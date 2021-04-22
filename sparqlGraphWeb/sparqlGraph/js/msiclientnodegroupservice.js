@@ -231,7 +231,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 if (! resultSet.isSuccess()) {
                     failureCallback(resultSet.getFailureHtml());
                 } else {
-                    var f = ["nodegroup", "modelErrorMessages", "invalidItemStrings"];
+                    var f = ["nodegroup", "modelErrorMessages", "invalidItemStrings", "warnings"];
                     for (var field of f) {
                         if (resultSet.getSimpleResultField(field) == null) {
                             failureCallback("InflateAndValidate return did not contain field: " + field);
@@ -240,7 +240,8 @@ define([	// properly require.config'ed   bootstrap-modal
                     ngMessagesItemsCallback(
                         resultSet.getSimpleResultField(f[0]),
                         resultSet.getSimpleResultField(f[1]),
-                        resultSet.getSimpleResultField(f[2])
+                        resultSet.getSimpleResultField(f[2]),
+                        resultSet.getSimpleResultField(f[3])
                     );
                 }
             },

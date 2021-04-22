@@ -289,6 +289,12 @@ public class NodeItem {
 		this.valueType = name.getLocalName();
 	}
 	
+	// alternate name
+	public void setRange(String newURI) {
+		this.changeUriValueType(newURI);
+		
+	}
+	
 	public String getUriConnectBy() {
 		return this.uriConnectBy;
 	}
@@ -398,6 +404,55 @@ public class NodeItem {
 			}
 		}
 		throw new Exception("NodeItem can't find link to semantic node");
+	}
+
+	/**
+	 * Merge everything except keyName, connectedBy, uriConnectBy
+	 * @param nItem
+	 * @throws Exception
+	 */
+	public void merge(NodeItem nItem, Node target) throws Exception {
+		if (this.isUsed()) {
+        	throw new Exception ("Target of node item edge merge is not empty: " + this.getKeyName());
+        }
+		
+		if (target == null) {
+			// move entire lists to this
+			this.nodes = nItem.nodes;
+			this.optionalMinus = nItem.optionalMinus;
+			this.deletionFlags = nItem.deletionFlags;
+			this.qualifiers = nItem.qualifiers;
+			// delete entire lists from nItem
+			nItem.nodes = new ArrayList<Node>();
+			nItem.optionalMinus = new ArrayList<Integer>();
+			nItem.deletionFlags = new ArrayList<Boolean>();
+			nItem.qualifiers = new ArrayList<String>();
+			nItem.connected = false;
+		} else {
+			// find position of target
+			int i = nItem.getNodeList().indexOf(target);
+			if (i == -1) {
+	        	throw new Exception ("Invalid target parameter in merge: " + target.getBindingOrSparqlID());
+			}
+			// move just the target to this
+			this.nodes.add(nItem.nodes.get(i));
+			this.optionalMinus.add(nItem.optionalMinus.get(i));
+			this.deletionFlags.add(nItem.deletionFlags.get(i));
+			this.qualifiers.add(nItem.qualifiers.get(i));
+			// remove target from nItem
+			nItem.nodes.remove(i);
+			nItem.optionalMinus.remove(i);
+			nItem.deletionFlags.remove(i);
+			nItem.qualifiers.remove(i);
+			nItem.connected = nItem.nodes.size() > 0;
+		}
+
+		//keyName 
+		this.valueType = nItem.valueType;
+		this.valueTypeURI = nItem.valueTypeURI;
+		//connectedBy
+		//uriConnectBy 
+		this.connected = this.nodes.size() > 0;
 	}
 	
 }

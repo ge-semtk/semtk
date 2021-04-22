@@ -1991,9 +1991,12 @@ SemanticNodeGroup.prototype = {
     },
 
     buildItemStr : function(snode, optItem, optTarget) {
-        if (optTarget !== undefined) {
-            // nodeItem
-            return snode.getSparqlID() + "|" + optItem.getURIConnectBy() + "|" + optTarget.getSparqlID();
+        if (optItem && optItem.getItemType() == "NodeItem") {
+            if (optTarget) {
+                return snode.getSparqlID() + "|" + optItem.getURIConnectBy() + "|" + optTarget.getSparqlID();
+            } else {
+                return snode.getSparqlID() + "|" + optItem.getURIConnectBy() + "|" + SemanticNodeGroup.NULL_TARGET;
+            }
         } else {
             return this.buildUnionValueStr(snode, optItem);
         }

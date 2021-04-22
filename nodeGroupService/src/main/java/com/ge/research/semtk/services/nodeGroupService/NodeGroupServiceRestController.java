@@ -997,7 +997,7 @@ public class NodeGroupServiceRestController {
 				// do the work for DOMAIN
 				if (itemStr.getType() == Node.class) {
 					nodegroup.changeItemDomain(itemStr.getSnode(), newURI);
-					// importSpec: nothing to do
+					importSpec.changeNodeDomain(itemStr.getSnode().getSparqlID(), newURI);
 					
 				} else if (itemStr.getType() == PropertyItem.class) {
 					Node node = itemStr.getSnode();
@@ -1009,6 +1009,19 @@ public class NodeGroupServiceRestController {
 						nodegroup.changeItemDomain(node, prop, newURI);
 						importSpec.changePropertyDomain(node.getSparqlID(), prop.getUriRelationship(), newURI);
 					}
+				} else {
+					// nodeItem
+					Node node = itemStr.getSnode();
+					NodeItem nItem = itemStr.getnItem();
+					Node target = itemStr.getTarget();
+					
+					if (deleteFlag) {
+						nodegroup.deleteNodeItem(node, nItem);
+						// no effect on importSpec
+					} else {
+						nodegroup.changeItemDomain(node, nItem, target, newURI);
+						// no effect on importSpec
+					}
 				}
 			} else {
 				// do the work for RANGE
@@ -1017,6 +1030,11 @@ public class NodeGroupServiceRestController {
 					
 				} else if (itemStr.getType() == PropertyItem.class) {
 					nodegroup.changeItemRange(itemStr.getpItem(), newURI);
+					// no effect on importSpec
+				} else {
+					// nodeItem
+					nodegroup.changeItemRange(itemStr.getnItem(), newURI);
+					// no effect on importSpec
 				}
 			}
 			

@@ -4473,16 +4473,51 @@ public class NodeGroup {
         mergeIntoProp.merge(prop);   // throws exception if prop is not empty
         node.rmPropItem(prop);
        
-        this.updateUnionHash(oldItemStr, newItemStr);
+        this.updateUnionHashPropItems(oldItemStr, newItemStr);
 
         return mergeIntoProp;
+		
+	}
+	
+	/**
+	 * 
+	 * @param node
+	 * @param nItem
+	 * @param target - can be null ( move entire nodeItem ) or non-null (just move target)
+	 * @param newURI
+	 * @return
+	 * @throws Exception
+	 */
+	public NodeItem changeItemDomain(Node node, NodeItem nItem, Node target, String newURI) throws Exception {
+		
+        NodeItem mergeIntoNItem = node.getNodeItem(newURI);
+        if (mergeIntoNItem == null) throw new Exception ("Can't find property to merge into: " + newURI);
+
+        String oldItemStr = (new NodeGroupItemStr(node, nItem, null)).getStr();
+        String newItemStr = (new NodeGroupItemStr(node, mergeIntoNItem, null)).getStr();
+        
+        mergeIntoNItem.merge(nItem, target); 
+        
+        if (! nItem.getConnected()) {
+        	node.rmNodeItem(nItem);
+        }
+       
+        this.updateUnionHashNodeItems(oldItemStr, newItemStr);
+
+        return mergeIntoNItem;
 		
 	}
 
 	public void deleteProperty(Node node, PropertyItem prop) {
 		node.rmPropItem(prop);
 		String itemStr = (new NodeGroupItemStr(node, prop)).getStr();
-		this.updateUnionHash(itemStr, null);
+		this.updateUnionHashPropItems(itemStr, null);
+	}
+	
+	public void deleteNodeItem(Node node, NodeItem nItem) {
+		node.rmNodeItem(nItem);
+		String itemStr = (new NodeGroupItemStr(node, nItem, null)).getStr();
+		this.updateUnionHashNodeItems(itemStr, null);
 	}
 	
 	/**
@@ -4496,13 +4531,18 @@ public class NodeGroup {
 		pItem.setRange(newURI);
 	}
 	
+	public void changeItemRange(NodeItem nItem, String newURI) throws Exception {
+		// very simple
+		nItem.setRange(newURI);
+	}
+	
 	/**
 	 * Update the union hash when a property has changed URI domain
 	 * Not necessary to call this for Nodes
 	 * @param oldItemStr
 	 * @param newItemStr - or null to delete
 	 */
-	private void updateUnionHash(String oldItemStr, String newItemStr) {
+	private void updateUnionHashPropItems(String oldItemStr, String newItemStr) {
 		for (Integer key : this.unionHash.keySet()) {
 			ArrayList<String> val = this.unionHash.get(key);
 			for (int i=0; i < val.size(); i++) {
@@ -4517,9 +4557,30 @@ public class NodeGroup {
 				}
 			}
 		}
-		
 	}
-
 	
+	/**
+	 * Update the union hash when a nodeItem has changed URI domain
+	 * @param oldItemStr
+	 * @param newItemStr - or null to delete
+	 */
+	private void updateUnionHashNodeItems(String oldItemStr, String newItemStr) {
+		String oldPrefix = NodeGroupItemStr.getNodeItemPrefix(oldItemStr);
+		String newPrefix = NodeGroupItemStr.getNodeItemPrefix(newItemStr);
+		for (Integer key : this.unionHash.keySet()) {
+			ArrayList<String> val = this.unionHash.get(key);
+			for (int i=0; i < val.size(); i++) {
+				if (val.get(i).startsWith(oldPrefix)) {
+					if (newItemStr != null) {
+						val.set(i, NodeGroupItemStr.replaceNodeItemPrefix(val.get(i), newPrefix));
+						break;
+					} else {
+						val.remove(i);
+						break;
+					}
+				}
+			}
+		}
+	}
 
 }

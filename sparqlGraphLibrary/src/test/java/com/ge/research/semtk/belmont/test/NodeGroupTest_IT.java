@@ -42,6 +42,7 @@ import com.ge.research.semtk.test.TestGraph;
 public class NodeGroupTest_IT {
 	private static OntologyInfo oInfo = null;
 	private static String colorURI = "http://kdl.ge.com/batterydemo#Color";
+	private static String colorItemURI = "http://kdl.ge.com/batterydemo#color";
 	private static String cellNodeURI = "http://kdl.ge.com/batterydemo#Cell";
 	private static String batteryURI = "http://kdl.ge.com/batterydemo#Battery";
 	private static String cellItemURI = "http://kdl.ge.com/batterydemo#cell";
@@ -306,14 +307,14 @@ public class NodeGroupTest_IT {
 		assertTrue("Missing Node item was not inflated", cellItem != null);
 
 
-		// used: error 
+		// 4a used: error 
 		Node cell1 = nodegroup.addClassFirstPath(cellNodeURI, oInfo);
 		cellItem.changeUriConnect(badURI);
 		
 		inflateAndValidate(nodegroup, 
 				null,
 				new String [] {badURI} , 
-				new NodeGroupItemStr [] {new NodeGroupItemStr(batteryNode, cellItem, cell1)}, 
+				new NodeGroupItemStr [] {new NodeGroupItemStr(batteryNode, cellItem, cell1), new NodeGroupItemStr(batteryNode, cellItem, null)}, 
 				new String [] {});
 		
 		// used: still there
@@ -341,8 +342,8 @@ public class NodeGroupTest_IT {
 		// targets are model-correct, range wrong: warn and fix 
 		Node cell1 = nodegroup.addClassFirstPath(cellNodeURI, oInfo);
 		Node cell2 = nodegroup.addClassFirstPath(cellNodeURI, oInfo);
-		NodeItem ni = batteryNode.getNodeItem(cellItemURI);
-		ni.changeUriValueType(badURI);
+		NodeItem cellItem = batteryNode.getNodeItem(cellItemURI);
+		cellItem.changeUriValueType(badURI);
 		
 		inflateAndValidate(nodegroup, 
 				null,
@@ -354,7 +355,7 @@ public class NodeGroupTest_IT {
 		// Delete the target connections and results should be the same
 		nodegroup.deleteNode(cell1, false);
 		nodegroup.deleteNode(cell2, false);
-		ni.changeUriValueType(badURI);
+		cellItem.changeUriValueType(badURI);
 		
 		inflateAndValidate(nodegroup, 
 				null,
@@ -368,17 +369,18 @@ public class NodeGroupTest_IT {
 		batteryNode.setConnection(colorNode, cellItemURI);  // bad target
 		cell1 = nodegroup.addNode(cellNodeURI, oInfo);
 		batteryNode.setConnection(cell1, cellItemURI); // good target
-		ni.changeUriValueType(badURI);  // bad range too
+		cellItem.changeUriValueType(badURI);  // bad range too
 		
 		inflateAndValidate(nodegroup, 
 				null,
 				new String [] {badURI} , 
-				new NodeGroupItemStr [] {new NodeGroupItemStr(batteryNode, ni, colorNode), new NodeGroupItemStr(batteryNode, ni, cell1)}, 
+				new NodeGroupItemStr [] {new NodeGroupItemStr(batteryNode, cellItem, null), new NodeGroupItemStr(batteryNode, cellItem, colorNode), new NodeGroupItemStr(batteryNode, cellItem, cell1)}, 
 				new String [] {});
 		
-		// used: still there with bad URI
-		ni = batteryNode.getNodeItem(cellItemURI);
-		assertTrue("Invalid ranged node item with one good, one bad connection was removed from nodegroup", ni != null);
+		// used: still there with bad range
+		cellItem = batteryNode.getNodeItem(cellItemURI);
+		assertTrue("Invalid ranged node item with one good, one bad connection was removed from nodegroup", cellItem != null);
+		assertEquals("After fixing nodeItem domain, node has wrong number of nodeItems", 1, batteryNode.getNodeItemList().size());
 
 	}
 	
@@ -432,7 +434,7 @@ public class NodeGroupTest_IT {
 		inflateAndValidate(nodegroup, 
 				importSpec,
 				new String [] {"class", "property", "edge"} , 
-				new NodeGroupItemStr [] {new NodeGroupItemStr(batteryNode), new NodeGroupItemStr(batteryNode, name), new NodeGroupItemStr(batteryNode, cell, cellNode)}, 
+				new NodeGroupItemStr [] {new NodeGroupItemStr(batteryNode), new NodeGroupItemStr(batteryNode, name), new NodeGroupItemStr(batteryNode, cell, cellNode), new NodeGroupItemStr(batteryNode, cell, null)}, 
 				new String [] {});
 		
 		// make sure propItem name was not deflated
@@ -517,4 +519,81 @@ public class NodeGroupTest_IT {
 		Table resTab = TestGraph.execTableSelect(sgjson);
 		assertEquals("Corrected nodegroup did not return correct rows of data", 3, resTab.getNumRows());
 	}
+	
+	@Test
+	public void testRepair4a_NItemBadDomain() throws Exception {		
+		// bad ?Cell->color_BAD
+		// NodeItem is part of union that when working, should return three rows
+		
+		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(this, "sampleBattery_invalid_4a.json");
+		NodeGroup nodegroup = sgjson.getNodeGroup();
+		ImportSpec importSpec = sgjson.getImportSpec();
+		Node cellNode = nodegroup.getNodeBySparqlID("?Cell");
+		NodeItem colorItem = cellNode.getNodeItem(colorItemURI + "_BAD");
+		Node colorNode = nodegroup.getNodeBySparqlID("?Color");
+		inflateAndValidate(nodegroup, 
+				importSpec,
+				new String [] {"_BAD"} , 
+				new NodeGroupItemStr [] {new NodeGroupItemStr(cellNode, colorItem, null), new NodeGroupItemStr(cellNode, colorItem, colorNode)}, 
+				new String [] {});
+		
+		// fix
+		nodegroup.changeItemDomain(cellNode, colorItem, null, colorItemURI);
+		
+		// no validation errors remain
+		inflateAndValidate(nodegroup, 
+				importSpec,
+				new String [] {} , 
+				new NodeGroupItemStr [] {}, 
+				new String [] {});
+		
+		// union query still works
+		sgjson.setNodeGroup(nodegroup);
+		Table resTab = TestGraph.execTableSelect(sgjson);
+		assertEquals("Corrected nodegroup did not return correct rows of data", 3, resTab.getNumRows());
+	}
+	
+	@Test
+	public void testRepair5a_NItemBadRange() throws Exception {		
+		// color nodeItem range set to invalid
+		// connected color node URI set to BATTERY so the nodeItem can't be auto-fixed
+		
+		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(this, "sampleBattery_invalid_5a.json");
+		NodeGroup nodegroup = sgjson.getNodeGroup();
+		ImportSpec importSpec = sgjson.getImportSpec();
+		Node cellNode = nodegroup.getNodeBySparqlID("?Cell");
+		NodeItem colorItem = cellNode.getNodeItem(colorItemURI);
+		Node colorNode = nodegroup.getNodeBySparqlID("?Color");
+		inflateAndValidate(nodegroup, 
+				importSpec,
+				new String [] {"_BAD"} , 
+				new NodeGroupItemStr [] {new NodeGroupItemStr(cellNode, colorItem, null), new NodeGroupItemStr(cellNode, colorItem, colorNode)}, 
+				new String [] {});
+		
+		// fix
+		nodegroup.changeItemRange(colorItem, colorURI);
+		
+		// no validation errors remain
+		inflateAndValidate(nodegroup, 
+				importSpec,
+				new String [] {"does not allow connection"} , 
+				new NodeGroupItemStr [] {new NodeGroupItemStr(cellNode, colorItem, colorNode)}, 
+				new String [] {});
+		
+		nodegroup.changeItemDomain(colorNode, colorURI);
+		importSpec.changeNodeDomain(colorNode.getSparqlID(), colorURI);
+		
+		// no validation errors remain
+		inflateAndValidate(nodegroup, 
+				importSpec,
+				new String [] {} , 
+				new NodeGroupItemStr [] {}, 
+				new String [] {"#cell", "#name", "#birthday"});   // deleted unused properties
+				
+		// union query still works
+		sgjson.setNodeGroup(nodegroup);
+		Table resTab = TestGraph.execTableSelect(sgjson);
+		assertEquals("Corrected nodegroup did not return correct rows of data", 3, resTab.getNumRows());
+	}
+	
 }

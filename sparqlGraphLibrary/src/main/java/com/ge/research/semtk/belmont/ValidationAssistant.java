@@ -91,8 +91,10 @@ public class ValidationAssistant {
 			}
 			match /= 2; // each match was counted twice
 			
-			Integer s = (match * 100) / (match + mismatch );  
-			score.put(uri, s);
+			Integer s = (match * 100) / Math.max(1, match + mismatch);  
+			if (s > score.get(uri)) {
+				score.put(uri, s);
+			}
 		}
 		
 		// sort by score descending

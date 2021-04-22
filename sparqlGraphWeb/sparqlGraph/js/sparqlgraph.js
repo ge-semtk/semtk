@@ -388,12 +388,6 @@
 
     };
 
-    var alertNodegroupInvalid = function () {
-        require(['sparqlgraph/js/modaliidx'], function(ModalIidx) {
-            ModalIidx.alert("Invalid Nodegroup", "Fix invalid items before editing the nodegroup");
-        });
-    };
-
     // application-specific property editing
     var launchPropertyItemDialog = function (propItem, snodeID) {
         checkQueryTextUnsavedThen(launchPropertyItemDialog1.bind(this, propItem, snodeID));
@@ -465,8 +459,7 @@
 
 
                 } else {
-                    // property item is valid, nodegroup has errors
-                    alertNodegroupInvalid();
+                    raisePropItemDialog();
                 }
             } else {
     		    raisePropItemDialog();
@@ -479,6 +472,47 @@
     };
 
     var launchLinkBuilder1 = function(snode, nItem) {
+        // check if entire NodeItem is invalid (domain or range)
+        var itemStr = gNodeGroup.buildItemStr(snode, nItem, null);
+
+        if (gInvalidItems.indexOf(itemStr) > -1) {
+            var oClass = gOInfo.getClass(snode.getURI());
+            var oProp = oClass.getProperty(nItem.getURI());
+            if (oProp != null) {
+                require(['sparqlgraph/js/modaliidx',
+                         'sparqlgraph/js/msiclientnodegroupservice'],
+                         function (ModalIidx, MsiClientNodeGroupService) {
+                    var correctRange = oProp.getRangeStr();
+                    var propName = oProp.getLocalName();
+                    ModalIidx.okCancel("Correct range",
+                                        "Correct " + propName + " range to " + correctRange,
+                                        changeItemURI.bind(this, nItem, null, correctRange, "range"));
+                });
+            } else {
+                require(['sparqlgraph/js/modalinvaliditemdialog',
+                         'sparqlgraph/js/msiclientnodegroupservice'],
+                         function (ModalInvalidItemDialog, MsiClientNodeGroupService) {
+
+                    // Domain is unknown.
+                    // Domain is illegal
+                    var dialog= new ModalInvalidItemDialog( new MsiClientNodeGroupService(g.service.nodeGroup.url),
+                                                            nItem, null,
+                                                            gNodeGroup,
+                                                            gConn,
+                                                            gOInfo,
+                                                            gMappingTab.getImportSpec(),
+                                                            changeItemURI
+                                                            );
+                    dialog.show();
+                });
+
+            }
+        } else {
+            launchLinkBuilder2(snode, nItem);
+        }
+    };
+
+    var launchLinkBuilder2 = function(snode, nItem) {
 		// callback when user clicks on a nodeItem
     	var rangeStr = nItem.getUriValueType();
 
@@ -620,14 +654,8 @@
                 ngClient.execAsyncChangeItemURI(sgJson, gNodeGroup.buildItemStr(parent, item),  newURI, domainOrRange, changeItemURICallback.bind(this, optSuccessCallback), ModalIidx.alert.bind(this, "NodeGroup Service failure"));
 
             } else if (item.getItemType() == "NodeItem") {
-                var snode = gNodeGroup.getPropertyItemParentSNode(item);
-                var oldURI = item.getURI();
-                gNodeGroup.mergeNodeItem(item, optTarget, newURI);
-                gNodeGroup.removeLink(item, optTarget);
-                if (item.getSNodes().length == 0 && !this.oInfo.classHasProp(oldURI)) {
-                    // TODO remove : it isn't this simple
-                }
-                // no import spec needed
+                var parent = gNodeGroup.getNodeItemParentSNode(item);
+                ngClient.execAsyncChangeItemURI(sgJson, gNodeGroup.buildItemStr(parent, item, optTarget),  newURI, domainOrRange, changeItemURICallback.bind(this, optSuccessCallback), ModalIidx.alert.bind(this, "NodeGroup Service failure"));
             }
         });
 
@@ -1195,17 +1223,28 @@
     };
 
     // callback: successfully determined whether there are modelErrors
-    var validateCallback = function(nodegroupJson, modelErrors, invalidItemStrings) {
+    var validateCallback = function(nodegroupJson, modelErrors, invalidItemStrings, warnings) {
 
         if (modelErrors.length > 0) {
             // some errors
             require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
                 var msgHtml = "<list>Nodegroup validation errors:<li>" + modelErrors.join("</li><li>") + "</li></list>";
-                ModalIidx.alert("Nodegroup / model mismatch", msgHtml, false);
+
+                if (warnings.length > 0) {
+                    msgHtml += "<list>Auto-corrected these errors:<li>" + warnings.join("</li><li>") + "</li></list>";
+                }
+                // skip warnings.  they only make it more confusing to user.
+                ModalIidx.alert("Error: model mis-matches", msgHtml, false);
             });
             gInvalidItems = invalidItemStrings;
             setStatus("Nodegroup is not valid to ontology");
         } else {
+            if (warnings.length > 0) {
+                require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
+                    var msgHtml = "<list>Nodegroup errors have been corrected:<li>" + warnings.join("</li><li>") + "</li></list><br>Re-save nodegroup.";
+                    ModalIidx.alert("Warning: model mis-matches", msgHtml, false);
+                });
+            }
             // no errors
             gInvalidItems = [];
             setStatus("");
@@ -1228,7 +1267,8 @@
     };
 
     // callback: successfully determined whether there are modelErrors
-    var reValidateCallback = function(callback, nodegroupJson, modelErrors, invalidItemStrings) {
+    // don't re-display errors.
+    var reValidateCallback = function(callback, nodegroupJson, modelErrors, invalidItemStrings, warnings) {
 
         gInvalidItems = invalidItemStrings;
         gNodeGroup = new SemanticNodeGroup();
@@ -1239,7 +1279,11 @@
         if (modelErrors.length == 0) {
             require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
                 setStatus("");
-                ModalIidx.alert("Validation success", "Nodegroup is now valid against ontology", false, callback);
+                var msgHtml = "Nodegroup is now valid against ontology. Re-save nodegroup.";
+                if (warnings.length > 0) {
+                    msgHtml = "<list>Auto-corrected additional errors:<li>" + warnings.join("</li><li>") + "</li></list><br>" + msgHtml;
+                }
+                ModalIidx.alert("Validation success", msgHtml, false, callback);
             });
 
         } else if (callback != undefined) {

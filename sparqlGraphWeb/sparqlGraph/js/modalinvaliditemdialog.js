@@ -89,16 +89,22 @@ define([	// properly require.config'ed
                     var snode = this.nodegroup.getNodeItemParentSNode(this.item);
                     var oPropList = this.oInfo.getInheritedProperties(new OntologyClass(snode.getURI()));
                     var domainList = [];
-                    var targetClass = new OntologyClass(this.target.getURI());
 
                     for (var op of oPropList) {
                         // separate propItems from nodeItems
                         var rangeStr = op.getRangeStr();
                         if (this.oInfo.containsClass(rangeStr)) {
                             var rangeClass = new OntologyClass(rangeStr);
-
+                            var invalidLinks = 0;
+                            for (var target of this.item.getSNodes()) {
+                                var targetClass = new OntologyClass(target.getURI());
+                                if (!this.oInfo.classIsA(targetClass, rangeClass)) {
+                                    invalidLinks = 1;
+                                    break;
+                                }
+                            }
                             // if link to target node valid, put it at the top of the list, else on bottom
-                            if (this.oInfo.classIsA(targetClass, rangeClass)) {
+                            if (invalidLinks == 0) {
                                 domainList.unshift(op.getNameStr());
                             } else {
                                 domainList.push(op.getNameStr());

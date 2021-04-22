@@ -423,7 +423,7 @@ public class ImportSpec {
 				}
 			}
 		}
-		throw new Exception("Can't find property: " + propUri + " in node " + nodeSparqlId);
+		throw new Exception("Can't find property in importSpec: " + propUri + " in node " + nodeSparqlId);
 	}
 	
 	/**
@@ -523,7 +523,12 @@ public class ImportSpec {
 	}
 	
 	public boolean hasMapping(String nodeSparqlId, String propUri) throws Exception {
-		JSONObject prop = this.findProp(nodeSparqlId, propUri);
+		JSONObject prop = null;
+		try {
+			prop = this.findProp(nodeSparqlId, propUri);
+		} catch (Exception e) {
+			return false;    // node doesn't even have the property
+		}
 		JSONArray mapArr = (JSONArray) prop.get(JKEY_IS_MAPPING);
 		return mapArr != null && mapArr.size() > 0;
 	}
@@ -672,6 +677,11 @@ public class ImportSpec {
 			this.getNode(n).put(JKEY_IS_PROPS, newProps);
 		}
 		
+	}
+
+	public void changeNodeDomain(String nodeSparqlID, String newURI) {
+		int n = this.getNodeIndex(nodeSparqlID);
+		this.getNode(n).put(JKEY_IS_NODE_TYPE, newURI);
 	}
 	
 }

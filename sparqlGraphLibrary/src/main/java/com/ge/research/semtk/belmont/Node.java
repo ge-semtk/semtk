@@ -186,10 +186,10 @@ public class Node extends Returnable {
 	 * 				 * 3a ERROR - wrong range if used
 	 * 				 * 3b WARNING - wrong range if unused
 	 *
-	 * 		NodeItem * 4a ERROR bad uri (domain)         items:  all targets
+	 * 		NodeItem * 4a ERROR bad uri (domain)                             items:  null target + all connected targets
 	 *               * 4b WARNING bad uri (domain) but unused
 	 *               
-	 * 				 * 5a ERROR  wrong range and connected to any illegal items:  all targets
+	 * 				 * 5a ERROR  wrong range and connected to any illegal    items:  null target + all connected targets
 	 *               * 5b WARNING wrong range but unused
 	 *               * 5c WARNING wrong range but connected nodes all legal to model so fix is easy
 	 *               
@@ -276,41 +276,8 @@ public class Node extends Returnable {
 				inputPItemHash.remove(ontPropURI);
 				
 		
-			} else if (!oInfo.containsClass(ontProp.getRangeStr())) {
-				// Range class is not found so must be either:
-				//      1. node with a bad range
-				//      2. property deflated out of the nodegroup
-				PropertyItem propItem = new PropertyItem(	
-						ontProp.getNameStr(true), 
-						ontProp.getRangeStr(true), 
-						ontProp.getRangeStr(false),
-						ontProp.getNameStr(false));
-				
-				if (inputNItemHash.containsKey(ontPropURI)) {
-					// choice 1:  node with a bad range
-					String msg = this.getBindingOrSparqlID() + " node property " + ontPropURI + " has range " + ontProp.getRangeStr() + " in the nodegroup, which can't be found in model.";
-
-					NodeItem nodeItem = inputNItemHash.get(ontPropURI);
-					if (nodeItem.isUsed()) {
-						// nItem is used, so the bad range is an error
-						modelErrList.add(msg);
-						for (Node target : nodeItem.getNodeList()) {
-							itemStrList.add(new NodeGroupItemStr(this, nodeItem, target));
-						}
-						
-					} else {
-						// bad nItem was not used: just fix it (should have been deflated)
-						nodeItem.setUriValueType(ontProp.getRangeStr());
-						nodeItem.setValueType(ontProp.getRangeStr(true));
-					}
-				} else {
-					// choice 2: deflated propItem
-					inflatedPItems.add(propItem);
-				}
-				
-			
 			} else if (inputNItemHash.containsKey(ontPropURI)) {
-				// nodeItem
+				// nodeItem is used
 				
 				NodeItem nodeItem = inputNItemHash.get(ontPropURI);
 				String nRangeStr = nodeItem.getUriValueType();
@@ -321,7 +288,7 @@ public class Node extends Returnable {
 				// is range incorrect
 				boolean rangeErrFlag = !nRangeStr.equals(correctRangeStr);
 				
-				// check for targets with classes that aren't a type of the CORRECT range
+				// 6. check for targets with classes that aren't a type of the CORRECT range
 				ArrayList<Node> targetErrList = new ArrayList<Node>();
 				if (nodeItem.getConnected()) {
 					OntologyClass correctRangeClass = oInfo.getClass(correctRangeStr);
@@ -337,16 +304,18 @@ public class Node extends Returnable {
 				
 				// range of nodeItem is wrong
 				if (rangeErrFlag) {
-					// if there are no bad targets: fix & warn
+					
 					if (targetErrList.size() == 0) {
+						// 5b 5c  Fix nodeitem range
 						warningList.add( this.getBindingOrSparqlID() + " edge " + ontPropURI + " range of " + nRangeStr + " corrected to model value " + correctRangeStr);
 						nodeItem.changeUriValueType(correctRangeStr);
 					} else {
 						
-						// else bad connections
+						// 5a else bad connections
 						modelErrList.add( this.getBindingOrSparqlID() + " edge " + ontPropURI + " range of " + nRangeStr + " doesn't match to model range of " + correctRangeStr);
 
-						// all targets are bad items
+						// all targets are bad items, so is generic "null target"
+						itemStrList.add(new NodeGroupItemStr(this, nodeItem, null));
 						for (Node target : nodeItem.getNodeList()) {
 							itemStrList.add(new NodeGroupItemStr(this, nodeItem, target));
 						}
@@ -376,8 +345,19 @@ public class Node extends Returnable {
 				inflatedNItems.add(nodeItem);
 				inputNItemHash.remove(ontPropURI);
 			
-            } else {
-                // Unused node: inflate
+			} else if (!oInfo.containsClass(ontProp.getRangeStr())) {
+				// Range class is not found: property deflated out of the nodegroup: inflate
+				PropertyItem propItem = new PropertyItem(	
+						ontProp.getNameStr(true), 
+						ontProp.getRangeStr(true), 
+						ontProp.getRangeStr(false),
+						ontProp.getNameStr(false));
+				
+				
+				inflatedPItems.add(propItem);
+			
+			} else {
+                // nodeitem deflated out of nodegroup: inflate
                 NodeItem nodeItem = new NodeItem(   ontProp.getNameStr(false), 
                                                     ontProp.getRangeStr(true),
                                                     ontProp.getRangeStr(false)
@@ -410,6 +390,7 @@ public class Node extends Returnable {
 	        	modelErrList.add(msg);
 				NodeItem nItem = inputNItemHash.get(key);
 				if (nItem.getConnected()) {
+					itemStrList.add(new NodeGroupItemStr(this, nodeItem, null));
 					for (Node target : nItem.getNodeList() ) {
 						// add every nodeItem/target combo
 						itemStrList.add(new NodeGroupItemStr(this, nodeItem, target));
@@ -978,6 +959,10 @@ public class Node extends Returnable {
 
 	public void rmPropItem(PropertyItem prop) {
 		this.props.remove(prop);
+	}
+
+	public void rmNodeItem(NodeItem nItem) {
+		this.nodes.remove(nItem);
 	}
 
 }
