@@ -181,16 +181,16 @@ public class Node extends Returnable {
 	 * 
 	 * 		Type     * 1a ERROR unknown URI
 	 * 	
-	 * 		PropItem * 2a ERROR - bad uri (domain) if used
-	 * 				 * 2b WARNING - bad uri (domain) if unused
-	 * 				 * 3a ERROR - wrong range if used
-	 * 				 * 3b WARNING - wrong range if unused
+	 * 		PropItem * 2a ERROR - bad uri (domain) if constrained
+	 * 				 * 2b WARNING - bad uri (domain) if not constrained
+	 * 				 * 3a ERROR - wrong range if constrained
+	 * 				 * 3b WARNING - wrong range if not constrained
 	 *
 	 * 		NodeItem * 4a ERROR bad uri (domain)                             items:  null target + all connected targets
-	 *               * 4b WARNING bad uri (domain) but unused
+	 *               * 4b WARNING bad uri (domain) but unconnected
 	 *               
 	 * 				 * 5a ERROR  wrong range and connected to any illegal    items:  null target + all connected targets
-	 *               * 5b WARNING wrong range but unused
+	 *               * 5b WARNING wrong range but unconnected
 	 *               * 5c WARNING wrong range but connected nodes all legal to model so fix is easy
 	 *               
 	 * 				 * 6 ERROR connected to nodes that violate the (correct) range   items: targets that don't match range
@@ -249,21 +249,23 @@ public class Node extends Returnable {
 		// loop through oInfo's version
 		// Remember: oProp can be propItem or nodeItem
 		for (OntologyProperty ontProp : ontProps) {
-			String ontPropURI = ontProp.getNameStr();			
-			
+			String ontPropURI = ontProp.getNameStr(false);			
+			String localPropURI = ontProp.getNameStr(true);
+
 			if (inputPItemHash.containsKey(ontPropURI)) {
 				// if input nodegroup contains this property
 				
 				PropertyItem propItem = inputPItemHash.get(ontPropURI);
 				if (! propItem.getValueTypeURI().equals(ontProp.getRangeStr())) {
-					if (propItem.isUsed() || (importSpec != null && importSpec.isUsed(this.getSparqlID(), ontPropURI))) {
+					String abbrevURI[] = abbreviateURIs(propItem.getValueTypeURI(), ontProp.getRangeStr());
+					if (propItem.getConstraints() != null || (importSpec != null && importSpec.isUsed(this.getSparqlID(), ontPropURI))) {
 						// ERROR property range doesn't match
-						String msg = this.getBindingOrSparqlID() + " property " + ontPropURI + " range of " + propItem.getValueTypeURI() + " doesn't match model range of " + ontProp.getRangeStr();
+						String msg = this.getBindingOrSparqlID() + " property " + localPropURI + "'s range of " + abbrevURI[0] + " doesn't match model: " + abbrevURI[1];
 						modelErrList.add(msg);
 						itemStrList.add(new NodeGroupItemStr(this, propItem));
 					} else {
 						// WARNING property range doesn't match
-						String msg = this.getBindingOrSparqlID() + " property " + ontPropURI + " range of " + propItem.getValueTypeURI() + " automatically changed to proper range of " + ontProp.getRangeStr();
+						String msg = this.getBindingOrSparqlID() + " property " + localPropURI + "'s range of " + abbrevURI[0] + " changed to: " + abbrevURI[1];
 						warningList.add(msg);
 						// fix range
 						propItem.changeValueType(XSDSupportedType.getMatchingValue(ontProp.getRangeStr(true)));
@@ -304,15 +306,16 @@ public class Node extends Returnable {
 				
 				// range of nodeItem is wrong
 				if (rangeErrFlag) {
-					
+					String abbrevURI[] = abbreviateURIs(nRangeStr, correctRangeStr);
+
 					if (targetErrList.size() == 0) {
 						// 5b 5c  Fix nodeitem range
-						warningList.add( this.getBindingOrSparqlID() + " edge " + ontPropURI + " range of " + nRangeStr + " corrected to model value " + correctRangeStr);
+						warningList.add( this.getBindingOrSparqlID() + " edge " + localPropURI + "'s range of " + abbrevURI[0] + " changed to: " + abbrevURI[1]);
 						nodeItem.changeUriValueType(correctRangeStr);
 					} else {
 						
 						// 5a else bad connections
-						modelErrList.add( this.getBindingOrSparqlID() + " edge " + ontPropURI + " range of " + nRangeStr + " doesn't match to model range of " + correctRangeStr);
+						modelErrList.add( this.getBindingOrSparqlID() + " edge " + localPropURI + "'s range of " + abbrevURI[0] + " doesn't match to model: " + abbrevURI[1]);
 
 						// all targets are bad items, so is generic "null target"
 						itemStrList.add(new NodeGroupItemStr(this, nodeItem, null));
@@ -326,14 +329,14 @@ public class Node extends Returnable {
 					
 					// somewhat randomly, check for keyname errors
 					if (!nRangeAbbr.equals(correctRangeAbbrev)) {
-						warningList.add(this.getBindingOrSparqlID() + " node property property " + ontPropURI + " abbrev " + nRangeAbbr + " corrected to match model abbrev of " + ontProp.getRangeStr(true));
+						warningList.add(this.getBindingOrSparqlID() + " node property property " + localPropURI + "'s abbrev " + nRangeAbbr + " corrected to match model: " + ontProp.getRangeStr(true));
 						nodeItem.setValueType(ontProp.getRangeStr(true));
 					}
 				
 				
 					// report any bad connections 
 					for (Node target : targetErrList) {
-						modelErrList.add( this.getBindingOrSparqlID() + " edge " + ontPropURI + "'s range of " + correctRangeAbbrev + " does not allow connection to " + target.getBindingOrSparqlID());
+						modelErrList.add( this.getBindingOrSparqlID() + " edge " + localPropURI + "'s range of " + correctRangeAbbrev + " does not allow connection to " + target.getBindingOrSparqlID());
 						itemStrList.add(new NodeGroupItemStr(this, nodeItem, target));
 					}
 					
@@ -410,6 +413,22 @@ public class Node extends Returnable {
 		this.props = inflatedPItems;
 		this.nodes = inflatedNItems;
 		
+	}
+	
+	/**
+	 * Return local names unless they are equal, return full names
+	 * @param uri1
+	 * @param uri2
+	 * @return
+	 */
+	private static String[] abbreviateURIs(String uri1, String uri2) {
+		String abbrev1 = new OntologyName(uri1).getLocalName();
+		String abbrev2 = new OntologyName(uri2).getLocalName();
+		if (abbrev1.equals(abbrev2)) {
+			return new String [] {uri1, uri2};
+		} else {
+			return new String [] {abbrev1, abbrev2};
+		}
 	}
 	
 	/**

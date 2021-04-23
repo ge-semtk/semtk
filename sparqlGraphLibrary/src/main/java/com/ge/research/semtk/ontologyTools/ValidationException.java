@@ -28,6 +28,6 @@ public class ValidationException extends Exception {
 	//Constructor that accepts a message
 	public ValidationException(String message)
 	{
-		super(message);
+		super("Error validating nodegroup to model: " + message);
 	}
 }

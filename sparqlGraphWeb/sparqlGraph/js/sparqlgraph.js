@@ -432,17 +432,21 @@
                         // There must be constraints or else this wouldn't have been flagged as an error.
                         var oRangeStr = oClass.getProperty(propItem.getURI()).getRange().getFullName();
                         var pRangeStr = propItem.getValueTypeURI();
+                        var hasConstraints = (propItem.getConstraints().length > 0);
+                        var hasMapping = gMappingTab.getImportSpec().hasMapping(snodeID, propItem.getURI());
 
                         // call REST to make the change, then raise the good dialog
                         var changePropItemURI = function() {
                             // same javascript black magic
                             // propItem - need to find it in the current gNodeGroup
                             var p = gNodeGroup.getNodeBySparqlID(snodeID).getPropertyByURIRelation(propItem.getUriRelation());
-                            changeItemURI(p, undefined, oRangeStr, "range", raisePropItemDialog);
+                            changeItemURI(p, undefined, oRangeStr, "range", hasConstraints ? raisePropItemDialog : undefined);
                         };
 
                         var msg = "Repairing property range<list><li>from " + pRangeStr + "</li><li>to " + oRangeStr + "</li></list><br>" +
-                                  "Review constraints to make sure they are compatible.";
+                                  (hasConstraints ? "<br>Review constraints to make sure they are compatible." : "") +
+                                  (hasMapping ? "<br>Review item's import mapping" : "")
+
                         ModalIidx.alert("Repair property range", msg, false, changePropItemURI);
                     } else {
                         // Domain is illegal
@@ -1241,8 +1245,8 @@
         } else {
             if (warnings.length > 0) {
                 require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
-                    var msgHtml = "<list>Nodegroup errors have been corrected:<li>" + warnings.join("</li><li>") + "</li></list><br>Re-save nodegroup.";
-                    ModalIidx.alert("Warning: model mis-matches", msgHtml, false);
+                    var msgHtml = "Nodegroup errors have been corrected to match model. <br><b>Re-save the nodegroup</b><list><li>" + warnings.join("</li><li>") + "</li></list>";
+                    ModalIidx.alert("Warning: corrected model mis-matches", msgHtml, false);
                 });
             }
             // no errors
@@ -1279,7 +1283,7 @@
         if (modelErrors.length == 0) {
             require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
                 setStatus("");
-                var msgHtml = "Nodegroup is now valid against ontology. Re-save nodegroup.";
+                var msgHtml = "Nodegroup is now valid against ontology. <br><b>Re-save nodegroup.</b>";
                 if (warnings.length > 0) {
                     msgHtml = "<list>Auto-corrected additional errors:<li>" + warnings.join("</li><li>") + "</li></list><br>" + msgHtml;
                 }

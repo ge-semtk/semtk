@@ -170,6 +170,11 @@ define([// properly require.config'ed
                 return ret;
             },
 
+            hasMapping : function(sparqlId, propUri) {
+                var key = ImportMapping.staticGenUniqueKey(sparqlId, propUri);
+                return (key in this.mapHash) && (this.mapHash[key].getItemList().length > 0);
+            },
+
 			getMapping : function(sparqlId, propUri) {
 				// find a row
 				// propUri may be null
