@@ -257,7 +257,10 @@ public class Node extends Returnable {
 				
 				PropertyItem propItem = inputPItemHash.get(ontPropURI);
 				if (! propItem.getValueTypeURI().equals(ontProp.getRangeStr())) {
-					String abbrevURI[] = abbreviateURIs(propItem.getValueTypeURI(), ontProp.getRangeStr());
+					String modelRangeStr = ontProp.getRangeStr();
+					String propRangeStr = propItem.getValueTypeURI();
+					String abbrevURI[] = abbreviateURIs(propRangeStr, modelRangeStr);
+					
 					if (propItem.getConstraints() != null || (importSpec != null && importSpec.isUsed(this.getSparqlID(), ontPropURI))) {
 						// ERROR property range doesn't match
 						String msg = this.getBindingOrSparqlID() + " property " + localPropURI + "'s range of " + abbrevURI[0] + " doesn't match model: " + abbrevURI[1];
@@ -268,12 +271,27 @@ public class Node extends Returnable {
 						String msg = this.getBindingOrSparqlID() + " property " + localPropURI + "'s range of " + abbrevURI[0] + " changed to: " + abbrevURI[1];
 						warningList.add(msg);
 						// fix range
-						propItem.changeValueType(XSDSupportedType.getMatchingValue(ontProp.getRangeStr(true)));
+						if (! oInfo.containsClass(modelRangeStr)) {
+							// normal fix: property
+							propItem.changeValueType(XSDSupportedType.getMatchingValue(ontProp.getRangeStr(true)));
+						} else {
+							// change to nodeItem
+							 NodeItem nodeItem = new NodeItem(   
+									 ontProp.getNameStr(false), 
+                                     ontProp.getRangeStr(true),
+                                     ontProp.getRangeStr(false)
+                                     );
+							 inflatedNItems.add(nodeItem);
+							 propItem = null;
+						}
+						
 					}
 				}
 				
-				// add the propItem
-				inflatedPItems.add(propItem);
+				// add the propItem, unless emergency switch to nodeItem
+				if (propItem != null) {
+					inflatedPItems.add(propItem);
+				}
 				
 				inputPItemHash.remove(ontPropURI);
 				
@@ -311,7 +329,20 @@ public class Node extends Returnable {
 					if (targetErrList.size() == 0) {
 						// 5b 5c  Fix nodeitem range
 						warningList.add( this.getBindingOrSparqlID() + " edge " + localPropURI + "'s range of " + abbrevURI[0] + " changed to: " + abbrevURI[1]);
-						nodeItem.changeUriValueType(correctRangeStr);
+						if (oInfo.containsClass(correctRangeStr)) {
+							nodeItem.changeUriValueType(correctRangeStr);
+						} else {
+							// "emergency" switch to a propItem
+							PropertyItem propItem = new PropertyItem(	
+									ontProp.getNameStr(true), 
+									ontProp.getRangeStr(true), 
+									ontProp.getRangeStr(false),
+									ontProp.getNameStr(false));
+							
+							
+							inflatedPItems.add(propItem);
+							nodeItem = null;
+						}
 					} else {
 						
 						// 5a else bad connections
@@ -340,12 +371,12 @@ public class Node extends Returnable {
 						itemStrList.add(new NodeGroupItemStr(this, nodeItem, target));
 					}
 					
-	
-					
 				}
 				
-				// add the nodeItem
-				inflatedNItems.add(nodeItem);
+				// add the nodeItem unless it was "emergency" switched to a property
+				if (nodeItem != null) {
+					inflatedNItems.add(nodeItem);
+				}
 				inputNItemHash.remove(ontPropURI);
 			
 			} else if (!oInfo.containsClass(ontProp.getRangeStr())) {
