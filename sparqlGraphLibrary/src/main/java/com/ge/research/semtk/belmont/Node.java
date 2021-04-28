@@ -302,16 +302,17 @@ public class Node extends Returnable {
 				NodeItem nodeItem = inputNItemHash.get(ontPropURI);
 				String nRangeStr = nodeItem.getUriValueType();
 				String nRangeAbbr = nodeItem.getValueType();
+			    OntologyClass nRangeClass = oInfo.getClass(nRangeStr);
 				String correctRangeStr = ontProp.getRangeStr();
 				String correctRangeAbbrev = ontProp.getRangeStr(true);
+				OntologyClass correctRangeClass = oInfo.getClass(correctRangeStr);
 				
 				// is range incorrect
-				boolean rangeErrFlag = !nRangeStr.equals(correctRangeStr);
+				boolean rangeErrFlag = ! oInfo.classIsA(nRangeClass, correctRangeClass);
 				
 				// 6. check for targets with classes that aren't a type of the CORRECT range
 				ArrayList<Node> targetErrList = new ArrayList<Node>();
 				if (nodeItem.getConnected()) {
-					OntologyClass correctRangeClass = oInfo.getClass(correctRangeStr);
 					
 					for (Node target : nodeItem.getNodeList()) {
 						OntologyClass targetClass = oInfo.getClass(target.getUri());
@@ -359,7 +360,7 @@ public class Node extends Returnable {
 					// range is ok
 					
 					// somewhat randomly, check for keyname errors
-					if (!nRangeAbbr.equals(correctRangeAbbrev)) {
+					if (!nRangeAbbr.equals(new OntologyName(nRangeStr).getLocalName())) {
 						warningList.add(this.getBindingOrSparqlID() + " node property property " + localPropURI + "'s abbrev " + nRangeAbbr + " corrected to match model: " + ontProp.getRangeStr(true));
 						nodeItem.setValueType(ontProp.getRangeStr(true));
 					}
