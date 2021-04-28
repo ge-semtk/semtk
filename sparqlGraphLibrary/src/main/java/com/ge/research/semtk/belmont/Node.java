@@ -291,8 +291,10 @@ public class Node extends Returnable {
 				String nRangeStr = nodeItem.getUriValueType();
 				String nRangeAbbr = nodeItem.getValueType();
 				boolean rangeErrFlag = false;
+				OntologyClass itemRangeClass = oInfo.getClass(nRangeStr);
+				OntologyClass oPropRangeClass = oInfo.getClass(oProp.getRangeStr());
 				
-				if (!nRangeStr.equals(oProp.getRangeStr())) {	
+				if (! oInfo.classIsA(itemRangeClass, oPropRangeClass)) {	
 					if (nodeItem.isUsed()) {
 						String msg = this.getSparqlID() + " node property " + oPropURI + " range of " + nRangeStr+ " doesn't match model range of " + oProp.getRangeStr();
 	
@@ -308,7 +310,7 @@ public class Node extends Returnable {
 						nodeItem.setUriValueType(oProp.getRangeStr());
 					}
 				}
-				if (!nRangeAbbr.equals(oProp.getRangeStr(true))) {
+				if (!nRangeAbbr.equals(new OntologyName(nRangeStr).getLocalName())) {
 					if (nodeItem.isUsed()) {
 						String msg = this.getSparqlID() + " node property " + oPropURI + " range abbreviation of " + nRangeAbbr + " doesn't match model range of " + oProp.getRangeStr(true);
 					
