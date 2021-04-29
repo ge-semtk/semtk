@@ -21,8 +21,10 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.math.NumberUtils;
+import org.apache.jena.atlas.json.JSON;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.utility.Utility;
@@ -44,11 +46,13 @@ public class PlotlyPlotSpec extends PlotSpec {
 	public static final String JKEY_LAYOUT = "layout";
 	public static final String JKEY_CONFIG = "config";
 	
+	private static final String SEMTK_FOREACH = "SEMTK_FOREACH";
+	private static final String JKEY_COLNAME = "colName";
+	private static final String JKEY_PLOTLY_KEY = "plotlyKey";
+	
 	private static final String PREFIX = "SEMTK_TABLE";     // x: "SEMTK_TABLE.col[col_name]"
 	private static final String CMD_COL = "col";
-	
-	String plotSpecJsonStrTemp = null;	// temp string to use while creating a replacement plotSpecJson
-		
+			
 
 	public PlotlyPlotSpec(JSONObject plotSpecJson) throws Exception {
 		super(plotSpecJson);	
@@ -65,39 +69,104 @@ public class PlotlyPlotSpec extends PlotSpec {
 		JSONArray data = (JSONArray) spec.get(JKEY_DATA);
 		if (data == null) throw new Exception("Plotly spec json needs a " + JKEY_DATA + " element");
 
-		this.plotSpecJsonStrTemp = json.toJSONString();  // create a temp string in which to make substitutions (cannot iterate + modify JSON at the same time)
-		walkToApplyTable(data, table);
-		this.json = Utility.getJsonObjectFromString(plotSpecJsonStrTemp);
+		while (walkToApplyTable(null, data, table)) {
+			// repeat until false;
+		}
 	}
 	
 	/**
-	 * Recursively walk json and apply table
+	 * Recursively walk json and apply table.  Make first change only (to avoid concurrent mod).
+	 * Call repeatedly until you get "false"
+	 * 
+	 * Returns: boolean - were any changes made.
 	 */
-	private void walkToApplyTable(Object json, Table table) throws Exception {
+	private boolean walkToApplyTable(Object parent, Object json, Table table) throws Exception {
+		boolean changeFlag = false;
 		if (json instanceof JSONObject) {
-			// walk members
-			JSONObject jObj = (JSONObject) json;
-			for (Object key : jObj.keySet()) {
-				Object member = jObj.get(key);
-				if (member instanceof JSONObject || member instanceof JSONArray) {
-					// if member is more json, then recurse
-					this.walkToApplyTable(member, table);
-				
-				} else if (member instanceof String) {
-					// found a string field: do the work
-					this.applyTableToJsonStringField(jObj, (String)key, table);
+			changeFlag = this.applyTableToObject(parent, (JSONObject) json, table);
+			
+			if (! changeFlag) {
+			
+				// walk members
+				JSONObject jObj = (JSONObject) json;
+				for (Object key : jObj.keySet()) {
+					Object member = jObj.get(key);
+					
+					if (member instanceof JSONObject) {
+						changeFlag = this.walkToApplyTable(json, member, table);
+					
+					} else if (member instanceof JSONArray) {
+						changeFlag = this.walkToApplyTable(json, member, table);
+					
+					} else if (member instanceof String) {
+						// found a string field: do the work
+						changeFlag = this.applyTableToJsonStringField(jObj, (String)key, table);
+					}
+					// return after first change to avoid concurrent operations exception
+					if (changeFlag) break;  
 				}
 			}
-			
+	
 		} else if (json instanceof JSONArray) {
 			// recursively apply to each member of array
 			JSONArray jArr = (JSONArray) json;
 			for (Object o : jArr) {
-				this.walkToApplyTable(o, table);
+				changeFlag = this.walkToApplyTable(json, o, table);
+				// return after first change to avoid concurrent operations exception
+				if (changeFlag) break;
 			}
 		}
+		
+		return changeFlag;
 	}
 	
+	/**
+	 * Apply SEMTK_FOREACH if warranted.
+	 * Adds a copy for each unique value in the column colName
+	 * Each copy also gets plotlyKey: unique  for each unique value in column colName
+	 * @param parent - must be JSONArray
+	 * @param json
+	 * @param table
+	 * @return boolean - were changes made
+	 * @throws Exception
+	 */
+	private boolean applyTableToObject(Object parent, JSONObject json, Table table) throws Exception {
+		JSONObject foreach = (JSONObject) ((JSONObject)json).get(SEMTK_FOREACH);
+		if (foreach == null) return false;
+				
+		String colName = (String) foreach.get(JKEY_COLNAME);
+		String plotlyKey = (String) foreach.get(JKEY_PLOTLY_KEY);
+		
+		// error check incoming json
+		if (! (parent instanceof JSONArray)) throw new Exception ("SEMTK_FOREACH applied to object that is not in a JSONArray");
+		if (colName == null) throw new Exception("SEMTK_FOREACH is missing 'colName' field");
+		
+		// remove this entry from parent array
+		json.remove("SEMTK_FOREACH");
+		((JSONArray) parent).remove(json);
+		JSONArray newArr = new JSONArray();
+		
+		String jsonTemplateStr = json.toJSONString();
+
+		String [] uniqueVals = table.getColumnUniqueValues(colName);
+		for (String uVal : uniqueVals) {
+			Table subTable = table.getSubsetWhereMatches(colName, uVal);
+			JSONObject copyObj = (JSONObject) (new JSONParser()).parse(jsonTemplateStr);
+			if (plotlyKey != null) {
+				copyObj.put(plotlyKey, uVal);
+			}
+			newArr.add(copyObj);
+			// no need to worry about concurrent stuff here.  object is not yet added to Json.
+			
+			while (this.walkToApplyTable(parent, copyObj, subTable))
+				;
+		}
+		// now add everything to parent
+		((JSONArray) parent).addAll(newArr);
+		
+		return true;
+	}
+
 	/**
 	 * Process the given existing string field of a JSON object
 	 * @param jObj the containing JSON object 
@@ -105,10 +174,10 @@ public class PlotlyPlotSpec extends PlotSpec {
 	 * @param table replace the string field with data from this table
 	 * @throws Exception
 	 */
-	private void applyTableToJsonStringField(JSONObject jObj, String key, Table table) throws Exception {
+	private boolean applyTableToJsonStringField(JSONObject jObj, String key, Table table) throws Exception {
 		
 		String s = (String) jObj.get(key);	// e.g. SEMTK_TABLE.col[colA]
-		if (!s.startsWith(PREFIX + ".")) return;
+		if (!s.startsWith(PREFIX + ".")) return false;
 		
 		// TODO if already replaced this field, then return
 				
@@ -119,19 +188,15 @@ public class PlotlyPlotSpec extends PlotSpec {
 			if (colIndex == -1) {
 				throw new Exception("Plot spec contains column which does not exist in table: '" + colName + "'");
 			}
-			ArrayList<String> list = new ArrayList<>(Arrays.asList(table.getColumn(colIndex)));
-			String columnDataStr;
-			if (table.getNumRows() == 0) {
-				columnDataStr = "[]";
-			} else if(NumberUtils.isNumber(table.getCell(0, colName))){
-				columnDataStr = "[" + list.stream().collect(Collectors.joining(", ")) + "]";							// no quotes needed, e.g. [11.1,11.5]
-			}else{
-				columnDataStr = "[" + list.stream().map(t -> "\"" + t + "\"").collect(Collectors.joining(", ")) + "]";  // surround each entry in quotes (e.g. e.g. ["2020-01-24T00:00:00","2020-01-23T00:00:00"])
-			}
-			plotSpecJsonStrTemp = plotSpecJsonStrTemp.replace("\"" + s + "\"", columnDataStr);  	// replace the SEMTK_TABLE instruction with the data
+			JSONArray jArr = new JSONArray();
+			jArr.addAll(Arrays.asList(table.getColumn(colIndex)));
+			jObj.put(key, jArr);
+			return true;
+
 		}else{
 			throw new Exception("Unsupported data specification for plotting: " + s);
 		}
+		
 	}
 	
 	/**
