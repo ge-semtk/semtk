@@ -120,6 +120,11 @@ public class PlotlyPlotSpec extends PlotSpec {
 		return changeFlag;
 	}
 	
+	private boolean applyTableToObject(Object parent, JSONObject json, Table table) throws Exception {
+		return this.applyTableToObjectForeach(parent, json, table);
+		    /// 
+	}
+	
 	/**
 	 * Apply SEMTK_FOREACH if warranted.
 	 * Adds a copy for each unique value in the column colName
@@ -130,7 +135,7 @@ public class PlotlyPlotSpec extends PlotSpec {
 	 * @return boolean - were changes made
 	 * @throws Exception
 	 */
-	private boolean applyTableToObject(Object parent, JSONObject json, Table table) throws Exception {
+	private boolean applyTableToObjectForeach(Object parent, JSONObject json, Table table) throws Exception {
 		JSONObject foreach = (JSONObject) ((JSONObject)json).get(SEMTK_FOREACH);
 		if (foreach == null) return false;
 				
