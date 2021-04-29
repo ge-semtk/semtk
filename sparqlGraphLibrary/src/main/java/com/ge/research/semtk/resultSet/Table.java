@@ -36,6 +36,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.belmont.XSDSupportedType;
 import com.ge.research.semtk.utility.Utility;
 
 /**
@@ -462,6 +463,14 @@ public class Table {
 	
 	public String getColumnType(String columnName){
 		return columnTypes[getColumnIndex(columnName)];
+	}
+	
+	public XSDSupportedType getColumnXSDType(String columnName) {
+		String t = this.getColumnType(columnName);
+		if (t.contains("#")) {
+			t = t.split("#")[1];
+		}
+		return XSDSupportedType.valueOf(t.toUpperCase());
 	}
 	
 	/**

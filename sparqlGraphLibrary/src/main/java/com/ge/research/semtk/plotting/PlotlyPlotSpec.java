@@ -26,6 +26,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import com.ge.research.semtk.belmont.XSDSupportedType;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.utility.Utility;
 
@@ -193,8 +194,23 @@ public class PlotlyPlotSpec extends PlotSpec {
 			if (colIndex == -1) {
 				throw new Exception("Plot spec contains column which does not exist in table: '" + colName + "'");
 			}
+			
 			JSONArray jArr = new JSONArray();
-			jArr.addAll(Arrays.asList(table.getColumn(colIndex)));
+			
+			if (table.getColumnXSDType(colName).isInt()) {
+				for (int r=0; r < table.getNumRows(); r++) {
+					jArr.add(table.getCellAsInt(r, colIndex));
+				}
+			} else if (table.getColumnXSDType(colName).isFloat()) {
+				for (int r=0; r < table.getNumRows(); r++) {
+					jArr.add(table.getCellAsFloat(r, colIndex));
+				}
+			} else  {
+				for (int r=0; r < table.getNumRows(); r++) {
+					jArr.add(table.getCellAsString(r, colIndex));
+				}
+			}
+			
 			jObj.put(key, jArr);
 			return true;
 

@@ -30,7 +30,7 @@ import com.ge.research.semtk.utility.Utility;
 
 public class PlotSpecTest {
 
-	private String tableJsonStr = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"2020-01-24T00:00:00\",\"22.2\",\"33.3\"],[\"2020-01-25T00:00:00\",\"22.5\",\"33.5\"]],\"col_type\":[\"String\",\"String\",\"String\"],\"col_count\":3,\"row_count\":2}";
+	private String tableJsonStr = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"2020-01-24T00:00:00\",\"22.2\",\"33.3\"],[\"2020-01-25T00:00:00\",\"22.5\",\"33.5\"]],\"col_type\":[\"Date\",\"double\",\"double\"],\"col_count\":3,\"row_count\":2}";
 	
 	@SuppressWarnings("unchecked")
 	@Test

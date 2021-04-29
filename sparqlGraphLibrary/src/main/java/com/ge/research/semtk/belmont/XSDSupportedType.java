@@ -226,8 +226,19 @@ public enum XSDSupportedType {
 	}
 	
 	public boolean isFloat(){
-		return (this == FLOAT ||
+		return (this == DECIMAL ||
+				this == FLOAT ||
 				this == DOUBLE);
+	}
+	
+	public boolean isInt(){
+		return (this == INT ||
+				this == INTEGER ||
+				this == NEGATIVEINTEGER ||
+				this == NONNEGATIVEINTEGER ||
+				this == POSITIVEINTEGER ||
+				this == NONPOSISITIVEINTEGER ||
+				this == LONG);
 	}
 	
 	public boolean rangeOperationsAvailable() {
