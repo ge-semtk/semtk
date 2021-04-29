@@ -1,0 +1,27 @@
+{
+	"type": "plotly",
+	"name": "Plotly Chart 1",
+	"spec": 	{  
+		"data": [ 
+			{
+				"SEMTK_FOREACH": {
+					"colName": "?cat",
+					"plotlyKey": "name"
+				},	
+				"type": "scatter",
+				"x": "SEMTK_TABLE.col[colA]",
+				"y": "SEMTK_TABLE.col[colB]",
+				"marker": {
+					"color": "rgb(16, 32, 77)" 
+				}
+			}
+		],
+		"layout": { 
+			"title": "simple example",  
+			"xaxis": {                  
+				"title": "time"         
+			}
+		},
+		"config": { "editable": true }
+	}
+}

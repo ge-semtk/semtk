@@ -31,7 +31,8 @@ import com.ge.research.semtk.utility.Utility;
 public class PlotSpecTest {
 
 	private String tableJsonStr = "{\"col_names\":[\"colA\",\"colB\",\"colC\"],\"rows\":[[\"2020-01-24T00:00:00\",\"22.2\",\"33.3\"],[\"2020-01-25T00:00:00\",\"22.5\",\"33.5\"]],\"col_type\":[\"Date\",\"double\",\"double\"],\"col_count\":3,\"row_count\":2}";
-	
+	private String tableJsonStrForeach = "{\"col_names\":[\"cat\", \"colA\",\"colB\",\"colC\"],\"rows\":[[\"one\", \"2020-01-24T00:00:00\",\"22.2\",\"33.3\"],[\"two\", \"2020-01-25T00:00:00\",\"22.5\",\"33.5\"]],\"col_type\":[\"String\", \"Date\",\"double\",\"double\"],\"col_count\":4,\"row_count\":2}";
+
 	@SuppressWarnings("unchecked")
 	@Test
 	public void test() throws Exception {
@@ -91,6 +92,27 @@ public class PlotSpecTest {
 		assertTrue(resultJson.toJSONString().contains("\"y\":[33.3,33.5]"));
 	}
 	
+	@Test
+	public void testApplyTableForeach() throws Exception {
+
+		// the plot spec
+		JSONObject plotSpecJson = Utility.getResourceAsJson(this, "plotly_foreach.json");
+	
+		// a table
+		Table table = Table.fromJson((JSONObject) new JSONParser().parse(tableJsonStrForeach));
+		
+		PlotlyPlotSpec spec = new PlotlyPlotSpec(plotSpecJson);
+		spec.applyTable(table);
+		
+		JSONObject resultJson = spec.toJson();	
+		System.out.println(resultJson.toJSONString());
+		assertFalse(resultJson.toJSONString().contains("SEMTK_TABLE"));
+		assertFalse(resultJson.toJSONString().contains("SEMTK_FOREACH"));
+		assertTrue(resultJson.toJSONString().contains("\"name\":\"one\""));
+		assertTrue(resultJson.toJSONString().contains("\"y\":[22.2]"));
+		assertTrue(resultJson.toJSONString().contains("\"name\":\"two\""));
+		assertTrue(resultJson.toJSONString().contains("\"y\":[22.5]"));
+	}
 	
 	@Test
 	public void testApplyTableError() throws Exception {
