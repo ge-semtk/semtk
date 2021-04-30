@@ -432,7 +432,8 @@
     	var unlinkedTargetNames = ["New " + rangeStr + ""];
 
     	for (var i=0; i < targetSNodes.length; i++) {
-    		if (nItem.getSNodes().indexOf(targetSNodes[i]) == -1) {
+            // TODO: this would be a good place to prevent circularity
+    		if (targetSNodes[i] != snode && nItem.getSNodes().indexOf(targetSNodes[i]) == -1) {
     			unlinkedTargetNames.push(targetSNodes[i].getBindingOrSparqlID());
     			unlinkedTargetSNodes.push(targetSNodes[i]);
     		}
