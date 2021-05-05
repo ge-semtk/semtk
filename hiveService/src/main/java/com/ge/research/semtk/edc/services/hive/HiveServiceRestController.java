@@ -77,16 +77,15 @@ public class HiveServiceRestController {
 	
 	/**
 	 * Execute arbitrary query in Hive.  
-	 * Returns a job id if running in asynchronous mode, or query results if running in synchronous mode.
+	 * Returns a job id (running in asynchronous mode)
 	 */
 	@CrossOrigin
 	@RequestMapping(value="/queryHive", method= RequestMethod.POST)
 	public JSONObject queryHive(@RequestBody DatabaseQueryRequest requestBody, @RequestHeader HttpHeaders headers){
-		long startTimeMillis = System.currentTimeMillis();
 		HeadersManager.setHeaders(headers); // add security to async job
 		String query = requestBody.query;
 		JSONObject ret = runQuery(requestBody, query);
-		LocalLogger.logToStdOut(SERVICE_NAME + " queryHive completed in " + Utility.getSecondsSince(startTimeMillis) + " sec for query " + query);
+		LocalLogger.logToStdOut(SERVICE_NAME + " queryHive initiated asynchronous query " + query);
 		return ret;
 	}
 	
