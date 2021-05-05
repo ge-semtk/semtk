@@ -49,15 +49,17 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
+import org.apache.http.conn.HttpClientConnectionManager;
 import org.apache.http.impl.auth.DigestScheme;
 import org.apache.http.impl.client.BasicAuthCache;
 import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.util.EntityUtils;
@@ -67,16 +69,12 @@ import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.auth.AuthorizationManager;
-import com.ge.research.semtk.belmont.ValueConstraint;
-import com.ge.research.semtk.belmont.XSDSupportedType;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.sparqlX.FusekiSparqlEndpointInterface;
-import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -134,6 +132,14 @@ public abstract class SparqlEndpointInterface {
 	
 	protected int retries = 0;
 		
+	private static HttpClientConnectionManager manager = buildConnectionManager();
+	
+	private static HttpClientConnectionManager buildConnectionManager() {
+		PoolingHttpClientConnectionManager ret =  new PoolingHttpClientConnectionManager();
+		ret.setDefaultMaxPerRoute(10);
+		return ret;
+	}
+	
 	/**
 	 * Constructor
 	 * @param serverAndPort e.g. "http://localhost:2420"
@@ -708,7 +714,7 @@ public abstract class SparqlEndpointInterface {
 		
         // get client, adding userName/password credentials if any exist
 		HttpHost targetHost = this.buildHttpHost();
-        CloseableHttpClient httpclient = this.buildHttpClient(targetHost.getSchemeName());
+        HttpClient httpclient = this.buildHttpClient(targetHost.getSchemeName());
 		// get context with digest auth if there is a userName, else null context
 		BasicHttpContext localcontext = this.buildHttpContext(targetHost);
      
@@ -742,9 +748,8 @@ public abstract class SparqlEndpointInterface {
 			// parse response
 			return this.parseResponse(resultType, responseTxt);
 		} finally {
-			httpclient.close();
 			if (entity != null) {
-				entity.getContent().close();
+				EntityUtils.consume(entity);
 			}
 		}
 	}
@@ -828,13 +833,14 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	/**
-	 * Get an CloseableHttpClient, handling credentials and HTTPS if needed
+	 * Get an HttpClient, handling credentials and HTTPS if needed
 	 * NOTE: for HTTPS connections, does not validate certificate chain.
 	 * @schemeName http or https
 	 */
-	protected CloseableHttpClient buildHttpClient(String schemeName) throws Exception {
+	protected HttpClient buildHttpClient(String schemeName) throws Exception {
 		
 		HttpClientBuilder clientBuilder = HttpClientBuilder.create();
+		clientBuilder.setConnectionManager(SparqlEndpointInterface.manager);
 		
 		// add userName and password, if any
 		if (this.isAuth()) {
@@ -1098,7 +1104,7 @@ public abstract class SparqlEndpointInterface {
 		}
 		
 		HttpHost targetHost = this.buildHttpHost();
-		CloseableHttpClient httpclient = this.buildHttpClient(targetHost.getSchemeName());
+		HttpClient httpclient = this.buildHttpClient(targetHost.getSchemeName());
 		BasicHttpContext localcontext = this.buildHttpContext(targetHost);
 
 		LocalLogger.logToStdErr(queryAndUrl);
@@ -1118,8 +1124,7 @@ public abstract class SparqlEndpointInterface {
 		try {
 			return this.parseResponse(resultType, responseTxt);
 		} finally {
-			httpclient.close();
-			entity.getContent().close();
+			EntityUtils.consume(entity);
 		}
 	}
 	

@@ -63,7 +63,8 @@ public class PerformanceTest {
 		try {
 			
 			//addSimpleRows(10, 10000); 
-			addBatteryDescriptions(1000, 500000);  
+			//addBatteryDescriptions(1000, 500000);  
+			addBatteryDescriptions(40000, 75000);  
 			//addBatteryDescriptionsVaryingThreadsAndSize(0);
 			//addSimpleBiggerRows(10, 50000);
 			
@@ -234,7 +235,7 @@ public class PerformanceTest {
 				Dataset ds1 = new CSVDataset(content1.toString(), true);
 				DataLoader dl1 = new DataLoader(sgJson1, ds1, "dba", "dba");
 				startTask("addBatteryDescriptions load simple, rows, " + rows_per_pass + ",total rows," + total_rows);
-				dl1.importData(NO_PRECHECK);
+				dl1.importData(PRECHECK);
 				lastSec[0] = endTask();
 			}
 			
@@ -244,7 +245,7 @@ public class PerformanceTest {
 				DataLoader dl2 = new DataLoader(sgJson2, ds2, "dba", "dba");
 				dl2.setLogPerformance(LOG_QUERY_PERFORMANCE);
 				startTask("addBatteryDescriptions load lookup class, rows," + rows_per_pass/2 + ",total rows," + total_rows);
-				dl2.importData(NO_PRECHECK);
+				dl2.importData(PRECHECK);
 				lastSec[1] = endTask();
 			}
 			
@@ -254,7 +255,7 @@ public class PerformanceTest {
 				DataLoader dl3 = new DataLoader(sgJson3, ds3, "dba", "dba");
 				dl3.setLogPerformance(LOG_QUERY_PERFORMANCE);
 				startTask("addBatteryDescriptions load lookup superclass, rows," + rows_per_pass /2 + ",total rows," + total_rows);
-				dl3.importData(NO_PRECHECK);
+				dl3.importData(PRECHECK);
 				lastSec[2] = endTask();
 			}
 			

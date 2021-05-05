@@ -23,16 +23,14 @@ import java.util.regex.Pattern;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.auth.AuthorizationException;
-import com.ge.research.semtk.auth.AuthorizationManager;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 /**
  * Interface to Virtuoso SPARQL endpoint
@@ -144,7 +142,7 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 		this.authorizeUpload();
 		
 		HttpHost targetHost = this.buildHttpHost();
-        CloseableHttpClient httpclient = this.buildHttpClient(targetHost.getSchemeName());
+        HttpClient httpclient = this.buildHttpClient(targetHost.getSchemeName());
 		BasicHttpContext localcontext = this.buildHttpContext(targetHost);
 		HttpPost httppost = new HttpPost(this.getUploadURL());
 		
