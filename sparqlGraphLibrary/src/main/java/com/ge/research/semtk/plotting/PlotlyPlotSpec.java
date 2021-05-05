@@ -49,8 +49,10 @@ public class PlotlyPlotSpec extends PlotSpec {
 	
 	private static final String SEMTK_FOREACH = "SEMTK_FOREACH";
 	private static final String JKEY_COLNAME = "colName";
-	private static final String JKEY_PLOTLY_KEY = "plotlyKey";
-	
+	private static final String JKEY_FILL_WITH_VALUE = "fillWithValue";
+	private static final String JKEY_FILL_BY_VALUE = "fillByValue";
+	private static final String SEMTK_TRACE = "SEMTK_TRACE_";     
+
 	private static final String PREFIX = "SEMTK_TABLE";     // x: "SEMTK_TABLE.col[col_name]"
 	private static final String CMD_COL = "col";
 			
@@ -129,19 +131,22 @@ public class PlotlyPlotSpec extends PlotSpec {
 	/**
 	 * Apply SEMTK_FOREACH if warranted.
 	 * Adds a copy for each unique value in the column colName
-	 * Each copy also gets plotlyKey: unique  for each unique value in column colName
+	 * Each copy also gets fillWithValue: unique  for each unique value in column colName
 	 * @param parent - must be JSONArray
 	 * @param json
 	 * @param table
 	 * @return boolean - were changes made
 	 * @throws Exception
 	 */
+	@SuppressWarnings("unchecked")
 	private boolean applyTableToObjectForeach(Object parent, JSONObject json, Table table) throws Exception {
 		JSONObject foreach = (JSONObject) ((JSONObject)json).get(SEMTK_FOREACH);
 		if (foreach == null) return false;
 				
 		String colName = (String) foreach.get(JKEY_COLNAME);
-		String plotlyKey = (String) foreach.get(JKEY_PLOTLY_KEY);
+		String fillWithValue = (String) foreach.get(JKEY_FILL_WITH_VALUE);
+		JSONObject fillByVal = (JSONObject) foreach.get(JKEY_FILL_BY_VALUE);
+		int semtkTrace = 1;
 		
 		// error check incoming json
 		if (! (parent instanceof JSONArray)) throw new Exception ("SEMTK_FOREACH applied to object that is not in a JSONArray");
@@ -156,17 +161,37 @@ public class PlotlyPlotSpec extends PlotSpec {
 
 		String [] uniqueVals = table.getColumnUniqueValues(colName);
 		for (String uVal : uniqueVals) {
+		
 			Table subTable = table.getSubsetWhereMatches(colName, uVal);
 			JSONObject copyObj = (JSONObject) (new JSONParser()).parse(jsonTemplateStr);
-			if (plotlyKey != null) {
-				copyObj.put(plotlyKey, uVal);
-			}
 			newArr.add(copyObj);
-			// no need to worry about concurrent stuff here.  object is not yet added to Json.
 			
+			// fill fillWithValue
+			if (fillWithValue != null) {
+				copyObj.put(fillWithValue, uVal);
+			}
+			
+			// fillByVal
+			if (fillByVal != null) {
+				JSONObject addMe = (JSONObject) fillByVal.get(uVal);
+				// if no specific trace was found, try next generic one
+				if (addMe == null) {
+					String traceKey = SEMTK_TRACE + String.valueOf(semtkTrace++);
+					addMe = (JSONObject) fillByVal.get(traceKey);
+				}
+				// if found: add
+				if (addMe != null) {
+					for (Object key : addMe.keySet()) {
+						copyObj.put(key, addMe.get(key));
+					}
+				} 
+			}
+			
+			// no need to worry about concurrent stuff here.  object is not yet added to Json.
 			while (this.walkToApplyTable(parent, copyObj, subTable))
 				;
 		}
+		
 		// now add everything to parent
 		((JSONArray) parent).addAll(newArr);
 		
@@ -180,6 +205,7 @@ public class PlotlyPlotSpec extends PlotSpec {
 	 * @param table replace the string field with data from this table
 	 * @throws Exception
 	 */
+	@SuppressWarnings("unchecked")
 	private boolean applyTableToJsonStringField(JSONObject jObj, String key, Table table) throws Exception {
 		
 		String s = (String) jObj.get(key);	// e.g. SEMTK_TABLE.col[colA]

@@ -6,7 +6,7 @@
 			{
 				"SEMTK_FOREACH": {
 					"colName": "?cat",
-					"plotlyKey": "name"
+					"fillWithValue": "name"
 				},	
 				"type": "scatter",
 				"x": "SEMTK_TABLE.col[colA]",
