@@ -48,6 +48,8 @@ public class NodeGroupTest_IT {
 	private static String cellItemURI = "http://kdl.ge.com/batterydemo#cell";
 	private static String nameItemURI = "http://kdl.ge.com/batterydemo#name";
 	private static String badURI = "http://kdl.ge.com/batterydemo#bad";
+	private static String badLocal = "bad";
+
 	
 	@BeforeClass
 	public static void setup() throws Exception {
@@ -339,7 +341,7 @@ public class NodeGroupTest_IT {
 		
 		Node batteryNode = nodegroup.addNode(batteryURI, oInfo);
 
-		// targets are model-correct, range wrong: warn and fix 
+		// 5a. targets are model-correct, range wrong: warn and fix 
 		Node cell1 = nodegroup.addClassFirstPath(cellNodeURI, oInfo);
 		Node cell2 = nodegroup.addClassFirstPath(cellNodeURI, oInfo);
 		NodeItem cellItem = batteryNode.getNodeItem(cellItemURI);
@@ -349,10 +351,10 @@ public class NodeGroupTest_IT {
 				null,
 				new String [] {} , 
 				new NodeGroupItemStr [] {}, 
-				new String [] {badURI});
+				new String [] {badLocal});
 		assertTrue("Invalid node item range connected to model-valid nodes did not get its range corrected", batteryNode.getNodeItem(cellItemURI) != null);
 
-		// Delete the target connections and results should be the same
+		// 5b. Delete the target connections and results should be the same
 		nodegroup.deleteNode(cell1, false);
 		nodegroup.deleteNode(cell2, false);
 		cellItem.changeUriValueType(badURI);
@@ -361,10 +363,10 @@ public class NodeGroupTest_IT {
 				null,
 				new String [] {} , 
 				new NodeGroupItemStr [] {}, 
-				new String [] {badURI});
+				new String [] {badLocal});
 		assertTrue("Invalid node item range un-connected did not get its range corrected", batteryNode.getNodeItem(cellItemURI) != null);
 		
-		// connect to a bad node colorNode, and a good node cell1, with bad range
+		// 5c. connect to a bad node colorNode, and a good node cell1, with bad range
 		Node colorNode = nodegroup.addNode(colorURI, oInfo);
 		batteryNode.setConnection(colorNode, cellItemURI);  // bad target
 		cell1 = nodegroup.addNode(cellNodeURI, oInfo);
@@ -373,7 +375,7 @@ public class NodeGroupTest_IT {
 		
 		inflateAndValidate(nodegroup, 
 				null,
-				new String [] {badURI} , 
+				new String [] {badLocal} , 
 				new NodeGroupItemStr [] {new NodeGroupItemStr(batteryNode, cellItem, null), new NodeGroupItemStr(batteryNode, cellItem, colorNode), new NodeGroupItemStr(batteryNode, cellItem, cell1)}, 
 				new String [] {});
 		

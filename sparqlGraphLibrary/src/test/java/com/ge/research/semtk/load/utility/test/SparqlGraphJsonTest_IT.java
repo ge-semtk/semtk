@@ -91,12 +91,12 @@ public class SparqlGraphJsonTest_IT {
 		
 		String files[] = {	
 				"src/test/resources/sampleBatteryInflateBadPropURI.json",
-				"src/test/resources/sampleBatteryInflateBadPropRange.json",
+				// "src/test/resources/sampleBatteryInflateBadPropRange.json",  // This is now corrected with a warning
 				"src/test/resources/sampleBatteryInflateBadNodeURI.json"
 		};
 		String msg[] = {	
 				"#cellIdBad",
-				"#stringBad",
+				// "#stringBad",     // This is now corrected with a warning
 				"#ColorBad"
 		};
 		

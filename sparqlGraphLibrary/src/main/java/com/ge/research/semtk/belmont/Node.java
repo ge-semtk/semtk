@@ -302,7 +302,6 @@ public class Node extends Returnable {
 				NodeItem nodeItem = inputNItemHash.get(ontPropURI);
 				String nRangeStr = nodeItem.getUriValueType();
 				String nRangeAbbr = nodeItem.getValueType();
-
 			    OntologyClass nRangeClass = oInfo.getClass(nRangeStr);
 				String correctRangeStr = ontProp.getRangeStr();
 				String correctRangeAbbrev = ontProp.getRangeStr(true);
