@@ -3271,7 +3271,7 @@ public class NodeGroup {
 			else {
 
 				// create a new belmont property object and add it to the list.
-				PropertyItem p = new PropertyItem(propNameLocal, XSDSupportedType.getMatchingValue(propRangeNameLocal), propRangeNameFull, propNameFull);
+				PropertyItem p = new PropertyItem(XSDSupportedType.getMatchingValue(propRangeNameLocal), propRangeNameFull, propNameFull);
 				belprops.add(p);
 			}
 		}
