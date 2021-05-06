@@ -400,7 +400,9 @@ public class ImportSpecHandler {
 					node.setValueConstraint(this.buildBestConstraint(node, sample));  
 				} else {
 					PropertyItem propItem = node.getPropertyByURIRelation(map.getPropURI());
-					
+					if (propItem == null) {
+						throw new Exception("Corrupt nodegroup: Can't find " + map.getPropURI() + " in node " + node.getBindingOrSparqlID());
+					}
 					// make sure there's a sparql ID
 					if (propItem.getSparqlID().equals("")) {
 						String sparqlID = BelmontUtil.generateSparqlID(propItem.getKeyName(), importNg.getAllVariableNames());
