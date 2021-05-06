@@ -44,7 +44,6 @@ public class NodeItem {
 	private ArrayList<Boolean> deletionFlags = new ArrayList<Boolean>();
 	private ArrayList<String> qualifiers = new ArrayList<String>();
 
-	private String keyName = "";
 	private String valueType = "";
 	private String valueTypeURI = "";
 	private String connectedBy = "";
@@ -58,7 +57,6 @@ public class NodeItem {
 	 * @param UriValueType (e.g. http://research.ge.com/print/testconfig#ScreenPrinting)
 	 */
 	public NodeItem(String uri, String valueType, String UriValueType) {
-		this.keyName = (new OntologyName(uri)).getLocalName();
 		this.uriConnectBy = uri;
 		this.valueType = valueType;
 		this.valueTypeURI = UriValueType;
@@ -66,7 +64,6 @@ public class NodeItem {
 	
 	public NodeItem(JSONObject next, NodeGroup ng) throws Exception{
 		// get basic values:
-		this.keyName = next.get("KeyName").toString();
 		this.valueTypeURI = next.get("UriValueType").toString();
 		this.valueType = next.get("ValueType").toString();
 		this.connectedBy = next.get("ConnectBy").toString();
@@ -186,7 +183,6 @@ public class NodeItem {
 		ret.put("OptionalMinus", optionalMinus);
 		ret.put("Qualifiers", qualifiers);
 		ret.put("DeletionMarkers", this.deletionFlags);
-		ret.put("KeyName", this.keyName);
 		ret.put("ValueType", this.valueType);
 		ret.put("UriValueType", this.valueTypeURI);
 		ret.put("ConnectBy", this.connectedBy);
@@ -209,7 +205,7 @@ public class NodeItem {
 	}
 	
 	public String getKeyName() {
-		return this.keyName;
+		return (new OntologyName(this.uriConnectBy)).getLocalName();
 	}
 	
 	public boolean isUsed() {
@@ -234,7 +230,6 @@ public class NodeItem {
 	public void changeUriConnect(String connectionURI) {
 		OntologyName name = new OntologyName(connectionURI);
 		this.uriConnectBy = name.getFullName();
-		this.keyName = name.getLocalName();
 	}
 
 	public void pushNode(Node curr) {
@@ -407,7 +402,7 @@ public class NodeItem {
 	}
 
 	/**
-	 * Merge everything except keyName, connectedBy, uriConnectBy
+	 * Merge everything except connectedBy, uriConnectBy
 	 * @param nItem
 	 * @throws Exception
 	 */
@@ -447,7 +442,6 @@ public class NodeItem {
 			nItem.connected = nItem.nodes.size() > 0;
 		}
 
-		//keyName 
 		this.valueType = nItem.valueType;
 		this.valueTypeURI = nItem.valueTypeURI;
 		//connectedBy

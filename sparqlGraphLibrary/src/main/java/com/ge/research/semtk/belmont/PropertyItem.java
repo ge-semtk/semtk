@@ -31,7 +31,6 @@ public class PropertyItem extends Returnable {
 	public static final int OPT_MINUS_OPTIONAL = 1;
 	public static final int OPT_MINUS_MINUS = 2;
 	
-	private String keyName = null;
 	private XSDSupportedType valueType = null;
 	private String valueTypeURI = null;  
 	private String uriRelationship = null; // obsolete, should always be this.valueType.getFullName()
@@ -49,24 +48,32 @@ public class PropertyItem extends Returnable {
 	 * @param valueTypeURI (e.g. http://www.w3.org/2001/XMLSchema#string)
 	 * @param uriRelationship (e.g. http://research.ge.com/print/testconfig#material)
 	 */
-	public PropertyItem(String nome, XSDSupportedType valueType, String valueTypeURI, String uriRelationship){
-		this.keyName = nome;
+	@Deprecated
+	public PropertyItem(String nomeDEPRECATED, XSDSupportedType valueType, String valueTypeURI, String uriRelationship){
 		this.valueType = valueType;
 		this.valueTypeURI = valueTypeURI;   
 		this.uriRelationship = uriRelationship;
 	}
-	
-	public PropertyItem(String nome, String valueTypeStr, String valueTypeURI, String uriRelationship) throws Exception {
-		this(nome, XSDSupportedType.getMatchingValue(valueTypeStr), valueTypeURI, uriRelationship);
+	@Deprecated
+	public PropertyItem(String nomeDEPRECATED, String valueTypeStr, String valueTypeURI, String uriRelationship) throws Exception {
+		this(nomeDEPRECATED, XSDSupportedType.getMatchingValue(valueTypeStr), valueTypeURI, uriRelationship);
 	}
 
+	public PropertyItem(XSDSupportedType valueType, String valueTypeURI, String uriRelationship){
+		this.valueType = valueType;
+		this.valueTypeURI = valueTypeURI;   
+		this.uriRelationship = uriRelationship;
+	}
 		
+	public PropertyItem(String valueTypeStr, String valueTypeURI, String uriRelationship) throws Exception {
+		this(XSDSupportedType.getMatchingValue(valueTypeStr), valueTypeURI, uriRelationship);
+	}
+	
 	public PropertyItem(JSONObject jObj) throws Exception {
 		// keeps track of the properties who are in the domain of a given node.
 		
 		this.fromReturnableJson(jObj);
 		
-		this.keyName = jObj.get("KeyName").toString();
 		
 		String typeStr = (String) (jObj.get("ValueType"));
 		try {
@@ -112,7 +119,6 @@ public class PropertyItem extends Returnable {
 
 		JSONObject ret = new JSONObject();
 		this.addReturnableJson(ret);
-		ret.put("KeyName", this.keyName);		
 		ret.put("ValueType", this.valueType.getSimpleName());
 		ret.put("relationship", this.valueTypeURI);
 		ret.put("UriRelationship", this.uriRelationship);
@@ -144,7 +150,7 @@ public class PropertyItem extends Returnable {
 	}
 	
 	public String getKeyName() {
-		return this.keyName;
+		return new OntologyName(uriRelationship).getLocalName();
 	}
 	
 	public String getUriRelationship() {
@@ -153,7 +159,6 @@ public class PropertyItem extends Returnable {
 	
 	public void setUriRelationship(String uriRelationship) {
 		this.uriRelationship = uriRelationship;
-		this.keyName = new OntologyName(uriRelationship).getLocalName();
 	}
 
 

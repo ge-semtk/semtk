@@ -339,7 +339,6 @@ var NodeItem = function(uri, val, uriVal, jObj, nodeGroup) { // used for
 							// represented by this NodeItem.
 		this.OptionalMinus = [];
         this.Qualifiers = [];
-		this.KeyName = new OntologyName(uri).getLocalName(); // the name used to identify this node item
 		this.valueType = val; // the type given for the linked (linkable?) node
 
 		this.UriValueType = uriVal; // full name of val
@@ -368,7 +367,6 @@ NodeItem.prototype = {
 			OptionalMinus : [],
             Qualifiers : [],
 			DeletionMarkers : [],
-			KeyName : this.KeyName,
 			ValueType : this.valueType,
 			UriValueType : this.UriValueType,
 			ConnectBy : this.ConnectBy,
@@ -453,7 +451,6 @@ NodeItem.prototype = {
 			}
 		}
 
-		this.KeyName = jObj.KeyName;
 		this.valueType = jObj.ValueType;
 		this.UriValueType = jObj.UriValueType;
 		this.ConnectBy = jObj.ConnectBy;
@@ -466,7 +463,7 @@ NodeItem.prototype = {
      */
     merge : function(other, target) {
         var i = other.SNodes.indexOf(target);
-        if (i == -1) throw "Can't find connection to " + target.getSparqlID() + " in " + this.KeyName;
+        if (i == -1) throw "Can't find connection to " + target.getSparqlID() + " in " + this.getKeyName();
 
         this.SNodes.push(target);
 		this.OptionalMinus.push(other.OptionalMinus[i]);
@@ -485,7 +482,7 @@ NodeItem.prototype = {
 	},
 	// set values used by the NodeItem.
 	setKeyName : function(strName) {
-		this.KeyName = strName;
+		// Deprecated
 	},
 	setValueType : function(strValType) {
 		this.valueType = strValType;
@@ -598,7 +595,7 @@ NodeItem.prototype = {
 
 	// get values used by the NodeItem
 	getKeyName : function() {
-		return this.KeyName;
+		return new OntologyName(this.UriConnectBy).getLocalName();
 	},
 	getValueType : function() {
 		return this.valueType;
@@ -673,7 +670,6 @@ var PropertyItem = function(keyname, valType, valueTypeURI, UriRelationship, jOb
 	if (jObj) {
 		this.fromJson(jObj);
 	} else {
-		this.KeyName = keyname; // the name used to identify the property
 		this.valueType = valType; // the type of the value associated with
 								// property in the ontology.
 		this.valueTypeURI = valueTypeURI;
@@ -702,7 +698,6 @@ PropertyItem.prototype = {
 	toJson : function() {
 		// return a JSON object of things needed to serialize
 		var ret = {
-			KeyName : this.KeyName,
 			ValueType : this.valueType,
 			relationship : this.valueTypeURI,    // json field is horribly misnamed
 			UriRelationship : this.UriRelationship,
@@ -724,7 +719,6 @@ PropertyItem.prototype = {
 	},
 	fromJson : function(jObj) {
 		// presumes SparqlID's in jObj are already reconciled with the nodeGroup
-		this.KeyName = jObj.KeyName;
 		this.valueType = jObj.ValueType;
 		this.valueTypeURI = jObj.relationship;  // JSON field is horribly misnamed
 		this.UriRelationship = jObj.UriRelationship;
@@ -781,7 +775,7 @@ PropertyItem.prototype = {
 	},
 	// set the values of items in the propertyItem
 	setKeyName : function(keyname) {
-		this.KeyName = keyname;
+		// deprecated
 	},
 	// set the insertion value. really, we should check the correct value type as we go.
 	addInstanceValue : function(inval){
@@ -894,7 +888,7 @@ PropertyItem.prototype = {
 
 	getKeyName : function() {
 		// return the name of the property
-		return this.KeyName;
+		return new OntologyName(this.UriRelationship).getLocalName();;
 	},
     getValueTypeURI : function() {
         return this.valueTypeURI;
