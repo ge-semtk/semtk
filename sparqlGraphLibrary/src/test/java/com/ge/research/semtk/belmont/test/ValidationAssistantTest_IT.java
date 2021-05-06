@@ -57,7 +57,7 @@ public class ValidationAssistantTest_IT {
 	@Test
 	public void test() throws Exception {
 		// animal should match itself
-		NodeGroup ng = TestGraph.getNodeGroup("src/test/resources/animalQuery.json");
+		NodeGroup ng = TestGraph.getNodeGroupFromResource(this, "/animalQuery.json");
 		Node node = ng.getNodeBySparqlID("?Animal");
 		ArrayList<String> suggestions = ValidationAssistant.suggestNodeClass(oInfo, ng, new NodeGroupItemStr(node));
 		String expect = node.getUri();
