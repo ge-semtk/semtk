@@ -195,6 +195,10 @@ define([	// properly require.config'ed
 					return this.propItem;
 				},
 
+                setPropItem : function (p) {
+					this.propItem = p;
+				},
+
 				/**
 				 * @description Get the MappingItems for this ImportMapping
 				 * @returns {MappingItem[]} ordered list of items

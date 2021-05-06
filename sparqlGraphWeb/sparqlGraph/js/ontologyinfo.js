@@ -487,7 +487,7 @@ OntologyInfo.prototype = {
 		return ret;
 	},
 
-	getInheritedPropertyByKeyname(ontClass, propName) {
+	getInheritedPropertyByKeyname : function(ontClass, propName) {
 		var props = this.getInheritedProperties(ontClass);
 		for (var i=0; i < props.length; i++) {
 			if (props[i].getNameStr(true) == propName) {

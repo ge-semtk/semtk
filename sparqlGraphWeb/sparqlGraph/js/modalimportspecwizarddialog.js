@@ -66,10 +66,7 @@ define([	// properly require.config'ed
                 // only submit if something useful is filled in
                 if (this.actionSelect.value == "Build from nodegroup" || this.lookupModeSelect.disabled == false) {
 
-                    var successCallback = function(sgJsonJson) {
-                        // wrangle return into an ImportSpec
-                        var sgjson = new SparqlGraphJson();
-                        sgjson.fromJson(sgJsonJson);
+                    var successCallback = function(sgjson) {
                         this.iSpecJsonCallback(sgjson.getImportSpecJson());
                     }.bind(this);
 

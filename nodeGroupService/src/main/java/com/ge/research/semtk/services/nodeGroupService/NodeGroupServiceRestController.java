@@ -17,6 +17,8 @@
 
 package com.ge.research.semtk.services.nodeGroupService;
 
+import static org.junit.Assert.assertArrayEquals;
+
 import java.util.ArrayList;
 
 import javax.annotation.PostConstruct;
@@ -865,14 +867,17 @@ public class NodeGroupServiceRestController {
 		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = new SimpleResultSet(false);
 		try {
-			SparqlConnection conn = ngRequest.buildConnection();
+			SparqlGraphJson sgjson = ngRequest.buildSparqlGraphJson();
+			SparqlConnection conn = sgjson.getSparqlConn();
 			OntologyInfo oInfo = this.retrieveOInfo(conn);
-			NodeGroup ng = ngRequest.buildNodeGroup();
+			NodeGroup ng = sgjson.getNodeGroup();
+			ImportSpec importSpec = sgjson.getImportSpec();
 			ArrayList<String> modelErrorMessages = new ArrayList<String>();
 			ArrayList<NodeGroupItemStr> invalidNodeGroupItems = new ArrayList<NodeGroupItemStr>();
+			ArrayList<String> warnings = new ArrayList<String>();
 			
 			// do the work
-			ng.inflateAndValidate(oInfo, modelErrorMessages, invalidNodeGroupItems);
+			ng.inflateAndValidate(oInfo, importSpec, modelErrorMessages, invalidNodeGroupItems, warnings);
 			
 			// translate invalid items
 			String invalidItemStrings[] = new String[invalidNodeGroupItems.size()];
@@ -884,6 +889,7 @@ public class NodeGroupServiceRestController {
 			retval.addResult("nodegroup", ng.toJson());
 			retval.addResult("modelErrorMessages", modelErrorMessages.toArray(new String[modelErrorMessages.size()]));
 			retval.addResult("invalidItemStrings", invalidItemStrings);
+			retval.addResult("warnings", warnings.toArray(new String[warnings.size()]));
 			retval.setSuccess(true);
 		}
 		catch(Exception e){
@@ -895,6 +901,34 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 	
+	@ApiOperation(
+			value="Suggest a valid class URI for a node",
+			notes="returns classList = array of class URI's sorted from best to worst match"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/suggestNodeClass", method=RequestMethod.POST)
+	public JSONObject suggestNodeClass(@RequestBody NodegroupItemStrRequest request, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+		try {
+			OntologyInfo oInfo = this.retrieveOInfo(request.buildConnection());
+			NodeGroup ng = request.buildNodeGroup();
+			NodeGroupItemStr itemStr = new NodeGroupItemStr(request.getItemStr(), ng);
+			if (itemStr.getType() != Node.class)
+				throw new Exception("Invalid itemStr param.  Expecting a Node URI");
+				
+			ArrayList<String> classList = ValidationAssistant.suggestNodeClass(oInfo, ng, itemStr);
+			retval.addResult("classList", classList.toArray(new String[0]));
+			retval.setSuccess(true);
+		}
+		catch(Exception e){
+			retval.addRationaleMessage(SERVICE_NAME, "suggestNodeClass", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+	
+		return retval.toJson();		
+	}
 	
 	@ApiOperation(
 			value="Add a sample plot to a nodegroup"
@@ -938,7 +972,86 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();	
 	}
 
-	
+	@ApiOperation(
+			value="change the domain or range of a nodegroup element"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/changeItemURI", method=RequestMethod.POST)
+	public JSONObject  changeItemURI(@RequestBody NodeGroupItemUriRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+			
+			// get things once in the right order
+			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
+			ImportSpec  importSpec = sgJson.getImportSpec();
+			SparqlConnection conn = sgJson.getSparqlConn();
+			OntologyInfo oInfo = this.retrieveOInfo(conn);
+			NodeGroup nodegroup = sgJson.getNodeGroupNoInflateNorValidate(oInfo);
+			NodeGroupItemStr itemStr = new NodeGroupItemStr(requestBody.getItemStr(), nodegroup);
+			String newURI = requestBody.getNewURI();
+			boolean deleteFlag = ! newURI.contains("#") && newURI.contains("<") && newURI.toLowerCase().contains("delete");
+			
+			if (requestBody.isDomain()) {
+				// do the work for DOMAIN
+				if (itemStr.getType() == Node.class) {
+					nodegroup.changeItemDomain(itemStr.getSnode(), newURI);
+					importSpec.changeNodeDomain(itemStr.getSnode().getSparqlID(), newURI);
+					
+				} else if (itemStr.getType() == PropertyItem.class) {
+					Node node = itemStr.getSnode();
+					PropertyItem prop = itemStr.getpItem();
+					if (deleteFlag) {
+						nodegroup.deleteProperty(node, prop);
+						importSpec.deleteProperty(node.getSparqlID(), prop.getUriRelationship());
+					} else {
+						nodegroup.changeItemDomain(node, prop, newURI);
+						importSpec.changePropertyDomain(node.getSparqlID(), prop.getUriRelationship(), newURI);
+					}
+				} else {
+					// nodeItem
+					Node node = itemStr.getSnode();
+					NodeItem nItem = itemStr.getnItem();
+					Node target = itemStr.getTarget();
+					
+					if (deleteFlag) {
+						nodegroup.deleteNodeItem(node, nItem);
+						// no effect on importSpec
+					} else {
+						nodegroup.changeItemDomain(node, nItem, target, newURI);
+						// no effect on importSpec
+					}
+				}
+			} else {
+				// do the work for RANGE
+				if (itemStr.getType() == Node.class) {
+					throw new Exception("Can not change Range of a class node");
+					
+				} else if (itemStr.getType() == PropertyItem.class) {
+					nodegroup.changeItemRange(itemStr.getpItem(), newURI);
+					// no effect on importSpec
+				} else {
+					// nodeItem
+					nodegroup.changeItemRange(itemStr.getnItem(), newURI);
+					// no effect on importSpec
+				}
+			}
+			
+			// return
+			sgJson.setNodeGroup(nodegroup);
+			sgJson.setImportSpec(importSpec);
+			retval.addResult(RET_KEY_NODEGROUP, sgJson.toJson());
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, "changeItemURI", e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
 	/**
 	 * Retrieve oInfo.
 	 * @param conn

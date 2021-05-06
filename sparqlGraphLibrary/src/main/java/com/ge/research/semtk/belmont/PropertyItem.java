@@ -24,15 +24,16 @@ import java.util.Iterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.ontologyTools.OntologyName;
+
 public class PropertyItem extends Returnable {
 	public static final int OPT_MINUS_NONE = 0;
 	public static final int OPT_MINUS_OPTIONAL = 1;
 	public static final int OPT_MINUS_MINUS = 2;
 	
-	private String keyName = null;
 	private XSDSupportedType valueType = null;
 	private String valueTypeURI = null;  
-	private String uriRelationship = null; // the full URI of the relationship
+	private String uriRelationship = null; // obsolete, should always be this.valueType.getFullName()
 	
 	private int optMinus = OPT_MINUS_NONE;
 	private ArrayList<String> instanceValues = new ArrayList<String>();
@@ -47,24 +48,32 @@ public class PropertyItem extends Returnable {
 	 * @param valueTypeURI (e.g. http://www.w3.org/2001/XMLSchema#string)
 	 * @param uriRelationship (e.g. http://research.ge.com/print/testconfig#material)
 	 */
-	public PropertyItem(String nome, XSDSupportedType valueType, String valueTypeURI, String uriRelationship){
-		this.keyName = nome;
+	@Deprecated
+	public PropertyItem(String nomeDEPRECATED, XSDSupportedType valueType, String valueTypeURI, String uriRelationship){
 		this.valueType = valueType;
-		this.valueTypeURI = valueTypeURI;
+		this.valueTypeURI = valueTypeURI;   
 		this.uriRelationship = uriRelationship;
 	}
-	
-	public PropertyItem(String nome, String valueTypeStr, String valueTypeURI, String uriRelationship) throws Exception {
-		this(nome, XSDSupportedType.getMatchingValue(valueTypeStr), valueTypeURI, uriRelationship);
+	@Deprecated
+	public PropertyItem(String nomeDEPRECATED, String valueTypeStr, String valueTypeURI, String uriRelationship) throws Exception {
+		this(nomeDEPRECATED, XSDSupportedType.getMatchingValue(valueTypeStr), valueTypeURI, uriRelationship);
 	}
 
+	public PropertyItem(XSDSupportedType valueType, String valueTypeURI, String uriRelationship){
+		this.valueType = valueType;
+		this.valueTypeURI = valueTypeURI;   
+		this.uriRelationship = uriRelationship;
+	}
 		
+	public PropertyItem(String valueTypeStr, String valueTypeURI, String uriRelationship) throws Exception {
+		this(XSDSupportedType.getMatchingValue(valueTypeStr), valueTypeURI, uriRelationship);
+	}
+	
 	public PropertyItem(JSONObject jObj) throws Exception {
 		// keeps track of the properties who are in the domain of a given node.
 		
 		this.fromReturnableJson(jObj);
 		
-		this.keyName = jObj.get("KeyName").toString();
 		
 		String typeStr = (String) (jObj.get("ValueType"));
 		try {
@@ -110,7 +119,6 @@ public class PropertyItem extends Returnable {
 
 		JSONObject ret = new JSONObject();
 		this.addReturnableJson(ret);
-		ret.put("KeyName", this.keyName);		
 		ret.put("ValueType", this.valueType.getSimpleName());
 		ret.put("relationship", this.valueTypeURI);
 		ret.put("UriRelationship", this.uriRelationship);
@@ -142,12 +150,17 @@ public class PropertyItem extends Returnable {
 	}
 	
 	public String getKeyName() {
-		return this.keyName;
+		return new OntologyName(uriRelationship).getLocalName();
 	}
 	
 	public String getUriRelationship() {
 		return this.uriRelationship;
 	}
+	
+	public void setUriRelationship(String uriRelationship) {
+		this.uriRelationship = uriRelationship;
+	}
+
 
 	/**
 	 * Return constraints SPARQL or null
@@ -179,9 +192,24 @@ public class PropertyItem extends Returnable {
 	public String getValueTypeURI() {
 		return this.valueTypeURI;
 	}
+	
+	/**
+	 * Newer-fangled way to change the range
+	 * @param uri
+	 * @throws Exception
+	 */
+	public void setRange(String uri) throws Exception {
+		this.valueTypeURI = uri;
+		this.valueType =  XSDSupportedType.getMatchingValue(new OntologyName(uri).getLocalName());
+	}
 
 	public void addInstanceValue(String value) {
 		this.instanceValues.add(value);
+	}
+	
+	public void changeValueType(XSDSupportedType type) {
+		this.valueType = type;
+		this.valueTypeURI = type.getFullName();
 	}
 	
 	public void setIsReturned(boolean b) throws Exception {
@@ -226,6 +254,27 @@ public class PropertyItem extends Returnable {
 	
 	public boolean getIsMarkedForDeletion(){
 		return this.isMarkedForDeletion;
+	}
+
+	/**
+	 * Set this property with all the values from other except URIRelationship
+	 * @param other
+	 * @exception if this property isn't empty
+	 */
+	public void merge(PropertyItem other) throws Exception {
+		if (this.isUsed() || this.getBindingOrSparqlID().length() > 0 ) {
+        	throw new Exception ("Target of property merge is not empty: " + this.getKeyName());
+        }
+		
+		this.constraints = other.constraints;
+        this.sparqlID = other.sparqlID;
+        this.isReturned = other.isReturned;
+        this.optMinus = other.optMinus;
+        this.isRuntimeConstrained = other.isRuntimeConstrained;
+        // instanceValues,
+        this.isMarkedForDeletion = other.isMarkedForDeletion;
+        this.binding = other.binding;
+		
 	}
 
 }

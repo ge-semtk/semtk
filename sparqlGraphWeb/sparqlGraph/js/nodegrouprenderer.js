@@ -448,8 +448,13 @@ define([	// properly require.config'ed
 
             propIsInvalid : function(nodeOrPropItem) {
                 for (let t of this.invalidItemTuples) {
-                    if (t.length > 1 && t[1] == nodeOrPropItem)
-                        return true;
+                    if (t.length > 1 && t[1] == nodeOrPropItem) {
+                        // node item is only invalid if it came back with null target
+                        // otherwise only some edges are invalid
+                        if (nodeOrPropItem instanceof PropertyItem || (t.length > 2 && t[2] == null))  {
+                            return true;
+                        }
+                    }
                 }
                 return false;
             },
@@ -775,7 +780,7 @@ define([	// properly require.config'ed
                 var callbackData = { y: y, type: item.getItemType(), value: item.getKeyName(), uri: item.getItemUri() };
 
                 // draw invalid box
-                if (item instanceof PropertyItem && this.propIsInvalid(item)) {
+                if (this.propIsInvalid(item)) {
                     this.drawBox(svg, x1, y1, x1+width, y1+height, NodegroupRenderer.COLOR_INVALID_BACKGROUND, NodegroupRenderer.COLOR_INVALID_FOREGROUND);
                 }
 

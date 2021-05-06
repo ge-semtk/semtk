@@ -41,6 +41,9 @@ define([	// properly require.config'ed   bootstrap-modal
 
 		MsiClientNodeGroupService.prototype = {
 
+            /**#
+                These return result sets.   Look to execAsync*() below for more complete functionality
+            ***/
             execGenerateAsk : function (nodegroup, conn, successCallback)              { return this.execNodegroupOnly("generateAsk",           nodegroup, conn, successCallback); },
             execGenerateConstruct : function (nodegroup, conn, successCallback)        { return this.execNodegroupOnly("generateConstruct",     nodegroup, conn, successCallback); },
             execGenerateCountAll : function (nodegroup, conn, successCallback)         { return this.execNodegroupOnly("generateCountAll",      nodegroup, conn, successCallback); },
@@ -82,6 +85,24 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.msi.postToEndpoint("getSampleIngestionCSV", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
             },
 
+
+            execSuggestNodeClass : function (nodegroup, conn, snode, classListCallback) {
+                var sgJson = new SparqlGraphJson(conn, nodegroup);
+                var data = JSON.stringify ({
+					  "jsonRenderedNodeGroup": JSON.stringify(sgJson.toJson()),
+                      "itemStr": nodegroup.buildItemStr(snode)
+					});
+                this.msi.postToEndpoint("suggestNodeClass", data, "application/json", classListCallback, this.optFailureCallback, this.optTimeout);
+            },
+
+            execGetSampleIngestionCSV : function (sgJson, format, successCallback) {
+                var data = JSON.stringify ({
+					  "jsonRenderedNodeGroup": JSON.stringify(sgJson.toJson()),
+                      "format": format
+					});
+				this.msi.postToEndpoint("getSampleIngestionCSV", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+            },
+
             execAddSamplePlot : function (sgJson, columnNames, graphType, plotName, plotType, successCallback) {
                 var data = JSON.stringify ({
 					  "jsonRenderedNodeGroup": JSON.stringify(sgJson.toJson()),
@@ -93,9 +114,21 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.msi.postToEndpoint("plot/addSamplePlot", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
             },
 
+            execChangeItemURI : function (sgJson, itemStr, newURI, domainOrRange, successCallback) {
+                var data = JSON.stringify ({
+					  "jsonRenderedNodeGroup": JSON.stringify(sgJson.toJson()),
+                      "itemStr" : itemStr,
+                      "newURI" : newURI,
+                      "domainOrRange" : domainOrRange
+					});
+				this.msi.postToEndpoint("changeItemURI", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+            },
+
             /*
-            **  Asynchronous functions: throw errors unless successful
+            **  Asynchronous functions: perform the whole async chain and return a "real" value.  failureCalback on any error.
+            **  (Name is confusing. All these functions in the file are Async.)
             */
+
             execAsyncGenerateFilter : function (nodegroup, conn, sparqlId, sparqlCallback, failureCallback) {
                 this.execGenerateFilter(nodegroup, conn, sparqlId,
                                         this.asyncSparqlCallback.bind(this, "generateFilter", sparqlCallback, failureCallback));
@@ -132,6 +165,11 @@ define([	// properly require.config'ed   bootstrap-modal
                                         this.asyncSimpleValueCallback.bind(this, "sampleCSV", csvTextCallback, failureCallback));
             },
 
+            execAsyncSuggestNodeClass : function (nodegroup, conn, snode, classListCallback, failureCallback) {
+                this.execSuggestNodeClass(nodegroup, conn, snode,
+                                        this.asyncSimpleValueCallback.bind(this, "classList", classListCallback, failureCallback));
+            },
+
             // Success calls ngMessagesItemsCallback(nodegroup, modelErrorMessages, invalidItemStrings)
             // FailureCallback(html) if not successful
             execAsyncInflateAndValidate : function (sgjson, ngMessagesItemsCallback, failureCallback) {
@@ -141,7 +179,12 @@ define([	// properly require.config'ed   bootstrap-modal
 
             execAsyncAddSamplePlot : function (sgjson, columnNames, graphType, plotName, plotType, sgjsonCallback, failureCallback) {
                 this.execAddSamplePlot(sgjson, columnNames, graphType, plotName, plotType,
-                                        this.asyncSimpleValueCallback.bind(this, "nodegroup", sgjsonCallback, failureCallback));
+                                        this.asyncSgJsonCallback.bind(this, "plot/addSamplePlot", sgjsonCallback, failureCallback));
+            },
+
+            execAsyncChangeItemURI : function (sgJson, itemStr, newURI, domainOrRange, sgjsonCallback, failureCallback) {
+                this.execChangeItemURI(sgJson, itemStr, newURI, domainOrRange,
+                                        this.asyncSgJsonCallback.bind(this, "changeItemURI", sgjsonCallback, failureCallback));
             },
 
             /*
@@ -150,8 +193,10 @@ define([	// properly require.config'ed   bootstrap-modal
             asyncSgJsonCallback(endpoint, sgjsonCallback, failureCallback, resultSet) {
                 if (resultSet.isSuccess()) {
                     // get the jobId
-                    var sgjson = resultSet.getSimpleResultField("nodegroup");
-                    if (sgjson) {
+                    var sgJsonJson = resultSet.getSimpleResultField("nodegroup");
+                    if (sgJsonJson) {
+                        var sgjson = new SparqlGraphJson();
+                        sgjson.fromJson(sgJsonJson);
                         sgjsonCallback(sgjson);
                     } else {
                         failureCallback(resultSet.getFailureHtml("did not return a nodegroup"));
@@ -186,7 +231,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 if (! resultSet.isSuccess()) {
                     failureCallback(resultSet.getFailureHtml());
                 } else {
-                    var f = ["nodegroup", "modelErrorMessages", "invalidItemStrings"];
+                    var f = ["nodegroup", "modelErrorMessages", "invalidItemStrings", "warnings"];
                     for (var field of f) {
                         if (resultSet.getSimpleResultField(field) == null) {
                             failureCallback("InflateAndValidate return did not contain field: " + field);
@@ -195,7 +240,8 @@ define([	// properly require.config'ed   bootstrap-modal
                     ngMessagesItemsCallback(
                         resultSet.getSimpleResultField(f[0]),
                         resultSet.getSimpleResultField(f[1]),
-                        resultSet.getSimpleResultField(f[2])
+                        resultSet.getSimpleResultField(f[2]),
+                        resultSet.getSimpleResultField(f[3])
                     );
                 }
             },

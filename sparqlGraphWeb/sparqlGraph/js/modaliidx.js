@@ -44,7 +44,7 @@ define([	// properly require.config'ed   bootstrap-modal
 		ModalIidx.HTML_SAFE = true;      // flag: disrespect anything that looks like html markup.  Show raw tag characters
 		ModalIidx.HTML_ALLOW = false;    //       respect html markup.
 
-		ModalIidx.alert = function (titleTxt, msgHtml, cleanHtmlFlag, optHideCallback) {
+		ModalIidx.alert = function (titleTxt, msgHtml, cleanHtmlFlag, optCallback) {
 			// clean up the html tags if flag is set
 			var msgHtml2 = (typeof cleanHtmlFlag === "undefined" || ! cleanHtmlFlag) ? msgHtml : IIDXHelper.htmlSafe(msgHtml);
 
@@ -54,7 +54,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			var m = new ModalIidx("ModalIidxAlert");
 			var div = document.createElement("div");
 			div.innerHTML = msgHtml2;
-            m.onHide(optHideCallback);
+            m.onHide(optCallback);
 			m.showOK(titleTxt, div, function(){});
             return m;
 		};
@@ -85,8 +85,8 @@ define([	// properly require.config'ed   bootstrap-modal
             return m;
 		};
 
-		ModalIidx.clearCancelSubmit = function (titleTxt, dom, clearCallback, submitCallback, optOKButText, optWidthPercent) {
-
+		ModalIidx.clearCancelSubmit = function (titleTxt, dom, clearCallback, submitCallback, optOKButText, optWidthPercent, optValidateCallback) {
+            var validateCallback = optValidateCallback ? optValidateCallback : function(){return null;};
 		    kdlLogEvent("clearCancelSubmit", "title", titleTxt);
 
 			var div = document.createElement("div");
@@ -95,7 +95,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			var m = new ModalIidx("clearCancelSubmit");
 			m.showClearCancelSubmit(titleTxt,
 									div,
-									function() {return null;},     // validation is not implemented for this one
+									validateCallback,
 									clearCallback,
 									submitCallback,
 									optOKButText,
@@ -375,7 +375,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 modal.className = "modal hide fade";
                 var style = "display: none;";
 
-                if (typeof optWidthPercent != "undefined") {
+                if (typeof optWidthPercent == "number") {
                     modal.style.margin = "0 auto auto 0";
                     modal.style.width = optWidthPercent + "%";
                     modal.style.left = (100 - optWidthPercent)/2 + "%";
@@ -599,10 +599,10 @@ define([	// properly require.config'ed   bootstrap-modal
              * Call this callback when modal finishes, no matter what
              */
             onHide : function(optCallback) {
-
+                $(document).unbind('hide');
                 if (typeof optCallback != "undefined" && optCallback) {
                     $(document).on('hide', '#'+this.id, optCallback);
-                }
+                } 
             }
 		};
 

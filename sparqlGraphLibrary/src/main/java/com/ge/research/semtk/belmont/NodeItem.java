@@ -44,7 +44,6 @@ public class NodeItem {
 	private ArrayList<Boolean> deletionFlags = new ArrayList<Boolean>();
 	private ArrayList<String> qualifiers = new ArrayList<String>();
 
-	private String keyName = "";
 	private String valueType = "";
 	private String valueTypeURI = "";
 	private String connectedBy = "";
@@ -58,7 +57,6 @@ public class NodeItem {
 	 * @param UriValueType (e.g. http://research.ge.com/print/testconfig#ScreenPrinting)
 	 */
 	public NodeItem(String uri, String valueType, String UriValueType) {
-		this.keyName = (new OntologyName(uri)).getLocalName();
 		this.uriConnectBy = uri;
 		this.valueType = valueType;
 		this.valueTypeURI = UriValueType;
@@ -66,7 +64,6 @@ public class NodeItem {
 	
 	public NodeItem(JSONObject next, NodeGroup ng) throws Exception{
 		// get basic values:
-		this.keyName = next.get("KeyName").toString();
 		this.valueTypeURI = next.get("UriValueType").toString();
 		this.valueType = next.get("ValueType").toString();
 		this.connectedBy = next.get("ConnectBy").toString();
@@ -186,7 +183,6 @@ public class NodeItem {
 		ret.put("OptionalMinus", optionalMinus);
 		ret.put("Qualifiers", qualifiers);
 		ret.put("DeletionMarkers", this.deletionFlags);
-		ret.put("KeyName", this.keyName);
 		ret.put("ValueType", this.valueType);
 		ret.put("UriValueType", this.valueTypeURI);
 		ret.put("ConnectBy", this.connectedBy);
@@ -209,7 +205,7 @@ public class NodeItem {
 	}
 	
 	public String getKeyName() {
-		return this.keyName;
+		return (new OntologyName(this.uriConnectBy)).getLocalName();
 	}
 	
 	public boolean isUsed() {
@@ -229,6 +225,11 @@ public class NodeItem {
 
 	public void setUriConnectBy(String connectionURI) {
 		this.uriConnectBy = connectionURI;		
+	}
+	
+	public void changeUriConnect(String connectionURI) {
+		OntologyName name = new OntologyName(connectionURI);
+		this.uriConnectBy = name.getFullName();
 	}
 
 	public void pushNode(Node curr) {
@@ -275,6 +276,18 @@ public class NodeItem {
 	}
 	public void setValueType(String name) {
 		this.valueType = name;
+	}
+	
+	public void changeUriValueType(String rangeURI) {
+		OntologyName name = new OntologyName(rangeURI);
+		this.valueTypeURI = name.getFullName();
+		this.valueType = name.getLocalName();
+	}
+	
+	// alternate name
+	public void setRange(String newURI) {
+		this.changeUriValueType(newURI);
+		
 	}
 	
 	public String getUriConnectBy() {
@@ -386,6 +399,54 @@ public class NodeItem {
 			}
 		}
 		throw new Exception("NodeItem can't find link to semantic node");
+	}
+
+	/**
+	 * Merge everything except connectedBy, uriConnectBy
+	 * @param nItem
+	 * @throws Exception
+	 */
+	public void merge(NodeItem nItem, Node target) throws Exception {
+		if (this.isUsed()) {
+        	throw new Exception ("Target of node item edge merge is not empty: " + this.getKeyName());
+        }
+		
+		if (target == null) {
+			// move entire lists to this
+			this.nodes = nItem.nodes;
+			this.optionalMinus = nItem.optionalMinus;
+			this.deletionFlags = nItem.deletionFlags;
+			this.qualifiers = nItem.qualifiers;
+			// delete entire lists from nItem
+			nItem.nodes = new ArrayList<Node>();
+			nItem.optionalMinus = new ArrayList<Integer>();
+			nItem.deletionFlags = new ArrayList<Boolean>();
+			nItem.qualifiers = new ArrayList<String>();
+			nItem.connected = false;
+		} else {
+			// find position of target
+			int i = nItem.getNodeList().indexOf(target);
+			if (i == -1) {
+	        	throw new Exception ("Invalid target parameter in merge: " + target.getBindingOrSparqlID());
+			}
+			// move just the target to this
+			this.nodes.add(nItem.nodes.get(i));
+			this.optionalMinus.add(nItem.optionalMinus.get(i));
+			this.deletionFlags.add(nItem.deletionFlags.get(i));
+			this.qualifiers.add(nItem.qualifiers.get(i));
+			// remove target from nItem
+			nItem.nodes.remove(i);
+			nItem.optionalMinus.remove(i);
+			nItem.deletionFlags.remove(i);
+			nItem.qualifiers.remove(i);
+			nItem.connected = nItem.nodes.size() > 0;
+		}
+
+		this.valueType = nItem.valueType;
+		this.valueTypeURI = nItem.valueTypeURI;
+		//connectedBy
+		//uriConnectBy 
+		this.connected = this.nodes.size() > 0;
 	}
 	
 }

@@ -170,6 +170,11 @@ define([// properly require.config'ed
                 return ret;
             },
 
+            hasMapping : function(sparqlId, propUri) {
+                var key = ImportMapping.staticGenUniqueKey(sparqlId, propUri);
+                return (key in this.mapHash) && (this.mapHash[key].getItemList().length > 0);
+            },
+
 			getMapping : function(sparqlId, propUri) {
 				// find a row
 				// propUri may be null
@@ -357,7 +362,7 @@ define([// properly require.config'ed
 			},
 
 			// get list of all PropertyItems that have mappings
-			getUndeflatablePropItems() {
+			getUndeflatablePropItems : function() {
 				var ret = [];
 				for (var i=0; i < this.mapList.length; i++) {
 					var map = this.mapList[i];
@@ -371,6 +376,21 @@ define([// properly require.config'ed
 				}
 				return ret;
 			},
+
+            /*
+                For a class snode, get a list of properties which are mapped.
+            */
+            getMappedProperties : function (snode) {
+                var ret = [];
+
+                for (var map of this.mapList) {
+                    var prop = map.getPropItem();
+                    if (map.getNode().getSparqlID() == snode.getSparqlID() && prop != null && map.getItemList().length > 0) {
+                        ret.push(prop.getURI());
+                    }
+                }
+                return ret;
+            },
 
 			updateNodegroup : function (nodegroup) {
 				// Build new mapList and mapHash based on this.nodegroup
@@ -426,12 +446,12 @@ define([// properly require.config'ed
 					}
 				}
 
-				for (var key in oldRowHash) {
-					if (oldRowHash[key] !== null) {
-						this.alert("Threw out some mapping items that no longer exist in the query.  e.g.:  " + key);
-						break;
-					};
-				}
+				//for (var key in oldRowHash) {
+				//	if (oldRowHash[key] !== null) {
+				//		this.alert("Threw out some mapping items that no longer exist in the query.  e.g.:  " + key);
+				//		break;
+				//	};
+				//}
 			},
 
 			/**

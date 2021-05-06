@@ -215,7 +215,7 @@ public class ImportSpec {
 	private JSONObject getNodeMapping(int nodeIndex, int mappingIndex) {
 		return (JSONObject) ((JSONArray)this.getNode(nodeIndex).get(JKEY_IS_MAPPING)).get(mappingIndex);
 	}
-	public int getNode(String sparqlID) {
+	public int getNodeIndex(String sparqlID) {
 		for (int i=0; i < this.getNumNodes(); i++) {
 			if (this.getNodeSparqlID(i).equals(sparqlID)) {
 				return i;
@@ -223,6 +223,18 @@ public class ImportSpec {
 		}
 		return -1;
 	}
+	
+	public int getNodePropIndex(int n, String propURI) {
+		JSONArray props = (JSONArray) this.getNode(n).get(JKEY_IS_PROPS);
+		for (int i=0; i < props.size(); i++) {
+			JSONObject prop = (JSONObject) props.get(i);
+			if (((String) prop.get(JKEY_IS_MAPPING_PROPS_URI_REL)).equals(propURI)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
 	/**
 	 * Due to backwards compatibility, could be null
 	 * @param index
@@ -411,7 +423,7 @@ public class ImportSpec {
 				}
 			}
 		}
-		throw new Exception("Can't find property: " + propUri + " in node " + nodeSparqlId);
+		throw new Exception("Can't find property in importSpec: " + propUri + " in node " + nodeSparqlId);
 	}
 	
 	/**
@@ -496,6 +508,29 @@ public class ImportSpec {
 		JSONArray mapArr = new JSONArray();
 		mapArr.add(mapping);
 		prop.put(JKEY_IS_MAPPING, mapArr);
+	}
+	
+	public boolean isUsed(String nodeSparqlId) throws Exception {
+		return this.hasMapping(nodeSparqlId);
+	}
+	public boolean isUsed(String nodeSparqlId, String propUri) throws Exception {
+		return this.hasMapping(nodeSparqlId, propUri);
+	}
+	public boolean hasMapping(String nodeSparqlId) throws Exception {
+		JSONObject node = this.findNode(nodeSparqlId);
+		JSONArray mapArr = (JSONArray) node.get(JKEY_IS_MAPPING);
+		return mapArr != null && mapArr.size() > 0;
+	}
+	
+	public boolean hasMapping(String nodeSparqlId, String propUri) throws Exception {
+		JSONObject prop = null;
+		try {
+			prop = this.findProp(nodeSparqlId, propUri);
+		} catch (Exception e) {
+			return false;    // node doesn't even have the property
+		}
+		JSONArray mapArr = (JSONArray) prop.get(JKEY_IS_MAPPING);
+		return mapArr != null && mapArr.size() > 0;
 	}
 	
 	public void addURILookup(String nodeSparqlId, String propUri, String lookupSparqlId) throws Exception {
@@ -606,6 +641,47 @@ public class ImportSpec {
 				}
 			}
 		}
+	}
+	
+
+	public void changePropertyDomain(String nodeSparqlID, String oldURI, String newURI) throws Exception {
+		
+		int n = this.getNodeIndex(nodeSparqlID);
+		if (n < 0) throw new Exception("Can't find node in import spec: " + nodeSparqlID);
+		int p = this.getNodePropIndex(n, oldURI);
+		
+		// if property had no mappings.  Done.
+		// if property is here, change it.
+		if (p >= 0) {
+			JSONObject prop  = this.getNodeProp(n,p);
+			prop.put(JKEY_IS_MAPPING_PROPS_URI_REL, newURI);
+		}
+		
+	}
+
+	public void deleteProperty(String nodeSparqlID, String uriRelationship) throws Exception {
+		int n = this.getNodeIndex(nodeSparqlID);
+		if (n < 0) throw new Exception("Can't find node in import spec: " + nodeSparqlID);
+		int p = this.getNodePropIndex(n, uriRelationship);
+		
+		// if property had no mappings.  Done.
+		// if property is here, change it.
+		if (p >= 0) {
+			int numProps = this.getNodeNumProperties(n);
+			JSONArray newProps = new JSONArray();
+			for (int i=0; i < numProps; i++) {
+				if (!this.getNodePropUriRel(n, i).equals(uriRelationship)) {
+					newProps.add(this.getNodeProp(n, i));
+				}
+			}
+			this.getNode(n).put(JKEY_IS_PROPS, newProps);
+		}
+		
+	}
+
+	public void changeNodeDomain(String nodeSparqlID, String newURI) {
+		int n = this.getNodeIndex(nodeSparqlID);
+		this.getNode(n).put(JKEY_IS_NODE_TYPE, newURI);
 	}
 	
 }

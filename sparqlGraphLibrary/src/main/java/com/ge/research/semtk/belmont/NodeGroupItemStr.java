@@ -111,4 +111,15 @@ public class NodeGroupItemStr {
 		return reverseFlag;
 	}
 	
+	// parse node and nodeitem out of a string
+	public static String getNodeItemPrefix(String str) {
+		String [] s = str.split("\\|");
+		return s[0] + "|" + s[1] + "|";
+	}
+	// parse everything after node and nodeitem out of string
+	public static String replaceNodeItemPrefix(String str, String newPrefix) {
+		String [] s = str.split("\\|");
+		return newPrefix + s[2] + (s.length == 4 ? ("|" + s[3]) : "");
+	}
+	
 }

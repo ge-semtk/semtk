@@ -20,11 +20,13 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 
+import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.ontologyTools.OntologyProperty;
 
 public class ValidationAssistant {
 	
-	static ArrayList<String> suggestNodeClass(OntologyInfo oInfo, NodeGroup ng, NodeGroupItemStr itemStr) {
+	public static ArrayList<String> suggestNodeClass(OntologyInfo oInfo, NodeGroup ng, NodeGroupItemStr itemStr) throws Exception {
 		
 		assert(itemStr.getType() == Node.class);
 		Node snode = itemStr.getSnode();
@@ -36,7 +38,7 @@ public class ValidationAssistant {
 			score.put(name, 0);
 		}
 		
-		// look through incoming edges.  Score above 1000, grouped by class hier
+		// look through incoming edges.  Score above 1000, grouped by class hierarchy
 		int localScore = 1000;
 		ArrayList<NodeItem> incoming = ng.getConnectingNodeItems(snode);
 		for (NodeItem nItem : incoming) {
@@ -50,8 +52,50 @@ public class ValidationAssistant {
 			}
 		}
 		
+		// get URI for each property and node item
+		ArrayList<String> snodeProps = new ArrayList<String>();
+		for (PropertyItem pItem : snode.getPropertyItems()) {
+			snodeProps.add(pItem.getUriRelationship());
+		}
+		for (NodeItem nItem : snode.getNodeItemList()) {
+			snodeProps.add(nItem.getUriConnectBy());
+		}
+		
 		// look for other classes in ontology that share props/nodes
-		// HERE
+		// score each class
+		for (String uri : oInfo.getClassNames()) {
+			
+			// get string list of inherited properties
+			ArrayList<OntologyProperty> otherOntProps = oInfo.getInheritedProperties(oInfo.getClass(uri));
+			ArrayList<String> otherProps = new ArrayList<String>();
+			for (OntologyProperty op : otherOntProps) {
+				otherProps.add(op.getNameStr());
+			}
+			
+			// cross-compare in both directions
+			int match = 0;
+			int mismatch = 0;
+			for (String p : otherProps) {
+				if (snodeProps.contains(p)) {
+					match += 1;
+				} else {
+					mismatch += 1;
+				}
+			}
+			for (String p : snodeProps) {
+				if (otherProps.contains(p)) {
+					match += 1;
+				} else {
+					mismatch += 1;
+				}
+			}
+			match /= 2; // each match was counted twice
+			
+			Integer s = (match * 100) / Math.max(1, match + mismatch);  
+			if (s > score.get(uri)) {
+				score.put(uri, s);
+			}
+		}
 		
 		// sort by score descending
 		ret.sort(new Comparator<String>() {

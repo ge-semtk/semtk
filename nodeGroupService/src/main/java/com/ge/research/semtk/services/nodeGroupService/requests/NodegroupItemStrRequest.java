@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016 General Electric Company
+ ** Copyright 2017 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,19 +15,23 @@
  ** limitations under the License.
  */
 
+package com.ge.research.semtk.services.nodeGroupService.requests;
 
-package com.ge.research.semtk.ontologyTools;
+import javax.validation.constraints.NotNull;
 
-public class ValidationException extends Exception {
+import io.swagger.annotations.ApiModelProperty;
 
-	private static final long serialVersionUID = 1L;
+public class NodegroupItemStrRequest extends NodegroupRequest {
+	@NotNull
+	@ApiModelProperty(
+			value = "itemStr",
+			required = true,
+			example = "?sNodeSparqlID")	
+	private String itemStr;
 	
-	//Parameterless Constructor
-	public ValidationException() {}
-	
-	//Constructor that accepts a message
-	public ValidationException(String message)
-	{
-		super("Error validating nodegroup to model: " + message);
+
+	public String getItemStr() {
+		return this.itemStr;
 	}
+	
 }
