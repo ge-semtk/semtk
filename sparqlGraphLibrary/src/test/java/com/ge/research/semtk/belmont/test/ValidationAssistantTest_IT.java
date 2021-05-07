@@ -65,7 +65,7 @@ public class ValidationAssistantTest_IT {
 		assertTrue("Expected first suggestion of to be " + expect + ". Found " + suggestions.toString(), expect.equals(actual));
 		
 		// change #name property to #scaryName and we should get Tiger
-		ng = this.getNodegroupWithUriReplaced("animalquery.json", "#name", "#scaryName");
+		ng = this.getNodegroupWithUriReplaced("animalQuery.json", "#name", "#scaryName");
 		node = ng.getNodeBySparqlID("?Animal");
 		suggestions = ValidationAssistant.suggestNodeClass(oInfo, ng, new NodeGroupItemStr(node));
 		expect = "http://AnimalSubProps#Tiger";

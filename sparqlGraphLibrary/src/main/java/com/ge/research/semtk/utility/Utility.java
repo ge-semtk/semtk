@@ -821,7 +821,7 @@ public abstract class Utility {
 		String ret = null;
 		InputStream in = c.getResourceAsStream(fixResourceName(fileName));
 		if (in == null) {
-			throw new Exception("Could find resource file: " + fileName);
+			throw new Exception("Couldn't find resource file: " + fileName);
 		}
 		
 		ret = IOUtils.toString(in, StandardCharsets.UTF_8);
