@@ -499,7 +499,7 @@ define([	// properly require.config'ed
         return buttonGroupDiv;
     }
 
-    IIDXHelper.buildControlGroup = function (labelText, controlDOM, optHelpText) {
+    IIDXHelper.buildControlGroup = function (labelText, controlDOM, optHelpText, optHelpId) {
         // take a text label, DOM control, and optional help text
         // Assemble a representative "control-group" div and return it
 
@@ -518,6 +518,9 @@ define([	// properly require.config'ed
         var s = document.createElement("span");  // formerly "p"
         s.className = "help-inline";             // formerly "help-block"
         s.innerHTML = (typeof optHelpText !== "undefined") ? optHelpText : "";
+        if (optHelpId) {
+            s.id = optHelpId;
+        }
         controlsDiv.appendChild(s);
 
         controlGroupDiv.appendChild(controlsDiv);

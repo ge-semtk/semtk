@@ -265,11 +265,14 @@ define([	// properly require.config'ed
 				inputURI.onchange = function (e) {
 					var val = document.getElementById("import_tab_uri_input").value;
 					this.importSpec.setBaseURI(val);
+                    this.validateBaseURI();
 				}.bind(this);
 
-				var group = IIDXHelper.buildControlGroup("Base URI: ", inputURI);
-				form.appendChild(group);
+				var group = IIDXHelper.buildControlGroup("Base URI: ", inputURI, "", "import_tab_baseuri_help");
+                group.id = "import_tab_baseuri_group";
+                form.appendChild(group);
 				this.optionsdiv.appendChild(form);
+                this.validateBaseURI();
 
 				// --- draw canvas side (left) ---
 				this.canvasDiv.innerHTML = "";
@@ -301,6 +304,28 @@ define([	// properly require.config'ed
                 this.validateRows();
                 this.updateAllUriLookupButtons();
 			},
+
+            validateBaseURI : function () {
+                var val = document.getElementById("import_tab_uri_input").value;
+                var group = document.getElementById("import_tab_baseuri_group");
+                var help = document.getElementById("import_tab_baseuri_help");
+
+                if (!val || String(val).toLowerCase().startsWith("http://")) {
+                    if (group.classList.contains("warning")) {
+                        group.classList.remove("warning");
+                    }
+                    help.innerHTML = "";
+                } else {
+                    if (! group.classList.contains("warning")) {
+                        group.classList.add("warning");
+                    }
+                    help.innerHTML = "Base URI that doesn't start with <b>http://</b> may cause performance hits in some triplestores.";
+                    this.optionsdiv.style.height="auto";
+                    if (!this.optionsdiv.classList.contains("in")) {
+                        this.optionsdiv.classList.add("in");
+                    }
+                }
+            },
 
             // colValidator might be null
             buildColValidatorButton : function(colName, colValidator) {
