@@ -526,9 +526,11 @@
     	var unlinkedTargetSNodes = [null];
     	var unlinkedTargetNames = ["New " + rangeStr + ""];
 
+        var mySubgraph = gNodeGroup.getSubGraph(snode, []);
+
     	for (var i=0; i < targetSNodes.length; i++) {
-            // TODO: this would be a good place to prevent circularity
-    		if (targetSNodes[i] != snode && nItem.getSNodes().indexOf(targetSNodes[i]) == -1) {
+            // Not circular, not self, not already linked
+    		if (mySubgraph.indexOf(targetSNodes[i]) == -1 && targetSNodes[i] != snode && nItem.getSNodes().indexOf(targetSNodes[i]) == -1) {
     			unlinkedTargetNames.push(targetSNodes[i].getBindingOrSparqlID());
     			unlinkedTargetSNodes.push(targetSNodes[i]);
     		}
