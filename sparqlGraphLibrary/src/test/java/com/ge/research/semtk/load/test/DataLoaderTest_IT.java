@@ -501,6 +501,56 @@ public class DataLoaderTest_IT {
 		
 	}
 	
+	@Test
+	public void testLoadWithBindings() throws Exception {
+		
+		Dataset ds = new CSVDataset("src/test/resources/loadTestData.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/loadTest.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTest.json");
+
+		// import
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		loadData(dl, "doLoadData no bindings", true);
+
+		assertEquals(dl.getTotalRecordsProcessed(), 1998);
+		
+		long start = IntegrationTestUtility.getStartTime();
+		Table tab = TestGraph.execTableSelect(sgJson);
+		String entry = IntegrationTestUtility.logDuration(start, "TIMING " + "query no bindings");
+		timingMessages.add(entry);
+		
+		/////// Add bindings and try again ///////////
+		NodeGroup ng = sgJson.getNodeGroup();
+		Node cell = ng.getNodeBySparqlID("Cell");
+		ng.setIsReturned(cell, false);
+		cell.setBinding("Cell_renamed");
+		ng.setBindingIsReturned(cell, true);
+		
+		PropertyItem cellId = cell.getPropertyByKeyname("cellId");
+		ng.setIsReturned(cellId, false);
+		cellId.setBinding("cellId_renamed");
+		ng.setBindingIsReturned(cellId, true);
+		
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/loadTest.owl");
+
+		// import
+		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		loadData(dl, "doLoadData w/ bindings", true);
+
+		assertEquals(dl.getTotalRecordsProcessed(), 1998);
+		
+		// run the query
+		start = IntegrationTestUtility.getStartTime();
+		tab = TestGraph.execTableSelect(sgJson);
+		entry = IntegrationTestUtility.logDuration(start, "TIMING " + "query w/ bindings");
+		timingMessages.add(entry);
+	}
+	
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testLoadDataSmallBatch() throws Exception {
@@ -898,10 +948,11 @@ public class DataLoaderTest_IT {
 		
 	}
 	
+	
 	@Test
 	public void test_LookupSuperBatteryIdAddDesc() throws Exception {
 		doLookupSuperBatteryIdAddDesc(true);  
-		doLookupSuperBatteryIdAddDesc(false);
+		//doLookupSuperBatteryIdAddDesc(false);
 	}
 	
 	/**
@@ -935,35 +986,42 @@ public class DataLoaderTest_IT {
 		TestGraph.queryAndCheckResults(sgJson, this, "/lookupBatteryIdAddDescResults.csv");
 		
 	}
+	  
 	@Test
 	public void test_LookupBatteryIdAddDescShort() throws Exception {
-		doLookupBatteryIdAddDescShort(false);
-		doLookupBatteryIdAddDescShort(true);
+		doLookupBatteryIdAddDescShort("loadTestDuraBatteryShortData", "lookupBatteryIdAddDescShortData", "lookupBatteryIdAddDesc", "lookupBatteryIdAddDescShortResults", false);
+		doLookupBatteryIdAddDescShort("loadTestDuraBatteryShortData", "lookupBatteryIdAddDescShortData", "lookupBatteryIdAddDesc", "lookupBatteryIdAddDescShortResults", true);
+	}
+	
+	@Test
+	public void test_LookupBatteryIdAddDescBound() throws Exception {
+		doLookupBatteryIdAddDescShort("loadTestDuraBatteryData", "lookupBatteryIdAddDescData", "lookupBatteryIdAddDesc", "lookupBatteryIdAddDescResults", true);
+		doLookupBatteryIdAddDescShort("loadTestDuraBatteryData", "lookupBatteryIdAddDescData", "lookupBatteryIdAddDescBound", "lookupBatteryIdAddDescResultsBound", true);
 	}
 
-	public void doLookupBatteryIdAddDescShort(boolean cacheFlag) throws Exception {
+	public void doLookupBatteryIdAddDescShort(String battCsvBasename, String descCsvBasename, String addDescJsonBasename, String resultsCsvBasename, boolean cacheFlag) throws Exception {
 		// setup
 		TestGraph.clearGraph();
 				
 		// ==== pre set some data =====
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
-		Dataset ds0 = new CSVDataset("src/test/resources/loadTestDuraBatteryShortData.csv", false);
+		Dataset ds0 = new CSVDataset("src/test/resources/" + battCsvBasename + ".csv", false);
 
 		DataLoader dl0 = new DataLoader(sgJson0, ds0, TestGraph.getUsername(), TestGraph.getPassword());
-		loadData(dl0, "testLookupBatteryIdAddDescShort preload", cacheFlag);
+		loadData(dl0, battCsvBasename + " preload batt", cacheFlag);
 				
 		LocalLogger.logToStdErr("------ done import 1 -------");		
 		// Try URI lookup
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupBatteryIdAddDesc.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/" + addDescJsonBasename + ".json");
 
-		Dataset ds = new CSVDataset("src/test/resources/lookupBatteryIdAddDescShortData.csv", false);
+		Dataset ds = new CSVDataset("src/test/resources/" + descCsvBasename + ".csv", false);
 		
 		// import the actual test: lookup URI and add description
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
-		loadData(dl, "testLookupBatteryIdAddDescShort", cacheFlag);
+		loadData(dl, addDescJsonBasename + " ingest desc", cacheFlag);
 
-		TestGraph.queryAndCheckResults(sgJson, this, "/lookupBatteryIdAddDescShortResults.csv");
+		TestGraph.queryAndCheckResults(sgJson, this, "/" + resultsCsvBasename + ".csv");
 		
 	}
 	

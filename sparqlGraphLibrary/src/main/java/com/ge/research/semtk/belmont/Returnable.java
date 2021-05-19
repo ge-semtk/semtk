@@ -187,6 +187,10 @@ public abstract class Returnable {
 		return this.constraints;
 	}
 	
+	public String getValueConstraintStr() {
+		return this.constraints == null ? "" : this.constraints.toString();
+	}
+	
 	public abstract XSDSupportedType getValueType();
 	
 

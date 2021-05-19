@@ -1,0 +1,130 @@
+{
+	"version": 3,
+	"sparqlConn": {
+		"name": "Junit fuseki",
+		"domain": "",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 13,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/durabattery#batteryDesc",
+						"Constraints": "",
+						"SparqlID": "?batteryDesc",
+						"isReturned": false,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false,
+						"binding": "?batteryDescBound",
+						"isBindingReturned": true
+					},
+					{
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/durabattery#batteryId",
+						"Constraints": "",
+						"SparqlID": "?batteryId",
+						"isReturned": false,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false,
+						"binding": "?batteryIdBound",
+						"isBindingReturned": true
+					}
+				],
+				"nodeList": [],
+				"fullURIName": "http://kdl.ge.com/durabattery#DuraBattery",
+				"SparqlID": "?DuraBattery",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE",
+				"binding": "?DuraBatteryBound",
+				"isBindingReturned": true
+			}
+		],
+		"orderBy": [
+			{
+				"sparqlID": "?DuraBatteryBound"
+			},
+			{
+				"sparqlID": "?batteryDescBound"
+			},
+			{
+				"sparqlID": "?batteryIdBound"
+			}
+		],
+		"unionHash": {}
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "batt_ID"
+			},
+			{
+				"colId": "col_1",
+				"colName": "description"
+			}
+		],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?DuraBattery",
+				"type": "http://kdl.ge.com/durabattery#DuraBattery",
+				"URILookupMode": "noCreate",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/durabattery#batteryDesc",
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/durabattery#batteryId",
+						"URILookup": [
+							"?DuraBattery"
+						],
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					}
+				]
+			}
+		]
+	},
+	"plotSpecs": []
+}
