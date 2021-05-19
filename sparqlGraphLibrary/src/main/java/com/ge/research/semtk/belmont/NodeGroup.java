@@ -26,6 +26,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -2789,7 +2790,51 @@ public class NodeGroup {
 		} 
 	}
 	
-	
+    
+    /**
+     * Bindings appear to cause great slowdowns in Fuseki (others unknown)
+     * Remove any stray bindings that aren't returned and don't appear in constraints.
+     */
+    public void removeUnusedBindings() {
+        
+        String constraintsText = this.getAllConstraintText();
+        for (Returnable r : this.getAllReturnables()) {
+            // if binding exists but is not returned
+            if (r.getBinding() != null && ! r.getIsBindingReturned()) {
+                // if binding isn't in any constraints
+                if (! Pattern.matches("\\" + r.getBinding() + "[^a-zA-Z0-9_]", constraintsText)) {
+                    r.setBinding(null);
+                }
+            }
+        }
+    }
+    
+    private ArrayList<Returnable> getAllReturnables() {
+        ArrayList<Returnable> ret = new ArrayList<Returnable>();
+        
+        for (Node n : this.nodes) {
+            ret.add(n);
+            ret.addAll(n.getPropertyItems());
+        }
+        return ret;
+    }
+    
+    /**
+     * get non-null text of all value constraints surrounded by " "
+     * @return
+     */
+    private String getAllConstraintText() {
+        StringBuilder ret = new StringBuilder();
+        for (Node n : this.nodes) {
+            ret.append(" " + n.getValueConstraintStr());
+            for (PropertyItem p : n.getPropertyItems()) {
+                ret.append(" " + p.getValueConstraintStr());
+            }
+        }
+        ret.append(" ");
+        return ret.toString();
+    }
+    
 	/**
 	 * Prune subgraphs of node that don't have any nodes.isUsed()==true
 	 * @param node
