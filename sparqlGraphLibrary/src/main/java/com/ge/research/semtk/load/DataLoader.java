@@ -467,9 +467,25 @@ public class DataLoader implements Runnable {
 		String s = this.cacheSei.dumpToTurtle();
 		int len = s.length();
 		if (len > 0) {
-			LocalLogger.logToStdErr("Uploading " + s.length() + " chars of ttl");
-			this.endpoint.authUploadTurtle(s.getBytes());
-			LocalLogger.logToStdErr("upload complete");
+			int tryCount = 1;
+			while (true) {
+				try {
+					LocalLogger.logToStdErr("Uploading " + s.length() + " chars of ttl");
+					
+					this.endpoint.authUploadTurtle(s.getBytes());
+					
+					LocalLogger.logToStdErr("upload complete");
+					return len;
+				} catch (Exception e) {
+					if (tryCount < 4) {
+						this.endpoint.logFailureAndSleep(e, tryCount);
+						tryCount ++;
+					} else {
+						throw new Exception("Giving up uploading temp graph", e);
+					}
+				}
+			}
+			
 		}
 		
 		return len;

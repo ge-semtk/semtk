@@ -575,29 +575,34 @@ public abstract class SparqlEndpointInterface {
 					throw e;
 					
 				} else {	
-					int sleepMsec = 500;
-					
-					// if we're overwhelming a server, really throttle
-					if (e.getMessage() != null && e.getMessage().contains("Address already in use: connect")) {
-						sleepMsec = 5000 * tryCount;
-					} else {
-						// normally: 2 sec per try
-						sleepMsec = 2000 * tryCount;
-					}
-					
-					// randomize sleepMsec from 75% to 125% in case threads are colliding at triplestore
-					sleepMsec = (int) ((sleepMsec * 0.75) + (Math.random() * sleepMsec * 0.5));
-					
+
+					logFailureAndSleep(e, tryCount);
 					this.retries += 1;
-					LocalLogger.logToStdOut (String.format("SPARQL query failed.  Sleeping %d millisec and trying again...", sleepMsec));
-					LocalLogger.logToStdErr(e.getMessage());
 					
-					TimeUnit.MILLISECONDS.sleep(sleepMsec);
 				}
 			}
 		}
 	}
 
+	public void logFailureAndSleep(Exception e, int tryCount) throws InterruptedException {
+		int sleepMsec = 500;
+		
+		// if we're overwhelming a server, really throttle
+		if (e.getMessage() != null && e.getMessage().contains("Address already in use: connect")) {
+			sleepMsec = 5000 * tryCount;
+		} else {
+			// normally: 2 sec per try
+			sleepMsec = 2000 * tryCount;
+		}
+		
+		// randomize sleepMsec from 75% to 125% in case threads are colliding at triplestore
+		sleepMsec = (int) ((sleepMsec * 0.75) + (Math.random() * sleepMsec * 0.5));
+		LocalLogger.logToStdOut (String.format("SPARQL query failed.  Sleeping %d millisec and trying again...", sleepMsec));
+		LocalLogger.logToStdErr(e.getMessage());
+		
+		TimeUnit.MILLISECONDS.sleep(sleepMsec);
+	}
+	
 	/**
 	 * Run a test query depending on isAuth()
 	 * See "internal use" note
@@ -985,10 +990,10 @@ public abstract class SparqlEndpointInterface {
 	public boolean isExceptionRetryAble(Exception e) {
 		if (e instanceof AuthorizationException) {
 			return false;
-		} else if (e instanceof ConnectException) {
+		} //else if (e instanceof ConnectException) {
 			// if this connection timed out, caller is already in jeopardy of timing out
-			return false;
-		}
+			//return false;
+		//}
 		return true;
 	}
 	
