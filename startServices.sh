@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright 2018 General Electric Company
+# Copyright 2018-2021 General Electric Company
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
