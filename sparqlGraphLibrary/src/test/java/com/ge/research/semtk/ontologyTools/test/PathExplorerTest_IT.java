@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 
+import org.bouncycastle.asn1.BEROctetStringGenerator;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -148,7 +149,13 @@ public class PathExplorerTest_IT {
 		// distance between two airports.
 		// FDC calls could take a long time
 		
-		String query = "select ?uri where { ?uri a <http://research.ge.com/semtk/fdcSample/test#Airport> } limit 2";
+		NodeGroup ng = new NodeGroup();
+		Node airport = ng.addNode("http://research.ge.com/semtk/fdcSample/test#Airport", TestGraph.getOInfo());
+		ng.setSparqlConnection(TestGraph.getSparqlConn());
+		ng.setIsReturned(airport, true);
+		ng.setLimit(2);
+		String query = ng.generateSparqlSelect();
+		
 		Table airportTable = TestGraph.execTableSelect(query);
 		String airportUri1 = airportTable.getCell(0, 0);
 		String airportUri2 = airportTable.getCell(1, 0);
@@ -161,7 +168,7 @@ public class PathExplorerTest_IT {
 		// just gets lucky that Distance is in the path in this data set
 		returnList.add(new ReturnRequest("http://research.ge.com/semtk/fdcSample/test#distanceNm"));
 				
-		NodeGroup ng = explorer.buildNgWithData(classInstanceList, returnList);
+		ng = explorer.buildNgWithData(classInstanceList, returnList);
 		
 		assertTrue("buildNgWithData failed to link Airport to Airport", ng != null);
 		
