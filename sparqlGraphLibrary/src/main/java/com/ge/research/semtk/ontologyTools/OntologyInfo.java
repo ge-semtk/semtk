@@ -1176,6 +1176,8 @@ public class OntologyInfo {
 	 */
 	public void loadProperties(String classList[], String propertyList[], String rangeList[]) throws Exception{
 		 
+		final boolean DEBUG_RANGE = false;   // print message when range is changed to superclass of two different ranges
+		
 		// loop through and make the property, pull class...
 		for(int i = 0; i < classList.length; i += 1){
 			OntologyProperty prop = null;
@@ -1184,12 +1186,21 @@ public class OntologyInfo {
 			if (this.propertyHash.containsKey(propertyList[i])) {
 				prop = this.propertyHash.get(propertyList[i]);
 				
-				// if property exists, make sure range is the same (where defaultClass and Empty are also equal)
+				// if property exists, and range is different 
+				// (ignore this if prop RANGE is already defaultClass or new range is empty)
 				if (! prop.getRangeStr().equals(rangeList[i]) && !prop.getRange().isDefaultClass() && !rangeList[i].isEmpty()) {
 					String superClass = this.findCommonSuperclass(prop.getRangeStr(), rangeList[i]);
+					
 					if (superClass != null) {
+						// Set range to common superclass of different range classes
 						// ignore subclass restrictions on ranges for now, until complex ranges are implemented
 						// Paul Aug 2020
+						
+						if (DEBUG_RANGE) {
+							LocalLogger.logToStdOut(classList[i] + "->" + propertyList[i] + ": prev: " + prop.getRangeStr() + " curr: " + rangeList[i] + " new super" + superClass);
+						}
+						
+						// make the change
 						prop.setRange(new OntologyRange(superClass));
 					} else {
 						// throw error
