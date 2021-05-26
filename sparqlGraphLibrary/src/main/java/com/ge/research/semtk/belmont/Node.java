@@ -308,7 +308,8 @@ public class Node extends Returnable {
 				OntologyClass correctRangeClass = oInfo.getClass(correctRangeStr);
 				
 				// is range incorrect
-				boolean rangeErrFlag = ! oInfo.classIsA(nRangeClass, correctRangeClass);
+				// PEC HERE: this isn't right.  They need to be equal.
+				boolean rangeErrFlag = ! nRangeStr.equals(correctRangeStr);
 				
 				// 6. check for targets with classes that aren't a type of the CORRECT range
 				ArrayList<Node> targetErrList = new ArrayList<Node>();
