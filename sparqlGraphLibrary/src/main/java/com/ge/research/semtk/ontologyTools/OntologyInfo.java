@@ -1180,6 +1180,25 @@ public class OntologyInfo {
 		
 		// loop through and make the property, pull class...
 		for(int i = 0; i < classList.length; i += 1){
+			
+			//////////////// new bug 5/2021 needs looking at properties query ////////////////////
+			// skip rows with empty range if there's another identical one with range
+			// seems to be caused by sadl "with values of type { A or B } "
+			boolean skipRow = false;
+			if (rangeList[i].isEmpty()) {
+				for (int j=0; j < classList.length; j++) {
+					if (classList[j].equals(classList[i]) && propertyList[j].equals(propertyList[i]) && !rangeList[j].isEmpty()) {
+						skipRow = true;
+						break;
+					}
+				}
+			}
+			if (skipRow) {
+				continue;
+			}
+			
+			////////////////////////////////////
+			
 			OntologyProperty prop = null;
 			
 			// get prop from propertyHash, or create it
