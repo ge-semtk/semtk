@@ -84,7 +84,7 @@ public class SparqlToXUtils {
   }
   
   public static String generateInsertTripleQuery(SparqlEndpointInterface sei, String sub, String pred, String obj) {
-	  return "INSERT INTO <" + sei.getGraph() + "> { " + sub + " " + pred + " " + obj + "}";
+	  return "INSERT DATA { GRAPH <" + sei.getGraph() + "> { " + sub + " " + pred + " " + obj + "} }";
   }
 	/**
 	 * Generate a DELETE query for a specific URI.
