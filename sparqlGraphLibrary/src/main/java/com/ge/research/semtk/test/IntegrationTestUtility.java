@@ -25,6 +25,7 @@ import static org.junit.Assume.assumeTrue;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
@@ -352,7 +353,7 @@ public class IntegrationTestUtility{
 		
 		Table servicesFDCConfig = FdcServiceManager.junitGetFdcConfig(IntegrationTestUtility.getServicesSei(),IntegrationTestUtility.getOntologyInfoClient());
 		assumeTrue("Skipping FDC _IT tests because services graph doesn't contain FDC Config (e.g. http://research.ge.com/semtk/fdcSample/test#AircraftLocation)",
-					List.of(servicesFDCConfig.getColumn("fdcClass")).contains("http://research.ge.com/semtk/fdcSample/test#AircraftLocation"));
+					Arrays.asList(servicesFDCConfig.getColumn("fdcClass")).contains("http://research.ge.com/semtk/fdcSample/test#AircraftLocation"));
 		// setup
 		IntegrationTestUtility.authenticateJunit();		
 		TestGraph.clearGraph();
