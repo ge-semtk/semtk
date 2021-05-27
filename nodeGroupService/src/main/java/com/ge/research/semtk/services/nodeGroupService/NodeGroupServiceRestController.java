@@ -57,6 +57,8 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupService.SparqlIdReturnedTuple;
 import com.ge.research.semtk.nodeGroupService.SparqlIdTuple;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.ontologyTools.OntologyProperty;
+import com.ge.research.semtk.ontologyTools.OntologyRange;
 import com.ge.research.semtk.plotting.PlotSpec;
 import com.ge.research.semtk.plotting.PlotSpecs;
 import com.ge.research.semtk.plotting.PlotlyPlotSpec;
@@ -973,7 +975,8 @@ public class NodeGroupServiceRestController {
 	}
 
 	@ApiOperation(
-			value="change the domain or range of a nodegroup element"
+			value="change the domain or range of a nodegroup element",
+			notes="domain: if domain is a valid property, sets the range too"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/changeItemURI", method=RequestMethod.POST)
@@ -1006,9 +1009,17 @@ public class NodeGroupServiceRestController {
 						nodegroup.deleteProperty(node, prop);
 						importSpec.deleteProperty(node.getSparqlID(), prop.getUriRelationship());
 					} else {
-						nodegroup.changeItemDomain(node, prop, newURI);
+						PropertyItem newProp = nodegroup.changeItemDomain(node, prop, newURI);
 						importSpec.changePropertyDomain(node.getSparqlID(), prop.getUriRelationship(), newURI);
+						
+						// If newURI is a valid property in ontology, make sure range is correct too
+						OntologyProperty oProp = oInfo.getProperty(newURI);
+						if (oProp != null) {
+							nodegroup.changeItemRange(newProp, oProp.getRangeStr());
+						}
 					}
+					
+					
 				} else {
 					// nodeItem
 					Node node = itemStr.getSnode();
@@ -1019,9 +1030,16 @@ public class NodeGroupServiceRestController {
 						nodegroup.deleteNodeItem(node, nItem);
 						// no effect on importSpec
 					} else {
-						nodegroup.changeItemDomain(node, nItem, target, newURI);
+						NodeItem newNodeItem = nodegroup.changeItemDomain(node, nItem, target, newURI);
 						// no effect on importSpec
+						
+						// If newURI is a valid property in ontology, make sure range is correct too
+						OntologyProperty oProp = oInfo.getProperty(newURI);
+						if (oProp != null) {
+							nodegroup.changeItemRange(newNodeItem, oProp.getRangeStr());
+						}
 					}
+					
 				}
 			} else {
 				// do the work for RANGE

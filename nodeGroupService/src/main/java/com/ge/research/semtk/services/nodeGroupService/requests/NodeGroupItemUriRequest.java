@@ -38,7 +38,8 @@ public class NodeGroupItemUriRequest extends NodegroupRequest {
 	@ApiModelProperty(
             value = "domainOrRange",
             required = true,
-            example = "uri://this")
+            example = "domain",
+            notes = "range - change the range only<br>" + "domain - change domain.  If domain is valid to model, change range too if wrong.")
 	@Pattern(regexp = "(domain|range)")
     private String domainOrRange;
 
