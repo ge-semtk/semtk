@@ -25,6 +25,7 @@ import static org.junit.Assume.assumeTrue;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
@@ -349,6 +350,9 @@ public class IntegrationTestUtility{
 		assumeTrue("Skipping FDC tests, using non-FDC dispatcher class: " + IntegrationTestUtility.get("integrationtest.dispatcherclassname"), 
 				IntegrationTestUtility.get("integrationtest.dispatcherclassname").contains("FdcDispatcher"));
 		
+		Table servicesFDCConfig = FdcServiceManager.junitGetFdcConfig(IntegrationTestUtility.getServicesSei(),IntegrationTestUtility.getOntologyInfoClient());
+		assumeTrue("Skipping FDC _IT tests because services graph doesn't contain FDC Config (e.g. http://research.ge.com/semtk/fdcSample/test#AircraftLocation)",
+					List.of(servicesFDCConfig.getColumn("fdcClass")).contains("http://research.ge.com/semtk/fdcSample/test#AircraftLocation"));
 		// setup
 		IntegrationTestUtility.authenticateJunit();		
 		TestGraph.clearGraph();
@@ -368,7 +372,7 @@ public class IntegrationTestUtility{
 		TestGraph.uploadOwlContents(configOwl);	
 		// force re-cache from test graph, different than normal semtk services which FDCDispatcher will use later
 		FdcServiceManager.cacheFdcConfig(TestGraph.getSei(), IntegrationTestUtility.getOntologyInfoClient());
-		
+
 		// delete just to be sure
 		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroup("fdcSampleDistance");
 		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroup("fdcSampleAircraftLocation");

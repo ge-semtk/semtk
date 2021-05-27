@@ -474,4 +474,20 @@ public class FdcServiceManager {
 		}
 	}
 
+	/**
+	 * For JUNIT:  query the FdcConfig
+	 * @param sei
+	 * @param oInfoClient
+	 * @return
+	 * @throws Exception
+	 */
+	public static Table junitGetFdcConfig(SparqlEndpointInterface sei, OntologyInfoClient oInfoClient) throws Exception {
+		try {
+			AuthorizationManager.setSemtkSuper();
+			return SparqlGraphJson.executeSelectToTable(
+					Utility.getResourceAsJson(sei, "/nodegroups/GetFdcConfig.json"), new SparqlConnection("services", sei), oInfoClient);
+		} finally {
+			AuthorizationManager.clearSemtkSuper();
+		}
+	}
 }
