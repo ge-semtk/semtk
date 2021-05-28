@@ -101,26 +101,44 @@ public class FdcSampleRestController extends GitAndNodegroupFDCRestController {
 		
 		// --- put a sample FDC config in to the services sei if needed --- //
 		
-		try {
-			// load all sorts of extra things to allow access to services graph and oInfo service
-			auth_prop.validateWithExit();
-			AuthorizationManager.authorizeWithExit(auth_prop);
-			servicesgraph_prop.validateWithExit();
-			oinfo_props.validateWithExit();
-			
-			SparqlEndpointInterface servicesSei = servicesgraph_prop.buildSei();
-			Table servicesFDCConfig = FdcServiceManager.junitGetFdcConfig(servicesSei, oinfo_props.getClient());
-			
-			// if FDC config is not loaded
-			if (!Arrays.asList(servicesFDCConfig.getColumn("fdcClass")).contains("http://research.ge.com/semtk/fdcSample/test#AircraftLocation")) {
-				String configOwl = Utility.getResourceAsString(TestGraph.getOSObject(), "/fdcTestSetup/fdcConfigSample.owl");
-				configOwl = configOwl.replace("localhost:12070", "localhost/" + String.valueOf(fdc_props.getPort()));
-				servicesSei.authUploadOwl(configOwl.getBytes());	
+		int msec = 0;
+		while (true) {
+			try {
+				// load all sorts of extra things to allow access to services graph and oInfo service
+				auth_prop.validateWithExit();
+				AuthorizationManager.authorizeWithExit(auth_prop);
+				servicesgraph_prop.validateWithExit();
+				oinfo_props.validateWithExit();
+				
+				SparqlEndpointInterface servicesSei = servicesgraph_prop.buildSei();
+				Table servicesFDCConfig = FdcServiceManager.junitGetFdcConfig(servicesSei, oinfo_props.getClient());
+				
+				// if FDC config is not loaded
+				if (!Arrays.asList(servicesFDCConfig.getColumn("fdcClass")).contains("http://research.ge.com/semtk/fdcSample/test#AircraftLocation")) {
+					String configOwl = Utility.getResourceAsString(this, "/fdcTestSetup/fdcConfigSample.owl");
+					configOwl = configOwl.replace("localhost:12070", "localhost/" + String.valueOf(fdc_props.getPort()));
+					servicesSei.authUploadOwl(configOwl.getBytes());	
+				}
+				
+				return;
+				
+			} catch (Exception e) {
+				if (msec < 60000) {
+					try {
+						Thread.sleep(20000);
+						msec += 20000;
+						
+					} catch (Exception ee) {
+						LocalLogger.logToStdErr("Error trying to load sample FDC config to services graph");
+						LocalLogger.printStackTrace(e);
+					}
+					
+				} else {
+					LocalLogger.logToStdErr("Error trying to load sample FDC config to services graph");
+					LocalLogger.printStackTrace(e);
+					return;
+				}
 			}
-			
-		} catch (Exception e) {
-			LocalLogger.logToStdErr("Error trying to load sample FDC config to services graph");
-			LocalLogger.printStackTrace(e);
 		}
 	}
 	
