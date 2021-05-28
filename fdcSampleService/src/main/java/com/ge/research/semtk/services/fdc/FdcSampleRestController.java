@@ -19,14 +19,18 @@ package com.ge.research.semtk.services.fdc;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
+import static org.junit.Assume.assumeTrue;
+
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 
 import javax.annotation.PostConstruct;
@@ -44,15 +48,24 @@ import org.eclipse.jgit.transport.Transport;
 import org.eclipse.jgit.util.FS;
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.auth.AuthorizationManager;
+import com.ge.research.semtk.properties.OntologyInfoServiceProperties;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.fdc.FdcProperties;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.sparqlX.dispatch.FdcServiceManager;
 import com.ge.research.semtk.springutilib.requests.FdcRequest;
 import com.ge.research.semtk.springutillib.controllers.GitAndNodegroupFDCRestController;
 import com.ge.research.semtk.springutillib.controllers.NodegroupProviderRestController;
+import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
+import com.ge.research.semtk.test.IntegrationTestUtility;
+import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Utility;
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.Session;
@@ -65,10 +78,17 @@ import io.swagger.annotations.ApiOperation;
 @CrossOrigin
 @RestController
 @RequestMapping("/fdcSample")
+@ComponentScan(basePackages = {"com.ge.research.semtk.springutillib"})
 public class FdcSampleRestController extends GitAndNodegroupFDCRestController {
 	private static final String SERVICE_NAME = "fdcSample";
 	@Autowired
 	FdcProperties fdc_props;
+	@Autowired
+	private AuthProperties auth_prop;
+	@Autowired
+	OInfoServiceProperties oinfo_props;
+	@Autowired
+	ServicesGraphProperties servicesgraph_prop;
 	@Autowired 
 	private ApplicationContext appContext;
 	
@@ -79,11 +99,31 @@ public class FdcSampleRestController extends GitAndNodegroupFDCRestController {
 		
 		fdc_props.validateWithExit();
 		
-		// won't use triplestore...so no auth
-		// auth_prop.validateWithExit();
-		//AuthorizationManager.authorizeWithExit(auth_prop);
-
+		// --- put a sample FDC config in to the services sei if needed --- //
+		
+		try {
+			// load all sorts of extra things to allow access to services graph and oInfo service
+			auth_prop.validateWithExit();
+			AuthorizationManager.authorizeWithExit(auth_prop);
+			servicesgraph_prop.validateWithExit();
+			oinfo_props.validateWithExit();
+			
+			SparqlEndpointInterface servicesSei = servicesgraph_prop.buildSei();
+			Table servicesFDCConfig = FdcServiceManager.junitGetFdcConfig(servicesSei, oinfo_props.getClient());
+			
+			// if FDC config is not loaded
+			if (!Arrays.asList(servicesFDCConfig.getColumn("fdcClass")).contains("http://research.ge.com/semtk/fdcSample/test#AircraftLocation")) {
+				String configOwl = Utility.getResourceAsString(TestGraph.getOSObject(), "/fdcTestSetup/fdcConfigSample.owl");
+				configOwl = configOwl.replace("localhost:12070", "localhost/" + String.valueOf(fdc_props.getPort()));
+				servicesSei.authUploadOwl(configOwl.getBytes());	
+			}
+			
+		} catch (Exception e) {
+			LocalLogger.logToStdErr("Error trying to load sample FDC config to services graph");
+			LocalLogger.printStackTrace(e);
+		}
 	}
+	
 	
 	@CrossOrigin
 	@RequestMapping(value="/distance", method= RequestMethod.POST)

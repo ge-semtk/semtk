@@ -23,27 +23,27 @@ import org.springframework.context.annotation.Configuration;
 import com.ge.research.semtk.properties.Properties;
 
 @Configuration
-@ConfigurationProperties(prefix="fdc.sample", ignoreUnknownFields = true)
+@ConfigurationProperties(prefix="fdcsample", ignoreUnknownFields = true)
 public class FdcProperties extends Properties {
 	
-	private int deleteme = 10;
-	
+	private int port = 10;
+
 	public FdcProperties() {
 		super();
-		setPrefix("fdc.sample");
+		setPrefix("fdcsample");
 	}
 
 	public void validate() throws Exception {
 		super.validate();
-		this.checkRangeInclusive("deleteme", deleteme, 9, 11);
+		this.checkRangeInclusive("port", port, 1000, 999999);
 	}
 	
-	public int getDeleteMe() {
-		return deleteme;
-	}
-	public void setDeleteMe(int s) {
-		this.deleteme = s;
+	public int getPort() {
+		return port;
 	}
 	
+	public void setPort(int port) {
+		this.port = port;
+	}
 	
 }
