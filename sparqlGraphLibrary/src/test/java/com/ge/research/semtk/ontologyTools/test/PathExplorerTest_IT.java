@@ -108,12 +108,16 @@ public class PathExplorerTest_IT {
 		// distance between two airports.
 		// FDC calls could take a long time
 		
-		String query = "select ?uri where { ?uri a <http://research.ge.com/semtk/fdcSample/test#Airport> } limit 2";
-		Table airportTable = TestGraph.execTableSelect(query);
+		NodeGroup ng = new NodeGroup();
+		ng.setSparqlConnection(TestGraph.getSparqlConn());
+		Node airport = ng.addNode("http://research.ge.com/semtk/fdcSample/test#Airport", TestGraph.getOInfo());
+		airport.setIsReturned(true);
+		ng.setLimit(2);
+		Table airportTable = TestGraph.execTableSelect(ng.generateSparqlSelect());
 		String airportUri1 = airportTable.getCell(0, 0);
 		String airportUri2 = airportTable.getCell(1, 0);
 		
-		NodeGroup ng = new NodeGroup();
+		ng = new NodeGroup();
 		ng.addNodeInstance("http://research.ge.com/semtk/fdcSample/test#Airport", oInfo, airportUri1);
 		
 		// Airport -> Aircraft
