@@ -1,0 +1,165 @@
+{
+	"version": 3,
+	"sparqlConn": {
+		"name": "fuseki performance test",
+		"domain": "",
+		"enableOwlImports": false,
+		"model": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/fuseki_test_persistent",
+				"graph": "http://performance_test_0"
+			}
+		],
+		"data": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/fuseki_test_persistent",
+				"graph": "http://performance_test_0"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 13,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://item#itemId",
+						"Constraints": "",
+						"SparqlID": "?itemId_0",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false,
+						"binding": "?itemIdTo",
+						"isBindingReturned": true
+					}
+				],
+				"nodeList": [],
+				"fullURIName": "http://item#Item",
+				"SparqlID": "?Item_0",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE",
+				"binding": "?ItemTo",
+				"isBindingReturned": false
+			},
+			{
+				"propList": [
+					{
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://item#itemId",
+						"Constraints": "",
+						"SparqlID": "?itemId",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false,
+						"binding": "?itemIdFrom",
+						"isBindingReturned": true
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Item_0"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"ValueType": "Item",
+						"UriValueType": "http://item#Item",
+						"ConnectBy": "linkedTo",
+						"Connected": true,
+						"UriConnectBy": "http://item#linkedTo"
+					}
+				],
+				"fullURIName": "http://item#Item",
+				"SparqlID": "?Item",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE",
+				"binding": "?ItemFrom",
+				"isBindingReturned": false
+			}
+		],
+		"orderBy": [],
+		"unionHash": {}
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "itemIdFrom"
+			},
+			{
+				"colId": "col_1",
+				"colName": "itemIdTo"
+			}
+		],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Item",
+				"type": "http://item#Item",
+				"URILookupMode": "noCreate",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://item#itemId",
+						"URILookup": [
+							"?Item"
+						],
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Item_0",
+				"type": "http://item#Item",
+				"URILookupMode": "noCreate",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://item#itemId",
+						"URILookup": [
+							"?Item_0"
+						],
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					}
+				]
+			}
+		]
+	},
+	"plotSpecs": null
+}

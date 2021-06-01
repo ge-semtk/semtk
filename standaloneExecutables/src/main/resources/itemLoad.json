@@ -1,0 +1,86 @@
+{
+	"version": 3,
+	"sparqlConn": {
+		"name": "fuseki performance test",
+		"domain": "",
+		"enableOwlImports": false,
+		"model": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/fuseki_test_persistent",
+				"graph": "http://performance_test_0"
+			}
+		],
+		"data": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/fuseki_test_persistent",
+				"graph": "http://performance_test_0"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 13,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://item#itemId",
+						"Constraints": "",
+						"SparqlID": "?itemId",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"fullURIName": "http://item#Item",
+				"SparqlID": "?Item",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": [],
+		"unionHash": {}
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "itemId"
+			}
+		],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Item",
+				"type": "http://item#Item",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://item#itemId",
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					}
+				]
+			}
+		]
+	},
+	"plotSpecs": null
+}

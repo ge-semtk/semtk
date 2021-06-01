@@ -29,6 +29,7 @@ import com.ge.research.semtk.sparqlX.NeptuneSparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
+import com.ge.research.semtk.utility.Utility;
 
 public class PerformanceTest {
 
@@ -62,9 +63,13 @@ public class PerformanceTest {
 		
 		try {
 			
+			linkItems(60000, 100000);  // 1/100th grammatech
+			//addBatteryDescriptions(40000, 75000);  
+			
+			
+			
 			//addSimpleRows(10, 10000); 
 			//addBatteryDescriptions(1000, 500000);  
-			addBatteryDescriptions(40000, 75000);  
 			//addBatteryDescriptionsVaryingThreadsAndSize(0);
 			//addSimpleBiggerRows(10, 50000);
 			
@@ -86,7 +91,7 @@ public class PerformanceTest {
 		
 		// setup
 		sei.clearGraph();
-		uploadOwl(sei, "/loadTest.owl");
+		uploadOwlFromSGL(sei, "/loadTest.owl");
 		
 		int pass = -1;
 		long triples = 0;
@@ -96,7 +101,7 @@ public class PerformanceTest {
 			int i = 0;
 			
 			// reload the sgJson so ImportSpec can't share between loads, cheat, or get bogged down.
-			SparqlGraphJson sgJson = getSparqlGraphJsonFromFile("/loadTest.json", sei, sei);
+			SparqlGraphJson sgJson = getSGJsonFromSGL("/loadTest.json", sei, sei);
 			
 			// build the rows
 			StringBuilder content = new StringBuilder();
@@ -127,7 +132,7 @@ public class PerformanceTest {
 		
 		// setup
 		sei.clearGraph();
-		uploadOwl(sei, "/loadTestDuraBattery.owl");
+		uploadOwlFromSGL(sei, "/loadTestDuraBattery.owl");
 		
 		int pass = -1;
 		long triples = 0;
@@ -137,7 +142,7 @@ public class PerformanceTest {
 			int i = 0;
 
 			// reload the sgJson so ImportSpec can't share between loads, cheat, or get bogged down.
-			SparqlGraphJson sgJson = getSparqlGraphJsonFromFile("/loadTestDuraBattery.json", sei, sei);
+			SparqlGraphJson sgJson = getSGJsonFromSGL("/loadTestDuraBattery.json", sei, sei);
 			
 			StringBuilder content = new StringBuilder();
 			content.append("batt_id,description_opt,cell1_id_opt,cell1_color,cell2_id_opt,cell2_color,cell3_id_opt,cell3_color,cell4_id_opt,cell4_color\n");
@@ -181,9 +186,9 @@ public class PerformanceTest {
 	private static void addBatteryDescriptions(int rows_per_pass, int max_triples) throws Exception {
 		
 		// setup loads
-		SparqlGraphJson sgJson1 = getSparqlGraphJsonFromFile("/loadTestDuraBattery.json", sei, sei);
-		SparqlGraphJson sgJson2 = getSparqlGraphJsonFromFile("/lookupBatteryIdAddDesc.json", sei, sei);
-		SparqlGraphJson sgJson3 = getSparqlGraphJsonFromFile("/lookupSuperclassIdAddDesc.json", sei, sei);
+		SparqlGraphJson sgJson1 = getSGJsonFromSGL("/loadTestDuraBattery.json", sei, sei);
+		SparqlGraphJson sgJson2 = getSGJsonFromSGL("/lookupBatteryIdAddDesc.json", sei, sei);
+		SparqlGraphJson sgJson3 = getSGJsonFromSGL("/lookupSuperclassIdAddDesc.json", sei, sei);
 		
 		// set up a query
 		OntologyInfo oInfo = new OntologyInfo(new SparqlConnection("Perftest", sei));
@@ -192,7 +197,7 @@ public class PerformanceTest {
 		ng2.setLimit(limit);
 		
 		sei.clearGraph();
-		uploadOwl(sei, "/loadTestDuraBattery.owl");
+		uploadOwlFromSGL(sei, "/loadTestDuraBattery.owl");
 		long triples = 0;
 
 		int pass = -1;
@@ -207,9 +212,9 @@ public class PerformanceTest {
 			int total_rows = (pass + 1) * rows_per_pass;
 			
 			// reload the sgJson so ImportSpec can't share between loads, cheat, or get bogged down.
-			sgJson1 = getSparqlGraphJsonFromFile("/loadTestDuraBattery.json", sei, sei);
-			sgJson2 = getSparqlGraphJsonFromFile("/lookupBatteryIdAddDesc.json", sei, sei);
-			sgJson3 = getSparqlGraphJsonFromFile("/lookupSuperclassIdAddDesc.json", sei, sei);
+			sgJson1 = getSGJsonFromSGL("/loadTestDuraBattery.json", sei, sei);
+			sgJson2 = getSGJsonFromSGL("/lookupBatteryIdAddDesc.json", sei, sei);
+			sgJson3 = getSGJsonFromSGL("/lookupSuperclassIdAddDesc.json", sei, sei);
 			
 			// build some rows
 			StringBuilder content1 = new StringBuilder();
@@ -314,6 +319,61 @@ public class PerformanceTest {
 
 	}
 	
+	
+	/**
+	 
+	 * @param passes
+	 * @throws Exception
+	 */
+	private static void linkItems(int numItems, int numLinks) throws Exception {
+		
+		// setup loads
+		SparqlGraphJson sgJsonItemLoad = getSGJsonResource("/itemLoad.json", sei, sei);
+		SparqlGraphJson sgJsonItemLoadLinks = getSGJsonResource("/itemLoadLinks.json", sei, sei);
+
+		// set up a query
+		OntologyInfo oInfo = new OntologyInfo(new SparqlConnection("Perftest", sei));
+		NodeGroup ngItemLoad = sgJsonItemLoad.getNodeGroupNoInflateNorValidate(oInfo);
+		NodeGroup ngItemLoadLinks = sgJsonItemLoadLinks.getNodeGroupNoInflateNorValidate(oInfo);
+		
+		sei.clearGraph();
+		uploadOwlResource(sei, "/item.owl");
+		
+		// build items
+		StringBuilder content = new StringBuilder();
+		content.append("itemId\n");
+		for (int i=0; i < numItems; i++) {
+			content.append("id_" + i + "\n");
+		}
+		
+		// load items
+		Dataset ds = new CSVDataset(content.toString(), true);
+		DataLoader loader = new DataLoader(sgJsonItemLoad, ds, "dba", "dba");
+		startTask("linkItems load items: " + numItems);
+		loader.importData(true);
+		endTask();
+		
+		
+		// build links
+		content = new StringBuilder();
+		content.append("itemIdFrom, itemIdTo\n");
+		int linksBuilt = 0;
+		for (int i=0; i < numItems-1 && linksBuilt < numLinks; i++) {
+			for (int j=i+1; j < numItems && linksBuilt < numLinks; j++) {
+				content.append("id_" + i + ", id_" + j + "\n");
+				linksBuilt ++;
+			}
+		}
+
+		// load links
+		ds = new CSVDataset(content.toString(), true);
+		loader = new DataLoader(sgJsonItemLoadLinks, ds, "dba", "dba");
+		startTask("linkItems load links: " + linksBuilt);
+		loader.importData(true);
+		endTask();
+		
+	}
+	
 	private static long countTriples(String name, int total_rows) throws Exception {
 		startTask(name + " count triples, rows," + total_rows);
 		long triples = sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
@@ -331,7 +391,7 @@ public class PerformanceTest {
 		// setup
 		
 		sei.clearGraph();
-		uploadOwl(sei, "/loadTestDuraBattery.owl");
+		uploadOwlFromSGL(sei, "/loadTestDuraBattery.owl");
 		long triples = 0;
 
 		int pass = -1;
@@ -340,8 +400,8 @@ public class PerformanceTest {
 			for (int querySize = 500; querySize < 10000; querySize += 500) {
 				
 				// reload sgJson objects so it ImportSpec can't cheat or get bogged down between loads
-				SparqlGraphJson sgJson1 = getSparqlGraphJsonFromFile("/loadTestDuraBattery.json", sei, sei);
-				SparqlGraphJson sgJson2 = getSparqlGraphJsonFromFile("/lookupBatteryIdAddDesc.json", sei, sei);
+				SparqlGraphJson sgJson1 = getSGJsonFromSGL("/loadTestDuraBattery.json", sei, sei);
+				SparqlGraphJson sgJson2 = getSGJsonFromSGL("/lookupBatteryIdAddDesc.json", sei, sei);
 				
 				// build 10,000 rows
 				int i = 0;
@@ -398,16 +458,33 @@ public class PerformanceTest {
 		return seconds;
 	}
 	
-	public static void uploadOwl(SparqlEndpointInterface sei, String filename) throws Exception {
+	public static void uploadOwlFromSGL(SparqlEndpointInterface sei, String filename) throws Exception {
 		File f = Paths.get(resourceFolder + "/" + filename).toFile();
 		byte [] owl =  FileUtils.readFileToByteArray(f);
 		sei.executeAuthUpload(owl);
 	}
 	
-	public static SparqlGraphJson getSparqlGraphJsonFromFile(String jsonFilename, SparqlEndpointInterface modelSei, SparqlEndpointInterface dataSei) throws Exception {	
+	public static void uploadOwlResource(SparqlEndpointInterface sei, String filename) throws Exception {
+		byte [] owl = Utility.getResourceAsBytes(PerformanceTest.class, filename);
+		sei.executeAuthUpload(owl);
+	}
+	
+	public static SparqlGraphJson getSGJsonFromSGL(String jsonFilename, SparqlEndpointInterface modelSei, SparqlEndpointInterface dataSei) throws Exception {	
 		InputStream is = Files.newInputStream(Paths.get(resourceFolder,jsonFilename));
 		InputStreamReader reader = new InputStreamReader(is);
 		JSONObject jObj = (JSONObject) (new JSONParser()).parse(reader);	
+		return buildSGJSON(jObj, modelSei, dataSei);
+
+		
+		
+	}	
+	
+	public static SparqlGraphJson getSGJsonResource(String jsonFilename, SparqlEndpointInterface modelSei, SparqlEndpointInterface dataSei) throws Exception {	
+		JSONObject jObj = Utility.getResourceAsJson(PerformanceTest.class, jsonFilename);
+		return buildSGJSON(jObj, modelSei, dataSei);
+	}	
+	
+	public static SparqlGraphJson buildSGJSON(JSONObject jObj, SparqlEndpointInterface modelSei, SparqlEndpointInterface dataSei) throws Exception {		
 		
 		SparqlGraphJson ret = new SparqlGraphJson(jObj);
 		

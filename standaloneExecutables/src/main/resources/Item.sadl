@@ -1,0 +1,9 @@
+uri "http://item".
+
+Item is a class,
+	described by itemId with a single value of type string,
+	described by linkedTo with values of type Item.
+	
+ItemSub1 is a type of Item.
+
+ItemSub2 is a type of ItemSub1.
