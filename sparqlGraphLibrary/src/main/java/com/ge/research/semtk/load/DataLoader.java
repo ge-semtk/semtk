@@ -427,7 +427,7 @@ public class DataLoader implements Runnable {
 					if (dumpCacheNext > 0 && startingRow > dumpCacheNext) {
 						// upload and clear
 						int len = uploadTempGraph();
-						this.cacheSei.clearGraph();
+						this.cacheSei = new InMemoryInterface("http://cache");
 						
 						// check size and adjust dumpCacheRowInterval with 1/3 weighted average
 						int newInterval = (int) (this.maxCacheLength) / Math.max(50000, len) * dumpCacheRowInterval;
