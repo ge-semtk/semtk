@@ -785,9 +785,13 @@ public class ImportSpecHandler {
 				lookupNodegroup = this.getLookupNodegroup(nodeID);
 				SparqlEndpointInterface safeEndpoint = this.nonThreadSafeEndpoint.copy();
 				String query = this.getLookupQuery(lookupNodegroup, nodeID, builtStrings);
-				TableResultSet res = (TableResultSet) safeEndpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
-				res.throwExceptionIfUnsuccessful();
-				tab = res.getTable();
+				if (query.equals(UriCache.EMPTY_LOOKUP)) {
+					return UriCache.EMPTY_LOOKUP;
+				} else {
+					TableResultSet res = (TableResultSet) safeEndpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+					res.throwExceptionIfUnsuccessful();
+					tab = res.getTable();
+				}
 			}
 			
 			// Check and return results
