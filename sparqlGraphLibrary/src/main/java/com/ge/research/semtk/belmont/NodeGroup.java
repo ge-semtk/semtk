@@ -2789,8 +2789,7 @@ public class NodeGroup {
 			}
 		} 
 	}
-	
-    
+	    
     /**
      * Bindings appear to cause great slowdowns in Fuseki (others unknown)
      * Remove any stray bindings that aren't returned and don't appear in constraints.
@@ -4225,17 +4224,28 @@ public class NodeGroup {
 		}
 		
 		// loop through the nodes and get any values we may need. 
-		for(Node curr : this.nodes){
+		for(Node node : this.nodes){
 			
-			Boolean currIsEnum = oInfo.classIsEnumeration(curr.getFullUriName());
-			Boolean currInstanceBlank = false;
-			String currInstanceValue = curr.getInstanceValue();
+			Boolean nodeIsEnum = oInfo.classIsEnumeration(node.getFullUriName());
+			Boolean instanceIsBlank = false;
+			String instanceValue = node.getInstanceValue();
 			
-			if(currInstanceValue == null || currInstanceValue == "" || currInstanceValue.isEmpty()){
-				currInstanceBlank = true;
-			}
+			instanceIsBlank = (instanceValue == null ||  instanceValue.isEmpty());
 
-			String sparqlID = curr.getSparqlID() + sparqlIDSuffix;
+			String subject = null;
+			if (!instanceIsBlank) {
+				
+				String nodeVal = this.applyBaseURI(instanceValue);
+				nodeVal = this.applyPrefixing(nodeVal);
+				nodeVal = this.applyAngleBrackets(nodeVal);  // VARISH's unusual URI's with no '#'
+				subject = nodeVal;
+
+			} else {
+				String sparqlID = node.getSparqlID() + sparqlIDSuffix;
+				subject = sparqlID;
+			}
+			
+			
 			// makes sure to indicate that this node was of its own type. it comes up.
 		
 			/**
@@ -4249,21 +4259,38 @@ public class NodeGroup {
 			 */
 			
 			// only add this node if the current instance should be included. 
-			if((!currIsEnum) || (currIsEnum && !currInstanceBlank)){   
-				if(!currIsEnum && !curr.isInstanceLookedUp()){	    // do not include type info when the target is an enum or URI was looked up
-					retval += "\t" + sparqlID + " a " + this.applyPrefixing(curr.getFullUriName()) + " . \n";
+			if((!nodeIsEnum) || (nodeIsEnum && !instanceIsBlank)){   
+				if(!nodeIsEnum && !node.isInstanceLookedUp()){	    // do not include type info when the target is an enum or URI was looked up
+					retval += "\t" + subject + " a " + this.applyPrefixing(node.getFullUriName()) + " . \n";
 				}
 				// insert each property we know of. 
-				for(PropertyItem prop : curr.getPropertyItems()){
+				for(PropertyItem prop : node.getPropertyItems()){
 					for(String inst : prop.getInstanceValues()){
-						retval += "\t" + sparqlID + " " + this.applyPrefixing(prop.getUriRelationship()) + " " + prop.getValueType().buildRDF11ValueString(inst, "XMLSchema") + " .\n";  
+						retval += "\t" + subject + " " + this.applyPrefixing(prop.getUriRelationship()) + " " + prop.getValueType().buildRDF11ValueString(inst, "XMLSchema") + " .\n";  
 					}
 				}
 				
 				// insert a line for each node item
-				for(NodeItem ni : curr.getNodeItemList()){
-					for(Node currentConnection : ni.getNodeList()){
-						retval += "\t" + sparqlID + " " + this.applyPrefixing(ni.getUriConnectBy()) + " " + currentConnection.getSparqlID() + sparqlIDSuffix + " .\n";
+				for(NodeItem ni : node.getNodeItemList()){
+					for(Node target : ni.getNodeList()){
+						
+						String targetInstanceValue = target.getInstanceValue();
+						
+						String predicate = null;
+						if (targetInstanceValue != null && !targetInstanceValue.isEmpty()) {
+							
+							String nodeVal = this.applyBaseURI(targetInstanceValue);
+							nodeVal = this.applyPrefixing(nodeVal);
+							nodeVal = this.applyAngleBrackets(nodeVal);  // VARISH's unusual URI's with no '#'
+							predicate = nodeVal;
+
+						} else {
+							String sparqlID = node.getSparqlID() + sparqlIDSuffix;
+							predicate = sparqlID;
+						}
+						
+						
+						retval += "\t" + subject + " " + this.applyPrefixing(ni.getUriConnectBy()) + " " + predicate + " .\n";
 					}
 				}
 			}
@@ -4295,10 +4322,12 @@ public class NodeGroup {
 			if (!instanceIsBlank) {
 				// URI was specified
 				
-				String nodeVal = this.applyBaseURI(node.getInstanceValue());
-				nodeVal = this.applyPrefixing(nodeVal);
-				nodeVal = this.applyAngleBrackets(nodeVal);  // VARISH's unusual URI's with no '#'
-				sparql.append("\tBIND (" + nodeVal + " AS " + sparqlId + ").\n");
+				// -- Moved to generateInsertLeader()--
+				
+				// String nodeVal = this.applyBaseURI(node.getInstanceValue());
+				// nodeVal = this.applyPrefixing(nodeVal);
+				// nodeVal = this.applyAngleBrackets(nodeVal);  // VARISH's unusual URI's with no '#'
+				// sparql.append("\tBIND (" + nodeVal + " AS " + sparqlId + ").\n");
 			
 			} else if(instanceIsBlank && !nodeIsEnum){
 				ArrayList<PropertyItem> constrainedProps = node.getConstrainedPropertyObjects();
