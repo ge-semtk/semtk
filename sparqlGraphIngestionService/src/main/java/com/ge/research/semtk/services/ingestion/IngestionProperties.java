@@ -23,6 +23,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import com.ge.research.semtk.logging.easyLogger.EasyLogEnabledConfigProperties;
+import com.ge.research.semtk.utility.LocalLogger;
 
 @Configuration
 @ConfigurationProperties(prefix="ingestion", ignoreUnknownFields = true)
@@ -31,6 +32,7 @@ public class IngestionProperties extends EasyLogEnabledConfigProperties{
 	private String sparqlUserName = "";
 	private String sparqlPassword = "";
 	private int batchSize = 50;
+	private int maxThreads = 3;
 	
 	private String loadTrackAwsRegion = "";
 	private String loadTrackS3Bucket = "";
@@ -66,6 +68,15 @@ public class IngestionProperties extends EasyLogEnabledConfigProperties{
 		return this.batchSize;
 	}
 	
+	public void setMaxThreads(int maxThreads){
+		LocalLogger.logToStdOut("ingestionMaxThreads=" + String.valueOf(maxThreads));
+		this.maxThreads = maxThreads;
+	}
+	
+	public int getMaxThreads(){
+		return this.maxThreads;
+	}
+	
 	public String getLoadTrackAwsRegion() {
 		return loadTrackAwsRegion;
 	}
@@ -98,5 +109,6 @@ public class IngestionProperties extends EasyLogEnabledConfigProperties{
 		checkNone("sparqlUserName", sparqlUserName);
 		checkNoneMaskValue("sparqlPassword", sparqlPassword);
 		checkNone("batchSize", batchSize);
+		checkNone("maxThreads", maxThreads);
 	}
 }

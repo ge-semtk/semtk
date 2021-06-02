@@ -670,7 +670,8 @@ public class IngestionRestController {
 
 			// load
 			DataLoader dl = new DataLoader(sgJson, ds, prop.getSparqlUserName(), prop.getSparqlPassword());
-			
+			dl.overrideMaxThreads(prop.getMaxThreads());
+
 			recordsProcessed = dl.importData(precheck, skipIngest);
 	
 			// yet some more logging
@@ -818,7 +819,7 @@ public class IngestionRestController {
 			// get a CSV data set to use in the load. 
 			Dataset ds = new CSVDataset(dataFileContent, true);
 			DataLoader dl = new DataLoader(sgJson, ds, prop.getSparqlUserName(), prop.getSparqlPassword());
-			
+			dl.overrideMaxThreads(prop.getMaxThreads());
 			
 			
 			dl.runAsync(precheck, skipIngest, 
@@ -913,7 +914,8 @@ public class IngestionRestController {
 			Dataset ds = new ODBCDataset(postgresDriver, dbUrl, dbUser, dbPassword, dbQuery);
 			
 			// perform actual load
-			DataLoader dl = new DataLoader(new SparqlGraphJson(json), prop.getBatchSize(), ds, sparqlEndpointUser, sparqlEndpointPassword);
+			DataLoader dl = new DataLoader(new SparqlGraphJson(json), ds, sparqlEndpointUser, sparqlEndpointPassword);
+			dl.overrideMaxThreads(prop.getMaxThreads());
 			dl.importData(true);	// defaulting to precheck
 	
 			retval.setSuccess(true);
