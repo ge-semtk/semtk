@@ -27,6 +27,7 @@ import com.ge.research.semtk.load.utility.DataLoadBatchHandler;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class IngestionWorkerThread extends Thread {
@@ -76,14 +77,25 @@ public class IngestionWorkerThread extends Thread {
 	public void run(){
 		final boolean DEBUG_QUERIES = false;
 		ThreadAuthenticator.authenticateThisThread(this.headerTable);
+		long start;
+		long convertTime=0;
+		long generateTime=0;
+		long executeTime=0;
+		long splitTime=0;
+
 		
 		try {
+			start = System.currentTimeMillis();
 			ArrayList<NodeGroup> nodeGroupList = this.batchHandler.convertToNodeGroups(this.dataSetRecords, this.startingRowNum, this.skipChecks);
+			convertTime += (System.currentTimeMillis() - start);
 			
 			if (nodeGroupList.size() > 0 && ! this.skipIngest) {
 				
 				// try to run one efficient query
+				start = System.currentTimeMillis();
 				String query = NodeGroup.generateCombinedSparqlInsert(nodeGroupList, oInfo, this.endpoint);
+				generateTime += (System.currentTimeMillis() - start);
+
 				int queryLen = query.length();
 				int targetMin = (int) (this.optimalQueryChars * 0.75);
 				int targetMax = (int) (this.optimalQueryChars * 1.25);
@@ -91,17 +103,22 @@ public class IngestionWorkerThread extends Thread {
 				if (queryLen >= targetMin && queryLen <= targetMax) {
 					if (DEBUG_QUERIES) System.err.println("query: " + query);
 					
+					start = System.currentTimeMillis();
 					this.endpoint.executeQuery(query, SparqlResultTypes.CONFIRM);
+					executeTime += (System.currentTimeMillis() - start);
 					
 				} else {
-					
+					start = System.currentTimeMillis();
 					ArrayList<String> queryList = this.splitIntoQueries(nodeGroupList);
+					splitTime += (System.currentTimeMillis() - start);
 					
 					// run queryList
 					for (String q : queryList) {
 						if (DEBUG_QUERIES) System.err.println("q: " + q);
 						
+						start = System.currentTimeMillis();
 						this.endpoint.executeQuery(q, SparqlResultTypes.CONFIRM);
+						executeTime += (System.currentTimeMillis() - start);
 					}
 				}
 			}
@@ -112,6 +129,7 @@ public class IngestionWorkerThread extends Thread {
 			LocalLogger.printStackTrace(e);
 			this.e = e;
 		}
+		if (DEBUG_QUERIES) System.out.println(String.format("convert %f generate %f execute %f split %f", convertTime/1000.0, generateTime/1000.0, executeTime/1000.0, splitTime/1000.0));
 	}
 	
 	/**
