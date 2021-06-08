@@ -326,6 +326,8 @@ public class PerformanceTest {
 	 * @throws Exception
 	 */
 	private static void linkItems(int numItems, int numLinks) throws Exception {
+		final int MAX_THREADS = 9;
+		System.out.println("max threads " + MAX_THREADS);
 		
 		// setup loads
 		SparqlGraphJson sgJsonItemLoad = getSGJsonResource("/itemLoad.json", sei, sei);
@@ -349,6 +351,7 @@ public class PerformanceTest {
 		// load items
 		Dataset ds = new CSVDataset(content.toString(), true);
 		DataLoader loader = new DataLoader(sgJsonItemLoad, ds, "dba", "dba");
+		loader.overrideMaxThreads(MAX_THREADS);
 		startTask("linkItems load items: " + numItems);
 		loader.importData(true);
 		endTask();
@@ -368,6 +371,7 @@ public class PerformanceTest {
 		// load links
 		ds = new CSVDataset(content.toString(), true);
 		loader = new DataLoader(sgJsonItemLoadLinks, ds, "dba", "dba");
+		loader.overrideMaxThreads(MAX_THREADS);
 		startTask("linkItems load links: " + linksBuilt);
 		loader.importData(true);
 		endTask();
