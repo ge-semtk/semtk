@@ -222,10 +222,10 @@ public class QueryGenTest_IT {
 		String optminusQualifierRows[] = new String[]{
 				String.valueOf(NodeItem.OPTIONAL_FALSE) + ";;6;6;6;Query with no optional/minus nor qualifier ", 
 				
-				String.valueOf(NodeItem.OPTIONAL_FALSE) + ";*;19;9;9;Query with no optional/minus * qualifier ", 
-				String.valueOf(NodeItem.OPTIONAL_FALSE) + ";+;10;6;6;Query with no optional/minus + qualifier ", 
-				String.valueOf(NodeItem.OPTIONAL_FALSE) + ";?;15;9;9;Query with no optional/minus ? qualifier ", 
-				String.valueOf(NodeItem.OPTIONAL_FALSE) + ";^;6;6;6;Query with no optional/minus ^ qualifier ", 
+				String.valueOf(NodeItem.OPTIONAL_FALSE) + ";*;19;9;9;Query with no optional/minus and * qualifier ", 
+				String.valueOf(NodeItem.OPTIONAL_FALSE) + ";+;10;6;6;Query with no optional/minus and + qualifier ", 
+				String.valueOf(NodeItem.OPTIONAL_FALSE) + ";?;15;9;9;Query with no optional/minus and ? qualifier ", 
+				String.valueOf(NodeItem.OPTIONAL_FALSE) + ";^;6;6;6;Query with no optional/minus and ^ qualifier ", 
 				
 				String.valueOf(NodeItem.OPTIONAL_TRUE) + ";;9;9;7;Query with optional and no qualifier ", 
 				String.valueOf(NodeItem.OPTIONAL_TRUE) + ";*;19;9;9;Query with optional and * qualifier ", 

@@ -742,6 +742,12 @@ public class ImportSpecHandler {
 		// Build the mapping results into builtStrings
 		for (ImportMapping mapping : this.lookupMappings.get(nodeID)) {
 			String builtStr = mapping.buildString(record);
+			
+			// check for empties
+			if (builtStr == null || builtStr.isEmpty()) {
+				return UriCache.EMPTY_LOOKUP;
+			}
+						
 			builtStrings.add(builtStr);
 		}
 				
@@ -785,13 +791,11 @@ public class ImportSpecHandler {
 				lookupNodegroup = this.getLookupNodegroup(nodeID);
 				SparqlEndpointInterface safeEndpoint = this.nonThreadSafeEndpoint.copy();
 				String query = this.getLookupQuery(lookupNodegroup, nodeID, builtStrings);
-				if (query.equals(UriCache.EMPTY_LOOKUP)) {
-					return UriCache.EMPTY_LOOKUP;
-				} else {
-					TableResultSet res = (TableResultSet) safeEndpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
-					res.throwExceptionIfUnsuccessful();
-					tab = res.getTable();
-				}
+				
+				TableResultSet res = (TableResultSet) safeEndpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+				res.throwExceptionIfUnsuccessful();
+				tab = res.getTable();
+				
 			}
 			
 			// Check and return results
@@ -848,11 +852,6 @@ public class ImportSpecHandler {
 
 			Node node = lookupNodegroup.getNodeBySparqlID(mapping.getNodeSparqlID());
 
-			// check for empties
-			if (builtString == null || builtString.isEmpty()) {
-				//throw new Exception("URI Lookup field is empty for node " + node.getSparqlID());
-				return UriCache.EMPTY_LOOKUP;
-			}
 
 			if (mapping.isNode()) {
 				String uri;
