@@ -18,6 +18,7 @@
 
 package com.ge.research.semtk.load;
 
+import java.time.Instant;
 import java.util.ArrayList;
 
 import org.json.simple.JSONObject;
@@ -59,7 +60,7 @@ public class DataLoader implements Runnable {
 	String password = null;
 	OntologyInfo oInfo = null;
 	
-	int maxThreads = 3; // 10;
+	int maxThreads = 3; 
 	int insertQueryIdealSizeOverride = 0;
 	
 	int totalRecordsProcessed = 0;
@@ -78,6 +79,7 @@ public class DataLoader implements Runnable {
 
 	InMemoryInterface cacheSei = null;
 	boolean doNotCache = false;
+	InMemoryInterfaceUploadThread uploadThread = null;
 	
 	public DataLoader(){
 		// default and does nothing special 
@@ -328,6 +330,8 @@ public class DataLoader implements Runnable {
 		int startingRow = 1;
 		int dumpCacheRowInterval = 0;
 		int dumpCacheNext = 0;
+		long startEpoch = Instant.now().getEpochSecond();   // for reporting only
+		int threadsUsed = 0;                                // for reporting only
 		
 		String mode = "";
 		if (skipIngest && skipCheck) {
@@ -375,6 +379,7 @@ public class DataLoader implements Runnable {
 			// and then we can start over.
 			// Over simplistic logic could be improved for performance.
 			if(wrkrs.size() == numThreads){
+				threadsUsed = numThreads;
 				int retries = 0;
 				for(int i = 0; i < wrkrs.size(); i++){
 					IngestionWorkerThread thread = wrkrs.get(i);
@@ -426,7 +431,7 @@ public class DataLoader implements Runnable {
 					// do upload when needed
 					if (dumpCacheNext > 0 && startingRow > dumpCacheNext) {
 						// upload and clear
-						int len = uploadTempGraph();
+						int len = launchUploadCache();
 						this.cacheSei = new InMemoryInterface("http://cache");
 						
 						// check size and adjust dumpCacheRowInterval with 1/3 weighted average
@@ -442,16 +447,21 @@ public class DataLoader implements Runnable {
 		
 		LocalLogger.logToStdOut("..." + recordsProcessed, false, false);
 		
+		// for reporting only
+		if (wrkrs.size() > threadsUsed) {
+			threadsUsed = wrkrs.size();
+		}
 		// join all remaining threads
 		for(int i = 0; i < wrkrs.size(); i++){
 			this.joinAndThrowIfException(wrkrs.get(i), exceptionHeader);
 		}
-		
-		LocalLogger.logToStdOut(" (DONE)", false, true);
+		String timingInfo = String.format(" %d threads %sed %d records in %d sec", threadsUsed, mode, recordsProcessed, Instant.now().getEpochSecond() - startEpoch);
+		LocalLogger.logToStdOut(" (DONE)" + "\n" + timingInfo, false, true);
 		
 		// If a temporary in-memory graph was used, then dump it to owl and upload it
 		if (!skipIngest && this.cacheSei != null) {
-			uploadTempGraph();
+			this.launchUploadCache();
+			this.waitForUpload();    // wait for last one.
 		}
 		
 		// tell status client if there is one set up
@@ -462,33 +472,37 @@ public class DataLoader implements Runnable {
 		return recordsProcessed;
 	}
 	
-	private int uploadTempGraph() throws Exception {
-		LocalLogger.logToStdErr("Generating temporary graph turtle...");
-		String s = this.cacheSei.dumpToTurtle();
-		int len = s.length();
-		if (len > 0) {
-			int tryCount = 1;
-			while (true) {
-				try {
-					LocalLogger.logToStdErr("Uploading " + s.length() + " chars of ttl");
-					
-					this.endpoint.authUploadTurtle(s.getBytes());
-					
-					LocalLogger.logToStdErr("upload complete");
-					return len;
-				} catch (Exception e) {
-					if (tryCount < 4) {
-						this.endpoint.logFailureAndSleep(e, tryCount);
-						tryCount ++;
-					} else {
-						throw new Exception("Giving up uploading temp graph", e);
-					}
-				}
-			}
-			
-		}
+	/**
+	 * Launch a new upload.  Waiting for previous to complete.
+	 * @return length of previous upload, or 0
+	 * @throws Exception
+	 */
+	private int launchUploadCache() throws Exception {
 		
-		return len;
+		int previousLength = this.waitForUpload();
+
+		this.uploadThread = new InMemoryInterfaceUploadThread(this.cacheSei , this.endpoint, this.headerTable);
+		this.uploadThread.start();
+		
+		return previousLength;
+	}
+	
+	/**
+	 * Wait for previous upload to complete, if any
+	 * @return length of upload or 0
+	 * @throws Exception
+	 */
+	private int waitForUpload() throws Exception {
+		if (this.uploadThread != null) {
+			this.uploadThread.join();
+			if (this.uploadThread.getException() != null) {
+				throw this.uploadThread.getException();
+			}
+			return this.uploadThread.getLength();
+		}
+		else {
+			return 0;
+		}
 	}
 	
 	public int getMaxThreads() {
@@ -497,10 +511,21 @@ public class DataLoader implements Runnable {
 
 	/**
 	 * Override the default max threads
-	 * @param maxThreads
+	 * @param maxThreads - number   OR BETTER: zero will set to number of available processors
 	 */
 	public void overrideMaxThreads(int maxThreads) {
-		this.maxThreads = maxThreads;
+		if (maxThreads==0) {
+			int processors = Runtime.getRuntime().availableProcessors();
+			if (processors > 8) {
+				this.maxThreads = 8;    // haven't seen any improvements over 6, but use 8 if we have them
+			} else if (processors > 4) {
+				this.maxThreads = processors - 1;
+			} else {
+				this.maxThreads = processors;
+			}
+		} else {
+			this.maxThreads = maxThreads;
+		}
 	}
 
 	/**

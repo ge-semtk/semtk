@@ -31,8 +31,7 @@ public class IngestionProperties extends EasyLogEnabledConfigProperties{
 	// stuff
 	private String sparqlUserName = "";
 	private String sparqlPassword = "";
-	private int batchSize = 50;
-	private int maxThreads = 3;
+	private int maxThreads = 0;
 	
 	private String loadTrackAwsRegion = "";
 	private String loadTrackS3Bucket = "";
@@ -60,19 +59,19 @@ public class IngestionProperties extends EasyLogEnabledConfigProperties{
 		this.sparqlPassword = sparqlPassword;
 	}
 	
-	public void setBatchSize(int batchSize){
-		this.batchSize = batchSize;
-	}
-	
-	public int getBatchSize(){
-		return this.batchSize;
-	}
-	
+	/**
+	 * Override system computation of how many threads to use.  0 means let system decide.
+	 * @param maxThreads
+	 */
 	public void setMaxThreads(int maxThreads){
 		LocalLogger.logToStdOut("ingestionMaxThreads=" + String.valueOf(maxThreads));
 		this.maxThreads = maxThreads;
 	}
 	
+	/**
+	 * Get a number of threads if set, else 0.
+	 * @return
+	 */
 	public int getMaxThreads(){
 		return this.maxThreads;
 	}
@@ -108,7 +107,6 @@ public class IngestionProperties extends EasyLogEnabledConfigProperties{
 //		checkNotEmptyMaskValue("sparqlPassword", sparqlPassword);
 		checkNone("sparqlUserName", sparqlUserName);
 		checkNoneMaskValue("sparqlPassword", sparqlPassword);
-		checkNone("batchSize", batchSize);
 		checkNone("maxThreads", maxThreads);
 	}
 }
