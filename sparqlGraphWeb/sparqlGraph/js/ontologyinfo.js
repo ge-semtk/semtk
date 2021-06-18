@@ -908,9 +908,10 @@ OntologyInfo.prototype = {
 
 			// STOP CRITERIA D: too much time spent searching
 			var tt = (new Date()).getTime();
-			// PEC TODO: false && turns it off for debugging
-			if ( tt - t0 > SEARCH_TIME_MSEC) {
-				alert("Note: Path-finding timing out.  Search incomplete.");
+
+			if ( false && tt - t0 > SEARCH_TIME_MSEC) {
+                // This message is annoying and serves no purpose
+				//alert("Note: Path-finding timing out.  Search incomplete.");
 				break;
 			}
 
