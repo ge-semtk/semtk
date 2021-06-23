@@ -25,6 +25,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
@@ -95,6 +96,9 @@ public class OntologyInfo {
 	// props found with no Domain.
 	private HashMap<String, OntologyProperty> orphanProps = new HashMap<String, OntologyProperty>();
 	
+	private PredicateStats predStats = null;
+	
+
 	/**
 	 * Default constructor
 	 */
@@ -135,6 +139,21 @@ public class OntologyInfo {
 		return importedGraphs;
 	}
 
+	/**
+	 * Given these stats on frequency of s o p with classes,
+	 * pathFinding will only return paths that actually exist.
+	 * @param predStats
+	 */
+	public void setPredicateStats(PredicateStats predStats) {
+		this.predStats = predStats;
+		connHash = new HashMap<String, ArrayList<OntologyPath>>();
+	}
+	
+	public void clearPredicateStats() {
+		this.predStats = null;
+		connHash = new HashMap<String, ArrayList<OntologyPath>>();
+	}
+	
 	/**
 	 * Load directly from model sparql endpoint interfaces
 	 * @param conn
@@ -240,6 +259,10 @@ public class OntologyInfo {
 		return this.getSubclassNames(maybeSuper).contains(sub);
 	}
 	
+	public boolean isSubPropOf(String sub, String maybeSuper) {
+		return this.getSuperPropNames(sub).contains(maybeSuper);
+	}
+	
 	/**
 	 * Get sub properties given valid for all super and sub properties of the domain class URI.
 	 * @param superPropertyName
@@ -303,7 +326,17 @@ public class OntologyInfo {
 		}
 		return null;
 	}
-	
+	public HashSet<String> getSuperPropNames(String subPropName) {
+		HashSet<String> ret = new HashSet<String>();
+		
+		for (String prop : this.subpropHash.keySet()) {
+			if (this.subpropHash.get(prop).contains(subPropName)) {
+				ret.add(prop);
+			}
+		}
+		
+		return ret;
+	}
 	public ArrayList<String> getSuperclassNames(String subClassName) {
 		return this.getSuperclassNames(subClassName, null);
 	}
@@ -388,17 +421,18 @@ public class OntologyInfo {
 	public ArrayList<OntologyPath> getConnList(String classNameStr) throws ClassException, PathException {
 		// return or calculate all legal one-hop path connections to and from a class
 		
+		// if we haven't hashed the answer in connHash yet
 		if (! this.connHash.containsKey(classNameStr)) {
+			
 			ArrayList<OntologyPath> ret = new ArrayList<OntologyPath>();
-			// OntologyProperty prop; // bug in Javascript that doesn't do anything bad
 			OntologyPath path;
 			if (! this.classHash.containsKey(classNameStr)) {
 				throw new ClassException("Internal error in OntologyInfo.getConnList(): class name is not in the ontology: " + classNameStr);
 			}
+			
 			OntologyClass classVal = this.classHash.get(classNameStr);
 			HashMap <String, Integer> foundHash = new HashMap <String, Integer>();     // hash of path.asString()     PEC TODO FAILS when Man-hasSon->Man hashes same as Man<-hasSon-Man
 			String hashStr = "";
-			
 			
 			//--- calculate HasA:   exact range classes for all inherited properties
 			ArrayList <OntologyProperty> props = this.getInheritedProperties(classVal);
@@ -408,26 +442,31 @@ public class OntologyInfo {
 				
 				// if the range class in this domain
 				if (this.containsClass(rangeClassName)) {
-					
-					// Exact match:  class -> hasA -> rangeClassName
-					path = new OntologyPath(classNameStr);
-					path.addTriple(classNameStr, prop.getNameStr(), rangeClassName);
-					hashStr = path.asString();
-					if (! foundHash.containsKey(hashStr)) {
-						ret.add(path);
-						foundHash.put(hashStr, 1);
+					// if no pred stats or pred stats show this triple exists
+					if (this.predStats == null || this.predStats.getCount(classNameStr,  prop.getNameStr(), rangeClassName) > 0) {
+						// Exact match:  class -> hasA -> rangeClassName
+						path = new OntologyPath(classNameStr);
+						path.addTriple(classNameStr, prop.getNameStr(), rangeClassName);
+						hashStr = path.asString();
+						if (! foundHash.containsKey(hashStr)) {
+								ret.add(path);
+								foundHash.put(hashStr, 1);
+						}
 					}
 				
 					// Sub-classes:  class -> hasA -> subclass(rangeClassName)
 					ArrayList<String> rangeSubNames = this.getSubclassNames(rangeClassName);
 					for (int j=0; j < rangeSubNames.size(); j++) {
 						if (this.containsClass(rangeSubNames.get(j))) {
-							path = new OntologyPath(classNameStr);
-							path.addTriple(classNameStr, prop.getNameStr(), rangeSubNames.get(j));
-							hashStr = path.asString();
-							if (! foundHash.containsKey(hashStr)) {
-								ret.add(path);
-								foundHash.put(hashStr, 1);
+							// if no pred stats or pred stats show this triple exists
+							if (this.predStats == null || this.predStats.getCount(classNameStr,  prop.getNameStr(), rangeSubNames.get(j)) > 0) {
+								path = new OntologyPath(classNameStr);
+								path.addTriple(classNameStr, prop.getNameStr(), rangeSubNames.get(j));
+								hashStr = path.asString();
+								if (! foundHash.containsKey(hashStr)) {
+										ret.add(path);
+										foundHash.put(hashStr, 1);
+								}
 							}
 						}
 					}
@@ -453,24 +492,30 @@ public class OntologyInfo {
 					
 					// HadBy:  cName -> hasA -> class
 					if (rangeClassStr.equals(classNameStr)) {
-						path = new OntologyPath(classNameStr);
-						path.addTriple(cname, prop.getNameStr(), classNameStr);
-						hashStr = path.asString();
-						if (! foundHash.containsKey(hashStr)) {
-							ret.add(path);
-							foundHash.put(hashStr, 1);
-						}
-					}
-					
-					// IsA + HadBy:   cName -> hasA -> superClass(class)
-					for (int j = 0; j < supList.size(); j++) {
-						if (rangeClassStr.equals(supList.get(j))) {
+						// if no pred stats or pred stats show this triple exists
+						if (this.predStats == null || this.predStats.getCount(cname,  prop.getNameStr(), classNameStr) > 0) {
 							path = new OntologyPath(classNameStr);
 							path.addTriple(cname, prop.getNameStr(), classNameStr);
 							hashStr = path.asString();
 							if (! foundHash.containsKey(hashStr)) {
 								ret.add(path);
 								foundHash.put(hashStr, 1);
+							}
+						}
+					}
+					
+					// IsA + HadBy:   cName -> hasA -> superClass(class)
+					for (int j = 0; j < supList.size(); j++) {
+						if (rangeClassStr.equals(supList.get(j))) {
+							// if no pred stats or pred stats show this triple exists
+							if (this.predStats == null || this.predStats.getCount(cname, prop.getNameStr(), classNameStr) > 0) {
+								path = new OntologyPath(classNameStr);
+								path.addTriple(cname, prop.getNameStr(), classNameStr);
+								hashStr = path.asString();
+								if (! foundHash.containsKey(hashStr)) {
+									ret.add(path);
+									foundHash.put(hashStr, 1);
+								}
 							}
 						}
 					}
@@ -1475,6 +1520,7 @@ public class OntologyInfo {
 			}
 		}
 		
+		this.sortPaths(ret);
 		if (CONSOLE_LOG) {
 			LocalLogger.logToStdOut("These are the paths I found:");
 			for (int i=0; i < ret.size(); i++) {
@@ -1485,6 +1531,89 @@ public class OntologyInfo {
 			LocalLogger.logToStdOut("findAllPaths time is: " + (t1-t0) + " msec");
 		}
 		return ret;	
+	}
+	
+	/**
+	 * Presuming the findAllPaths algorithm already sorts shortest to longest
+	 * and puts adjacent subclasses,subproperties in adjacent positions...
+	 * Do the remaining sort of putting the subclasses/subproperties first.
+	 * In other words, each grouping is sorted most-specific first.
+	 * 
+	 * @param list
+	 */
+	private void sortPaths(ArrayList<OntologyPath> list) {
+		boolean swap;
+		// for each element in list
+		for (int i=1; i < list.size(); i++) {
+			int insertAt = i;
+			// look at the previous elements
+			for (int j=i-1; j >= 0; j--) {
+				// if list item is path with same length
+				if (list.get(j).getLength() == list.get(i).getLength()) {
+					swap = true;
+					int score = 0;
+					// scoring system: equal is 0, subclass is a +, superclass is a -, none is automatic -100 fail
+					for (int k=0; k < list.get(i).getLength() && swap==true; k++) {
+						Triple triple_ik = list.get(i).getTriple(k);
+						String subi = triple_ik.getSubject();
+						String predi = triple_ik.getPredicate();
+						String obji = triple_ik.getObject();
+						
+						Triple triple_jk = list.get(j).getTriple(k);
+						String subj = triple_jk.getSubject();
+						String predj = triple_jk.getPredicate();
+						String objj = triple_jk.getObject();
+						
+						if (subj.equals(subi)) {
+							//zero
+						} else if ( this.isSubclassOf(subi, subj)) {
+							score += 1;
+						} else if ( this.isSubclassOf(subj, subi)) {
+							score -= 1;
+						} else {
+							score = -100;
+							break;
+						}
+						if (predj.equals(predi)) {
+							//zero
+						} else if (this.isSubPropOf(predi, predj)) {
+							score += 1;
+						} else if ( this.isSubPropOf(predj, predi)) {
+							score -= 1;
+						} else {
+							score = -100;
+							break;
+						}
+						if (objj.equals(obji)) {
+							//zero
+						} else if (this.isSubclassOf(obji, objj)) {
+							score += 1;
+						} else if (this.isSubclassOf(objj, obji)) {
+							score -= 1;
+						} else {
+							score = -100;
+							break;
+						}
+					}
+					
+					// if there are more subclasses then superclasses in the path, move the item ahead
+					if (score > 0) {
+						insertAt = j;
+					} 
+				} else {
+					break;
+				}
+				
+			}
+			// if any previous items are moveable, do it
+			if (insertAt < i) {
+				OntologyPath tmp = list.get(i);
+				list.remove(i);
+				list.add(insertAt, tmp);
+				
+				LocalLogger.logToStdErr("moving " + i + " to  " + insertAt);
+			}
+		}
 	}
 	/**
 	 * returns true/false indicating whether the classCompared is a subclass of the classComparedTo

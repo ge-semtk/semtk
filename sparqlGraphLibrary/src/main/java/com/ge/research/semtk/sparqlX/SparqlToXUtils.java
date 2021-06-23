@@ -400,6 +400,21 @@ public class SparqlToXUtils {
 		return sparql.toString();
 	}
 	
+	public static String generatePredicateStatsQuery(SparqlConnection conn, OntologyInfo oInfo) throws Exception {
+		
+		String sparql = String.format(
+				"select ?s_class ?p ?o_class (COUNT(*) as ?count)\n"
+				+ "%s\n"
+				+ "WHERE {\n"
+				+ "	?s ?p ?o .\n"
+				+ "	?s a ?s_class.\n"
+				+ "	?o a ?o_class.\n"
+				+ "} group by ?s_class ?p ?o_class\n"
+				+ "order by ?p ?s_class ?o_class",
+				generateSparqlFromOrUsing("", "from", conn, oInfo));
+		return sparql;
+	}
+	
 	public static String tabIndent(String tab) {
 		return tab.concat("\t");
 	}

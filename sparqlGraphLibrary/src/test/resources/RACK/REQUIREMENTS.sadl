@@ -1,0 +1,67 @@
+/* Copyright (c) 2020, General Electric Company, Galois, Inc.
+ *
+ * All Rights Reserved
+ *
+ * This material is based upon work supported by the Defense Advanced Research
+ * Projects Agency (DARPA) under Contract No. FA8750-20-C-0203.
+ *
+ * Any opinions, findings and conclusions or recommendations expressed in this
+ * material are those of the author(s) and do not necessarily reflect the views
+ * of the Defense Advanced Research Projects Agency (DARPA).
+ */
+
+/************** edit history *****************
+  *
+  * dwa - 11 Nov 2020 - reduced cardinality of several
+  * dwa - 11 Nov 2020 - removed incorrect associations
+  * dwa - 11 Nov 2020 - removed unnecessary subclassing
+  *
+  *********************************************/
+
+uri "http://arcos.rack/REQUIREMENTS" alias Rq.
+import "http://arcos.rack/HAZARD".
+
+// The natural language text of a requirement can be captured in the
+// *description* property common to all RACK data.
+REQUIREMENT
+	(note "Captures (both high- and low-level) properties of a process or artifact that are to be assessed")
+	is a type of ENTITY.
+
+	governs (note "ENTITY(s) that are the subject of the requirement") describes REQUIREMENT with values of type ENTITY.
+	governs is a type of wasImpactedBy.
+
+	satisfies (note "Parent ENTITY(s) (e.g. REQUIREMENT) that this REQUIREMENT is derived from") describes REQUIREMENT with values of type ENTITY.
+	satisfies is a type of wasImpactedBy.
+
+	Rq:mitigates (note "ENTITY(s) (e.g. HAZARD) that is being mitigated by this REQUIREMENT") describes REQUIREMENT with values of type ENTITY.
+	Rq:mitigates is a type of wasImpactedBy.
+
+	Rq:createdBy (note "ACTIVITY(s) (e.g. REQUIREMENT_DEVELOPMENT) that created this REQUIREMENT") describes REQUIREMENT with values of type ACTIVITY.
+	Rq:createdBy is a type of wasGeneratedBy.
+
+DATA_DICTIONARY_TERM
+	(note "Defines some conceptual data that may be collected somewhere and used somewhere else")
+	is a type of ENTITY.
+
+	providedBy (note "ENTITY(s) (e.g. REQUIREMENT) that provides this information") describes DATA_DICTIONARY_TERM with values of type ENTITY.
+	providedBy is a type of wasImpactedBy.
+
+	consumedBy (note "ENTITY(s) (e.g. REQUIREMENT) that consumes this information") describes DATA_DICTIONARY_TERM with values of type ENTITY.
+	consumedBy is a type of wasImpactedBy.
+
+	Rq:createdBy (note "ACTIVITY(s) (e.g. REQUIREMENT_DEVELOPMENT) that created this data dictionary term") describes DATA_DICTIONARY_TERM with values of type ACTIVITY.
+	Rq:createdBy is a type of wasGeneratedBy.
+
+
+REQUIREMENT_DEVELOPMENT
+	(note "ACTIVITY that produces REQUIREMENTs")
+	is a type of ACTIVITY.
+
+	Rq:author (note "AGENT(s) responsible for producing a REQUIREMENT") describes REQUIREMENT_DEVELOPMENT with values of type AGENT.
+	Rq:author is a type of wasAssociatedWith.
+
+	Rq:referenced (note "Source materials (requirement and design docs) used during development") describes REQUIREMENT_DEVELOPMENT with values of type ENTITY.
+	Rq:referenced is a type of used.
+
+	Rq:governedBy (note "ENTITY(s) (e.g. REQUIREMENTS, any sort of document) used during this ACTIVITY") describes REQUIREMENT_DEVELOPMENT with values of type ENTITY.
+	Rq:governedBy is a type of used.

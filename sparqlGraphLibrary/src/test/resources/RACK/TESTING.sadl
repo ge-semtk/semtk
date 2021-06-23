@@ -1,0 +1,64 @@
+/* Copyright (c) 2020, General Electric Company, Galois, Inc.
+ *
+ * All Rights Reserved
+ *
+ * This material is based upon work supported by the Defense Advanced Research
+ * Projects Agency (DARPA) under Contract No. FA8750-20-C-0203.
+ *
+ * Any opinions, findings and conclusions or recommendations expressed in this
+ * material are those of the author(s) and do not necessarily reflect the views
+ * of the Defense Advanced Research Projects Agency (DARPA).
+ */
+
+ /************** edit history *****************
+  *
+  * dwa - 11 Nov 2020 - removed incorrect usages of relationships
+  *
+  *********************************************/
+
+uri "http://arcos.rack/TESTING" alias tst.
+import "http://arcos.rack/PROV-S".
+
+TEST
+	(note "Description of a single test")
+	is a type of ENTITY.
+
+	verifies (note "ENTITY(s) (e.g. REQUIREMENT) that this test verifies") describes TEST with values of type ENTITY.
+	verifies is a type of wasImpactedBy.
+
+	producedBy (note "TEST_DEVELOPMENT activity(s) this test belongs to") describes TEST with values of type ACTIVITY.
+	producedBy is a type of wasGeneratedBy.
+
+TEST_STATUS (note "The high-level outcome of a TEST_RESULT")
+    is a type of THING,
+    must be one of {Passed, Failed, Indeterminate}.
+Passed        is a TEST_STATUS with identifier "Passed".
+Failed        is a TEST_STATUS with identifier "Failed".
+Indeterminate is a TEST_STATUS with identifier "Indeterminate".
+
+TEST_RESULT
+	(note "Result corresponding to one execution of one TEST")
+	is a type of ENTITY.
+
+	result (note "Pass/Failed/Indeterminate status resulting from a TEST_EXECUTION") describes TEST_RESULT with a single value of type TEST_STATUS.
+
+	confirms (note "Parent test(s) of this test result") describes TEST_RESULT with values of type TEST.
+	confirms is a type of wasImpactedBy.
+
+	executedBy (note "ACTIVITY(s) that created this test result") describes TEST_RESULT with values of type ACTIVITY.
+	executedBy is a type of wasGeneratedBy.
+
+TEST_DEVELOPMENT
+	(note "ACTIVITY of creating a TEST to participate in the evaluation of a requirement")
+	is a type of ACTIVITY.
+
+	developedBy (note "Entity that is responsible for producing a test, could be a person or a tool. ") describes TEST_DEVELOPMENT with values of type AGENT.
+	developedBy is a type of wasAssociatedWith.
+
+TEST_EXECUTION
+	(note "ACTIVITY of performing a TEST and record its corresponding TEST_RESULT")
+	is a type of ACTIVITY.
+
+	executedOn describes TEST_EXECUTION with values of type AGENT.
+	executedOn (note "AGENT(s) (e.g. some testing software/machine) running those tests").
+	executedOn is a type of wasAssociatedWith.
