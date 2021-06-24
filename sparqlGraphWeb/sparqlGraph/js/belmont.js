@@ -1778,7 +1778,7 @@ SemanticNodeGroup.prototype = {
 	addJson : function(jObj) {
 
 		if (jObj.version > SemanticNodeGroup.JSON_VERSION) {
-			throw new Error("belmont.js:SemanticNodeGroup.addJson() only recognizes nodegroup json up to version " + SemanticNodeGroup.JSON_VERSION + " but file is version " + jObj.version);
+			throw new Error("\nJavascript is old. Browser may need a hard refresh. https://en.wikipedia.org/wiki/Wikipedia:Bypass_your_cache \nbelmont.js supports version " + SemanticNodeGroup.JSON_VERSION + " but nodegroup json is version " + jObj.version);
 		}
 
         if (jObj.hasOwnProperty("limit")) {
