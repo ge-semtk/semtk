@@ -24,6 +24,12 @@ fi
 
 . ./.fun
 
+# put SHA key into sparqlGraph.html
+MACHINE_DAY="built-"`hostname`"-"`date +%F-%H%M%S`
+GIT_SHA="gitSHA-"`git rev-parse origin/master 2> /dev/null`
+BUILD=${GIT_SHA:-$MACHINE_DAY}
+sed --in-place "s#%%BUILD%%#${BUILD}#g" "${WEBAPPS}/sparqlGraph/main-oss/sparqlGraph.html"
+
 # define array of versioned files
 declare -a VERSIONED=("sparqlGraph/main-oss/sparqlgraphconfigOss.js"
                       "sparqlGraph/main-oss/KDLEasyLoggerConfigOss.js"
