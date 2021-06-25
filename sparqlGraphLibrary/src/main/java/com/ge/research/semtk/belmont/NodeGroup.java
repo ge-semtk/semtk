@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -828,6 +829,17 @@ public class NodeGroup {
 	}
     public ArrayList<Node> getNodeList(){
         return this.nodes;
+    }
+    /**
+     * Get list of all unique classes (nodes' full URIs)
+     * @return
+     */
+    public Set<String> getNodeURIStrings() {
+    	Set<String> ret = new HashSet<String>();
+    	for (Node n : this.nodes) {
+    		ret.add(n.getFullUriName());
+    	}
+    	return ret;
     }
     
 	/**

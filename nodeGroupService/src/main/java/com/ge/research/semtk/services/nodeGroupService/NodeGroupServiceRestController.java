@@ -37,6 +37,7 @@ import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -57,6 +58,7 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupService.SparqlIdReturnedTuple;
 import com.ge.research.semtk.nodeGroupService.SparqlIdTuple;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
 import com.ge.research.semtk.ontologyTools.OntologyRange;
 import com.ge.research.semtk.plotting.PlotSpec;
@@ -66,7 +68,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.utility.LocalLogger;
-
+import com.google.gson.JsonArray;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -112,6 +114,46 @@ public class NodeGroupServiceRestController {
 	    response.addHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
 	    response.addHeader("Access-Control-Allow-Headers", "origin, content-type, accept, x-requested-with");
 	    response.addHeader("Access-Control-Max-Age", "3600");
+	}
+	
+	@ApiOperation(
+			value="Generate a SELECT query",
+			notes="Generic query with no special options."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/findAllPaths", method=RequestMethod.POST)
+	public JSONObject generateSelectSparql(@RequestBody PathRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = null;
+		
+		try{
+			// more efficient way than some of the others to get everything
+			// note that ng should be inflated and contain model and data connections
+			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
+			SparqlConnection conn = sgJson.getSparqlConn();
+			OntologyInfo oInfo = retrieveOInfo(conn);
+			NodeGroup ng = sgJson.getNodeGroupNoInflateNorValidate(oInfo);
+			ArrayList<String> classes = new ArrayList<String>();
+			classes.addAll(ng.getNodeURIStrings());
+			
+			// TODO both flags
+			ArrayList<OntologyPath> pathList = oInfo.findAllPaths(requestBody.getAddClass(), classes);
+			
+			retval = new SimpleResultSet(true);
+			JSONArray pathJsonArr = new JSONArray();
+			for (OntologyPath p: pathList) {
+				pathJsonArr.add(p.toJson());
+			}
+			retval.addResult("pathList", pathJsonArr);
+			
+		}
+		catch(Exception e){
+			retval = new SimpleResultSet(false);
+			retval.addRationaleMessage(SERVICE_NAME, "findAllPaths", e);
+			LocalLogger.printStackTrace(e);
+		}
+		
+		return retval.toJson();
 	}
 	
 	/*
