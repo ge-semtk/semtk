@@ -28,7 +28,7 @@
   <![endif]-->
     <script>
         var gVERSION = 2.0;
-        var gGitSha = "%%GIT_SHA%%";  // filled in by configWebApps.sh at deploy time
+        var gBuild = "%%BUILD%%";  // filled in by configWebApps.sh at deploy time
     </script>
   	<script src="../../iidx-oss/components/modernizr/modernizr.js"></script>
 
@@ -69,7 +69,7 @@
 	    requireConfigSparqlgraph(
 			"../sparqlGraph",
 			{
-        urlArgs: "bustSHA=" + gGitSha,
+        urlArgs: "bust=" + gBuild,
 				baseUrl : '../../iidx-oss',
 				paths : {
 					"jquery-csv" : "../sparqlGraph/jquery/jquery.csv-0.71.min",
@@ -130,7 +130,7 @@
 	<script>
 		// =========== custom for OSS version =========
 		doAbout = function() {
-			logAndAlert(g.help.buildHtml + '<br>' + "Built off git release SHA: " + gGitSha + "<br>" + g.help.aboutHtml + '<br>' + g.help.legalNoticeHtml, 'About SPARQLgraph');
+			logAndAlert(g.help.buildHtml + '<br>' + "Build: " + gBuild+ "<br>" + g.help.aboutHtml + '<br>' + g.help.legalNoticeHtml, 'About SPARQLgraph');
 		}
 
     doCanvasSize = function(bigFlag) {
