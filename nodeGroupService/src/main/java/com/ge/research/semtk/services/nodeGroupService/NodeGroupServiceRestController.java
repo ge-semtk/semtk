@@ -61,6 +61,7 @@ import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
 import com.ge.research.semtk.ontologyTools.OntologyRange;
+import com.ge.research.semtk.ontologyTools.PredicateStats;
 import com.ge.research.semtk.plotting.PlotSpec;
 import com.ge.research.semtk.plotting.PlotSpecs;
 import com.ge.research.semtk.plotting.PlotlyPlotSpec;
@@ -122,7 +123,8 @@ public class NodeGroupServiceRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/findAllPaths", method=RequestMethod.POST)
-	public JSONObject generateSelectSparql(@RequestBody PathRequest requestBody, @RequestHeader HttpHeaders headers) {
+	public JSONObject generateSelectSparql(@RequestBody PathFindingRequest requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME = "findAllPaths";
 		HeadersManager.setHeaders(headers);
 		SimpleResultSet retval = null;
 		
@@ -131,14 +133,29 @@ public class NodeGroupServiceRestController {
 			// note that ng should be inflated and contain model and data connections
 			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
 			SparqlConnection conn = sgJson.getSparqlConn();
+			
 			OntologyInfo oInfo = retrieveOInfo(conn);
+			oInfo.setPathFindingMaxLengthRange(requestBody.getMaxLengthRange());
+			oInfo.setPathFindingMaxPathCount(requestBody.getMaxPathCount());
+			oInfo.setPathFindingMaxPathLength(requestBody.getMaxPathLength());
+			oInfo.setPathFindingMaxTimeMsec(requestBody.getMaxTimeMsec());
+			if (requestBody.getPropsInDataFlag()) {
+				PredicateStats stats = new PredicateStats(conn, oInfo);
+				oInfo.setPredicateStats(stats);
+			}
+			if (requestBody.getNodegroupInDataFlag()) {
+				// TODO
+			}
+			
 			NodeGroup ng = sgJson.getNodeGroupNoInflateNorValidate(oInfo);
+			
 			ArrayList<String> classes = new ArrayList<String>();
 			classes.addAll(ng.getNodeURIStrings());
 			
 			// TODO both flags
 			ArrayList<OntologyPath> pathList = oInfo.findAllPaths(requestBody.getAddClass(), classes);
 			
+			// add "pathList"
 			retval = new SimpleResultSet(true);
 			JSONArray pathJsonArr = new JSONArray();
 			for (OntologyPath p: pathList) {
@@ -146,10 +163,17 @@ public class NodeGroupServiceRestController {
 			}
 			retval.addResult("pathList", pathJsonArr);
 			
+			ArrayList<String> pathWarnings = oInfo.getPathWarnings();
+			JSONArray pathWarnArr = new JSONArray();
+			for (String p : pathWarnings) {
+				pathWarnArr.add(p);
+			}
+			retval.addResult("pathWarnings", pathWarnArr);
+			
 		}
 		catch(Exception e){
 			retval = new SimpleResultSet(false);
-			retval.addRationaleMessage(SERVICE_NAME, "findAllPaths", e);
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
 			LocalLogger.printStackTrace(e);
 		}
 		

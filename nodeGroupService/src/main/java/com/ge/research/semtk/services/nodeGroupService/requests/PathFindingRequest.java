@@ -23,7 +23,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 @ApiModel
-public class PathRequest extends NodegroupRequest {
+public class PathFindingRequest extends NodegroupRequest {
 
 	
 	@ApiModelProperty(
@@ -49,8 +49,39 @@ public class PathRequest extends NodegroupRequest {
             value = "Return only paths such that new nodegroup w/o constraints returns data in instance data",
             required = false,
             example = "true")
-	
     private Boolean nodegroupInDataFlag = false;
+	
+	@ApiModelProperty(
+            position = 5,
+            name = "maxLengthRange",
+            value = "Stop when longest path is this much longer than shortest",
+            required = false,
+            example = "5")
+	private int maxLengthRange = 5;
+	
+	@ApiModelProperty(
+            position = 6,
+            name = "maxTimeMsec",
+            value = "Stop after this many milliseconds of path-finding",
+            required = false,
+            example = "5000")
+	private int maxTimeMsec = 5000;
+	
+	@ApiModelProperty(
+            position = 7,
+            name = "maxPathLength",
+            value = "Stop when all paths this length or shorter have been found",
+            required = false,
+            example = "10")
+	private int maxPathLength = 10;
+	
+	@ApiModelProperty(
+            position = 7,
+            name = "maxPathCount",
+            value = "Stop when this many paths have been found",
+            required = false,
+            example = "100")
+	private int maxPathCount = 100;
 
 	public String getAddClass() throws Exception {
 		return addClass;
@@ -64,4 +95,21 @@ public class PathRequest extends NodegroupRequest {
 		return nodegroupInDataFlag;
 	}
 
+	public int getMaxLengthRange() {
+		return maxLengthRange;
+	}
+
+	public int getMaxTimeMsec() {
+		return maxTimeMsec;
+	}
+
+	public int getMaxPathLength() {
+		return maxPathLength;
+	}
+
+	public int getMaxPathCount() {
+		return maxPathCount;
+	}
+
+	
 }

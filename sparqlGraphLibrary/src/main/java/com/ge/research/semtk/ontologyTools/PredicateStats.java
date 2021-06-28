@@ -10,11 +10,18 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 
+/**
+ * Stores a list of counts of [subject_class pred object_class] from instance data
+ * Each instance increments all super classes' and super predicates' counts
+ * 
+ * Constructor using conn queries the triplestore directly through the conn's seis
+ * @author 200001934
+ *
+ */
 public class PredicateStats {
 	
 	private Hashtable<String, Integer> statsHash = new Hashtable<String, Integer>();
 	
-	private Table statsTab = null;    // quickly produce JSON if needed
 	
 	/** 
 	 * Get stats from the data sei's in a connection.
@@ -29,6 +36,11 @@ public class PredicateStats {
 		this.storeStats(statsTab, oInfo);
 	}	
 	
+	/**
+	 * Construct from JSON
+	 * @param jObj
+	 * @throws Exception
+	 */
 	public PredicateStats(JSONObject jObj) throws Exception {
 		JSONObject statsTabJson =  (JSONObject) jObj.get("statsTab");
 		for (Object k : statsTabJson.keySet()) {
@@ -36,6 +48,7 @@ public class PredicateStats {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public JSONObject toJson() {
 		JSONObject ret = new JSONObject();
 		JSONObject statsTabJson = new JSONObject();
@@ -64,15 +77,14 @@ public class PredicateStats {
 	 * @param oInfo
 	 */
 	private void storeStats(Table t, OntologyInfo oInfo) {
-		this.statsTab = t;
 		for (int i=0; i < t.getNumRows(); i++) {
 			String sub = t.getCell(i, 0);
 			String pred = t.getCell(i, 1);
 			String obj = t.getCell(i, 2);
 			int count =  t.getCellAsInt(i, 3);
-			ArrayList<String> subjects = oInfo.getSuperclassNames(sub);
+			HashSet<String> subjects = oInfo.getSuperclassNames(sub);
 			HashSet<String> predicates = oInfo.getSuperPropNames(pred);
-			ArrayList<String> objects = oInfo.getSuperclassNames(obj);
+			HashSet<String> objects = oInfo.getSuperclassNames(obj);
 			subjects.add(sub);
 			predicates.add(pred);
 			objects.add(obj);

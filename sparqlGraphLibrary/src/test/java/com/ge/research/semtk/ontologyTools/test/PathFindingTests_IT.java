@@ -20,6 +20,7 @@ import static org.junit.Assert.*;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import org.apache.curator.framework.recipes.locks.PredicateResults;
 import org.junit.AfterClass;
@@ -58,6 +59,11 @@ public class PathFindingTests_IT {
 	
 	private final static String REQUIREMENT = "http://arcos.rack/REQUIREMENTS#REQUIREMENT";
 	private final static String TEST_RESULT = "http://arcos.rack/TESTING#TEST_RESULT";
+	private final static String THING = "http://arcos.rack/PROV-S#THING";
+	private final static String WAS_DERIVED_FROM = "http://arcos.rack/PROV-S#wasDerivedFrom";
+	private final static String WAS_IMPACTED_BY = "http://arcos.rack/PROV-S#wasImpactedBy";
+
+
 
 	
 	@BeforeClass
@@ -80,6 +86,7 @@ public class PathFindingTests_IT {
 	}
 
 	
+	
 	@Test
 	public void testOne() throws Exception {
 
@@ -98,6 +105,35 @@ public class PathFindingTests_IT {
 		}
 		
 		assertTrue(true);
+
+	}
+	
+	@Test
+	/**
+	 * The RACK ontology has lots of super/sub stuff and it is used heavily by path-finding
+	 * so test it here.
+	 * 
+	 * @throws Exception
+	 */
+	public void testSubSuperClassesProps() throws Exception {
+
+		HashSet<String> set = oInfo.getSubclassNames(THING);
+		assertEquals("THING has wrong number of subclasses", 12, set.size());
+		
+		set = oInfo.getSubclassNames(REQUIREMENT);
+		assertEquals("REQUIREMENT has wrong number of subclasses", 0, set.size());
+		
+		set = oInfo.getSuperclassNames(REQUIREMENT);
+		assertEquals("REQUIREMENT has wrong number of super classes", 2, set.size());
+		
+		set = oInfo.getSuperclassNames(THING);
+		assertEquals("THING has wrong number of super classes", 0, set.size());
+		
+		set = oInfo.getSuperPropNames(WAS_DERIVED_FROM);
+		assertEquals("wasDerivedFrom has wrong number of super properties", 0, set.size());
+		
+		set = oInfo.getSuperPropNames(WAS_IMPACTED_BY);
+		assertEquals("wasImpactedBy has wrong number of super properties", 1, set.size());
 
 	}
 }

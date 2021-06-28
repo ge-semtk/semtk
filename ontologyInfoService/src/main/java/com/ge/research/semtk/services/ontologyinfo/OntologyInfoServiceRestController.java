@@ -156,32 +156,7 @@ public class OntologyInfoServiceRestController {
 		return retval.toJson();		
 	}
 
-	@ApiOperation(
-		    value= "Deprecated complex version of json"
-		)
-	@CrossOrigin
-	@RequestMapping(value="/getOntologyInfo", method=RequestMethod.POST)
-	public JSONObject getOntologyInfo(@RequestBody OntologyInfoRequestBody requestBody, @RequestHeader HttpHeaders headers){
-		HeadersManager.setHeaders(headers);
-		SimpleResultSet retval = null;
-		
-		try{
-			SparqlConnection conn = requestBody.buildSparqlConnection();
-			OntologyInfo oInfo = oInfoCache.get(conn);
-			JSONObject oInfoDetails = oInfo.toAdvancedClientJson();
-			
-			retval = new SimpleResultSet();
-			retval.addResult("ontologyInfo", oInfoDetails);
-			retval.setSuccess(true);
-		}
-		catch(Exception e){
-			retval = new SimpleResultSet(false);
-			retval.addRationaleMessage(SERVICE_NAME, "getOntologyInfo", e);
-			LocalLogger.printStackTrace(e);
-		}
-		// send it out.
-		return retval.toJson();
-	}
+	
 	@ApiOperation(
 		    value= "Get all data and object properties of a class, including those inherited from superclasses.",
 		    notes= "Returns classInfo = { name : 'classname', properties = [ { domain : 'http://model#hasTree', range: ['http://model#Tree'] } ]"

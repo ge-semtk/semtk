@@ -1521,6 +1521,14 @@ var OntologyPath = function(className) {
 	this.classHash[className] = 1;
 };
 
+OntologyPath.fromJson = function (jObj) {
+    var ret = new OntologyPath(jObj["startClassName"]);
+    for (var j of jObj["triples"]) {
+        ret.addTriple(j["s"], j["p"], j["o"]);
+    }
+    return ret;
+};
+
 OntologyPath.prototype = {
 
 	addTriple : function(className0, attName, className1) {
