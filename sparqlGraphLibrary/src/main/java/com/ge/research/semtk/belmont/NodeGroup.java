@@ -3226,17 +3226,18 @@ public class NodeGroup {
 		return this.addPath(path, anchorNode, oInfo, reverseFlag, false);
 	}
 
+	/**
+	 * Add a path to the nodegroup.  Path's start class is the "new one".  End class connects to nodegroup anchorNode (except reverseFlag)
+	 * @param path - path connects in whichever end matches anchorNode.  If both match, default to path END at anchor node.
+	 * @param anchorNode - Path connects here
+	 * @param oInfo - used to properly build new nodes
+	 * @param reverseFlag - Connect with Path START at anchor node, or throw and exception if URI doesn't match
+	 * @param optionalFlag - should connection point be OPTIONAL
+	 * @return the node at the end of the path that is new to the nodegroup
+	 * @throws Exception
+	 */
 	public Node addPath(OntologyPath path, Node anchorNode, OntologyInfo oInfo, Boolean reverseFlag, Boolean optionalFlag) throws Exception  {
-		// Adds a path to the canvas.
-		// path start class is the new one
-		// path end class already exists
-		// return the node corresponding to the path's startClass. (i.e. the one
-		// the user is adding.)
-		
-		// reverseFlag:  in diabolic case where path is one triple that starts and ends on same class
-		//               if reverseFlag, then connect
-		
-		// add the first class in the path
+
 		Node retNode = this.addNode(path.getStartClassName(), oInfo);
 		Node lastNode = retNode;
 		Node node0;
@@ -3248,18 +3249,19 @@ public class NodeGroup {
 			String attUri = path.getAttributeName(i);
 			String class1Uri = path.getClass1Name(i);
 
-			// if this hop in path is  lastAdded--hasX-->class1
+			
 			if (class0Uri.equals(lastNode.getUri())) {
+				//  this hop in path is  lastAdded--hasX-->class1
 				node1 = this.returnBelmontSemanticNode(class1Uri, oInfo);
 				this.addOneNode(node1, lastNode, null, attUri);
 				lastNode = node1;
 				
 				if (optionalFlag) {
 					throw new Exception("Internal error in belmont.js:AddPath(): SparqlGraph is not smart enough\nto add an optional path with links pointing away from the new node.\nAdding path without optional flag.");
-					//optionalFlag = false;
 				}
-			// else this hop in path is class0--hasX-->lastAdded
+			
 			} else {
+				// else this hop in path is class0--hasX-->lastAdded
 				node0 = this.returnBelmontSemanticNode(class0Uri, oInfo);
 				this.addOneNode(node0, lastNode, attUri, null);
 				lastNode = node0;
@@ -3267,22 +3269,22 @@ public class NodeGroup {
 		}
 
 		// link the last two nodes, which by now already exist
-		String class0Uri = path.getClass0Name(pathLen - 1);
 		String class1Uri = path.getClass1Name(pathLen - 1);
 		String attUri = path.getAttributeName(pathLen - 1);
 
-		// link diabolical case from anchor node to last node in path
-		if (class0Uri.equals(class1Uri) && reverseFlag ) {
-			int opt = optionalFlag ? NodeItem.OPTIONAL_REVERSE : NodeItem.OPTIONAL_FALSE;
-			anchorNode.setConnection(lastNode, attUri, opt);
-			
-		// normal link from last node to anchor node
-		} else if (anchorNode.getUri().equals(class1Uri)) {
+
+		
+		if (!reverseFlag && anchorNode.getUri().equals(class1Uri)) {
+			// normal link from last node to anchor node, 
+			// When last connection URI matches and reverseFlag isn't set
 			int opt = optionalFlag ? NodeItem.OPTIONAL_REVERSE : NodeItem.OPTIONAL_FALSE;
 			lastNode.setConnection(anchorNode, attUri, opt);
 			
-		// normal link from anchor node to last node
+		
 		} else {
+			// reverse connection
+			// either reverseFlag, or normal direction URI wasn't correct so presume backwards will work
+			// throw exception if URI doesn't work
 			int opt = optionalFlag ? NodeItem.OPTIONAL_TRUE : NodeItem.OPTIONAL_FALSE;
 			anchorNode.setConnection(lastNode, attUri, opt);
 		}
