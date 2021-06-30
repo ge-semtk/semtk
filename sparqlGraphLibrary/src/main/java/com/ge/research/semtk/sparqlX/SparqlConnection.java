@@ -528,4 +528,30 @@ public class SparqlConnection {
 		ret.append(this.enableOwlImports ? "owlImports;" : "noImports;");
 		return ret.toString();
 	}
+	
+	/**
+	 * Generate a string that uniquely identifies the model and data connection(s)
+	 * @return
+	 */
+	public String getUniqueKey() {
+		
+		String seiKeys[] = new String[this.getModelInterfaceCount() + this.getDataInterfaceCount()];
+		int index = 0;
+		
+		for (int i=0; i < this.getModelInterfaceCount(); i++) {
+			seiKeys[index++] = this.getModelInterface(i).getServerAndPort() + ";" + this.getModelInterface(i).getGraph();
+		}
+		for (int i=0; i < this.getDataInterfaceCount(); i++) {
+			seiKeys[index++] = this.getDataInterface(i).getServerAndPort() + ";" + this.getDataInterface(i).getGraph();
+		}
+		Arrays.sort(seiKeys);
+		
+		StringBuilder ret = new StringBuilder();
+		ret.append(this.domain + ";");
+		for (int i=0; i < seiKeys.length; i++) {
+			ret.append(seiKeys[i] + ";");
+		}
+		ret.append(this.enableOwlImports ? "owlImports;" : "noImports;");
+		return ret.toString();
+	}
 }

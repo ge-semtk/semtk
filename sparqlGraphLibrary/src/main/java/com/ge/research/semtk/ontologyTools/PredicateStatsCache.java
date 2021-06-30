@@ -1,16 +1,17 @@
 package com.ge.research.semtk.ontologyTools;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Hashtable;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
-public class OntologyInfoCache {
+public class PredicateStatsCache {
 	
-	long maxAgeMillis = 1000 * 60 * 5;   // five minutes
-	Hashtable<String, CachedOntologyInfo> hash = new Hashtable<String, CachedOntologyInfo>();
+	long maxAgeMillis = 1000 * 60 * 120;   // 120 minutes
+	Hashtable<String, CachedPredicateStats> hash = new Hashtable<String, CachedPredicateStats>();
 	
-	public OntologyInfoCache(long maxAgeMillis) {
+	public PredicateStatsCache(long maxAgeMillis) {
 		this.maxAgeMillis = maxAgeMillis;
 	}
 	
@@ -20,16 +21,16 @@ public class OntologyInfoCache {
 	 * @return
 	 * @throws Exception
 	 */
-	public synchronized OntologyInfo get(SparqlConnection conn) throws Exception {
-		String key = conn.getUniqueModelKey();
+	public synchronized PredicateStats get(SparqlConnection conn, OntologyInfo oInfo) throws Exception {
+		String key = conn.getUniqueKey();
 		
 		this.clearExpired();
 		
 		if (!hash.containsKey(key)) {
-			hash.put(key, new CachedOntologyInfo(conn));
+			hash.put(key, new CachedPredicateStats(conn, oInfo));
 		}
 		
-		return hash.get(key).getOInfo(this.maxAgeMillis);
+		return hash.get(key).getPredicateStats(this.maxAgeMillis, oInfo);
 	}
 	
 	/**
@@ -37,7 +38,7 @@ public class OntologyInfoCache {
 	 * @param conn
 	 */
 	public synchronized void remove(SparqlConnection conn) {
-		String key = conn.getUniqueModelKey();
+		String key = conn.getUniqueKey();
 		if (this.hash.containsKey(key)) {
 			this.hash.remove(key);
 		}
@@ -48,13 +49,25 @@ public class OntologyInfoCache {
 	 * @param conn
 	 */
 	public synchronized void removeSimilar(SparqlConnection conn) {
-		ArrayList<String> toDelete = new ArrayList<String>();
+		HashSet<String> toDelete = new HashSet<String>();
 		
 		// search through conn's models
 		for (int i=0; i < conn.getModelInterfaceCount(); i++) {
 			for (String key : this.hash.keySet()) {
 				// if datasets match, it's too close for comfort: delete
 				if (key.contains(conn.getModelInterface(i).getGraph())) {
+					if (! toDelete.contains(key)) {
+						toDelete.add(key);
+					}
+				}
+			}
+		}
+		
+		// search through conn's models
+		for (int i=0; i < conn.getDataInterfaceCount(); i++) {
+			for (String key : this.hash.keySet()) {
+				// if datasets match, it's too close for comfort: delete
+				if (key.contains(conn.getDataInterface(i).getGraph())) {
 					if (! toDelete.contains(key)) {
 						toDelete.add(key);
 					}

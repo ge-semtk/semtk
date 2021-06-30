@@ -28,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -42,15 +41,17 @@ import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyInfoCache;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
+import com.ge.research.semtk.ontologyTools.PredicateStats;
+import com.ge.research.semtk.ontologyTools.PredicateStatsCache;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.services.ontologyinfo.OntologyInfoLoggingProperties;
 import com.ge.research.semtk.services.ontologyinfo.requests.OntologyInfoClassRequestBody;
 import com.ge.research.semtk.services.ontologyinfo.requests.OntologyInfoRequestBody;
 import com.ge.research.semtk.services.ontologyinfo.requests.SparqlConnectionRequestBody;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
@@ -66,6 +67,7 @@ public class OntologyInfoServiceRestController {
  	static final String SERVICE_NAME = "ontologyInfoService";
 
  	OntologyInfoCache oInfoCache = new OntologyInfoCache(5 * 60 * 1000);
+ 	PredicateStatsCache predStatsCache = new PredicateStatsCache(5 * 60 * 1000);
  	
 	@Autowired
 	OntologyInfoLoggingProperties log_prop;
@@ -320,6 +322,36 @@ public class OntologyInfoServiceRestController {
 			SparqlConnection conn = requestBody.buildSparqlConnection();
 			
 			oInfoCache.removeSimilar(conn);
+			// Also remove any predicate stats that have this model
+			conn.clearDataInterfaces();
+			predStatsCache.removeSimilar(conn);
+			
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+	
+	@ApiOperation(
+			value="Un-cache anything based on any dataset in the given connection."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/uncacheChangedConn", method=RequestMethod.POST)
+	public JSONObject uncacheChangedConn(@RequestBody OntologyInfoRequestBody requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "uncacheChangedConn";
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {			
+			SparqlConnection conn = requestBody.buildSparqlConnection();
+			
+			oInfoCache.removeSimilar(conn);
+			predStatsCache.removeSimilar(conn);
 			
 			retval.setSuccess(true);
 		}
@@ -347,6 +379,38 @@ public class OntologyInfoServiceRestController {
 			SparqlConnection conn = requestBody.buildSparqlConnection();
 			
 			oInfoCache.remove(conn);
+			
+			// Also remove any predicate stats that have this model
+			conn.clearDataInterfaces();
+			predStatsCache.removeSimilar(conn);
+			
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+	
+	@ApiOperation(
+			value="Get predicate stats for a given connections ontology and data."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getPredicateStats", method=RequestMethod.POST)
+	public JSONObject uncacheOntology(@RequestBody SparqlConnectionRequest requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "getPredicateStats";
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {			
+			SparqlConnection conn = requestBody.buildSparqlConnection();
+			
+			OntologyInfo oInfo = oInfoCache.get(conn);
+			PredicateStats stats = new PredicateStats(conn, oInfo);
+			retval.addResult("predicateStats", stats.toJson());
 			
 			retval.setSuccess(true);
 		}
