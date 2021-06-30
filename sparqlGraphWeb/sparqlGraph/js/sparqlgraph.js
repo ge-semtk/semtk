@@ -205,52 +205,18 @@
                 guiGraphNonEmpty();
 
             } else {
-                var nodelist = gNodeGroup.getArrayOfURINames();
-                var paths = gOInfo.findAllPaths(dragLabel, nodelist, gConn.getDomain());
+                require([ 'sparqlgraph/js/msiclientnodegroupservice',
+                          'sparqlgraph/js/sparqlgraphjson',
+                      ], function (MsiClientNodeGroupService, SparqlGraphJson) {
 
-                if (paths.length == 0) {
-                    gNodeGroup.addNode(dragLabel, gOInfo);
-                    nodeGroupChanged(true);
-                    guiGraphNonEmpty();
+                    var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
 
-                } else {
-                    // find possible anchor node(s) for each path
-                    // start with disconnected option
-                    var pathStrList = ["** Disconnected " + dragLabel];
-                    var valList = [[new OntologyPath(dragLabel), null, false]];
+                    //var nodelist = gNodeGroup.getArrayOfURINames();
+                    //var paths = gOInfo.findAllPaths(dragLabel, nodelist, gConn.getDomain());
+                    var sgJson = new SparqlGraphJson(gConn, gNodeGroup, null, false, null);
+                    ngClient.execFindAllPaths(sgJson, dragLabel, false, false, findAllPathsCallback.bind(this, dragLabel));
 
-                    // for each path
-                    for (var p=0; p < paths.length; p++) {
-                        // for each instance of the anchor class
-                        var nlist = gNodeGroup.getNodesByURI(paths[p].getAnchorClassName());
-                        for (var n=0; n < nlist.length; n++) {
-
-                            pathStrList.push(paths[p].genPathString(nlist[n], false));
-                            valList.push( [paths[p], nlist[n], false ] );
-
-                            // push it again backwards if it is a special singleLoop
-                            if ( paths[p].isSingleLoop()) {
-                                pathStrList.push(paths[p].genPathString(nlist[n], true));
-                                valList.push( [paths[p], nlist[n], true ] );
-                            }
-                        }
-                    }
-
-                    // if choices are more than "** Disconnected" plus one other path...
-                    if (valList.length > 2) {
-                         require([ 'sparqlgraph/js/modaliidx',
-                                 ], function (ModalIidx) {
-
-                            // offer a choice, defaulting to the shortest non-disconnected path
-                            ModalIidx.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, 80);
-
-                         });
-
-                    } else {
-                        // automatically add using the only path
-                        dropClassCallback(valList[1]);
-                    }
-                }
+                });
             }
         }
         else{
@@ -261,6 +227,54 @@
 
     };
 
+    var findAllPathsCallback = function(addClassStr, simpleRes) {
+        var pathListJson = simpleRes.getSimpleResultField("pathList");
+        var pathWarnings = simpleRes.getSimpleResultField("pathWarnings");
+
+        if (pathListJson.length == 0) {
+            gNodeGroup.addNode(addClassStr, gOInfo);
+            nodeGroupChanged(true);
+            guiGraphNonEmpty();
+
+        } else {
+            // find possible anchor node(s) for each path
+            // start with disconnected option
+            var pathStrList = ["** Disconnected " + addClassStr];
+            var valList = [[new OntologyPath(addClassStr), null, false]];
+
+            // for each path
+            for (var p of pathListJson) {
+                var oPath = OntologyPath.fromJson(p);
+                // for each instance of the anchor class
+                var nlist = gNodeGroup.getNodesByURI(oPath.getAnchorClassName());
+                for (var n=0; n < nlist.length; n++) {
+                    pathStrList.push(oPath.genPathString(nlist[n], false));
+                    valList.push( [oPath, nlist[n], false ] );
+
+                    // push it again backwards if it is a special singleLoop
+                    if (oPath.getStartClassName() == oPath.getEndClassName()) {
+                        pathStrList.push(oPath.genPathString(nlist[n], true));
+                        valList.push( [oPath, nlist[n], true ] );
+                    }
+                }
+            }
+
+            // if choices are more than "** Disconnected" plus one other path...
+            if (valList.length > 2) {
+                 require([ 'sparqlgraph/js/modaliidx',
+                         ], function (ModalIidx) {
+
+                    // offer a choice, defaulting to the shortest non-disconnected path
+                    ModalIidx.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, 80);
+
+                 });
+
+            } else {
+                // automatically add using the only path
+                dropClassCallback(valList[1]);
+            }
+        }
+    }
     /**
      * Add a node via path from anchorSNode
      * If there is no anchorSNode then just add path.startClass

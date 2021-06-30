@@ -492,14 +492,17 @@ doDeleteFromNGStore = function() {
 };
 
 doStoreNodeGroup = function () {
+    require(['sparqlgraph/js/sparqlgraphjson'
+            ],
+            function(SparqlGraphJson) {
 
-    // save user when done
-    var doneCallback = function () {
-        localStorage.setItem("SPARQLgraph_user", gModalStoreDialog.getUser());
-    }
+        // save user when done
+        var doneCallback = function () {
+            localStorage.setItem("SPARQLgraph_user", gModalStoreDialog.getUser());
+        }
 
-    gModalStoreDialog.launchStoreDialog(getSGJson(), doneCallback);
-
+        gModalStoreDialog.launchStoreDialog(getSGJson(SparqlGraphJson), doneCallback);
+    });
 };
 
 doQueryUpload = function() {
@@ -518,10 +521,11 @@ doQueryUpload = function() {
 
 doQueryDownload = function() {
     require([   'sparqlgraph/js/iidxhelper',
+                'sparqlgraph/js/sparqlgraphjson'
             ],
-            function(IIDXHelper) {
+            function(IIDXHelper, SparqlGraphJson) {
 
-    	var sgJson = getSGJson();
+    	var sgJson = getSGJson(SparqlGraphJson);
     	IIDXHelper.downloadFile(JSON.stringify(sgJson.toJson()), "sparqlForm.json", "text/csv;charset=utf8");
     	kdlLogEvent("SF: Save Query");
     });
@@ -566,6 +570,156 @@ initForm = function() {
 
 };
 
+experimentIsDataClass = function (classStr) {
+    return (classStr == "http://kdl.ge.com/additiveMeasuresAndUtils#Measurement" ||
+            classStr == "http://kdl.ge.com/additiveMeasuresAndUtils#XYZCoordinate");
+};
+
+findFirstPath = function(oInfo, fromClassName, targetClassNames, domain) {
+    //   Simplfied form of findAllPaths()
+    //   All path-finding has been moved to the Java side, see MsiClientNodeGroupService
+    //   This was too hard to move safely so, here it is...
+    var t0 = (new Date()).getTime();
+    var waitingList = [new OntologyPath(fromClassName)];
+    var ret = [];
+    var targetHash = {};              // hash of all possible ending classes:  targetHash[className] = 1
+
+    var SEARCH_TIME_MSEC = 5000;
+
+    // return if there is no endpoint
+    if (targetClassNames.length < 1) return [];
+
+    // set up targetHash[targetClass] = 1
+    for (var i=0; i < targetClassNames.length; i++) {
+
+        // experiment:  don't connect to an existing measurement
+        if ( !experimentIsDataClass(targetClassNames[i]) ) {
+             targetHash[targetClassNames[i]] = 1;
+        }
+    }
+
+    // search as long as there is a waiting list
+    while (waitingList.length > 0) {
+        // pull one off waiting list
+        var item = waitingList.shift();
+        var waitClass = item.getEndClassName();
+        var waitPath = item;
+
+        // STOP CRITERIA D: too much time spent searching
+        var tt = (new Date()).getTime();
+
+        if ( false && tt - t0 > SEARCH_TIME_MSEC) {
+            // This message is annoying and serves no purpose
+            //alert("Note: Path-finding timing out.  Search incomplete.");
+            break;
+        }
+
+        // get all one hop connections and loop through them
+        var conn = oInfo.getConnList(waitClass);
+        for (var i=0; i < conn.length; i++) {
+
+            //  each connection is a path with only one node (the 0th)
+            //  grab the name of the newly found class
+            var newClass = "";
+            var newPath = null;
+            var loopFlag = false;
+
+            // if the newfound class is pointed to by an attribute of one on the wait list
+            if (conn[i].getStartClassName() == waitClass) {
+                newClass = conn[i].getEndClassName();
+
+            } else {
+                newClass = conn[i].getStartClassName();
+            }
+
+            // check for loops in the path before adding the class
+            if (waitPath.containsClass(newClass)) {
+                loopFlag = true;
+            }
+
+            // build the new path
+            var t = conn[i].getTriple(0);
+            newPath = waitPath.deepCopy();
+            newPath.addTriple(t[0], t[1], t[2]);
+
+            // if path leads anywhere in domain, store it
+            var name = new OntologyName(newClass);
+            // experiment: don't connect through a measurement
+            if (name.isInDomain(domain) && ! experimentIsDataClass(newClass) ) {
+
+                // if path leads to a target, push onto the ret list
+                if (newClass in targetHash) {
+                    return [newPath];
+
+                // if path doens't lead to target, add to waiting list
+                // But if it is a loop (that didn't end at the targetHash) then stop
+                }  else if (loopFlag == false){
+                    // try extending already-found paths
+                    waitingList.push(newPath);
+                }
+            }
+        }
+    }
+    return [];
+},
+
+addClassFirstPath = function(classURI, oInfo, domain, optOptionalFlag) {
+    // attach a classURI using the first path found.
+    // Error if less than one path is found.
+    // return the new node
+    // return null if there are no paths
+
+    // get first path from classURI to this nodeGroup
+    var paths = findFirstPath(oInfo, classURI, gNodeGroup.getArrayOfURINames(), domain);
+    if (paths.length === 0) {
+        return null;
+    }
+    var path = paths[0];
+
+    // get first node matching anchor of first path
+    var nlist = gNodeGroup.getNodesByURI(path.getAnchorClassName());
+
+    // add sNode
+    var sNode = gNodeGroup.addPath(path, nlist[0], oInfo, false, optOptionalFlag);
+
+    return sNode;
+};
+
+getOrAddNode = function(classURI, oInfo, domain, optSuperclassFlag, optOptionalFlag) {
+    // return first (randomly selected) node with this URI
+    // if none exist then create one and add it using the shortest path (see addClassFirstPath)
+    // if superclassFlag, then any subclass of classURI "counts"
+    // if optOptionalFlag: ONLY if node is added, change first nodeItem connection in path's isOptional to true
+
+    // if gNodeGroup is empty: simple add
+    var sNode;
+    var scFlag =       (optSuperclassFlag === undefined) ? false : optSuperclassFlag;
+    var optionalFlag = (optOptionalFlag   === undefined) ? false : optOptionalFlag;
+
+    if (gNodeGroup.getNodeCount() === 0) {
+        sNode = gNodeGroup.addNode(classURI, oInfo);
+
+    } else {
+        // if node already exists, return first one
+        var sNodes;
+
+        // if superclassFlag, then any subclass of classURI "counts"
+        if (scFlag) {
+            sNodes = gNodeGroup.getNodesBySuperclassURI(classURI, oInfo);
+        // otherwise find nodes with exact classURI
+        } else {
+            sNodes = gNodeGroup.getNodesByURI(classURI);
+        }
+
+        if (sNodes.length > 0) {
+            sNode = sNodes[0];
+        } else {
+            sNode = addClassFirstPath(classURI, oInfo, domain, optOptionalFlag);
+        }
+    }
+    return sNode;
+};
+
 addRowFromOTree = function(treeNode) {
     require([   'sparqlgraph/js/ontologyinfo',
             ],
@@ -606,7 +760,7 @@ addRowFromOTree = function(treeNode) {
     	}
 
     	// get info on the dropped Node
-    	var itemSNode = gNodeGroup.getOrAddNode(classObj.getNameStr(), gOInfo, gConn.getDomain(), true);
+    	var itemSNode = getOrAddNode(classObj.getNameStr(), gOInfo, gConn.getDomain(), true);
 
     	if (itemSNode == null) {
     		alertUser("Internal error in sparqlForm addRowFromOTree:  Can't find a path to add " + classObj.getNameStr());
@@ -1033,24 +1187,21 @@ doQueryTableResCallback = function(csvFilename, fullURL, results) {
  **  Get a sparqlGraphJson with
  **       - expand optional subgraphs
  **       - formRows added
+ **
+ **  NOTE: caller needs to require sparqlgraph/js/sparqlgraphjson
  **/
-getSGJson = function() {
-    require([   'sparqlgraph/js/sparqlgraphjson',
-            ],
-            function(SparqlGraphJson) {
+getSGJson = function(SparqlGraphJson) {
+    var tmpNodegroup = gNodeGroup.deepCopy();
+    tmpNodegroup.expandOptionalSubgraphs();
 
-        var tmpNodegroup = gNodeGroup.deepCopy();
-        tmpNodegroup.expandOptionalSubgraphs();
+    var sgJson = new SparqlGraphJson(gConn, tmpNodegroup);
+	sgJson.setExtra("formRows", getFormRowsArray());
 
-        var sgJson = new SparqlGraphJson(gConn, tmpNodegroup);
-    	sgJson.setExtra("formRows", getFormRowsArray());
+	if (formConstraintsGet() != null) {
+		 sgJson.setExtra("constraintSet", formConstraintJson());
+	}
 
-    	if (formConstraintsGet() != null) {
-    		 sgJson.setExtra("constraintSet", formConstraintJson());
-    	}
-
-    	return sgJson;
-    });
+	return sgJson;
 };
 
 restoreQueryFromJsonStr = function(str) {
