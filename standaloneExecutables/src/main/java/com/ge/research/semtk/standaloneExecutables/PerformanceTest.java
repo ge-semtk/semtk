@@ -8,7 +8,12 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -17,7 +22,6 @@ import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.io.FileUtils;
-import org.apache.jena.reasoner.rulesys.Rule.ParserException;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -40,17 +44,21 @@ import com.ge.research.semtk.utility.Utility;
 
 public class PerformanceTest {
 
+	private static int passSize;
+	private static int numberOfItems;
+	private static int numberOfLinks;
+	private static int numberOfPasses;
 	private static String resourceFolder;
 	private static String taskName;
 	private static String serverType;
 	private static String serverURL;
 	private static long startTime;
 	private static SparqlEndpointInterface sei;
+	private static String whatToTest;
 	private final static boolean NO_PRECHECK = false;
 	private final static boolean PRECHECK = true;
 	private final static boolean LOG_QUERY_PERFORMANCE = false;
 	private final static Double  CIRCUIT_BREAKER_SEC = 60.0 * 3;
-
 
 	public static void main(String[] args) throws Exception {
 
@@ -67,7 +75,7 @@ public class PerformanceTest {
 		String serverURLArg = "server-url";
 		Option serverURLOpt = new Option(
 			null, serverURLArg, true,
-			"Server URL (ending with /<dataset>)"
+			"Server URL (ending with \"/<dataset>\")"
 		);
 		serverURLOpt.setRequired(true);
 		options.addOption(serverURLOpt);
@@ -80,14 +88,91 @@ public class PerformanceTest {
 		resourcesOpt.setRequired(true);
 		options.addOption(resourcesOpt);
 
+		String testLinkItems = "link-items";
+		String testAddSimpleRows = "add-simple-rows";
+		String testAddSimpleBiggerRows = "add-simple-bigger-rows";
+
+		String whatToTestOptions =
+			Stream.of(
+				testAddSimpleRows,
+				testAddSimpleBiggerRows,
+				testLinkItems
+			).collect(Collectors.joining(", "));
+
+		String testArg = "test";
+		Option testOpt = new Option(
+			null, testArg, true,
+			MessageFormat.format("What to test, one of: {0}", whatToTestOptions)
+		);
+		testOpt.setRequired(true);
+		options.addOption(testOpt);
+
+		String testsRequiringItemsAndLinks = Stream.of(new String[] {
+			testLinkItems
+		}).collect(Collectors.joining(", "));
+
+		String testsRequiringPasses = Stream.of(new String[] {
+			testAddSimpleRows,
+			testAddSimpleBiggerRows
+		}).collect(Collectors.joining(", "));
+
+		String numberOfItemsArg = "items";
+		String defaultNumberOfItems = "50000";
+		Option numberOfItemsOpt = new Option(
+			null, numberOfItemsArg, true,
+			MessageFormat.format(
+				"Number of items (for -{0} in {1}, default {2})",
+				testArg, testsRequiringItemsAndLinks, defaultNumberOfItems
+			)
+		);
+		options.addOption(numberOfItemsOpt);
+
+		String numberOfLinksArg = "links";
+		String defaultNumberOfLinks = "100000";
+		Option numberOfLinksOpt = new Option(
+			null, numberOfLinksArg, true,
+			MessageFormat.format(
+				"Number of links (for -{0} in {1}, default {2})",
+				testArg, testsRequiringItemsAndLinks, defaultNumberOfLinks
+			)
+		);
+		options.addOption(numberOfLinksOpt);
+
+		String numberOfPassesArg = "passes";
+		String defaultNumberOfPasses = "10";
+		Option numberOfPassesOpt = new Option(
+			null, numberOfPassesArg, true,
+			MessageFormat.format(
+				"Number of passes (for -{0} in {1}, default {2})",
+				testArg, testsRequiringPasses, defaultNumberOfPasses
+			)
+		);
+		options.addOption(numberOfPassesOpt);
+
+		String passSizeArg = "pass-size";
+		String defaultPassSize = "10000";
+		Option passSizeOpt = new Option(
+			null, passSizeArg, true,
+			MessageFormat.format(
+				"Rows per pass (for -{0} in {1}, default {2})",
+				testArg, testsRequiringPasses, defaultPassSize
+			)
+		);
+		options.addOption(passSizeOpt);
+
 		CommandLineParser parser = new BasicParser();
 
 		try {
 			CommandLine cmd = parser.parse(options, args);
+			numberOfItems = Integer.parseInt(cmd.getOptionValue(numberOfItemsArg, defaultNumberOfItems));
+			numberOfLinks = Integer.parseInt(cmd.getOptionValue(numberOfLinksArg, defaultNumberOfLinks));
+			numberOfPasses = Integer.parseInt(cmd.getOptionValue(numberOfPassesArg, defaultNumberOfPasses));
+			passSize = Integer.parseInt(cmd.getOptionValue(passSizeArg, defaultPassSize));
 			serverType = cmd.getOptionValue(serverTypeArg);
 			serverURL = cmd.getOptionValue(serverURLArg);
 			resourceFolder = cmd.getOptionValue(resourcesArg);
-		} catch (ParserException e) {
+			whatToTest = cmd.getOptionValue(testArg);
+		} catch (Exception e) {
 			System.out.println(e.getMessage());
 			(new HelpFormatter()).printHelp("PerformanceTest", options);
 			System.exit(1);
@@ -106,12 +191,44 @@ public class PerformanceTest {
 
 		try {
 
-			linkItems(60000, 100000);  // 1/100th grammatech
-			//addBatteryDescriptions(40000, 75000);
-			// addSimpleRows(10, 10000);
-			//addBatteryDescriptions(1000, 500000);
-			//addBatteryDescriptionsVaryingThreadsAndSize(0);
-			//addSimpleBiggerRows(10, 50000);
+			if (whatToTest.equals(testAddSimpleRows)) {
+				addRows(
+					numberOfPasses, passSize, "addSimpleRows",
+					"battery name, cell id, color",
+					(currentPass, rowIndex) -> MessageFormat.format(
+						"name_{0},cell_{0},red",
+        				Integer.toString((currentPass - 1) * 10000 + rowIndex)
+					)
+				);
+				return;
+			}
+
+			if (whatToTest.equals(testAddSimpleBiggerRows)) {
+				addRows(
+					numberOfPasses, passSize, "addSimpleBiggerRows",
+					"batt_id,description_opt,cell1_id_opt,cell1_color,cell2_id_opt,cell2_color,cell3_id_opt,cell3_color,cell4_id_opt,cell4_color",
+					(currentPass, rowIndex) -> MessageFormat.format(
+						"id{0},desc_{0},cell1_{0},red,cell2_{0},red,cell3_{0},blue,cell4_{0},white",
+        				Integer.toString((currentPass - 1) * 10000 + rowIndex)
+					)
+				);
+				return;
+			}
+
+			if (whatToTest.equals(testLinkItems)) {
+				linkItems(numberOfItems, numberOfLinks);
+				return;
+			}
+
+			System.out.println(MessageFormat.format(
+				"Unknown test option: {0}.\nOption -{1} should be one of {2}.",
+				whatToTest, testArg, whatToTestOptions
+			));
+
+			// Not yet exposed:
+			// addBatteryDescriptions(40000, 75000);
+			// addBatteryDescriptions(1000, 500000);
+			// addBatteryDescriptionsVaryingThreadsAndSize(0);
 
 		} finally {
 			sei.clearGraph();
@@ -122,99 +239,65 @@ public class PerformanceTest {
 	}
 
 	/**
-	 * Import rows and count
-	 * @param passes - how many passes
-	 * @param pass_size - rows per pass
-	 * @throws Exception
+	 * A 'Pass' is just a callback that receives the pass number and does its work.
 	 */
-	private static void addSimpleRows(int passes, int pass_size) throws Exception {
+	@FunctionalInterface
+	private interface Pass {
+		void apply(int currentPass) throws Exception;
+	}
+
+	/**
+	 * Runs the given 'Pass' the indicated number of passes.
+	 *
+	 * @param numberOfPasses How many passes to run
+	 * @param pass           Callback to run one pass
+	 */
+	public static void runMultiplePasses(int numberOfPasses, Pass pass) {
+		IntStream.range(0, numberOfPasses).forEach(i -> {
+			try {
+				// Passes receive 1-based pass number
+				pass.apply(i + 1);
+			} catch (Exception e) {
+				System.out.println(e.getMessage());
+				System.exit(1);
+			}
+		});
+	}
+
+	public static void addRows(int numberOfPasses, int passSize, String taskName, String csvHeader,
+			BiFunction<Integer, Integer, String> buildCSVRow) throws Exception {
 
 		// setup
 		sei.clearGraph();
 		uploadOwlFromSGL(sei, "/loadTest.owl");
 
-		int pass = -1;
-		long triples = 0;
-
-		while (++pass < passes) {
-			// build 10,000 rows
-			int i = 0;
-
-			// reload the sgJson so ImportSpec can't share between loads, cheat, or get bogged down.
+		runMultiplePasses(numberOfPasses, (Pass) currentPass -> {
+			// reload the sgJson so ImportSpec can't share between loads, cheat, or get
+			// bogged down.
 			SparqlGraphJson sgJson = getSGJsonFromSGL("/loadTest.json", sei, sei);
 
 			// build the rows
-			StringBuilder content = new StringBuilder();
-			content.append("battery name, cell id, color\n");
-			for (i=0; i < pass_size; i++) {
-				int index = pass * pass_size + i;
-				content.append("name_" + index + ",cell_" + index + ",red\n");
-			}
-
-			Dataset ds0 = new CSVDataset(content.toString(), true);
+			String content = csvHeader + "\n" + IntStream.range(0, passSize)
+					.mapToObj(i -> buildCSVRow.apply(currentPass, i)).collect(Collectors.joining("\n"));
+			Dataset ds0 = new CSVDataset(content, true);
 
 			// ingest
 			DataLoader dl0 = new DataLoader(sgJson, ds0, "dba", "dba");
-			startTask("addSimpleRows load " + pass_size + "  totaling," + (pass + 1) * pass_size);
+			startTask(MessageFormat.format(
+				"{0} load {1,number,#} totaling, {2,number,#}",
+				taskName, passSize, currentPass * passSize
+			));
 			dl0.importData(NO_PRECHECK);
 			endTask();
 
 			// get new total triples twice
-			triples = sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
-			startTask("addSimpleRows count, " + triples);
+			long triples = sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
+			startTask(MessageFormat.format(
+				"{0} count, {1,number,#}", taskName, triples
+			));
 			sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
 			endTask();
-		}
-
-	}
-
-	private static void addSimpleBiggerRows(int passes, int pass_size) throws Exception {
-
-		// setup
-		sei.clearGraph();
-		uploadOwlFromSGL(sei, "/loadTestDuraBattery.owl");
-
-		int pass = -1;
-		long triples = 0;
-
-		while (++pass < passes) {
-			// build 10,000 rows
-			int i = 0;
-
-			// reload the sgJson so ImportSpec can't share between loads, cheat, or get bogged down.
-			SparqlGraphJson sgJson = getSGJsonFromSGL("/loadTestDuraBattery.json", sei, sei);
-
-			StringBuilder content = new StringBuilder();
-			content.append("batt_id,description_opt,cell1_id_opt,cell1_color,cell2_id_opt,cell2_color,cell3_id_opt,cell3_color,cell4_id_opt,cell4_color\n");
-			for (i=0; i < pass_size; i++) {
-				int index = pass * pass_size + i;
-				content.append("id" + index +
-						",desc_" + index +
-						",cell1_" + index +
-						",red" +
-						",cell2_" + index +
-						",red" +
-						",cell3_" + index +
-						",blue" +
-						",cell4_" + index +
-						",white" +
-						"\n"
-						);
-			}
-
-			Dataset ds0 = new CSVDataset(content.toString(), true);
-
-			DataLoader dl0 = new DataLoader(sgJson, ds0, "dba", "dba");
-			startTask("addSimpleBiggerRows load " + pass_size + "  totaling," + (pass + 1) * pass_size);
-			dl0.importData(PRECHECK);
-			endTask();
-
-			// get new total triples twice
-			triples = sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
-			startTask("addSimpleBiggerRows count triples, " + triples);
-			sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
-			endTask();
-		}
+		});
 
 	}
 
