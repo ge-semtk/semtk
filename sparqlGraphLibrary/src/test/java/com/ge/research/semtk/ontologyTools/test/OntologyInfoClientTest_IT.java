@@ -36,6 +36,7 @@ import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.ontologyTools.PredicateStats;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.services.client.RestClientConfig;
@@ -164,6 +165,17 @@ public class OntologyInfoClientTest_IT {
 		oInfo = client.getOntologyInfo(conn);
 		assertEquals("query client uploadOwl didn't update oInfo cache", 3, oInfo.getNumberOfClasses());
 		
+		
+	}
+	
+	@Test
+	public void testGetPredicateStats() throws Exception {
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this.getClass(), "sampleBattery.owl");
+		OntologyInfoClient client = this.getClient();
+		String jobId = client.execGetPredicateStats(TestGraph.getSparqlConn());
+		IntegrationTestUtility.getStatusClient(jobId).waitForCompletionSuccess();
+		PredicateStats stats = new PredicateStats(IntegrationTestUtility.getResultsClient().execGetBlobResult(jobId));
 		
 	}
 }

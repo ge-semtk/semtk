@@ -104,6 +104,37 @@ public class JobTracker {
 	}
 	
 	/**
+	 * Wait for completion, updating a parent process' percent complete
+	 * @param jobId
+	 * @param parentJobId
+	 * @param parentStatus - status for parent
+	 * @param pollingMsec - max wait sec between poll
+	 * @param startPercent - parent start percent
+	 * @param endPercent - parent end percent
+	 * @throws AuthorizationException
+	 * @throws Exception
+	 */
+	public void waitTilCompleteUpdatingParent(String jobId, String parentJobId, String defaultParentStatus, int pollingMsec, int startPercent, int endPercent) throws AuthorizationException, Exception {
+		int percentComplete = 0;
+		Object [] percentAndStatus;
+		
+		
+		do {
+			if (percentComplete == 0) {
+				// fist time through, pass current values to parent
+				percentAndStatus = this.getJobPercentCompleteAndStatusMsg(jobId);
+			} else {
+				// after first time, wait polling Msec
+				percentAndStatus = this.waitForPercentOrMsecWithStatusMsg(jobId, 100, pollingMsec);
+			}
+			percentComplete = (int) percentAndStatus[0];
+			int parentPercent = startPercent + (endPercent - startPercent) * percentComplete / 100;
+			String status = (String) percentAndStatus[1];
+			this.setJobPercentComplete(parentJobId, parentPercent, status.length() > 0 ? status : defaultParentStatus);
+		} while (percentComplete < 100);
+	}
+	
+	/**
 	 * Create a jobs endpoint with one free superuser query
 	 * @return
 	 * @throws Exception
@@ -164,17 +195,28 @@ public class JobTracker {
 	 * @return
 	 * @throws Exception if jobId doesn't exist or job has no percentComplete
 	 */
-	public int getJobPercentComplete(String jobId) throws AuthorizationException, Exception {	    
+	public int getJobPercentComplete(String jobId) throws AuthorizationException, Exception {	 
+		return (int) (this.getJobPercentCompleteAndStatusMsg(jobId)[0]);
+	}
+	
+	/**
+	 * Return { (Integer)percent_complete, "status or empty string" }
+	 * @param jobId
+	 * @return
+	 * @throws Exception if jobId doesn't exist or job has no percentComplete
+	 */
+	public Object[] getJobPercentCompleteAndStatusMsg(String jobId) throws AuthorizationException, Exception {	    
 		   
 	    String query = String.format("  \n" +
 	        "prefix job:<http://research.ge.com/semtk/services/job#>  \n" +
 	    	"prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#>  \n" +
 	    	"	  \n" +
-	    	"	select distinct ?Job ?percentComplete ?userName \n" +            // PEC: added ?Job for debugging double percentComplete problem 9/13/2017
+	    	"	select distinct ?Job ?percentComplete ?statusMsg ?userName \n" +            // PEC: added ?Job for debugging double percentComplete problem 9/13/2017
 	    	"   from <" + this.sei.getGraph() + "> where { " +
 	    	"	   ?Job a job:Job.  \n" +
 	    	"	   ?Job job:id '%s' .  \n" +
 	    	"	   ?Job job:percentComplete ?percentComplete .  \n" +
+	    	"	   optional { ?Job job:statusMessage ?statusMsg } .  \n" +
 	    	"	   ?Job job:userName ?userName .  \n" +
 	    	"	}",
 	    	SparqlToXUtils.safeSparqlString(jobId));
@@ -197,14 +239,14 @@ public class JobTracker {
 	    		throw new Exception(String.format("Can't find percent complete for Job %s",  jobId));
 	    	}
 	    } else {
-	    	int ret = Integer.parseInt(trList[0]);
+	    	int percent = Integer.parseInt(trList[0]);
 	    	
-	    	if (ret < 0 || ret > 100) {
+	    	if (percent < 0 || percent > 100) {
 	    		throw new Exception(String.format("Trouble parsing percent complete of job %s into an int 0-100.  Value = '%s'", jobId, trList[0]));
 	    	}
 	    	
 	    	this.throwExceptionIfNotOwner(endpoint, jobId);
-		    return ret;
+		    return (new Object[] { Integer.valueOf(percent), tab.getCell(0, "statusMsg")}) ;
 	    }
 	}
 	
@@ -1272,15 +1314,22 @@ public class JobTracker {
 	 * @throws Exception on error
 	 */
 	public int waitForPercentOrMsec(String jobId, int percentComplete, int maxWaitMsec) throws AuthorizationException, Exception {
+		return (int) this.waitForPercentOrMsecWithStatusMsg(jobId, percentComplete, maxWaitMsec)[0];
+	}
+	
+	public Object[] waitForPercentOrMsecWithStatusMsg(String jobId, int percentComplete, int maxWaitMsec) throws AuthorizationException, Exception {
 		long sleepMsec = 200;
 		int actualPercent = 0;
 		long now = System.currentTimeMillis();
 		long endTime = now + maxWaitMsec;
+		String status = "";
 		
 		now -= 1; // make sure we run the loop at least once
 		
 		while (now < endTime) {
-			actualPercent = this.getJobPercentComplete(jobId);
+			Object percentAndStatus[] = this.getJobPercentCompleteAndStatusMsg(jobId);
+			actualPercent = (int) percentAndStatus[0];
+			status = (String) percentAndStatus[1];
 			if (actualPercent >= percentComplete) {
 				break;
 			}
@@ -1299,7 +1348,7 @@ public class JobTracker {
 				now = System.currentTimeMillis();
 			}
 		}
-		return actualPercent;
+		return new Object [] {actualPercent, status};
 	}
 	
 	/**

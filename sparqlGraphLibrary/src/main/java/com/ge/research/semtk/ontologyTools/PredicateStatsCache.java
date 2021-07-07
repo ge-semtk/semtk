@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
 
+import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
 public class PredicateStatsCache {
@@ -18,6 +19,7 @@ public class PredicateStatsCache {
 	/**
 	 * Get an oInfo based on the connection.  Retrieve from cache if possible.
 	 * @param conn
+	 * @param oInfo - Used to create new stats.  Passed in so caller can control performance.
 	 * @return
 	 * @throws Exception
 	 */
@@ -31,6 +33,32 @@ public class PredicateStatsCache {
 		}
 		
 		return hash.get(key).getPredicateStats(this.maxAgeMillis, oInfo);
+	}
+	
+	public synchronized PredicateStats get(SparqlConnection conn, OntologyInfo oInfo, JobTracker tracker, String jobId, int startPercent, int endPercent) throws Exception {
+		String key = conn.getUniqueKey();
+		
+		this.clearExpired();
+		
+		if (!hash.containsKey(key)) {
+			hash.put(key, new CachedPredicateStats(conn, oInfo, tracker, jobId, startPercent, endPercent));
+		}
+		
+		return hash.get(key).getPredicateStats(this.maxAgeMillis, oInfo);
+	}
+	
+	/**
+	 * Get if cached, else null
+	 * @param conn
+	 * @return
+	 * @throws Exception
+	 */
+	public synchronized PredicateStats getIfCached(SparqlConnection conn) throws Exception {
+		String key = conn.getUniqueKey();
+		this.clearExpired();
+		
+		CachedPredicateStats cached = this.hash.get(key);
+		return cached == null ? null : cached.getPredicateStats();
 	}
 	
 	/**

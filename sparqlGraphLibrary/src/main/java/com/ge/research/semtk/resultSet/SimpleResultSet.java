@@ -71,6 +71,11 @@ public class SimpleResultSet extends GeneralResultSet{
 	public String getJobId() throws Exception {
 		return this.getResult(JOB_ID_RESULT_KEY);
 	}
+	
+	public void addJobId(String jobId) {
+		this.addResult(JOB_ID_RESULT_KEY, jobId);
+	}
+	
 	/**
 	 * Return results in a hashmap
 	 */

@@ -207,7 +207,7 @@ define([	// properly require.config'ed   bootstrap-modal
              */
             asyncSgJsonCallback(endpoint, sgjsonCallback, failureCallback, resultSet) {
                 if (resultSet.isSuccess()) {
-                    // get the jobId
+                    // get the sgjson
                     var sgJsonJson = resultSet.getSimpleResultField("nodegroup");
                     if (sgJsonJson) {
                         var sgjson = new SparqlGraphJson();

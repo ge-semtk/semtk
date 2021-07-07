@@ -27,8 +27,11 @@ import javax.servlet.http.HttpServletResponse;
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.belmont.*;
 import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
+import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
+import com.ge.research.semtk.edc.client.ResultsClient;
+import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.services.nodeGroupService.requests.*;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -36,6 +39,7 @@ import com.ge.research.semtk.springutilib.requests.NodegroupRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -90,9 +94,14 @@ public class NodeGroupServiceRestController {
 	@Autowired
 	OInfoServiceProperties oinfo_props;
 	@Autowired
+	private NodegroupServiceResultsProperties results_props;
+	@Autowired
+	private ServicesGraphProperties servicesgraph_props;
+	@Autowired
 	private AuthProperties auth_prop;
 	@Autowired 
 	private ApplicationContext appContext;
+	
 	
 	@PostConstruct
     public void init() {
@@ -102,6 +111,8 @@ public class NodeGroupServiceRestController {
 		// these are still in the older NodegroupExecutionServiceStartup
 		
 		oinfo_props.validateWithExit();
+		results_props.validateWithExit();
+		servicesgraph_props.validateWithExit();
 		auth_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);
 
@@ -117,62 +128,101 @@ public class NodeGroupServiceRestController {
 	    response.addHeader("Access-Control-Max-Age", "3600");
 	}
 	
+	
+	
 	@ApiOperation(
-			value="Generate a SELECT query",
-			notes="Generic query with no special options."
+			value="Find paths from a class to a nodegroup.",
+			notes="Returns pathList and pathWarnings."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/findAllPaths", method=RequestMethod.POST)
-	public JSONObject generateSelectSparql(@RequestBody PathFindingRequest requestBody, @RequestHeader HttpHeaders headers) {
+	public JSONObject findAllPaths(@RequestBody PathFindingRequest requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME = "findAllPaths";
 		HeadersManager.setHeaders(headers);
-		SimpleResultSet retval = null;
+		SimpleResultSet retval = new SimpleResultSet();
 		
-		try{
-			// more efficient way than some of the others to get everything
-			// note that ng should be inflated and contain model and data connections
-			SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
-			SparqlConnection conn = sgJson.getSparqlConn();
+		try {	
+			String jobId = JobTracker.generateJobId();
+			JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
+			tracker.createJob(jobId);
+			tracker.setJobPercentComplete(jobId, 1, "Start path-finding");
 			
-			OntologyInfo oInfo = retrieveOInfo(conn);
-			oInfo.setPathFindingMaxLengthRange(requestBody.getMaxLengthRange());
-			oInfo.setPathFindingMaxPathCount(requestBody.getMaxPathCount());
-			oInfo.setPathFindingMaxPathLength(requestBody.getMaxPathLength());
-			oInfo.setPathFindingMaxTimeMsec(requestBody.getMaxTimeMsec());
-			if (requestBody.getPropsInDataFlag()) {
-				PredicateStats stats = new PredicateStats(conn, oInfo);
-				oInfo.setPredicateStats(stats);
-			}
-			if (requestBody.getNodegroupInDataFlag()) {
-				// TODO
-			}
+			new Thread(() -> {
+				try {
+					
+					SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
+					SparqlConnection conn = sgJson.getSparqlConn();
+					NodeGroup ng = sgJson.getNodeGroup();
+					SimpleResultSet results = new SimpleResultSet(true);
+					ResultsClient rclient = new ResultsClient(new ResultsClientConfig(results_props.getProtocol(), results_props.getServer(), results_props.getPort()));
+					JSONArray pathJsonArr = new JSONArray();
+					JSONArray pathWarnArr = new JSONArray();
+					
+					// Only if there are nodes, hence possibly some paths...
+					if (ng.getNodeCount() > 0) {
+						
+						// 1. Retrieve OInfo sync, and set path-finding flags
+						tracker.setJobPercentComplete(jobId, 2, "Retrieving ontology");
+						OntologyInfo oInfo = this.retrieveOInfo(conn);
+						oInfo.setPathFindingMaxLengthRange(requestBody.getMaxLengthRange());
+						oInfo.setPathFindingMaxPathCount(requestBody.getMaxPathCount());
+						oInfo.setPathFindingMaxPathLength(requestBody.getMaxPathLength());
+						oInfo.setPathFindingMaxTimeMsec(requestBody.getMaxTimeMsec());
+						
+						
+						// 2. Retrieve Predicate Stats
+						if (requestBody.getPropsInDataFlag()) {
+							PredicateStats stats = this.retrievePredicateStats(conn, jobId, 25, 50);
+							oInfo.setPredicateStats(stats);
+						}
+						
+						// 3. Find All Paths
+						tracker.setJobPercentComplete(jobId, 51, "Building Paths");
+						ng.noInflateNorValidate(oInfo);
+						ArrayList<String> classes = new ArrayList<String>();
+						classes.addAll(ng.getNodeURIStrings());
+						ArrayList<OntologyPath> pathList = oInfo.findAllPaths(requestBody.getAddClass(), classes);
+						
+						// TODO: 4.  NodeGroups valid
+						tracker.setJobPercentComplete(jobId, 75, "Pruning invalid nodegroups");
+						if (requestBody.getNodegroupInDataFlag()) {
+							
+						}
+						
+						tracker.setJobPercentComplete(jobId, 98, "");
+	
+						// 5. Build and send result
+						
+						for (OntologyPath p: pathList) {
+							pathJsonArr.add(p.toJson());
+						}
+						
+						ArrayList<String> pathWarnings = oInfo.getPathWarnings();
+						for (String p : pathWarnings) {
+							pathWarnArr.add(p);
+						}
+						
+					}
+					results.addResult("pathList", pathJsonArr);
+					results.addResult("pathWarnings", pathWarnArr);
+					rclient.execStoreBlobResults(jobId, results.toJson());
+					tracker.setJobSuccess(jobId);
+					
+				} catch (Exception e) {
+					try {
+						tracker.setJobFailure(jobId, e.getMessage());
+					} catch (Exception ee) {
+						LocalLogger.logToStdErr(ENDPOINT_NAME + " error accessing job tracker");
+						LocalLogger.printStackTrace(ee);
+					}
+				}
+			}).start();
+		
+			retval.addJobId(jobId);
+			retval.setSuccess(true);
 			
-			NodeGroup ng = sgJson.getNodeGroupNoInflateNorValidate(oInfo);
-			
-			ArrayList<String> classes = new ArrayList<String>();
-			classes.addAll(ng.getNodeURIStrings());
-			
-			// TODO both flags
-			ArrayList<OntologyPath> pathList = oInfo.findAllPaths(requestBody.getAddClass(), classes);
-			
-			// add "pathList"
-			retval = new SimpleResultSet(true);
-			JSONArray pathJsonArr = new JSONArray();
-			for (OntologyPath p: pathList) {
-				pathJsonArr.add(p.toJson());
-			}
-			retval.addResult("pathList", pathJsonArr);
-			
-			ArrayList<String> pathWarnings = oInfo.getPathWarnings();
-			JSONArray pathWarnArr = new JSONArray();
-			for (String p : pathWarnings) {
-				pathWarnArr.add(p);
-			}
-			retval.addResult("pathWarnings", pathWarnArr);
-			
-		}
-		catch(Exception e){
-			retval = new SimpleResultSet(false);
+		} catch(Exception e){
+			retval.setSuccess(false);
 			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
 			LocalLogger.printStackTrace(e);
 		}
@@ -1149,10 +1199,42 @@ public class NodeGroupServiceRestController {
 		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
 		return oClient.getOntologyInfo(conn);
 		
-		/* Faster option: Local cache
-		 * It doesn't get cleared if model changes
-		 */
-		//return oInfoCache.get(conn);
 	}
+	
+	/**
+	 * Retrieve predicate stats only if already cached and ready, else null.
+	 * @param conn
+	 * @return
+	 * 
+	 * @throws Exception
+	 */
+	private PredicateStats retrievePredicateStatsIfCached(SparqlConnection conn) throws Exception {
 
+		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
+		return oClient.execGetCachedPredicateStats(conn);
+	}
+	
+	/**
+	 * Retrieve predicate stats asynchronously.
+	 * @param conn
+	 * @return
+	 * 
+	 * @throws Exception
+	 */
+	private PredicateStats retrievePredicateStats(SparqlConnection conn, String parentJobId, int startPercent, int endPercent) throws Exception {
+
+		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
+		String jobId = oClient.execGetPredicateStats(conn);
+		JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
+		tracker.waitTilCompleteUpdatingParent(jobId, parentJobId, "Getting stats on predicate usage", 1000, startPercent, endPercent);
+		
+		if (tracker.jobSucceeded(jobId)) {
+			ResultsClient rclient = new ResultsClient(new ResultsClientConfig(results_props.getProtocol(), results_props.getServer(), results_props.getPort()));
+			JSONObject statsJson = rclient.execGetBlobResult(jobId);
+			return new PredicateStats(statsJson);
+		} else {
+			throw new Exception(tracker.getJobStatusMessage(jobId));
+		}
+	}
+	
 }

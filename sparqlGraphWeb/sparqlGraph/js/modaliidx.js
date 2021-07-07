@@ -180,7 +180,7 @@ define([	// properly require.config'ed   bootstrap-modal
         };
 
         // old ModalDialog.listDialog
-        ModalIidx.listDialog = function (headerText, buttonLabel, nameArray, valArray, defaultIndex, callback, optWidthPercent) {
+        ModalIidx.listDialog = function (headerText, buttonLabel, nameArray, valArray, defaultIndex, callback, optWidthPercent, extraDOM) {
 
             var div = document.createElement("div");
             div.align = "center";
@@ -195,6 +195,10 @@ define([	// properly require.config'ed   bootstrap-modal
             select.size = "6";
             select.style.width = "100%";
             div.appendChild(select);
+
+            if (extraDOM) {
+                div.appendChild(extraDOM);
+            }
 
             // callbacks
             var listDialogSubmit = function (sel, vArr, cback) {
@@ -602,7 +606,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 $(document).unbind('hide');
                 if (typeof optCallback != "undefined" && optCallback) {
                     $(document).on('hide', '#'+this.id, optCallback);
-                } 
+                }
             }
 		};
 

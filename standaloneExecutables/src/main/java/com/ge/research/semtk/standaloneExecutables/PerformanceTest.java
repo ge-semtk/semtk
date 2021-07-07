@@ -63,10 +63,8 @@ public class PerformanceTest {
 		
 		try {
 			
-			linkItems(60000, 100000);  // 1/100th grammatech
-			//addBatteryDescriptions(40000, 75000);  
-			
-			
+			// linkItems(60000, 100000);  // 1/100th grammatech
+			addBatteryDescriptions(50000, 5000000);  
 			
 			//addSimpleRows(10, 10000); 
 			//addBatteryDescriptions(1000, 500000);  

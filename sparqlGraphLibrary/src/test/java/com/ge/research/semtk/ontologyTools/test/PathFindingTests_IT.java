@@ -88,13 +88,10 @@ public class PathFindingTests_IT {
 	
 	
 	@Test
-	public void testOne() throws Exception {
+	public void testWithPredicateStats() throws Exception {
 
 		TestGraph.clearPrefix(UriResolver.DEFAULT_URI_PREFIX);
 		TestGraph.ingest(this.getClass(), "RACK/ingest_req_test_result.json", "RACK/ingest_req_test_result.csv");
-		
-		//ArrayList<OntologyPath> paths = oInfo.findAllPaths(TEST_RESULT, REQUIREMENT);
-		//System.out.println("paths: " + paths.size());
 		
 		PredicateStats stats = new PredicateStats(TestGraph.getSparqlConn(), oInfo);
 		

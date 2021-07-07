@@ -205,17 +205,29 @@
                 guiGraphNonEmpty();
 
             } else {
-                require([ 'sparqlgraph/js/msiclientnodegroupservice',
+                require([ 'sparqlgraph/js/msiclientresults',
+                          'sparqlgraph/js/msiclientstatus',
+                          'sparqlgraph/js/msiclientnodegroupservice',
+                          'sparqlgraph/js/msiresultset',
                           'sparqlgraph/js/sparqlgraphjson',
-                      ], function (MsiClientNodeGroupService, SparqlGraphJson) {
+                      ], function (MsiClientResults, MsiClientStatus, MsiClientNodeGroupService, MsiResultSet, SparqlGraphJson) {
 
                     var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
 
                     //var nodelist = gNodeGroup.getArrayOfURINames();
                     //var paths = gOInfo.findAllPaths(dragLabel, nodelist, gConn.getDomain());
                     var sgJson = new SparqlGraphJson(gConn, gNodeGroup, null, false, null);
-                    ngClient.execFindAllPaths(sgJson, dragLabel, false, false, findAllPathsCallback.bind(this, dragLabel));
 
+                    var successCallback = function(resJson) {
+                        var resObj = new MsiResultSet(resJson.serviceURL, resJson.xhr);
+                        findAllPathsCallback(dragLabel, resObj);
+                    };
+
+                    var resultsCall = MsiClientResults.prototype.execGetJsonBlobRes;
+                    var callback = buildStatusResultsCallback(successCallback, resultsCall, MsiClientStatus, MsiClientResults, MsiResultSet);
+
+                    var predicateMode = getPathFindingMode() == 1;
+                    ngClient.execFindAllPaths(sgJson, dragLabel, predicateMode, false, callback);
                 });
             }
         }
@@ -264,8 +276,20 @@
                  require([ 'sparqlgraph/js/modaliidx',
                          ], function (ModalIidx) {
 
+                    var extraDOM = undefined;
+                    if (pathWarnings && pathWarnings.length > 0) {
+                        extraDOM = document.createElement("div");
+                        extraDOM.align="left";
+                        for (var warnStr of pathWarnings) {
+                            var alert = document.createElement("span");
+                            alert.classList.add("alert");
+                            alert.classList.add("alert-info");
+                            alert.innerHTML = warnStr;
+                            extraDOM.appendChild(alert);
+                        }
+                    }
                     // offer a choice, defaulting to the shortest non-disconnected path
-                    ModalIidx.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, 80);
+                    ModalIidx.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, 80, extraDOM);
 
                  });
 
@@ -1538,14 +1562,14 @@
 
             var csvJsonCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(RESULTS_MAX_ROWS,
                                                                                      queryTableResCallback,
-                                                                                     queryFailureCallback,
+                                                                                     asyncFailureCallback,
                                                                                      setStatusProgressBar.bind(this, "Running Query"),
                                                                                      this.checkForCancel.bind(this),
                                                                                      g.service.status.url,
                                                                                      g.service.results.url);
 
             var jsonLdCallback = MsiClientNodeGroupExec.buildJsonLdCallback(queryJsonLdCallback,
-                                                                            queryFailureCallback,
+                                                                            asyncFailureCallback,
                                                                             setStatusProgressBar.bind(this, "Running Query"),
                                                                             this.checkForCancel.bind(this),
                                                                             g.service.status.url,
@@ -1553,16 +1577,16 @@
             setStatusProgressBar("Running Query", 1);
             switch (getQueryType()) {
 			case "SELECT":
-                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
+                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
                 break;
 			case "COUNT" :
-                client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
+                client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
                 break;
             case "CONSTRUCT":
-                client.execAsyncDispatchConstructFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jsonLdCallback, queryFailureCallback);
+                client.execAsyncDispatchConstructFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jsonLdCallback, asyncFailureCallback);
                 break;
 			case "DELETE":
-                var okCallback = client.execAsyncDispatchDeleteFromNodeGroup.bind(client, gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
+                var okCallback = client.execAsyncDispatchDeleteFromNodeGroup.bind(client, gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
                 var cancelCallback = function () {
                     guiUnDisableAll();
                     setStatus("");
@@ -1585,7 +1609,7 @@
 
              var csvJsonCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(RESULTS_MAX_ROWS,
                                                                                       queryTableResCallback,
-                                                                                      queryFailureCallback,
+                                                                                      asyncFailureCallback,
                                                                                       setStatusProgressBar.bind(this, "Running Query"),
                                                                                       this.checkForCancel.bind(this),
                                                                                       g.service.status.url,
@@ -1595,7 +1619,7 @@
             var sparql = document.getElementById('queryText').value;
 
             if (sparql.toLowerCase().indexOf("delete") > -1) {
-                var okCallback = client.execAsyncDispatchRawSparql.bind(client, sparql, gConn, csvJsonCallback, queryFailureCallback);
+                var okCallback = client.execAsyncDispatchRawSparql.bind(client, sparql, gConn, csvJsonCallback, asyncFailureCallback);
 
                 var cancelCallback = function () {
                     guiUnDisableAll();
@@ -1604,17 +1628,17 @@
 
                 ModalIidx.okCancel("Delete query", "Query may write / delete triples.<br>Confirm you want to run this query.", okCallback, "Run Query", cancelCallback);
             } else {
-                client.execAsyncDispatchRawSparql(sparql, gConn, csvJsonCallback, queryFailureCallback);
+                client.execAsyncDispatchRawSparql(sparql, gConn, csvJsonCallback, asyncFailureCallback);
             }
 
     	});
     };
 
-    var queryFailureCallback = function (html) {
+    var asyncFailureCallback = function (html) {
         require(['sparqlgraph/js/modaliidx'],
                 function(ModalIidx) {
 
-            ModalIidx.alert("Query Failed", html);
+            ModalIidx.alert("Failure", html);
             guiUnDisableAll();
             setStatus("");
         });
@@ -1892,6 +1916,17 @@
 
     };
 
+    var onchangePathFindingMode = function() {
+
+    };
+
+    // 0 "model", 1 "predicate data", 2 "nodegroup data"
+    var getPathFindingMode = function() {
+        var e = document.getElementById("selectPathFindingMode");
+        var value = e ? e.value : "model";
+        return value == "model" ? 0 : (value == "predicate data" ? 1 : 2);
+    };
+
     var onchangeQueryType = function () {
 
         // verify it's ok to move forward
@@ -1957,6 +1992,7 @@
     };
 
     var setStatusProgressBar = function(msg, percent, optMessageOverride) {
+        console.log("MSG " + optMessageOverride || "<none>");
 		var p = (typeof percent === 'undefined') ? 50 : percent;
         var m = (typeof optMessageOverride === 'undefined' && optMessageOverride != "") ? msg : optMessageOverride;
 		document.getElementById("status").innerHTML = m
@@ -2043,8 +2079,8 @@
                     ], function(MsiClientNodeGroupService) {
                 clearResults();
 
-                var ngsClient = new MsiClientNodeGroupService(g.service.nodeGroup.url, queryFailureCallback);
-                ngsClient.execAsyncGetRuntimeConstraints(gNodeGroup, gConn, runGraphWithConstraints, queryFailureCallback);
+                var ngsClient = new MsiClientNodeGroupService(g.service.nodeGroup.url, asyncFailureCallback);
+                ngsClient.execAsyncGetRuntimeConstraints(gNodeGroup, gConn, runGraphWithConstraints, asyncFailureCallback);
             });
     	}
     };
@@ -2374,3 +2410,50 @@
 		gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
 
 	};
+
+    //
+    // Build a callback which uses the status and results service to get to completion.
+    //     callback parameter:  simpleResults with jobID
+    // GUI: disables screen when called, handles cancel and unDisable at completion.
+    // successCallback: called by resultsCall
+    // resultsCall: a resultsClient function that takes a callback(successJson) as parameter
+    //            e.g. MsiClientResults.prototype.execGetJsonBlobRes
+
+    buildStatusResultsCallback = function(successCallback, resultsCall, MsiClientStatus, MsiClientResults, MsiResultSet) {
+
+        var failureCallback = this.asyncFailureCallback.bind(this);
+        var progressCallback = this.setStatusProgressBar.bind(this, "");
+        var checkForCancelCallback = this.checkForCancel.bind(this);
+        guiDisableAll(true);
+
+        // callback for the nodegroup execution service to send jobId
+        var simpleResCallback = function(simpleResJson) {
+
+            var resultSet = new MsiResultSet(simpleResJson.serviceURL, simpleResJson.xhr);
+            if (!resultSet.isSuccess()) {
+                failureCallback(resultSet.getFailureHtml);
+            } else {
+                var jobId = resultSet.getSimpleResultField("JobId");
+                // callback for status service after job successfully finishes
+                var statusSuccessCallback = function() {
+                    // callback for results service
+                    var resultsSuccessCallback = function (results) {
+                        successCallback(results);
+                        setStatus("");
+                        guiUnDisableAll();
+                    };
+                    var resultsClient = new MsiClientResults(g.service.results.url, jobId);
+                    resultsCall.bind(resultsClient)(resultsSuccessCallback);
+                };
+
+                progressCallback(1, "");
+
+                // call status service loop
+                var statusClient = new MsiClientStatus(g.service.status.url, jobId, failureCallback);
+                statusClient.execAsyncWaitUntilDone(statusSuccessCallback, checkForCancelCallback, progressCallback);
+            }
+
+        };
+
+        return simpleResCallback;
+    };

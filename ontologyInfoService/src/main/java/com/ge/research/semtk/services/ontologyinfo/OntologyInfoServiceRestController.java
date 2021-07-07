@@ -19,6 +19,7 @@
 package com.ge.research.semtk.services.ontologyinfo;
 
 import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
 
 import javax.annotation.PostConstruct;
 
@@ -36,6 +37,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
+import com.ge.research.semtk.edc.JobTracker;
+import com.ge.research.semtk.edc.client.ResultsClient;
+import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.ontologyTools.DataDictionaryGenerator;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
@@ -55,6 +59,7 @@ import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
 import io.swagger.annotations.ApiOperation;
@@ -67,16 +72,20 @@ public class OntologyInfoServiceRestController {
  	static final String SERVICE_NAME = "ontologyInfoService";
 
  	OntologyInfoCache oInfoCache = new OntologyInfoCache(5 * 60 * 1000);
- 	PredicateStatsCache predStatsCache = new PredicateStatsCache(5 * 60 * 1000);
+ 	PredicateStatsCache predStatsCache = new PredicateStatsCache(6 * 60 * 60 * 1000);
  	
 	@Autowired
-	OntologyInfoLoggingProperties log_prop;
+	private OntologyInfoLoggingProperties log_prop;
 	@Autowired
-	private OntologyServiceProperties service_prop;
+	private OntologyInfoResultsProperties results_props;
+	@Autowired
+	private OntologyServiceProperties oinfo_props;
+	@Autowired
+	private ServicesGraphProperties servicesgraph_props;
 	@Autowired 
 	private ApplicationContext appContext;
 	@Autowired
-	AuthProperties auth_prop;
+	private AuthProperties auth_prop;
 
 	@PostConstruct
     public void init() {
@@ -84,7 +93,9 @@ public class OntologyInfoServiceRestController {
 		env_prop.validateWithExit();
 
 		log_prop.validateWithExit();
-		service_prop.validateWithExit();
+		results_props.validateWithExit();
+		oinfo_props.validateWithExit();
+		servicesgraph_props.validateWithExit();
 		auth_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);
 
@@ -92,6 +103,7 @@ public class OntologyInfoServiceRestController {
 	/**
 	 * Get a tabular data dictionary report.
 	 */
+	@SuppressWarnings("deprecation") // This uses a deprecated request body for backwards-compatibility
 	@CrossOrigin
 	@RequestMapping(value="/getDataDictionary", method=RequestMethod.POST)
 	public JSONObject getDataDictionary(@RequestBody SparqlConnectionRequestBody requestBody, @RequestHeader HttpHeaders headers){
@@ -159,6 +171,7 @@ public class OntologyInfoServiceRestController {
 	}
 
 	
+	@SuppressWarnings("unchecked")
 	@ApiOperation(
 		    value= "Get all data and object properties of a class, including those inherited from superclasses.",
 		    notes= "Returns classInfo = { name : 'classname', properties = [ { domain : 'http://model#hasTree', range: ['http://model#Tree'] } ]"
@@ -396,22 +409,89 @@ public class OntologyInfoServiceRestController {
 	}
 	
 	@ApiOperation(
-			value="Get predicate stats for a given connections ontology and data."
+			value="Get predicate stats for a given connections ontology and data.",
+			notes="Async.  Returns a jobID.  If stats are in the cache, job will already be complete."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getPredicateStats", method=RequestMethod.POST)
-	public JSONObject uncacheOntology(@RequestBody SparqlConnectionRequest requestBody, @RequestHeader HttpHeaders headers){
+	public JSONObject getPredicateStats(@RequestBody SparqlConnectionRequest requestBody, @RequestHeader HttpHeaders headers){
 		HeadersManager.setHeaders(headers);
 		final String ENDPOINT_NAME = "getPredicateStats";
 		SimpleResultSet retval = new SimpleResultSet(false);
 
-		try {			
+		try {		
+			String jobId = JobTracker.generateJobId();
+			JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
+			ResultsClient rclient = new ResultsClient(new ResultsClientConfig(results_props.getProtocol(), results_props.getServer(), results_props.getPort()));
+			
 			SparqlConnection conn = requestBody.buildSparqlConnection();
+			PredicateStats stats = this.predStatsCache.getIfCached(conn);
+			tracker.createJob(jobId);
 			
-			OntologyInfo oInfo = oInfoCache.get(conn);
-			PredicateStats stats = new PredicateStats(conn, oInfo);
-			retval.addResult("predicateStats", stats.toJson());
+			if (stats != null) {
+				// already cached:  send to results service and complete job
+				rclient.execStoreBlobResults(jobId, stats.toJson());
+				tracker.setJobSuccess(jobId);
 			
+			} else {
+				// spin up an async thread
+				new Thread(() -> {
+					try {
+						// since getIfCached() failed, presume this get() will lead to creating a new one
+						PredicateStats newStats = this.predStatsCache.get(conn, this.oInfoCache.get(conn), tracker, jobId, 0, 99);
+						
+						rclient.execStoreBlobResults(jobId, newStats.toJson());
+						tracker.setJobSuccess(jobId);
+						
+					} catch (Exception e) {
+						try {
+							tracker.setJobFailure(jobId, e.getMessage());
+						} catch (Exception ee) {
+							LocalLogger.logToStdErr(ENDPOINT_NAME + " error accessing job tracker");
+							LocalLogger.printStackTrace(ee);
+						}
+					}
+				}).start();
+			}
+			
+			retval.addJobId(jobId);
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+	
+	@ApiOperation(
+			value="Get predicate stats for a given connections ontology and data.",
+			notes="Sync.   if stats are not currently cached returns cached: 'none', else 'predicateStats': json"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getCachedPredicateStats", method=RequestMethod.POST)
+	public JSONObject getCachedPredicateStats(@RequestBody SparqlConnectionRequest requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "getCachedPredicateStats";
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {		
+		
+			
+			SparqlConnection conn = requestBody.buildSparqlConnection();
+			PredicateStats stats = this.predStatsCache.getIfCached(conn);
+			
+			if (stats != null) {
+				retval.addResult("cached", "true");
+				retval.addResult("predicateStats", stats.toJson());
+				retval.setSuccess(true);
+			
+			} else {
+				retval.addResult("cached", "false");
+				retval.setSuccess(false);
+			}
 			retval.setSuccess(true);
 		}
 		catch (Exception e) {

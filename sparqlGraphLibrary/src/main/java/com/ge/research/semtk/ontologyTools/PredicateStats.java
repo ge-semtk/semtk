@@ -6,6 +6,8 @@ import java.util.Hashtable;
 
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.auth.AuthorizationException;
+import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
@@ -20,7 +22,7 @@ import com.ge.research.semtk.sparqlX.SparqlToXUtils;
  */
 public class PredicateStats {
 	
-	private Hashtable<String, Integer> statsHash = new Hashtable<String, Integer>();
+	private Hashtable<String, Long> statsHash = new Hashtable<String, Long>();
 	
 	
 	/** 
@@ -33,7 +35,29 @@ public class PredicateStats {
 		dataConn.clearModelInterfaces();
 		String sparql = SparqlToXUtils.generatePredicateStatsQuery(dataConn, oInfo);
 		Table statsTab = conn.getDefaultQueryInterface().executeQueryToTable(sparql);
-		this.storeStats(statsTab, oInfo);
+		this.storeStats(statsTab, oInfo, null, null, 0, 0);
+	}	
+	
+	/**
+	 * Constructor that keeps a jobTracker up to date on progress
+	 * @param conn
+	 * @param oInfo
+	 * @param tracker
+	 * @param jobId
+	 * @param startPercent
+	 * @param endPercent
+	 * @throws Exception
+	 */
+	public PredicateStats(SparqlConnection conn, OntologyInfo oInfo, JobTracker tracker, String jobId, int startPercent, int endPercent) throws Exception {
+		SparqlConnection dataConn = SparqlConnection.deepCopy(conn);
+		dataConn.clearModelInterfaces();
+		String sparql = SparqlToXUtils.generatePredicateStatsQuery(dataConn, oInfo);
+		
+		tracker.setJobPercentComplete(jobId, startPercent, "running stats query");
+		Table statsTab = conn.getDefaultQueryInterface().executeQueryToTable(sparql);
+		
+		int queryDonePercent = startPercent + (endPercent - startPercent) / 2;
+		this.storeStats(statsTab, oInfo, tracker, jobId, queryDonePercent, endPercent);
 	}	
 	
 	/**
@@ -44,7 +68,7 @@ public class PredicateStats {
 	public PredicateStats(JSONObject jObj) throws Exception {
 		JSONObject statsTabJson =  (JSONObject) jObj.get("statsTab");
 		for (Object k : statsTabJson.keySet()) {
-			this.statsHash.put((String) k, (Integer) statsTabJson.get(k));
+			this.statsHash.put((String) k, (Long) statsTabJson.get(k));
 		}
 	}
 
@@ -59,9 +83,9 @@ public class PredicateStats {
 		return ret;
 	}
 	
-	public int getCount(String subject, String predicate, String object) {
+	public long getCount(String subject, String predicate, String object) {
 		String key = this.buildKey(subject, predicate, object);
-		Integer ret = this.statsHash.get(key);
+		Long ret = this.statsHash.get(key);
 		return (ret == null) ? 0 : ret;
 	}
 	
@@ -70,18 +94,41 @@ public class PredicateStats {
 	}
 	
 	/**
-	 * For a table of exact results  subj pred obj count
-	 * set statsHash such that hash(s,p,o) gets sum of all triples where:
-	 *         subject_superclass* predicate_superclass* object_superclass*
+	
 	 * @param t
 	 * @param oInfo
+	 * @throws Exception 
+	 * @throws AuthorizationException 
 	 */
-	private void storeStats(Table t, OntologyInfo oInfo) {
+
+	/**
+	 * For a table of exact results  subj pred obj count
+	 * set statsHash such that hash(s,p,o) gets sum of all triples where:
+	 *         subject_superclass* predicate_superclass* object_superclass*	 * @param t
+	 *         
+	 * If tracker is not null, send job percent complete info.  
+	 * 
+	 * @param oInfo
+	 * @param tracker
+	 * @param jobId
+	 * @param startPercent
+	 * @param endPercent
+	 * @throws AuthorizationException
+	 * @throws Exception
+	 */
+	private void storeStats(Table t, OntologyInfo oInfo, JobTracker tracker, String jobId, int startPercent, int endPercent) throws AuthorizationException, Exception {
+		final String STATUS = "calculating stats";
+		
+		double rows = t.getNumRows();
 		for (int i=0; i < t.getNumRows(); i++) {
+			if (tracker != null && i % 2000 == 0) {
+				int percent = (int) (startPercent + (endPercent - startPercent) * (i / rows));
+				tracker.setJobPercentComplete(jobId, percent, STATUS);
+			}
 			String sub = t.getCell(i, 0);
 			String pred = t.getCell(i, 1);
 			String obj = t.getCell(i, 2);
-			int count =  t.getCellAsInt(i, 3);
+			long count =  t.getCellAsInt(i, 3);
 			HashSet<String> subjects = oInfo.getSuperclassNames(sub);
 			HashSet<String> predicates = oInfo.getSuperPropNames(pred);
 			HashSet<String> objects = oInfo.getSuperclassNames(obj);
@@ -104,6 +151,9 @@ public class PredicateStats {
 					}
 				}
 			}
+		}
+		if (tracker != null) {
+			tracker.setJobPercentComplete(jobId, endPercent, STATUS);
 		}
 	}
 }

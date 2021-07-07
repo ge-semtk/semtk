@@ -23,10 +23,10 @@ import java.net.ConnectException;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.ThreadAuthenticator;
+import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.ontologyTools.PredicateStats;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
-import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
@@ -48,6 +48,48 @@ public class OntologyInfoClient extends RestClient {
 		throw new Exception("Received empty response");
 	}
 	
+	/**
+	 * Returns jobId
+	 * @throws Exception
+	 */
+	public String execGetPredicateStats(SparqlConnection conn) throws ConnectException, EndpointNotFoundException, Exception {
+		this.parametersJSON.put("conn", conn.toJson().toJSONString());
+		conf.setServiceEndpoint("ontologyinfo/getPredicateStats");
+		
+		try {
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
+			res.throwExceptionIfUnsuccessful();
+			return res.getJobId();
+		} finally {
+			// reset conf and parametersJSON
+			this.parametersJSON.remove("conn");
+			conf.setServiceEndpoint(null);
+		}
+	}
+	
+	/**
+	 * Gets predicate stats only if they are cached, else null
+	 * @throws Exception
+	 */
+	public PredicateStats execGetCachedPredicateStats(SparqlConnection conn) throws ConnectException, EndpointNotFoundException, Exception {
+		this.parametersJSON.put("conn", conn.toJson().toJSONString());
+		conf.setServiceEndpoint("ontologyinfo/getCachedPredicateStats");
+		
+		try {
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
+			res.throwExceptionIfUnsuccessful();
+			if (res.getResult("cached").equals("none")) {
+				return null;
+			} else {
+				JSONObject statsJson = res.getResultJSON("predicateStats");
+				return new PredicateStats(statsJson);
+			}
+		} finally {
+			// reset conf and parametersJSON
+			this.parametersJSON.remove("conn");
+			conf.setServiceEndpoint(null);
+		}
+	}
 	
 	/**
 	 * 

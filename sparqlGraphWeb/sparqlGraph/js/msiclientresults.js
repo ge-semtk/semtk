@@ -86,6 +86,13 @@ define([	// properly require.config'ed   bootstrap-modal
 
             },
 
+            execGetJsonBlobRes : function (successCallback) {
+                var data = this.getJobIdData();
+
+                this.msi.postToEndpoint("getJsonBlobResults", JSON.stringify(data), "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+
+            },
+
             /* downloadFlag won't work in Ajax */
              execGetTableResultsCsv : function (maxRows, downloadFlag, successCallback) {
                 var data = this.getJobIdData();

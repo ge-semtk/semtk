@@ -105,7 +105,7 @@ define([	// properly require.config'ed   bootstrap-modal
 					"percentComplete" : percent,
 				});
 
-				this.msi.postToEndpoint("waitForPercentOrMsec", myData, "application/json", successCallback, this.optFailureCallback, timeoutMsec + 5000);
+				this.msi.postToEndpoint("waitForPercentOrMsec", myData, "application/json", successCallback, this.optFailureCallback, timeoutMsec + 20000);
 			},
 
             /*
@@ -207,7 +207,7 @@ define([	// properly require.config'ed   bootstrap-modal
 
                 } else if (thisPercent > 99) {
 
-                    statusBarCallback(100);
+                    statusBarCallback(100, "");
                     this.execGetStatusBoolean(this.execAsyncStatusCallback.bind(this, jobSuccessCallback));
 
                 } else {

@@ -57,7 +57,6 @@
 	 <!-- long-term trouble with require.js unless I do this -->
 	<script src="../../iidx-oss/components/bootstrap/js/bootstrap-modal.js"></script>
 	<script src="../../iidx-oss/components/bootstrap/js/bootstrap-tooltip.js"></script>
-	<script src="../../iidx-oss/components/bootstrap/js/bootstrap-transition.js"></script>
 
 	<!--  require.js -->
 
@@ -269,6 +268,7 @@
             <td><span id="spanConnection"></span></td>
 
             <td align="right">
+
               <button class="btn" id="btnMaximize"   onclick="javascript:doCanvasSize(true); return false;" ><i class="icon-resize-vertical"></i></button>
               <button class="btn" id="btnNormal"   onclick="javascript:doCanvasSize(false); return false;" ><i class="icon-th-list"></i></button>
               <button class="btn" id="btnExpandAll"   onclick="javascript:doExpandAll(); return false;" disabled><i class="icon-double-angle-up"></i></button>
@@ -329,7 +329,20 @@
         <section class="module">
                     <table width="100%">
                         <tbody>
-                            <tr>
+                              <td>
+                                <form class="form-horizontal" style="margin-bottom: 0px;">
+                                &nbsp; path-finding:
+                                  <select class="input-medium" id="selectPathFindingMode" onchange="javascript:onchangePathFindingMode();">
+                                  	<option>model</option>
+                                  	<option>predicate data</option>
+                                  	<option disabled="disabled" style="color:lightblue
+
+                                    ">nodegroup data</option>
+                                  </select>
+                                <button class="icon-white btn-small btn-info" onclick="javascript:window.open(g.help.url.base + '/page', '_blank','location=yes');"><icon class="icon-info-sign"></icon></button>
+                              </form>
+                              </td>
+
                   <td align="right">
                     <form class="form-horizontal" style="margin-bottom: 0px;">
                     &nbsp; query:

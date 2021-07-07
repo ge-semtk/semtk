@@ -1529,18 +1529,20 @@ public class OntologyInfo {
 			//    this final path (with 1 added connection) will be longer than the first (shortest) already found path
 			if (!ret.isEmpty() && 
 				(waitPath.getLength() + 1  > ret.get(0).getLength() + pathFindingMaxLengthRange)) {
+				this.pathWarnings.add(String.format("Found paths up to length %d.", waitPath.getLength()));
 				break;
 			} 
 			
 			// STOP CRITERIA C: stop if path is too long
 			if (waitPath.getLength() > pathFindingMaxPathLength) {
+				this.pathWarnings.add(String.format("Found paths up to length %d.", pathFindingMaxPathLength));
 				break;
 			}
 			
 			// STOP CRITERIA D: too much time spent searching
 			// Budget half the time for sorting the results
 			if (System.currentTimeMillis() - t0 > pathFindingMaxTimeMsec / 2) {
-				this.pathWarnings.add("Path-finding timing out.  Search incomplete.");
+				this.pathWarnings.add("Path-finding timing out. ");
 				break;
 			}
 			
@@ -1549,6 +1551,7 @@ public class OntologyInfo {
 				while (ret.size() > pathFindingMaxPathCount) {
 					ret.remove(ret.size() -1);
 				}
+				this.pathWarnings.add(String.format("Found first %d paths.", pathFindingMaxPathCount));
 				break;
 			}
 			
