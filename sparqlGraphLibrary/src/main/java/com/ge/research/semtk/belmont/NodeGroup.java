@@ -4444,22 +4444,22 @@ public class NodeGroup {
 		HashMap<String, RuntimeConstraintMetaData> retval = new HashMap<String, RuntimeConstraintMetaData>();
 		
 		// go through all of the nodegroup contents and send back the collection.
-		for(Node curr : this.nodes){
-			if(curr.getIsRuntimeConstrained()){ 
+		for(Node n : this.nodes){
+			if(n.getIsRuntimeConstrained()){ 
 				// this one is constrained. add it to the list. 
 				
-				RuntimeConstraintMetaData currConst = new RuntimeConstraintMetaData((Returnable)curr, RuntimeConstraintManager.SupportedTypes.NODE);
-				retval.put(curr.sparqlID, currConst);
+				RuntimeConstraintMetaData currConst = new RuntimeConstraintMetaData((Returnable)n, RuntimeConstraintManager.SupportedTypes.NODE);
+				retval.put(n.getBindingOrSparqlID(), currConst);
 			}
 			else{
 				// do nothing.
 			}
 			
 			// check the properties to make sure that we get them all. 
-			for(PropertyItem pi : curr.getPropertyItems()){
+			for(PropertyItem pi : n.getPropertyItems()){
 				if(pi.getIsRuntimeConstrained()){
 					RuntimeConstraintMetaData currConst = new RuntimeConstraintMetaData((Returnable)pi, RuntimeConstraintManager.SupportedTypes.PROPERTYITEM);
-					retval.put(pi.sparqlID, currConst);
+					retval.put(pi.getBindingOrSparqlID(), currConst);
 				}
 				else{
 					// do nothing.

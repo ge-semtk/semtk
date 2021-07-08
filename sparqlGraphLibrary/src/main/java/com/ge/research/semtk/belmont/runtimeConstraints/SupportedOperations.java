@@ -25,6 +25,7 @@ package com.ge.research.semtk.belmont.runtimeConstraints;
 public enum SupportedOperations {
 
 	MATCHES(1,1000), 		        // value matches one of the operands (accepts collections)
+	NOTMATCHES(1,1000),
 	REGEX(1,1), 			        // value matches the string indicated by the given operand
 	GREATERTHAN(1,1), 			    // value is greater than the operand
 	GREATERTHANOREQUALS(1,1), 	    // value is greater than or equal to the operand

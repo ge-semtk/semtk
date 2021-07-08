@@ -424,6 +424,21 @@ public class ValueConstraint {
 
 	}
 	
+	public static String buildFilterNotInConstraint(String sparqlId, ArrayList<String> valList, XSDSupportedType valType) throws Exception{
+		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
+				
+		ArrayList<String> list = new ArrayList<String>();
+		// go through each passed value and add them.
+		for(String v : valList){
+			v = BelmontUtil.sparqlSafe(v);
+			valType.validate(v);
+			list.add(valType.buildRDF11ValueString(v));
+			
+		}
+		
+		return "FILTER (" + sparqlId + " NOT IN ( " + String.join(", ", list) + ")) ";
+	}
+	
 	/**
 	 * Build a FILTER REGEX
 	 * @param sparqlId

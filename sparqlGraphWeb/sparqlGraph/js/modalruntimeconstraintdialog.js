@@ -38,9 +38,9 @@ define([	// properly require.config'ed
         //   NODE_URI
 
         // dropdown operator choices for different types
-        var operatorChoicesForStrings = ["=", "regex"];
-        var operatorChoicesForUris = ["="];
-        var operatorChoicesForNumerics = [  "=",">", ">=", "<", "<="];
+        var operatorChoicesForStrings = ["=", "!=", "regex"];
+        var operatorChoicesForUris = ["=", "!="];
+        var operatorChoicesForNumerics = [  "=", "!=",">", ">=", "<", "<="];
         var operandChoicesForBoolean = ["true","false","unspecified"];
 
         var isNumericType = function(dataType){
@@ -285,6 +285,8 @@ define([	// properly require.config'ed
                             // user did not enter an operand - skip
                         }else if(operator1 == "="){
                             runtimeConstraints.add(sparqlId, "MATCHES", operandValList1);
+                        }else if(operator1 == "!="){
+                            runtimeConstraints.add(sparqlId, "NOTMATCHES", operandValList1);
                         }else if(operator1 == "regex"){
                             runtimeConstraints.add(sparqlId, "REGEX", operandValList1);
                         }else{
@@ -320,6 +322,9 @@ define([	// properly require.config'ed
                             switch(operator1.trim()){
                                 case("="):
                                     runtimeConstraints.add(sparqlId, "MATCHES", operandValList1);
+                                    break;
+                                case("!="):
+                                    runtimeConstraints.add(sparqlId, "NOTMATCHES", operandValList1);
                                     break;
                                 case("<"):
                                     // TODO complain or prevent multiple operands

@@ -1807,6 +1807,7 @@ public class DataLoaderTest_IT {
 		
 
 	}
+	
 	public void doTypesAndConstraintsViaBook(boolean cacheFlag) throws Exception {  
 		// Test important parts of RDF1.1 literal typing
 		// with semtk load and semtk query
@@ -1824,6 +1825,9 @@ public class DataLoaderTest_IT {
 
 		TestGraph.queryAndCheckResults(sgJson, this, "/bookResults.csv");
 		
+		queryBook("?title", 
+				SupportedOperations.NOTMATCHES, 
+				new String[] {"Doesn't exist","me neither","unknown"});
 		queryBook("?title", 
 				SupportedOperations.MATCHES, 
 				new String[] {"Typed Raw SPARQL","Untyped Raw SPARQL","Ingested"});
