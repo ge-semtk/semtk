@@ -76,6 +76,10 @@ public class RuntimeConstraintMetaData{
 			this.setMatchesConstraint(sparqlId, operands);
 		}
 		
+		else if(operation == SupportedOperations.NOTMATCHES){
+			this.setNotMatchesConstraint(sparqlId, operands);
+		}
+		
 		else if(operation == SupportedOperations.REGEX){
 			this.setRegexConstraint(sparqlId, operands.get(0));
 		}
@@ -124,6 +128,12 @@ public class RuntimeConstraintMetaData{
 	private void setMatchesConstraint(String sparqlId, ArrayList<String> inputs) throws Exception{
 		// create the constraint string. 
 		String constraintStr = ValueConstraint.buildFilterInConstraint(sparqlId, inputs, getType(sparqlId));
+		this.setValueConstraint(constraintStr);
+	}
+	
+	private void setNotMatchesConstraint(String sparqlId, ArrayList<String> inputs) throws Exception{
+		// create the constraint string. 
+		String constraintStr = ValueConstraint.buildFilterNotInConstraint(sparqlId, inputs, getType(sparqlId));
 		this.setValueConstraint(constraintStr);
 	}
 	

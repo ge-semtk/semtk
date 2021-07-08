@@ -42,7 +42,7 @@ public class RuntimeConstraintRequest {
                     "\tLESSTHANOREQUALS // value is less than or equal to the operand\n" +
                     "\tVALUEBETWEEN // value is between the given operands, including both endpoints\n" +
                     "\tVALUEBETWEENUNINCLUSIVE  // value is between the given operands, not including endpoints\n",
-            allowableValues = "MATCHES, REGEX, GREATERTHAN, GREATERTHANOREQUALS, LESSTHAN, LESSTHANOREQUALS, VALUEBETWEEN, VALUEBETWEENUNINCLUSIVE",
+            allowableValues = "NOTMATCHES, MATCHES, REGEX, GREATERTHAN, GREATERTHANOREQUALS, LESSTHAN, LESSTHANOREQUALS, VALUEBETWEEN, VALUEBETWEENUNINCLUSIVE",
             required = true,
             example = "MATCHES")
     private SupportedOperations operation;
