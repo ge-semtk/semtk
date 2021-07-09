@@ -379,7 +379,7 @@
                 },
 
 
-                persist: true,
+                persist: false,    // true causes a cookie error with large trees
             });
 
             gOTree = new OntologyTree($("#treeDiv").dynatree("getTree"));

@@ -24,10 +24,24 @@ fi
 
 . ./.fun
 
-# put SHA key into sparqlGraph.html
-MACHINE_DAY="built-"`hostname`"-"`date +%F-%H%M%S`
-GIT_SHA="gitSHA-"`git rev-parse origin/master 2> /dev/null`
-BUILD=${GIT_SHA:-$MACHINE_DAY}
+# Try to get git SHA without crashing script
+save=$-
+set +e
+GIT_SHA=`git rev-parse origin/master 2> /dev/null`
+if [[ $save =~ e ]]; then
+	set -e
+else
+	set +e
+fi
+
+# Create a BUILD id
+if [[ -z "$GIT_SHA" ]]; then
+	BUILD="built-"`hostname`"-"`date +%F-%H%M%S`
+else
+	BUILD="gitSHA-"${GIT_SHA}
+fi
+echo "Web build ID="${BUILD}
+
 sed --in-place "s#%%BUILD%%#${BUILD}#g" "${WEBAPPS}/sparqlGraph/main-oss/sparqlGraph.html"
 
 # define array of versioned files
