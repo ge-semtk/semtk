@@ -161,7 +161,7 @@ define([	// properly require.config'ed
                         }.bind(this)
                     },
 
-                    persist: true,
+                    persist: false,    // true causes a cookie error with large trees
                     selectMode: 2,    // 1 single, 2 multi, 3 multi hierarchical
                     checkbox: true,
 
