@@ -71,8 +71,11 @@ import io.swagger.annotations.ApiOperation;
 public class OntologyInfoServiceRestController {
  	static final String SERVICE_NAME = "ontologyInfoService";
 
- 	OntologyInfoCache oInfoCache = new OntologyInfoCache(5 * 60 * 1000);
- 	PredicateStatsCache predStatsCache = new PredicateStatsCache(6 * 60 * 60 * 1000);
+ 	static final int MINUTE = 1000 * 60;
+ 	static final int HOUR = MINUTE * 60;
+ 	
+ 	OntologyInfoCache oInfoCache = new OntologyInfoCache(HOUR * 2); 
+ 	PredicateStatsCache predStatsCache = new PredicateStatsCache(HOUR * 6);   
  	
 	@Autowired
 	private OntologyInfoLoggingProperties log_prop;

@@ -538,6 +538,7 @@ public class SparqlConnection {
 		String seiKeys[] = new String[this.getModelInterfaceCount() + this.getDataInterfaceCount()];
 		int index = 0;
 		
+		// build a list of keys: one per graph
 		for (int i=0; i < this.getModelInterfaceCount(); i++) {
 			seiKeys[index++] = this.getModelInterface(i).getServerAndPort() + ";" + this.getModelInterface(i).getGraph();
 		}
@@ -546,10 +547,13 @@ public class SparqlConnection {
 		}
 		Arrays.sort(seiKeys);
 		
+		// append keys if they are not duplicates.  everything is followed by ';'
 		StringBuilder ret = new StringBuilder();
 		ret.append(this.domain + ";");
 		for (int i=0; i < seiKeys.length; i++) {
-			ret.append(seiKeys[i] + ";");
+			if (!seiKeys[i].equals(seiKeys[i-1])) {
+				ret.append(seiKeys[i] + ";");
+			}
 		}
 		ret.append(this.enableOwlImports ? "owlImports;" : "noImports;");
 		return ret.toString();
