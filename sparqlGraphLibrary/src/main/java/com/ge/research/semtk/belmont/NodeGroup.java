@@ -2554,6 +2554,11 @@ public class NodeGroup {
 					retval += tab + node.getSparqlID() + " a " + this.applyPrefixing(node.getFullUriName()) + " .\n";
 				}
 			}
+			
+		} else if (node.getIsTypeReturned()) {
+			// ELSE: no need for subclassing etc. and not CONSTRUCT
+			//       but type is returned.
+			retval += tab + node.getSparqlID() + " a " + node.getTypeSparqlID() + " .\n";
 		}
 		
 		return retval;
