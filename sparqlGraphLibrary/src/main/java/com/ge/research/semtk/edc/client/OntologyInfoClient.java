@@ -124,9 +124,30 @@ public class OntologyInfoClient extends RestClient {
 		return new OntologyInfo(this.execGetOntologyInfoJson(conn));
 	}
 	
+	/**
+	 * Convenience function for only clearing model portion of a connection
+	 * @param conn
+	 * @throws ConnectException
+	 * @throws EndpointNotFoundException
+	 * @throws Exception
+	 */
 	public void uncacheChangedModel(SparqlConnection conn) throws ConnectException, EndpointNotFoundException, Exception {
+		SparqlConnection conn2 = SparqlConnection.deepCopy(conn);
+		conn2.clearDataInterfaces();
+		this.uncacheChangedConn(conn2);
+	}
+	
+	/**
+	 * Clears PredicateStats and Ontology cache entries that contain any Sei in the connection.
+	 * Note that model and data connections are treated equally.
+	 * @param conn
+	 * @throws ConnectException
+	 * @throws EndpointNotFoundException
+	 * @throws Exception
+	 */
+	public void uncacheChangedConn(SparqlConnection conn) throws ConnectException, EndpointNotFoundException, Exception {
 		this.parametersJSON.put("jsonRenderedSparqlConnection", conn.toJson().toJSONString());
-		conf.setServiceEndpoint("ontologyinfo/uncacheChangedModel");
+		conf.setServiceEndpoint("ontologyinfo/uncacheChangedConn");
 		
 		try {
 			SimpleResultSet res = this.executeWithSimpleResultReturn();

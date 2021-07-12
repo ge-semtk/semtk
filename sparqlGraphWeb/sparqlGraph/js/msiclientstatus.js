@@ -207,12 +207,12 @@ define([	// properly require.config'ed   bootstrap-modal
 
                 } else if (thisPercent > 99) {
 
-                    statusBarCallback(100, "");
+                    statusBarCallback("", 100, "");
                     this.execGetStatusBoolean(this.execAsyncStatusCallback.bind(this, jobSuccessCallback));
 
                 } else {
 
-                    statusBarCallback(thisPercent, optOverrideMsg);
+                    statusBarCallback(optOverrideMsg || "", thisPercent);
 
                     this.execWaitForPercentOrMsecInt(thisPercent + 1, 10000, this.execAsyncWaitUntilDoneCallback.bind( this,
                                                                                 jobSuccessCallback,

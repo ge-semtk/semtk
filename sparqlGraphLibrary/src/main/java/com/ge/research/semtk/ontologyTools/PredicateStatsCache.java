@@ -76,29 +76,14 @@ public class PredicateStatsCache {
 	 * Clear any connection from cache if it shares a model dataset with conn
 	 * @param conn
 	 */
-	public synchronized void removeSimilar(SparqlConnection conn) {
+	public synchronized void removeOverlapping(SparqlConnection conn) {
 		HashSet<String> toDelete = new HashSet<String>();
 		
 		// search through conn's models
-		for (int i=0; i < conn.getModelInterfaceCount(); i++) {
-			for (String key : this.hash.keySet()) {
-				// if datasets match, it's too close for comfort: delete
-				if (key.contains(conn.getModelInterface(i).getGraph())) {
-					if (! toDelete.contains(key)) {
-						toDelete.add(key);
-					}
-				}
-			}
-		}
-		
-		// search through conn's models
-		for (int i=0; i < conn.getDataInterfaceCount(); i++) {
-			for (String key : this.hash.keySet()) {
-				// if datasets match, it's too close for comfort: delete
-				if (key.contains(conn.getDataInterface(i).getGraph())) {
-					if (! toDelete.contains(key)) {
-						toDelete.add(key);
-					}
+		for (String key : this.hash.keySet()) {
+			if (conn.overlapsSparqlConnKey(key)) {
+				if (! toDelete.contains(key)) {
+					toDelete.add(key);
 				}
 			}
 		}

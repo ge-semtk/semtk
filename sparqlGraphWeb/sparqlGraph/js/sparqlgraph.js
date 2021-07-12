@@ -219,6 +219,7 @@
                     var sgJson = new SparqlGraphJson(gConn, gNodeGroup, null, false, null);
 
                     var successCallback = function(resJson) {
+                        // no way to check for success from json blob
                         var resObj = new MsiResultSet(resJson.serviceURL, resJson.xhr);
                         findAllPathsCallback(dragLabel, resObj);
                     };
@@ -938,13 +939,14 @@
 	    	if (gConn != null) {
 
                 oInfoClient = new MsiClientOntologyInfo(g.service.ontologyInfo.url, doLoadFailure);
-                setStatus("clearing ontology cache");
-                oInfoClient.execUncacheOntology(gConn,
-                    function() {
-                        setStatus("");
-                        gOInfo.loadFromService(oInfoClient, gConn, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
-                    }
-                );
+                //setStatus("clearing ontology cache");
+                //oInfoClient.execUncacheOntology(gConn,
+                //    function() {
+                //        setStatus("");
+                //        gOInfo.loadFromService(oInfoClient, gConn, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
+                //    }
+                //);
+                gOInfo.loadFromService(oInfoClient, gConn, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
 	    	}
     	});
     };
@@ -1917,7 +1919,23 @@
     };
 
     var onchangePathFindingMode = function() {
-
+        if (getPathFindingMode() != 0) {
+            // if not model, call for getPredicateStats() to make sure they're cached in service Layer
+            // but don't even bother retrieving them
+            require(['sparqlgraph/js/msiclientontologyinfo',
+                    'sparqlgraph/js/msiclientstatus',
+                    'sparqlgraph/js/msiclientresults',
+                    'sparqlgraph/js/msiresultset'
+                    ],
+                function(MsiClientOntologyInfo, MsiClientStatus, MsiClientResults, MsiResultSet) {
+                    var client = new MsiClientOntologyInfo(g.service.ontologyInfo.url);
+                    var resultsCall = MsiClientResults.prototype.doNothing;  // don't try to get the actual predicate stats
+                    var successCallback = function(){setStatus("");};                      // there is no callback from doNothing
+                    var callback = buildStatusResultsCallback(successCallback, resultsCall, MsiClientStatus, MsiClientResults, MsiResultSet, 20, 100);
+                    client.execGetPredicateStats(gConn, callback);
+                }
+            );
+        }
     };
 
     // 0 "model", 1 "predicate data", 2 "nodegroup data"
@@ -1989,6 +2007,11 @@
 
     var setStatus = function(msg) {
     	document.getElementById("status").innerHTML= "<font color='red'>" + msg + "</font><br>";
+    };
+
+    var setStatusProgressBarScaled = function(lo, hi, msg, percent) {
+        var newPercent = lo + (percent / 100 * (hi - lo));
+        setStatusProgressBar(msg, newPercent);
     };
 
     var setStatusProgressBar = function(msg, percent, optMessageOverride) {
@@ -2419,10 +2442,10 @@
     // resultsCall: a resultsClient function that takes a callback(successJson) as parameter
     //            e.g. MsiClientResults.prototype.execGetJsonBlobRes
 
-    buildStatusResultsCallback = function(successCallback, resultsCall, MsiClientStatus, MsiClientResults, MsiResultSet) {
+    buildStatusResultsCallback = function(successCallback, resultsCall, MsiClientStatus, MsiClientResults, MsiResultSet, optLoPercent, optHiPercent) {
 
         var failureCallback = this.asyncFailureCallback.bind(this);
-        var progressCallback = this.setStatusProgressBar.bind(this, "");
+        var progressCallback = this.setStatusProgressBarScaled.bind(this, optLoPercent || 0, optHiPercent || 100);
         var checkForCancelCallback = this.checkForCancel.bind(this);
         guiDisableAll(true);
 
@@ -2431,7 +2454,7 @@
 
             var resultSet = new MsiResultSet(simpleResJson.serviceURL, simpleResJson.xhr);
             if (!resultSet.isSuccess()) {
-                failureCallback(resultSet.getFailureHtml);
+                failureCallback(resultSet.getFailureHtml());
             } else {
                 var jobId = resultSet.getSimpleResultField("JobId");
                 // callback for status service after job successfully finishes
@@ -2439,14 +2462,14 @@
                     // callback for results service
                     var resultsSuccessCallback = function (results) {
                         successCallback(results);
-                        setStatus("");
-                        guiUnDisableAll();
+                        progressCallback("finishing up", 99);
+                        setTimeout(function () { setStatus(""); guiUnDisableAll();}, 200);
                     };
                     var resultsClient = new MsiClientResults(g.service.results.url, jobId);
                     resultsCall.bind(resultsClient)(resultsSuccessCallback);
                 };
 
-                progressCallback(1, "");
+                progressCallback("", 1);
 
                 // call status service loop
                 var statusClient = new MsiClientStatus(g.service.status.url, jobId, failureCallback);

@@ -1635,7 +1635,6 @@ public class OntologyInfo {
 		boolean swap;
 		// for each element in list
 		for (int i=1; i < list.size(); i++) {
-			System.err.println(i);
 			int insertAt = i;
 			// look at the previous elements
 			for (int j=i-1; j >= 0; j--) {

@@ -75,7 +75,7 @@ public class OntologyInfoServiceRestController {
  	static final int HOUR = MINUTE * 60;
  	
  	OntologyInfoCache oInfoCache = new OntologyInfoCache(HOUR * 2); 
- 	PredicateStatsCache predStatsCache = new PredicateStatsCache(HOUR * 6);   
+ 	PredicateStatsCache predStatsCache = new PredicateStatsCache(HOUR * 24);   
  	
 	@Autowired
 	private OntologyInfoLoggingProperties log_prop;
@@ -325,37 +325,8 @@ public class OntologyInfoServiceRestController {
 	}
 	
 	@ApiOperation(
-			value="Un-cache any oInfo that was built from any model dataset in the given connection."
-			)
-	@CrossOrigin
-	@RequestMapping(value="/uncacheChangedModel", method=RequestMethod.POST)
-	public JSONObject uncacheChangedModel(@RequestBody OntologyInfoRequestBody requestBody, @RequestHeader HttpHeaders headers){
-		HeadersManager.setHeaders(headers);
-		final String ENDPOINT_NAME = "uncacheChangedModel";
-		SimpleResultSet retval = new SimpleResultSet(false);
-
-		try {			
-			SparqlConnection conn = requestBody.buildSparqlConnection();
-			
-			oInfoCache.removeSimilar(conn);
-			// Also remove any predicate stats that have this model
-			conn.clearDataInterfaces();
-			predStatsCache.removeSimilar(conn);
-			
-			retval.setSuccess(true);
-		}
-		catch (Exception e) {
-			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
-			retval.setSuccess(false);
-			LocalLogger.printStackTrace(e);
-		}
-
-		return retval.toJson();		
-	}
-	
-	@ApiOperation(
 			value="Un-cache anything based on any dataset in the given connection."
-			)
+			)	
 	@CrossOrigin
 	@RequestMapping(value="/uncacheChangedConn", method=RequestMethod.POST)
 	public JSONObject uncacheChangedConn(@RequestBody OntologyInfoRequestBody requestBody, @RequestHeader HttpHeaders headers){
@@ -366,8 +337,8 @@ public class OntologyInfoServiceRestController {
 		try {			
 			SparqlConnection conn = requestBody.buildSparqlConnection();
 			
-			oInfoCache.removeSimilar(conn);
-			predStatsCache.removeSimilar(conn);
+			oInfoCache.removeOverlapping(conn);
+			predStatsCache.removeOverlapping(conn);
 			
 			retval.setSuccess(true);
 		}
@@ -398,7 +369,7 @@ public class OntologyInfoServiceRestController {
 			
 			// Also remove any predicate stats that have this model
 			conn.clearDataInterfaces();
-			predStatsCache.removeSimilar(conn);
+			predStatsCache.removeOverlapping(conn);
 			
 			retval.setSuccess(true);
 		}
@@ -441,7 +412,7 @@ public class OntologyInfoServiceRestController {
 				new Thread(() -> {
 					try {
 						// since getIfCached() failed, presume this get() will lead to creating a new one
-						PredicateStats newStats = this.predStatsCache.get(conn, this.oInfoCache.get(conn), tracker, jobId, 0, 99);
+						PredicateStats newStats = this.predStatsCache.get(conn, this.oInfoCache.get(conn), tracker, jobId, 1, 99);
 						
 						rclient.execStoreBlobResults(jobId, newStats.toJson());
 						tracker.setJobSuccess(jobId);

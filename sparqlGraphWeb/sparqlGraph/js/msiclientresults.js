@@ -38,6 +38,11 @@ define([	// properly require.config'ed   bootstrap-modal
 
 
 		MsiClientResults.prototype = {
+            doNothing : function(successCallback) {
+                // believe it or not this is actually used.  Exercise left to the reader.
+                successCallback();
+            },
+
             /*
              * Return a hash table of return[type] = cell_tranform_func(x)
              */

@@ -53,7 +53,7 @@ public class PredicateStats {
 		dataConn.clearModelInterfaces();
 		String sparql = SparqlToXUtils.generatePredicateStatsQuery(dataConn, oInfo);
 		
-		tracker.setJobPercentComplete(jobId, startPercent, "running stats query");
+		tracker.setJobPercentComplete(jobId, startPercent, "querying predicate statistics");
 		Table statsTab = conn.getDefaultQueryInterface().executeQueryToTable(sparql);
 		
 		int queryDonePercent = startPercent + (endPercent - startPercent) / 2;

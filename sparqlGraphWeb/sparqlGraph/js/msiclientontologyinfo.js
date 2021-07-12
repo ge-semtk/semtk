@@ -78,6 +78,25 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.msi.postToEndpoint("uncacheOntology", myData, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
             },
 
+            // Service layer should normally take care of this.  Special-purpose use only.
+            execUncacheChangedConn : function (conn, successCallback) {
+                var myData = JSON.stringify ({
+					"jsonRenderedSparqlConnection" : JSON.stringify(conn.toJson()),
+				});
+
+				this.msi.postToEndpoint("uncacheChangedConn", myData, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+            },
+
+            // Get a predicate stats.
+            // Handy way to pre-cache them in the service Layer
+            // Returns simpleResults with jobId.
+            execGetPredicateStats : function (conn, successCallback) {
+                var myData = JSON.stringify ({
+					"conn" : JSON.stringify(conn.toJson()),
+				});
+
+				this.msi.postToEndpoint("getPredicateStats", myData, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+            },
 		};
 
 		return MsiClientOntologyInfo;            // return the constructor

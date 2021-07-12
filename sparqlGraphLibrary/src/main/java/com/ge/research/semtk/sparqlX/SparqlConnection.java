@@ -516,7 +516,7 @@ public class SparqlConnection {
 		String modelKeys[] = new String[this.getModelInterfaceCount()];
 		
 		for (int i=0; i < this.getModelInterfaceCount(); i++) {
-			modelKeys[i] = this.getModelInterface(i).getServerAndPort() + ";" + this.getModelInterface(i).getGraph();
+			modelKeys[i] = this.buildSeiKey(this.getModelInterface(i));
 		}
 		Arrays.sort(modelKeys);
 		
@@ -527,6 +527,27 @@ public class SparqlConnection {
 		}
 		ret.append(this.enableOwlImports ? "owlImports;" : "noImports;");
 		return ret.toString();
+	}
+	
+	private String buildSeiKey(SparqlEndpointInterface sei) {
+		return sei.getServerAndPort() + "-" + sei.getGraph();
+	}
+	
+	/**
+	 * Are any of the graphs in this connection also in the Connection that generated sparqlConnKey
+	 * @param sparqlConnKey
+	 * @return boolean
+	 */
+	public boolean overlapsSparqlConnKey(String sparqlConnKey) {
+		ArrayList<SparqlEndpointInterface> seiList = new ArrayList<SparqlEndpointInterface>();
+		seiList.addAll(this.getModelInterfaces());
+		seiList.addAll(this.getDataInterfaces());
+		
+		for (SparqlEndpointInterface sei : seiList) {
+			if (sparqlConnKey.contains(this.buildSeiKey(sei) + ";"))
+				return true;
+		}
+		return false;
 	}
 	
 	/**
@@ -540,10 +561,10 @@ public class SparqlConnection {
 		
 		// build a list of keys: one per graph
 		for (int i=0; i < this.getModelInterfaceCount(); i++) {
-			seiKeys[index++] = this.getModelInterface(i).getServerAndPort() + ";" + this.getModelInterface(i).getGraph();
+			seiKeys[index++] = this.buildSeiKey(this.getModelInterface(i));
 		}
 		for (int i=0; i < this.getDataInterfaceCount(); i++) {
-			seiKeys[index++] = this.getDataInterface(i).getServerAndPort() + ";" + this.getDataInterface(i).getGraph();
+			seiKeys[index++] = this.buildSeiKey(this.getDataInterface(i));
 		}
 		Arrays.sort(seiKeys);
 		
@@ -551,7 +572,7 @@ public class SparqlConnection {
 		StringBuilder ret = new StringBuilder();
 		ret.append(this.domain + ";");
 		for (int i=0; i < seiKeys.length; i++) {
-			if (!seiKeys[i].equals(seiKeys[i-1])) {
+			if (i == 0 || !seiKeys[i].equals(seiKeys[i-1])) {
 				ret.append(seiKeys[i] + ";");
 			}
 		}

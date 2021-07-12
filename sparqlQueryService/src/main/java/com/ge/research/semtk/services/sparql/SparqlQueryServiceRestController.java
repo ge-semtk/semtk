@@ -228,7 +228,7 @@ public class SparqlQueryServiceRestController {
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 		
 			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
-			uncacheChangedModel(sei);
+			uncache(sei);
 			String dropGraphQuery = SparqlToXUtils.generateDropGraphSparql(sei);
 			resultSet = sei.executeQueryAndBuildResultSet(dropGraphQuery, SparqlResultTypes.CONFIRM);
 			
@@ -379,7 +379,7 @@ public class SparqlQueryServiceRestController {
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 	
 			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
-			uncacheChangedModel(sei);
+			uncache(sei);
 			String query = SparqlToXUtils.generateDeleteModelTriplesQuery(sei, requestBody.prefixes, deleteBlankNodes);
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
 			
@@ -412,7 +412,7 @@ public class SparqlQueryServiceRestController {
 			requestBody.validate(); 	// check inputs 		
 			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
 			sei.clearGraph();
-			uncacheChangedModel(sei);
+			uncache(sei);
 			resultSet = new SimpleResultSet(true);
 			
 		} catch (Exception e) {			
@@ -476,7 +476,7 @@ public class SparqlQueryServiceRestController {
 			simpleResultSetJson = sei.executeAuthUploadOwl(owlFile.getBytes());
 			SimpleResultSet sResult = SimpleResultSet.fromJson(simpleResultSetJson);
 			if (sResult.getSuccess()) {
-				uncacheChangedModel(sei);
+				uncache(sei);
 			}
 			
 		} catch (Exception e) {			
@@ -534,7 +534,7 @@ public class SparqlQueryServiceRestController {
 			simpleResultSetJson = sei.executeAuthUploadTurtle(ttlFile.getBytes());
 			SimpleResultSet sResult = SimpleResultSet.fromJson(simpleResultSetJson);
 			if (sResult.getSuccess()) {
-				uncacheChangedModel(sei);
+				uncache(sei);
 			}
 			
 		} catch (Exception e) {			
@@ -593,7 +593,7 @@ public class SparqlQueryServiceRestController {
 			// clear the graph, upload owl, uncache the ontology
 			sei.clearGraph();
 			simpleResultSetJson = sei.executeAuthUploadOwl(owlFile.getBytes());
-			uncacheChangedModel(sei);
+			uncache(sei);
 			
 		} catch (Exception e) {			
 			LocalLogger.printStackTrace(e);
@@ -613,10 +613,10 @@ public class SparqlQueryServiceRestController {
 	 * @param sei
 	 * @throws Exception
 	 */
-	private void uncacheChangedModel(SparqlEndpointInterface sei) throws Exception {
+	private void uncache(SparqlEndpointInterface sei) throws Exception {
 		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
 		SparqlConnection conn = new SparqlConnection();
 		conn.addModelInterface(sei);
-		oClient.uncacheChangedModel(conn);
+		oClient.uncacheChangedConn(conn);
 	}
 }
