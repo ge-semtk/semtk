@@ -284,29 +284,6 @@ public class SparqlQueryServiceRestController {
 		}
 	}	
 
-/*
-	@CrossOrigin
-	@RequestMapping(value="/parallelQueryX", method= RequestMethod.POST, consumes= "application/x-www-form-urlencoded")
-	public JSONObject parallelQueryX(String subqueriesJson, String subqueryType, Boolean isSubqueryOptional, String columnsToFuseOn, String columnsToReturn) {	
-//LocalLogger.logToStdOut("In Parallel Query X!");
-
-//LocalLogger.logToStdOut("Queries:\n" + subqueriesJson);
-		try{
-			SparqlParallelQueries spq = new SparqlParallelQueries (subqueriesJson, subqueryType, isSubqueryOptional, columnsToFuseOn, columnsToReturn);
-			spq.runQueries ();
-			JSONObject tableResultSetJSON = spq.returnFusedResults();
-//return (new SimpleResultSet(false, "Returning here")).toJson();
-			return tableResultSetJSON;			
-		} catch (Exception e) {			
-			LocalLogger.logMessageAndTrace(e);	
-			return (new SimpleResultSet(false, e.getMessage())).toJson();
-		} catch (Throwable e) {
-			LocalLogger.printStackTrace(e);	
-			return (new SimpleResultSet(false, e.getMessage())).toJson();
-		}
-	}	
-*/
-
 	/**
 	 * Execute auth query 
 	 */
@@ -327,7 +304,7 @@ public class SparqlQueryServiceRestController {
 			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
 			query = SparqlToXUtils.generateDeletePrefixQuery(sei, requestBody.prefix);
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
-			
+			uncache(sei);
 		} catch (Exception e) {			
 			LocalLogger.printStackTrace(e);
 			resultSet = new SimpleResultSet();

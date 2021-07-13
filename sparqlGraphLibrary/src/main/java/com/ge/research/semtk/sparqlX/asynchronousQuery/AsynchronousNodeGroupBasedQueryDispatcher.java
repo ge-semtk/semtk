@@ -233,6 +233,13 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			
 			if (retval.getSuccess()) {
 				
+				// uncache SEI if delete query
+				if (supportedQueryType == DispatcherSupportedQueryTypes.DELETE && retval.getTable().getNumRows() > 0) {
+					SparqlConnection conn = new SparqlConnection();
+					conn.addDataInterface(this.querySei);
+					this.oInfoClient.uncacheChangedConn(conn);
+				}
+				
 				LocalLogger.logToStdErr("about to write results for " + this.jobID);
 				if(supportedQueryType == DispatcherSupportedQueryTypes.CONSTRUCT || supportedQueryType == DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION){
 					// constructs require particular support in the results client and the results service. this support would start here.
