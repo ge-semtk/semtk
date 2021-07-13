@@ -2763,7 +2763,7 @@ SemanticNodeGroup.prototype = {
 
 		// add the first class in the path
 		var retNode = this.addNode(path.getStartClassName(), oInfo);
-		var lastNode = retNode;
+		var lastNode = reverseFlag ? anchorNode : retNode;
 		var node0;
 		var node1;
 		var pathLen = path.getLength();
@@ -2797,20 +2797,20 @@ SemanticNodeGroup.prototype = {
 		var class1Uri = path.getClass1Name(pathLen - 1);
 		var attUri = path.getAttributeName(pathLen - 1);
 		var nodeItem;
+        var finalNode = reverseFlag ? retNode : anchorNode;
 
-
-		if (!reverseFlag && anchorNode.getURI() == class1Uri) {
+		if (finalNode.getURI() == class1Uri) {
             // normal link from last node to anchor node,
 			// When last connection URI matches and reverseFlag isn't set
 			var opt = optionalFlag ? NodeItem.OPTIONAL_REVERSE : NodeItem.OPTIONAL_FALSE;
-			nodeItem = lastNode.setConnection(anchorNode, attUri, opt);
+			nodeItem = lastNode.setConnection(finalNode, attUri, opt);
 
 		} else {
             // reverse connection
 			// either reverseFlag, or normal direction URI wasn't correct so presume backwards will work
 			// throw exception if URI doesn't work
 			var opt = optionalFlag ? NodeItem.OPTIONAL_TRUE : NodeItem.OPTIONAL_FALSE;
-			var nodeItem = anchorNode.setConnection(lastNode, attUri, opt);
+			var nodeItem = finalNode.setConnection(lastNode, attUri, opt);
 
 		}
 

@@ -3244,7 +3244,7 @@ public class NodeGroup {
 	public Node addPath(OntologyPath path, Node anchorNode, OntologyInfo oInfo, Boolean reverseFlag, Boolean optionalFlag) throws Exception  {
 
 		Node retNode = this.addNode(path.getStartClassName(), oInfo);
-		Node lastNode = retNode;
+		Node lastNode = reverseFlag ? anchorNode : retNode;
 		Node node0;
 		Node node1;
 		int pathLen = path.getLength();
@@ -3276,14 +3276,14 @@ public class NodeGroup {
 		// link the last two nodes, which by now already exist
 		String class1Uri = path.getClass1Name(pathLen - 1);
 		String attUri = path.getAttributeName(pathLen - 1);
-
+		Node finalNode = reverseFlag ? retNode : anchorNode;
 
 		
-		if (!reverseFlag && anchorNode.getUri().equals(class1Uri)) {
+		if (finalNode.getUri().equals(class1Uri)) {
 			// normal link from last node to anchor node, 
 			// When last connection URI matches and reverseFlag isn't set
 			int opt = optionalFlag ? NodeItem.OPTIONAL_REVERSE : NodeItem.OPTIONAL_FALSE;
-			lastNode.setConnection(anchorNode, attUri, opt);
+			lastNode.setConnection(finalNode, attUri, opt);
 			
 		
 		} else {
@@ -3291,7 +3291,7 @@ public class NodeGroup {
 			// either reverseFlag, or normal direction URI wasn't correct so presume backwards will work
 			// throw exception if URI doesn't work
 			int opt = optionalFlag ? NodeItem.OPTIONAL_TRUE : NodeItem.OPTIONAL_FALSE;
-			anchorNode.setConnection(lastNode, attUri, opt);
+			finalNode.setConnection(lastNode, attUri, opt);
 		}
 		return retNode;
 
