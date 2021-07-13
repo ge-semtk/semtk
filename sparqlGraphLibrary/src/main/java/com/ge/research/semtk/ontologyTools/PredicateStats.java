@@ -23,6 +23,7 @@ import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 public class PredicateStats {
 	
 	private Hashtable<String, Long> statsHash = new Hashtable<String, Long>();
+	private Hashtable<String, Long> exactHash = new Hashtable<String, Long>();
 	
 	
 	/** 
@@ -70,6 +71,10 @@ public class PredicateStats {
 		for (Object k : statsTabJson.keySet()) {
 			this.statsHash.put((String) k, (Long) statsTabJson.get(k));
 		}
+		JSONObject exactTabJson =  (JSONObject) jObj.get("exactTab");
+		for (Object k : exactTabJson.keySet()) {
+			this.exactHash.put((String) k, (Long) exactTabJson.get(k));
+		}
 	}
 
 	@SuppressWarnings("unchecked")
@@ -80,12 +85,38 @@ public class PredicateStats {
 			statsTabJson.put(key, this.statsHash.get(key));
 		}
 		ret.put("statsTab", statsTabJson);
+		
+		JSONObject exactTabJson = new JSONObject();
+		for (String key : this.exactHash.keySet()) {
+			exactTabJson.put(key, this.exactHash.get(key));
+		}
+		ret.put("exactTab", exactTabJson);
 		return ret;
 	}
 	
-	public long getCount(String subject, String predicate, String object) {
+	/**
+	 * Get count of this relationship including subects predicates and objects that are sub-class or sub-pred
+	 * @param subject
+	 * @param predicate
+	 * @param object
+	 * @return
+	 */
+	public long getStat(String subject, String predicate, String object) {
 		String key = this.buildKey(subject, predicate, object);
 		Long ret = this.statsHash.get(key);
+		return (ret == null) ? 0 : ret;
+	}
+	
+	/**
+	 * Get count of this exact relationship
+	 * @param subject
+	 * @param predicate
+	 * @param object
+	 * @return
+	 */
+	public long getExact(String subject, String predicate, String object) {
+		String key = this.buildKey(subject, predicate, object);
+		Long ret = this.exactHash.get(key);
 		return (ret == null) ? 0 : ret;
 	}
 	
@@ -135,6 +166,7 @@ public class PredicateStats {
 			subjects.add(sub);
 			predicates.add(pred);
 			objects.add(obj);
+			this.exactHash.put(this.buildKey(sub, pred, obj), count);
 			
 			// loop through super predicates, subjects and objects
 			for (String p : predicates) {

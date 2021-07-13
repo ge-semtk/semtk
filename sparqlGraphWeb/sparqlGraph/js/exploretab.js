@@ -31,6 +31,10 @@ define([	// properly require.config'ed
          	'sparqlgraph/js/iidxhelper',
             'sparqlgraph/js/modaliidx',
             'sparqlgraph/js/msiclientnodegroupexec',
+            'sparqlgraph/js/msiclientontologyinfo',
+            'sparqlgraph/js/msiclientstatus',
+            'sparqlgraph/js/msiclientresults',
+            'sparqlgraph/js/msiresultset',
             'sparqlgraph/js/ontologyinfo',
             'sparqlgraph/js/visjshelper',
 
@@ -46,11 +50,11 @@ define([	// properly require.config'ed
 		],
 
     // TODO: this isn't leveraging VisJsHelper properly.  Code duplication.
-	function(IIDXHelper, ModalIidx, MsiClientNodeGroupExec, OntologyInfo, VisJsHelper, $, vis) {
+	function(IIDXHelper, ModalIidx, MsiClientNodeGroupExec, MsiClientOntologyInfo, MsiClientStatus, MsiClientResults, MsiResultSet, OntologyInfo, VisJsHelper, $, vis) {
 
 
 		//============ local object  ExploreTab =============
-		var ExploreTab = function(treediv, canvasdiv, buttondiv, searchForm) {
+		var ExploreTab = function(treediv, canvasdiv, buttondiv, searchForm, oInfoClientURL) {
             this.treebuttondiv = document.createElement("div");
             this.treebuttondiv.id = "etTreeButtonDiv";
             treediv.appendChild(this.treebuttondiv);
@@ -92,6 +96,7 @@ define([	// properly require.config'ed
 
             this.buttondiv = buttondiv;
             this.searchForm = searchForm;
+            this.oInfoClientURL = oInfoClientURL;
 
             this.infospan = document.createElement("span");
             this.infospan.style.marginRight = "3ch";
@@ -290,7 +295,7 @@ define([	// properly require.config'ed
                 hform3.appendChild(IIDXHelper.createNbspText());
                 hform3.appendChild(IIDXHelper.createButton("redraw", this.drawCanvas.bind(this)));
 
-                var select = IIDXHelper.createSelect("etSelect", ["Ontology", "Instance Data"], ["Ontology"]);
+                var select = IIDXHelper.createSelect("etSelect", ["Ontology", "Instance Data", "Predicate Count"], ["Ontology"]);
                 select.onchange = this.drawCanvas.bind(this);
                 hform3.appendChild(IIDXHelper.createNbspText());
                 hform3.appendChild(select);
@@ -374,7 +379,8 @@ define([	// properly require.config'ed
             drawCanvas : function() {
                 if (this.getMode() == "Ontology") {
                     this.drawOntology();
-                } else {
+
+                } else if (this.getMode() == "Instance Data") {
                     this.clearNetwork();
                     var workList = this.oTree.getSelectedPropertyPairs();
 
@@ -384,7 +390,62 @@ define([	// properly require.config'ed
                         workList.push([c]);
                     }
                     this.addInstanceData(workList);
+
+                } else {  // "Predicate Count"
+
+                    var client = new MsiClientOntologyInfo(this.oInfoClientURL, ModalIidx.alert.bind(this, "Error"));
+                    var resultsCall = MsiClientResults.prototype.execGetJsonBlobRes;
+                    var successCallback = this.drawPredicateStats.bind(this);
+                    var callback = buildStatusResultsCallback(successCallback, resultsCall, MsiClientStatus, MsiClientResults, MsiResultSet, 20, 100);
+                    client.execGetPredicateStats(gConn, callback);
                 }
+            },
+
+            drawPredicateStats : function(json) {
+                this.clearNetwork();
+
+                this.network.body.data.nodes.clear();
+                this.network.body.data.edges.clear();
+                var nodeData = [];
+                var edgeData = [];
+                var idHash = {};
+
+                var blob = json.xhr;
+
+                // get maximum Count
+                //var maxCount = 1;
+                //for (var key in blob.exactTab) {
+                //    if (blob.exactTab[key] > maxCount) {
+                //        maxCount = blob.exactTab[key];
+                //    }
+                //}
+
+                for (var key in blob.exactTab) {
+                    var triple = key.split('|');
+                    var count = blob.exactTab[key];
+
+                    var oSubject = new OntologyName(triple[0]);
+                    var oPredicate = new OntologyName(triple[1]);
+                    var oObject = new OntologyName(triple[2]);
+
+                    if (! (oSubject.getFullName() in idHash)) {
+                        idHash[oSubject.getFullName()] = 1;
+                        nodeData.push({id: oSubject.getFullName(), label: oSubject.getLocalName(), group: oSubject.getNamespace() });
+                    }
+
+                    if (! (oObject.getFullName() in idHash)) {
+                        idHash[oObject.getFullName()] = 1;
+                        nodeData.push({id: oObject.getFullName(), label: oObject.getLocalName(), group: oObject.getNamespace() });
+                    }
+                    var width = Math.ceil(Math.log10(count));
+                    edgeData.push({from: oSubject.getFullName(), to: oObject.getFullName(), label: oPredicate.getLocalName() + " " + count, arrows: 'to', width: width});
+                }
+
+                // add any left-over data
+                this.network.body.data.nodes.add(nodeData);
+                this.network.body.data.edges.add(edgeData);
+
+                this.updateInfo();
             },
 
             drawOntology : function () {

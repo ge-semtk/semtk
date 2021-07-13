@@ -528,7 +528,7 @@ public class OntologyInfo {
 				// if the range class in this domain
 				if (this.containsClass(rangeClassName)) {
 					// if no pred stats or pred stats show this triple exists
-					if (this.predStats == null || this.predStats.getCount(classNameStr,  prop.getNameStr(), rangeClassName) > 0) {
+					if (this.predStats == null || this.predStats.getStat(classNameStr,  prop.getNameStr(), rangeClassName) > 0) {
 						// Exact match:  class -> hasA -> rangeClassName
 						path = new OntologyPath(classNameStr);
 						path.addTriple(classNameStr, prop.getNameStr(), rangeClassName);
@@ -543,7 +543,7 @@ public class OntologyInfo {
 					for (String rangeSubName : this.getSubclassNames(rangeClassName)) {
 						if (this.containsClass(rangeSubName)) {
 							// if no pred stats or pred stats show this triple exists
-							if (this.predStats == null || this.predStats.getCount(classNameStr,  prop.getNameStr(), rangeSubName) > 0) {
+							if (this.predStats == null || this.predStats.getStat(classNameStr,  prop.getNameStr(), rangeSubName) > 0) {
 								path = new OntologyPath(classNameStr);
 								path.addTriple(classNameStr, prop.getNameStr(), rangeSubName);
 								hashStr = path.asString();
@@ -577,7 +577,7 @@ public class OntologyInfo {
 					// HadBy:  cName -> hasA -> class
 					if (rangeClassStr.equals(classNameStr)) {
 						// if no pred stats or pred stats show this triple exists
-						if (this.predStats == null || this.predStats.getCount(cname,  prop.getNameStr(), classNameStr) > 0) {
+						if (this.predStats == null || this.predStats.getStat(cname,  prop.getNameStr(), classNameStr) > 0) {
 							path = new OntologyPath(classNameStr);
 							path.addTriple(cname, prop.getNameStr(), classNameStr);
 							hashStr = path.asString();
@@ -592,7 +592,7 @@ public class OntologyInfo {
 					for (String supStr : supList) {
 						if (rangeClassStr.equals(supStr)) {
 							// if no pred stats or pred stats show this triple exists
-							if (this.predStats == null || this.predStats.getCount(cname, prop.getNameStr(), classNameStr) > 0) {
+							if (this.predStats == null || this.predStats.getStat(cname, prop.getNameStr(), classNameStr) > 0) {
 								path = new OntologyPath(classNameStr);
 								path.addTriple(cname, prop.getNameStr(), classNameStr);
 								hashStr = path.asString();

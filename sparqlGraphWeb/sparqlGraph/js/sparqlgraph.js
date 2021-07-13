@@ -111,7 +111,8 @@
             gExploreTab = new ExploreTab( document.getElementById("exploreTreeDiv"),
                                        document.getElementById("exploreCanvasDiv"),
                                        document.getElementById("exploreButtonDiv"),
-                                       document.getElementById("exploreSearchForm")
+                                       document.getElementById("exploreSearchForm"),
+                                       g.service.ontologyInfo.url
                                       );
             setTabButton("explore-tab-but", false);
 
@@ -939,13 +940,7 @@
 	    	if (gConn != null) {
 
                 oInfoClient = new MsiClientOntologyInfo(g.service.ontologyInfo.url, doLoadFailure);
-                //setStatus("clearing ontology cache");
-                //oInfoClient.execUncacheOntology(gConn,
-                //    function() {
-                //        setStatus("");
-                //        gOInfo.loadFromService(oInfoClient, gConn, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
-                //    }
-                //);
+
                 gOInfo.loadFromService(oInfoClient, gConn, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
 	    	}
     	});
