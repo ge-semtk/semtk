@@ -30,6 +30,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 public class OntologyInfoClient extends RestClient {
 
@@ -137,6 +138,11 @@ public class OntologyInfoClient extends RestClient {
 		this.uncacheChangedConn(conn2);
 	}
 	
+	public void uncacheChangedConn(SparqlEndpointInterface sei) throws ConnectException, EndpointNotFoundException, Exception {
+		SparqlConnection conn = new SparqlConnection();
+		conn.addDataInterface(sei);   // doesn't matter which, Data or Model are treated the same.
+		this.uncacheChangedConn(conn);
+	}
 	/**
 	 * Clears PredicateStats and Ontology cache entries that contain any Sei in the connection.
 	 * Note that model and data connections are treated equally.
