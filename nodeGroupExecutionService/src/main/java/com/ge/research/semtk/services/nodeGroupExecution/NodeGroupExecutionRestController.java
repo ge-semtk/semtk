@@ -1148,7 +1148,10 @@ public class NodeGroupExecutionRestController {
 						resClient);
 				
 				sparqlExec.start();
-
+				
+				// tell oInfo to uncache
+				oinfo_props.getClient().uncacheChangedConn(sei);
+				
 				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, sparqlExec.getJobId());
 				retval.setSuccess(true);
 	
