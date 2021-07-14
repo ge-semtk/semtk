@@ -74,29 +74,6 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.msi.postToEndpoint("waitForPercentComplete", myData, "application/json", successCallback, this.optFailureCallback, timeoutMsec + 5000);
 			},
 
-            /*
-             * New-fashioned callbacks get success values
-             * otherwise failureCallback
-             *
-             */
-            execGetPercentCompleteInt : function (percentCallback) {
-                // Callback checks for success and gets a percent int before calling percentCallback
-                var successCallback = function(percCallback, resultSet) {
-                    if (resultSet.isSuccess()) {
-                        var thisPercent = resultSet.getSimpleResultField("percentComplete");
-                        if (thisPercent == null) {
-                            this.doFailureCallback(resultSet,
-                                                    "Status service getPercentComplete did not return a percent.");
-                        } else {
-                            percCallback(parseInt(thisPercent));
-                        }
-                    } else {
-                        this.doFailureCallback(resultSet, null);
-                    }
-                }.bind(this, percentCallback);
-
-                this.execGetPercentComplete(successCallback);
-            },
 
             execWaitForPercentOrMsec : function (percent, timeoutMsec, successCallback) {
 				var myData = JSON.stringify ({
@@ -113,8 +90,8 @@ define([	// properly require.config'ed   bootstrap-modal
              * otherwise failureCallback
              *
              */
-            execWaitForPercentOrMsecInt : function (percent, timeoutMsec, percentCallback) {
-                // Callback checks for success and gets a percent int before calling percentCallback
+            execWaitForPercentOrMsecInt : function (percent, timeoutMsec, statusPercentCallback) {
+                // Callback checks for success and gets a percent int before calling statusPercentCallback
                 var successCallback = function(percCallback, resultSet) {
                     if (resultSet.isSuccess()) {
                         var thisPercent = resultSet.getSimpleResultField("percentComplete");
@@ -124,12 +101,12 @@ define([	// properly require.config'ed   bootstrap-modal
                             this.doFailureCallback(resultSet,
                                                     "Status service execWaitForPercentOrMsec did not return a percent.");
                         } else {
-                            percCallback(parseInt(thisPercent), statusMessage);
+                            percCallback(statusMessage, parseInt(thisPercent));
                         }
                     } else {
                         this.doFailureCallback(resultSet, null);
                     }
-                }.bind(this, percentCallback);
+                }.bind(this, statusPercentCallback);
 
                 this.execWaitForPercentOrMsec(percent, timeoutMsec, successCallback);
             },
@@ -201,18 +178,17 @@ define([	// properly require.config'ed   bootstrap-modal
              * execAsync chain's percent complete loop
              * @private
              */
-            execAsyncWaitUntilDoneCallback : function (jobSuccessCallback, statusBarCallback, checkForCancelCallback, thisPercent, optOverrideMsg) {
+            execAsyncWaitUntilDoneCallback : function (jobSuccessCallback, statusBarCallback, checkForCancelCallback, optMsg, thisPercent) {
                 if (checkForCancelCallback()) {
                     this.doFailureCallbackHtml("Operation cancelled.");
 
                 } else if (thisPercent > 99) {
 
-                    statusBarCallback("", 100, "");
                     this.execGetStatusBoolean(this.execAsyncStatusCallback.bind(this, jobSuccessCallback));
 
                 } else {
 
-                    statusBarCallback(optOverrideMsg || "", thisPercent);
+                    statusBarCallback(optMsg || "", thisPercent);
 
                     this.execWaitForPercentOrMsecInt(thisPercent + 1, 10000, this.execAsyncWaitUntilDoneCallback.bind( this,
                                                                                 jobSuccessCallback,
@@ -250,12 +226,11 @@ define([	// properly require.config'ed   bootstrap-modal
 
                 } else if (thisPercent > 99) {
 
-                    statusBarCallback(100);
                     this.execGetStatusBoolean(this.execAsyncStatusCallback.bind(this, jobSuccessCallback));
 
                 } else {
 
-                    statusBarCallback(thisPercent);
+                    statusBarCallback("", thisPercent);
 
                     // if percent just changed, reset timeout
                     var thisTimeout = (thisPercent == lastPercent) ? timeout : 50;

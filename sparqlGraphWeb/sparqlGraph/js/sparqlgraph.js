@@ -2009,10 +2009,10 @@
         setStatusProgressBar(msg, newPercent);
     };
 
-    var setStatusProgressBar = function(msg, percent, optMessageOverride) {
-        console.log("MSG " + optMessageOverride || "<none>");
+    var setStatusProgressBar = function(msg, percent) {
+        
 		var p = (typeof percent === 'undefined') ? 50 : percent;
-        var m = (typeof optMessageOverride === 'undefined' && optMessageOverride != "") ? msg : optMessageOverride;
+        var m =  msg  || "";
 		document.getElementById("status").innerHTML = m
 				+ '<div class="progress progress-info progress-striped active"> \n'
 				+ '  <div class="bar" style="width: ' + p
