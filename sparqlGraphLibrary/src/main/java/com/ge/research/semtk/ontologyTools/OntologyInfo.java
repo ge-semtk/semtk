@@ -1509,10 +1509,6 @@ public class OntologyInfo {
 		// return if there is no endpoint
 		if (targetClassNames.isEmpty()) { return ret; }
 		
-		// PEC CONFUSED:  comment placeholder 
-		// so this looks
-		// like the javascript
-		
 		// set up targetHash[targetClass] = 1
 		for (int i=0; i < targetClassNames.size(); i++) {
 			targetHash.put(targetClassNames.get(i), 1);

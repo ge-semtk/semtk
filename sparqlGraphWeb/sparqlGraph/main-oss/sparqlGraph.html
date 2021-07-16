@@ -259,22 +259,22 @@
             <td align="left">
               <div class="input-append">
                   <input type="text" id="search" class="input-medium search-query" align="left">
-                  <button type="submit" class="btn btn-icon"><i class="icon-search"></i></button>
+                  <button type="submit" class="btn btn-icon" title="Search"><i class="icon-search"></i></button>
                 </div>
-                  <button class="btn" id="btnTreeExpand"   onclick="javascript:doExpand(); return false;"  disabled>Expand</button>
-                <button class="btn" id="btnTreeCollapse" onclick="javascript:doCollapse(); return false;" disabled>Collapse</button>
+                  <button class="btn" id="btnTreeExpand"   onclick="javascript:doExpand(); return false;"  disabled title="Expand all"><i class="icon-folder-open"></i></button>
+                <button class="btn" id="btnTreeCollapse" onclick="javascript:doCollapse(); return false;" disabled title="Collapse all"><i class="icon-folder-close"></i></button>
             </td>
 
             <td><span id="spanConnection"></span></td>
 
             <td align="right">
 
-              <button class="btn" id="btnMaximize"   onclick="javascript:doCanvasSize(true); return false;" ><i class="icon-resize-vertical"></i></button>
-              <button class="btn" id="btnNormal"   onclick="javascript:doCanvasSize(false); return false;" ><i class="icon-th-list"></i></button>
-              <button class="btn" id="btnExpandAll"   onclick="javascript:doExpandAll(); return false;" disabled><i class="icon-double-angle-up"></i></button>
-              <button class="btn" id="btnCollapseUnused"   onclick="javascript:doCollapseUnused(); return false;" disabled><i class="icon-double-angle-down"></i></button>
-              <button class="btn" id="btnLayout"   onclick="javascript:doLayout(); return false;" disabled><i class="icon-magnet"></i></button>
-              <button class="btn" id="btnGraphClear"   onclick="javascript:clearGraph(); return false;" disabled>Clear</button>
+              <button class="btn" id="btnMaximize"   onclick="javascript:doCanvasSize(true); return false;"  title="Maximize canvas"><i class="icon-resize-vertical"></i></button>
+              <button class="btn" id="btnNormal"   onclick="javascript:doCanvasSize(false); return false;" title="Normal canvas"><i class="icon-th-list"></i></button>
+              <button class="btn" id="btnExpandAll"   onclick="javascript:doExpandAll(); return false;" disabled title="Expand all nodes"><i class="icon-double-angle-up"></i></button>
+              <button class="btn" id="btnCollapseUnused"   onclick="javascript:doCollapseUnused(); return false;" disabled title="Collapse all nodes"><i class="icon-double-angle-down"></i></button>
+              <button class="btn" id="btnLayout"   onclick="javascript:doLayout(); return false;" disabled title="Network physics"><i class="icon-magnet"></i></button>
+              <button class="btn" id="btnGraphClear"   onclick="javascript:clearGraph(); return false;" disabled title="Clear graph">Clear</button>
             </td>
           </tr></table>
           </form>
@@ -339,7 +339,7 @@
 
                                     ">nodegroup data</option>
                                   </select>
-                                <button class="icon-white btn-small btn-info" onclick="javascript:window.open(g.help.url.base + '/page', '_blank','location=yes');"><icon class="icon-info-sign"></icon></button>
+                                <button class="icon-white btn-small btn-info" onclick="javascript:window.open(g.help.url.base + '/path-finding', '_blank','location=yes');" title="Help"><icon class="icon-info-sign"></icon></button>
                               </form>
                               </td>
 
@@ -356,7 +356,6 @@
                       &nbsp; order: <button class="btn btn-icon" id="SGOrderBy" onclick="javascript:editOrderBy(); return false;"><i class="icon-edit"></i></button>
                       &nbsp; limit: <input type="text" class="input-mini" id="SGQueryLimit" value="" onkeyup="javascript:onkeyupLimit();">
                       &nbsp; <input type="checkbox" class='checkbox' id="SGQueryNamespace" checked> Show namespaces
-                                        <button class="btn btn-disabled" id="btnFormCancel"  onclick="javascript:doCancel(); return false;" disabled>Cancel</button>
                                         <button class="btn btn-primary" id="btnGraphExecute" onclick="javascript:runGraph(); return false;" disabled>Run</button>
                     </form>
                   </td>

@@ -880,9 +880,7 @@
     	gOTree.showAll();
 	    gOInfoLoadTime = new Date();
 
-        gExploreTab.setOInfo(gOInfo);
-        gExploreTab.setConn(gConn);
-        gExploreTab.draw();
+        gExploreTab.setConn(gConn, gOInfo);
 
 		setStatus("");
 		guiTreeNonEmpty();
@@ -907,9 +905,7 @@
 	    	gOInfo = new OntologyInfo();
 		    gOInfoLoadTime = new Date();
 
-            gExploreTab.setOInfo(gOInfo);
-            gExploreTab.setConn(gConn);
-            gExploreTab.draw();
+            gExploreTab.setConn(gConn, gOInfo);
 
 	    	gMappingTab.updateNodegroup(gNodeGroup, gConn);
 			gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
@@ -918,7 +914,7 @@
  		// retains gConn
     };
 
-    var doLoadConnection = function(connProfile, optCallback) {
+    var doLoadConnection = function(connProfile, optCallback, optClearCache) {
     	// Callback from the load dialog
     	var callback = (typeof optCallback === "undefined") ? function(){} : optCallback;
 
@@ -941,7 +937,15 @@
 
                 oInfoClient = new MsiClientOntologyInfo(g.service.ontologyInfo.url, doLoadFailure);
 
-                gOInfo.loadFromService(oInfoClient, gConn, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
+                var continueWithLoad = function() {
+                    gOInfo.loadFromService(oInfoClient, gConn, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
+                };
+
+                if (optClearCache) {
+                    oInfoClient.execUncacheOntology(gConn, continueWithLoad);
+                } else {
+                    continueWithLoad();
+                }
 	    	}
     	});
     };
@@ -2000,8 +2004,12 @@
         queryTextChanged(false);
     };
 
+    // set status to a message or "" to finish progress.
     var setStatus = function(msg) {
     	document.getElementById("status").innerHTML= "<font color='red'>" + msg + "</font><br>";
+        if (!msg || msg.length == 0) {
+            gCancelled = false;
+        }
     };
 
     var setStatusProgressBarScaled = function(lo, hi, msg, percent) {
@@ -2010,13 +2018,28 @@
     };
 
     var setStatusProgressBar = function(msg, percent) {
-        
+
 		var p = (typeof percent === 'undefined') ? 50 : percent;
         var m =  msg  || "";
-		document.getElementById("status").innerHTML = m
+        var table = document.createElement("table");
+        var tr = document.createElement("tr");
+        table.appendChild(tr);
+        table.style.width = "100%";
+        table.tableLayout="auto";
+        var tdLeft = document.createElement("td");
+        tr.appendChild(tdLeft);
+        var tdRight = document.createElement("td");
+        tdRight.style.width = "1%";
+        tdRight.style.whiteSpace = "no-wrap";
+        tr.appendChild(tdRight);
+		tdLeft.innerHTML = m
 				+ '<div class="progress progress-info progress-striped active"> \n'
-				+ '  <div class="bar" style="width: ' + p
-				+ '%;"></div></div>';
+				+ '  <div class="bar" style="width: ' + p + '%;">'
+				+ '</div></div>';
+        tdRight.innerHTML = "<button class='btn btn-danger' onclick='javascript:doCancel()' title='Cancel'><icon class='icon-remove-sign'></i></button>";
+        var status = document.getElementById("status");
+        status.innerHTML="";
+        status.appendChild(table);
 	};
 
     var buildQuery = function() {
@@ -2261,9 +2284,6 @@
         var opposite = [];
 
         // Cancel button works backwards if we're running via services
-        if (runViaServiceFlag) {
-            opposite.push("btnFormCancel");
-        }
 
         var buttons = document.getElementsByTagName("button");
         for (var i = 0; i < buttons.length; i++) {
@@ -2338,9 +2358,7 @@
     var clearEverything = function () {
     	clearTree();
     	gOInfo = new OntologyInfo();
-        gExploreTab.setOInfo(gOInfo);
-        gExploreTab.setConn(gConn);
-        gExploreTab.draw();
+        gExploreTab.setConn(gConn, gOInfo);
     	setConn(null);
 	    gOInfoLoadTime = new Date();
     };
@@ -2386,7 +2404,7 @@
  		setTabButton("mapping-tab-but", false);
 		setTabButton("upload-tab-but", false);
 
-        gExploreTab.stopLayout();
+        gExploreTab.releaseFocus();
 	};
 
     var tabExploreActivated = function() {
@@ -2397,7 +2415,7 @@
 		setTabButton("mapping-tab-but", false);
 		setTabButton("upload-tab-but", false);
 
-        gExploreTab.startLayout();
+        gExploreTab.takeFocus();
 	};
 
     var tabMappingActivated = function() {
@@ -2408,7 +2426,7 @@
  		setTabButton("mapping-tab-but", true);
 		setTabButton("upload-tab-but", false);
 
-        gExploreTab.stopLayout();
+        gExploreTab.releaseFocus();
 
 		gMappingTab.updateNodegroup(gNodeGroup, gConn);
 
@@ -2423,7 +2441,7 @@
   		setTabButton("mapping-tab-but", false);
 		setTabButton("upload-tab-but", true);
 
-        gExploreTab.stopLayout();
+        gExploreTab.releaseFocus();
 
 		gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
 

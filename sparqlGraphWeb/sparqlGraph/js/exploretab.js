@@ -54,48 +54,12 @@ define([	// properly require.config'ed
 
 
 		//============ local object  ExploreTab =============
-		var ExploreTab = function(treediv, canvasdiv, buttondiv, searchForm, oInfoClientURL) {
-            this.treebuttondiv = document.createElement("div");
-            this.treebuttondiv.id = "etTreeButtonDiv";
-            treediv.appendChild(this.treebuttondiv);
+		var ExploreTab = function(treediv, canvasdiv, buttondiv, topControlForm, oInfoClientURL) {
+            this.controlDivParent = treediv;
+            this.canvasDivParent = canvasdiv;
 
-            this.treediv = document.createElement("div");
-            this.treediv.id = "etTreeDiv";
-            treediv.appendChild(this.treediv);
-
-            // TODO: move somewhere that doesn't look awful and interfere with ontologytree
-            this.configdiv = document.createElement("div");
-            this.configdiv.style.margin="1ch";
-            this.configdiv.id="etConfigDiv";
-            this.configdiv.style.display="table";
-            this.configdiv.style.background = "rgba(32, 16, 16, 0.2)";
-
-            $(this.configdiv).dialog({  'autoOpen': false,
-                                        buttons: [
-                                        {
-                                          text: "Ok",
-                                          icon: "ui-icon-heart",
-                                          click: function() {
-                                            $( this ).dialog( "close" );
-                                          }
-                                        }],
-                                        dialogClass: "modal",
-                                        open: function(event, ui) {
-                                            $(".ui-dialog-titlebar-close", ui.dialog | ui).hide();
-                                        },
-                                      });
-            // treediv.appendChild(document.createElement("hr"));
-            // treediv.appendChild(this.configdiv);
-
-            this.canvasdiv = document.createElement("div");
-            this.canvasdiv.style.margin="1ch";
-            this.canvasdiv.id="ExploreTab.canvasdiv_" + Math.floor(Math.random() * 10000).toString();
-            this.canvasdiv.style.height="100%";
-            this.canvasdiv.style.width="100%";
-            canvasdiv.appendChild(this.canvasdiv);
-
-            this.buttondiv = buttondiv;
-            this.searchForm = searchForm;
+            this.botomButtonDiv = buttondiv;
+            this.topControlForm = topControlForm;
             this.oInfoClientURL = oInfoClientURL;
 
             this.infospan = document.createElement("span");
@@ -103,47 +67,283 @@ define([	// properly require.config'ed
             this.oInfo = null;
             this.conn = null;
             this.oTree = null;
-            this.network = null;
+
+            this.controlDivHash = this.initControlDivHash();
+            this.canvasDivHash = this.initCanvasDivHash();
+            this.configDivHash = this.initConfigDivHash();
+            this.networkHash = this.initNetworkHash();
 
             this.busyFlag = false;
             this.ignoreSelectFlag = false;
 
             this.cancelFlag = false;
 
-            this.initSearchForm();
-            this.initDynaTree();
-            this.initButtonDiv();
-            this.initCanvas();
+            this.initTopControlForm();
+            this.initControlDivs();
+
+            this.initBottomButtonDiv();
 
             this.progressDiv = document.createElement("div");
             this.progressDiv.id = "etProgressDiv";
-            this.buttondiv.appendChild(this.progressDiv);
+            this.botomButtonDiv.appendChild(this.progressDiv);
 
 
         };
 
 		ExploreTab.MAX_LAYOUT_ELEMENTS = 100;
-
+        ExploreTab.MODE_ONTOLOGY = "Ontology";
+        ExploreTab.MODE_INSTANCE = "Instance Data";
+        ExploreTab.MODE_STATS = "Instance Counts";
+        ExploreTab.MODES = [ExploreTab.MODE_ONTOLOGY, ExploreTab.MODE_INSTANCE, ExploreTab.MODE_STATS ];
 
 		ExploreTab.prototype = {
 
-            setOInfo : function (oInfo) {
-                this.oInfo = new OntologyInfo(oInfo.toJson());  // deepCopy
-                this.oTree.setOInfo(this.oInfo);
-                this.setModeToOntology();
+            initControlDivHash : function() {
+                this.controlDivHash = {};
+                for (var m of ExploreTab.MODES) {
+                    this.controlDivHash[m] = document.createElement("div");
+                    this.controlDivHash[m].id="exploreTabControl_" + m.replace(" ", "-");
+                }
+                return this.controlDivHash;
             },
 
-            setConn: function(conn) {
+            initCanvasDivHash : function() {
+                this.canvasDivHash = {};
+                for (var m of ExploreTab.MODES) {
+                    this.canvasDivHash[m] = document.createElement("div");
+                    this.canvasDivHash[m].style.width="100%";
+                    this.canvasDivHash[m].style.height="100%";
+                }
+                return this.canvasDivHash;
+            },
+
+            initConfigDivHash : function() {
+                this.configDivHash = {};
+                for (var m of ExploreTab.MODES) {
+                    this.configDivHash[m] = document.createElement("div");
+                }
+                return this.configDivHash;
+            },
+
+            initNetworkHash : function() {
+                this.networkHash = {};
+                for (var m of ExploreTab.MODES) {
+                    this.networkHash[m] = new vis.Network(this.canvasDivHash[m], {}, this.getDefaultOptions(m));
+                }
+                return this.networkHash;
+            },
+
+            // generate options for each mode
+            getDefaultOptions : function(mode) {
+
+                // options shared by all.  Inject the correct configdiv
+                var options = {
+                    configure: {
+                        enabled: true,
+                        container: this.configDivHash[mode],
+                        filter: "layout physics",
+                        showButton: true
+                    },
+                    groups: {
+                        useDefaultGroups: true,
+                        data: {color:{background:'white'}, shape: 'box'}
+                    },
+                    interaction: {
+                        multiselect: true,
+                    },
+                    manipulation: {
+                        initiallyActive: false,
+                        deleteNode: true,
+                        deleteEdge: true,
+                    }
+                };
+
+                // options special to each mode
+                if (mode == ExploreTab.MODE_ONTOLOGY) {
+                    options.layout =  {
+                        "hierarchical": {
+                          "enabled": true,
+                          "levelSeparation": -150,
+                          "direction": "DU",
+                          "sortMethod": "directed"
+                        }
+                    };
+                    options.physics = {
+                            "hierarchicalRepulsion": {
+                            "centralGravity": 0,
+                            "springLength": 30,
+                            "nodeDistance": 260,
+                            "damping": 0.21
+                          },
+                        "minVelocity": 0.75,
+                        "solver": "hierarchicalRepulsion"
+                    };
+
+                } else if (mode == ExploreTab.MODE_INSTANCE) {
+                    options.physics ={
+                              "barnesHut": {
+                                "centralGravity": 0.15,
+                                "springLength": 180
+                              },
+                              "maxVelocity": 38,
+                              "minVelocity": 0.75,
+                              "solver": "barnesHut"
+                          };
+
+                } else if (mode == ExploreTab.MODE_STATS) {
+                    options.physics ={
+                              "barnesHut": {
+                                "centralGravity": 0.15,
+                                "springLength": 180
+                              },
+                              "maxVelocity": 38,
+                              "minVelocity": 0.75,
+                              "solver": "barnesHut"
+                          };
+                }
+
+                return options;
+            },
+
+            setConn: function(conn, oInfo) {
                 this.conn = conn;
+
+                this.oInfo = new OntologyInfo(oInfo.toJson());  // deepCopy
+                this.oTree.setOInfo(this.oInfo);
+
+                this.clearNetwork(ExploreTab.MODES);
+            },
+
+            // Use opened this tab
+            // Draw it it isn't drawn yet.
+            // Otherwise everything should be the same as when they left last time.
+            takeFocus : function() {
+                if (this.networkHash[this.getMode()].body.data.nodes.getIds().length == 0) {
+                    this.draw();
+                }
+            },
+
+            // User left this tab
+            // Make sure it isn't using any resources
+            releaseFocus : function() {
+                this.stopLayout();
+            },
+
+            initTopControlForm : function() {
+                var table = document.createElement("table");
+                table.style.width="100%";
+                this.topControlForm.appendChild(table);
+
+                // left
+                var tr = document.createElement("tr");
+                table.appendChild(tr);
+                var td = document.createElement("td");
+                td.align="right";
+                tr.appendChild(td);
+
+                // center
+                td = document.createElement("td");
+                td.align="right";
+                tr.appendChild(td);
+
+                var bold = document.createElement("b");
+                td.appendChild(bold);
+                bold.innerHTML = "Explore mode: ";
+                var select = IIDXHelper.createSelect("etSelect", [ExploreTab.MODE_ONTOLOGY, ExploreTab.MODE_INSTANCE, ExploreTab.MODE_STATS], [ExploreTab.MODE_ONTOLOGY]);
+                select.onchange = this.draw.bind(this);
+                td.appendChild(select);
+
+                // right
+                td = document.createElement("td");
+                td.align="right";
+                tr.appendChild(td);
+
+                // network config physics
+                var showConfig = function() {
+                    VisJsHelper.showConfigDialog(this.configDivHash[this.getMode()], function(){});
+                }.bind(this);
+
+                but = IIDXHelper.createIconButton("icon-magnet", showConfig, undefined, undefined, undefined, "Network physics");
+                td.appendChild(but);
+                IIDXHelper.appendSpace(td);
+
+                // redraw button
+                td.appendChild(IIDXHelper.createIconButton("icon-refresh", function () {this.clearNetwork(); this.draw();}.bind(this), undefined, undefined, undefined, "Redraw network"));
+                IIDXHelper.appendSpace(td);
+
+                // stop layout
+                td.appendChild(IIDXHelper.createIconButton("icon-off", this.stopLayout.bind(this), undefined, undefined, undefined, "Stop layout"));
+                IIDXHelper.appendSpace(td);
+
+                // clear
+                var but = IIDXHelper.createButton("Clear", this.clearNetwork.bind(this));
+                td.appendChild(but);
+            },
+
+            // add controls to empty control divs
+            initControlDivs : function() {
+                    this.initControlDivInstance();
+                    this.initControlDivOntology();
+                    this.initControlDivStats();
+            },
+
+            initControlDivStats : function() {
+                var div = this.controlDivHash[ExploreTab.MODE_STATS];
+                div.style.margin="1ch";
+
+                var h = document.createElement("h3");
+                div.appendChild(h);
+                h.innerHTML = ExploreTab.MODE_STATS;
+                div.appendChild(IIDXHelper.buildList(["Number of predicates connecting each exact class.","Color by namespace."]));
+            },
+
+            initControlDivOntology : function() {
+                var div = this.controlDivHash[ExploreTab.MODE_ONTOLOGY];
+                div.style.margin="1ch";
+                var h = document.createElement("h3");
+                div.appendChild(h);
+                h.innerHTML = ExploreTab.MODE_ONTOLOGY;
+                div.appendChild(IIDXHelper.buildList(["Show superclass relationships.","Color by namespace."]));
+            },
+
+            initControlDivInstance : function() {
+                // INSTANCE
+                var div = this.controlDivHash[ExploreTab.MODE_INSTANCE];
+                div.style.margin="1ch";
+
+                var dom = IIDXHelper.createSearchDiv(this.doSearch, this);
+
+                var but = IIDXHelper.createIconButton("icon-folder-open", this.doExpand.bind(this), undefined, undefined, undefined, "Expand all");
+                but.style.marginLeft = "1ch";
+                dom.appendChild(but);
+
+                but = IIDXHelper.createIconButton("icon-folder-close", this.doCollapse.bind(this), undefined, undefined, undefined, "Collapse all");
+                but.style.marginLeft = "1ch";
+                dom.appendChild(but);
+
+                div.appendChild(dom);
+
+                var hform1 = IIDXHelper.buildHorizontalForm(true)
+                div.appendChild(hform1);
+
+                var select = IIDXHelper.createSelect("etTreeSelect", [["single",2], ["sub-tree",3]], ["multi"], false, "input-small");
+                select.onchange = function() {
+                    this.oTree.tree.options.selectMode = parseInt(document.getElementById("etTreeSelect").value);
+                }.bind(this);
+
+                hform1.appendChild(document.createTextNode(" select mode:"));
+                hform1.appendChild(select);
+                this.initDynaTree();
             },
 
             /*
-             * Initialize an empty dynatree
+             * Initialize an empty dynatree into this.controlDivHash[ExploreTab.MODE_INSTANCE]
              */
 			initDynaTree : function() {
 
-                var treeSelector = "#" + this.treediv.id;
-
+                this.controlDivParent.innerHtml = "";
+                this.controlDivParent.appendChild(this.controlDivHash[ExploreTab.MODE_INSTANCE]);
+                var treeSelector = "#" + this.controlDivHash[ExploreTab.MODE_INSTANCE].id;
                 $(treeSelector).dynatree({
                     onSelect: function(flag, node) {
                         this.selectedNodeCallback(flag, node);
@@ -185,14 +385,17 @@ define([	// properly require.config'ed
                 this.oTree.selectIdenticalNodes(node, flag);
                 this.ignoreSelectFlag = false;
 
-                if (this.getMode() != "Instance Data") return;
+                if (this.getMode() != ExploreTab.MODE_INSTANCE) return;
 
                 var workList = [];
 
                 if (this.oTree.tree.options.selectMode == 3) {
                     workList = this.oTree.getPropertyPairsFamily(node);
                 } else {
-                    workList.push(this.oTree.getPropertyPair(node));
+                    var pair = this.oTree.getPropertyPair(node);
+                    if (pair) {
+                        workList.push(pair);
+                    }
                 }
 
                 if (flag) {
@@ -202,39 +405,13 @@ define([	// properly require.config'ed
                 }
             },
 
-            initCanvas : function() {
-                this.clearNetwork();
-            },
+            // main section of buttons along the bottom.
+            // Should have controls that are useful for all modes
+            initBottomButtonDiv : function() {
 
-            // little div sitting on top of the otree
-            initSearchForm : function() {
-
-                var div = this.treebuttondiv;
-                div.innerHTML = "";
-                div.style.padding="1ch";
-
-                var butTable = document.createElement("table");
-                this.searchForm.appendChild(butTable);
-                butTable.width="100%";
-                var tr = document.createElement("tr");
-                butTable.appendChild(tr);
-
-                var td = document.createElement("td");
-                tr.appendChild(td);
-                td.align="left";
-                td.appendChild(IIDXHelper.createSearchDiv(this.doSearch, this));
-
-                td.appendChild(IIDXHelper.createButton("Expand", this.doExpand.bind(this)));
-                td.appendChild(IIDXHelper.createButton("Collapse", this.doCollapse.bind(this)));
-
-            },
-
-            // main section of buttons
-            initButtonDiv : function() {
-
-                this.buttondiv.innerHTML = "";
+                this.botomButtonDiv.innerHTML = "";
                 var table = document.createElement("table");
-                this.buttondiv.appendChild(table);
+                this.botomButtonDiv.appendChild(table);
                 table.width = "100%";
 
                 // match first column's width to treediv
@@ -243,7 +420,7 @@ define([	// properly require.config'ed
 
                 var col = document.createElement("col");
                 colgroup.appendChild(col);
-                col.width = this.treediv.offsetWidth;
+                col.width = this.controlDivHash[ExploreTab.MODE_INSTANCE].offsetWidth;
 
                 var tbody = document.createElement("tbody");
                 table.appendChild(tbody);
@@ -254,23 +431,6 @@ define([	// properly require.config'ed
                 // -------- cell 1/3 --------
                 var td1 = document.createElement("td");
                 tr.appendChild(td1);
-                td1.align="left";
-                var hform1 = IIDXHelper.buildHorizontalForm(true)
-                td1.appendChild(hform1);
-
-                var select = IIDXHelper.createSelect("etTreeSelect", [["single",2], ["sub-tree",3]], ["multi"], false, "input-small");
-                select.onchange = function() {
-                    this.oTree.tree.options.selectMode = parseInt(document.getElementById("etTreeSelect").value);
-                }.bind(this);
-
-                hform1.appendChild(document.createTextNode(" select mode:"));
-                hform1.appendChild(select);
-
-                hform1.appendChild(IIDXHelper.createNbspText());
-                hform1.appendChild(IIDXHelper.createButton("Select all", this.treeSelectAll.bind(this, true)));
-
-                hform1.appendChild(IIDXHelper.createNbspText());
-                hform1.appendChild(IIDXHelper.createButton("Clear all", this.treeSelectAll.bind(this, false)));
 
                 //  -------- cell 2/3 --------
                 var td2 = document.createElement("td");
@@ -288,27 +448,7 @@ define([	// properly require.config'ed
                 var hform3 = IIDXHelper.buildHorizontalForm(true)
                 td3.appendChild(hform3);
 
-                // network... button
-                hform3.appendChild(IIDXHelper.createButton("network...", function() {$(this.configdiv).dialog("open")}.bind(this)));
-
-                // redraw button
-                hform3.appendChild(IIDXHelper.createNbspText());
-                hform3.appendChild(IIDXHelper.createButton("redraw", this.drawCanvas.bind(this)));
-
-                var select = IIDXHelper.createSelect("etSelect", ["Ontology", "Instance Data", "Predicate Count"], ["Ontology"]);
-                select.onchange = this.drawCanvas.bind(this);
-                hform3.appendChild(IIDXHelper.createNbspText());
-                hform3.appendChild(select);
-
-                var but1 = IIDXHelper.createButton("stop query", this.butSetCancelFlag.bind(this));
-                hform3.appendChild(IIDXHelper.createNbspText());
-                hform3.appendChild(but1);
-
-                var but2 = IIDXHelper.createButton("stop layout", this.stopLayout.bind(this));
-                but2.id = "butStopLayout";
-                but2.disabled = true;
-                hform3.appendChild(IIDXHelper.createNbspText());
-                hform3.appendChild(but2);
+                // moved everything out of here
 
             },
 
@@ -316,10 +456,10 @@ define([	// properly require.config'ed
                 this.ignoreSelectFlag = true;
                 this.oTree.selectAll(flag);
                 this.ignoreSelectFlag = false;
-                this.drawCanvas();
+                this.draw();
             },
 
-            // get the etSelect value "Ontology", or "Instance Data"
+            // get the etSelect value ExploreTab.MODE_ONTOLOGY, or ExploreTab.MODE_INSTANCE
             getMode : function() {
                 var sel = document.getElementById("etSelect");
                 var value = sel.options[sel.selectedIndex].text;
@@ -336,14 +476,14 @@ define([	// properly require.config'ed
             },
 
             startLayout : function() {
-                if (this.network) {
-                    this.network.startSimulation();
+                if (this.networkHash[this.getMode()]) {
+                    this.networkHash[this.getMode()].startSimulation();
                 }
             },
 
             stopLayout : function() {
-                if (this.network) {
-                    this.network.stopSimulation();
+                if (this.networkHash[this.getMode()]) {
+                    this.networkHash[this.getMode()].stopSimulation();
                 }
             },
 
@@ -362,50 +502,52 @@ define([	// properly require.config'ed
                 return false;
             },
 
-            // Redraws the entire graph (presuming there's new data)
-            // This can be processor-intensive,
-            // so, when needed, send in msec of layout time to stop it
-            draw : function (stopAfterMsec) {
-                this.oTree.showAll();
+            // Retrieve the correct control and canvas divs and show them
+            // Draw if empty, otherwise presume what is there is ok.
+            draw : function() {
 
-                this.drawCanvas();
+                // display correct controls and canvas
+                this.controlDivParent.innerHTML = "";
+                this.controlDivParent.appendChild(this.controlDivHash[this.getMode()]);
+                this.canvasDivParent.innerHTML = "";
+                this.canvasDivParent.appendChild(this.canvasDivHash[this.getMode()]);
 
-                // stop the layout after stopAfterMsec
-                if (typeof stopAfterMsec != "undefined") {
-                    setTimeout(this.stopLayout.bind(this), stopAfterMsec);
-                }
-            },
+                // if network is empty it might never have been drawn yet.
+                // if it is supposed to be empty then this is cheap.
+                // Either way, redraw.
+                if (this.networkHash[this.getMode()].body.data.nodes.getIds().length == 0) {
 
-            drawCanvas : function() {
-                if (this.getMode() == "Ontology") {
-                    this.drawOntology();
+                    if (this.getMode() == ExploreTab.MODE_ONTOLOGY) {
+                        this.drawOntology();
 
-                } else if (this.getMode() == "Instance Data") {
-                    this.clearNetwork();
-                    var workList = this.oTree.getSelectedPropertyPairs();
+                    } else if (this.getMode() == ExploreTab.MODE_INSTANCE) {
+                        this.oTree.showAll();
+                        var workList = this.oTree.getSelectedPropertyPairs();
 
-                    // add selected classes as lists [className]
-                    var classList = this.oTree.getSelectedClassNames();
-                    for (var c of classList) {
-                        workList.push([c]);
+                        // add selected classes as lists [className]
+                        var classList = this.oTree.getSelectedClassNames();
+                        for (var c of classList) {
+                            workList.push([c]);
+                        }
+                        this.addInstanceData(workList);
+
+                    } else {  // ExploreTab.MODE_STATS
+                        var client = new MsiClientOntologyInfo(this.oInfoClientURL, ModalIidx.alert.bind(this, "Error"));
+                        var callback = this.buildStatusResultsCallback(
+                            this.drawPredicateStats.bind(this),
+                            MsiClientResults.prototype.execGetJsonBlobRes
+                        );
+                        client.execGetPredicateStats(gConn, callback);
                     }
-                    this.addInstanceData(workList);
+                    this.networkHash[this.getMode()].fit();
 
-                } else {  // "Predicate Count"
-
-                    var client = new MsiClientOntologyInfo(this.oInfoClientURL, ModalIidx.alert.bind(this, "Error"));
-                    var resultsCall = MsiClientResults.prototype.execGetJsonBlobRes;
-                    var successCallback = this.drawPredicateStats.bind(this);
-                    var callback = buildStatusResultsCallback(successCallback, resultsCall, MsiClientStatus, MsiClientResults, MsiResultSet, 20, 100);
-                    client.execGetPredicateStats(gConn, callback);
                 }
+                this.updateInfo();
             },
 
             drawPredicateStats : function(json) {
                 this.clearNetwork();
 
-                this.network.body.data.nodes.clear();
-                this.network.body.data.edges.clear();
                 var nodeData = [];
                 var edgeData = [];
                 var idHash = {};
@@ -442,21 +584,22 @@ define([	// properly require.config'ed
                 }
 
                 // add any left-over data
-                this.network.body.data.nodes.add(nodeData);
-                this.network.body.data.edges.add(edgeData);
+                this.networkHash[ExploreTab.MODE_STATS].body.data.nodes.add(nodeData);
+                this.networkHash[ExploreTab.MODE_STATS].body.data.edges.add(edgeData);
 
                 this.updateInfo();
             },
 
             drawOntology : function () {
-                this.network.body.data.nodes.clear();
-                this.network.body.data.edges.clear();
                 var nodeData = [];
                 var edgeData = [];
+                var SHOW_NAMESPACE = false;
 
                 // namespace nodes
-                for (var namespace of this.oInfo.getNamespaceNames()) {
-                    nodeData.push({id: namespace, label: namespace, group: namespace , shape: 'box'});
+                if (SHOW_NAMESPACE) {
+                    for (var namespace of this.oInfo.getNamespaceNames()) {
+                        nodeData.push({id: namespace, label: namespace, group: namespace , shape: 'box'});
+                    }
                 }
 
                 // class nodes
@@ -473,8 +616,10 @@ define([	// properly require.config'ed
                     var oClass = this.oInfo.getClass(className);
 
                     // namespace members
-                    var namespace = this.oInfo.getClass(className).getNamespaceStr();
-                    edgeData.push({from: className, to: namespace, label: '', arrows: 'to'});
+                    if (SHOW_NAMESPACE) {
+                        var namespace = this.oInfo.getClass(className).getNamespaceStr();
+                        edgeData.push({from: className, to: namespace, label: '', arrows: 'to'});
+                    }
 
                     // make a subclass arrow style
                     // TODO move this
@@ -493,28 +638,11 @@ define([	// properly require.config'ed
                 }
 
                 // add any left-over data
-                this.network.body.data.nodes.add(nodeData);
-                this.network.body.data.edges.add(edgeData);
+                this.networkHash[ExploreTab.MODE_ONTOLOGY].body.data.nodes.add(nodeData);
+                this.networkHash[ExploreTab.MODE_ONTOLOGY].body.data.edges.add(edgeData);
 
-                var options = {
-                  "layout": {
-                    "hierarchical": {
-                      "enabled": true,
-                      "levelSeparation": -150,
-                      "direction": "DU",
-                      "sortMethod": "directed"
-                    }
-                  },
-                  "physics": {
-                    "hierarchicalRepulsion": {
-                      "centralGravity": 0
-                    },
-                    "minVelocity": 0.75,
-                    "solver": "hierarchicalRepulsion"
-                  }
-                }
-                this.network.setOptions(options);
                 this.updateInfo();
+
             },
 
             // add instance data returned by from /dispatchSelectInstanceData REST call
@@ -572,7 +700,7 @@ define([	// properly require.config'ed
 
                     // --- handle multiple classes ---
                     var classList = [];
-                    var existsNode =  this.network.body.data.nodes.get(s);
+                    var existsNode =  this.networkHash[ExploreTab.MODE_INSTANCE].body.data.nodes.get(s);
                     if (existsNode) {
                         classList = classList.concat(existsNode.group.split(","));
                     }
@@ -600,7 +728,7 @@ define([	// properly require.config'ed
 
                         // add the predicate
                         var p_id = s + "," + p + "," + o;
-                        if (this.network.body.data.edges.get(p_id) == null) {
+                        if (this.networkHash[ExploreTab.MODE_INSTANCE].body.data.edges.get(p_id) == null) {
                             edgeList.push({  id: p_id, from: s, to: o, label: local(p),
                                                                 arrows: 'to',
                                                                 color: {inherit: false},
@@ -608,8 +736,8 @@ define([	// properly require.config'ed
                         }
                     }
                 }
-                this.network.body.data.nodes.update(nodeList);
-                this.network.body.data.edges.update(edgeList);
+                this.networkHash[ExploreTab.MODE_INSTANCE].body.data.nodes.update(nodeList);
+                this.networkHash[ExploreTab.MODE_INSTANCE].body.data.edges.update(edgeList);
                 this.updateInfo();
                 //console.log("Adding to nodeJs END");
 
@@ -638,7 +766,7 @@ define([	// properly require.config'ed
                 var i = 0;
                 // first pass: remove edges
                 for (var w of workList) {
-                    var vEdgeList = this.network.body.data.edges.get();
+                    var vEdgeList = this.networkHash[ExploreTab.MODE_INSTANCE].body.data.edges.get();
                     if (w.length == 2) {
                         // delete edges
                         var domainUri = w[0];
@@ -659,7 +787,7 @@ define([	// properly require.config'ed
                             // if predicate matches
                             if (spo[1] == predicateUri) {
                                 // if fromNode is a member of domainUri
-                                var fromNode = this.network.body.data.nodes.get(spo[0]);
+                                var fromNode = this.networkHash[ExploreTab.MODE_INSTANCE].body.data.nodes.get(spo[0]);
                                 if (fromNode.group.split(",").indexOf(domainUri) > -1) {
                                     vNodesLostEdgesList.push(vEdge.from);
                                     vNodesLostEdgesList.push(vEdge.to);
@@ -669,14 +797,14 @@ define([	// properly require.config'ed
                         }
                     }
                 }
-                this.network.body.data.edges.remove(vEdgesToDelete);
+                this.networkHash[ExploreTab.MODE_INSTANCE].body.data.edges.remove(vEdgesToDelete);
 
                 //console.log("1st pass time: " + (performance.now() - START));
                 START = performance.now();
 
                 // count edges for each node
                 var edgeCountHash = {};
-                for (var vEdge of this.network.body.data.edges.get()) {
+                for (var vEdge of this.networkHash[ExploreTab.MODE_INSTANCE].body.data.edges.get()) {
                     //console.log("edge hash");
                     edgeCountHash[vEdge.from] = (edgeCountHash[vEdge.from] ? edgeCountHash[vEdge.from] : 0) + 1;
                     edgeCountHash[vEdge.to] = (edgeCountHash[vEdge.to] ? edgeCountHash[vEdge.to] : 0) + 1;
@@ -689,7 +817,7 @@ define([	// properly require.config'ed
                     // delete nodes
                     if (w.length == 1) {
                         var classUri = w[0];
-                        var vNodeList = this.network.body.data.nodes.get();
+                        var vNodeList = this.networkHash[ExploreTab.MODE_INSTANCE].body.data.nodes.get();
                         for (var vNode of vNodeList) {
 
                             if (++i % 200 == 1) {
@@ -700,12 +828,12 @@ define([	// properly require.config'ed
                             if (vNode.group == classUri) {
                                 // simple single-class exact match if no edges remain
                                 if (!(vNode.id in edgeCountHash)) {
-                                    this.network.body.data.nodes.remove(vNode.id);
+                                    this.networkHash[ExploreTab.MODE_INSTANCE].body.data.nodes.remove(vNode.id);
                                 }
                             } else if (vNode.group.indexOf(classUri) > -1) {
                                 // remove class from multi-class nodes
                                 vNode.group = vNode.group.split(",").filter(function(uri, x) {return x != uri;}.bind(this, classUri)).toString();
-                                this.network.body.data.nodes.update(vNode);
+                                this.networkHash[ExploreTab.MODE_INSTANCE].body.data.nodes.update(vNode);
                             }
                         }
                     }
@@ -725,13 +853,13 @@ define([	// properly require.config'ed
                         //console.log("third pass " + percent + "%");
                         IIDXHelper.progressBarSetPercent(this.progressDiv, percent, "Removing_orphans");
                     }
-                    var vNode = this.network.body.data.nodes.get(vNodeId);
+                    var vNode = this.networkHash[ExploreTab.MODE_INSTANCE].body.data.nodes.get(vNodeId);
                     // remove iff still exists, only one class, class is not selected in oTree, no edges
                     if (vNode && vNode.group.split(",").length == 1 && !(vNode.id in edgeCountHash) && selectedClasses.indexOf(vNode.group) == -1) {
                         vNodesToRemove.push(vNode);
                     }
                 }
-                this.network.body.data.nodes.remove(vNodesToRemove);
+                this.networkHash[ExploreTab.MODE_INSTANCE].body.data.nodes.remove(vNodesToRemove);
                 //console.log("3rd pass time: " + (performance.now() - START));
 
                 IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
@@ -745,11 +873,16 @@ define([	// properly require.config'ed
                 this.oTree.setAllSelectable(!flag);
             },
 
-            clearNetwork : function() {
-                this.configdiv.innerHTML = "";
-                // create an array with nodes
+            clearNetwork : function(modeList) {
+                var modes = modeList ? modeList : [this.getMode()];
+                for (var m of modes) {
+                    this.networkHash[m].body.data.nodes.clear();
+                    this.networkHash[m].body.data.edges.clear();
+                }
 
-                this.network = new vis.Network(this.canvasdiv, {}, VisJsHelper.getDefaultOptions(this.configdiv));
+                // if (this.network !== null) {
+                //    this.network.destroy();
+                // }
 
             },
 
@@ -839,7 +972,7 @@ define([	// properly require.config'ed
                                                                                      g.service.status.url,
                                                                                      g.service.results.url);
 
-                IIDXHelper.progressBarCreate(this.progressDiv, "progress-info progress-striped active");
+                IIDXHelper.progressBarCreate(this.progressDiv, "progress-info progress-striped active", this.butSetCancelFlag.bind(this));
                 IIDXHelper.progressBarSetPercent(this.progressDiv, 0, "Querying instance data");
                 CALL_NOW = performance.now();
 
@@ -856,8 +989,59 @@ define([	// properly require.config'ed
             },
 
             updateInfo : function () {
-                this.infospan.innerHTML = "nodes: " + this.network.body.data.nodes.getIds().length + "  predicates: " + this.network.body.data.edges.getIds().length;
-            }
+                this.infospan.innerHTML = "nodes: " + this.networkHash[this.getMode()].body.data.nodes.getIds().length + "  predicates: " + this.networkHash[this.getMode()].body.data.edges.getIds().length;
+            },
+
+            // Build a callback for single 1-100 job
+            // Creates the progressBar, and
+            buildStatusResultsCallback : function(successCallback, resultsCall) {
+
+                var failureCallback = function(msg) {
+                    ModalIidx.alert("Alert", msg);
+                    IIDXHelper.progressBarRemove(this.progressDiv);
+                    this.cancelFlag = false;
+                }.bind(this);
+                var progressCallback = function(msg, percent) {
+                    IIDXHelper.progressBarSetPercent(this.progressDiv, percent, msg);
+                }.bind(this);
+                var checkForCancelCallback = function() { return this.cancelFlag }.bind(this);
+
+                IIDXHelper.progressBarCreate(this.progressDiv, "progress-info progress-striped active", this.butSetCancelFlag.bind(this));
+                this.cancelFlag = false;
+
+                // callback for the nodegroup execution service to send jobId
+                var simpleResCallback = function(simpleResJson) {
+
+                    var resultSet = new MsiResultSet(simpleResJson.serviceURL, simpleResJson.xhr);
+                    if (!resultSet.isSuccess()) {
+                        failureCallback(resultSet.getFailureHtml());
+                    } else {
+                        var jobId = resultSet.getSimpleResultField("JobId");
+                        // callback for status service after job successfully finishes
+                        var statusSuccessCallback = function() {
+                            // callback for results service
+                            var resultsSuccessCallback = function (results) {
+                                successCallback(results);
+                                progressCallback("finishing up", 99);
+                                setTimeout(function () {
+                                    IIDXHelper.progressBarRemove(this.progressDiv);
+                                }.bind(this),
+                                200);
+                            }.bind(this);
+                            var resultsClient = new MsiClientResults(g.service.results.url, jobId);
+                            resultsCall.bind(resultsClient)(resultsSuccessCallback);
+                        }.bind(this);
+
+                        progressCallback("", 1);
+
+                        // call status service loop
+                        var statusClient = new MsiClientStatus(g.service.status.url, jobId, failureCallback);
+                        statusClient.execAsyncWaitUntilDone(statusSuccessCallback, checkForCancelCallback, progressCallback);
+                    }
+                }.bind(this);
+
+                return simpleResCallback;
+            },
         }
 
 		return ExploreTab;            // return the constructor

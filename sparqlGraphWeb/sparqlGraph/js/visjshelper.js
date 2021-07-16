@@ -1,4 +1,5 @@
 define([	// properly require.config'ed
+            'sparqlgraph/js/modaliidx',
 
         	'jquery',
 
@@ -6,11 +7,44 @@ define([	// properly require.config'ed
 			// shimmed
 
 		],
-        function($, vis) {
+        function(ModalIidx, $, vis) {
 
     var VisJsHelper = function () {
     };
 
+    VisJsHelper.createCanvasDiv = function(id) {
+        var canvasdiv = document.createElement("div");
+        canvasdiv.id= id;
+        canvasdiv.style.height="100%";
+        canvasdiv.style.width="100%";
+
+        return canvasdiv;
+    };
+
+    VisJsHelper.createConfigDiv = function(id) {
+        var configdiv = document.createElement("div");
+        configdiv.style.margin="1ch";
+        configdiv.id= id;
+        configdiv.style.display="table";
+        configdiv.style.background = "rgba(32, 16, 16, 0.2)";
+        return configdiv;
+    };
+
+    VisJsHelper.showConfigDialog = function(configdiv, saveConfigCallback) {
+
+        // hack at getting the UI colors so they don't look terrible
+        for (var e of configdiv.children) {
+            e.style.backgroundColor='white';
+            for (var ee of e.children) {
+                if (! ee.innerHTML.startsWith("generate")) {
+                    ee.style.backgroundColor='white';
+                }
+            }
+        }
+
+        var m = new ModalIidx("ModalIidxAlert");
+        m.showOK("Network physics", configdiv, saveConfigCallback);
+    },
     VisJsHelper.getDefaultOptions = function(configdiv) {
         return {
             configure: {
