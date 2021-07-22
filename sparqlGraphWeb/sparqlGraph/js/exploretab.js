@@ -150,6 +150,10 @@ define([	// properly require.config'ed
                     },
                     interaction: {
                         multiselect: true,
+                        navigationButtons: true,
+                        keyboard: {
+                            bindToWindow: false
+                        }
                     },
                     manipulation: {
                         initiallyActive: false,
@@ -533,11 +537,11 @@ define([	// properly require.config'ed
 
                     } else {  // ExploreTab.MODE_STATS
                         var client = new MsiClientOntologyInfo(this.oInfoClientURL, ModalIidx.alert.bind(this, "Error"));
-                        var callback = this.buildStatusResultsCallback(
+                        var drawStatsCallback = this.buildStatusResultsCallback(
                             this.drawPredicateStats.bind(this),
                             MsiClientResults.prototype.execGetJsonBlobRes
                         );
-                        client.execGetPredicateStats(gConn, callback);
+                        client.execGetPredicateStats(gConn, drawStatsCallback);
                     }
                     this.networkHash[this.getMode()].fit();
 
@@ -546,41 +550,57 @@ define([	// properly require.config'ed
             },
 
             drawPredicateStats : function(json) {
+                var SHOW_DATA = true;
                 this.clearNetwork();
 
                 var nodeData = [];
                 var edgeData = [];
-                var idHash = {};
 
                 var blob = json.xhr;
 
-                // get maximum Count
-                //var maxCount = 1;
-                //for (var key in blob.exactTab) {
-                //    if (blob.exactTab[key] > maxCount) {
-                //        maxCount = blob.exactTab[key];
-                //    }
-                //}
-
+                // first pass: add nodes for each type with count
                 for (var key in blob.exactTab) {
                     var triple = key.split('|');
                     var count = blob.exactTab[key];
 
-                    var oSubject = new OntologyName(triple[0]);
+                    var oSubjectClass = new OntologyName(triple[0]);
                     var oPredicate = new OntologyName(triple[1]);
-                    var oObject = new OntologyName(triple[2]);
+                    var oObjectClass = new OntologyName(triple[2]);
 
-                    if (! (oSubject.getFullName() in idHash)) {
-                        idHash[oSubject.getFullName()] = 1;
-                        nodeData.push({id: oSubject.getFullName(), label: oSubject.getLocalName(), group: oSubject.getNamespace() });
+                    // skipping Type since w already have oSubjectClass
+                    if ( oPredicate.getLocalName() == "type") {
+                        var myLabel = oSubjectClass.getLocalName() + " " + count;
+                        nodeData.push({id: oSubjectClass.getFullName(), label: myLabel, group: oSubjectClass.getNamespace() });
                     }
+                }
 
-                    if (! (oObject.getFullName() in idHash)) {
-                        idHash[oObject.getFullName()] = 1;
-                        nodeData.push({id: oObject.getFullName(), label: oObject.getLocalName(), group: oObject.getNamespace() });
+                // second pass: add edges
+                for (var key in blob.exactTab) {
+                    var triple = key.split('|');
+                    var count = blob.exactTab[key];
+
+                    var oSubjectClass = new OntologyName(triple[0]);
+                    var oPredicate = new OntologyName(triple[1]);
+                    var oObjectClass = new OntologyName(triple[2]);
+
+                    // skipping Type since w already have oSubjectClass
+                    if ( oPredicate.getLocalName() != "type") {
+                        var width = Math.ceil(Math.log10(count));
+
+                        if (oObjectClass.getFullName() == "") {
+                            // connection to data, not a class
+                            if (SHOW_DATA) {
+                                // data: separate each into it's own node
+                                var dataId = triple[0] + "|" + triple[1] + "|data";
+                                nodeData.push({id: dataId, label: " ", group: "data" });
+                                edgeData.push({from: oSubjectClass.getFullName(), to: dataId, label: oPredicate.getLocalName() + " " + count, arrows: 'to', width: width});
+                            }
+
+                        } else {
+                            // normal class-to-class (all class nodes already added by pass1)
+                            edgeData.push({from: oSubjectClass.getFullName(), to: oObjectClass.getFullName(), label: oPredicate.getLocalName() + " " + count, arrows: 'to', width: width});
+                        }
                     }
-                    var width = Math.ceil(Math.log10(count));
-                    edgeData.push({from: oSubject.getFullName(), to: oObject.getFullName(), label: oPredicate.getLocalName() + " " + count, arrows: 'to', width: width});
                 }
 
                 // add any left-over data

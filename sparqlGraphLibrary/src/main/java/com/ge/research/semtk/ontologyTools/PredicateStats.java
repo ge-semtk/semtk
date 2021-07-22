@@ -1,6 +1,5 @@
 package com.ge.research.semtk.ontologyTools;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
 
@@ -22,7 +21,10 @@ import com.ge.research.semtk.sparqlX.SparqlToXUtils;
  */
 public class PredicateStats {
 	
+	// statsHash : a count of every  subject_class predicate object_class.  Including all subclasses and sub-predicates
 	private Hashtable<String, Long> statsHash = new Hashtable<String, Long>();
+	
+	// exactHash :  exact count with no inheritance.  subject_class optional_predicate optional_object_class
 	private Hashtable<String, Long> exactHash = new Hashtable<String, Long>();
 	
 	
@@ -96,32 +98,32 @@ public class PredicateStats {
 	
 	/**
 	 * Get count of this relationship including subects predicates and objects that are sub-class or sub-pred
-	 * @param subject
+	 * @param subjectClass
 	 * @param predicate
-	 * @param object
+	 * @param objectClass
 	 * @return
 	 */
-	public long getStat(String subject, String predicate, String object) {
-		String key = this.buildKey(subject, predicate, object);
+	public long getStat(String subjectClass, String predicate, String objectClass) {
+		String key = this.buildKey(subjectClass, predicate, objectClass);
 		Long ret = this.statsHash.get(key);
 		return (ret == null) ? 0 : ret;
 	}
 	
 	/**
 	 * Get count of this exact relationship
-	 * @param subject
+	 * @param subjectClass
 	 * @param predicate
-	 * @param object
+	 * @param objectClass
 	 * @return
 	 */
-	public long getExact(String subject, String predicate, String object) {
-		String key = this.buildKey(subject, predicate, object);
+	public long getExact(String subjectClass, String predicate, String objectClass) {
+		String key = this.buildKey(subjectClass, predicate, objectClass);
 		Long ret = this.exactHash.get(key);
 		return (ret == null) ? 0 : ret;
 	}
 	
-	private String buildKey(String subject, String predicate, String object) {
-		return subject + "|" + predicate + "|" + object;
+	private String buildKey(String subjectClass, String predicate, String objectClass) {
+		return subjectClass + "|" + predicate + "|" + objectClass;
 	}
 	
 	/**
@@ -156,29 +158,38 @@ public class PredicateStats {
 				int percent = (int) (startPercent + (endPercent - startPercent) * (i / rows));
 				tracker.setJobPercentComplete(jobId, percent, STATUS);
 			}
-			String sub = t.getCell(i, 0);
+			// extract info from query result row
+			String sclass = t.getCell(i, 0);
 			String pred = t.getCell(i, 1);
-			String obj = t.getCell(i, 2);
+			String oclass = t.getCell(i, 2);
 			long count =  t.getCellAsInt(i, 3);
-			HashSet<String> subjects = oInfo.getSuperclassNames(sub);
-			HashSet<String> predicates = oInfo.getSuperPropNames(pred);
-			HashSet<String> objects = oInfo.getSuperclassNames(obj);
-			subjects.add(sub);
-			predicates.add(pred);
-			objects.add(obj);
-			this.exactHash.put(this.buildKey(sub, pred, obj), count);
 			
-			// loop through super predicates, subjects and objects
-			for (String p : predicates) {
-				for (String s : subjects) {
-					for (String o : objects) {
-						String key = this.buildKey(s,p,o);
-						if (this.statsHash.contains(key)) {
-							// add to existing count
-							this.statsHash.put(key, this.statsHash.get(key) + count);
-						} else {
-							// set new count
-							this.statsHash.put(key, count);
+			// exactHash gets everything
+			this.exactHash.put(this.buildKey(sclass, pred, oclass), count);
+			
+			// fill in stats hash iff there's a predicate and an object class
+			if (pred.length() > 0 && oclass.length() > 0) {
+				
+				// generate supers
+				HashSet<String> subjects = oInfo.getSuperclassNames(sclass);
+				HashSet<String> predicates = oInfo.getSuperPropNames(pred);
+				HashSet<String> objects = oInfo.getSuperclassNames(oclass);
+				subjects.add(sclass);
+				predicates.add(pred);
+				objects.add(oclass);
+				
+				// loop through all combos super predicates, subjects and objects
+				for (String p : predicates) {
+					for (String s : subjects) {
+						for (String o : objects) {
+							String key = this.buildKey(s,p,o);
+							if (this.statsHash.contains(key)) {
+								// add to existing count
+								this.statsHash.put(key, this.statsHash.get(key) + count);
+							} else {
+								// set new count
+								this.statsHash.put(key, count);
+							}
 						}
 					}
 				}

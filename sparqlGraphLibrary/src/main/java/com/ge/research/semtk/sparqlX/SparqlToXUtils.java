@@ -406,9 +406,11 @@ public class SparqlToXUtils {
 				"select ?s_class ?p ?o_class (COUNT(*) as ?count)\n"
 				+ "%s\n"
 				+ "WHERE {\n"
-				+ "	?s ?p ?o .\n"
-				+ "	?s a ?s_class.\n"
-				+ "	?o a ?o_class.\n"
+				+ "	   ?s a ?s_class.\n"
+				+ "	   ?s ?p ?o .\n"
+				+ "    optional {\n"
+				+ "	      ?o a ?o_class.\n"
+				+ "    }\n"
 				+ "} group by ?s_class ?p ?o_class\n"
 				+ "order by ?p ?s_class ?o_class",
 				generateSparqlFromOrUsing("", "from", conn, oInfo));
