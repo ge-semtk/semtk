@@ -411,7 +411,6 @@ public class ValueConstraint {
 	}
 	
 	//  Use sei version to get optimization (avoid de-optimized virtuoso version)
-	@Deprecated
 	public static String buildFilterInConstraint(Returnable item, String val) throws Exception{
 		return buildFilterInConstraint(item, val, null);
 	}
