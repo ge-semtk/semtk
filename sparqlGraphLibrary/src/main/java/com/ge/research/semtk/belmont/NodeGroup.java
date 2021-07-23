@@ -3395,13 +3395,11 @@ public class NodeGroup {
 		return this.nodes.size();
 	}
 	
-	private ArrayList<String> getArrayOfURINames() {
-		ArrayList<String> retval = new ArrayList<String>();
+	private HashSet<String> getAllNodeUris() {
+		HashSet<String> retval = new HashSet<String>();
 		int t = this.nodes.size();
 		for (int l = 0; l < t; l++) {
-			// output the name
 			retval.add(this.nodes.get(l).getUri());
-			// alert(this.SNodeList[l].getURI());
 		}
 		return retval;
 
@@ -3528,7 +3526,7 @@ public class NodeGroup {
 
 		// get first path from classURI to this nodeGroup
 		this.oInfo = oInfo;
-		ArrayList<OntologyPath> paths = oInfo.findAllPaths(classURI, this.getArrayOfURINames(), domain);
+		ArrayList<OntologyPath> paths = oInfo.findAllPaths(classURI, this.getAllNodeUris(), domain);
 		if (paths.size() == 0) {
 			return null;
 		}

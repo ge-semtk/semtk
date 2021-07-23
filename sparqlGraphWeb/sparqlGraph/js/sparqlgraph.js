@@ -2474,9 +2474,10 @@
                 var statusSuccessCallback = function() {
                     // callback for results service
                     var resultsSuccessCallback = function (results) {
+                        guiUnDisableAll();
                         successCallback(results);
                         progressCallback("finishing up", 99);
-                        setTimeout(function () { setStatus(""); guiUnDisableAll();}, 200);
+                        setTimeout(function () { setStatus(""); }, 200);
                     };
                     var resultsClient = new MsiClientResults(g.service.results.url, jobId);
                     resultsCall.bind(resultsClient)(resultsSuccessCallback);

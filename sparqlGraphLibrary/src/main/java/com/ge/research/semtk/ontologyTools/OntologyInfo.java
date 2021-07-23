@@ -419,14 +419,14 @@ public class OntologyInfo {
 		this.superPropNamesSpeedup.put(subPropName, ret);
 		return new HashSet<String>(ret);
 	}
-	
+
 	public HashSet<String> getSuperclassNames(String subClassName) {
 		HashSet<String> stopList = new HashSet<String>();
 		stopList.add(subClassName);
 		return this.getSuperClassNames(subClassName, stopList);
 	}
 	/**
-	 * return a list of the superclasses for a given class.
+	 * return a list of the all (recursive) superclasses for a given class.
 	 * if there are no known super classes, an empty list is returned.
 	 **/
 	private HashSet<String> getSuperClassNames(String subclassName, HashSet<String> stopList){
@@ -493,7 +493,7 @@ public class OntologyInfo {
 	}
 	
 	/**
-	 * Get all one-hop paths two and from a class
+	 * Get all one-hop paths two and from a class (includes incoming and outgoing class' subclasses)
 	 *         classFrom -has-> classNameStr
 	 *      subClassFrom -has-> classNameStr
 	 *                          classNameStr -has->    classTo
@@ -528,7 +528,7 @@ public class OntologyInfo {
 				// if the range class in this domain
 				if (this.containsClass(rangeClassName)) {
 					// if no pred stats or pred stats show this triple exists
-					if (this.predStats == null || this.predStats.getStat(classNameStr,  prop.getNameStr(), rangeClassName) > 0) {
+					if (this.predStats == null || this.predStats.getExact(classNameStr,  prop.getNameStr(), rangeClassName) > 0) {
 						// Exact match:  class -> hasA -> rangeClassName
 						path = new OntologyPath(classNameStr);
 						path.addTriple(classNameStr, prop.getNameStr(), rangeClassName);
@@ -543,7 +543,7 @@ public class OntologyInfo {
 					for (String rangeSubName : this.getSubclassNames(rangeClassName)) {
 						if (this.containsClass(rangeSubName)) {
 							// if no pred stats or pred stats show this triple exists
-							if (this.predStats == null || this.predStats.getStat(classNameStr,  prop.getNameStr(), rangeSubName) > 0) {
+							if (this.predStats == null || this.predStats.getExact(classNameStr,  prop.getNameStr(), rangeSubName) > 0) {
 								path = new OntologyPath(classNameStr);
 								path.addTriple(classNameStr, prop.getNameStr(), rangeSubName);
 								hashStr = path.asString();
@@ -577,7 +577,7 @@ public class OntologyInfo {
 					// HadBy:  cName -> hasA -> class
 					if (rangeClassStr.equals(classNameStr)) {
 						// if no pred stats or pred stats show this triple exists
-						if (this.predStats == null || this.predStats.getStat(cname,  prop.getNameStr(), classNameStr) > 0) {
+						if (this.predStats == null || this.predStats.getExact(cname,  prop.getNameStr(), classNameStr) > 0) {
 							path = new OntologyPath(classNameStr);
 							path.addTriple(cname, prop.getNameStr(), classNameStr);
 							hashStr = path.asString();
@@ -592,7 +592,7 @@ public class OntologyInfo {
 					for (String supStr : supList) {
 						if (rangeClassStr.equals(supStr)) {
 							// if no pred stats or pred stats show this triple exists
-							if (this.predStats == null || this.predStats.getStat(cname, prop.getNameStr(), classNameStr) > 0) {
+							if (this.predStats == null || this.predStats.getExact(cname, prop.getNameStr(), classNameStr) > 0) {
 								path = new OntologyPath(classNameStr);
 								path.addTriple(cname, prop.getNameStr(), classNameStr);
 								hashStr = path.asString();
@@ -848,6 +848,16 @@ public class OntologyInfo {
 		ArrayList<OntologyProperty> props = this.getInheritedProperties(ontClass);
 		for (OntologyProperty i : props) {
 			if (i.getNameStr(true).equals(propName)) {
+				return i;
+			}
+		}
+		return null;
+	}
+	
+	public OntologyProperty getInheritedPropertyByUri(OntologyClass ontClass, String propUri) {
+		ArrayList<OntologyProperty> props = this.getInheritedProperties(ontClass);
+		for (OntologyProperty i : props) {
+			if (i.getNameStr(false).equals(propUri)) {
 				return i;
 			}
 		}
@@ -1473,18 +1483,206 @@ public class OntologyInfo {
 		return retval;
 	}
 	
-	public ArrayList<OntologyPath> findAllPaths(String fromClassName, String targetClassName) throws PathException, ClassException {
-		ArrayList<String> targetClassNames = new ArrayList<String>();
+	/**
+	 * Promote endClass of a Path to the named parent class name  IF ONTOLOGY ALLOWS.
+	 * @param path
+	 * @param parentName
+	 * @return boolean - true if successful
+	 * @throws Exception 
+	 */
+	private boolean promoteEndClass(OntologyPath path, OntologyClass oParent) throws Exception {
+		Triple lastTriple = path.getTriple(path.getLength()-1);
+		String parentName = oParent.getName();
+		
+		if (path.getEndClassName().equals(lastTriple.getSubject())) {
+			// promote subject of last triple
+			if (this.getInheritedPropertyByUri(oParent, lastTriple.getPredicate()) != null) {
+				// parent has property
+				lastTriple.setSubject(parentName);
+				path.setEndClassName(parentName);
+				return true;
+			} else {
+				return false;
+			}
+			
+		} else {
+			// promote object of last triple
+			OntologyClass oSubject = this.getClass(lastTriple.getSubject());
+			OntologyProperty oPred = this.getInheritedPropertyByUri(oSubject, lastTriple.getPredicate());
+			if (this.classIsInRange(oParent, oPred.getRange())) {
+				// parent is in range of property
+				lastTriple.setObject(parentName);
+				path.setEndClassName(parentName);
+				return true;
+			} else {
+				return false;
+			}
+		}
+	}
+	
+	/**
+	 * Promote startClass of a Path to the named parent class name  IF ONTOLOGY ALLOWS.
+	 * @param path
+	 * @param parentName
+	 * @return boolean - true if successful
+	 */
+	private boolean promoteStartClass(OntologyPath path, OntologyClass oParent) {
+		Triple firstTriple = path.getTriple(0);
+		String parentName = oParent.getName();
+		
+		if (path.getStartClassName().equals(firstTriple.getSubject())) {
+			// promote subject of last triple
+			if (this.getInheritedPropertyByUri(oParent, firstTriple.getPredicate()) != null) {
+				// parent has property
+				firstTriple.setSubject(parentName);
+				path.setStartClassName(parentName);
+				return true;
+			} else {
+				return false;
+			}
+			
+		} else {
+			// promote object of first triple
+			OntologyClass oSubject = this.getClass(firstTriple.getSubject());
+			OntologyProperty oPred = this.getInheritedPropertyByUri(oSubject, firstTriple.getPredicate());
+			if (this.classIsInRange(oParent, oPred.getRange())) {
+				// parent is in range of property
+				firstTriple.setObject(parentName);
+				path.setStartClassName(parentName);
+				return true;
+			} else {
+				return false;
+			}
+		}
+	}
+	public ArrayList<OntologyPath> findAllPaths(String fromClassName, String targetClassName) throws Exception {
+		HashSet<String> targetClassNames = new HashSet<String>();
 		targetClassNames.add(targetClassName);
 		return this.findAllPaths(fromClassName, targetClassNames, null);
 	}
 	
-	public ArrayList<OntologyPath> findAllPaths(String fromClassName, ArrayList<String> targetClassNames) throws PathException, ClassException {
+	public ArrayList<OntologyPath> findAllPaths(String fromClassName, HashSet<String> targetClassNames) throws Exception {
 		return this.findAllPaths(fromClassName, targetClassNames, null);
 	}
 
-	public ArrayList<OntologyPath> findAllPaths(String fromClassName, ArrayList<String> targetClassNames, String domain) throws PathException, ClassException {
-		//   NOTE:  lots of [sic] stuff in here so that this will match the Javascript VERY CLOSELY
+	/**
+	 * Find all paths from fromClassName to any of targetClassNames.
+	 * TargetClassNames' subclasses will be considered a match,
+	 * and the path's endClass will be promoted up to the TargetClassName.
+	 * @param fromClassName
+	 * @param targetClassNames
+	 * @param domain
+	 * @return
+	 * @throws Exception 
+	 */
+	public ArrayList<OntologyPath> findAllPaths(String fromClassName, HashSet<String> targetClassNames, String domain) throws Exception {
+		if (this.predStats == null) {
+			return this.findExactPaths(fromClassName, targetClassNames, domain);
+		} else {
+			
+			// add subclasses to fromClassName
+			HashSet<String> fromClassNames = new HashSet<String>();
+			fromClassNames.add(fromClassName);
+			
+			for (String subClass : this.getSubclassNames(fromClassName)) {
+				fromClassNames.add(subClass);
+			}
+			
+			// add subclasses to targetClassNames
+			HashSet<String> targetsWithSubclasses = new HashSet<String>();
+			targetsWithSubclasses.addAll(targetClassNames);
+			
+			for (String targetClass : targetClassNames) {
+				for (String subClass : this.getSubclassNames(targetClass)) {
+					targetsWithSubclasses.add(subClass);
+				}
+			}
+		
+			// find exact paths
+			ArrayList<OntologyPath> paths =  this.findExactPaths(fromClassNames, targetsWithSubclasses, domain);
+		
+			// find paths that starts or ends on a subclass
+			ArrayList<OntologyPath> removedPaths = new ArrayList<OntologyPath>();
+			for (OntologyPath p : paths) {
+				// if end class is not in the target list or start class is not fromClass
+				if (! targetClassNames.contains(p.getEndClassName()) || !p.getStartClassName().equals(fromClassName) ) {
+					removedPaths.add(p);
+				}
+			}
+			// do actual removal from results
+			for (OntologyPath p : removedPaths) {
+				paths.remove(p);
+			}
+			
+			// build hash of returns
+			HashSet<String> pathsHash = new HashSet<String>();
+			for (OntologyPath p : paths) {
+				pathsHash.add(p.asString());
+			}			
+						
+			// try to promote each removed path to a correct endClass
+			for (OntologyPath p : removedPaths) {
+				if (! targetClassNames.contains(p.getEndClassName())) {
+					// find a parent that is in targetClassNames
+					for (String superClassName : this.getSuperclassNames(p.getEndClassName())) {
+						if (targetClassNames.contains(superClassName)) {
+							// if end class promotion succeeds
+							if (this.promoteEndClass(p, this.getClass(superClassName))) {
+								// if start class is ok OR start class promotion succeeds
+								if (p.getStartClassName().equals(fromClassName) || this.promoteStartClass(p, this.getClass(fromClassName))) {
+									String hash = p.asString();
+									// if result isn't already being returned
+									if (!pathsHash.contains(hash)) {
+										paths.add(p);
+										pathsHash.add(hash);
+									}
+								}
+							}
+						}
+					}
+				} else { // was removed only due to  startClass != fromClassName
+					if (this.promoteStartClass(p, this.getClass(fromClassName))) {
+						String hash = p.asString();
+						// if result isn't already being returned
+						if (!pathsHash.contains(hash)) {
+							paths.add(p);
+							pathsHash.add(hash);
+						}
+					}
+				}
+			}
+			return paths;
+		}
+	}
+	
+	/**
+	 * Convenience: single fromClassName
+	 * @param fromClassName
+	 * @param targetClassNames
+	 * @param domain
+	 * @return
+	 * @throws PathException
+	 * @throws ClassException
+	 */
+	public ArrayList<OntologyPath> findExactPaths(String fromClassName, HashSet<String> targetClassNames, String domain) throws PathException, ClassException {
+		HashSet<String> fromClassNames = new HashSet<String>();
+		fromClassNames.add(fromClassName);
+		return this.findExactPaths(fromClassNames, targetClassNames, domain);
+	}
+	
+	/**
+	 * Find all paths from fromClassName to one of targetClassNames.
+	 * Must be an exact match end-to-end, 
+	 * (which only matters when there are predicateStats or instance data being checked)
+	 * @param fromClassNames
+	 * @param targetClassNames
+	 * @param domain
+	 * @return
+	 * @throws PathException
+	 * @throws ClassException
+	 */
+	public ArrayList<OntologyPath> findExactPaths(HashSet<String> fromClassNames, HashSet<String> targetClassNames, String domain) throws PathException, ClassException {
+		//   
 		//   A form of A* path finding algorithm
 		//   See getConnList() for the types of connections that are allowed
 		//   Returns a list shortest to longest:  [path0, path1, path2...]
@@ -1495,7 +1693,9 @@ public class OntologyInfo {
 		long t0 = System.currentTimeMillis();
 		this.pathWarnings = new ArrayList<String>();
 		ArrayList<OntologyPath> waitingList = new ArrayList<OntologyPath>();
-		waitingList.add(new OntologyPath(fromClassName));
+		for (String fromClassName : fromClassNames) {
+			waitingList.add(new OntologyPath(fromClassName));
+		}
 		ArrayList<OntologyPath> ret = new ArrayList<OntologyPath>();
 		long numFound = 0;
 		HashMap<String, Integer> targetHash = new HashMap<String,Integer>(); // hash of all possible ending classes:  targetHash[className] = 1
@@ -1510,8 +1710,8 @@ public class OntologyInfo {
 		if (targetClassNames.isEmpty()) { return ret; }
 		
 		// set up targetHash[targetClass] = 1
-		for (int i=0; i < targetClassNames.size(); i++) {
-			targetHash.put(targetClassNames.get(i), 1);
+		for (String targetName : targetClassNames) {
+			targetHash.put(targetName, 1);
 		}
 		
 		// STOP CRITERIA A: search as long as there is a waiting list 

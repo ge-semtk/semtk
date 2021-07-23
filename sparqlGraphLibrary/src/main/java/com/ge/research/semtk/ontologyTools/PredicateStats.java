@@ -13,7 +13,6 @@ import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 
 /**
  * Stores a list of counts of [subject_class pred object_class] from instance data
- * Each instance increments all super classes' and super predicates' counts
  * 
  * Constructor using conn queries the triplestore directly through the conn's seis
  * @author 200001934
@@ -21,8 +20,7 @@ import com.ge.research.semtk.sparqlX.SparqlToXUtils;
  */
 public class PredicateStats {
 	
-	// statsHash : a count of every  subject_class predicate object_class.  Including all subclasses and sub-predicates
-	private Hashtable<String, Long> statsHash = new Hashtable<String, Long>();
+	// note: in the old days of experimenting, there were actual stats.  No longer needed.
 	
 	// exactHash :  exact count with no inheritance.  subject_class optional_predicate optional_object_class
 	private Hashtable<String, Long> exactHash = new Hashtable<String, Long>();
@@ -69,10 +67,7 @@ public class PredicateStats {
 	 * @throws Exception
 	 */
 	public PredicateStats(JSONObject jObj) throws Exception {
-		JSONObject statsTabJson =  (JSONObject) jObj.get("statsTab");
-		for (Object k : statsTabJson.keySet()) {
-			this.statsHash.put((String) k, (Long) statsTabJson.get(k));
-		}
+
 		JSONObject exactTabJson =  (JSONObject) jObj.get("exactTab");
 		for (Object k : exactTabJson.keySet()) {
 			this.exactHash.put((String) k, (Long) exactTabJson.get(k));
@@ -82,11 +77,6 @@ public class PredicateStats {
 	@SuppressWarnings("unchecked")
 	public JSONObject toJson() {
 		JSONObject ret = new JSONObject();
-		JSONObject statsTabJson = new JSONObject();
-		for (String key : this.statsHash.keySet()) {
-			statsTabJson.put(key, this.statsHash.get(key));
-		}
-		ret.put("statsTab", statsTabJson);
 		
 		JSONObject exactTabJson = new JSONObject();
 		for (String key : this.exactHash.keySet()) {
@@ -96,19 +86,7 @@ public class PredicateStats {
 		return ret;
 	}
 	
-	/**
-	 * Get count of this relationship including subects predicates and objects that are sub-class or sub-pred
-	 * @param subjectClass
-	 * @param predicate
-	 * @param objectClass
-	 * @return
-	 */
-	public long getStat(String subjectClass, String predicate, String objectClass) {
-		String key = this.buildKey(subjectClass, predicate, objectClass);
-		Long ret = this.statsHash.get(key);
-		return (ret == null) ? 0 : ret;
-	}
-	
+
 	/**
 	 * Get count of this exact relationship
 	 * @param subjectClass
@@ -167,33 +145,6 @@ public class PredicateStats {
 			// exactHash gets everything
 			this.exactHash.put(this.buildKey(sclass, pred, oclass), count);
 			
-			// fill in stats hash iff there's a predicate and an object class
-			if (pred.length() > 0 && oclass.length() > 0) {
-				
-				// generate supers
-				HashSet<String> subjects = oInfo.getSuperclassNames(sclass);
-				HashSet<String> predicates = oInfo.getSuperPropNames(pred);
-				HashSet<String> objects = oInfo.getSuperclassNames(oclass);
-				subjects.add(sclass);
-				predicates.add(pred);
-				objects.add(oclass);
-				
-				// loop through all combos super predicates, subjects and objects
-				for (String p : predicates) {
-					for (String s : subjects) {
-						for (String o : objects) {
-							String key = this.buildKey(s,p,o);
-							if (this.statsHash.contains(key)) {
-								// add to existing count
-								this.statsHash.put(key, this.statsHash.get(key) + count);
-							} else {
-								// set new count
-								this.statsHash.put(key, count);
-							}
-						}
-					}
-				}
-			}
 		}
 		if (tracker != null) {
 			tracker.setJobPercentComplete(jobId, endPercent, STATUS);

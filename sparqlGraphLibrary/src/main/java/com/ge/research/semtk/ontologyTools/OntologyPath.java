@@ -90,8 +90,17 @@ public class OntologyPath {
 		return this.tripleList;
 	}
 	
-	
-	// asOldFashionedList should be deprecated
+	public void setStartClassName(String startClassName) {
+		this.startClassName = startClassName;
+	}
+
+	public void setEndClassName(String endClassName) {
+		this.endClassName = endClassName;
+	}
+
+	public String getLastPredicate() {
+		return this.tripleList.get(this.tripleList.size()-1).getPredicate();
+	}
 	
 	public String getClass0Name(int tripleIndex){
 		return this.tripleList.get(tripleIndex).getSubject();

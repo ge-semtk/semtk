@@ -298,7 +298,7 @@ public class PathExplorer {
 		}
 		
 		// get list of all oInfo model paths from classUri to the ng nodes.
-		ArrayList<String> classList = new ArrayList<String>();
+		HashSet<String> classList = new HashSet<String>();
 		classList.addAll(classSet);
 		ArrayList<OntologyPath> pathList = oInfo.findAllPaths(classUri, classList);
 		
