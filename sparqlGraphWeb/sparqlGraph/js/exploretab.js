@@ -570,7 +570,7 @@ define([	// properly require.config'ed
                     // skipping Type since w already have oSubjectClass
                     if ( oPredicate.getLocalName() == "type") {
                         var myLabel = oSubjectClass.getLocalName() + " " + count;
-                        nodeData.push({id: oSubjectClass.getFullName(), label: myLabel, group: oSubjectClass.getNamespace() });
+                        nodeData.push({id: oSubjectClass.getFullName(), label: myLabel, title: oSubjectClass.getFullName(), group: oSubjectClass.getNamespace() });
                     }
                 }
 
