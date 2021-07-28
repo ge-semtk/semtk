@@ -223,6 +223,7 @@ define([	// properly require.config'ed
                     } else if (itemData.type == "header") {
                         if (x_perc > itemData.x_close_perc) {
                             this.snodeRemoverCallback(snode);
+                            delete this.nodeCallbackData[snode.getSparqlID()];
                         } else if (x_perc > itemData.x_expand_perc) {
                             // toggle the grabBar (position[0]) expandFlag and redraw
                             this.setExpandFlag(snode, !this.getExpandFlag(snode));
@@ -303,7 +304,7 @@ define([	// properly require.config'ed
                 for (var id of graphIDs) {
                     if (nodegroupIDs.indexOf(id) == -1) {
                         deletedIDs.push(id);
-                        delete this.nodeCallbackData["id"]
+                        delete this.nodeCallbackData[id]
                     }
                 }
                 this.network.body.data.nodes.remove(deletedIDs);
