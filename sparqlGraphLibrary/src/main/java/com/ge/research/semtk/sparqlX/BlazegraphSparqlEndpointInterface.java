@@ -69,6 +69,12 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 	public int getInsertQueryMaxSize()    { return 50000; }
 	public int getInsertQueryOptimalSize() { return 5000; }
 	
+	/* Timeout is not implemented.  Should be "timeout" REST param */
+	public String getTimeoutSparqlPrefix() { return null; }    
+	public String getTimeoutSparqlClause() { return null; } 
+	public String getTimeoutPostParamName() { return "timeout"; }    
+	public String getTimeoutPostParamValue() { return this.timeout == 0 ? null : String.valueOf(this.timeout); } 
+	
 	/**
 	 * Fuseki uses different param names for "auth" queries, which Fuseki calls "update"
 	 */

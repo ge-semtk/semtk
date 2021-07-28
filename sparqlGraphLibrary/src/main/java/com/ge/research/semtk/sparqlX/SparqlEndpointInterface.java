@@ -131,7 +131,8 @@ public abstract class SparqlEndpointInterface {
 	protected boolean logPerformance = false;
 	
 	protected int retries = 0;
-		
+	protected int timeout = 0;
+	
 	private static HttpClientConnectionManager manager = buildConnectionManager();
 	
 	private static HttpClientConnectionManager buildConnectionManager() {
@@ -169,6 +170,25 @@ public abstract class SparqlEndpointInterface {
 	
 	public abstract int getInsertQueryMaxSize();
 	public abstract int getInsertQueryOptimalSize();
+	
+	/**
+	 * Timeout msec sent along with query
+	 * @return
+	 */
+	public int getTimeout() {
+		return timeout;
+	}
+
+	public void setTimeout(int seconds) {
+		this.timeout = seconds;
+	}
+
+	/* all should return null when not in use */
+	/* This will cause a query to throw a QueryTimeoutException */
+	public abstract String getTimeoutSparqlPrefix();    // e.g. AWS query hints
+	public abstract String getTimeoutSparqlClause();
+	public abstract String getTimeoutPostParamName();   // e.g. Fuseki / Blazegraph REST param
+	public abstract String getTimeoutPostParamValue();
 	
 	/**
 	 * Can this endpoint run auth queries
@@ -913,6 +933,10 @@ public abstract class SparqlEndpointInterface {
 		params.add(new BasicNameValuePair("query", query));
 		params.add(new BasicNameValuePair("format", this.getContentType(resultType)));
 		params.add(new BasicNameValuePair("default-graph-uri", this.graph));
+		
+		if (this.getTimeoutPostParamName() != null && this.getTimeoutPostParamValue() != null) {
+			params.add(new BasicNameValuePair(this.getTimeoutPostParamName(), this.getTimeoutPostParamValue()));
+		}
 
 		// set entity
 		httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
