@@ -20,6 +20,7 @@ package com.ge.research.semtk.services.nodeGroupService;
 import static org.junit.Assert.assertArrayEquals;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
@@ -165,33 +166,32 @@ public class NodeGroupServiceRestController {
 						tracker.setJobPercentComplete(jobId, 2, "Retrieving ontology");
 						OntologyInfo oInfo = this.retrieveOInfo(conn);
 						oInfo.setPathFindingMaxLengthRange(requestBody.getMaxLengthRange());
-						oInfo.setPathFindingMaxPathCount(requestBody.getMaxPathCount());
+						oInfo.setPathFindingMaxPathCount(requestBody.getMaxPathCount()); 
 						oInfo.setPathFindingMaxPathLength(requestBody.getMaxPathLength());
 						oInfo.setPathFindingMaxTimeMsec(requestBody.getMaxTimeMsec());
 						
 						
 						// 2. Retrieve Predicate Stats
-						if (requestBody.getPropsInDataFlag()) {
-							PredicateStats stats = this.retrievePredicateStats(conn, jobId, 25, 50);
-							oInfo.setPredicateStats(stats);
+						PredicateStats predStats = null;
+						if (requestBody.getPropsInDataFlag() || requestBody.getNodegroupInDataFlag()) {
+							predStats = this.retrievePredicateStats(conn, jobId, 25, 50);
 						}
 						
 						// 3. Find All Paths
 						tracker.setJobPercentComplete(jobId, 51, "Building Paths");
 						ng.noInflateNorValidate(oInfo);
-						ArrayList<String> classes = new ArrayList<String>();
+						HashSet<String> classes = new HashSet<String>();
 						classes.addAll(ng.getNodeURIStrings());
-						ArrayList<OntologyPath> pathList = oInfo.findAllPaths(requestBody.getAddClass(), classes);
-						
-						// TODO: 4.  NodeGroups valid
-						tracker.setJobPercentComplete(jobId, 75, "Pruning invalid nodegroups");
-						if (requestBody.getNodegroupInDataFlag()) {
-							
+						if (! requestBody.getNodegroupInDataFlag()) {
+							// discard if not nodegroupInDataFlag
+							ng = null;
 						}
+						
+						ArrayList<OntologyPath> pathList = oInfo.findAllPaths(requestBody.getAddClass(), classes, predStats, ng, conn);
 						
 						tracker.setJobPercentComplete(jobId, 98, "");
 	
-						// 5. Build and send result
+						// 4. Build and send result
 						
 						for (OntologyPath p: pathList) {
 							pathJsonArr.add(p.toJson());
@@ -466,7 +466,7 @@ public class NodeGroupServiceRestController {
 			RuntimeConstraintManager rtci = new RuntimeConstraintManager(ng);
 			retval = new TableResultSet(true); 
 			
-			// TODO: it is awful that this returns a table of descriptions
+			//  it is awful that this returns a table of descriptions
 			//       the RunTimeConstrainedItems needs fromJson but it has a nodegroup pointer
 			//       Serious re-design may be needed
 			retval.addResults(rtci.getConstrainedItemsDescription() );
@@ -1236,5 +1236,7 @@ public class NodeGroupServiceRestController {
 			throw new Exception(tracker.getJobStatusMessage(jobId));
 		}
 	}
+	
+	
 	
 }

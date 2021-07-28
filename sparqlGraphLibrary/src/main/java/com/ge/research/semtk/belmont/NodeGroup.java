@@ -1374,6 +1374,35 @@ public class NodeGroup {
 	}
 	
 	/**
+	 * 
+	 * @param uri
+	 * @param oInfo
+	 * @return ArrayList of Nodes which are of class uri or any of its subclasses
+	 */
+	public ArrayList<Node> getNodesBySubclassURI(String uri, OntologyInfo oInfo) {
+		// get all nodes with the given uri
+		ArrayList<Node> ret = new ArrayList<Node>();
+
+		// get all subclasses
+		ArrayList<String> classes = new ArrayList<String>();
+		classes.add(uri);
+		classes.addAll(oInfo.getSuperclassNames(uri));
+		
+		// for each class / sub-class
+		for (int i=0; i < classes.size(); i++) {
+			// get all nodes
+			ArrayList<Node> c = this.getNodesByURI(classes.get(i));
+			// push node if it isn't already in ret
+			for (int j=0; j < c.size(); j++) {
+				if (ret.indexOf(c.get(j)) == -1) {
+					ret.add(c.get(j));
+				}
+			}
+		}
+		
+		return ret;
+	}
+	/**
 	 * Look up a node by sparqlId
 	 * @param sparqlId - optionally starts with "?"
 	 * @return - index or -1
@@ -3516,9 +3545,9 @@ public class NodeGroup {
 	 * @throws Exception
 	 */
 	public Node addClassFirstPath(String classURI, OntologyInfo oInfo) throws Exception  {
-		return this.addClassFirstPath(classURI, oInfo, null, false);
+		return this.addClassFirstPath(classURI, oInfo, false);
 	}
-	public Node addClassFirstPath(String classURI, OntologyInfo oInfo, String domain, Boolean optionalFlag) throws Exception  {
+	public Node addClassFirstPath(String classURI, OntologyInfo oInfo, Boolean optionalFlag) throws Exception  {
 		// attach a classURI using the first path found.
 		// Error if less than one path is found.
 		// return the new node
@@ -3526,7 +3555,7 @@ public class NodeGroup {
 
 		// get first path from classURI to this nodeGroup
 		this.oInfo = oInfo;
-		ArrayList<OntologyPath> paths = oInfo.findAllPaths(classURI, this.getAllNodeUris(), domain);
+		ArrayList<OntologyPath> paths = oInfo.findAllPaths(classURI, this.getAllNodeUris());
 		if (paths.size() == 0) {
 			return null;
 		}
@@ -3581,20 +3610,16 @@ public class NodeGroup {
         }         
         return  ret;
     }
-	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain) throws Exception  {
-		return this.getOrAddNode(classURI, oInfo, domain, false, false);
+	public Node getOrAddNode(String classURI, OntologyInfo oInfo) throws Exception  {
+		return this.getOrAddNode(classURI, oInfo, false, false);
 	}
 	
 	public Node getOrAddNode(String classURI, OntologyInfo oInfo, boolean superclassFlag) throws Exception  {
-		return this.getOrAddNode(classURI, oInfo, "", superclassFlag, false);
-	}
-	
-	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain, boolean superclassFlag) throws Exception  {
-		return this.getOrAddNode(classURI, oInfo, domain, superclassFlag, false);
+		return this.getOrAddNode(classURI, oInfo, superclassFlag, false);
 	}
 	
 
-	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain, boolean superclassFlag, boolean optionalFlag ) throws Exception  {
+	public Node getOrAddNode(String classURI, OntologyInfo oInfo, boolean superclassFlag, boolean optionalFlag ) throws Exception  {
 		// return first (randomly selected) node with this URI
 		// if none exist then create one and add it using the shortest path (see addClassFirstPath)
 		// if superclassFlag, then any subclass of classURI "counts"
@@ -3622,7 +3647,7 @@ public class NodeGroup {
 			if (sNodes.size() > 0) {
 				sNode = sNodes.get(0);
 			} else {
-				sNode = this.addClassFirstPath(classURI, oInfo, domain, optionalFlag);
+				sNode = this.addClassFirstPath(classURI, oInfo, optionalFlag);
 			}
 		}
 		return sNode;
@@ -3666,7 +3691,7 @@ public class NodeGroup {
 				sNode = sNodes.get(0);
 				
 			} else {
-				sNode = this.addClassFirstPath(classURI, oInfo, null, false);
+				sNode = this.addClassFirstPath(classURI, oInfo, false);
 			}
 		}
 		return sNode;

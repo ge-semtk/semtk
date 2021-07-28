@@ -95,8 +95,7 @@ public class PathFindingTests_IT {
 		
 		PredicateStats stats = new PredicateStats(TestGraph.getSparqlConn(), oInfo);
 		
-		oInfo.setPredicateStats(stats);
-		ArrayList<OntologyPath> paths2 = oInfo.findAllPaths(TEST_RESULT, REQUIREMENT);
+		ArrayList<OntologyPath> paths2 = oInfo.findAllPaths(TEST_RESULT, REQUIREMENT, stats);
 		for (int i=0; i < paths2.size(); i++) {
 			System.out.println(paths2.get(i).asString());
 		}

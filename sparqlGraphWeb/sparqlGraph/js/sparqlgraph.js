@@ -229,7 +229,8 @@
                     var callback = buildStatusResultsCallback(successCallback, resultsCall, MsiClientStatus, MsiClientResults, MsiResultSet);
 
                     var predicateMode = getPathFindingMode() == 1;
-                    ngClient.execFindAllPaths(sgJson, dragLabel, predicateMode, false, callback);
+                    var ngMode = getPathFindingMode() == 2;
+                    ngClient.execFindAllPaths(sgJson, dragLabel, predicateMode, ngMode, callback);
                 });
             }
         }
@@ -1939,9 +1940,7 @@
 
     // 0 "model", 1 "predicate data", 2 "nodegroup data"
     var getPathFindingMode = function() {
-        var e = document.getElementById("selectPathFindingMode");
-        var value = e ? e.value : "model";
-        return value == "model" ? 0 : (value == "predicate data" ? 1 : 2);
+        return document.getElementById("selectPathFindingMode").value;
     };
 
     var onchangeQueryType = function () {

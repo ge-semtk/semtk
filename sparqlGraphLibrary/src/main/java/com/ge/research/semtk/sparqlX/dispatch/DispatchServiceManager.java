@@ -65,7 +65,7 @@ public class DispatchServiceManager {
 	private NodeGroup edcNodegroup = null;
 
 	private OntologyInfo oInfo = null;
-	private String domain = null;
+	private String domainDeprecated = null;
 	private SparqlEndpointInterface nodegroupSei;
 	private SparqlEndpointInterface extConfigSei;
 
@@ -96,9 +96,15 @@ public class DispatchServiceManager {
 	 * @throws Exception
 	 */
 
-	public DispatchServiceManager(SparqlEndpointInterface extConfigSei, NodeGroup nodegroup, OntologyInfo oInfo, String domain, SparqlEndpointInterface nodegroupSei, OntologyInfoClient oInfoClient) throws Exception {
+	@Deprecated
+	public DispatchServiceManager(SparqlEndpointInterface extConfigSei, NodeGroup nodegroup, OntologyInfo oInfo, String domainDeprecated, SparqlEndpointInterface nodegroupSei, OntologyInfoClient oInfoClient) throws Exception {
 		
-		this(extConfigSei, nodegroup, oInfo, domain, nodegroupSei, oInfoClient, true);
+		this(extConfigSei, nodegroup, oInfo, nodegroupSei, oInfoClient, true);
+	}
+	
+	public DispatchServiceManager(SparqlEndpointInterface extConfigSei, NodeGroup nodegroup, OntologyInfo oInfo, SparqlEndpointInterface nodegroupSei, OntologyInfoClient oInfoClient) throws Exception {
+		
+		this(extConfigSei, nodegroup, oInfo, nodegroupSei, oInfoClient, true);
 	}
 	
 	/**
@@ -106,16 +112,16 @@ public class DispatchServiceManager {
 	 * @param extConfigSei - edc services sei
 	 * @param nodegroup - the nodegroup being dispatched
 	 * @param oInfo - oInfo of nodegroup being dispatched
-	 * @param domain - (deprecated?) domain of the query connection
+	 * @param domainDeprecated - (deprecated) domain of the query connection
 	 * @param nodegroupSei - the nodegroup's default query sei
 	 * @param heedRestrictions
 	 * @throws Exception
 	 */
-	public DispatchServiceManager(SparqlEndpointInterface extConfigSei, NodeGroup nodegroup, OntologyInfo oInfo, String domain, SparqlEndpointInterface nodegroupSei, OntologyInfoClient oInfoClient, boolean heedRestrictions) throws Exception {
+	public DispatchServiceManager(SparqlEndpointInterface extConfigSei, NodeGroup nodegroup, OntologyInfo oInfo, SparqlEndpointInterface nodegroupSei, OntologyInfoClient oInfoClient, boolean heedRestrictions) throws Exception {
 		this.nodegroup = nodegroup;
 		this.edcNodegroup = null;
 		this.oInfo = oInfo;
-		this.domain = domain;
+		this.domainDeprecated = domainDeprecated;
 		this.nodegroupSei = nodegroupSei;
 		this.extConfigSei = extConfigSei;
 		this.heedRestrictions = heedRestrictions;
@@ -438,7 +444,7 @@ public class DispatchServiceManager {
 		
 		// in rare case that nodegroup does not have the EdcSourceClass in the mneumonic
 		// add it so that the returns' paths pass through it
-		ng.getOrAddNode(this.edcSourceClass, oInfo, this.domain, true);
+		ng.getOrAddNode(this.edcSourceClass, oInfo, true);
 		
 		String [] classURI = this.mneParams.getColumn(0);
 		String [] keyName  = this.mneParams.getColumn(1);
@@ -448,7 +454,7 @@ public class DispatchServiceManager {
 			String uri = classURI[i];
 			
 			// add the node if needed
-			Node snode = ng.getOrAddNode(uri, oInfo, this.domain, true);
+			Node snode = ng.getOrAddNode(uri, oInfo, true);
 			
 			//**** Return the class if requested - Java version empty keyName  ****//
 			if (keyName[i].length() < 1) {
@@ -522,7 +528,7 @@ public class DispatchServiceManager {
 			// Find the required class (or it's superclass)
 			// If it doesn't exist, add it so we can count how many will come back
 			boolean includeSubclasses = true;
-			Node snode = tmpNodegroup.getOrAddNode(classURI[i], this.oInfo, this.domain, includeSubclasses);
+			Node snode = tmpNodegroup.getOrAddNode(classURI[i], this.oInfo, includeSubclasses);
 			snode.setIsReturned(true);
 			sparqlID[i] = snode.getSparqlID();
 			
