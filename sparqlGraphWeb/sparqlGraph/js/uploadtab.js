@@ -1332,8 +1332,8 @@ define([	// properly require.config'ed
                     statusClient.execGetStatusBoolean(gotSuccessCallback.bind(this, statusClient, resultsClient));
                 };
 
-                var waitingCallback = function(statusClient, resultsClient, percent) {
-                    IIDXHelper.progressBarSetPercent(this.progressDiv, percent);
+                var waitingCallback = function(statusClient, resultsClient, message, percent) {
+                    IIDXHelper.progressBarSetPercent(this.progressDiv, percent, message);
                     if (percent == 100) {
                         getSuccessCallback.bind(this)(statusClient, resultsClient);
                     } else {
