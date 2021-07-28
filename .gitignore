@@ -22,3 +22,4 @@ auth_settings.json
 release.properties
 sparqlGraphLibrary/src/main/resources/semantics/OwlModels/ont-policy.rdf
 sparqlGraphIngestionService/hs_err_pid23408.log
+*.log

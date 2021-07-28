@@ -90,6 +90,11 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 			params.add(new BasicNameValuePair("update", query));
 		}
 
+		// timeout 
+		if (this.getTimeoutPostParamName() != null && this.getTimeoutPostParamValue() != null) {
+			params.add(new BasicNameValuePair(this.getTimeoutPostParamName(), this.getTimeoutPostParamValue()));
+		}
+				
 		// set entity
 		httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 	}
@@ -234,8 +239,12 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 			}
 			
 		} else {
-			if (responseTxt.contains("Error 400")) {
+			if (responseTxt.contains("TimeoutException")) {
+				throw new QueryTimeoutException("Timed out after " + String.valueOf(this.timeout) + " sec");
+				
+			} else if (responseTxt.contains("Error 400")) {
 				throw new DontRetryException(responseTxt);
+				
 			} else if (responseTxt.contains("Error 404")) {
 				throw new DontRetryException(responseTxt + " server=" + this.getServerAndPort());
 			}
