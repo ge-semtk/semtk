@@ -213,6 +213,11 @@ public class OntologyInfo {
 		return this.subclassHash.get(className) != null;
 	}
 	
+	/**
+	 * List of recursive sub-classes
+	 * @param superClassName
+	 * @return
+	 */
 	public ArrayList<String> getSubclassNames(String superClassName) {
 		return this.getSubclassNames(superClassName, null);
 	}
@@ -304,11 +309,16 @@ public class OntologyInfo {
 		return null;
 	}
 	
+	/**
+	 * find list of recursive superclasses
+	 * @param subClassName
+	 * @return
+	 */
 	public ArrayList<String> getSuperclassNames(String subClassName) {
 		return this.getSuperclassNames(subClassName, null);
 	}
 	/**
-	 * return a list of the superclasses for a given class.
+	 * return a list of the recursive superclasses for a given class.
 	 * if there are no known super classes, an empty list is returned.
 	 **/
 	public ArrayList<String> getSuperclassNames(String subclassName, ArrayList<String> retval){
