@@ -248,6 +248,7 @@ public class OntologyInfo {
 		HashSet<String> stopList = new HashSet<String>();
 		stopList.add(superClassName);
 		return this.getSubclassNames(superClassName, stopList);
+
 	}
 	
 	/**

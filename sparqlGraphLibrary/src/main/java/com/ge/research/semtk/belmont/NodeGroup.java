@@ -484,7 +484,7 @@ public class NodeGroup {
 			
 			if (pre == null) {
 				// prefixing failed.
-				retval = originalUri;  
+				retval = "<" + originalUri + ">";  
 			}
 			else if(chunks.length > 1 ){
 				retval = pre + ":" + chunks[1];
@@ -624,10 +624,20 @@ public class NodeGroup {
 			// add the URIs for the properties as well:
 			for(PropertyItem pi : n.getPropertyItems()){
 				this.addToPrefixHash(pi.getUriRelationship());
+				if (this.oInfo != null) {
+					for (String subProp : this.oInfo.inferSubPropertyNames(pi.getUriRelationship(), n.getFullUriName())) {
+						this.addToPrefixHash(subProp);
+					}
+				}
 			}
 			// add the URIs for the node items
 			for(NodeItem ni : n.getNodeItemList()){
 				this.addToPrefixHash(ni.getUriConnectBy());
+				if (this.oInfo != null) {
+					for (String subProp : this.oInfo.inferSubPropertyNames(ni.getUriConnectBy(), n.getFullUriName())) {
+						this.addToPrefixHash(subProp);
+					}
+				}
 			}
 		}
 
