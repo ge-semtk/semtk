@@ -349,23 +349,97 @@ public class OntologyInfo {
 		}
 	}
 	
-	public String findCommonSuperclass(String subClassName1, String subClassName2) {
-		HashSet<String> superClassNames1 = this.getSuperclassNames(subClassName1);
-		HashSet<String> superClassNames2 = this.getSuperclassNames(subClassName2);
+	/**
+	 * Find superclass that is the least number of hops combined upward from the two classes.
+	 * Ties are broken randomly.
+	 * @param subClassName1
+	 * @param subClassName2
+	 * @return class name or null
+	 */
+	public String findLowestCommonSuperclass(String subClassName1, String subClassName2) {
+		HashMap<String, Integer> hops1 = new HashMap<String, Integer>();
+		HashMap<String, Integer> hops2 = new HashMap<String, Integer>();
+		boolean newHops1;
+		boolean newHops2;
+		hops1.put(subClassName1, 0);
+		hops2.put(subClassName2, 0);
 		
-		superClassNames1.add(subClassName1);
-		superClassNames2.add(subClassName2);
-		for (String c : superClassNames1) {
-			if (superClassNames2.contains(c)) {
-				return c;
-			}
+		if (subClassName1.equals(subClassName2)) {
+			return subClassName1;
 		}
-		for (String c : superClassNames2) {
-			if (superClassNames1.contains(c)) {
-				return c;
+		Integer hops = 	1;
+		while (true) {
+			newHops1 = false;
+			newHops2 = false;
+			
+			// get classes previous iteration (i.e. hops-1)
+			HashSet<String> lastRound1 = new HashSet<String>();
+			for (String c : hops1.keySet()) {
+				if (hops1.get(c) == hops - 1) {
+					lastRound1.add(c);
+				}
 			}
+			// get superclasses for that last round
+			for (String c : lastRound1) {
+				for (String s : this.getDirectSuperclasses(c)) {
+					newHops1 = true;
+					hops1.put(s, hops);
+				}
+			}
+			// get classes previous iteration (i.e. hops-1)
+			HashSet<String> lastRound2 = new HashSet<String>();
+			for (String c : hops2.keySet()) {
+				if (hops2.get(c) == hops - 1) {
+					lastRound2.add(c);
+				}
+			}
+			// get superclasses for that last round
+			for (String c : lastRound2) {
+				for (String s : this.getDirectSuperclasses(c)) {
+					newHops2 = true;
+					hops2.put(s, hops);
+				}
+			}
+			if (!newHops1 && !newHops2) {
+				return null;
+
+			} else {
+				// are any of hops1 also in hops2
+				HashMap<String, Integer> match = new HashMap<String, Integer>();
+				for (String c : hops1.keySet()) {
+					if (hops2.containsKey(c)) {
+						Integer combinedHops = hops1.get(c) + hops2.get(c);
+						if (! match.containsKey(c) || match.get(c) > combinedHops) {
+							// add to match if new or shorter hops
+							match.put(c, combinedHops);
+						}
+					}
+				}
+				// are any of hops2 also in hops1
+				for (String c : hops2.keySet()) {
+					if (hops1.containsKey(c)) {
+						Integer combinedHops = hops1.get(c) + hops2.get(c);
+						if (! match.containsKey(c) || match.get(c) > combinedHops) {
+							// add to match if new or shorter hops
+							match.put(c, combinedHops);
+						}
+					}
+				}
+				// found matches: find the lowest hop one and return
+				if (match.size() > 0) {
+					String ret = null;
+					Integer retHops = 0;
+					for (String matchClass : match.keySet()) {
+						if (ret == null || match.get(matchClass) < retHops) {
+							ret = matchClass;
+							retHops = match.get(matchClass);
+						}
+					}
+					return ret;
+				}
+			}
+			hops += 1;
 		}
-		return null;
 	}
 	
 	/**
@@ -409,6 +483,13 @@ public class OntologyInfo {
 		return new HashSet<String>(ret);
 	}
 
+	public HashSet<String> getDirectSuperclasses(String subClassName) {
+		OntologyClass oSubclass = this.classHash.get(subClassName);
+		HashSet<String> ret = new HashSet<String>();
+		ret.addAll(oSubclass.getParentNameStrings(false));
+		return ret;
+	}
+	
 	public HashSet<String> getSuperclassNames(String subClassName) {
 		HashSet<String> stopList = new HashSet<String>();
 		stopList.add(subClassName);
@@ -1291,7 +1372,6 @@ public class OntologyInfo {
 		
 		// loop through and make the property, pull class...
 		for(int i = 0; i < classList.length; i += 1){
-			
 			//////////////// new bug 5/2021 needs looking at properties query ////////////////////
 			// skip rows with empty range if there's another identical one with range
 			// seems to be caused by sadl "with values of type { A or B } "
@@ -1319,7 +1399,7 @@ public class OntologyInfo {
 				// if property exists, and range is different 
 				// (ignore this if prop RANGE is already defaultClass or new range is empty)
 				if (! prop.getRangeStr().equals(rangeList[i]) && !prop.getRange().isDefaultClass() && !rangeList[i].isEmpty()) {
-					String superClass = this.findCommonSuperclass(prop.getRangeStr(), rangeList[i]);
+					String superClass = this.findLowestCommonSuperclass(prop.getRangeStr(), rangeList[i]);
 					
 					if (superClass != null) {
 						// Set range to common superclass of different range classes
@@ -1332,6 +1412,7 @@ public class OntologyInfo {
 						
 						// make the change
 						prop.setRange(new OntologyRange(superClass));
+						
 					} else {
 						// throw error
 						throw new Exception(String.format("SemTk doesn't handle complex ranges.\nClass %s property domain %s\nrange 1: %s\nrange 2: %s",
