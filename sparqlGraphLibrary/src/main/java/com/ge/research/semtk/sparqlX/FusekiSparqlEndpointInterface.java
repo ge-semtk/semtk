@@ -44,6 +44,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 /**
@@ -91,9 +92,11 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 			params.add(new BasicNameValuePair("update", query));
 		}
 		params.add(new BasicNameValuePair("format", this.getContentType(resultType)));
+		
 
 		// timeout 
 		if (this.getTimeoutPostParamName() != null && this.getTimeoutPostParamValue() != null) {
+			LocalLogger.logToStdErr("timeout header: " + this.getTimeoutPostParamName() + "=" + this.getTimeoutPostParamValue());
 			params.add(new BasicNameValuePair(this.getTimeoutPostParamName(), this.getTimeoutPostParamValue()));
 		}
 		

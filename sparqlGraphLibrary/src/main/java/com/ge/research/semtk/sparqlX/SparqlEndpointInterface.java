@@ -936,6 +936,8 @@ public abstract class SparqlEndpointInterface {
 		
 		if (this.getTimeoutPostParamName() != null && this.getTimeoutPostParamValue() != null) {
 			params.add(new BasicNameValuePair(this.getTimeoutPostParamName(), this.getTimeoutPostParamValue()));
+			LocalLogger.logToStdErr("Setting timeout to: " + this.getTimeoutPostParamValue());
+
 		}
 
 		// set entity

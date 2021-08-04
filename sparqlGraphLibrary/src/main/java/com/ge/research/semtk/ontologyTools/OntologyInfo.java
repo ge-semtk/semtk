@@ -259,7 +259,10 @@ public class OntologyInfo {
 	private HashSet<String> getSubclassNames(String superClassName, HashSet<String> stopList){
 		// check the speedup hash
 		if (this.subclassNamesSpeedup.containsKey(superClassName)) {
-			return new HashSet<String>(this.subclassNamesSpeedup.get(superClassName));
+			// return a copy
+			HashSet<String> ret = new HashSet<String>();
+			ret.addAll(this.subclassNamesSpeedup.get(superClassName));
+			return ret;
 		}
 		HashSet<String> ret = new HashSet<String>();
 		
@@ -279,8 +282,11 @@ public class OntologyInfo {
 				}
 			}
 		}
+		// save a copy
+		HashSet<String> save = new HashSet<String>();
+		save.addAll(ret);
+		this.subclassNamesSpeedup.put(superClassName, save);
 		
-		this.subclassNamesSpeedup.put(superClassName, ret);
 		return new HashSet<String>(ret);
 	}
 
@@ -1826,7 +1832,6 @@ public class OntologyInfo {
 			
 			// get all one hop connections and loop through them
 			for (OntologyPath oConn : this.getConnList(waitClass, predStats)) {
-				
 				//  each connection is a path with only one node (the 0th)
 				//  grab the name of the newly found class
 				String newClass = "";
@@ -1866,7 +1871,6 @@ public class OntologyInfo {
 
 					// if path doens't lead to target
 					}  else if (loopFlag == false){
-
 						// if in full instance mode, path must have data
 						if (ng == null || this.pathHasInstance(newPath, conn)) {
 							waitingList.add(newPath);
@@ -1877,7 +1881,6 @@ public class OntologyInfo {
 
 			}
 		}
-		
 		this.sortPaths(ret);
 		
 		if (CONSOLE_LOG) {
@@ -1985,13 +1988,14 @@ public class OntologyInfo {
 //			return false;
 //		}
 				
-		if (CONSOLE_LOG) { LocalLogger.logToStdOut(sparql); }
+		
 		
 		int savedTimeout = sei.getTimeout();
 		
 		try {
 			int newTimeout = this.pathFindingMaxTimeMsec / 2000;
 			sei.setTimeout(newTimeout);
+			if (CONSOLE_LOG) { LocalLogger.logToStdOut("timeout: " + String.valueOf(newTimeout) + "\nsparql:\n" + sparql); }
 			Table tab = sei.executeQueryToTable(sparql);
 			count = tab.getCellAsInt(0, 0);
 			
