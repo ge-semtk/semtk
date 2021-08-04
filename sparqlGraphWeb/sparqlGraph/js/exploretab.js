@@ -265,6 +265,7 @@ define([	// properly require.config'ed
                 // network config physics
                 var showConfig = function() {
                     VisJsHelper.showConfigDialog(this.configDivHash[this.getMode()], function(){});
+                    return false;
                 }.bind(this);
 
                 but = IIDXHelper.createIconButton("icon-magnet", showConfig, undefined, undefined, undefined, "Network physics");
@@ -272,7 +273,7 @@ define([	// properly require.config'ed
                 IIDXHelper.appendSpace(td);
 
                 // redraw button
-                td.appendChild(IIDXHelper.createIconButton("icon-refresh", function () {this.clearNetwork(); this.draw();}.bind(this), undefined, undefined, undefined, "Redraw network"));
+                td.appendChild(IIDXHelper.createIconButton("icon-refresh", function () {this.clearNetwork(); this.draw(); return false;}.bind(this), undefined, undefined, undefined, "Redraw network"));
                 IIDXHelper.appendSpace(td);
 
                 // stop layout
@@ -483,12 +484,14 @@ define([	// properly require.config'ed
                 if (this.networkHash[this.getMode()]) {
                     this.networkHash[this.getMode()].startSimulation();
                 }
+                return false;   // in case this is a callback
             },
 
             stopLayout : function() {
                 if (this.networkHash[this.getMode()]) {
                     this.networkHash[this.getMode()].stopSimulation();
                 }
+                return false;   // in case this is a callback
             },
 
             doSearch : function(textElem) {
@@ -625,10 +628,8 @@ define([	// properly require.config'ed
                 // class nodes
                 for (var className of this.oInfo.getClassNames()) {
                     var oClass = this.oInfo.getClass(className);
-                    var localName = oClass.getNameStr(true);
-                    var namespace = oClass.getNamespaceStr();
 
-                    nodeData.push({id: className, label: localName, group: namespace });
+                    nodeData.push({id: className, label: oClass.getNameStr(true), title: oClass.getNameStr(false), group: oClass.getNamespaceStr() });
                 }
 
                 // edges
