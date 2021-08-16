@@ -1426,7 +1426,13 @@
    	};
 
     var doTest = function () {
-        doNodeGroupDownload(false);
+        var e = document.getElementById("optionNgPathFinding");
+        e.disabled=false;
+        e.style.backgroundColor="white";
+        require(['sparqlgraph/js/modaliidx'],
+             function (ModalIidx) {
+                ModalIidx.alert("Test mode", "Nodegroup path-finding is enabled.<br>Test mode<br><b>Warning:<b>this has been known to lock up a triplestore.", false);
+            });
     };
 
     // append user button to an elem
