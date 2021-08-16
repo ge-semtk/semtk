@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.ontologyTools;
 
+import org.json.simple.JSONObject;
+
 public class Triple {
 	
 	private String[] triple;
@@ -32,6 +34,13 @@ public class Triple {
 	
 	public Triple(){
 		this.triple = new String[3];
+	}
+	
+	public Triple(JSONObject jObj){
+		this.triple = new String[3];
+		this.triple[0] = (String) jObj.get("s");
+		this.triple[1] = (String) jObj.get("p");
+		this.triple[2] = (String) jObj.get("o");
 	}
 	
 	public boolean equals(Triple other) {
@@ -66,5 +75,14 @@ public class Triple {
 	
 	public String toCsvString() {
 		return String.join(",", this.triple);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public JSONObject toJson() {
+		JSONObject ret = new JSONObject();
+		ret.put("s", this.getSubject());
+		ret.put("p", this.getPredicate());
+		ret.put("o", this.getObject());
+		return ret;
 	}
 }

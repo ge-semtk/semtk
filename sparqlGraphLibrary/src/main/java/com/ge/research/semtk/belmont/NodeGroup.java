@@ -25,6 +25,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -839,6 +840,17 @@ public class NodeGroup {
     public ArrayList<Node> getNodeList(){
         return this.nodes;
     }
+    /**
+     * Get list of all unique classes (nodes' full URIs)
+     * @return
+     */
+    public Set<String> getNodeURIStrings() {
+    	Set<String> ret = new HashSet<String>();
+    	for (Node n : this.nodes) {
+    		ret.add(n.getFullUriName());
+    	}
+    	return ret;
+    }
     
 	/**
 	 * Create a new union
@@ -1371,6 +1383,35 @@ public class NodeGroup {
 		return ret;
 	}
 	
+	/**
+	 * 
+	 * @param uri
+	 * @param oInfo
+	 * @return ArrayList of Nodes which are of class uri or any of its subclasses
+	 */
+	public ArrayList<Node> getNodesBySubclassURI(String uri, OntologyInfo oInfo) {
+		// get all nodes with the given uri
+		ArrayList<Node> ret = new ArrayList<Node>();
+
+		// get all subclasses
+		ArrayList<String> classes = new ArrayList<String>();
+		classes.add(uri);
+		classes.addAll(oInfo.getSuperclassNames(uri));
+		
+		// for each class / sub-class
+		for (int i=0; i < classes.size(); i++) {
+			// get all nodes
+			ArrayList<Node> c = this.getNodesByURI(classes.get(i));
+			// push node if it isn't already in ret
+			for (int j=0; j < c.size(); j++) {
+				if (ret.indexOf(c.get(j)) == -1) {
+					ret.add(c.get(j));
+				}
+			}
+		}
+		
+		return ret;
+	}
 	/**
 	 * Look up a node by sparqlId
 	 * @param sparqlId - optionally starts with "?"
@@ -3229,19 +3270,20 @@ public class NodeGroup {
 		return this.addPath(path, anchorNode, oInfo, reverseFlag, false);
 	}
 
+	/**
+	 * Add a path to the nodegroup.  Path's start class is the "new one".  End class connects to nodegroup anchorNode (except reverseFlag)
+	 * @param path - path connects in whichever end matches anchorNode.  If both match, default to path END at anchor node.
+	 * @param anchorNode - Path connects here
+	 * @param oInfo - used to properly build new nodes
+	 * @param reverseFlag - Connect with Path START at anchor node, or throw and exception if URI doesn't match
+	 * @param optionalFlag - should connection point be OPTIONAL
+	 * @return the node at the end of the path that is new to the nodegroup
+	 * @throws Exception
+	 */
 	public Node addPath(OntologyPath path, Node anchorNode, OntologyInfo oInfo, Boolean reverseFlag, Boolean optionalFlag) throws Exception  {
-		// Adds a path to the canvas.
-		// path start class is the new one
-		// path end class already exists
-		// return the node corresponding to the path's startClass. (i.e. the one
-		// the user is adding.)
-		
-		// reverseFlag:  in diabolic case where path is one triple that starts and ends on same class
-		//               if reverseFlag, then connect
-		
-		// add the first class in the path
+
 		Node retNode = this.addNode(path.getStartClassName(), oInfo);
-		Node lastNode = retNode;
+		Node lastNode = reverseFlag ? anchorNode : retNode;
 		Node node0;
 		Node node1;
 		int pathLen = path.getLength();
@@ -3251,18 +3293,19 @@ public class NodeGroup {
 			String attUri = path.getAttributeName(i);
 			String class1Uri = path.getClass1Name(i);
 
-			// if this hop in path is  lastAdded--hasX-->class1
+			
 			if (class0Uri.equals(lastNode.getUri())) {
+				//  this hop in path is  lastAdded--hasX-->class1
 				node1 = this.returnBelmontSemanticNode(class1Uri, oInfo);
 				this.addOneNode(node1, lastNode, null, attUri);
 				lastNode = node1;
 				
 				if (optionalFlag) {
 					throw new Exception("Internal error in belmont.js:AddPath(): SparqlGraph is not smart enough\nto add an optional path with links pointing away from the new node.\nAdding path without optional flag.");
-					//optionalFlag = false;
 				}
-			// else this hop in path is class0--hasX-->lastAdded
+			
 			} else {
+				// else this hop in path is class0--hasX-->lastAdded
 				node0 = this.returnBelmontSemanticNode(class0Uri, oInfo);
 				this.addOneNode(node0, lastNode, attUri, null);
 				lastNode = node0;
@@ -3270,24 +3313,24 @@ public class NodeGroup {
 		}
 
 		// link the last two nodes, which by now already exist
-		String class0Uri = path.getClass0Name(pathLen - 1);
 		String class1Uri = path.getClass1Name(pathLen - 1);
 		String attUri = path.getAttributeName(pathLen - 1);
+		Node finalNode = reverseFlag ? retNode : anchorNode;
 
-		// link diabolical case from anchor node to last node in path
-		if (class0Uri.equals(class1Uri) && reverseFlag ) {
+		
+		if (finalNode.getUri().equals(class1Uri)) {
+			// normal link from last node to anchor node, 
+			// When last connection URI matches and reverseFlag isn't set
 			int opt = optionalFlag ? NodeItem.OPTIONAL_REVERSE : NodeItem.OPTIONAL_FALSE;
-			anchorNode.setConnection(lastNode, attUri, opt);
+			lastNode.setConnection(finalNode, attUri, opt);
 			
-		// normal link from last node to anchor node
-		} else if (anchorNode.getUri().equals(class1Uri)) {
-			int opt = optionalFlag ? NodeItem.OPTIONAL_REVERSE : NodeItem.OPTIONAL_FALSE;
-			lastNode.setConnection(anchorNode, attUri, opt);
-			
-		// normal link from anchor node to last node
+		
 		} else {
+			// reverse connection
+			// either reverseFlag, or normal direction URI wasn't correct so presume backwards will work
+			// throw exception if URI doesn't work
 			int opt = optionalFlag ? NodeItem.OPTIONAL_TRUE : NodeItem.OPTIONAL_FALSE;
-			anchorNode.setConnection(lastNode, attUri, opt);
+			finalNode.setConnection(lastNode, attUri, opt);
 		}
 		return retNode;
 
@@ -3391,13 +3434,11 @@ public class NodeGroup {
 		return this.nodes.size();
 	}
 	
-	private ArrayList<String> getArrayOfURINames() {
-		ArrayList<String> retval = new ArrayList<String>();
+	private HashSet<String> getAllNodeUris() {
+		HashSet<String> retval = new HashSet<String>();
 		int t = this.nodes.size();
 		for (int l = 0; l < t; l++) {
-			// output the name
 			retval.add(this.nodes.get(l).getUri());
-			// alert(this.SNodeList[l].getURI());
 		}
 		return retval;
 
@@ -3514,9 +3555,9 @@ public class NodeGroup {
 	 * @throws Exception
 	 */
 	public Node addClassFirstPath(String classURI, OntologyInfo oInfo) throws Exception  {
-		return this.addClassFirstPath(classURI, oInfo, null, false);
+		return this.addClassFirstPath(classURI, oInfo, false);
 	}
-	public Node addClassFirstPath(String classURI, OntologyInfo oInfo, String domain, Boolean optionalFlag) throws Exception  {
+	public Node addClassFirstPath(String classURI, OntologyInfo oInfo, Boolean optionalFlag) throws Exception  {
 		// attach a classURI using the first path found.
 		// Error if less than one path is found.
 		// return the new node
@@ -3524,7 +3565,7 @@ public class NodeGroup {
 
 		// get first path from classURI to this nodeGroup
 		this.oInfo = oInfo;
-		ArrayList<OntologyPath> paths = oInfo.findAllPaths(classURI, this.getArrayOfURINames(), domain);
+		ArrayList<OntologyPath> paths = oInfo.findAllPaths(classURI, this.getAllNodeUris());
 		if (paths.size() == 0) {
 			return null;
 		}
@@ -3579,20 +3620,16 @@ public class NodeGroup {
         }         
         return  ret;
     }
-	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain) throws Exception  {
-		return this.getOrAddNode(classURI, oInfo, domain, false, false);
+	public Node getOrAddNode(String classURI, OntologyInfo oInfo) throws Exception  {
+		return this.getOrAddNode(classURI, oInfo, false, false);
 	}
 	
 	public Node getOrAddNode(String classURI, OntologyInfo oInfo, boolean superclassFlag) throws Exception  {
-		return this.getOrAddNode(classURI, oInfo, "", superclassFlag, false);
-	}
-	
-	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain, boolean superclassFlag) throws Exception  {
-		return this.getOrAddNode(classURI, oInfo, domain, superclassFlag, false);
+		return this.getOrAddNode(classURI, oInfo, superclassFlag, false);
 	}
 	
 
-	public Node getOrAddNode(String classURI, OntologyInfo oInfo, String domain, boolean superclassFlag, boolean optionalFlag ) throws Exception  {
+	public Node getOrAddNode(String classURI, OntologyInfo oInfo, boolean superclassFlag, boolean optionalFlag ) throws Exception  {
 		// return first (randomly selected) node with this URI
 		// if none exist then create one and add it using the shortest path (see addClassFirstPath)
 		// if superclassFlag, then any subclass of classURI "counts"
@@ -3620,7 +3657,7 @@ public class NodeGroup {
 			if (sNodes.size() > 0) {
 				sNode = sNodes.get(0);
 			} else {
-				sNode = this.addClassFirstPath(classURI, oInfo, domain, optionalFlag);
+				sNode = this.addClassFirstPath(classURI, oInfo, optionalFlag);
 			}
 		}
 		return sNode;
@@ -3664,7 +3701,7 @@ public class NodeGroup {
 				sNode = sNodes.get(0);
 				
 			} else {
-				sNode = this.addClassFirstPath(classURI, oInfo, null, false);
+				sNode = this.addClassFirstPath(classURI, oInfo, false);
 			}
 		}
 		return sNode;

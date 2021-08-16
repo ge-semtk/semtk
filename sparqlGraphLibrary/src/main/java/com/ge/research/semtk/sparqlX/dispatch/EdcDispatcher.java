@@ -69,7 +69,7 @@ public class EdcDispatcher extends AsynchronousNodeGroupBasedQueryDispatcher {
 	
 		super(jobId, sgJson, jobTrackerSei, resConfig, extConfigSei, false, oInfoClient, ngStoreClient);
 		
-		this.dispatchServiceMgr =  new DispatchServiceManager(extConfigSei, this.queryNodeGroup, oInfo, domain, this.querySei, oInfoClient, heedRestrictions);
+		this.dispatchServiceMgr =  new DispatchServiceManager(extConfigSei, this.queryNodeGroup, oInfo, this.querySei, oInfoClient, heedRestrictions);
 	
 	}
 

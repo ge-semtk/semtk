@@ -1,0 +1,65 @@
+/* Copyright (c) 2020, General Electric Company, Galois, Inc.
+ *
+ * All Rights Reserved
+ *
+ * This material is based upon work supported by the Defense Advanced Research
+ * Projects Agency (DARPA) under Contract No. FA8750-20-C-0203.
+ *
+ * Any opinions, findings and conclusions or recommendations expressed in this
+ * material are those of the author(s) and do not necessarily reflect the views
+ * of the Defense Advanced Research Projects Agency (DARPA).
+ */
+
+ /************** edit history *****************
+  *
+  * dwa - 11 Nov 2020 - reduced cardinalities of properties in several places to 1, where N was ill-defined or unnecessary
+  * dwa - 11 Nov 2020 - pushed 'name' as a string property down into the base AGENT class, because all agent subclasses appear amenable to having a name
+  */
+
+uri "http://arcos.rack/PROV-S" alias provs 
+(note "a basic Implementation of PROV Data Model standard in SADL based on table https://www.w3.org/TR/prov-dm/#relations-at-a-glance").
+
+THING (note "A piece of data stored in RACK") is a class.
+	identifier (note "identifier is any data item that is used to associate items on when loading into the data store.") describes THING with values of type string.
+	identifier describes THING with at most 1 value.
+	title (note "A short, human-readable identifying label.") describes THING with values of type string.
+	title describes THING with at most 1 value.
+	description (note "A free-form, multi-line, human-readable explanation of this data element.") describes THING with values of type string.
+	description describes THING with at most 1 value.
+	dataInsertedBy (note "The activity that caused this data to be added to RACK") describes THING with values of type ACTIVITY.
+	dataInsertedBy describes THING with at most one value of type ACTIVITY.
+
+ENTITY (note "An entity is a physical, digital, conceptual, or other kind of thing with some fixed aspects; entities may be real or imaginary.")
+	is a type of THING.
+
+	wasDerivedFrom (note "A derivation is a transformation of an entity into another, an update of an entity resulting in a new one, or the construction of a new entity based on a pre-existing entity.") describes ENTITY with values of type ENTITY.
+	wasRevisionOf (note "Indicates a direct line of primary descendancy from one entity to a derivative entity.") describes ENTITY with values of type ENTITY.
+	wasRevisionOf is a type of wasDerivedFrom.
+	wasImpactedBy (note "Indicates that an entity materially affected another entity, and changing the former might affect or invalidate the latter.") describes ENTITY with values of type ENTITY.
+	wasImpactedBy is a type of wasDerivedFrom.
+	wasGeneratedBy (note "Generation is the completion of production of a new entity by an activity. This entity did not exist before generation and becomes available for usage after this generation.")describes ENTITY with values of type ACTIVITY.
+	wasGeneratedBy describes ENTITY with at most 1 value.
+	wasAttributedTo (note "Attribution is the ascribing of an entity to an agent. https://www.w3.org/TR/prov-dm/#concept-attribution" ) describes ENTITY with values of type AGENT.
+	generatedAtTime (note "The time this entity was created and available for use") describes ENTITY with values of type dateTime.
+	generatedAtTime describes ENTITY with at most 1 value.
+	invalidatedAtTime (note "The time at which this entity was no longer usable") describes ENTITY with values of type dateTime.
+	invalidatedAtTime describes ENTITY with at most 1 value.
+
+COLLECTION (note "A collection is an entity that provides a structure to some constituents, which are themselves entities. These constituents are said to be member of the collections.")
+	is a type of ENTITY.
+	content (note "An entity in a collection.") describes COLLECTION with values of type ENTITY.
+
+AGENT (note "An agent is something that bears some form of responsibility for an activity taking place, for the existence of an entity, or for another agent's activity.")
+	is a type of THING.
+
+	actedOnBehalfOf (note "Delegation is the assignment of authority and responsibility to an agent (by itself or by another agent) to carry out a specific activity as a delegate or representative, while the agent it acts on behalf of retains some responsibility for the outcome of the delegated work.") describes AGENT with values of type AGENT.
+
+ACTIVITY (note "An activity is something that occurs over a period of time and acts upon or with entities; it may include consuming, processing, transforming, modifying, relocating, using, or generating entities.")
+	is a type of THING.
+	wasAssociatedWith (note "An activity association is an assignment of responsibility to an agent for an activity, indicating that the agent had a role in the activity. It further allows for a plan to be specified, which is the plan intended by the agent to achieve some goals in the context of this activity.") describes ACTIVITY with values of type AGENT.
+	wasInformedBy (note "a Communication, the exchange of some unspecified entity by two activities, one activity using some entity generated by the other.") describes ACTIVITY with values of type ACTIVITY.
+	startedAtTime (note "The time an activity was started") describes ACTIVITY with values of type dateTime.
+	startedAtTime describes ACTIVITY with at most 1 value.
+	endedAtTime (note "The time an activity was ended") describes ACTIVITY with values of type dateTime.
+	endedAtTime describes ACTIVITY with at most 1 value.
+    used (note "Usage is the beginning of utilizing an entity by an activity. Before usage, the activity had not begun to utilize this entity and could not have been affected by the entity. (Note: This definition is formulated for a given usage; it is permitted for an activity to have used a same entity multiple times.)") describes ACTIVITY with values of type ENTITY.

@@ -122,6 +122,13 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	public int getInsertQueryMaxSize()    { return 100000; }
 	public int getInsertQueryOptimalSize()  { return 5000; }
 	
+	/* Timeout is not implemented. Should be query hint.   */
+	/* https://docs.aws.amazon.com/neptune/latest/userguide/sparql-query-hints-queryTimeout.html */
+	/* This will require mods to sparql generator */
+	public String getTimeoutSparqlPrefix() { return null; }    
+	public String getTimeoutSparqlClause() { return null; } 
+	public String getTimeoutPostParamName() { return null; }    
+	public String getTimeoutPostParamValue() { return null; } 
 	/**
 	 * Neptune never requires username or password.  Always auth-capable.
 	 */

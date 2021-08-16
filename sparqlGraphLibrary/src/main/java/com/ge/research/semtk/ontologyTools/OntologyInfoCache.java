@@ -47,17 +47,13 @@ public class OntologyInfoCache {
 	 * Clear any connection from cache if it shares a model dataset with conn
 	 * @param conn
 	 */
-	public synchronized void removeSimilar(SparqlConnection conn) {
+	public synchronized void removeOverlapping(SparqlConnection conn) {
 		ArrayList<String> toDelete = new ArrayList<String>();
 		
-		// search through conn's models
-		for (int i=0; i < conn.getModelInterfaceCount(); i++) {
-			for (String key : this.hash.keySet()) {
-				// if datasets match, it's too close for comfort: delete
-				if (key.contains(conn.getModelInterface(i).getDataset())) {
-					if (! toDelete.contains(key)) {
-						toDelete.add(key);
-					}
+		for (String key : this.hash.keySet()) {
+			if (conn.overlapsSparqlConnKey(key)) {
+				if (! toDelete.contains(key)) {
+					toDelete.add(key);
 				}
 			}
 		}

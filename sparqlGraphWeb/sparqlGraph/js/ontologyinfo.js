@@ -846,144 +846,8 @@ OntologyInfo.prototype = {
 		return null;
 	},
 
-	findAllPaths : function(fromClassName, targetClassNames, domain) {
-		//   A form of A* path finding algorithm
-		//   See getConnList() for the types of connections that are allowed
-		//   Returns a list shortest to longest:  [path0, path1, path2...]
-		//        pathX.getStartClassName() == fromClassName
-		//        pathX.getEndClassName() == member of targetClassNames
-		//        pathX.asList() returns list of triple lists [[className0, att, className1], [className1, attName, className2]...]
-		var t0 = (new Date()).getTime();
-		this.pathWarnings = [];
-		var waitingList = [new OntologyPath(fromClassName)];
-		var ret = [];
-		var targetHash = {};              // hash of all possible ending classes:  targetHash[className] = 1
-
-		var LENGTH_RANGE = 2;     // search only for paths this much longer than the shortest one found
-		var SEARCH_TIME_MSEC = 5000;
-		var LONGEST_PATH = 10;
-		var CONSOLE_LOG = false;
-
-		/* ISSUE 50:  but perhaps these should be handled by a caller, not by this method
-		 * Pathfinding should also find paths
- 		 *   A) from the new class to a superclass of an existing class
-         *   B) from an existing class to a superclass of the new class.
-		 */
-
-		// return if there is no endpoint
-		if (targetClassNames.length < 1) return [];
-
-		// PEC CONFUSED: why is this here?  Process->hasNext->Process can't get past here.
-		// return if this special case has no possible solution
-		//if (targetClassNames.length == 1 && targetClassNames[0] == fromClassName) return [];
-
-		// set up targetHash[targetClass] = 1
-		for (var i=0; i < targetClassNames.length; i++) {
-
-            // experiment:  don't connect to an existing measurement
-            if ( !this.experimentIsDataClass(targetClassNames[i]) ) {
-			     targetHash[targetClassNames[i]] = 1;
-            }
-		}
-
-
-		// STOP CRITERIA A: search as long as there is a waiting list
-		while (waitingList.length > 0) {
-			// pull one off waiting list
-			var item = waitingList.shift();
-			var waitClass = item.getEndClassName();
-			var waitPath = item;
-
-			// STOP CRITERIA B:  Also stop searching if:
-			//    this final path (with 1 added connection) will be longer than the first (shortest) already found path
-			if (ret.length > 0 &&
-				(waitPath.getLength() + 1  > ret[0].getLength() + LENGTH_RANGE)) {
-				break;
-			}
-
-			// STOP CRITERIA C: stop if path is too long
-			if (waitPath.getLength() > LONGEST_PATH) {
-				break;
-			}
-
-			// STOP CRITERIA D: too much time spent searching
-			var tt = (new Date()).getTime();
-
-			if ( false && tt - t0 > SEARCH_TIME_MSEC) {
-                // This message is annoying and serves no purpose
-				//alert("Note: Path-finding timing out.  Search incomplete.");
-				break;
-			}
-
-			// get all one hop connections and loop through them
-			var conn = this.getConnList(waitClass);
-			for (var i=0; i < conn.length; i++) {
-
-				//  each connection is a path with only one node (the 0th)
-				//  grab the name of the newly found class
-				var newClass = "";
-				var newPath = null;
-				var loopFlag = false;
-
-				// if the newfound class is pointed to by an attribute of one on the wait list
-				if (conn[i].getStartClassName() == waitClass) {
-					newClass = conn[i].getEndClassName();
-
-				} else {
-					newClass = conn[i].getStartClassName();
-				}
-
-				// check for loops in the path before adding the class
-				if (waitPath.containsClass(newClass)) {
-					loopFlag = true;
-				}
-
-				// build the new path
-				var t = conn[i].getTriple(0);
-				newPath = waitPath.deepCopy();
-				newPath.addTriple(t[0], t[1], t[2]);
-
-				// if path leads anywhere in domain, store it
-				var name = new OntologyName(newClass);
-                // experiment: don't connect through a measurement
-				if (name.isInDomain(domain) && ! this.experimentIsDataClass(newClass) ) {
-
-					// if path leads to a target, push onto the ret list
-					if (newClass in targetHash) {
-						ret.push(newPath);
-						if (CONSOLE_LOG) console.log(">>>found path " + newPath.debugString());
-
-					// PEC CONFUSED: this used to happen every time without any "else" or "else if"
-
-					// if path doens't lead to target, add to waiting list
-					// But if it is a loop (that didn't end at the targetHash) then stop
-					}  else if (loopFlag == false){
-					    // try extending already-found paths
-						waitingList.push(newPath);
-						if (CONSOLE_LOG) console.log("searching " + newPath.debugString());
-					}
-
-				}
-
-			}
-		}
-
-		if (CONSOLE_LOG) {
-			console.log("These are the paths I found:");
-			for (var i=0; i < ret.length; i++) {
-				console.log(ret[i].debugString());
-			}
-
-			var t1 = (new Date()).getTime();
-			console.log("findAllPaths time is: " + (t1-t0) + " msec");
-		}
-		return ret;
-	},
-
-	experimentIsDataClass : function (classStr) {
-        return (classStr == "http://kdl.ge.com/additiveMeasuresAndUtils#Measurement" ||
-                classStr == "http://kdl.ge.com/additiveMeasuresAndUtils#XYZCoordinate");
-    },
+    // findAllPaths : function
+    // is moved to the service layer via MsiClientNodeGroupService
 
 	classIsA : function (class1, class2) {
 
@@ -1521,6 +1385,14 @@ var OntologyPath = function(className) {
 	this.classHash[className] = 1;
 };
 
+OntologyPath.fromJson = function (jObj) {
+    var ret = new OntologyPath(jObj["startClassName"]);
+    for (var j of jObj["triples"]) {
+        ret.addTriple(j["s"], j["p"], j["o"]);
+    }
+    return ret;
+};
+
 OntologyPath.prototype = {
 
 	addTriple : function(className0, attName, className1) {
@@ -1673,49 +1545,48 @@ OntologyPath.prototype = {
 		return ret;
 	},
 
-    genPathString : function(anchorNode, singleLoopFlag) {
+    genPathString : function(anchorNode, reverseFlag) {
         var str = anchorNode.getSparqlID() + ": ";
 
-        // handle diabolical case
-        if (singleLoopFlag) {
-            cl = new OntologyName(this.getClass0Name(0)).getLocalName();
-            var att = new OntologyName(this.getAttributeName(0)).getLocalName();
-            str += anchorNode.getSparqlID() + "-" + att + "->" + cl + "_NEW";
+        // is path connecting at start instead of "normal" end
+        var startAtNew = !reverseFlag || this.getEndClassName() != anchorNode.getURI();
+
+        var firstName = new OntologyName(this.getStartClassName()).getLocalName();
+        if (startAtNew) {
+            str += firstName + "_NEW";
+        } else {
+            str += anchorNode.getBindingOrSparqlID();
         }
-        else {
-            var first = new OntologyName(this.getStartClassName()).getLocalName();
-            str += first;
-            if (first != anchorNode.getURI(true)) str += "_NEW";
-            var last = first;
+        var lastNameSoFar = firstName;
 
-            for (var i=0; i < this.getLength(); i++) {
-                var class0 = new OntologyName(this.getClass0Name(i)).getLocalName();
-                var att = new OntologyName(this.getAttributeName(i)).getLocalName();
-                var class1 = new OntologyName(this.getClass1Name(i)).getLocalName();
-                var sub0 = "";
-                var sub1 = "";
+        for (var i=0; i < this.getLength(); i++) {
+            var class0 = new OntologyName(this.getClass0Name(i)).getLocalName();
+            var att = new OntologyName(this.getAttributeName(i)).getLocalName();
+            var class1 = new OntologyName(this.getClass1Name(i)).getLocalName();
+            var sub0 = "";
+            var sub1 = "";
 
-                // mark connecting node on last hop of this
-                if (i == this.getLength() - 1) {
-                    if (class0 == last) {
-                        sub0 = anchorNode.getSparqlID();
-                    } else {
-                        sub1 = anchorNode.getSparqlID();
-                    }
-                }
-
-                if ( class0 == last ) {
-                    str += "-" + att + "->";
-                    str += sub1 ? sub1 : class1;
-                    last = class1;
+            // SUB-stitute in binding/sparqlID of node if needed at end of path
+            if (i == this.getLength() - 1 && startAtNew) {
+                if (class0 == lastNameSoFar) {
+                    sub1 = anchorNode.getBindingOrSparqlID();
                 } else {
-                    str += "<-" + att + "-";
-                    str += sub0 ? sub0 : class0;
-                    last = class0;
+                    sub0 = anchorNode.getBindingOrSparqlID();
                 }
             }
-            if (last != anchorNode.getURI(true)) str += "_NEW";
+
+            if ( class0 == lastNameSoFar ) {
+                str += "-" + att + "->";
+                str += sub1 ? sub1 : class1;
+                lastNameSoFar = class1;
+            } else {
+                str += "<-" + att + "-";
+                str += sub0 ? sub0 : class0;
+                lastNameSoFar = class0;
+            }
         }
+        if (! startAtNew) str += "_NEW";
+
 
         return str;
     },

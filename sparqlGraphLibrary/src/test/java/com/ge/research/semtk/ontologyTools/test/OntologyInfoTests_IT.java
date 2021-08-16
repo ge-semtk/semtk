@@ -28,7 +28,9 @@ import org.junit.Test;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestConnection;
 import com.ge.research.semtk.test.TestGraph;
+import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.belmont.test.QueryGenTest_IT;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
@@ -467,5 +469,23 @@ public class OntologyInfoTests_IT {
 				assertTrue(propArr[i] + " expected domain " + domainArr[i] + " found " + d0, d0.equals(domainArr[i]));
 			}
 		}
+	}
+	
+	@Test
+	public void testGetLowestCommonSuperclass() throws Exception {
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlContents(Utility.getResourceAsString(QueryGenTest_IT.class, 
+				"AnimalSubProps.owl"));
+		OntologyInfo oInfo = new OntologyInfo();
+		oInfo.load(TestGraph.getSei(), false);
+		
+		String animal = "http://AnimalSubProps#Animal";
+		String cat = "http://AnimalSubProps#Cat";
+		String tiger = "http://AnimalSubProps#Tiger";
+		String dog = "http://AnimalSubProps#Dog";
+		
+		assertEquals(oInfo.findLowestCommonSuperclass(tiger, dog), animal);
+		assertEquals(oInfo.findLowestCommonSuperclass(tiger, cat), cat);
+		assertEquals(oInfo.findLowestCommonSuperclass(dog, cat), animal);
 	}
 }

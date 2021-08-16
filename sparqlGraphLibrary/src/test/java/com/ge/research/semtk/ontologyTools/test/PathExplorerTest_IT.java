@@ -67,7 +67,7 @@ public class PathExplorerTest_IT {
 		// many-to-one FDC calls shouldn't be too overwhelming
 		
 		NodeGroup ng = new NodeGroup();
-		ng.getOrAddNode("http://research.ge.com/semtk/fdcSample/test#Airport", oInfo, null);
+		ng.getOrAddNode("http://research.ge.com/semtk/fdcSample/test#Airport", oInfo);
 		
 		// Airport -> Aircraft
 		// this should succeed through Distance
@@ -88,7 +88,7 @@ public class PathExplorerTest_IT {
 		// FDC calls could take a long time
 		
 		NodeGroup ng = new NodeGroup();
-		ng.getOrAddNode("http://research.ge.com/semtk/fdcSample/test#Airport", oInfo, null);
+		ng.getOrAddNode("http://research.ge.com/semtk/fdcSample/test#Airport", oInfo);
 		
 		// Airport -> Aircraft
 		// this should succeed through Distance
@@ -139,7 +139,7 @@ public class PathExplorerTest_IT {
 		// will never find instance data using addClassFirstPathWithData()
 		
 		NodeGroup ng = new NodeGroup();
-		ng.getOrAddNode("http://research.ge.com/semtk/fdcSample/test#Airport", oInfo, null);
+		ng.getOrAddNode("http://research.ge.com/semtk/fdcSample/test#Airport", oInfo);
 		
 		// Airport -> Distance  
 		// this should fail because distance requires two locations to ever work

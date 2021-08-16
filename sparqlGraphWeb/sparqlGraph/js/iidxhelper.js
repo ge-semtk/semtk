@@ -440,7 +440,7 @@ define([	// properly require.config'ed
         return ret;
     };
 
-    IIDXHelper.createIconButton = function(iconClass, callback, optClassList, optId, optText) {
+    IIDXHelper.createIconButton = function(iconClass, callback, optClassList, optId, optText, optMouseOver) {
         var butElem = document.createElement("button");
         butElem.appendChild(IIDXHelper.createIcon(iconClass));
         if (optText) {
@@ -454,6 +454,9 @@ define([	// properly require.config'ed
         }
         if (typeof optId != "undefined") {
             butElem.id = optId;
+        }
+        if (typeof optMouseOver != "undefined") {
+            butElem.title = optMouseOver;
         }
         return butElem;
     };
@@ -478,6 +481,10 @@ define([	// properly require.config'ed
         elem.appendChild(document.createTextNode(text));
         elem.appendChild(document.createElement("br"));
     };
+
+    IIDXHelper.appendSpace = function(elem) {
+        elem.appendChild(IIDXHelper.createNbspText());
+    }
 
     /*
      * Create a button group.
@@ -769,14 +776,39 @@ define([	// properly require.config'ed
      *     progress-striped
      *     active
      */
-    IIDXHelper.progressBarCreate = function (emptyDivWithId, classes) {
-        emptyDivWithId.className = "progress " + classes;
+    IIDXHelper.progressBarCreate = function (emptyDivWithId, classes, optCancelCallback) {
+        // create a table
+        var table = document.createElement("table");
+        var tr = document.createElement("tr");
+        table.appendChild(tr);
+        table.style.width = "100%";
+        table.tableLayout="auto";
+        emptyDivWithId.appendChild(table);
+
+        var tdLeft = document.createElement("td");
+        tr.appendChild(tdLeft);
+
+        var tdRight = document.createElement("td");
+        tdRight.style.width = "1%";
+        tdRight.style.whiteSpace = "no-wrap";
+        tr.appendChild(tdRight);
+
+        var div = document.createElement("div");
+        div.className = "progress " + classes;
+        div.style.margin = "0";
+        tdLeft.appendChild(div);
+
         var bar = document.createElement("div");
         bar.classList.add("bar");
         bar.style.width = "0%";
         bar.id = IIDXHelper.getNextId("bar");
-        emptyDivWithId.appendChild(bar);
+        div.appendChild(bar);
         IIDXHelper.idHash[emptyDivWithId.id] = bar.id;
+
+        if (optCancelCallback) {
+            var but = IIDXHelper.createIconButton("icon-remove-sign", optCancelCallback, ["btn", "btn-danger"], undefined, undefined, "Cancel" );
+            tdRight.appendChild(but);
+        }
     };
 
     /**
@@ -794,7 +826,7 @@ define([	// properly require.config'ed
         }
         html += "</font></b>"
         bar.innerHTML = html;
-    }
+    };
 
     /**
      * Clean up a progress bar, returning the empty div
@@ -803,8 +835,20 @@ define([	// properly require.config'ed
         emptyDivWithId.className = "";
         emptyDivWithId.innerHTML = "";
         delete IIDXHelper.idHash[emptyDivWithId.id];
-    }
+    };
 
+    /**
+     * Build a simple <list> <li>
+     */
+    IIDXHelper.buildList = function(listOfTexts) {
+        var list = document.createElement("list");
+        for (var t of listOfTexts) {
+            var li = document.createElement("li");
+            li.innerHTML = t;
+            list.appendChild(li);
+        }
+        return list;
+    };
     IIDXHelper.buildUserIdButton = function (userId, logoutURL) {
 
         var div = document.createElement("div");

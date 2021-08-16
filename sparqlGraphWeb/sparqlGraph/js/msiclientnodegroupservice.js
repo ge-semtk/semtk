@@ -124,6 +124,16 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.msi.postToEndpoint("changeItemURI", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
             },
 
+            execFindAllPaths : function (sgJson, addClassURI, propsInDataFlag, nodegroupInDataFlag, simpleResultsCallback) {
+                var data = JSON.stringify ({
+					  "jsonRenderedNodeGroup": JSON.stringify(sgJson.toJson()),
+                      "addClass" : addClassURI,
+                      "propsInDataFlag" : propsInDataFlag,
+                      "nodegroupInDataFlag" : nodegroupInDataFlag
+					});
+				this.msi.postToEndpoint("findAllPaths", data, "application/json", simpleResultsCallback, this.optFailureCallback, this.optTimeout);
+            },
+
             /*
             **  Asynchronous functions: perform the whole async chain and return a "real" value.  failureCalback on any error.
             **  (Name is confusing. All these functions in the file are Async.)
@@ -187,12 +197,17 @@ define([	// properly require.config'ed   bootstrap-modal
                                         this.asyncSgJsonCallback.bind(this, "changeItemURI", sgjsonCallback, failureCallback));
             },
 
+            execAsyncFindAllPaths : function (sgJson, newURI, propsInDataFlag, nodegroupInDataFlag, simpleResultsCallback, failureCallback) {
+                this.execFindAllPaths(gJson, newURI, propsInDataFlag, nodegroupInDataFlag,
+                                        this.asyncSimpleResultsCallback.bind(this, simpleResultsCallback, failureCallback));
+            },
+
             /*
              * @private
              */
             asyncSgJsonCallback(endpoint, sgjsonCallback, failureCallback, resultSet) {
                 if (resultSet.isSuccess()) {
-                    // get the jobId
+                    // get the sgjson
                     var sgJsonJson = resultSet.getSimpleResultField("nodegroup");
                     if (sgJsonJson) {
                         var sgjson = new SparqlGraphJson();
@@ -218,6 +233,17 @@ define([	// properly require.config'ed   bootstrap-modal
                     } else {
                         failureCallback(resultSet.getFailureHtml("did not return a " + valueName));
                     }
+                } else {
+                    failureCallback(resultSet.getFailureHtml());
+                }
+            },
+
+            /*
+             * @private
+             */
+            asyncSimpleResultCallback(simpleResultCallback, failureCallback, resultSet) {
+                if (resultSet.isSuccess()) {
+                    simpleResultCallback(resultSet);
                 } else {
                     failureCallback(resultSet.getFailureHtml());
                 }

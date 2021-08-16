@@ -48,6 +48,8 @@ public class PerformanceTest {
 	private static int numberOfItems;
 	private static int numberOfLinks;
 	private static int numberOfPasses;
+	private static int maxTriples;
+	private static int circuitBreakerSec;
 	private static String resourceFolder;
 	private static String taskName;
 	private static String serverType;
@@ -58,12 +60,12 @@ public class PerformanceTest {
 	private final static boolean NO_PRECHECK = false;
 	private final static boolean PRECHECK = true;
 	private final static boolean LOG_QUERY_PERFORMANCE = false;
-	private final static Double  CIRCUIT_BREAKER_SEC = 60.0 * 3;
 
 	public static void main(String[] args) throws Exception {
 
 		Options options = new Options();
 
+		// option: server-type
 		String serverTypeArg = "server-type";
 		Option serverTypeOpt = new Option(
 			null, serverTypeArg, true,
@@ -72,6 +74,7 @@ public class PerformanceTest {
 		serverTypeOpt.setRequired(true);
 		options.addOption(serverTypeOpt);
 
+		// option: server-url
 		String serverURLArg = "server-url";
 		Option serverURLOpt = new Option(
 			null, serverURLArg, true,
@@ -80,6 +83,7 @@ public class PerformanceTest {
 		serverURLOpt.setRequired(true);
 		options.addOption(serverURLOpt);
 
+		// option: resources
 		String resourcesArg = "resources";
 		Option resourcesOpt = new Option(
 			null, resourcesArg, true,
@@ -88,15 +92,18 @@ public class PerformanceTest {
 		resourcesOpt.setRequired(true);
 		options.addOption(resourcesOpt);
 
+		// option: test
 		String testLinkItems = "link-items";
 		String testAddSimpleRows = "add-simple-rows";
 		String testAddSimpleBiggerRows = "add-simple-bigger-rows";
+		String testLookupAddText = "lookup-add-test";
 
 		String whatToTestOptions =
 			Stream.of(
 				testAddSimpleRows,
 				testAddSimpleBiggerRows,
-				testLinkItems
+				testLinkItems,
+				testLookupAddText
 			).collect(Collectors.joining(", "));
 
 		String testArg = "test";
@@ -107,15 +114,50 @@ public class PerformanceTest {
 		testOpt.setRequired(true);
 		options.addOption(testOpt);
 
+		// which options are requred for which tests
 		String testsRequiringItemsAndLinks = Stream.of(new String[] {
-			testLinkItems
+				testLinkItems
 		}).collect(Collectors.joining(", "));
 
 		String testsRequiringPasses = Stream.of(new String[] {
-			testAddSimpleRows,
-			testAddSimpleBiggerRows
+				testAddSimpleRows,
+				testAddSimpleBiggerRows,
+				testLookupAddText
 		}).collect(Collectors.joining(", "));
 
+		String testsRequiringMaxTriples = Stream.of(new String[] {
+				testLookupAddText
+		}).collect(Collectors.joining(", "));
+
+		String testsRequiringCircuitBreakerSec = Stream.of(new String[] {
+				testLookupAddText
+		}).collect(Collectors.joining(", "));
+
+		// option: max-triples
+		String maxTriplesArg = "max-triples";
+		String defaultMaxTriples = "100000";
+		Option maxTriplesOpt = new Option(
+				null, maxTriplesArg, true,
+				MessageFormat.format(
+						"Number of items (for -{0} in {1}, default {2})",
+						maxTriplesArg, testsRequiringMaxTriples, defaultMaxTriples
+						)
+				);
+		options.addOption(maxTriplesOpt);
+		
+		// option: circuit-breaker-sec
+		String circuitBreakerSecArg = "circuit-breaker-sec";
+		String defaultCircuitBreakerSec = "180";
+		Option maxCircuitBreakerSec = new Option(
+				null, circuitBreakerSecArg, true,
+				MessageFormat.format(
+						"Number of items (for -{0} in {1}, default {2})",
+						circuitBreakerSecArg, testsRequiringCircuitBreakerSec, defaultCircuitBreakerSec
+						)
+				);
+		options.addOption(maxCircuitBreakerSec);
+				
+		// option: items
 		String numberOfItemsArg = "items";
 		String defaultNumberOfItems = "50000";
 		Option numberOfItemsOpt = new Option(
@@ -127,6 +169,7 @@ public class PerformanceTest {
 		);
 		options.addOption(numberOfItemsOpt);
 
+		// option: links
 		String numberOfLinksArg = "links";
 		String defaultNumberOfLinks = "100000";
 		Option numberOfLinksOpt = new Option(
@@ -138,6 +181,7 @@ public class PerformanceTest {
 		);
 		options.addOption(numberOfLinksOpt);
 
+		// option: passes
 		String numberOfPassesArg = "passes";
 		String defaultNumberOfPasses = "10";
 		Option numberOfPassesOpt = new Option(
@@ -149,6 +193,7 @@ public class PerformanceTest {
 		);
 		options.addOption(numberOfPassesOpt);
 
+		// option: pass-size
 		String passSizeArg = "pass-size";
 		String defaultPassSize = "10000";
 		Option passSizeOpt = new Option(
@@ -168,6 +213,8 @@ public class PerformanceTest {
 			numberOfLinks = Integer.parseInt(cmd.getOptionValue(numberOfLinksArg, defaultNumberOfLinks));
 			numberOfPasses = Integer.parseInt(cmd.getOptionValue(numberOfPassesArg, defaultNumberOfPasses));
 			passSize = Integer.parseInt(cmd.getOptionValue(passSizeArg, defaultPassSize));
+			maxTriples = Integer.parseInt(cmd.getOptionValue(maxTriplesArg, defaultMaxTriples));
+			circuitBreakerSec = Integer.parseInt(cmd.getOptionValue(circuitBreakerSecArg, defaultCircuitBreakerSec));
 			serverType = cmd.getOptionValue(serverTypeArg);
 			serverURL = cmd.getOptionValue(serverURLArg);
 			resourceFolder = cmd.getOptionValue(resourcesArg);
@@ -200,10 +247,8 @@ public class PerformanceTest {
         				Integer.toString((currentPass - 1) * 10000 + rowIndex)
 					)
 				);
-				return;
-			}
-
-			if (whatToTest.equals(testAddSimpleBiggerRows)) {
+				
+			} else if (whatToTest.equals(testAddSimpleBiggerRows)) {
 				addRows(
 					numberOfPasses, passSize, "addSimpleBiggerRows",
 					"batt_id,description_opt,cell1_id_opt,cell1_color,cell2_id_opt,cell2_color,cell3_id_opt,cell3_color,cell4_id_opt,cell4_color",
@@ -212,22 +257,21 @@ public class PerformanceTest {
         				Integer.toString((currentPass - 1) * 10000 + rowIndex)
 					)
 				);
-				return;
-			}
-
-			if (whatToTest.equals(testLinkItems)) {
+				
+			} else if (whatToTest.equals(testLinkItems)) {
 				linkItems(numberOfItems, numberOfLinks);
-				return;
+				
+			} else if (whatToTest.equals(testLookupAddText)) {
+				addBatteryDescriptions(passSize, maxTriples, circuitBreakerSec);
+		
+			} else {
+				System.out.println(MessageFormat.format(
+					"Unknown test option: {0}.\nOption -{1} should be one of {2}.",
+					whatToTest, testArg, whatToTestOptions
+				));
 			}
-
-			System.out.println(MessageFormat.format(
-				"Unknown test option: {0}.\nOption -{1} should be one of {2}.",
-				whatToTest, testArg, whatToTestOptions
-			));
 
 			// Not yet exposed:
-			// addBatteryDescriptions(40000, 75000);
-			// addBatteryDescriptions(1000, 500000);
 			// addBatteryDescriptionsVaryingThreadsAndSize(0);
 
 		} finally {
@@ -306,7 +350,7 @@ public class PerformanceTest {
 	 * @param passes
 	 * @throws Exception
 	 */
-	private static void addBatteryDescriptions(int rows_per_pass, int max_triples) throws Exception {
+	private static void addBatteryDescriptions(int rows_per_pass, int max_triples, int circuit_breaker_sec) throws Exception {
 
 		// setup loads
 		SparqlGraphJson sgJson1 = getSGJsonFromSGL("/loadTestDuraBattery.json", sei, sei);
@@ -359,7 +403,7 @@ public class PerformanceTest {
 			}
 
 			// ingest rows
-			if (lastSec[0] < CIRCUIT_BREAKER_SEC) {
+			if (lastSec[0] < circuit_breaker_sec) {
 				Dataset ds1 = new CSVDataset(content1.toString(), true);
 				DataLoader dl1 = new DataLoader(sgJson1, ds1, "dba", "dba");
 				startTask("addBatteryDescriptions load simple, rows, " + rows_per_pass + ",total rows," + total_rows);
@@ -368,7 +412,7 @@ public class PerformanceTest {
 			}
 
 			// add descriptions
-			if (lastSec[1] < CIRCUIT_BREAKER_SEC) {
+			if (lastSec[1] < circuit_breaker_sec) {
 				Dataset ds2 = new CSVDataset(content2.toString(), true);
 				DataLoader dl2 = new DataLoader(sgJson2, ds2, "dba", "dba");
 				dl2.setLogPerformance(LOG_QUERY_PERFORMANCE);
@@ -378,7 +422,7 @@ public class PerformanceTest {
 			}
 
 			// add descriptions superclass
-			if (lastSec[2] < CIRCUIT_BREAKER_SEC) {
+			if (lastSec[2] < circuit_breaker_sec) {
 				Dataset ds3 = new CSVDataset(content3.toString(), true);
 				DataLoader dl3 = new DataLoader(sgJson3, ds3, "dba", "dba");
 				dl3.setLogPerformance(LOG_QUERY_PERFORMANCE);
@@ -404,7 +448,7 @@ public class PerformanceTest {
 			Table t;
 
 			// Select filter in
-			if (lastSec[3] < CIRCUIT_BREAKER_SEC) {
+			if (lastSec[3] < circuit_breaker_sec) {
 				startTask("addBatteryDescription select filter in 10, triples," + triples + ",total rows," + total_rows);
 				t = sei.executeQueryToTable(SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildFilterInConstraint("?p", idList, XSDSupportedType.STRING, sei)));
 				assert(t.getNumRows() == SIZE);
@@ -412,7 +456,7 @@ public class PerformanceTest {
 			}
 
 			// Select regex
-			if (lastSec[4] < CIRCUIT_BREAKER_SEC) {
+			if (lastSec[4] < circuit_breaker_sec) {
 				startTask("addBatteryDescription select filter regex 10, triples," + triples + ",total rows," + total_rows);
 				t = sei.executeQueryToTable(SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildRegexConstraint("?p", regex.toString(), XSDSupportedType.STRING)));
 				assert(t.getNumRows() == SIZE);
@@ -420,7 +464,7 @@ public class PerformanceTest {
 			}
 
 			// Select values
-			if (lastSec[5] < CIRCUIT_BREAKER_SEC) {
+			if (lastSec[5] < circuit_breaker_sec) {
 				startTask("addBatteryDescription select values 10, triples," + triples + ",total rows," + total_rows);
 				t =sei.executeQueryToTable(SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildValuesConstraint("?p", idList, XSDSupportedType.STRING, sei)));
 				assert(t.getNumRows() == SIZE);
@@ -428,7 +472,7 @@ public class PerformanceTest {
 			}
 
 			// Select from subclass
-			if (lastSec[6] < CIRCUIT_BREAKER_SEC) {
+			if (lastSec[6] < circuit_breaker_sec) {
 				startTask("addBatteryDescription select subclassOf* 10, triples," + triples + ",total rows," + total_rows);
 				NodeGroup ng = sgJson3.getNodeGroup();
 				PropertyItem item = ng.getPropertyItemBySparqlID("?batteryId");

@@ -69,6 +69,12 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 	public int getInsertQueryMaxSize()    { return 50000; }
 	public int getInsertQueryOptimalSize() { return 5000; }
 	
+	/* Timeout is not implemented.  Should be "timeout" REST param */
+	public String getTimeoutSparqlPrefix() { return null; }    
+	public String getTimeoutSparqlClause() { return null; } 
+	public String getTimeoutPostParamName() { return "timeout"; }    
+	public String getTimeoutPostParamValue() { return this.timeout == 0 ? null : String.valueOf(this.timeout); } 
+	
 	/**
 	 * Fuseki uses different param names for "auth" queries, which Fuseki calls "update"
 	 */
@@ -84,6 +90,11 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 			params.add(new BasicNameValuePair("update", query));
 		}
 
+		// timeout 
+		if (this.getTimeoutPostParamName() != null && this.getTimeoutPostParamValue() != null) {
+			params.add(new BasicNameValuePair(this.getTimeoutPostParamName(), this.getTimeoutPostParamValue()));
+		}
+				
 		// set entity
 		httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 	}
@@ -228,8 +239,12 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 			}
 			
 		} else {
-			if (responseTxt.contains("Error 400")) {
+			if (responseTxt.contains("TimeoutException")) {
+				throw new QueryTimeoutException("Timed out after " + String.valueOf(this.timeout) + " sec");
+				
+			} else if (responseTxt.contains("Error 400")) {
 				throw new DontRetryException(responseTxt);
+				
 			} else if (responseTxt.contains("Error 404")) {
 				throw new DontRetryException(responseTxt + " server=" + this.getServerAndPort());
 			}

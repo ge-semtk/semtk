@@ -61,6 +61,7 @@ define([	// properly require.config'ed
         this.changedFlag = false;
         this.displayedIndex = -1;
 
+        // WOW: very old-school.  Oh well.
         this.html = ' \
         <div id="modaldialog_div" style="width:90ch;">\
         <center>\
@@ -114,6 +115,7 @@ define([	// properly require.config'ed
                 </td>\
             </table>\
             <div class="form-actions" style="padding-top:1ch; padding-bottom:1ch;"  align="right"> \
+                <input type="checkbox" id="mdNoCacheCheckbox" style="margin: 0"><span style="padding-right:4ch;"> clear cache</span> \
                 <input type="button" id="mdCancel" class="btn-danger" value="Cancel" ></input> \
                 <input type="submit" class="btn-primary" value="Submit"></input>\
             </div>\
@@ -278,7 +280,7 @@ define([	// properly require.config'ed
             var success = function () {
                 this.hide();
                 this.writeProfiles();
-                this.callback(this.conn);
+                this.callback(this.conn, function() {}, document.getElementById('mdNoCacheCheckbox').checked);
             }.bind(this);
 
             this.storeDisplayedProfile();

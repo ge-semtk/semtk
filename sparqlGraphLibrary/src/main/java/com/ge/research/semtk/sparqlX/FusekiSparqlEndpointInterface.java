@@ -44,6 +44,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 /**
@@ -70,6 +71,12 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 	public int getInsertQueryMaxSize()    { return 50000; }
 	public int getInsertQueryOptimalSize() { return 5000; }
 	
+	/* Timeout is not implemented.  Should be "timeout" REST param */
+	public String getTimeoutSparqlPrefix() { return null; }    
+	public String getTimeoutSparqlClause() { return null; } 
+	public String getTimeoutPostParamName() { return "timeout"; }    
+	public String getTimeoutPostParamValue() { return this.timeout == 0 ? null : String.valueOf(this.timeout); } 
+	
 	/**
 	 * Fuseki uses different param names for "auth" queries, which Fuseki calls "update"
 	 */
@@ -85,7 +92,14 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 			params.add(new BasicNameValuePair("update", query));
 		}
 		params.add(new BasicNameValuePair("format", this.getContentType(resultType)));
+		
 
+		// timeout 
+		if (this.getTimeoutPostParamName() != null && this.getTimeoutPostParamValue() != null) {
+			LocalLogger.logToStdErr("timeout header: " + this.getTimeoutPostParamName() + "=" + this.getTimeoutPostParamValue());
+			params.add(new BasicNameValuePair(this.getTimeoutPostParamName(), this.getTimeoutPostParamValue()));
+		}
+		
 		// set entity
 		httppost.setEntity(new UrlEncodedFormEntity(params, "UTF-8"));
 	}
@@ -227,7 +241,9 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 			}
 			
 		} else {
-			if (responseTxt.contains("Error 400")) {
+			if (this.timeout > 0 && responseTxt.contains("503")) {
+				throw new QueryTimeoutException("Timed out after " + String.valueOf(this.timeout) + " sec");
+			} else if (responseTxt.contains("Error 400")) {
 				throw new DontRetryException(responseTxt);
 			} else if (responseTxt.contains("Error 404")) {
 				throw new DontRetryException(responseTxt + " server=" + this.getServerAndPort());

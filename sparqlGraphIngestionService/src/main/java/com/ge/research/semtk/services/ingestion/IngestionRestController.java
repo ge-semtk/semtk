@@ -47,8 +47,6 @@ import org.json.simple.parser.JSONParser;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.ge.research.semtk.services.ingestion.IngestionFromStringsRequestBody;
-import com.ge.research.semtk.services.ingestion.IngestionProperties;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
@@ -69,6 +67,8 @@ import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.edc.JobTracker;
+import com.ge.research.semtk.edc.client.OntologyInfoClient;
+import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
@@ -107,6 +107,9 @@ public class IngestionRestController {
 	IngestionProperties prop;
 	
 	@Autowired
+	OInfoServiceProperties oinfo_props;
+	
+	@Autowired
 	ResultsServiceProperties results_prop;
 	
 	@Autowired
@@ -137,6 +140,7 @@ public class IngestionRestController {
 		env_prop.validateWithExit();
 		
 		prop.validateWithExit();
+		oinfo_props.validateWithExit();
 		results_prop.validateWithExit();
 		status_prop.validateWithExit();
 		servicesgraph_prop.validateWithExit();
@@ -668,6 +672,9 @@ public class IngestionRestController {
 			String trackKey = UUID.randomUUID().toString();
 			this.overrideBaseURI(sgJson, trackFlag, overrideBaseURI, trackKey);
 
+			// clear caches
+			uncache(sgJson.getSparqlConn().getInsertInterface());
+			
 			// load
 			DataLoader dl = new DataLoader(sgJson, ds, prop.getSparqlUserName(), prop.getSparqlPassword());
 			dl.overrideMaxThreads(prop.getMaxThreads());
@@ -946,5 +953,17 @@ public class IngestionRestController {
 			LocalLogger.printStackTrace(eee);
 		}
 		return logger;
+	}
+	
+	/**
+	 * Remove sei and anything that looks like it from SemTK ontology and PredicateStats caches
+	 * @param sei
+	 * @throws Exception
+	 */
+	private void uncache(SparqlEndpointInterface sei) throws Exception {
+		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
+		SparqlConnection conn = new SparqlConnection();
+		conn.addModelInterface(sei);
+		oClient.uncacheChangedConn(conn);
 	}
 }

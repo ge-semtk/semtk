@@ -1,0 +1,103 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:provs="http://arcos.rack/PROV-S#"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel#"
+    xmlns:tst="http://arcos.rack/TESTING#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xml:base="http://arcos.rack/TESTING">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="PROV-S"/>
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'TESTING.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:ID="TEST_DEVELOPMENT">
+    <rdfs:comment xml:lang="en">ACTIVITY of creating a TEST to participate in the evaluation of a requirement</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="PROV-S#ACTIVITY"/>
+  </owl:Class>
+  <owl:Class rdf:ID="TEST">
+    <rdfs:comment xml:lang="en">Description of a single test</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="PROV-S#ENTITY"/>
+  </owl:Class>
+  <owl:Class rdf:ID="TEST_STATUS">
+    <owl:equivalentClass>
+      <owl:Class>
+        <owl:oneOf rdf:parseType="Collection">
+          <tst:TEST_STATUS rdf:ID="Passed">
+            <provs:identifier>Passed</provs:identifier>
+          </tst:TEST_STATUS>
+          <tst:TEST_STATUS rdf:ID="Failed">
+            <provs:identifier>Failed</provs:identifier>
+          </tst:TEST_STATUS>
+          <tst:TEST_STATUS rdf:ID="Indeterminate">
+            <provs:identifier>Indeterminate</provs:identifier>
+          </tst:TEST_STATUS>
+        </owl:oneOf>
+      </owl:Class>
+    </owl:equivalentClass>
+    <rdfs:comment xml:lang="en">The high-level outcome of a TEST_RESULT</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="PROV-S#THING"/>
+  </owl:Class>
+  <owl:Class rdf:ID="TEST_RESULT">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="result"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment xml:lang="en">Result corresponding to one execution of one TEST</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="PROV-S#ENTITY"/>
+  </owl:Class>
+  <owl:Class rdf:ID="TEST_EXECUTION">
+    <rdfs:comment xml:lang="en">ACTIVITY of performing a TEST and record its corresponding TEST_RESULT</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="PROV-S#ACTIVITY"/>
+  </owl:Class>
+  <owl:ObjectProperty rdf:ID="developedBy">
+    <rdfs:subPropertyOf rdf:resource="PROV-S#wasAssociatedWith"/>
+    <rdfs:comment xml:lang="en">Entity that is responsible for producing a test, could be a person or a tool. </rdfs:comment>
+    <rdfs:range rdf:resource="PROV-S#AGENT"/>
+    <rdfs:domain rdf:resource="#TEST_DEVELOPMENT"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="verifies">
+    <rdfs:subPropertyOf rdf:resource="PROV-S#wasImpactedBy"/>
+    <rdfs:comment xml:lang="en">ENTITY(s) (e.g. REQUIREMENT) that this test verifies</rdfs:comment>
+    <rdfs:range rdf:resource="PROV-S#ENTITY"/>
+    <rdfs:domain rdf:resource="#TEST"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="executedOn">
+    <rdfs:subPropertyOf rdf:resource="PROV-S#wasAssociatedWith"/>
+    <rdfs:range rdf:resource="PROV-S#AGENT"/>
+    <rdfs:domain rdf:resource="#TEST_EXECUTION"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="producedBy">
+    <rdfs:subPropertyOf rdf:resource="PROV-S#wasGeneratedBy"/>
+    <rdfs:comment xml:lang="en">TEST_DEVELOPMENT activity(s) this test belongs to</rdfs:comment>
+    <rdfs:range rdf:resource="PROV-S#ACTIVITY"/>
+    <rdfs:domain rdf:resource="#TEST"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="confirms">
+    <rdfs:subPropertyOf rdf:resource="PROV-S#wasImpactedBy"/>
+    <rdfs:comment xml:lang="en">Parent test(s) of this test result</rdfs:comment>
+    <rdfs:range rdf:resource="#TEST"/>
+    <rdfs:domain rdf:resource="#TEST_RESULT"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="executedBy">
+    <rdfs:subPropertyOf rdf:resource="PROV-S#wasGeneratedBy"/>
+    <rdfs:comment xml:lang="en">ACTIVITY(s) that created this test result</rdfs:comment>
+    <rdfs:range rdf:resource="PROV-S#ACTIVITY"/>
+    <rdfs:domain rdf:resource="#TEST_RESULT"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="#result">
+    <rdfs:comment xml:lang="en">Pass/Failed/Indeterminate status resulting from a TEST_EXECUTION</rdfs:comment>
+    <rdfs:range rdf:resource="#TEST_STATUS"/>
+    <rdfs:domain rdf:resource="#TEST_RESULT"/>
+  </owl:ObjectProperty>
+</rdf:RDF>

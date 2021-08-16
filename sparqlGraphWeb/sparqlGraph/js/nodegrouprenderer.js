@@ -45,7 +45,7 @@ define([	// properly require.config'ed
 
 
 		//============ local object  ExploreTab =============
-		var NodegroupRenderer = function(canvasdiv) {
+		var NodegroupRenderer = function(parentdiv) {
             this.ctx = document.createElement("canvas").getContext("2d");
 
             this.nodegroup = null;
@@ -56,18 +56,10 @@ define([	// properly require.config'ed
             this.linkBuilderCallback = null;
             this.linkEditorCallback = null;
 
-            this.configdiv = document.createElement("div");
-            this.configdiv.style.margin="1ch";
-            this.configdiv.id="ngrConfigDiv";
-            this.configdiv.style.display="table";
-            this.configdiv.style.background = "rgba(32, 16, 16, 0.2)";
+            this.configdiv = VisJsHelper.createConfigDiv("ngrConfigDiv");
+            this.canvasdiv = VisJsHelper.createCanvasDiv("NodegroupRenderer.canvasdiv_" + Math.floor(Math.random() * 10000).toString());
 
-            this.canvasdiv = document.createElement("div");
-            this.canvasdiv.id="NodegroupRenderer.canvasdiv_" + Math.floor(Math.random() * 10000).toString();
-            this.canvasdiv.style.height="100%";
-            this.canvasdiv.style.width="100%";
-
-            canvasdiv.appendChild(this.canvasdiv);
+            parentdiv.appendChild(this.canvasdiv);
 
             this.network = new vis.Network(this.canvasdiv, {}, NodegroupRenderer.getDefaultOptions(this.configdiv));
             this.network.on('click', this.click.bind(this));
@@ -231,6 +223,7 @@ define([	// properly require.config'ed
                     } else if (itemData.type == "header") {
                         if (x_perc > itemData.x_close_perc) {
                             this.snodeRemoverCallback(snode);
+                            delete this.nodeCallbackData[snode.getSparqlID()];
                         } else if (x_perc > itemData.x_expand_perc) {
                             // toggle the grabBar (position[0]) expandFlag and redraw
                             this.setExpandFlag(snode, !this.getExpandFlag(snode));
@@ -311,7 +304,7 @@ define([	// properly require.config'ed
                 for (var id of graphIDs) {
                     if (nodegroupIDs.indexOf(id) == -1) {
                         deletedIDs.push(id);
-                        delete this.nodeCallbackData["id"]
+                        delete this.nodeCallbackData[id]
                     }
                 }
                 this.network.body.data.nodes.remove(deletedIDs);
@@ -848,19 +841,7 @@ define([	// properly require.config'ed
             },
 
             showConfigDialog : function() {
-
-                // hack at getting the UI colors so they don't look terrible
-                for (var e of this.configdiv.children) {
-                    e.style.backgroundColor='white';
-                    for (var ee of e.children) {
-                        if (! ee.innerHTML.startsWith("generate")) {
-                            ee.style.backgroundColor='white';
-                        }
-                    }
-                }
-
-                var m = new ModalIidx("ModalIidxAlert");
-                m.showOK("Network physics", this.configdiv, this.saveConfigToCookie.bind(this));
+                VisJsHelper.showConfigDialog(this.configdiv, this.saveConfigToCookie.bind(this));
             },
 
             saveConfigToCookie : function() {

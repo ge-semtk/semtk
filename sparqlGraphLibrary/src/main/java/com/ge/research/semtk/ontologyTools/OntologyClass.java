@@ -73,12 +73,12 @@ public class OntologyClass extends AnnotatableElement {
 	public ArrayList<String> getParentNameStrings(Boolean stripNamespace){
 		ArrayList<String> retval = new ArrayList<String>();
 		if(stripNamespace){
-			for(OntologyName pn : parentNames){
+			for(OntologyName pn : this.parentNames){
 				retval.add(pn.getLocalName());
 			}
 		}
 		else{
-			for(OntologyName pn : parentNames){
+			for(OntologyName pn : this.parentNames){
 				retval.add(pn.getFullName());
 			}
 		}

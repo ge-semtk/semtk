@@ -56,6 +56,12 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 	public int getInsertQueryMaxSize()    { return 100000; }
 	public int getInsertQueryOptimalSize()  { return 3000; }
 	
+	/* Timeout is not implemented.  */
+	public String getTimeoutSparqlPrefix() { return null; }    
+	public String getTimeoutSparqlClause() { return null; } 
+	public String getTimeoutPostParamName() { return null; }    
+	public String getTimeoutPostParamValue() { return null; } 
+	
 	/**
 	 * Success criteria: contains "done"
 	 * @throws Exception

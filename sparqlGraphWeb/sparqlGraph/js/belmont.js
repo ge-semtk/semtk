@@ -2752,13 +2752,10 @@ SemanticNodeGroup.prototype = {
 
 	addPath : function(path, anchorNode, oInfo, optReverseFlag, optOptionalFlag) {
 		// Adds a path to the canvas.
-		// path start class is the new one
-		// path end class already exists
+		// path start class is the new one, path ENDS at existing nodegroup
 		// return the node corresponding to the path's startClass. (i.e. the one
 		// the user is adding.)
-
-		// reverseFlag:  in diabolic case where path is one triple that starts and ends on same class
-		//               if reverseFlag, then connect
+		// reverseFlag:  force connection in the opposite direction (path STARTS at nodegroup)
 		var reverseFlag = (optReverseFlag === undefined) ? false : optReverseFlag;
 
 		// optionalFlag:  if set, the first link will be optional
@@ -2766,11 +2763,14 @@ SemanticNodeGroup.prototype = {
 
 		// add the first class in the path
 		var retNode = this.addNode(path.getStartClassName(), oInfo);
-		var lastNode = retNode;
+		var lastNode = reverseFlag ? anchorNode : retNode;
 		var node0;
 		var node1;
 		var pathLen = path.getLength();
         var collapseSNodes = [];
+
+
+
 
 		// loop through path but not the last one
 		for (var i = 0; i < pathLen - 1; i++) {
@@ -2794,26 +2794,23 @@ SemanticNodeGroup.prototype = {
 		}
 
 		// link the last two nodes, which by now already exist
-		var class0Uri = path.getClass0Name(pathLen - 1);
 		var class1Uri = path.getClass1Name(pathLen - 1);
 		var attUri = path.getAttributeName(pathLen - 1);
 		var nodeItem;
+        var finalNode = reverseFlag ? retNode : anchorNode;
 
-
-		if (class0Uri === class1Uri && reverseFlag ) {
-			// link diabolical case from anchor node to last node in path
+		if (finalNode.getURI() == class1Uri) {
+            // normal link from last node to anchor node,
+			// When last connection URI matches and reverseFlag isn't set
 			var opt = optionalFlag ? NodeItem.OPTIONAL_REVERSE : NodeItem.OPTIONAL_FALSE;
-			nodeItem = anchorNode.setConnection(lastNode, attUri, opt);
-
-		} else if (anchorNode.getURI() == class1Uri) {
-			// normal link from last node to anchor node
-			var opt = optionalFlag ? NodeItem.OPTIONAL_REVERSE : NodeItem.OPTIONAL_FALSE;
-			nodeItem = lastNode.setConnection(anchorNode, attUri, opt);
+			nodeItem = lastNode.setConnection(finalNode, attUri, opt);
 
 		} else {
-			// normal link from anchor node to last node
+            // reverse connection
+			// either reverseFlag, or normal direction URI wasn't correct so presume backwards will work
+			// throw exception if URI doesn't work
 			var opt = optionalFlag ? NodeItem.OPTIONAL_TRUE : NodeItem.OPTIONAL_FALSE;
-			var nodeItem = anchorNode.setConnection(lastNode, attUri, opt);
+			var nodeItem = finalNode.setConnection(lastNode, attUri, opt);
 
 		}
 
@@ -3724,41 +3721,6 @@ SemanticNodeGroup.prototype = {
 		}
 	},
 
-	getOrAddNode : function(classURI, oInfo, domain, optSuperclassFlag, optOptionalFlag) {
-		// return first (randomly selected) node with this URI
-		// if none exist then create one and add it using the shortest path (see addClassFirstPath)
-		// if superclassFlag, then any subclass of classURI "counts"
-		// if optOptionalFlag: ONLY if node is added, change first nodeItem connection in path's isOptional to true
-
-		// if gNodeGroup is empty: simple add
-		var sNode;
-		var scFlag =       (optSuperclassFlag === undefined) ? false : optSuperclassFlag;
-		var optionalFlag = (optOptionalFlag   === undefined) ? false : optOptionalFlag;
-
-		if (this.getNodeCount() === 0) {
-			sNode = this.addNode(classURI, oInfo);
-
-		} else {
-			// if node already exists, return first one
-			var sNodes;
-
-			// if superclassFlag, then any subclass of classURI "counts"
-			if (scFlag) {
-				sNodes = this.getNodesBySuperclassURI(classURI, oInfo);
-			// otherwise find nodes with exact classURI
-			} else {
-				sNodes = this.getNodesByURI(classURI);
-			}
-
-			if (sNodes.length > 0) {
-				sNode = sNodes[0];
-			} else {
-				sNode = this.addClassFirstPath(classURI, oInfo, domain, optOptionalFlag);
-			}
-		}
-		return sNode;
-	},
-
 	setConnectingNodeItemsOptional : function(snode, val) {
 		// set setSNodeOptional(val) on every nodeItem pointing to this snode
 
@@ -3766,28 +3728,6 @@ SemanticNodeGroup.prototype = {
 		for (var i=0; i < nItemList.length; i++) {
 			nItemList[i].setSNodeOptional(snode, val);
 		}
-	},
-
-	addClassFirstPath : function(classURI, oInfo, domain, optOptionalFlag) {
-		// attach a classURI using the first path found.
-		// Error if less than one path is found.
-		// return the new node
-		// return null if there are no paths
-
-		// get first path from classURI to this nodeGroup
-		var paths = oInfo.findAllPaths(classURI, this.getArrayOfURINames(), domain);
-		if (paths.length === 0) {
-			return null;
-		}
-		var path = paths[0];
-
-		// get first node matching anchor of first path
-		var nlist = this.getNodesByURI(path.getAnchorClassName());
-
-		// add sNode
-		var sNode = this.addPath(path, nlist[0], oInfo, false, optOptionalFlag);
-
-		return sNode;
 	},
 
 	addSubclassPropertyByURI : function(snode, propURI, oInfo) {

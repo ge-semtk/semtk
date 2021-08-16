@@ -46,11 +46,11 @@ public class OntologyPath {
 		this.endClassName = startClassname;
 	}
 	
-	public void addJsonTriples(JSONArray j) throws Exception {
-		
-		for (Object o : j) {
-			JSONArray arr = (JSONArray) o;
-			this.addTriple((String)arr.get(0), (String)arr.get(1), (String)arr.get(2));
+	public OntologyPath(JSONObject jObj) throws Exception {
+		this((String)jObj.get("startClassName"));
+		for (Object o : (JSONArray) jObj.get("triples")) {
+			Triple t = new Triple( (JSONObject) o);
+			this.addTriple(t.getSubject(), t.getPredicate(), t.getObject());
 		}
 	}
 	
@@ -90,8 +90,17 @@ public class OntologyPath {
 		return this.tripleList;
 	}
 	
-	
-	// asOldFashionedList should be deprecated
+	public void setStartClassName(String startClassName) {
+		this.startClassName = startClassName;
+	}
+
+	public void setEndClassName(String endClassName) {
+		this.endClassName = endClassName;
+	}
+
+	public String getLastPredicate() {
+		return this.tripleList.get(this.tripleList.size()-1).getPredicate();
+	}
 	
 	public String getClass0Name(int tripleIndex){
 		return this.tripleList.get(tripleIndex).getSubject();
@@ -207,11 +216,13 @@ public class OntologyPath {
 		return ret;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public JSONObject toJson() {
 		JSONObject ret = new JSONObject();
+		ret.put("startClassName", this.startClassName);
 		JSONArray triples = new JSONArray();
 		for (Triple t : this.tripleList) {
-			triples.add(t.toCsvString());
+			triples.add(t.toJson());
 		}
 		ret.put("triples", triples);
 		return ret;

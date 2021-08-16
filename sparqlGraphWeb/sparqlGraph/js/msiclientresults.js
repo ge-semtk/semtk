@@ -38,6 +38,11 @@ define([	// properly require.config'ed   bootstrap-modal
 
 
 		MsiClientResults.prototype = {
+            doNothing : function(successCallback) {
+                // believe it or not this is actually used.  Exercise left to the reader.
+                successCallback();
+            },
+
             /*
              * Return a hash table of return[type] = cell_tranform_func(x)
              */
@@ -83,6 +88,13 @@ define([	// properly require.config'ed   bootstrap-modal
                 var data = this.getJobIdData();
 
                 this.msi.postToEndpoint("getJsonLdResults", JSON.stringify(data), "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+
+            },
+
+            execGetJsonBlobRes : function (successCallback) {
+                var data = this.getJobIdData();
+
+                this.msi.postToEndpoint("getJsonBlobResults", JSON.stringify(data), "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 
             },
 

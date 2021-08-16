@@ -55,9 +55,6 @@ public class OntologyInfoTests {
         
         assertTrue(oInfo2.getClass("http://kdl.ge.com/durabattery#Battery") != null);
 
-        System.out.println(oInfo.toAdvancedClientJson().toJSONString());
-        System.out.println(oInfo.toAdvancedClientJson().toJSONString().length());
-
 	}
 	
 	@Test

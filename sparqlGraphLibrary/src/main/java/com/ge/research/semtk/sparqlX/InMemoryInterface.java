@@ -38,6 +38,12 @@ public class InMemoryInterface extends SparqlEndpointInterface {
 		
 	}
 
+	/* Timeout is not implemented.  */
+	public String getTimeoutSparqlPrefix() { return null; }    
+	public String getTimeoutSparqlClause() { return null; } 
+	public String getTimeoutPostParamName() { return null; }    
+	public String getTimeoutPostParamValue() { return null; } 
+	
 	public JSONObject executeQueryPost(String query, SparqlResultTypes resultType) throws DontRetryException, Exception {
 		
 		if (resultType == SparqlResultTypes.CONFIRM) {

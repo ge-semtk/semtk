@@ -111,7 +111,8 @@
             gExploreTab = new ExploreTab( document.getElementById("exploreTreeDiv"),
                                        document.getElementById("exploreCanvasDiv"),
                                        document.getElementById("exploreButtonDiv"),
-                                       document.getElementById("exploreSearchForm")
+                                       document.getElementById("exploreSearchForm"),
+                                       g.service.ontologyInfo.url
                                       );
             setTabButton("explore-tab-but", false);
 
@@ -205,52 +206,32 @@
                 guiGraphNonEmpty();
 
             } else {
-                var nodelist = gNodeGroup.getArrayOfURINames();
-                var paths = gOInfo.findAllPaths(dragLabel, nodelist, gConn.getDomain());
+                require([ 'sparqlgraph/js/msiclientresults',
+                          'sparqlgraph/js/msiclientstatus',
+                          'sparqlgraph/js/msiclientnodegroupservice',
+                          'sparqlgraph/js/msiresultset',
+                          'sparqlgraph/js/sparqlgraphjson',
+                      ], function (MsiClientResults, MsiClientStatus, MsiClientNodeGroupService, MsiResultSet, SparqlGraphJson) {
 
-                if (paths.length == 0) {
-                    gNodeGroup.addNode(dragLabel, gOInfo);
-                    nodeGroupChanged(true);
-                    guiGraphNonEmpty();
+                    var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
 
-                } else {
-                    // find possible anchor node(s) for each path
-                    // start with disconnected option
-                    var pathStrList = ["** Disconnected " + dragLabel];
-                    var valList = [[new OntologyPath(dragLabel), null, false]];
+                    //var nodelist = gNodeGroup.getArrayOfURINames();
+                    //var paths = gOInfo.findAllPaths(dragLabel, nodelist, gConn.getDomain());
+                    var sgJson = new SparqlGraphJson(gConn, gNodeGroup, null, false, null);
 
-                    // for each path
-                    for (var p=0; p < paths.length; p++) {
-                        // for each instance of the anchor class
-                        var nlist = gNodeGroup.getNodesByURI(paths[p].getAnchorClassName());
-                        for (var n=0; n < nlist.length; n++) {
+                    var successCallback = function(resJson) {
+                        // no way to check for success from json blob
+                        var resObj = new MsiResultSet(resJson.serviceURL, resJson.xhr);
+                        findAllPathsCallback(dragLabel, resObj);
+                    };
 
-                            pathStrList.push(paths[p].genPathString(nlist[n], false));
-                            valList.push( [paths[p], nlist[n], false ] );
+                    var resultsCall = MsiClientResults.prototype.execGetJsonBlobRes;
+                    var callback = buildStatusResultsCallback(successCallback, resultsCall, MsiClientStatus, MsiClientResults, MsiResultSet);
 
-                            // push it again backwards if it is a special singleLoop
-                            if ( paths[p].isSingleLoop()) {
-                                pathStrList.push(paths[p].genPathString(nlist[n], true));
-                                valList.push( [paths[p], nlist[n], true ] );
-                            }
-                        }
-                    }
-
-                    // if choices are more than "** Disconnected" plus one other path...
-                    if (valList.length > 2) {
-                         require([ 'sparqlgraph/js/modaliidx',
-                                 ], function (ModalIidx) {
-
-                            // offer a choice, defaulting to the shortest non-disconnected path
-                            ModalIidx.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, 80);
-
-                         });
-
-                    } else {
-                        // automatically add using the only path
-                        dropClassCallback(valList[1]);
-                    }
-                }
+                    var predicateMode = getPathFindingMode() == 1;
+                    var ngMode = getPathFindingMode() == 2;
+                    ngClient.execFindAllPaths(sgJson, dragLabel, predicateMode, ngMode, callback);
+                });
             }
         }
         else{
@@ -261,6 +242,66 @@
 
     };
 
+    var findAllPathsCallback = function(addClassStr, simpleRes) {
+        var pathListJson = simpleRes.getSimpleResultField("pathList");
+        var pathWarnings = simpleRes.getSimpleResultField("pathWarnings");
+
+        if (pathListJson.length == 0) {
+            gNodeGroup.addNode(addClassStr, gOInfo);
+            nodeGroupChanged(true);
+            guiGraphNonEmpty();
+
+        } else {
+            // find possible anchor node(s) for each path
+            // start with disconnected option
+            var pathStrList = ["** Disconnected " + addClassStr];
+            var valList = [[new OntologyPath(addClassStr), null, false]];
+
+            // for each path
+            for (var p of pathListJson) {
+                var oPath = OntologyPath.fromJson(p);
+                // for each instance of the anchor class
+                var nlist = gNodeGroup.getNodesByURI(oPath.getAnchorClassName());
+                for (var n=0; n < nlist.length; n++) {
+                    pathStrList.push(oPath.genPathString(nlist[n], false));
+                    valList.push( [oPath, nlist[n], false ] );
+
+                    // push it again backwards if it is a special singleLoop
+                    if (oPath.getStartClassName() == oPath.getEndClassName()) {
+                        pathStrList.push(oPath.genPathString(nlist[n], true));
+                        valList.push( [oPath, nlist[n], true ] );
+                    }
+                }
+            }
+
+            // if choices are more than "** Disconnected" plus one other path...
+            if (valList.length > 2) {
+                 require([ 'sparqlgraph/js/modaliidx',
+                         ], function (ModalIidx) {
+
+                    var extraDOM = undefined;
+                    if (pathWarnings && pathWarnings.length > 0) {
+                        extraDOM = document.createElement("div");
+                        extraDOM.align="left";
+                        for (var warnStr of pathWarnings) {
+                            var alert = document.createElement("span");
+                            alert.classList.add("alert");
+                            alert.classList.add("alert-info");
+                            alert.innerHTML = warnStr;
+                            extraDOM.appendChild(alert);
+                        }
+                    }
+                    // offer a choice, defaulting to the shortest non-disconnected path
+                    ModalIidx.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, 80, extraDOM);
+
+                 });
+
+            } else {
+                // automatically add using the only path
+                dropClassCallback(valList[1]);
+            }
+        }
+    }
     /**
      * Add a node via path from anchorSNode
      * If there is no anchorSNode then just add path.startClass
@@ -840,9 +881,7 @@
     	gOTree.showAll();
 	    gOInfoLoadTime = new Date();
 
-        gExploreTab.setOInfo(gOInfo);
-        gExploreTab.setConn(gConn);
-        gExploreTab.draw();
+        gExploreTab.setConn(gConn, gOInfo);
 
 		setStatus("");
 		guiTreeNonEmpty();
@@ -867,9 +906,7 @@
 	    	gOInfo = new OntologyInfo();
 		    gOInfoLoadTime = new Date();
 
-            gExploreTab.setOInfo(gOInfo);
-            gExploreTab.setConn(gConn);
-            gExploreTab.draw();
+            gExploreTab.setConn(gConn, gOInfo);
 
 	    	gMappingTab.updateNodegroup(gNodeGroup, gConn);
 			gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
@@ -878,7 +915,7 @@
  		// retains gConn
     };
 
-    var doLoadConnection = function(connProfile, optCallback) {
+    var doLoadConnection = function(connProfile, optCallback, optClearCache) {
     	// Callback from the load dialog
     	var callback = (typeof optCallback === "undefined") ? function(){} : optCallback;
 
@@ -900,13 +937,16 @@
 	    	if (gConn != null) {
 
                 oInfoClient = new MsiClientOntologyInfo(g.service.ontologyInfo.url, doLoadFailure);
-                setStatus("clearing ontology cache");
-                oInfoClient.execUncacheOntology(gConn,
-                    function() {
-                        setStatus("");
-                        gOInfo.loadFromService(oInfoClient, gConn, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
-                    }
-                );
+
+                var continueWithLoad = function() {
+                    gOInfo.loadFromService(oInfoClient, gConn, setStatus, function(){doLoadOInfoSuccess(); callback();}, doLoadFailure);
+                };
+
+                if (optClearCache) {
+                    oInfoClient.execUncacheOntology(gConn, continueWithLoad);
+                } else {
+                    continueWithLoad();
+                }
 	    	}
     	});
     };
@@ -1386,7 +1426,13 @@
    	};
 
     var doTest = function () {
-        doNodeGroupDownload(false);
+        var e = document.getElementById("optionNgPathFinding");
+        e.disabled=false;
+        e.style.backgroundColor="white";
+        require(['sparqlgraph/js/modaliidx'],
+             function (ModalIidx) {
+                ModalIidx.alert("Test mode", "Nodegroup path-finding is enabled.<br>Test mode<br><b>Warning:<b>this has been known to lock up a triplestore.", false);
+            });
     };
 
     // append user button to an elem
@@ -1524,14 +1570,14 @@
 
             var csvJsonCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(RESULTS_MAX_ROWS,
                                                                                      queryTableResCallback,
-                                                                                     queryFailureCallback,
+                                                                                     asyncFailureCallback,
                                                                                      setStatusProgressBar.bind(this, "Running Query"),
                                                                                      this.checkForCancel.bind(this),
                                                                                      g.service.status.url,
                                                                                      g.service.results.url);
 
             var jsonLdCallback = MsiClientNodeGroupExec.buildJsonLdCallback(queryJsonLdCallback,
-                                                                            queryFailureCallback,
+                                                                            asyncFailureCallback,
                                                                             setStatusProgressBar.bind(this, "Running Query"),
                                                                             this.checkForCancel.bind(this),
                                                                             g.service.status.url,
@@ -1539,16 +1585,16 @@
             setStatusProgressBar("Running Query", 1);
             switch (getQueryType()) {
 			case "SELECT":
-                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
+                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
                 break;
 			case "COUNT" :
-                client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
+                client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
                 break;
             case "CONSTRUCT":
-                client.execAsyncDispatchConstructFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jsonLdCallback, queryFailureCallback);
+                client.execAsyncDispatchConstructFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jsonLdCallback, asyncFailureCallback);
                 break;
 			case "DELETE":
-                var okCallback = client.execAsyncDispatchDeleteFromNodeGroup.bind(client, gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, queryFailureCallback);
+                var okCallback = client.execAsyncDispatchDeleteFromNodeGroup.bind(client, gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
                 var cancelCallback = function () {
                     guiUnDisableAll();
                     setStatus("");
@@ -1571,7 +1617,7 @@
 
              var csvJsonCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(RESULTS_MAX_ROWS,
                                                                                       queryTableResCallback,
-                                                                                      queryFailureCallback,
+                                                                                      asyncFailureCallback,
                                                                                       setStatusProgressBar.bind(this, "Running Query"),
                                                                                       this.checkForCancel.bind(this),
                                                                                       g.service.status.url,
@@ -1581,7 +1627,7 @@
             var sparql = document.getElementById('queryText').value;
 
             if (sparql.toLowerCase().indexOf("delete") > -1) {
-                var okCallback = client.execAsyncDispatchRawSparql.bind(client, sparql, gConn, csvJsonCallback, queryFailureCallback);
+                var okCallback = client.execAsyncDispatchRawSparql.bind(client, sparql, gConn, csvJsonCallback, asyncFailureCallback);
 
                 var cancelCallback = function () {
                     guiUnDisableAll();
@@ -1590,17 +1636,17 @@
 
                 ModalIidx.okCancel("Delete query", "Query may write / delete triples.<br>Confirm you want to run this query.", okCallback, "Run Query", cancelCallback);
             } else {
-                client.execAsyncDispatchRawSparql(sparql, gConn, csvJsonCallback, queryFailureCallback);
+                client.execAsyncDispatchRawSparql(sparql, gConn, csvJsonCallback, asyncFailureCallback);
             }
 
     	});
     };
 
-    var queryFailureCallback = function (html) {
+    var asyncFailureCallback = function (html) {
         require(['sparqlgraph/js/modaliidx'],
                 function(ModalIidx) {
 
-            ModalIidx.alert("Query Failed", html);
+            ModalIidx.alert("Failure", html);
             guiUnDisableAll();
             setStatus("");
         });
@@ -1878,6 +1924,31 @@
 
     };
 
+    var onchangePathFindingMode = function() {
+        if (getPathFindingMode() != 0) {
+            // if not model, call for getPredicateStats() to make sure they're cached in service Layer
+            // but don't even bother retrieving them
+            require(['sparqlgraph/js/msiclientontologyinfo',
+                    'sparqlgraph/js/msiclientstatus',
+                    'sparqlgraph/js/msiclientresults',
+                    'sparqlgraph/js/msiresultset'
+                    ],
+                function(MsiClientOntologyInfo, MsiClientStatus, MsiClientResults, MsiResultSet) {
+                    var client = new MsiClientOntologyInfo(g.service.ontologyInfo.url);
+                    var resultsCall = MsiClientResults.prototype.doNothing;  // don't try to get the actual predicate stats
+                    var successCallback = function(){setStatus("");};                      // there is no callback from doNothing
+                    var callback = buildStatusResultsCallback(successCallback, resultsCall, MsiClientStatus, MsiClientResults, MsiResultSet, 20, 100);
+                    client.execGetPredicateStats(gConn, callback);
+                }
+            );
+        }
+    };
+
+    // 0 "model", 1 "predicate data", 2 "nodegroup data"
+    var getPathFindingMode = function() {
+        return document.getElementById("selectPathFindingMode").value;
+    };
+
     var onchangeQueryType = function () {
 
         // verify it's ok to move forward
@@ -1938,17 +2009,42 @@
         queryTextChanged(false);
     };
 
+    // set status to a message or "" to finish progress.
     var setStatus = function(msg) {
     	document.getElementById("status").innerHTML= "<font color='red'>" + msg + "</font><br>";
+        if (!msg || msg.length == 0) {
+            gCancelled = false;
+        }
     };
 
-    var setStatusProgressBar = function(msg, percent, optMessageOverride) {
+    var setStatusProgressBarScaled = function(lo, hi, msg, percent) {
+        var newPercent = lo + (percent / 100 * (hi - lo));
+        setStatusProgressBar(msg, newPercent);
+    };
+
+    var setStatusProgressBar = function(msg, percent) {
+
 		var p = (typeof percent === 'undefined') ? 50 : percent;
-        var m = (typeof optMessageOverride === 'undefined' && optMessageOverride != "") ? msg : optMessageOverride;
-		document.getElementById("status").innerHTML = m
+        var m =  msg  || "";
+        var table = document.createElement("table");
+        var tr = document.createElement("tr");
+        table.appendChild(tr);
+        table.style.width = "100%";
+        table.tableLayout="auto";
+        var tdLeft = document.createElement("td");
+        tr.appendChild(tdLeft);
+        var tdRight = document.createElement("td");
+        tdRight.style.width = "1%";
+        tdRight.style.whiteSpace = "no-wrap";
+        tr.appendChild(tdRight);
+		tdLeft.innerHTML = m
 				+ '<div class="progress progress-info progress-striped active"> \n'
-				+ '  <div class="bar" style="width: ' + p
-				+ '%;"></div></div>';
+				+ '  <div class="bar" style="width: ' + p + '%;">'
+				+ '</div></div>';
+        tdRight.innerHTML = "<button class='btn btn-danger' onclick='javascript:doCancel()' title='Cancel'><icon class='icon-remove-sign'></i></button>";
+        var status = document.getElementById("status");
+        status.innerHTML="";
+        status.appendChild(table);
 	};
 
     var buildQuery = function() {
@@ -2029,8 +2125,8 @@
                     ], function(MsiClientNodeGroupService) {
                 clearResults();
 
-                var ngsClient = new MsiClientNodeGroupService(g.service.nodeGroup.url, queryFailureCallback);
-                ngsClient.execAsyncGetRuntimeConstraints(gNodeGroup, gConn, runGraphWithConstraints, queryFailureCallback);
+                var ngsClient = new MsiClientNodeGroupService(g.service.nodeGroup.url, asyncFailureCallback);
+                ngsClient.execAsyncGetRuntimeConstraints(gNodeGroup, gConn, runGraphWithConstraints, asyncFailureCallback);
             });
     	}
     };
@@ -2193,9 +2289,6 @@
         var opposite = [];
 
         // Cancel button works backwards if we're running via services
-        if (runViaServiceFlag) {
-            opposite.push("btnFormCancel");
-        }
 
         var buttons = document.getElementsByTagName("button");
         for (var i = 0; i < buttons.length; i++) {
@@ -2270,9 +2363,7 @@
     var clearEverything = function () {
     	clearTree();
     	gOInfo = new OntologyInfo();
-        gExploreTab.setOInfo(gOInfo);
-        gExploreTab.setConn(gConn);
-        gExploreTab.draw();
+        gExploreTab.setConn(gConn, gOInfo);
     	setConn(null);
 	    gOInfoLoadTime = new Date();
     };
@@ -2318,7 +2409,7 @@
  		setTabButton("mapping-tab-but", false);
 		setTabButton("upload-tab-but", false);
 
-        gExploreTab.stopLayout();
+        gExploreTab.releaseFocus();
 	};
 
     var tabExploreActivated = function() {
@@ -2329,7 +2420,7 @@
 		setTabButton("mapping-tab-but", false);
 		setTabButton("upload-tab-but", false);
 
-        gExploreTab.startLayout();
+        gExploreTab.takeFocus();
 	};
 
     var tabMappingActivated = function() {
@@ -2340,7 +2431,7 @@
  		setTabButton("mapping-tab-but", true);
 		setTabButton("upload-tab-but", false);
 
-        gExploreTab.stopLayout();
+        gExploreTab.releaseFocus();
 
 		gMappingTab.updateNodegroup(gNodeGroup, gConn);
 
@@ -2355,8 +2446,56 @@
   		setTabButton("mapping-tab-but", false);
 		setTabButton("upload-tab-but", true);
 
-        gExploreTab.stopLayout();
+        gExploreTab.releaseFocus();
 
 		gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
 
 	};
+
+    //
+    // Build a callback which uses the status and results service to get to completion.
+    //     callback parameter:  simpleResults with jobID
+    // GUI: disables screen when called, handles cancel and unDisable at completion.
+    // successCallback: called by resultsCall
+    // resultsCall: a resultsClient function that takes a callback(successJson) as parameter
+    //            e.g. MsiClientResults.prototype.execGetJsonBlobRes
+
+    buildStatusResultsCallback = function(successCallback, resultsCall, MsiClientStatus, MsiClientResults, MsiResultSet, optLoPercent, optHiPercent) {
+
+        var failureCallback = this.asyncFailureCallback.bind(this);
+        var progressCallback = this.setStatusProgressBarScaled.bind(this, optLoPercent || 0, optHiPercent || 100);
+        var checkForCancelCallback = this.checkForCancel.bind(this);
+        guiDisableAll(true);
+
+        // callback for the nodegroup execution service to send jobId
+        var simpleResCallback = function(simpleResJson) {
+
+            var resultSet = new MsiResultSet(simpleResJson.serviceURL, simpleResJson.xhr);
+            if (!resultSet.isSuccess()) {
+                failureCallback(resultSet.getFailureHtml());
+            } else {
+                var jobId = resultSet.getSimpleResultField("JobId");
+                // callback for status service after job successfully finishes
+                var statusSuccessCallback = function() {
+                    // callback for results service
+                    var resultsSuccessCallback = function (results) {
+                        guiUnDisableAll();
+                        successCallback(results);
+                        progressCallback("finishing up", 99);
+                        setTimeout(function () { setStatus(""); }, 200);
+                    };
+                    var resultsClient = new MsiClientResults(g.service.results.url, jobId);
+                    resultsCall.bind(resultsClient)(resultsSuccessCallback);
+                };
+
+                progressCallback("", 1);
+
+                // call status service loop
+                var statusClient = new MsiClientStatus(g.service.status.url, jobId, failureCallback);
+                statusClient.execAsyncWaitUntilDone(statusSuccessCallback, checkForCancelCallback, progressCallback);
+            }
+
+        };
+
+        return simpleResCallback;
+    };
