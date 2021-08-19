@@ -446,29 +446,42 @@ public class PerformanceTest {
 			regex.append(")");
 
 			Table t;
+			String sparql;
 
 			// Select filter in
 			if (lastSec[3] < circuit_breaker_sec) {
 				startTask("addBatteryDescription select filter in 10, triples," + triples + ",total rows," + total_rows);
-				t = sei.executeQueryToTable(SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildFilterInConstraint("?p", idList, XSDSupportedType.STRING, sei)));
-				assert(t.getNumRows() == SIZE);
+				sparql = SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildFilterInConstraint("?o", idList, XSDSupportedType.STRING, sei));
+				t = sei.executeQueryToTable(sparql);
+				myAssert(String.format("FILTER IN did not return %d rows", SIZE), t.getNumRows() == SIZE);
 				lastSec[3] = endTask();
+				if (pass==0) {
+					System.out.println("Sample FILTER IN" + sparql);
+				}
 			}
 
 			// Select regex
 			if (lastSec[4] < circuit_breaker_sec) {
 				startTask("addBatteryDescription select filter regex 10, triples," + triples + ",total rows," + total_rows);
-				t = sei.executeQueryToTable(SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildRegexConstraint("?p", regex.toString(), XSDSupportedType.STRING)));
-				assert(t.getNumRows() == SIZE);
+				sparql = SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildRegexConstraint("?o", regex.toString(), XSDSupportedType.STRING));
+				t = sei.executeQueryToTable(sparql);
+				myAssert(String.format("FILTER REGEX did not return %d rows", SIZE), t.getNumRows() == SIZE);
 				lastSec[4] = endTask();
+				if (pass==0) {
+					System.out.println("Sample FILTER REGEX" + sparql);
+				}
 			}
 
 			// Select values
 			if (lastSec[5] < circuit_breaker_sec) {
 				startTask("addBatteryDescription select values 10, triples," + triples + ",total rows," + total_rows);
-				t =sei.executeQueryToTable(SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildValuesConstraint("?p", idList, XSDSupportedType.STRING, sei)));
-				assert(t.getNumRows() == SIZE);
+				sparql = SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildValuesConstraint("?o", idList, XSDSupportedType.STRING, sei));
+				t =sei.executeQueryToTable(sparql);
+				myAssert(String.format("VALUES clause did not return %d rows", SIZE), t.getNumRows() == SIZE);
 				lastSec[5] = endTask();
+				if (pass==0) {
+					System.out.println("Sample VALUES " + sparql);
+				}
 			}
 
 			// Select from subclass
@@ -477,15 +490,31 @@ public class PerformanceTest {
 				NodeGroup ng = sgJson3.getNodeGroup();
 				PropertyItem item = ng.getPropertyItemBySparqlID("?batteryId");
 				item.setValueConstraint(new ValueConstraint(ValueConstraint.buildValuesConstraint("?batteryId", idList, XSDSupportedType.STRING, sei)));
-				t = sei.executeQueryToTable(ng.generateSparqlSelect());
-				assert(t.getNumRows() == SIZE);
+				
+				// clean up the nodegroup:  remove optionals and order by so it is a little more fair
+				item.setOptMinus(PropertyItem.OPT_MINUS_NONE);
+				PropertyItem item2 = ng.getPropertyItemBySparqlID("?batteryDesc");
+				item2.setOptMinus(PropertyItem.OPT_MINUS_NONE);
+				ng.clearOrderBy();
+				
+				sparql = ng.generateSparqlSelect();   // since no oInfo, no optimizing of subclass*.  always subclass*
+				t = sei.executeQueryToTable(sparql);
+				myAssert(String.format("SUBCLASS VALUES did not return %d rows", SIZE), t.getNumRows() == SIZE);
 				lastSec[6] = endTask();
+				if (pass==0) {
+					System.out.println("Sample SUBCLASS VALUES " + sparql);
+				}
 			}
 
 		}
 
 	}
 
+	private static void myAssert(String failMessage, boolean b) throws Exception {
+		if (!b) {
+			throw new Exception(failMessage);
+		}
+	}
 
 	/**
 
