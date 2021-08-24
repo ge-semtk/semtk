@@ -27,6 +27,8 @@ import java.util.regex.Pattern;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.belmont.XSDSupportedType;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.ontologyTools.OntologyPath;
+import com.ge.research.semtk.ontologyTools.Triple;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class SparqlToXUtils {
@@ -238,7 +240,11 @@ public class SparqlToXUtils {
   }
   
   public static String generateSelectSPOSparql(SparqlEndpointInterface sei, String clause) {
-	  return "SELECT ?s ?p ?o from <" + sei.getGraph() + "> WHERE { ?s ?p ?o. " + clause + "}";
+	  return "SELECT ?s ?p ?o FROM <" + sei.getGraph() + "> WHERE { ?s ?p ?o. " + clause + "}";
+  }
+  
+  public static String generateConstructSPOSparql(SparqlEndpointInterface sei, String clause) {
+	  return "CONSTRUCT { ?s ?p ?o } FROM <" + sei.getGraph() + "> WHERE { ?s ?p ?o. " + clause + "}";
   }
   
   /**
@@ -417,6 +423,49 @@ public class SparqlToXUtils {
 		return sparql;
 	}
 	
+	public static String generatePathInstanceCountQuery(OntologyPath path, SparqlConnection conn, OntologyInfo oInfo) throws Exception {
+		
+		String sparql = 
+				"select (COUNT(*) as ?count)\n"
+				+ generateSparqlFromOrUsing("", "from", conn, oInfo) + "\n"
+				+ "WHERE {\n"
+				;
+		OntologyPath tempPath = new OntologyPath(path.getStartClassName());
+		Triple t0 = path.getTriple(0);
+		sparql += String.format(
+				"	   ?s_0 a <%s>.\n" +
+				"      ?s_0 <%s> ?o_0.\n " +
+				"	   ?o_0 a <%s>.\n",
+				t0.getSubject(),
+				t0.getPredicate(),
+				t0.getObject()
+				);
+		tempPath.addTriple(t0.getSubject(),	t0.getPredicate(), t0.getObject());
+		
+		for (int i=1; i < path.getLength(); i++) {
+			Triple t = path.getTriple(i);
+			
+			// add next triple forward or backward
+			if (t.getSubject().equals(tempPath.getEndClassName())) {
+				sparql += String.format(
+						"      ?o_%d <%s> ?o_%d.\n " +
+						"	   ?o_%d a <%s> .\n", 
+						i-1, t.getPredicate(), i,
+						i, t.getObject());
+			} else {
+				sparql += String.format(
+						"      ?o_%d <%s> ?o_%d.\n " +
+						"	   ?o_%d a <%s>.\n", 
+						i, t.getPredicate(), i-1,
+						i, t.getSubject());
+			}
+			
+			tempPath.addTriple(t.getSubject(),	t.getPredicate(), t.getObject());
+		}
+		sparql += "}";
+		return sparql;
+	}
+	
 	public static String tabIndent(String tab) {
 		return tab.concat("\t");
 	}
@@ -563,4 +612,6 @@ public class SparqlToXUtils {
 		System.out.println(sparql.toString());
 		return sparql.toString();
 	}
+
+	
 }

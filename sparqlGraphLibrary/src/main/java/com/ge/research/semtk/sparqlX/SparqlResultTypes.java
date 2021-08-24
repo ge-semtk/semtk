@@ -30,6 +30,7 @@ public enum SparqlResultTypes {
 	GRAPH_JSONLD,  	// expect graph results (e.g. for construct queries)
 	// GRAPH_TURTLE	// in the future may support multiple result types for a graph
 	CONFIRM, 		// expect a confirmation message (e.g. "inserted 5 tuples", "cleared graph")
+	RDF,            // 
 	HTML;           // e.g. uploading owl to strange endpoint
 	/**
 	 * Determines if a query is a DROP GRAPH query or not.

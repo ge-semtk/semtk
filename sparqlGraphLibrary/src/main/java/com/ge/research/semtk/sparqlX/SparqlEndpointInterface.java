@@ -106,6 +106,7 @@ public abstract class SparqlEndpointInterface {
 	protected static final String CONTENTTYPE_SPARQL_QUERY_RESULT_JSON = "application/sparql-results+json"; 
 	protected static final String CONTENTTYPE_X_JSON_LD = "application/x-json+ld";
 	protected static final String CONTENTTYPE_HTML = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
+	protected static final String CONTENTTYPE_RDF = "application/rdf+xml";
 	
 	private static final int MAX_QUERY_TRIES = 4;
 
@@ -981,6 +982,20 @@ public abstract class SparqlEndpointInterface {
 			return this.handleEmptyResponse(resultType); 
 		}
 		
+		// check for RDF first, return { "rdf": "<rdf ....    >" } 
+		
+		if (resultType==SparqlResultTypes.RDF) {
+			String beginning = responseTxt.length() > 100 ? responseTxt.substring(0,100) : responseTxt;
+			beginning = beginning.trim();
+			if (!beginning.trim().contains("<rdf")) {
+				throw new Exception("non-rdf response, starting with: " + beginning);
+			}
+			JSONObject res = new JSONObject();
+			res.put(SparqlResultTypes.RDF.toString(), responseTxt);
+			return res;
+		}
+		
+		// it now must be JSON.  Start by parsing.
 		try {
 			responseObj = new JSONParser().parse(responseTxt);
 		} catch(Exception e) {
@@ -1100,6 +1115,14 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 
+	public String downloadOwl() throws AuthorizationException, Exception {
+		String query = SparqlToXUtils.generateConstructSPOSparql(this, "");
+		AuthorizationManager.authorizeQuery(this, query);
+		
+		JSONObject res = this.executeQueryPost(query, SparqlResultTypes.RDF);
+		return (String) res.get(SparqlResultTypes.RDF.toString());
+	}
+	
 	/**
 	 * Execute query using GET (use should be rare - in cases where POST is not supported) 
 	 * See "internal use" note
@@ -1228,6 +1251,8 @@ public abstract class SparqlEndpointInterface {
 			return CONTENTTYPE_X_JSON_LD; 
 		} else if (resultType == SparqlResultTypes.HTML) { 
 			return CONTENTTYPE_HTML; 
+		} else if (resultType == SparqlResultTypes.RDF) { 
+			return CONTENTTYPE_RDF; 
 		} 
 		
 		// fail and throw an exception if the value was not valid.
@@ -1264,7 +1289,10 @@ public abstract class SparqlEndpointInterface {
 		} else if(resultType == SparqlResultTypes.GRAPH_JSONLD) {
 			retval = getJsonldResponse(responseObj);
 		
-		} else{
+		} else if (resultType == SparqlResultTypes.RDF) {
+			retval = (JSONObject) responseObj;
+			
+		} else {
 			throw new Exception("an unknown results type was passed to \"getResultsBasedOnExpectedType\". don't know how to handle type: " + resultType);
 		}
 		return retval;

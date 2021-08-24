@@ -63,6 +63,7 @@ import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
+import com.google.common.net.MediaType;
 
 import io.swagger.annotations.ApiOperation;
 
@@ -377,7 +378,7 @@ public class SparqlQueryServiceRestController {
 	 * Execute clear all query 
 	 */
 	@CrossOrigin
-	@RequestMapping(value="/clearAll", method= RequestMethod.POST)
+	@RequestMapping(value={"/clearAll", "/clearGraph"}, method= RequestMethod.POST)
 	public JSONObject clearAll(@RequestBody SparqlAuthRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		GeneralResultSet resultSet = null;
@@ -404,6 +405,31 @@ public class SparqlQueryServiceRestController {
 		return resultSet.toJson();
 	}	
 	
+	/**
+	 * get <rdf>....</rdf> dump of a graph
+	 * or <error>message</error>
+	 */
+	@CrossOrigin
+	@RequestMapping(value={"/downloadOwl"}, method= RequestMethod.POST, produces="rdf/xml")
+	public String downloadOwl(@RequestBody SparqlAuthRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SparqlEndpointInterface sei = null;
+		LocalLogger.logToStdOut("Sparql Query Service start downloadOwl");
+		
+		try {			
+			requestBody.validate(); 	// check inputs 		
+			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
+			return sei.downloadOwl();
+			
+		} catch (Exception e) {			
+			LocalLogger.printStackTrace(e);
+			return "<error>\n\t" + e.toString() + "\n</error>";
+			
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		}		
+		
+	}	
 	//public JSONObject uploadOwl(@RequestBody SparqlAuthRequestBody requestBody, @RequestParam("owlFile") MultipartFile owlFile){
     // We can't use a @RequestBody with a @RequestParam,
 	// So the SparqlAuthRequestBody is broken into individual string @RequestParams

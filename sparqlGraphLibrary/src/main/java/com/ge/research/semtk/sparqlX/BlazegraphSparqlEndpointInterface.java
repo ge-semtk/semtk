@@ -84,7 +84,7 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 		List<NameValuePair> params = new ArrayList<NameValuePair>(3);
 		
 		// if (this.password == null) {
-		if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.GRAPH_JSONLD) { 
+		if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.GRAPH_JSONLD || resultType == SparqlResultTypes.RDF) { 
 			params.add(new BasicNameValuePair("query", query));
 		} else {
 			params.add(new BasicNameValuePair("update", query));
@@ -135,7 +135,7 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * Build a POST URL
 	 */
 	public String getPostURL(SparqlResultTypes resultType) {
-		if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.GRAPH_JSONLD) { 
+		if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.GRAPH_JSONLD || resultType == SparqlResultTypes.RDF) { 
 			return String.format("%s:%s/%s/sparql", this.server, this.port, this.endpoint);	
 		} else{
 			// context-uri trick is from
