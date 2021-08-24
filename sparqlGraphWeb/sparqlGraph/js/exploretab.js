@@ -563,45 +563,51 @@ define([	// properly require.config'ed
 
                 // first pass: add nodes for each type with count
                 for (var key in blob.exactTab) {
-                    var triple = key.split('|');
-                    var count = blob.exactTab[key];
+                    var jObj = JSON.parse(key);
 
-                    var oSubjectClass = new OntologyName(triple[0]);
-                    var oPredicate = new OntologyName(triple[1]);
-                    var oObjectClass = new OntologyName(triple[2]);
+                    // only visualize one-hops
+                    if (jObj.triples.length == 1) {
+                        var count = blob.exactTab[key];
+                        var oSubjectClass = new OntologyName(jObj.triples[0].s);
+                        var oPredicate = new OntologyName(jObj.triples[0].p);
+                        var oObjectClass = new OntologyName(jObj.triples[0].o);
 
-                    // skipping Type since w already have oSubjectClass
-                    if ( oPredicate.getLocalName() == "type") {
-                        var myLabel = oSubjectClass.getLocalName() + " " + count;
-                        nodeData.push({id: oSubjectClass.getFullName(), label: myLabel, title: oSubjectClass.getFullName(), group: oSubjectClass.getNamespace() });
+                        // skipping Type since w already have oSubjectClass
+                        if ( oPredicate.getLocalName() == "type") {
+                            var myLabel = oSubjectClass.getLocalName() + " " + count;
+                            nodeData.push({id: oSubjectClass.getFullName(), label: myLabel, title: oSubjectClass.getFullName(), group: oSubjectClass.getNamespace() });
+                        }
                     }
                 }
 
                 // second pass: add edges
                 for (var key in blob.exactTab) {
-                    var triple = key.split('|');
-                    var count = blob.exactTab[key];
+                    var jObj = JSON.parse(key);
 
-                    var oSubjectClass = new OntologyName(triple[0]);
-                    var oPredicate = new OntologyName(triple[1]);
-                    var oObjectClass = new OntologyName(triple[2]);
+                    // only visualize one-hops
+                    if (jObj.triples.length == 1) {
+                        var count = blob.exactTab[key];
+                        var oSubjectClass = new OntologyName(jObj.triples[0].s);
+                        var oPredicate = new OntologyName(jObj.triples[0].p);
+                        var oObjectClass = new OntologyName(jObj.triples[0].o);
 
-                    // skipping Type since w already have oSubjectClass
-                    if ( oPredicate.getLocalName() != "type") {
-                        var width = Math.ceil(Math.log10(count));
+                        // skipping Type since w already have oSubjectClass
+                        if ( oPredicate.getLocalName() != "type") {
+                            var width = Math.ceil(Math.log10(count));
 
-                        if (oObjectClass.getFullName() == "") {
-                            // connection to data, not a class
-                            if (SHOW_DATA) {
-                                // data: separate each into it's own node
-                                var dataId = triple[0] + "|" + triple[1] + "|data";
-                                nodeData.push({id: dataId, label: " ", group: "data" });
-                                edgeData.push({from: oSubjectClass.getFullName(), to: dataId, label: oPredicate.getLocalName() + " " + count, arrows: 'to', width: width});
+                            if (oObjectClass.getFullName() == "") {
+                                // connection to data, not a class
+                                if (SHOW_DATA) {
+                                    // data: separate each into it's own node
+                                    var dataId = oSubjectClass.getFullName() + "|" + oPredicate.getFullName() + "|data";
+                                    nodeData.push({id: dataId, label: " ", group: "data" });
+                                    edgeData.push({from: oSubjectClass.getFullName(), to: dataId, label: oPredicate.getLocalName() + " " + count, arrows: 'to', width: width});
+                                }
+
+                            } else {
+                                // normal class-to-class (all class nodes already added by pass1)
+                                edgeData.push({from: oSubjectClass.getFullName(), to: oObjectClass.getFullName(), label: oPredicate.getLocalName() + " " + count, arrows: 'to', width: width});
                             }
-
-                        } else {
-                            // normal class-to-class (all class nodes already added by pass1)
-                            edgeData.push({from: oSubjectClass.getFullName(), to: oObjectClass.getFullName(), label: oPredicate.getLocalName() + " " + count, arrows: 'to', width: width});
                         }
                     }
                 }

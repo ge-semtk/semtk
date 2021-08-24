@@ -59,6 +59,7 @@ public class PathFindingTests_IT {
 	
 	private final static String REQUIREMENT = "http://arcos.rack/REQUIREMENTS#REQUIREMENT";
 	private final static String TEST_RESULT = "http://arcos.rack/TESTING#TEST_RESULT";
+	private final static String TEST = "http://arcos.rack/TESTING#TEST";
 	private final static String THING = "http://arcos.rack/PROV-S#THING";
 	private final static String WAS_DERIVED_FROM = "http://arcos.rack/PROV-S#wasDerivedFrom";
 	private final static String WAS_IMPACTED_BY = "http://arcos.rack/PROV-S#wasImpactedBy";
@@ -96,13 +97,15 @@ public class PathFindingTests_IT {
 		PredicateStats stats = new PredicateStats(TestGraph.getSparqlConn(), oInfo);
 		
 		ArrayList<OntologyPath> paths2 = oInfo.findAllPaths(TEST_RESULT, REQUIREMENT, stats);
-		for (int i=0; i < paths2.size(); i++) {
-			System.out.println(paths2.get(i).asString());
-		}
 		
-		assertTrue(true);
+		assertEquals("Number of paths found", 1, paths2.size());
+		OntologyPath path = paths2.get(0);
+		assertEquals("Path start", TEST_RESULT, path.getStartClassName());
+		assertEquals("Path end", REQUIREMENT, path.getEndClassName());
+		assertTrue(path.containsClass(TEST));
 
 	}
+	
 	
 	@Test
 	/**
