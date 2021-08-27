@@ -168,6 +168,25 @@ define([	// properly require.config'ed
 					this.returnCheckOnClick();   // handles any disabling fields
 				}
 
+                // return type
+                var retTypeCheck = this.getFieldElement(ModalItemDialog.RETURN_TYPE_CHECK);
+                if (retTypeCheck != null) {
+                    retTypeCheck.checked = false;
+                    this.returnTypeCheckOnClick();
+                }
+
+                // delete check
+                var delCheck = this.getFieldElement(ModalItemDialog.DELETE_CHECK);
+                if (delCheck != null) {
+                    delCheck.checked = false;
+                }
+
+                // delete select
+                var delSelect = this.getFieldElement(ModalItemDialog.DELETE_SELECT);
+                if (delSelect != null) {
+                    delSelect.selectedIndex = 0;
+                }
+
 				// choose first (default) item in the union select
 				var optMinSelect = this.getFieldElement(ModalItemDialog.OPTMINUNI_SELECT);
 				if (optMinSelect != null) {
@@ -187,6 +206,11 @@ define([	// properly require.config'ed
 
 				// clear the constraint
 				this.setFieldValue(ModalItemDialog.CONSTRAINT_TEXT, "");
+
+                // functions
+                for (var f of ModalItemDialog.FUNCTION_LIST) {
+                    this.getFieldElement(f).checked = false;
+                }
 
 				// note that we leave the sparqlID
 			},
@@ -275,13 +299,9 @@ define([	// properly require.config'ed
 			setRunningQuery : function (flag) {
 				if (flag) {
 					this.setStatus("Running query...");
-			    	//document.getElementById("btnSuggest").className = "btn disabled";
-			    	//document.getElementById("btnSuggest").disabled = true;
 				} else {
 					this.setStatus("");
-			    	//document.getElementById("btnSuggest").className = "btn";
-			    	//document.getElementById("btnSuggest").disabled = false;
-				};
+			    };
 			},
 
             /* run query to suggest values
@@ -1055,8 +1075,18 @@ define([	// properly require.config'ed
 					// fill the values list
 					// this.query();
 
+                    var delSel = this.getFieldElement(ModalItemDialog.DELETE_SELECT);
+                    var delCheck = this.getFieldElement(ModalItemDialog.DELETE_CHECK);
 					// Set returned if it looks like this dialog is totally empty
-					if (this.item.getIsReturned() == false && this.item.getIsBindingReturned() == false && this.item.getConstraints() == "") {
+					if (this.item.getIsReturned() == false &&
+                        this.item.getIsBindingReturned() == false &&
+                        this.item.getFunctions().length == 0 &&
+                        this.item.getIsTypeReturned() == false &&
+                        this.item.getIsRuntimeConstrained() == false &&
+                        (delSel == null || delSel.selectedIndex == 0) &&
+                        (delCheck == null || delCheck.checked == false) &&
+                        this.getFieldElement(ModalItemDialog.OPTMINUNI_SELECT).selectedIndex == 0 &&
+                        this.item.getConstraints() == "") {
 						returnCheck.checked = true;
 						this.returnCheckOnClick();
 					}
