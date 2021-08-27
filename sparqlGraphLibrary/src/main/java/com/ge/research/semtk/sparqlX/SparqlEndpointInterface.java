@@ -502,6 +502,8 @@ public abstract class SparqlEndpointInterface {
 			resultSet = new TableResultSet(); // non-construct queries produce tables
 		}else if (resultType == SparqlResultTypes.HTML) {
 			resultSet = new SimpleResultSet();
+		}else if (resultType == SparqlResultTypes.RDF) {
+			resultSet = new SimpleResultSet();
 		}
 		
 		// execute the query
