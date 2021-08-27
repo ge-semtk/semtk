@@ -749,7 +749,7 @@
         nodeGroupChanged(true);
 	};
 
-    var propertyItemDialogCallback = function(propItem, varName, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data) {
+    var propertyItemDialogCallback = function(propItem, varName, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data, functions) {
         // Note: ModalItemDialog validates that sparqlID is legal
 
         require([ 'sparqlgraph/js/modalitemdialog',
@@ -788,14 +788,14 @@
             propItem.setIsRuntimeConstrained(rtConstrainedFlag);
             propItem.setConstraints(constraintStr);
             propItem.setIsMarkedForDeletion(delMarker);
-
+            propItem.setFunctions(functions);
             gNodeGroup.removeInvalidOrderBy();
 
             nodeGroupChanged(true);
         });
     };
 
-    var snodeItemDialogCallback = function(snodeItem, varName, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data) {
+    var snodeItemDialogCallback = function(snodeItem, varName, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data, functions) {
         require([ 'sparqlgraph/js/modalitemdialog',
                 ], function (ModalItemDialog) {
 
@@ -833,6 +833,7 @@
 
         	// constraints
         	snodeItem.setConstraints(constraintStr);
+            snodeItem.setFunctions(functions);
 
             nodeGroupChanged(true);
         });

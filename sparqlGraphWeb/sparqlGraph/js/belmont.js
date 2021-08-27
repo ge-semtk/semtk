@@ -680,6 +680,7 @@ var PropertyItem = function(keyname, valType, valueTypeURI, UriRelationship, jOb
 		this.fullURIName = '';
 		this.SparqlID = '';
 		this.isReturned = false;
+        this.functions = [];
         this.binding = null;
         this.isBindingReturned = false;
 		this.optMinus = 0;
@@ -715,6 +716,9 @@ PropertyItem.prototype = {
             ret.isBindingReturned = this.isBindingReturned;
         }
 
+        if (this.functions.length > 0) {
+            ret.functions = this.functions;
+        }
 		return ret;
 	},
 	fromJson : function(jObj) {
@@ -740,6 +744,12 @@ PropertyItem.prototype = {
         } else {
             this.binding = null;
             this.isBindingReturned = false;
+        }
+        // optional things
+        if (jObj.hasOwnProperty("functions")) {
+            this.functions = jObj.functions;
+        } else {
+            this.functions = [];
         }
 
 		this.isRuntimeConstrained = jObj.hasOwnProperty("isRuntimeConstrained") ? jObj.isRuntimeConstrained : false;
@@ -781,6 +791,20 @@ PropertyItem.prototype = {
 	addInstanceValue : function(inval){
 		this.instanceValues.push(inval);
 	},
+
+    getFunctions : function() {
+        return this.functions;
+    },
+    setFunctions : function(list) {
+        this.functions = list;
+    },
+    getFunctionSparqlIDs : function() {
+        ret = [];
+        for (var id of this.functions) {
+            ret.push(this.getSparqlID + "_" + id);
+        }
+        return ret;
+    },
 	getInstanceValues : function() {
 		return this.instanceValues;
 	},
@@ -863,7 +887,7 @@ PropertyItem.prototype = {
 	// return values from the propertyItem
 
     hasAnyReturn : function() {
-		return this.isReturned || this.isTypeReturned || this.isBindingReturned;
+		return this.isReturned || this.isTypeReturned || this.isBindingReturned || this.functions.length > 0;
 	},
     getBinding : function() {
         return this.binding;
@@ -998,6 +1022,7 @@ var SemanticNode = function(nome, plist, nlist, fullName, subClassNamesUNUSED,
 											// always included in the query
 		this.isReturned = false;
         this.isTypeReturned = false;
+        this.functions = [];
         this.binding = null;
         this.isBindingReturned = false;
 		this.isRuntimeConstrained = false;
@@ -1052,6 +1077,11 @@ SemanticNode.prototype = {
         if (this.isTypeReturned) {
             ret.isTypeReturned = true;
         }
+
+        if (this.functions.length > 0) {
+            ret.functions = this.functions;
+        }
+
         if (this.binding) {
             ret.binding = this.binding;
             ret.isBindingReturned = this.isBindingReturned;
@@ -1100,6 +1130,12 @@ SemanticNode.prototype = {
             this.isTypeReturned = false;
         }
 
+        if (jObj.hasOwnProperty("functions")) {
+            this.functions = jObj.functions;
+        } else {
+            this.functions = [];
+        }
+
         if (jObj.hasOwnProperty("binding")) {
             this.binding = jObj.binding;
             this.isBindingReturned = jObj.isBindingReturned;
@@ -1127,7 +1163,19 @@ SemanticNode.prototype = {
 	getInstanceValue : function() {
 		return this.instanceValue;
 	},
-
+    getFunctions : function() {
+        return this.functions;
+    },
+    setFunctions : function(list) {
+        this.functions = list;
+    },
+    getFunctionSparqlIDs : function() {
+        ret = [];
+        for (var id of this.functions) {
+            ret.push(this.getSparqlID + "_" + id);
+        }
+        return ret;
+    },
 	buildFilterConstraint : function(op, val) {
 		// build but don't set a filter constraint from op and value
 		f = new SparqlFormatter();
@@ -1193,7 +1241,7 @@ SemanticNode.prototype = {
 		this.valueConstraint = c;
 	},
     hasAnyReturn : function() {
-		return this.isReturned || this.isTypeReturned || this.isBindingReturned;
+		return this.isReturned || this.isTypeReturned || this.isBindingReturned || this.functions.length > 0;
 	},
     getBinding : function() {
         return this.binding;
@@ -1716,7 +1764,8 @@ SemanticNodeGroup.QUERY_CONSTRUCT = 3;
 SemanticNodeGroup.QUERY_CONSTRUCT_WHERE = 4;
 SemanticNodeGroup.QUERY_DELETE_WHERE = 5;
 
-SemanticNodeGroup.JSON_VERSION = 13;
+SemanticNodeGroup.JSON_VERSION = 14;
+// version 14 - added functions (optional)
 // version 13 - removed node.NodeName
 // version 12 - unionHash
 // version 11 - import spec has dataValidator
@@ -2387,6 +2436,10 @@ SemanticNodeGroup.prototype = {
     				if (snode.getIsTypeReturned()) {
     					ret[snode.getTypeSparqlID()] = 1;
     				}
+
+                    for (var id of snode.getFunctionSparqlIDs()) {
+                        ret[id] = 1;
+                    }
     			}
             }
 
@@ -2403,6 +2456,9 @@ SemanticNodeGroup.prototype = {
     					if (prop.getBinding() != null) {
     						ret[prop.getBinding()] = 1;
     					}
+                        for (var id of prop.getFunctionSparqlIDs()) {
+                            ret[id] = 1;
+                        }
     				}
                 }
 			}
@@ -3475,6 +3531,9 @@ SemanticNodeGroup.prototype = {
             }
             if (items[i].getIsTypeReturned()) {
                 retHash[items[i].getTypeSparqlID()] = 1;
+            }
+            for (var id of items[i].getFunctionSparqlIDs()) {
+                retHash[id] = 1;
             }
         }
 

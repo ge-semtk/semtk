@@ -18,6 +18,9 @@
 
 package com.ge.research.semtk.belmont;
 
+import java.util.HashSet;
+
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 public abstract class Returnable {
@@ -28,6 +31,7 @@ public abstract class Returnable {
 	protected Boolean isRuntimeConstrained = false;
 	protected String binding = null;
 	protected Boolean isBindingReturned = false;
+	protected HashSet<String> functions = new HashSet<String>();
 	
 	// the constraints which will be applied on qry
 	protected ValueConstraint constraints = null;
@@ -41,6 +45,13 @@ public abstract class Returnable {
 		if (this.isTypeReturned) {
 			ret.put("isTypeReturned", true);
 		}
+		
+		if (this.functions.size() > 0) {
+			JSONArray funcs = new JSONArray();
+			funcs.addAll(this.functions);
+			ret.put("functions", funcs);
+		}
+		
 		if (this.binding != null) {
 			ret.put("binding", this.binding);
 			ret.put("isBindingReturned", this.isBindingReturned);
@@ -69,6 +80,11 @@ public abstract class Returnable {
 		} else {
 			this.isTypeReturned = false;
 		}
+		
+		this.functions = new HashSet<String>();
+		if (jObj.containsKey("functions")) {
+			this.functions.addAll((JSONArray)jObj.get("functions"));
+		} 
 		
 		try{
 			this.setIsRuntimeConstrained((Boolean)jObj.get("isRuntimeConstrained"));  ///
@@ -127,6 +143,14 @@ public abstract class Returnable {
 		return binding;
 	}
 	
+	public HashSet<String> getFunctions() {
+		return this.functions;
+	}
+	
+	public void setFunctions(HashSet<String> set) {
+		this.functions = set;
+	}
+	
 	public String getBindingOrSparqlID() {
 		if (this.binding != null && ! this.binding.isEmpty()) {
 			return this.binding;
@@ -146,7 +170,7 @@ public abstract class Returnable {
 	public void clearBinding() {
 		this.setBinding(null);
 	}
-
+	
 	// Is binding returned (it must also exist)
 	public Boolean getIsBindingReturned() {
 		return isBindingReturned && this.binding != null && !this.binding.isEmpty();
@@ -160,6 +184,18 @@ public abstract class Returnable {
         return this.sparqlID + "_type";
     }
 	
+	public HashSet<String> getFunctionSparqlIDs() {
+		HashSet<String> ret = new HashSet<String>();
+		for (String f : this.functions) {
+			ret.add(this.getFunctionSparqlID(f));
+		}
+		return ret;
+	}
+	
+	public String getFunctionSparqlID(String f) {
+		return this.getBindingOrSparqlID() + "_" + f;
+	}
+	
 	public boolean getIsTypeReturned() {
 		return this.isTypeReturned;
 	}
@@ -169,7 +205,7 @@ public abstract class Returnable {
 	}
 	
 	public boolean hasAnyReturn() {
-		return this.isReturned || this.isTypeReturned || this.isBindingReturned;
+		return this.isReturned || this.isTypeReturned || this.isBindingReturned || this.functions.size() > 0;
 	}
 
 	public boolean getIsRuntimeConstrained(){
