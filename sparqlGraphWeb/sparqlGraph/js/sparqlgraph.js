@@ -1484,6 +1484,22 @@
         });
    	};
 
+    var editGroupBy = function () {
+
+        require(['sparqlgraph/js/modalgroupbydialog'],
+    	         function (ModalGroupByDialog) {
+
+            var callback = function (x) {
+                gNodeGroup.setGroupBy(x);
+                nodeGroupChanged(true);
+            };
+
+            var skipFuncs = true;
+            var dialog = new ModalGroupByDialog(gNodeGroup.getReturnedSparqlIDs(skipFuncs), gNodeGroup.getGroupBy(), callback);
+            dialog.launch();
+        });
+   	};
+
 
     var gStopChecking = true;
 
@@ -1884,6 +1900,9 @@
             document.getElementById("SGOrderBy").classList.remove("btn-primary");
         }
 
+        // check up GROUP BY
+        // TODO
+
         // check up on LIMIT
         var limit = gNodeGroup.getLimit();
         var elem = document.getElementById("SGQueryLimit");
@@ -2012,9 +2031,13 @@
 
     // set status to a message or "" to finish progress.
     var setStatus = function(msg) {
-    	document.getElementById("status").innerHTML= "<font color='red'>" + msg + "</font><br>";
+        var div = document.getElementById("status");
+    	div.innerHTML= "<font color='red'>" + msg + "</font><br>";
         if (!msg || msg.length == 0) {
             gCancelled = false;
+            div.style.margin = "";
+        } else {
+            div.style.margin = "1em";
         }
     };
 
@@ -2081,8 +2104,13 @@
         });
     };
 
-    var buildQuerySuccess = function (sparql) {
+    var buildQuerySuccess = function (sparql, optMsg) {
         document.getElementById('queryText').value = sparql;
+        if (optMsg) {
+            setStatus(optMsg);
+        } else {
+            setStatus("");
+        }
 
         if (sparql.length > 0) {
             guiQueryNonEmpty();
@@ -2242,14 +2270,17 @@
     	document.getElementById("btnLayout").disabled = false;
     	document.getElementById("btnGraphClear").disabled = false;
     	document.getElementById("SGOrderBy").disabled = false;
+        document.getElementById("SGGroupBy").disabled = false;
 
     };
+
 
     var giuGraphEmpty = function () {
         document.getElementById("btnExpandAll").disabled = true;
         document.getElementById("btnCollapseUnused").disabled = true;
         document.getElementById("btnLayout").disabled = true;
         document.getElementById("SGOrderBy").disabled = true;
+        document.getElementById("SGGroupBy").disabled = true;
     	guiUpdateGraphRunButton();
     };
 

@@ -30,16 +30,16 @@ define([	// properly require.config'ed
 	function(ModalIidx, IIDXHelper, SelectTable, $) {
 
 		/**
-		 *  callback(OrderElement[])
+		 *  callback(String[])
 		 */
-		var ModalOrderByDialog= function (sparqlIDs, orderElems, callback) {
+		var ModalGroupByDialog= function (sparqlIDs, groupIds, callback) {
             // copy sparqlIDs
             this.sparqlIDs = sparqlIDs.slice();
 
-            // copy orderElems
-            this.orderElems = [];
-            for (var i=0; i < orderElems.length; i++) {
-                this.orderElems.push(orderElems[i].deepCopy());
+            // copy groupIds
+            this.groupIds = [];
+            for (var id of groupIds) {
+                this.groupIds.push(id);
             }
 
             this.callback = callback;
@@ -50,7 +50,7 @@ define([	// properly require.config'ed
 		};
 
 
-		ModalOrderByDialog.prototype = {
+		ModalGroupByDialog.prototype = {
 
 
             validateCallback : function() {
@@ -62,8 +62,8 @@ define([	// properly require.config'ed
 			},
 
 			okCallback : function() {
-                this.updateOrderElems(true);
-                this.callback(this.orderElems);
+                this.updateGroupElems(true);
+                this.callback(this.groupIds);
 			},
 
 			cancelCallback : function() {
@@ -87,10 +87,10 @@ define([	// properly require.config'ed
                 var id = null;
                 var sparqlIDList = [""].concat(this.sparqlIDs);
 
-                // remove sparqlID's in use in other orderElems
-                for (var i=0; i < this.orderElems.length; i++) {
-                    if (this.orderElems[i].getSparqlID() != mySparqlID) {
-                        var otherID = this.orderElems[i].getSparqlID();
+                // remove sparqlID's in use in other groupIds
+                for (var i=0; i < this.groupIds.length; i++) {
+                    if (this.groupIds[i] != mySparqlID) {
+                        var otherID = this.groupIds[i];
                         var pos = sparqlIDList.indexOf(otherID);
                         if (otherID != "" && pos > -1) {
                             sparqlIDList.splice(pos,1);
@@ -113,27 +113,24 @@ define([	// properly require.config'ed
              * with currently used sparql ID's, etc.
              */
             updateRoundTrip : function() {
-                this.updateOrderElems();
+                this.updateGroupElems();
                 this.updateSelTable();
             },
 
-            buildTableRow : function (mySparqlID, myFunc) {
+            buildTableRow : function (mySparqlID) {
                 var sel0 = this.createSparqlIDSelect(mySparqlID);
                 sel0.onchange = this.updateRoundTrip.bind(this);
 
-                var sel1 = this.createFuncSelect(myFunc);
-                sel1.onchange = this.updateOrderElems.bind(this);
-
-                return [sel0, sel1];
+                return [sel0];
             },
 
             /**
-              * Create new this.selTable from this.orderElems
+              * Create new this.selTable from this.groupIds
               * updates this.selTable and this.selTableDiv.innerHTML
               */
             updateSelTable : function() {
                 var multiFlag = false;
-                var colList = ["SPARQL ID", "Order Function"];
+                var colList = ["SPARQL ID"];
                 var undefVal = "";
                 var filterFlag = false;
 
@@ -152,10 +149,9 @@ define([	// properly require.config'ed
                 var rows = [];
 
                 // add 'normal' rows
-                for (var i=0; i < this.orderElems.length; i++) {
+                for (var i=0; i < this.groupIds.length; i++) {
 
-                    rows.push(this.buildTableRow(   this.orderElems[i].getSparqlID(),
-                                                    this.orderElems[i].getFunc()      ));
+                    rows.push(this.buildTableRow(   this.groupIds[i]));
                 }
 
                 // build table
@@ -182,28 +178,31 @@ define([	// properly require.config'ed
             },
 
             /*
-             * Create new this.orderElems based on the this.selTable
+             * Create new this.groupIds based on the this.selTable
              *
              * optRmBlanksFlag - if true, remove any blank rows (used for final "OK")
              */
-            updateOrderElems : function(optRmBlanksFlag) {
+            updateGroupElems : function(optRmBlanksFlag) {
                 var rmBlanksFlag = typeof optRmBlanksFlag !== "undefined" ? optRmBlanksFlag : false;
-                this.orderElems = [];
+                this.groupIds = [];
 
                 for (var i=0; i < this.selTable.getNumRows(); i++) {
-                    var sparqlID = this.selTable.getCellDom(i,0).getElementsByTagName("select")[0].value;
+                    var id = this.selTable.getCellDom(i,0).getElementsByTagName("select")[0].value;
 
                     // if we're not removing blanks or row isn't blank
-                    if (!rmBlanksFlag || sparqlID !== "")  {
-                        var func     = this.selTable.getCellDom(i,1).getElementsByTagName("select")[0].value;
-                        var oe = new OrderElement(sparqlID, func);
-                        this.orderElems.push(oe);
+                    if (!rmBlanksFlag || id !== "")  {
+                        this.groupIds.push(id);
                     }
                 }
             },
 
+            callbackSelectAll : function() {
+                this.groupIds = this.sparqlIDs.slice();
+                this.updateSelTable();
+            },
+
             callbackPlus : function() {
-                this.orderElems.push(new OrderElement("", ""));
+                this.groupIds.push("");
                 this.updateSelTable();
             },
 
@@ -212,7 +211,7 @@ define([	// properly require.config'ed
                 if (rows.length == 0) {
                     return;
                 }
-                this.orderElems.splice(rows[0],1);
+                this.groupIds.splice(rows[0],1);
                 this.updateSelTable();
             },
 
@@ -224,7 +223,7 @@ define([	// properly require.config'ed
                 var from = rows[0];
                 var to = from - 1;
                 if (to == -1) return;
-                this.orderElems.splice(to, 0, this.orderElems.splice(from, 1)[0]);
+                this.groupIds.splice(to, 0, this.groupIds.splice(from, 1)[0]);
                 this.updateSelTable();
             },
 
@@ -235,8 +234,8 @@ define([	// properly require.config'ed
                 }
                 var from = rows[0];
                 var to = from + 1;
-                if (to == this.orderElems.length) return;
-                this.orderElems.splice(to, 0, this.orderElems.splice(from, 1)[0]);
+                if (to == this.groupIds.length) return;
+                this.groupIds.splice(to, 0, this.groupIds.splice(from, 1)[0]);
                 this.updateSelTable();
             },
 
@@ -246,20 +245,25 @@ define([	// properly require.config'ed
                 div.style.marginBottom = "0.5ch";
                 var but = null;
 
-                but = IIDXHelper.createIconButton("icon-plus", this.callbackPlus.bind(this));
+                but = IIDXHelper.createIconButton("icon-plus", this.callbackPlus.bind(this), undefined, undefined, undefined, "Add row");
                 div.appendChild(but);
 
-                but = IIDXHelper.createIconButton("icon-remove", this.callbackRemove.bind(this));
+                but = IIDXHelper.createIconButton("icon-remove", this.callbackRemove.bind(this), undefined, undefined, undefined, "Remove row");
                 div.appendChild(document.createTextNode(" "));
                 div.appendChild(but);
 
-                but = IIDXHelper.createIconButton("icon-sort-up", this.callbackUp.bind(this));
+                but = IIDXHelper.createIconButton("icon-sort-up", this.callbackUp.bind(this), undefined, undefined, undefined, "Move up");
                 div.appendChild(document.createTextNode(" "));
                 div.appendChild(but);
 
-                but = IIDXHelper.createIconButton("icon-sort-down", this.callbackDown.bind(this));
+                but = IIDXHelper.createIconButton("icon-sort-down", this.callbackDown.bind(this), undefined, undefined, undefined, "Move down");
                 div.appendChild(document.createTextNode(" "));
                 div.appendChild(but);
+
+                but = IIDXHelper.createIconButton("icon-plus-sign-alt", this.callbackSelectAll.bind(this), undefined, undefined, "Add all", undefined);
+                div.appendChild(document.createTextNode(" "));
+                div.appendChild(but);
+
 
                 return div;
             },
@@ -269,10 +273,10 @@ define([	// properly require.config'ed
               *  Then launch generic dialog with title and callback linked to "OK"
               *  callback(id)
               */
-            launchOrderByDialog : function () {
+            launch : function () {
 
                 if (this.sparqlIDs.length == 0) {
-                    ModalIidx.alert("Order by error", "<b>Query has no return values.</b><br>Can not create an ORDER BY clause.");
+                    ModalIidx.alert("Group by error", "<b>Query has no return values.</b><br>Can not create an GROUP BY clause.");
                     return;
                 }
 
@@ -281,9 +285,9 @@ define([	// properly require.config'ed
                 this.selTableDiv = document.createElement("div");
                 this.div.appendChild(this.selTableDiv);
 
-                // if orderElems is empty, create a blank OrderElement
-                if (this.orderElems.length == 0) {
-                    this.orderElems = [new OrderElement("")];
+                // if groupIds is empty, create a blank GroupElement
+                if (this.groupIds.length == 0) {
+                    this.groupIds = [""];
                 }
 
                 this.updateSelTable();
@@ -291,7 +295,7 @@ define([	// properly require.config'ed
                 // launch the modal
                 var m = new ModalIidx();
                 m.showOKCancel(
-                                "Order By",
+                                "Group By",
                                 this.div,
                                 this.validateCallback.bind(this),
                                 this.okCallback.bind(this),
@@ -304,6 +308,6 @@ define([	// properly require.config'ed
 
 		};
 
-		return ModalOrderByDialog;
+		return ModalGroupByDialog;
 	}
 );

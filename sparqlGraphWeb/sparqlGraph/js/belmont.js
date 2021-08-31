@@ -800,10 +800,14 @@ PropertyItem.prototype = {
     },
     getFunctionSparqlIDs : function() {
         ret = [];
-        for (var id of this.functions) {
-            ret.push(this.getSparqlID + "_" + id);
+        for (var f of this.functions) {
+            ret.push(this.getFunctionSparqlId(f));
         }
         return ret;
+    },
+
+    getFunctionSparqlId : function(f) {
+        return this.getBindingOrSparqlID() + "_" + f;
     },
 	getInstanceValues : function() {
 		return this.instanceValues;
@@ -1171,10 +1175,14 @@ SemanticNode.prototype = {
     },
     getFunctionSparqlIDs : function() {
         ret = [];
-        for (var id of this.functions) {
-            ret.push(this.getSparqlID + "_" + id);
+        for (var f of this.functions) {
+            ret.push(this.getFunctionSparqlId(f));
         }
         return ret;
+    },
+
+    getFunctionSparqlId : function(f) {
+        return this.getBindingOrSparqlID() + "_" + f;
     },
 	buildFilterConstraint : function(op, val) {
 		// build but don't set a filter constraint from op and value
@@ -1736,6 +1744,7 @@ var SemanticNodeGroup = function() {
     this.limit = 0;
     this.offset = 0;
     this.orderBy = [];
+    this.groupBy = [];
 
 	this.sparqlNameHash = {};
 
@@ -1803,6 +1812,7 @@ SemanticNodeGroup.prototype = {
             offset : this.offset,
 			sNodeList : [],
             orderBy : [],
+            groupBy : [],
             unionHash : {}
 		};
 
@@ -1816,6 +1826,13 @@ SemanticNodeGroup.prototype = {
             ret.orderBy.push(this.orderBy[i].toJson());
         }
 
+        // groupBy
+        if (this.groupBy.length > 0) {
+            ret.groupBy = [];
+            for (s of this.groupBy) {
+                ret.groupBy.push(s);
+            }
+        }
         // unionHash
         for (var k in this.unionHash) {
             ret.unionHash[k.toString()] = this.unionHash[k].slice();
@@ -1856,7 +1873,15 @@ SemanticNodeGroup.prototype = {
                 this.appendOrderBy(o);
             }
         }
+
+        if (jObj.hasOwnProperty("groupBy")) {
+            for (var i=0; i < jObj.groupBy.length; i++) {
+                var j = jObj.groupBy[i];
+                this.appendGroupBy(j);
+            }
+        }
         this.validateOrderBy();
+        this.validateGroupBy();
 
         // unionHash
         this.unionHash = {};
@@ -2695,6 +2720,44 @@ SemanticNodeGroup.prototype = {
         }
     },
 
+    getGroupBy : function () {
+        return this.groupBy;
+    },
+
+    setGroupBy : function (strList) {
+        this.groupBy = strList;
+    },
+
+    clearGroupBy : function () {
+        this.groupBy = [];
+    },
+
+    appendGroupBy : function (oElem) {
+        this.groupBy.push(oElem);
+    },
+
+    removeInvalidGroupBy : function() {
+        var keep = [];
+        var returnedSparqlIDs = this.getReturnedSparqlIDs(true);
+        for (var i=0; i < this.groupBy.length; i++) {
+            var s = this.groupBy[i];
+            if (returnedSparqlIDs.indexOf(s) != -1) {
+                keep.push(e);
+            }
+        }
+
+        this.groupBy = keep;
+    },
+
+    validateGroupBy: function() {
+        var returnedSparqlIDs = this.getReturnedSparqlIDs(true);
+        for (var i=0; i < this.groupBy.length; i++) {
+            var s = this.groupBy[i];
+            if (returnedSparqlIDs.indexOf(s) == -1) {
+                throw new Error("Invalid SparqlID in GROUP BY : " + s);
+            }
+        }
+    },
     setOffset : function(offset) {
         this.offset = offset;
     },
@@ -3519,7 +3582,7 @@ SemanticNodeGroup.prototype = {
     //
     // includes types and bindings that are returned
     //
-    getReturnedSparqlIDs : function() {
+    getReturnedSparqlIDs : function(optSkipFuncsFlag) {
         var items = this.getReturnedItems();
         var retHash = {};
         for (var i=0; i < items.length; i++) {
@@ -3532,8 +3595,10 @@ SemanticNodeGroup.prototype = {
             if (items[i].getIsTypeReturned()) {
                 retHash[items[i].getTypeSparqlID()] = 1;
             }
-            for (var id of items[i].getFunctionSparqlIDs()) {
-                retHash[id] = 1;
+            if (! optSkipFuncsFlag) {
+                for (var id of items[i].getFunctionSparqlIDs()) {
+                    retHash[id] = 1;
+                }
             }
         }
 
@@ -3592,7 +3657,7 @@ SemanticNodeGroup.prototype = {
         var newID = "";
         if (requestID != "") {
             newID = new SparqlFormatter().genSparqlID(requestID, nameHash);
-		  obj.setSparqlID(newID);
+		    obj.setSparqlID(newID);
 
             // fix orderBy entries
             for (var i=0; i < this.orderBy.length; i++) {
@@ -3603,9 +3668,17 @@ SemanticNodeGroup.prototype = {
                     this.orderBy[i].setSparqlID(obj.getTypeSparqlID());
                 }
             }
+
+            // fix groupBy entries
+            for (var i=0; i < this.groupBy.length; i++) {
+                if (this.groupBy[i] == oldID) {
+                    this.groupBy[i] = newID;
+                }
+            }
         }
 
         this.removeInvalidOrderBy();
+        this.removeInvalidGroupBy();
 		return newID;
 	},
 
@@ -3659,6 +3732,7 @@ SemanticNodeGroup.prototype = {
         this.limit = 0;
         this.offset = 0;
         this.orderBy = [];
+        this.groupBy = [];
         this.unionHash = {};
 
 	},
@@ -3695,6 +3769,7 @@ SemanticNodeGroup.prototype = {
 		this.removeTaggedNodes();
 
         this.removeInvalidOrderBy();
+        this.removeInvalidGroupBy();
 
 	},
 
