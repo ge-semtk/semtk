@@ -1980,8 +1980,8 @@ public class NodeGroup {
 		
 		sparql.append("}\n");
 		
-		sparql.append(this.generateOrderByClause());
 		sparql.append(this.generateGroupByClause());
+		sparql.append(this.generateOrderByClause());
 		sparql.append(this.generateLimitClause(limitOverride));
 		sparql.append(this.generateOffsetClause());
 		
@@ -2097,10 +2097,10 @@ public class NodeGroup {
 		
 		if (this.orderBy.size() > 0) {
 			StringBuffer ret = new StringBuffer();
-			ret.append("ORDER BY");
+			ret.append("ORDER BY ");
 			for (OrderElement e : this.orderBy) {
-				ret.append(" ");
 				ret.append(e.toSparql());
+				ret.append(" ");
 			}
 			return ret.toString();
 		} else {
@@ -2113,10 +2113,10 @@ public class NodeGroup {
 		
 		if (this.groupBy.size() > 0) {
 			StringBuffer ret = new StringBuffer();
-			ret.append("GROUP BY");
+			ret.append("GROUP BY ");
 			for (String id : this.groupBy) {
-				ret.append(" ");
 				ret.append(id);
+				ret.append(" ");
 			}
 			return ret.toString();
 		} else {

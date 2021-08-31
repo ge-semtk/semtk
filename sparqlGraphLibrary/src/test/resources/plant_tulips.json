@@ -1,0 +1,192 @@
+{
+	"version": 3,
+	"sparqlConn": {
+		"name": "Junit fuseki",
+		"domain": "",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 14,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [],
+				"nodeList": [],
+				"fullURIName": "http://research.ge.com/kdl/plant#Color",
+				"SparqlID": "?Color",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"ValueType": "float",
+						"relationship": "http://www.w3.org/2001/XMLSchema#float",
+						"UriRelationship": "http://research.ge.com/kdl/plant#bulbSizeCm",
+						"Constraints": "",
+						"SparqlID": "?bulbSizeCm",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false,
+						"functions": [
+							"MAX"
+						]
+					},
+					{
+						"ValueType": "int",
+						"relationship": "http://www.w3.org/2001/XMLSchema#int",
+						"UriRelationship": "http://research.ge.com/kdl/plant#numPedals",
+						"Constraints": "",
+						"SparqlID": "?numPedals",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false,
+						"functions": [
+							"AVG"
+						]
+					},
+					{
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/kdl/plant#plantName",
+						"Constraints": "",
+						"SparqlID": "?plantName",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Color"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"ValueType": "Color",
+						"UriValueType": "http://research.ge.com/kdl/plant#Color",
+						"ConnectBy": "color",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/kdl/plant#color"
+					}
+				],
+				"fullURIName": "http://research.ge.com/kdl/plant#Tulip",
+				"SparqlID": "?Tulip",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": [
+			{
+				"sparqlID": "?bulbSizeCm_MAX"
+			}
+		],
+		"groupBy": [
+			"?Color"
+		],
+		"unionHash": {}
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "bulbSizeCm"
+			},
+			{
+				"colId": "col_1",
+				"colName": "numPedals"
+			},
+			{
+				"colId": "col_2",
+				"colName": "plantName"
+			},
+			{
+				"colId": "col_3",
+				"colName": "Color"
+			}
+		],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Tulip",
+				"type": "http://research.ge.com/kdl/plant#Tulip",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/kdl/plant#bulbSizeCm",
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/kdl/plant#numPedals",
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://research.ge.com/kdl/plant#plantName",
+						"mapping": [
+							{
+								"colId": "col_2"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Color",
+				"type": "http://research.ge.com/kdl/plant#Color",
+				"mapping": [
+					{
+						"colId": "col_3"
+					}
+				],
+				"props": []
+			}
+		]
+	},
+	"plotSpecs": null
+}
