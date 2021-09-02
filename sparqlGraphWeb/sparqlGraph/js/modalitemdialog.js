@@ -82,9 +82,10 @@ define([	// properly require.config'ed
 		ModalItemDialog.DELETE_CHECK = 8;
 		ModalItemDialog.DELETE_SELECT = 9;
         ModalItemDialog.RETURN_TYPE_CHECK = 10;
-        ModalItemDialog.SPARQL_ID_SPAN = 11;
+        ModalItemDialog.TYPE_SPARQL_ID_SPAN = 11;
         ModalItemDialog.OPTMINUNI_SELECT = 12;
 
+        // reserved function field numbers 20-30
 
         ModalItemDialog.UNION_NONE = 1000;
         ModalItemDialog.UNION_NEW =  1001;
@@ -151,6 +152,25 @@ define([	// properly require.config'ed
 					this.returnCheckOnClick();   // handles any disabling fields
 				}
 
+                // return type
+                var retTypeCheck = this.getFieldElement(ModalItemDialog.RETURN_TYPE_CHECK);
+                if (retTypeCheck != null) {
+                    retTypeCheck.checked = false;
+                    this.returnTypeCheckOnClick();
+                }
+
+                // delete check
+                var delCheck = this.getFieldElement(ModalItemDialog.DELETE_CHECK);
+                if (delCheck != null) {
+                    delCheck.checked = false;
+                }
+
+                // delete select
+                var delSelect = this.getFieldElement(ModalItemDialog.DELETE_SELECT);
+                if (delSelect != null) {
+                    delSelect.selectedIndex = 0;
+                }
+
 				// choose first (default) item in the union select
 				var optMinSelect = this.getFieldElement(ModalItemDialog.OPTMINUNI_SELECT);
 				if (optMinSelect != null) {
@@ -170,6 +190,11 @@ define([	// properly require.config'ed
 
 				// clear the constraint
 				this.setFieldValue(ModalItemDialog.CONSTRAINT_TEXT, "");
+
+                // functions
+                for (var f of SemanticNodeGroup.FUNCTION_LIST) {
+                    this.getFieldElement(this.getFunctionFieldNumber(f)).checked = false;
+                }
 
 				// note that we leave the sparqlID
 			},
@@ -195,6 +220,13 @@ define([	// properly require.config'ed
 					delMarker = null;
 				}
 
+                var functions = [];
+                for (var f of SemanticNodeGroup.FUNCTION_LIST) {
+                    if (this.isFunctionChecked(f)) {
+                        functions.push(SemanticNodeGroup.getFunctionName(f));
+                    }
+                }
+
 				// return a list containing just the text field
 				this.callback(	this.item,
 								(returnChecked || rtConstrainedChecked || constraintTxt != "" || delMarker != null) ? sparqlID : "",
@@ -205,10 +237,14 @@ define([	// properly require.config'ed
 								delMarker,
 								rtConstrainedChecked,
 								constraintTxt,
-								this.data
+								this.data,
+                                functions
                             );
 			},
 
+            getFunctionFieldNumber : function (f) {
+                return f + 20;
+            },
 
             // Get UNION
             // including possible UNION_NONE and UNION_NEW
@@ -250,13 +286,9 @@ define([	// properly require.config'ed
 			setRunningQuery : function (flag) {
 				if (flag) {
 					this.setStatus("Running query...");
-			    	//document.getElementById("btnSuggest").className = "btn disabled";
-			    	//document.getElementById("btnSuggest").disabled = true;
 				} else {
 					this.setStatus("");
-			    	//document.getElementById("btnSuggest").className = "btn";
-			    	//document.getElementById("btnSuggest").disabled = false;
-				};
+			    };
 			},
 
             /* run query to suggest values
@@ -587,7 +619,7 @@ define([	// properly require.config'ed
                     this.updateConstraintSparqlID(this.prevName, newName);
 
                     // update ruturn_type checkbox text
-                    var span = this.getFieldElement(ModalItemDialog.SPARQL_ID_SPAN);
+                    var span = this.getFieldElement(ModalItemDialog.TYPE_SPARQL_ID_SPAN);
                     if (span) span.innerHTML = newName + "_type";
                 }
 
@@ -700,12 +732,23 @@ define([	// properly require.config'ed
 				tr = document.createElement("tr");
 				table.appendChild(tr);
 
-				// cell 2,1 is empty
+				// cell 2,1: headings
 				td = document.createElement("td");
-				tr.appendChild(td);
+                td.style.verticalAlign="top";
+                tr.appendChild(td);
+                b = document.createElement("b");
+                td.appendChild(b);
+                if (!this.sparqlformFlag && this.item.getItemType() == "SemanticNode") {
+                    b.appendChild(document.createTextNode("Type:"));
+                    b.appendChild(document.createElement("br"));
+                }
+                b.appendChild(document.createElement("br"));
+                b.appendChild(document.createTextNode("Funcs:"));
+
 
 				// cell 2,2: class info if Semantic node
 				td = document.createElement("td");
+                td.style.verticalAlign="top";
 				tr.appendChild(td);
                 if (!this.sparqlformFlag && this.item.getItemType() == "SemanticNode") {
                     returnClassCheck = IIDXHelper.createVAlignedCheckbox(
@@ -715,12 +758,26 @@ define([	// properly require.config'ed
                                             this.returnTypeCheckOnClick.bind(this)
                                             );
 
-                    IIDXHelper.appendCheckBox(td, returnClassCheck, "return ");
+                    td.appendChild(returnClassCheck);
+                    td.appendChild(document.createTextNode("return "));
                     var span = document.createElement("span");
-                    span.id = this.getFieldID(ModalItemDialog.SPARQL_ID_SPAN);
+                    span.id = this.getFieldID(ModalItemDialog.TYPE_SPARQL_ID_SPAN);
                     span.innerHTML = this.item.getTypeSparqlID();
 
                     td.appendChild(span);
+                    td.appendChild(document.createElement("br"));
+                }
+
+                // add here
+                // <input type="checkbox" id="something" class="btn" style="vertical-align: middle; position: relative; bottom: 0.25em;"> exact type
+                // <br>
+
+                // cell 2,2 continued: functions
+
+                if (!this.sparqlformFlag) {
+                    td.appendChild(document.createElement("br"));
+
+                    td.appendChild(this.buildFunctionTable());
                 }
 
 				// cell 2,3: batch of controls:  opt/min, delete, runtime constrain
@@ -1005,8 +1062,18 @@ define([	// properly require.config'ed
 					// fill the values list
 					// this.query();
 
+                    var delSel = this.getFieldElement(ModalItemDialog.DELETE_SELECT);
+                    var delCheck = this.getFieldElement(ModalItemDialog.DELETE_CHECK);
 					// Set returned if it looks like this dialog is totally empty
-					if (this.item.getIsReturned() == false && this.item.getIsBindingReturned() == false && this.item.getConstraints() == "") {
+					if (this.item.getIsReturned() == false &&
+                        this.item.getIsBindingReturned() == false &&
+                        this.item.getFunctions().length == 0 &&
+                        this.item.getIsTypeReturned() == false &&
+                        this.item.getIsRuntimeConstrained() == false &&
+                        (delSel == null || delSel.selectedIndex == 0) &&
+                        (delCheck == null || delCheck.checked == false) &&
+                        this.getFieldElement(ModalItemDialog.OPTMINUNI_SELECT).selectedIndex == 0 &&
+                        this.item.getConstraints() == "") {
 						returnCheck.checked = true;
 						this.returnCheckOnClick();
 					}
@@ -1015,6 +1082,48 @@ define([	// properly require.config'ed
 				// tooltips
 				$("#" + this.getFieldID(ModalItemDialog.OPTMINUNI_SELECT)).tooltip({placement: "left"});
 			},
+
+            // table of aggregate SPARQL function buttons
+            buildFunctionTable : function() {
+                table = document.createElement("table");
+                table.style.width="100%";
+                table.style.border="1px solid lightgray"
+
+                tr = document.createElement("tr");
+                table.appendChild(tr);
+
+                tr.appendChild(this.buildFunctionTd("MIN", this.getFieldID(this.getFunctionFieldNumber(SemanticNodeGroup.FUNCTION_MIN))));
+                tr.appendChild(this.buildFunctionTd("MAX", this.getFieldID(this.getFunctionFieldNumber(SemanticNodeGroup.FUNCTION_MAX))));
+                tr.appendChild(this.buildFunctionTd("COUNT", this.getFieldID(this.getFunctionFieldNumber(SemanticNodeGroup.FUNCTION_COUNT))));
+
+                tr = document.createElement("tr");
+                table.appendChild(tr);
+
+                tr.appendChild(this.buildFunctionTd("AVG", this.getFieldID(this.getFunctionFieldNumber(SemanticNodeGroup.FUNCTION_AVG))));
+                tr.appendChild(this.buildFunctionTd("SUM", this.getFieldID(this.getFunctionFieldNumber(SemanticNodeGroup.FUNCTION_SUM))));
+                tr.appendChild(this.buildFunctionTd("SAMPLE", this.getFieldID(this.getFunctionFieldNumber(SemanticNodeGroup.FUNCTION_SAMPLE))));
+
+                tr = document.createElement("tr");
+                table.appendChild(tr);
+
+                td = this.buildFunctionTd("GROUP_CONCAT", this.getFieldID(this.getFunctionFieldNumber(SemanticNodeGroup.FUNCTION_GROUP_CONCAT)));
+                td.colSpan="3";
+                tr.appendChild(td);
+
+                return table;
+            },
+
+            buildFunctionTd : function(text, id, checked, callback) {
+                td = document.createElement("td");
+                td.appendChild(document.createTextNode(" "));
+                td.appendChild(IIDXHelper.createVAlignedCheckbox(id, this.item.getFunctions().indexOf(text) > -1, "btn", callback));
+                td.appendChild(document.createTextNode(" " + text + " "));
+                return td;
+            },
+
+            isFunctionChecked : function(f) {
+                return document.getElementById(this.getFieldID(this.getFunctionFieldNumber(f))).checked;
+            },
 
 			// ------ manage unique id's ------
 			// would be actually unique if there were GUID in the constructor.  overkill.

@@ -975,6 +975,9 @@ public class Node extends Returnable {
 		if (this.getIsBindingReturned()) {
 			ret += 1;
 		}
+		
+		ret += this.getFunctions().size();
+		
 		for (PropertyItem p : this.getPropertyItems()) {
 			if (p.getIsReturned()) {
 				ret += 1;
@@ -982,6 +985,7 @@ public class Node extends Returnable {
 			if (p.getIsBindingReturned()) {
 				ret += 1;
 			}
+			ret += p.getFunctions().size();
 		}
 		return ret;
 	}

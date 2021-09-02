@@ -25,6 +25,7 @@ import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 public enum XSDSupportedType {
 
 	STRING("string", "string") , 
+	LITERAL("literal", "literal") ,   // e.g. returned by group_by columns in fuseki
 	BOOLEAN("boolean", "True") , 
 	DECIMAL("decimal", "27.1") , 
 	INT("int", "42") , 

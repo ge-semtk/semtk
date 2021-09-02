@@ -526,12 +526,12 @@ public class DataLoaderTest_IT {
 		NodeGroup ng = sgJson.getNodeGroup();
 		Node cell = ng.getNodeBySparqlID("Cell");
 		ng.setIsReturned(cell, false);
-		cell.setBinding("Cell_renamed");
+		ng.setBinding(cell, "Cell_renamed");
 		ng.setBindingIsReturned(cell, true);
 		
 		PropertyItem cellId = cell.getPropertyByKeyname("cellId");
 		ng.setIsReturned(cellId, false);
-		cellId.setBinding("cellId_renamed");
+		ng.setBinding(cellId, "cellId_renamed");
 		ng.setBindingIsReturned(cellId, true);
 		
 		// setup

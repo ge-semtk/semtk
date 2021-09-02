@@ -61,8 +61,13 @@ define([	// properly require.config'ed
 
 
 			clear : function () {
-				document.getElementById("ModalLinkDialog.optionalCheck").checked = false;
+				document.getElementById("ModalLinkDialog.reverseCheck").checked = false;
 				document.getElementById("ModalLinkDialog.deleteCheck").checked = false;
+                document.getElementById("ModalLinkDialog.optMinusSelect").selectedIndex = 0;
+                document.getElementById("ModalLinkDialog.unionSelect").selectedIndex = 0;
+                document.getElementById("ModalLinkDialog.qualifierSelect").selectedIndex = 0;
+                document.getElementById("ModalLinkDialog.deleteSelect").selectedIndex = 0;
+                this.updateAll();
 			},
 
 			submit : function () {

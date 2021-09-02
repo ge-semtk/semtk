@@ -51,6 +51,8 @@ import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class NodeGroup {
+	public  static String[] FUNCTION_NAMES = new String [] {"MAX", "MIN", "SUM", "COUNT", "AVG", "SAMPLE", "GROUP_CONCAT"};
+
 	private static final String JSON_KEY_NODELIST = "sNodeList";
 	private static final String JSON_KEY_UNIONHASH = "unionHash";
 	
@@ -59,7 +61,8 @@ public class NodeGroup {
 	// version 11: importSpec dataValidator
 	// version 12: unions
 	// version 13: removed node.nodeName
-	private static final int VERSION = 13;
+	// version 14: functions and GROUP BY
+	private static final int VERSION = 14;
 	
 	// actually used to keep track of our nodes and the nomenclature in use. 
 	private ArrayList<Node> nodes = new ArrayList<Node>();
@@ -67,6 +70,7 @@ public class NodeGroup {
 	private int limit = 0;
 	private int offset = 0;
 	private ArrayList<OrderElement> orderBy = new ArrayList<OrderElement>();
+	private ArrayList<String> groupBy = new ArrayList<String>();
 
 	private ArrayList<Node> orphanOnCreate = new ArrayList<Node>();
 	private HashMap<String, String> prefixHash = new HashMap<String, String>();
@@ -369,6 +373,7 @@ public class NodeGroup {
 		this.limit = 0;
 		this.offset = 0;
 		this.orderBy = new ArrayList<OrderElement>();
+		this.groupBy = new ArrayList<String>();
 		for (Node n : this.nodes) {
 			n.reset();
 		}
@@ -401,10 +406,17 @@ public class NodeGroup {
 	}
 	
 	public void appendOrderBy(String sparqlID, String func) throws Exception {
+		boolean found = false;
+		for (OrderElement e : this.orderBy) {
+			if (e.getSparqlID().equals(sparqlID)) {
+				found = true;
+				break;
+			}
+		}
 		if (! this.getReturnedSparqlIDs().contains(sparqlID)) {
 			throw new Exception(String.format("SparqlID can't be found in nodegroup: '%s'", sparqlID));
 			
-		} else if (this.orderBy.contains(sparqlID)) {
+		} else if (found) {
 			throw new Exception(String.format("SparqlID can't be added to ORDER BY twice: '%s'", sparqlID));
 
 		} else {
@@ -433,6 +445,14 @@ public class NodeGroup {
 		}
 	}
 	
+	public void updateOrderBy(String oldID, String newID) {		
+		for (OrderElement e : this.orderBy) {
+			if (e.getSparqlID().equals(oldID)) {
+				e.setSparqlID(newID);
+			}
+		}
+	}
+	
 	/**
 	 * Set orderBy to every returned item.
 	 * (To ensure a deterministic return order for OFFSET)
@@ -445,6 +465,54 @@ public class NodeGroup {
 		}
 	}
 
+	public void clearGroupBy() {
+		this.groupBy = new ArrayList<String>();
+	}
+	
+
+	
+	public void appendGroupBy(String sparqlID) throws Exception {
+		if (! this.getReturnedSparqlIDs(true).contains(sparqlID)) {
+			throw new Exception(String.format("SparqlID can't be found in nodegroup: '%s'", sparqlID));
+			
+		} else if (this.groupBy.contains(sparqlID)) {
+			throw new Exception(String.format("SparqlID can't be added to GROUP BY twice: '%s'", sparqlID));
+
+		} else {
+			this.groupBy.add(sparqlID);
+		}
+	}
+	
+	public void removeInvalidGroupBy() {
+		ArrayList<String> keep = new ArrayList<String>();
+		ArrayList<String> ids = this.getReturnedSparqlIDs(true);
+		for (String s : this.groupBy) {
+			if (ids.contains(s)) {
+				keep.add(s);
+			}
+		}
+		
+		this.groupBy = keep;
+	}
+	
+	public void validateGroupBy() throws Exception {		
+		ArrayList<String> ids = this.getReturnedSparqlIDs(true);
+		for (String s : this.groupBy) {
+			if (!ids.contains(s)) {
+				throw new ValidationException(String.format("Invalid SparqlID in GROUP BY : '%s'", s));
+			}
+		}
+	}
+	
+	public void updateGroupBy(String oldID, String newID) {		
+
+		for (int i=0; i < this.groupBy.size(); i++) {
+			if (this.groupBy.get(i).equals(oldID)) {
+				this.groupBy.set(i, newID);
+			}
+		}
+	}
+	
 	public void setOffset(int offset) {
 		this.offset = offset;
 	}
@@ -723,6 +791,15 @@ public class NodeGroup {
 		}
 		
 		this.validateOrderBy();
+		
+		if (jobj.containsKey("groupBy")) {
+			JSONArray gList = (JSONArray) jobj.get("groupBy");
+			for (int i=0; i < gList.size(); i++) {
+				String s = (String) gList.get(i);
+				this.appendGroupBy(s); 
+			}
+		}
+		this.validateGroupBy();
 		
 		// unionHash
 		this.unionHash = new HashMap<Integer, ArrayList<String>>();
@@ -1315,7 +1392,7 @@ public class NodeGroup {
 		String binding = node.getBinding();
 		if (binding != null && nameHash.contains(binding))  {
 			binding = BelmontUtil.generateSparqlID(binding, nameHash);
-			node.setBinding(binding);	// update it. 
+			this.setBinding(node, binding);	// update it. 
 		}
 		// check the properties...
 		ArrayList<PropertyItem> props = node.getReturnedPropertyItems();
@@ -1330,7 +1407,7 @@ public class NodeGroup {
 			binding = pItem.getBinding();
 			if(binding != null && nameHash.contains(binding)){
 				binding = BelmontUtil.generateSparqlID(binding, nameHash);
-				pItem.setBinding(binding);
+				this.setBinding(pItem, binding);
 			}
 		}
 	}
@@ -1464,10 +1541,13 @@ public class NodeGroup {
 	public void unsetAllReturns() throws Exception {
 		this.unsetAllReturns(null);
 		this.clearOrderBy();
+		this.clearGroupBy();
 	}
 	
 	/**
 	 * Unset every isReturned in the nodegroup...
+	 * Unset bindingIsReturned
+	 * Clear all functions
 	 * @param exceptThis - but not this one
 	 */
 	public void unsetAllReturns(Returnable exceptThis) throws Exception {
@@ -1481,6 +1561,7 @@ public class NodeGroup {
 			
 				item.setIsTypeReturned(false);
 				item.setIsBindingReturned(false);
+				item.setFunctions(new HashSet<String>());
 			}
 		}
 	}
@@ -1489,8 +1570,12 @@ public class NodeGroup {
 	 * Get all returned variables
 	 * @return
 	 */
-	
+
 	public ArrayList<String> getReturnedSparqlIDs() {
+		return this.getReturnedSparqlIDs(false);
+	}
+	
+	public ArrayList<String> getReturnedSparqlIDs(boolean skipFuncs) {
 		
 		// get returned items
 		ArrayList<Returnable> items = this.getReturnedItems();
@@ -1517,10 +1602,26 @@ public class NodeGroup {
 					ret.add(id);
 				}
 			}
+
+			if (! skipFuncs) {
+				ret.addAll(item.getFunctionSparqlIDs());
+			}
+			
 		}
 		return ret;
 	}
 	
+	public ArrayList<String> getFunctionSparqlIDs() {
+		
+		// get returned items
+		ArrayList<Returnable> items = this.getReturnedItems();
+		ArrayList<String> ret = new ArrayList<String>();
+		
+		for(Returnable item : items) {
+			ret.addAll(item.getFunctionSparqlIDs());
+		}
+		return ret;
+	}
 	
 	public ArrayList<Returnable> getReturnedItems() {
 		ArrayList<Returnable> ret = new ArrayList<Returnable>();
@@ -1617,6 +1718,7 @@ public class NodeGroup {
 					if (snode.getIsTypeReturned()) {
 						ret.add(snode.getTypeSparqlID());
 					}
+					ret.addAll(snode.getFunctionSparqlIDs());
 				}
 			}
 			
@@ -1632,6 +1734,7 @@ public class NodeGroup {
 						if (prop.getBinding() != null) {
 							ret.add(prop.getBinding());
 						}
+						ret.addAll(prop.getFunctionSparqlIDs());
 					}
 				}
 			}
@@ -1795,6 +1898,12 @@ public class NodeGroup {
 		// Error handling: For each error, inserts a comment at the beginning.
 		//    #Error: explanation
 		
+		// added for some clarity to this legacy code...
+		if (qt == AutoGeneratedQueryTypes.QUERY_ASK)  
+			return this.generateSparqlAsk();
+		else if (qt == AutoGeneratedQueryTypes.QUERY_DELETE_WHERE)
+			throw new Exception("Invalid query type.  Use generateSparqlDelete()");
+		
 		this.buildPrefixHash();
 		this.updateUnionMemberships();
 		
@@ -1854,6 +1963,7 @@ public class NodeGroup {
 		
 		sparql.append("}\n");
 		
+		sparql.append(this.generateGroupByClause());
 		sparql.append(this.generateOrderByClause());
 		sparql.append(this.generateLimitClause(limitOverride));
 		sparql.append(this.generateOffsetClause());
@@ -1890,9 +2000,20 @@ public class NodeGroup {
 			if (qt.equals(AutoGeneratedQueryTypes.QUERY_CONSTRAINT)) {
 				throw new Exception("Can not generate a filter constraint query with no target object");
 			}
-			ArrayList<String> ids = this.getReturnedSparqlIDs();
-			for (String id : ids) {
-				sparql.append(" " + id);
+			ArrayList<Returnable> items = this.getReturnedItems();
+			for (Returnable item : items) {
+				if (item.getIsReturned()) {
+					sparql.append(" " + item.getSparqlID());
+				}
+				if (item.getIsTypeReturned()) {
+					sparql.append(" " + item.getTypeSparqlID());
+				}
+				if (item.getIsBindingReturned()) {
+					sparql.append(" " + item.getBinding());
+				}
+				for (String f : item.getFunctions()) {
+					sparql.append(" (" + f + "(" + item.getBindingOrSparqlID() + ") AS " + item.getFunctionSparqlID(f) + ")");
+				}
 			}
 		}
 		
@@ -1959,10 +2080,42 @@ public class NodeGroup {
 		
 		if (this.orderBy.size() > 0) {
 			StringBuffer ret = new StringBuffer();
-			ret.append("ORDER BY");
+			ret.append("ORDER BY ");
 			for (OrderElement e : this.orderBy) {
-				ret.append(" ");
 				ret.append(e.toSparql());
+				ret.append(" ");
+			}
+			return ret.toString();
+		} else {
+			return "";
+		}
+	}
+	
+	private String generateGroupByClause() throws NoValidSparqlException, Exception {
+		// check that no bad id's snuck into group by during nodgroup editing
+		this.validateGroupBy();
+		
+		// If aggregate functions are in use, all other sparql ids must be in the GROUP BY
+		if (this.getFunctionSparqlIDs().size() > 0) {
+			ArrayList<String> missing = new ArrayList<String>();
+			for (String id : this.getReturnedSparqlIDs(true)) {
+				if (! this.groupBy.contains(id)) {
+					missing.add(id);
+				}
+			}
+			if (missing.size() > 0) {
+				throw new NoValidSparqlException("Functions in use and return(s) are missing from GROUP BY: " + String.join(", ", missing));
+			}
+		}
+		
+		
+		// build the SPARQL
+		if (this.groupBy.size() > 0) {
+			StringBuffer ret = new StringBuffer();
+			ret.append("GROUP BY ");
+			for (String id : this.groupBy) {
+				ret.append(id);
+				ret.append(" ");
 			}
 			return ret.toString();
 		} else {
@@ -2016,60 +2169,6 @@ public class NodeGroup {
 		return this.generateSparql(AutoGeneratedQueryTypes.QUERY_CONSTRUCT, false, -1, null, false);
 	}
 
-	public String generateSparqlConstructDELETE_ME() throws Exception {
-	
-		this.buildPrefixHash();
-		
-		String tab = SparqlToXUtils.tabIndent("");
-		StringBuilder sparql = new StringBuilder();
-		sparql.append(this.generateSparqlPrefix());
-		
-		
-		// Construct
-		sparql.append("CONSTRUCT {\n");
-				
-		ArrayList<Node> doneNodes  = new ArrayList<Node>();
-		ArrayList<Integer> doneUnions = new ArrayList<Integer>();
-		Node headNode = this.getNextHeadNode(doneNodes);
-
-		while (headNode != null) {
-			
-			sparql.append(this.generateSparqlSubgraphClausesNode(	AutoGeneratedQueryTypes.QUERY_CONSTRUCT, 
-																	headNode, 
-																	null, null,    // skip nodeItem.  Null means do them all.
-																	null,    // no targetObj
-																	doneNodes, doneUnions,
-																	tab));
-			headNode = this.getNextHeadNode(doneNodes);
-		}
-		
-		sparql.append("\n}");
-		
-		// From
-		sparql.append(SparqlToXUtils.generateSparqlFromOrUsing("", "FROM", this.conn, this.oInfo));
-		
-		// Where
-		sparql.append("\nWHERE {\n");
-
-		
-		doneNodes = new ArrayList<Node>();
-		doneUnions = new ArrayList<Integer>();
-		headNode = this.getNextHeadNode(doneNodes);
-		while (headNode != null) {
-		
-			sparql.append(this.generateSparqlSubgraphClausesNode(	AutoGeneratedQueryTypes.QUERY_CONSTRUCT_WHERE, 
-																	headNode, 
-																	null, null,   // skip nodeItem.  Null means do them all.
-																	null,         // no targetObj
-																	doneNodes, doneUnions, 
-																	tab));
-			headNode = this.getNextHeadNode(doneNodes);
-		}
-		
-		sparql.append("}\n");
-		
-		return sparql.toString();
-	}
 	
 	public String generateSparqlAsk() throws Exception {
 		
@@ -2858,7 +2957,7 @@ public class NodeGroup {
             if (r.getBinding() != null && ! r.getIsBindingReturned()) {
                 // if binding isn't in any constraints
                 if (! Pattern.matches("\\" + r.getBinding() + "[^a-zA-Z0-9_]", constraintsText)) {
-                    r.setBinding(null);
+                    r.binding = null;
                 }
             }
         }
@@ -3053,6 +3152,7 @@ public class NodeGroup {
 		}
 
 		this.removeInvalidOrderBy();
+		this.removeInvalidGroupBy();
 
 		//unionHash
 		for (NodeItem n : node.getNodeItemList()) {
@@ -3522,6 +3622,7 @@ public class NodeGroup {
 
 		// bail if this is a no-op
 		String oldID = obj.getSparqlID();
+		ArrayList<String> oldPossibleFuncIDs = obj.getPossibleFunctionSparqlIDs();
 		if (requestID.equals(oldID)) {
 			return requestID;
 		}
@@ -3541,10 +3642,41 @@ public class NodeGroup {
 			obj.setSparqlID(newID);
 		}
 		
-		
-		this.removeInvalidOrderBy();
+        // update ORDER BY and GROUP BY
+		ArrayList<String> newPossibleFuncIDs = obj.getPossibleFunctionSparqlIDs();
+		this.updateOrderBy(oldID, newID);
+		this.updateGroupBy(oldID, newID);
+		for (int i=0; i < oldPossibleFuncIDs.size(); i++) {
+			this.updateOrderBy(oldPossibleFuncIDs.get(i), newPossibleFuncIDs.get(i));
+			this.updateGroupBy(oldPossibleFuncIDs.get(i), newPossibleFuncIDs.get(i));
+		}
 
 		return newID;
+	}
+	/**
+	 * Set binding
+	 * @param obj
+	 * @param newID - id or null
+	 */
+	public void setBinding(Returnable obj, String newID) {
+		String oldID = obj.getBindingOrSparqlID();
+        ArrayList<String> oldPossibleFuncIDs = obj.getPossibleFunctionSparqlIDs();
+
+        if (newID == null) {
+            obj.binding = null;
+            newID = obj.getBindingOrSparqlID();
+        } else {
+            obj.binding = newID.startsWith("?") ? newID : "?" + newID;
+        }
+
+        // update ORDER BY and GROUP BY
+        ArrayList<String> newPossibleFuncIDs = obj.getPossibleFunctionSparqlIDs();
+        this.updateOrderBy(oldID, newID);
+        this.updateGroupBy(oldID, newID);
+        for (int i=0; i < oldPossibleFuncIDs.size(); i++) {
+			this.updateOrderBy(oldPossibleFuncIDs.get(i), newPossibleFuncIDs.get(i));
+			this.updateGroupBy(oldPossibleFuncIDs.get(i), newPossibleFuncIDs.get(i));
+		}
 	}
 	
 	/**
@@ -4020,7 +4152,9 @@ public class NodeGroup {
 		this.buildPrefixHash();
 		
 		String primaryBody = this.genDeletionLeader(post, oInfo);
-		if(primaryBody == null || primaryBody.isEmpty() || primaryBody == ""){ throw new NoValidSparqlException("nothing given to delete.");}
+		if(primaryBody == null || primaryBody.isEmpty() || primaryBody == "") { 
+			throw new NoValidSparqlException("nothing given to delete.");
+		}
 		
 		String whereBody = this.getDeletionWhereBody(post, oInfo);
 		
@@ -4040,6 +4174,21 @@ public class NodeGroup {
 		return retval.toString();
 	}
 
+	private int countItemsForDeletion() {
+		int ret = 0;
+			
+		for(Node n : this.nodes){
+			if( n.getDeletionMode() != NodeDeletionTypes.NO_DELETE){
+				ret += 1;
+			}
+			for( PropertyItem pi : n.getPropertyItems() ){
+				if(pi.getIsMarkedForDeletion()){
+					ret += 1;
+				}
+			}
+		}
+		return ret;
+	}
 	private String genDeletionLeader(String post, OntologyInfo oInfo) throws Exception {
 		
 		StringBuilder retval = new StringBuilder();
@@ -4193,11 +4342,11 @@ public class NodeGroup {
 		int i=0;
 		for (Node n : this.getOrderedNodes()) {
 			this.changeSparqlID(n, n.getUri(true) + String.valueOf(i));
-			n.clearBinding();
+			this.setBinding(n, null);
 			for (PropertyItem p : n.getPropertyItems()) {
 				if (! p.getSparqlID().isEmpty()) {
 					this.changeSparqlID(p, p.getKeyName() + String.valueOf(i));
-					p.clearBinding();
+					this.setBinding(p,  null);
 				}
 			}
 		}
@@ -4445,12 +4594,21 @@ public class NodeGroup {
 		ret.put("limit", this.limit);
 		ret.put("offset", this.offset);
 		
-		// orderBy
+		// orderBy: not optional
 		JSONArray orderBy = new JSONArray();
 		for (int i=0; i < this.orderBy.size(); i++) {
 			orderBy.add(this.orderBy.get(i).toJson());
 		}
 		ret.put("orderBy", orderBy);
+		
+		// groupBy: optional
+		if (this.groupBy.size() > 0) {
+			JSONArray groupBy = new JSONArray();
+			for (String s : this.groupBy) {
+				groupBy.add(s);
+			}
+			ret.put("groupBy", groupBy);
+		}
 		
 		// sNodeList
 		JSONArray sNodeList = new JSONArray();

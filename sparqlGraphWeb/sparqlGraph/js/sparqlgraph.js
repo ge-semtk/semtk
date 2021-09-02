@@ -749,7 +749,7 @@
         nodeGroupChanged(true);
 	};
 
-    var propertyItemDialogCallback = function(propItem, varName, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data) {
+    var propertyItemDialogCallback = function(propItem, varName, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data, functions) {
         // Note: ModalItemDialog validates that sparqlID is legal
 
         require([ 'sparqlgraph/js/modalitemdialog',
@@ -761,11 +761,11 @@
             }
             if (varName == propItem.getSparqlID()) {
                 // varName is sparqlID: shut of binding
-                propItem.setBinding(null);
+                gNodeGroup.setBinding(propItem, null);
                 propItem.setIsBindingReturned(false);
             } else {
                 // varName is NOT sparqlID: use binding
-                propItem.setBinding(varName);
+                gNodeGroup.setBinding(propItem, varName);
                 propItem.setIsReturned(false);
             }
             gNodeGroup.setIsReturned(varName, returnFlag);
@@ -788,14 +788,13 @@
             propItem.setIsRuntimeConstrained(rtConstrainedFlag);
             propItem.setConstraints(constraintStr);
             propItem.setIsMarkedForDeletion(delMarker);
-
-            gNodeGroup.removeInvalidOrderBy();
+            propItem.setFunctions(functions);
 
             nodeGroupChanged(true);
         });
     };
 
-    var snodeItemDialogCallback = function(snodeItem, varName, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data) {
+    var snodeItemDialogCallback = function(snodeItem, varName, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data, functions) {
         require([ 'sparqlgraph/js/modalitemdialog',
                 ], function (ModalItemDialog) {
 
@@ -804,11 +803,11 @@
             // update the binding or sparqlID based on varName and returnFalg
             if (varName == snodeItem.getSparqlID()) {
                 // varname is sparqlID: shut off binding
-                snodeItem.setBinding(null);
+                gNodeGroup.setBinding(snodeItem, null);
                 snodeItem.setIsBindingReturned(false);
             } else {
                 // varname is NOT sparqlID: use binding
-                snodeItem.setBinding(varName);
+                gNodeGroup.setBinding(snodeItem, varName);
                 snodeItem.setIsReturned(false);
             }
             gNodeGroup.setIsReturned(varName, returnFlag);
@@ -833,6 +832,7 @@
 
         	// constraints
         	snodeItem.setConstraints(constraintStr);
+            snodeItem.setFunctions(functions);
 
             nodeGroupChanged(true);
         });
@@ -1483,6 +1483,22 @@
         });
    	};
 
+    var editGroupBy = function () {
+
+        require(['sparqlgraph/js/modalgroupbydialog'],
+    	         function (ModalGroupByDialog) {
+
+            var callback = function (x) {
+                gNodeGroup.setGroupBy(x);
+                nodeGroupChanged(true);
+            };
+
+            var skipFuncs = true;
+            var dialog = new ModalGroupByDialog(gNodeGroup.getReturnedSparqlIDs(skipFuncs), gNodeGroup.getGroupBy(), callback);
+            dialog.launch();
+        });
+   	};
+
 
     var gStopChecking = true;
 
@@ -1877,11 +1893,22 @@
 
         // check up ORDER BY
         gNodeGroup.removeInvalidOrderBy();
+        gNodeGroup.removeInvalidGroupBy();
+
         if (gNodeGroup.getOrderBy().length > 0) {
             document.getElementById("SGOrderBy").classList.add("btn-primary");
         } else {
             document.getElementById("SGOrderBy").classList.remove("btn-primary");
         }
+
+        if (gNodeGroup.getGroupBy().length > 0) {
+            document.getElementById("SGGroupBy").classList.add("btn-primary");
+        } else {
+            document.getElementById("SGGroupBy").classList.remove("btn-primary");
+        }
+
+        // check up GROUP BY
+        // TODO
 
         // check up on LIMIT
         var limit = gNodeGroup.getLimit();
@@ -2011,9 +2038,13 @@
 
     // set status to a message or "" to finish progress.
     var setStatus = function(msg) {
-    	document.getElementById("status").innerHTML= "<font color='red'>" + msg + "</font><br>";
+        var div = document.getElementById("status");
+    	div.innerHTML= "<font color='red'>" + msg + "</font><br>";
         if (!msg || msg.length == 0) {
             gCancelled = false;
+            div.style.margin = "";
+        } else {
+            div.style.margin = "1em";
         }
     };
 
@@ -2080,8 +2111,13 @@
         });
     };
 
-    var buildQuerySuccess = function (sparql) {
+    var buildQuerySuccess = function (sparql, optMsg) {
         document.getElementById('queryText').value = sparql;
+        if (optMsg) {
+            setStatus(optMsg);
+        } else {
+            setStatus("");
+        }
 
         if (sparql.length > 0) {
             guiQueryNonEmpty();
@@ -2092,11 +2128,10 @@
     };
 
     var buildQueryFailure = function (msgHtml, sparqlMsgOrCallback) {
-        var sparql = "";
         if (typeof sparqlMsgOrCallback == "string") {
-            sparql = "#" + sparqlMsgOrCallback.replace(/\n/g, '#');
-
+            setStatus(sparqlMsgOrCallback.replace(/\n/g,' '));
         } else {
+            setStatus("");
             require(['sparqlgraph/js/modaliidx'],
     	         function (ModalIidx) {
 					ModalIidx.alert("Query Generation Failed", msgHtml, false, sparqlMsgOrCallback);
@@ -2104,7 +2139,7 @@
 
         }
 
-        document.getElementById('queryText').value = sparql;
+        document.getElementById('queryText').value = "";
         guiQueryEmpty();
     };
 
@@ -2241,14 +2276,17 @@
     	document.getElementById("btnLayout").disabled = false;
     	document.getElementById("btnGraphClear").disabled = false;
     	document.getElementById("SGOrderBy").disabled = false;
+        document.getElementById("SGGroupBy").disabled = false;
 
     };
+
 
     var giuGraphEmpty = function () {
         document.getElementById("btnExpandAll").disabled = true;
         document.getElementById("btnCollapseUnused").disabled = true;
         document.getElementById("btnLayout").disabled = true;
         document.getElementById("SGOrderBy").disabled = true;
+        document.getElementById("SGGroupBy").disabled = true;
     	guiUpdateGraphRunButton();
     };
 
@@ -2482,7 +2520,7 @@
                         guiUnDisableAll();
                         successCallback(results);
                         progressCallback("finishing up", 99);
-                        setTimeout(function () { setStatus(""); }, 200);
+                        setStatus("");
                     };
                     var resultsClient = new MsiClientResults(g.service.results.url, jobId);
                     resultsCall.bind(resultsClient)(resultsSuccessCallback);

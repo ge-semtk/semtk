@@ -279,8 +279,9 @@ define([	// properly require.config'ed   bootstrap-modal
                 if (resultSet.isSuccess()) {
                     // get the jobId
                     var sparql = resultSet.getSimpleResultField("SparqlQuery");
+                    var msg = resultSet.getSimpleResultField("QueryMessage");
                     if (sparql) {
-                        sparqlCallback(sparql);
+                        sparqlCallback(sparql, msg);
                     } else {
                         failureCallback(resultSet.getFailureHtml("did not return a SparqlQuery"));
                     }

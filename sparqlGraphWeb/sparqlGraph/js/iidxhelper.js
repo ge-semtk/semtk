@@ -410,7 +410,7 @@ define([	// properly require.config'ed
         return labelElem;
     };
 
-    IIDXHelper.createButton = function (text, callback, optClassList, optId) {
+    IIDXHelper.createButton = function (text, callback, optClassList, optId, optMouseOver) {
         var butElem = document.createElement("a");
         butElem.innerHTML = text;
         butElem.onclick = callback;
@@ -422,6 +422,9 @@ define([	// properly require.config'ed
         }
         if (typeof optId != "undefined") {
             butElem.id = optId;
+        }
+        if (typeof optMouseOver != "undefined") {
+            butElem.title = optMouseOver;
         }
         return butElem;
     };
