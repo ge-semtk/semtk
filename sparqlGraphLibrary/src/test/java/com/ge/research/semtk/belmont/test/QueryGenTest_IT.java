@@ -77,7 +77,7 @@ public class QueryGenTest_IT {
 				"animalSubPropsTigers.json", csv);
 		
 		TestGraph.uploadOwlContents(Utility.getResourceAsString(QueryGenTest_IT.class, 
-				"plant.owl"));
+				"Plant.owl"));
 		csv = Utility.getResourceAsString(QueryGenTest_IT.class, 
 				"plant_tulips.csv");
 		TestGraph.ingestCsvString(QueryGenTest_IT.class, 
