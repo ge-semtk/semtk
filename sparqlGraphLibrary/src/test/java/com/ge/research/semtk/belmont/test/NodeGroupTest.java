@@ -60,6 +60,7 @@ public class NodeGroupTest {
 
         SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath("src/test/resources/sampleBattery.json"));
 		NodeGroup ng = sgJson.getNodeGroup();
+		ng.clearOrderBy();
 		ng.appendOrderBy("?CellId", "DESC");
 		ng.appendOrderBy("?Name");
 		
@@ -74,7 +75,6 @@ public class NodeGroupTest {
 		String jStr2 = jObj2.toJSONString();
 		
 		assertEquals(jStr, jStr2);
-		System.out.println(jStr);
 	}
 	
 	@Test
