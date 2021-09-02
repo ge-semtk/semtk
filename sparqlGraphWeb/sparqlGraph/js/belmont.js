@@ -798,15 +798,24 @@ PropertyItem.prototype = {
     setFunctions : function(list) {
         this.functions = list;
     },
-    getFunctionSparqlIDs : function() {
+
+    getPossibleFunctionSparqlIDs : function() {
         ret = [];
-        for (var f of this.functions) {
-            ret.push(this.getFunctionSparqlId(f));
+        for (var f of SemanticNodeGroup.FUNCTION_LIST) {
+            ret.push(this.getFunctionSparqlID(SemanticNodeGroup.getFunctionName(f)));
         }
         return ret;
     },
 
-    getFunctionSparqlId : function(f) {
+    getFunctionSparqlIDs : function() {
+        ret = [];
+        for (var f of this.functions) {
+            ret.push(this.getFunctionSparqlID(f));
+        }
+        return ret;
+    },
+
+    getFunctionSparqlID : function(f) {
         return this.getBindingOrSparqlID() + "_" + f;
     },
 	getInstanceValues : function() {
@@ -869,13 +878,6 @@ PropertyItem.prototype = {
 		this.isBindingReturned = val;
 	},
 
-    setBinding : function (binding) {
-		if (binding == null) {
-			this.binding = null;
-		} else {
-			this.binding = binding.startsWith("?") ? binding : "?" + binding;
-		}
-	},
     // deprecated form of optMinus
 	setIsOptional : function(bool) {
 		this.optMinus = bool ? PropertyItem.OPT_MINUS_OPTIONAL : PropertyItem.OPT_MINUS_NONE;
@@ -1173,17 +1175,27 @@ SemanticNode.prototype = {
     setFunctions : function(list) {
         this.functions = list;
     },
-    getFunctionSparqlIDs : function() {
-        ret = [];
-        for (var f of this.functions) {
-            ret.push(this.getFunctionSparqlId(f));
+
+    getPossibleFunctionSparqlIDs : function() {
+        rret = [];
+        for (var f of SemanticNodeGroup.FUNCTION_LIST) {
+            ret.push(this.getFunctionSparqlID(SemanticNodeGroup.getFunctionName(f)));
         }
         return ret;
     },
 
-    getFunctionSparqlId : function(f) {
-        return this.getBindingOrSparqlID() + "_" + f;
+    getFunctionSparqlIDs : function() {
+        ret = [];
+        for (var f of this.functions) {
+            ret.push(this.getFunctionSparqlID(f));
+        }
+        return ret;
     },
+
+    getFunctionSparqlID : function(f) {
+        return this.getBindingOrSparqlID() + "_" + SemanticNodeGroup.getFunctionName(f);
+    },
+
 	buildFilterConstraint : function(op, val) {
 		// build but don't set a filter constraint from op and value
 		f = new SparqlFormatter();
@@ -1794,6 +1806,35 @@ SemanticNodeGroup.INSERT_PREFIX = "generateSparqlInsert:";
 SemanticNodeGroup.INSERT_FULL = "belmont/generateSparqlInsert#";
 
 SemanticNodeGroup.NULL_TARGET = "Nu11T@rG3t";
+
+SemanticNodeGroup.FUNCTION_MIN = 0;
+SemanticNodeGroup.FUNCTION_MAX = 1;
+SemanticNodeGroup.FUNCTION_COUNT = 2;
+SemanticNodeGroup.FUNCTION_AVG = 3;
+SemanticNodeGroup.FUNCTION_SUM = 4;
+SemanticNodeGroup.FUNCTION_SAMPLE = 5;
+SemanticNodeGroup.FUNCTION_GROUP_CONCAT = 6;
+
+SemanticNodeGroup.FUNCTION_LIST = [
+    SemanticNodeGroup.FUNCTION_MIN,
+    SemanticNodeGroup.FUNCTION_MAX,
+    SemanticNodeGroup.FUNCTION_COUNT,
+    SemanticNodeGroup.FUNCTION_AVG,
+    SemanticNodeGroup.FUNCTION_SUM,
+    SemanticNodeGroup.FUNCTION_SAMPLE,
+    SemanticNodeGroup.FUNCTION_GROUP_CONCAT,
+];
+
+SemanticNodeGroup.getFunctionName = function(f) {
+    if (f == SemanticNodeGroup.FUNCTION_MIN) return "MIN";
+    else if (f == SemanticNodeGroup.FUNCTION_MAX) return "MAX";
+    else if (f == SemanticNodeGroup.FUNCTION_COUNT) return "COUNT";
+    else if (f == SemanticNodeGroup.FUNCTION_AVG) return "AVG";
+    else if (f == SemanticNodeGroup.FUNCTION_SUM) return "SUM";
+    else if (f == SemanticNodeGroup.FUNCTION_SAMPLE) return "SAMPLE";
+    else if (f == SemanticNodeGroup.FUNCTION_GROUP_CONCAT) return "GROUP_CONCAT";
+    else return null;
+};
 
 SemanticNodeGroup.prototype = {
 
@@ -2683,6 +2724,7 @@ SemanticNodeGroup.prototype = {
         this.orderBy.push(oElem);
     },
 
+    // remove any invalid ORDER BY
     removeInvalidOrderBy : function() {
         var keep = [];
         var returnedSparqlIDs = this.getReturnedSparqlIDs();
@@ -2696,11 +2738,20 @@ SemanticNodeGroup.prototype = {
         this.orderBy = keep;
     },
 
-    validateOrderBy: function() {
+    updateOrderBy : function(oldID, newID) {
 
+        for (var o of this.orderBy) {
+            if (o.getSparqlID() == oldID) {
+                o.setSparqlID(newID);
+            }
+        }
+    },
+
+    validateOrderBy: function() {
+        var ids = this.getReturnedSparqlIDs();
         for (var i=0; i < this.orderBy.length; i++) {
             var e = this.orderBy[i];
-            if (this.getItemBySparqlID(e.getSparqlID()) == null) {
+            if (ids.indexOf(e.getSparqlID()) == -1) {
                 throw new Error("Invalid SparqlID in ORDER BY : " + e.getSparqlID());
             }
         }
@@ -2736,19 +2787,28 @@ SemanticNodeGroup.prototype = {
         this.groupBy.push(oElem);
     },
 
+    // remove invalid GROUP BY
+    // optionally update one name
     removeInvalidGroupBy : function() {
         var keep = [];
         var returnedSparqlIDs = this.getReturnedSparqlIDs(true);
         for (var i=0; i < this.groupBy.length; i++) {
             var s = this.groupBy[i];
             if (returnedSparqlIDs.indexOf(s) != -1) {
-                keep.push(e);
+                keep.push(s);
             }
         }
 
         this.groupBy = keep;
     },
 
+    updateGroupBy : function(oldID, newID) {
+        for (var i=0; i < this.groupBy.length; i++) {
+            if (this.groupBy[i] == oldID) {
+                this.groupBy[i] = newID;
+            }
+        }
+    },
     validateGroupBy: function() {
         var returnedSparqlIDs = this.getReturnedSparqlIDs(true);
         for (var i=0; i < this.groupBy.length; i++) {
@@ -3636,8 +3696,10 @@ SemanticNodeGroup.prototype = {
 		// etc...
 		// return the new id, which may be slightly different than the requested
 		// id.
+        // WARNING: behavior undefined for requestID null or ""
         var oldID = obj.getSparqlID();
         var oldTypeID = obj.getTypeSparqlID();
+
 
         // return if non-event
         if (requestID == oldID) {
@@ -3656,31 +3718,49 @@ SemanticNodeGroup.prototype = {
         // set new ID if it isn't blank
         var newID = "";
         if (requestID != "") {
+            var oldPossibleFuncIDs = obj.getPossibleFunctionSparqlIDs();
+
             newID = new SparqlFormatter().genSparqlID(requestID, nameHash);
 		    obj.setSparqlID(newID);
 
-            // fix orderBy entries
-            for (var i=0; i < this.orderBy.length; i++) {
-                if (this.orderBy[i].getSparqlID() == oldID) {
-                    this.orderBy[i].setSparqlID(newID);
-                }
-                if (this.orderBy[i].getSparqlID() == oldTypeID) {
-                    this.orderBy[i].setSparqlID(obj.getTypeSparqlID());
-                }
+            // update ORDER BY and GROUP BY
+            var newPossibleFuncIDs = obj.getPossibleFunctionSparqlIDs();
+            this.updateOrderBy(oldID, newID);
+            this.updateGroupBy(oldID, newID);
+            for (var i=0; i < oldPossibleFuncIDs.length; i++) {
+                this.updateOrderBy(oldPossibleFuncIDs[i], newPossibleFuncIDs[i]);
+                this.updateGroupBy(oldPossibleFuncIDs[i], newPossibleFuncIDs[i]);
             }
 
-            // fix groupBy entries
-            for (var i=0; i < this.groupBy.length; i++) {
-                if (this.groupBy[i] == oldID) {
-                    this.groupBy[i] = newID;
-                }
-            }
         }
 
-        this.removeInvalidOrderBy();
-        this.removeInvalidGroupBy();
 		return newID;
 	},
+
+    /**
+      *  set binding
+      *    newID = new id or null
+     **/
+    setBinding : function (obj, newID) {
+        var oldID = obj.getBindingOrSparqlID();
+        var oldPossibleFuncIDs = obj.getPossibleFunctionSparqlIDs();
+
+        if (newID == null) {
+            obj.binding = null;
+            newID = obj.getBindingOrSparqlID();
+        } else {
+            obj.binding = newID.startsWith("?") ? newID : "?" + newID;
+        }
+
+        // update ORDER BY and GROUP BY
+        var newPossibleFuncIDs = obj.getPossibleFunctionSparqlIDs();
+        this.updateOrderBy(oldID, newID);
+        this.updateGroupBy(oldID, newID);
+        for (var i=0; i < oldPossibleFuncIDs.length; i++) {
+            this.updateOrderBy(oldPossibleFuncIDs[i], newPossibleFuncIDs[i]);
+            this.updateGroupBy(oldPossibleFuncIDs[i], newPossibleFuncIDs[i]);
+        }
+    },
 
 	removeTaggedNodes : function() {
 

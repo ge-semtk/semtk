@@ -85,23 +85,7 @@ define([	// properly require.config'ed
         ModalItemDialog.TYPE_SPARQL_ID_SPAN = 11;
         ModalItemDialog.OPTMINUNI_SELECT = 12;
 
-        ModalItemDialog.FUNCTION_MIN = 13;
-        ModalItemDialog.FUNCTION_MAX = 14;
-        ModalItemDialog.FUNCTION_COUNT = 15;
-        ModalItemDialog.FUNCTION_AVG = 16;
-        ModalItemDialog.FUNCTION_SUM = 17;
-        ModalItemDialog.FUNCTION_SAMPLE = 18;
-        ModalItemDialog.FUNCTION_GROUP_CONCAT = 19;
-
-        ModalItemDialog.FUNCTION_LIST = [
-            ModalItemDialog.FUNCTION_MIN,
-            ModalItemDialog.FUNCTION_MAX,
-            ModalItemDialog.FUNCTION_COUNT,
-            ModalItemDialog.FUNCTION_AVG,
-            ModalItemDialog.FUNCTION_SUM,
-            ModalItemDialog.FUNCTION_SAMPLE,
-            ModalItemDialog.FUNCTION_GROUP_CONCAT,
-        ];
+        // reserved function field numbers 20-30
 
         ModalItemDialog.UNION_NONE = 1000;
         ModalItemDialog.UNION_NEW =  1001;
@@ -208,8 +192,8 @@ define([	// properly require.config'ed
 				this.setFieldValue(ModalItemDialog.CONSTRAINT_TEXT, "");
 
                 // functions
-                for (var f of ModalItemDialog.FUNCTION_LIST) {
-                    this.getFieldElement(f).checked = false;
+                for (var f of SemanticNodeGroup.FUNCTION_LIST) {
+                    this.getFieldElement(this.getFunctionFieldNumber(f)).checked = false;
                 }
 
 				// note that we leave the sparqlID
@@ -237,9 +221,9 @@ define([	// properly require.config'ed
 				}
 
                 var functions = [];
-                for (var f of ModalItemDialog.FUNCTION_LIST) {
+                for (var f of SemanticNodeGroup.FUNCTION_LIST) {
                     if (this.isFunctionChecked(f)) {
-                        functions.push(this.getFunctionName(f));
+                        functions.push(SemanticNodeGroup.getFunctionName(f));
                     }
                 }
 
@@ -258,6 +242,9 @@ define([	// properly require.config'ed
                             );
 			},
 
+            getFunctionFieldNumber : function (f) {
+                return f + 20;
+            },
 
             // Get UNION
             // including possible UNION_NONE and UNION_NEW
@@ -1105,21 +1092,21 @@ define([	// properly require.config'ed
                 tr = document.createElement("tr");
                 table.appendChild(tr);
 
-                tr.appendChild(this.buildFunctionTd("MIN", this.getFieldID(ModalItemDialog.FUNCTION_MIN)));
-                tr.appendChild(this.buildFunctionTd("MAX", this.getFieldID(ModalItemDialog.FUNCTION_MAX)));
-                tr.appendChild(this.buildFunctionTd("COUNT", this.getFieldID(ModalItemDialog.FUNCTION_COUNT)));
+                tr.appendChild(this.buildFunctionTd("MIN", this.getFieldID(this.getFunctionFieldNumber(SemanticNodeGroup.FUNCTION_MIN))));
+                tr.appendChild(this.buildFunctionTd("MAX", this.getFieldID(this.getFunctionFieldNumber(SemanticNodeGroup.FUNCTION_MAX))));
+                tr.appendChild(this.buildFunctionTd("COUNT", this.getFieldID(this.getFunctionFieldNumber(SemanticNodeGroup.FUNCTION_COUNT))));
 
                 tr = document.createElement("tr");
                 table.appendChild(tr);
 
-                tr.appendChild(this.buildFunctionTd("AVG", this.getFieldID(ModalItemDialog.FUNCTION_AVG)));
-                tr.appendChild(this.buildFunctionTd("SUM", this.getFieldID(ModalItemDialog.FUNCTION_SUM)));
-                tr.appendChild(this.buildFunctionTd("SAMPLE", this.getFieldID(ModalItemDialog.FUNCTION_SAMPLE)));
+                tr.appendChild(this.buildFunctionTd("AVG", this.getFieldID(this.getFunctionFieldNumber(SemanticNodeGroup.FUNCTION_AVG))));
+                tr.appendChild(this.buildFunctionTd("SUM", this.getFieldID(this.getFunctionFieldNumber(SemanticNodeGroup.FUNCTION_SUM))));
+                tr.appendChild(this.buildFunctionTd("SAMPLE", this.getFieldID(this.getFunctionFieldNumber(SemanticNodeGroup.FUNCTION_SAMPLE))));
 
                 tr = document.createElement("tr");
                 table.appendChild(tr);
 
-                td = this.buildFunctionTd("GROUP_CONCAT", this.getFieldID(ModalItemDialog.FUNCTION_GROUP_CONCAT));
+                td = this.buildFunctionTd("GROUP_CONCAT", this.getFieldID(this.getFunctionFieldNumber(SemanticNodeGroup.FUNCTION_GROUP_CONCAT)));
                 td.colSpan="3";
                 tr.appendChild(td);
 
@@ -1135,18 +1122,7 @@ define([	// properly require.config'ed
             },
 
             isFunctionChecked : function(f) {
-                return document.getElementById(this.getFieldID(f)).checked;
-            },
-
-            getFunctionName : function(f) {
-                if (f == ModalItemDialog.FUNCTION_MIN) return "MIN";
-                else if (f == ModalItemDialog.FUNCTION_MAX) return "MAX";
-                else if (f == ModalItemDialog.FUNCTION_COUNT) return "COUNT";
-                else if (f == ModalItemDialog.FUNCTION_AVG) return "AVG";
-                else if (f == ModalItemDialog.FUNCTION_SUM) return "SUM";
-                else if (f == ModalItemDialog.FUNCTION_SAMPLE) return "SAMPLE";
-                else if (f == ModalItemDialog.FUNCTION_GROUP_CONCAT) return "GROUP_CONCAT";
-                else return null;
+                return document.getElementById(this.getFieldID(this.getFunctionFieldNumber(f))).checked;
             },
 
 			// ------ manage unique id's ------

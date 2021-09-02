@@ -761,11 +761,11 @@
             }
             if (varName == propItem.getSparqlID()) {
                 // varName is sparqlID: shut of binding
-                propItem.setBinding(null);
+                gNodeGroup.setBinding(propItem, null);
                 propItem.setIsBindingReturned(false);
             } else {
                 // varName is NOT sparqlID: use binding
-                propItem.setBinding(varName);
+                gNodeGroup.setBinding(propItem, varName);
                 propItem.setIsReturned(false);
             }
             gNodeGroup.setIsReturned(varName, returnFlag);
@@ -789,7 +789,6 @@
             propItem.setConstraints(constraintStr);
             propItem.setIsMarkedForDeletion(delMarker);
             propItem.setFunctions(functions);
-            gNodeGroup.removeInvalidOrderBy();
 
             nodeGroupChanged(true);
         });
@@ -804,11 +803,11 @@
             // update the binding or sparqlID based on varName and returnFalg
             if (varName == snodeItem.getSparqlID()) {
                 // varname is sparqlID: shut off binding
-                snodeItem.setBinding(null);
+                gNodeGroup.setBinding(snodeItem, null);
                 snodeItem.setIsBindingReturned(false);
             } else {
                 // varname is NOT sparqlID: use binding
-                snodeItem.setBinding(varName);
+                gNodeGroup.setBinding(snodeItem, varName);
                 snodeItem.setIsReturned(false);
             }
             gNodeGroup.setIsReturned(varName, returnFlag);
@@ -1894,10 +1893,18 @@
 
         // check up ORDER BY
         gNodeGroup.removeInvalidOrderBy();
+        gNodeGroup.removeInvalidGroupBy();
+
         if (gNodeGroup.getOrderBy().length > 0) {
             document.getElementById("SGOrderBy").classList.add("btn-primary");
         } else {
             document.getElementById("SGOrderBy").classList.remove("btn-primary");
+        }
+
+        if (gNodeGroup.getGroupBy().length > 0) {
+            document.getElementById("SGGroupBy").classList.add("btn-primary");
+        } else {
+            document.getElementById("SGGroupBy").classList.remove("btn-primary");
         }
 
         // check up GROUP BY
@@ -2121,11 +2128,10 @@
     };
 
     var buildQueryFailure = function (msgHtml, sparqlMsgOrCallback) {
-        var sparql = "";
         if (typeof sparqlMsgOrCallback == "string") {
-            sparql = "#" + sparqlMsgOrCallback.replace(/\n/g, '#');
-
+            setStatus(sparqlMsgOrCallback.replace(/\n/g,' '));
         } else {
+            setStatus("");
             require(['sparqlgraph/js/modaliidx'],
     	         function (ModalIidx) {
 					ModalIidx.alert("Query Generation Failed", msgHtml, false, sparqlMsgOrCallback);
@@ -2133,7 +2139,7 @@
 
         }
 
-        document.getElementById('queryText').value = sparql;
+        document.getElementById('queryText').value = "";
         guiQueryEmpty();
     };
 
@@ -2514,7 +2520,7 @@
                         guiUnDisableAll();
                         successCallback(results);
                         progressCallback("finishing up", 99);
-                        setTimeout(function () { setStatus(""); }, 200);
+                        setStatus("");
                     };
                     var resultsClient = new MsiClientResults(g.service.results.url, jobId);
                     resultsCall.bind(resultsClient)(resultsSuccessCallback);

@@ -18,6 +18,7 @@
 
 package com.ge.research.semtk.belmont;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 
 import org.json.simple.JSONArray;
@@ -65,9 +66,9 @@ public abstract class Returnable {
 		this.isReturned = (Boolean)jObj.get("isReturned");///
 
 		if (jObj.containsKey("binding")) {
-			this.setBinding((String) jObj.get("binding"));///
+			this.binding = (String) jObj.get("binding");///
 		} else {
-			this.setBinding(null);
+			this.binding = null;
 		}
 		if (jObj.containsKey("isBindingReturned")) {
 			this.setIsBindingReturned((Boolean)jObj.get("isBindingReturned"));///
@@ -159,17 +160,8 @@ public abstract class Returnable {
 		}
 	}
 
-	public void setBinding(String binding) {
-		if (binding == null) {
-			this.binding = null;
-		} else {
-			this.binding = binding.startsWith("?") ? binding : "?" + binding;
-		}
-	}
+	// setBinding() has moved to NodeGroup, for same reasons as changeSparqlID()
 	
-	public void clearBinding() {
-		this.setBinding(null);
-	}
 	
 	// Is binding returned (it must also exist)
 	public Boolean getIsBindingReturned() {
@@ -191,6 +183,14 @@ public abstract class Returnable {
 		}
 		return ret;
 	}
+	
+	public ArrayList<String> getPossibleFunctionSparqlIDs() {
+		ArrayList<String> ret = new ArrayList<String>();
+        for (String fname : NodeGroup.FUNCTION_NAMES) {
+            ret.add(this.getFunctionSparqlID(fname));
+        }
+        return ret;
+    }
 	
 	public String getFunctionSparqlID(String f) {
 		return this.getBindingOrSparqlID() + "_" + f;
