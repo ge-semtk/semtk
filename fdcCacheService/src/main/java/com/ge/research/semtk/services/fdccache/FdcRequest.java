@@ -25,30 +25,19 @@ import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 
 import io.swagger.annotations.ApiModelProperty;
 
-public class TableBootstrapRequest extends FdcRequest {
-	
+public class FdcRequest extends SparqlConnectionRequest {
 	@ApiModelProperty(
-			value = "bootstrapTableJsonStr",
+			value = "specId",
 			required = true,
-			example = "\"{\"col_names\":[\"aircraftUri\",\"tailNumber\"],\"rows\":[[\"http://uri\",\"007a\"]],\"col_type\":[\"String\",\"String\"],\"col_count\":1,\"row_count\":1}\"")
-	private String bootstrapTableJsonStr;
+			example = "realBOM")
+	private String specId;
 	
-	@ApiModelProperty(
-			value = "recacheAfterSec",
-			required = false,
-			example = "300")
-	private int recacheAfterSec = 0;
-	
-
-	public String getBootstrapTableJsonStr() {
-		return this.bootstrapTableJsonStr;
-	}
-	public Table buildBootstrapTable() throws Exception {
-		return Table.fromJson((JSONObject) (new JSONParser()).parse(this.bootstrapTableJsonStr));
+	public String getSpecId() {
+		return specId;
 	}
 
-	public int getRecacheAfterSec() {
-		return recacheAfterSec;
+	public void setSpecId(String specId) {
+		this.specId = specId;
 	}
 
 	/**

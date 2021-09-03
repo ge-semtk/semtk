@@ -83,8 +83,8 @@ public class FdcCacheServiceRestController {
 	}
 	
 	@ApiOperation(
-			value="Start a cache process, bootstrap with table results from step 1's input nodegroup"
-			//notes="nnn"
+			value="Start a cache process with bootstrap table if cache hasn't been run recently enough.",
+			notes="Data graph[0] may be cleared and re-populated.  Other graphs are read-only."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/cacheUsingTableBootstrap", method= RequestMethod.POST)
@@ -106,7 +106,41 @@ public class FdcCacheServiceRestController {
 			runner.setBootstrapTable(bootstrapTable);
 			runner.start();
 			results.setSuccess(true);
-			results.addResult(results.JOB_ID_RESULT_KEY, runner.getJobId());
+			results.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, runner.getJobId());
+			return results.toJson();
+			
+		} catch(Exception e){
+	    	SimpleResultSet res = new SimpleResultSet();
+	    	res.setSuccess(false);
+	    	res.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+		    LocalLogger.printStackTrace(e);
+		    return res.toJson();
+		}  
+	}
+	
+	@ApiOperation(
+			value="Start a cache process with the first query.",
+			notes="Data graph[0] will be appended.  Other graphs are read-only."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/runFdcSpec", method= RequestMethod.POST)
+	public JSONObject runFdcSpec(@RequestBody FdcRequest request,  @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);		
+		final String ENDPOINT_NAME = "runFdcSpec";
+		
+		SimpleResultSet results = new SimpleResultSet();
+		try {
+			FdcCacheSpecRunner runner = new FdcCacheSpecRunner(
+					request.getSpecId(), 
+					request.buildSparqlConnection(), 
+					0,
+					servicesgraph_prop.buildSei(), 
+					oinfo_prop.getClient(), 
+					ngexec_prop.getClient(), 
+					ngstore_prop.getClient());
+			runner.start();
+			results.setSuccess(true);
+			results.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, runner.getJobId());
 			return results.toJson();
 			
 		} catch(Exception e){

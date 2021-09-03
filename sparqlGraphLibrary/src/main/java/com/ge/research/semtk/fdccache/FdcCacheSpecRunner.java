@@ -45,6 +45,9 @@ import com.ge.research.semtk.utility.Utility;
 
 public class FdcCacheSpecRunner extends Thread {
 	static boolean firstContruct = true;
+	static final String SUBJECT = "http://fdc/cache#info";
+	static final String PRED_HASH = "http://fdc/cache#hash";
+	static final String PRED_EPOCH = "http://fdc/cache#epoch";
 	
 	String specId = null;
 	SparqlConnection conn = null;
@@ -154,6 +157,14 @@ public class FdcCacheSpecRunner extends Thread {
 	}
 	
 	/**
+	 * Build bootstrap table hash
+	 * @return hash, or null if no bootstrap table
+	 * @throws Exception
+	 */
+	private String getBootstrapTableHash() throws Exception {
+		return this.bootstrapTable != null ? this.specId + ":" + this.bootstrapTable.hashMD5() : null;
+	}
+	/**
 	 * Check if data is already cached to this sei (connection's dataInterface 0)
 	 * If so and recent enough, return true
 	 * If so and too old, clear data graph and insert triples for hash defining cache and epoch
@@ -166,15 +177,13 @@ public class FdcCacheSpecRunner extends Thread {
 	 * @return boolean - is cache fine as-is, or job failed
 	 * @throws Exception
 	 */
-	private boolean checkAlreadyCached() throws Exception {
-		final String SUBJECT = "http://fdc/cache#info";
-		final String PRED_HASH = "http://fdc/cache#hash";
-		final String PRED_EPOCH = "http://fdc/cache#epoch";
+	private boolean checkAlreadyCached(String bootstrapHash) throws Exception {
+		
+		
 		String storedHash = null;
 		long storedEpoch = 0;
 		long nowEpoch = Instant.now().getEpochSecond();
 		SparqlEndpointInterface sei = this.conn.getDataInterface(0);
-		String bootstrapHash = this.specId + ":" + this.bootstrapTable.hashMD5();
 		
 		// borrow password from services graph
 		sei.setUserAndPassword(this.servicesSei.getUserName(), this.servicesSei.getPassword());
@@ -207,9 +216,8 @@ public class FdcCacheSpecRunner extends Thread {
 				return true;
 			}
 			
-			// clear old stuff
-			sei.clearGraph();
 		} else {
+			// no hash so this has never been a cache.  It should be empty.
 			String countQuery = SparqlToXUtils.generateCountTriplesSparql(sei);
 			Table t = sei.executeQueryToTable(countQuery);
 			if (t.getCellAsInt(0, 0) != 0) {
@@ -218,6 +226,17 @@ public class FdcCacheSpecRunner extends Thread {
 			}
 		}
 		
+		return false;
+
+	}
+	
+	private void clearAndHashGraph(String bootstrapHash) throws Exception {
+		
+		long nowEpoch = Instant.now().getEpochSecond();
+		SparqlEndpointInterface sei = this.conn.getDataInterface(0);
+
+		// clear old stuff
+		sei.clearGraph();
 		// ----  At this point graph is empty and we're about to fill it ----
 		
 		// add hash and epoch triples
@@ -226,9 +245,6 @@ public class FdcCacheSpecRunner extends Thread {
 		// presume services sei credentials work sei insert
 		sei.executeQueryAndConfirm(sparql1);
 		sei.executeQueryAndConfirm(sparql2);
-		
-		return false;
-
 	}
 	
 	/**
@@ -239,9 +255,16 @@ public class FdcCacheSpecRunner extends Thread {
 		ThreadAuthenticator.authenticateThisThread(this.headerTable);
 		
 		try {
-			if (this.checkAlreadyCached()) {
-				return;
-			}
+			// iff there is a bootstrap table, check age
+			if (this.bootstrapTable != null) {
+				String bootstrapTableHash = this.getBootstrapTableHash();
+				if (this.checkAlreadyCached(bootstrapTableHash)) {
+					return;
+				} else {
+					// clear and timestamp data graph[0]
+					this.clearAndHashGraph(bootstrapTableHash);
+				}
+			} 
 			
 			FdcClient fdcClient = null;
 			int percentStep = 100 / this.getNumSteps();
@@ -250,15 +273,10 @@ public class FdcCacheSpecRunner extends Thread {
 			for (this.curStep = 0; this.curStep < this.getNumSteps(); this.curStep++) {
 				
 				//----- get fdc inputs -----
-				if (curStep == 0) {
-					// bootstrap first step
-					if (bootstrapTable == null) {
-						throw new Exception("Runs without bootstrap table are"
-								+ " not yet implemented.");
-					} else { 
-						tracker.setJobPercentComplete(jobId, percentComplete, "loading bootstrap table");
-						fdcClient = getStepFdcClient(this.bootstrapTable);
-					}
+				if (curStep == 0 && bootstrapTable != null) {
+					tracker.setJobPercentComplete(jobId, percentComplete, "loading bootstrap table");
+					fdcClient = getStepFdcClient(this.bootstrapTable);
+					
 				} else {
 					// normal select 
 					tracker.setJobPercentComplete(jobId, percentComplete, "run select, nodegroup = " + this.getStepInputNg());
