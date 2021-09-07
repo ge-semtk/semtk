@@ -1177,7 +1177,7 @@ SemanticNode.prototype = {
     },
 
     getPossibleFunctionSparqlIDs : function() {
-        rret = [];
+        ret = [];
         for (var f of SemanticNodeGroup.FUNCTION_LIST) {
             ret.push(this.getFunctionSparqlID(SemanticNodeGroup.getFunctionName(f)));
         }
