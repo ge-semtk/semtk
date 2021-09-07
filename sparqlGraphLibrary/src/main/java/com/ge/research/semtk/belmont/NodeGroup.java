@@ -767,7 +767,7 @@ public class NodeGroup {
 
 		int version = Integer.parseInt(jobj.get("version").toString());
 		if (version > NodeGroup.VERSION) {
-			throw new Exception (String.format("NodeGroup.java service layer reads NodeGroups through version %d. Nodegroup version is %d.", NodeGroup.VERSION, version));
+			throw new Exception (String.format("Nodegroup version is %d. This Java service layer supports only up to version %d. ", version, NodeGroup.VERSION));
 		}
 		
 		if (jobj.containsKey("limit")) {
