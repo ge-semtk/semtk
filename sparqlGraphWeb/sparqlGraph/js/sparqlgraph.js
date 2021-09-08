@@ -1,4 +1,4 @@
-/**
+SemanticNodegroup.QTYPE_SELECT/**
  ** Copyright 2016 General Electric Company
  **
  ** Authors:  Paul Cuddihy, Justin McHugh
@@ -51,6 +51,7 @@
     var gQuerySource = "SERVICES";
 
     var RESULTS_MAX_ROWS = 5000; // 5000 sample rows
+
 
     // READY FUNCTION
     $('document').ready(function(){
@@ -749,7 +750,7 @@
         nodeGroupChanged(true);
 	};
 
-    var propertyItemDialogCallback = function(propItem, varName, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data, functions) {
+    var propertyItemDialogCallback = function(propItem, varName, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data, functions, undefinedConstructFlag) {
         // Note: ModalItemDialog validates that sparqlID is legal
 
         require([ 'sparqlgraph/js/modalitemdialog',
@@ -794,7 +795,7 @@
         });
     };
 
-    var snodeItemDialogCallback = function(snodeItem, varName, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data, functions) {
+    var snodeItemDialogCallback = function(snodeItem, varName, returnFlag, returnTypeFlag, optMinus, union, delMarker, rtConstrainedFlag, constraintStr, data, functions, constructFlag) {
         require([ 'sparqlgraph/js/modalitemdialog',
                 ], function (ModalItemDialog) {
 
@@ -834,6 +835,7 @@
         	snodeItem.setConstraints(constraintStr);
             snodeItem.setFunctions(functions);
 
+            snodeItem.setIsConstructed(constructFlag);
             nodeGroupChanged(true);
         });
     };
@@ -1600,16 +1602,16 @@
                                                                             g.service.results.url);
             setStatusProgressBar("Running Query", 1);
             switch (getQueryType()) {
-			case "SELECT":
+			case SemanticNodegroup.QTYPE_SELECT:
                 client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
                 break;
-			case "COUNT" :
+			case SemanticNodegroup.QTYPE_COUNT :
                 client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
                 break;
-            case "CONSTRUCT":
+            case SemanticNodegroup.QTYPE_CONSTRUCT:
                 client.execAsyncDispatchConstructFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jsonLdCallback, asyncFailureCallback);
                 break;
-			case "DELETE":
+			case SemanticNodegroup.QTYPE_DELETE:
                 var okCallback = client.execAsyncDispatchDeleteFromNodeGroup.bind(client, gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
                 var cancelCallback = function () {
                     guiUnDisableAll();
@@ -2096,13 +2098,13 @@
             case "SELECT":
                 client.execAsyncGenerateSelect(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
                 break;
-            case "COUNT":
+            case SemanticNodegroup.QTYPE_COUNT:
                 client.execAsyncGenerateCountAll(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
                 break;
-            case "CONSTRUCT":
+            case SemanticNodegroup.QTYPE_CONSTRUCT:
                 client.execAsyncGenerateConstruct(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
                 break;
-            case "DELETE":
+            case SemanticNodegroup.QTYPE_DELETE:
                 client.execAsyncGenerateDelete(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
                 break;
             default:

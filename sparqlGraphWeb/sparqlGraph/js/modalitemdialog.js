@@ -76,6 +76,7 @@ define([	// properly require.config'ed
 		ModalItemDialog.SPARQL_ID_TEXT = 2;
 		ModalItemDialog.UNUSED = 3;
 		ModalItemDialog.RETURN_CHECK = 4;
+        ModalItemDialog.CONSTRUCT_CHECK = 45;
 		ModalItemDialog.AUTO_TEXT = 5;
 		ModalItemDialog.AUTO_TEXT_LIST = 6;
 		ModalItemDialog.RT_CONSTRAINED_CHECK = 7;
@@ -227,7 +228,9 @@ define([	// properly require.config'ed
                     }
                 }
 
-				// return a list containing just the text field
+                var constructedChecked = this.item.getItemType() == "SemanticNode" ? this.getFieldElement(ModalItemDialog.CONSTRUCT_CHECK).checked : undefined;
+
+                // return a list containing just the text field
 				this.callback(	this.item,
 								(returnChecked || rtConstrainedChecked || constraintTxt != "" || delMarker != null) ? sparqlID : "",
 								returnChecked,
@@ -238,7 +241,8 @@ define([	// properly require.config'ed
 								rtConstrainedChecked,
 								constraintTxt,
 								this.data,
-                                functions
+                                functions,
+                                constructedChecked
                             );
 			},
 
@@ -510,16 +514,6 @@ define([	// properly require.config'ed
 
 			},
 
-            returnTypeCheckOnClick : function() {
-            },
-
-			returnCheckOnClick : function() {
-				// nothing to do any more
-			},
-
-			rtConstrainedCheckOnClick : function () {
-			},
-
 			sparqlIDOnFocus : function () {
 				this.prevName = this.getSparqlIDFromText();
 			},
@@ -592,6 +586,19 @@ define([	// properly require.config'ed
             },
             unionSelectOnFocusOut : function() {
                 this.sparqlIDOnFocusOut();
+            },
+
+            returnCheckCallback : function() {
+                // property items:
+                // user can't change getIsConstruct
+                // it is determined by isReturned and parentSNode.isConstructed()
+                if (this.item.getItemType() == "PropertyItem") {
+                    var returnCheck = this.getFieldElement(ModalItemDialog.RETURN_CHECK);
+                    var constructCheck = this.getFieldElement(ModalItemDialog.CONSTRUCT_CHECK);
+                    var snode = this.nodegroup.getPropertyItemParentSNode(this.item);
+
+                    constructCheck.checked = returnCheck.checked && snode.getIsConstructed();
+                }
             },
 
 			sparqlIDOnFocusOut : function() {
@@ -723,10 +730,34 @@ define([	// properly require.config'ed
                                 this.getFieldID(ModalItemDialog.RETURN_CHECK),
                                 this.item.getIsReturned() || this.item.getIsBindingReturned(),
                                 "btn",
-                                this.returnCheckOnClick.bind(this)
+                                this.returnCheckCallback.bind(this)
                                 );
 
-                IIDXHelper.appendCheckBox(td, returnCheck, "return");
+                IIDXHelper.appendCheckBox(td, returnCheck, "select");
+
+                // construct checkbox
+				constructCheck = IIDXHelper.createVAlignedCheckbox(
+                                this.getFieldID(ModalItemDialog.CONSTRUCT_CHECK),
+                                false, // gets set below
+                                "btn"
+                                );
+                if (this.item.getItemType() == "PropertyItem") {
+                    // PropItem: isConstructed is determined by isReturned and parent.isConstructed
+                    constructCheck.disabled = true;
+                    var snode = this.nodegroup.getPropertyItemParentSNode(this.item);
+                    constructCheck.checked = this.item.getIsReturned() && snode.getIsConstructed();
+                } else {
+                    // SemanticNode: only settable if not returned
+                    if (returnCheck.checked) {
+                        constructCheck.checked = true;
+                        constructCheck.disabled = true;
+                    } else {
+                        constructCheck.disabled = false;
+                        constructCheck.checked = this.item.getIsConstructed();
+                    }
+                }
+
+                IIDXHelper.appendCheckBox(td, constructCheck, "construct");
 
 				// row #2
 				tr = document.createElement("tr");
@@ -754,8 +785,7 @@ define([	// properly require.config'ed
                     returnClassCheck = IIDXHelper.createVAlignedCheckbox(
                                             this.getFieldID(ModalItemDialog.RETURN_TYPE_CHECK),
                                             this.item.getIsTypeReturned(),
-                                            "btn",
-                                            this.returnTypeCheckOnClick.bind(this)
+                                            "btn"
                                             );
 
                     td.appendChild(returnClassCheck);
@@ -876,8 +906,7 @@ define([	// properly require.config'ed
 				runtimeConstrainedCheck = IIDXHelper.createVAlignedCheckbox(
                                             this.getFieldID(ModalItemDialog.RT_CONSTRAINED_CHECK),
                                             this.item.getIsRuntimeConstrained(),
-                                            "btn",
-                                            this.rtConstrainedCheckOnClick.bind(this)
+                                            "btn"
                                         );
 
 				// Top section is handled totally differently with sparqlformFlag
@@ -930,7 +959,6 @@ define([	// properly require.config'ed
 						var deleteSelect = IIDXHelper.createSelect(   this.getFieldID(ModalItemDialog.DELETE_SELECT),
                                                                       options,
                                                                       selectedText);
-						deleteSelect.classList.add("input-medium");
 
                         // TODO: last two aren't implemented on the other end
                         //       They probably shouldn't be in belmont.js
@@ -1059,24 +1087,7 @@ define([	// properly require.config'ed
 				if (this.sparqlformFlag) {
 					this.query();
 				} else {
-					// fill the values list
-					// this.query();
-
-                    var delSel = this.getFieldElement(ModalItemDialog.DELETE_SELECT);
-                    var delCheck = this.getFieldElement(ModalItemDialog.DELETE_CHECK);
-					// Set returned if it looks like this dialog is totally empty
-					if (this.item.getIsReturned() == false &&
-                        this.item.getIsBindingReturned() == false &&
-                        this.item.getFunctions().length == 0 &&
-                        this.item.getIsTypeReturned() == false &&
-                        this.item.getIsRuntimeConstrained() == false &&
-                        (delSel == null || delSel.selectedIndex == 0) &&
-                        (delCheck == null || delCheck.checked == false) &&
-                        this.getFieldElement(ModalItemDialog.OPTMINUNI_SELECT).selectedIndex == 0 &&
-                        this.item.getConstraints() == "") {
-						returnCheck.checked = true;
-						this.returnCheckOnClick();
-					}
+                    returnCheck.checked =this.item.getIsReturned() ||this.item.getIsBindingReturned();
 				}
 
 				// tooltips

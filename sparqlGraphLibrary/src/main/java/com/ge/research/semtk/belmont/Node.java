@@ -51,6 +51,7 @@ public class Node extends Returnable {
 	private NodeGroup nodeGroup = null;
 	
 	private NodeDeletionTypes deletionMode = NodeDeletionTypes.NO_DELETE;
+	private boolean isConstructed = true;
 	
 	// Left-over from confused port from javascript
 	public Node(String name, ArrayList<PropertyItem> p, ArrayList<NodeItem> n, String URI, NodeGroup ng){
@@ -123,7 +124,11 @@ public class Node extends Returnable {
 				jNodeList.add(this.nodes.get(i).toJson());
 			}
 		}
-				
+		
+		// defaults to true
+		if (this.isConstructed == false) {
+			ret.put("isConstructed", false);
+		}
 		ret.put("propList", jPropList);
 		ret.put("nodeList", jNodeList);
 		ret.put("fullURIName", this.fullURIname);
@@ -135,6 +140,14 @@ public class Node extends Returnable {
 		ret.put("deletionMode", this.deletionMode.name());
 		
 		return ret;
+	}
+	
+	public boolean getIsConstructed() {
+		return this.isConstructed;
+	}
+	
+	public void setIsConstructed(boolean isConstructed) {
+		this.isConstructed = isConstructed;
 	}
 	
 	/**
@@ -149,6 +162,7 @@ public class Node extends Returnable {
 		this.instanceLookedUp = instanceLookedUp;
 	}
 
+	
 	/**
 	 * Inflate (add any missing properties) and validate against model
 	 * This legacy version throws an Exception on the first model error.
@@ -569,6 +583,9 @@ public class Node extends Returnable {
 		// build all the parts we need from this incoming JSON Object...
 		this.fullURIname = nodeEncoded.get("fullURIName").toString();
 		
+		if (nodeEncoded.containsKey("isConstructed")) {
+			this.isConstructed = (boolean) nodeEncoded.get("isConstructed");
+		}
 				
 		// NOTE: removed OPTIONAL array of subclass names.
 		try{

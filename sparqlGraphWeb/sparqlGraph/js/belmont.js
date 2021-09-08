@@ -477,6 +477,7 @@ NodeItem.prototype = {
     getIsReturned : function() {
         return false;
     },
+
     hasConstraints : function() {
 		return false;
 	},
@@ -705,7 +706,7 @@ PropertyItem.prototype = {
 			Constraints : this.Constraints,
 			SparqlID : this.SparqlID,
 			isReturned : this.isReturned,
-			optMinus : this.getOptMinus(),
+            optMinus : this.getOptMinus(),
 			isRuntimeConstrained : this.getIsRuntimeConstrained(),
 			instanceValues : this.instanceValues,
 			isMarkedForDeletion : this.isMarkedForDeletion,
@@ -729,7 +730,6 @@ PropertyItem.prototype = {
 		this.Constraints = jObj.Constraints;
 		this.SparqlID = jObj.SparqlID;
 		this.isReturned = jObj.isReturned;
-
         // backwards compatible isOptional
 		this.optMinus = PropertyItem.OPT_MINUS_NONE;
        	if (jObj.hasOwnProperty("isOptional")) {
@@ -944,6 +944,7 @@ PropertyItem.prototype = {
     getIsTypeReturned : function () {
         return false;
     },
+
 	getIsOptional : function() {
 		return this.isOptional == PropertyItem.OPT_MINUS_OPTIONAL;
 	},
@@ -1028,6 +1029,7 @@ var SemanticNode = function(nome, plist, nlist, fullName, subClassNamesUNUSED,
 											// always included in the query
 		this.isReturned = false;
         this.isTypeReturned = false;
+        this.isConstructed = true;
         this.functions = [];
         this.binding = null;
         this.isBindingReturned = false;
@@ -1084,6 +1086,9 @@ SemanticNode.prototype = {
             ret.isTypeReturned = true;
         }
 
+        if (this.isConstructed == false) {
+            ret.isConstructed = false;
+        }
         if (this.functions.length > 0) {
             ret.functions = this.functions;
         }
@@ -1124,6 +1129,7 @@ SemanticNode.prototype = {
 		this.fullURIName = jObj.fullURIName;
 		this.SparqlID = jObj.SparqlID;
 		this.isReturned = jObj.isReturned;
+        this.isConstructed = jObj.hasOwnProperty("isConstructed") ? jObj.isConstructed : true;
 		this.isRuntimeConstrained = jObj.hasOwnProperty("isRuntimeConstrained") ? jObj.isRuntimeConstrained : false;
 		this.valueConstraint = jObj.valueConstraint;
 		this.instanceValue = jObj.instanceValue;
@@ -1257,6 +1263,10 @@ SemanticNode.prototype = {
 	setIsRuntimeConstrained : function(val) {
 		this.isRuntimeConstrained = val;
 	},
+    setIsConstructed : function(val) {
+        this.isConstructed = val;
+    },
+
 	setValueConstraint : function(c) {
 		this.valueConstraint = c;
 	},
@@ -1293,7 +1303,9 @@ SemanticNode.prototype = {
 	getIsRuntimeConstrained : function() {
 		return this.isRuntimeConstrained;
 	},
-
+    getIsConstructed : function() {
+        return this.isConstructed;
+    },
 	isUsed : function (optInstanceOnly) {
 		var instanceOnly = (optInstanceOnly === undefined) ? false : optInstanceOnly;
 
@@ -1806,6 +1818,12 @@ SemanticNodeGroup.INSERT_PREFIX = "generateSparqlInsert:";
 SemanticNodeGroup.INSERT_FULL = "belmont/generateSparqlInsert#";
 
 SemanticNodeGroup.NULL_TARGET = "Nu11T@rG3t";
+
+SemanticNodeGroup.QTYPE_SELECT = "SELECT";
+SemanticNodeGroup.QTYPE_CONSTRUCT = "CONSTRUCT";
+SemanticNodeGroup.QTYPE_CONSTRUCT_RDF = "CONSTRUCT RDF";
+SemanticNodeGroup.QTYPE_DELETE = "DELETE";
+SemanticNodeGroup.QTYPE_COUNT = "COUNT";
 
 SemanticNodeGroup.FUNCTION_MIN = 0;
 SemanticNodeGroup.FUNCTION_MAX = 1;
