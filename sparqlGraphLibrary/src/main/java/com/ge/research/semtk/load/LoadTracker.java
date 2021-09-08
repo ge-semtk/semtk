@@ -155,7 +155,7 @@ public class LoadTracker {
 				r.setIsReturned(false);
 			}
 		}
-		String query = ng.generateSparqlDelete(null);
+		String query = ng.generateSparqlDelete();
 		this.dataSei.executeQueryAndConfirm(query);
 	}
 	

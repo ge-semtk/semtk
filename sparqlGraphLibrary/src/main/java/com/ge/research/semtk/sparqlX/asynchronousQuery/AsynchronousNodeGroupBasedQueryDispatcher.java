@@ -297,7 +297,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			retval = this.queryNodeGroup.generateSparqlConstruct(true);
 		}
 		else if(qt.equals(DispatcherSupportedQueryTypes.DELETE)) {
-			retval = this.queryNodeGroup.generateSparqlDelete(null);
+			retval = this.queryNodeGroup.generateSparqlDelete();
 		}
 		else{
 			throw new Exception("Dispatcher passed and unrecognized query type. it does not know how to build a " + qt.name() +  " query");

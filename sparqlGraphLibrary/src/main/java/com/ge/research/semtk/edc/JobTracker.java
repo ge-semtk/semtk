@@ -978,7 +978,7 @@ public class JobTracker {
 		creationTime.setValueConstraint(new ValueConstraint(creationTimeConstraint));
 		
 		// run
-		query = ngJobDel.generateSparqlDelete(null);
+		query = ngJobDel.generateSparqlDelete();
 		
 		// we've already checked that user is JobAdmin.  So user can delete jobs from triplestore.
 		endpoint = this.createSuperuserEndpoint();
@@ -1063,7 +1063,7 @@ public class JobTracker {
 		idItem.setValueConstraint(new ValueConstraint(jobIdConstraint));
 		
 		// delete from triplestore
-		this.createSuperuserEndpoint().executeQueryAndConfirm(ngJobDel.generateSparqlDelete(null));
+		this.createSuperuserEndpoint().executeQueryAndConfirm(ngJobDel.generateSparqlDelete());
 		LocalLogger.logToStdOut("Deleted job from triplestore: " + jobIdConstraint);
 		
 	}

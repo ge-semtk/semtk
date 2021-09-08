@@ -710,7 +710,7 @@ public class QueryGenTest_IT {
 		
 		// nothing to delete
 		try {
-			String msg = ng.generateSparqlDelete(TestGraph.getOInfo());
+			String msg = ng.generateSparqlDelete();
 			assertTrue("No exception was thrown generating sparql with nothing to delete", false);
 		} catch (NoValidSparqlException e) {
 			assertTrue("Expected 'nothing to DELETE' ng.checkNodegroup() message, got: " + e.getMessage(), e.getMessage().contains("delet"));

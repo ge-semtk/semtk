@@ -318,7 +318,7 @@ public class NodeGroupServiceRestController {
 			NodeGroup ng = requestBody.buildNodeGroup();
 			ng.noInflateNorValidate(retrieveOInfo(requestBody.buildConnection()));
 
-			String query = ng.generateSparqlDelete(null);
+			String query = ng.generateSparqlDelete();
 			
 			retval = this.generateSuccessOutput("DELETE", query);
 			
