@@ -60,7 +60,7 @@ define([	// properly require.config'ed   bootstrap-modal
 			},
 
             isJsonLdResults : function () {
-                return this.xhr.hasOwnProperty("@graph") || this.xhr.hasOwnProperty("@id") || JSON.stringify(this.xhr) === "{}";
+                return this.xhr.hasOwnProperty("@graph") || this.xhr.hasOwnProperty("@id") || this.xhr.hasOwnProperty("@context") || JSON.stringify(this.xhr) === "{}";
             },
 
 			getColumnName : function (x) {
