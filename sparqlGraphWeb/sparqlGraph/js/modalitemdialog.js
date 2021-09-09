@@ -106,7 +106,7 @@ define([	// properly require.config'ed
                 this.maxValues = mv;
             },
 
-			selectChanged : function () {
+			selectCheckOnChange : function () {
 				// build the text field using the selected fields in the <select>
 
 				var select = this.getFieldElement(ModalItemDialog.VALS_SELECT);
@@ -150,7 +150,7 @@ define([	// properly require.config'ed
 				if (! this.sparqlformFlag) {
 					var returnCheck = this.getFieldElement(ModalItemDialog.RETURN_CHECK);
 					returnCheck.checked = false;
-					this.returnCheckOnClick();   // handles any disabling fields
+					this.selectCheckOnChange();   // handles any disabling fields
 				}
 
                 // return type
@@ -508,7 +508,7 @@ define([	// properly require.config'ed
 						select[pos].selected = true;
 					}
 
-					this.selectChanged();
+					this.selectCheckOnChange();
 					this.getFieldElement(ModalItemDialog.AUTO_TEXT).value="";
 				}
 
@@ -1051,7 +1051,7 @@ define([	// properly require.config'ed
 				elem.multiple = true;
 				elem.id = this.getFieldID(ModalItemDialog.VALS_SELECT);
 				elem.size = "10";
-				elem.onchange = this.selectChanged.bind(this);
+				elem.onchange = this.selectCheckOnChange.bind(this);
 				elem.style.width = "100%";
 				dom.appendChild(elem);
 

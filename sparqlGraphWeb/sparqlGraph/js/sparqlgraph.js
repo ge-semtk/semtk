@@ -1,5 +1,5 @@
-SemanticNodegroup.QTYPE_SELECT/**
- ** Copyright 2016 General Electric Company
+/*
+ ** Copyright 2016-2021 General Electric Company
  **
  ** Authors:  Paul Cuddihy, Justin McHugh
  **
@@ -1171,6 +1171,7 @@ SemanticNodegroup.QTYPE_SELECT/**
             } else {
                 doQueryLoadFile2(sgJson, optNgName);
             }
+
 		});
 
     };
@@ -1242,6 +1243,8 @@ SemanticNodegroup.QTYPE_SELECT/**
                 sgJson.getNodeGroup(gNodeGroup);
                 gNodeGroup.setSparqlConnection(gConn);
                 gPlotSpecsHandler = sgJson.getPlotSpecsHandler();
+
+                setQueryTypeSelect();
             } catch (e) {
                 // real non-model error loading the nodegroup
                 console.log(e.stack);
@@ -1601,25 +1604,27 @@ SemanticNodegroup.QTYPE_SELECT/**
                                                                             g.service.status.url,
                                                                             g.service.results.url);
             setStatusProgressBar("Running Query", 1);
-            switch (getQueryType()) {
-			case SemanticNodegroup.QTYPE_SELECT:
-                client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
-                break;
-			case SemanticNodegroup.QTYPE_COUNT :
-                client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
-                break;
-            case SemanticNodegroup.QTYPE_CONSTRUCT:
-                client.execAsyncDispatchConstructFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jsonLdCallback, asyncFailureCallback);
-                break;
-			case SemanticNodegroup.QTYPE_DELETE:
-                var okCallback = client.execAsyncDispatchDeleteFromNodeGroup.bind(client, gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
-                var cancelCallback = function () {
-                    guiUnDisableAll();
-                    setStatus("");
-                };
+            switch (gNodeGroup.getQueryType()) {
+    			case SemanticNodeGroup.QT_DISTINCT:
+                    client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
+                    break;
+    			case SemanticNodeGroup.QT_COUNT:
+                    client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
+                    break;
+                case SemanticNodeGroup.QT_CONSTRUCT:
+                    client.execAsyncDispatchConstructFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jsonLdCallback, asyncFailureCallback);
+                    break;
+    			case SemanticNodeGroup.QT_DELETE:
+                    var okCallback = client.execAsyncDispatchDeleteFromNodeGroup.bind(client, gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
+                    var cancelCallback = function () {
+                        guiUnDisableAll();
+                        setStatus("");
+                    };
 
-                ModalIidx.okCancel("Delete query", "Confirm SPARQL DELETE operation.", okCallback, "Run Delete", cancelCallback);
-                break;
+                    ModalIidx.okCancel("Delete query", "Confirm SPARQL DELETE operation.", okCallback, "Run Delete", cancelCallback);
+                    break;
+                default:
+                    throw new Error("Internal error: Unknown query type.");
 			}
 
     	});
@@ -1859,13 +1864,6 @@ SemanticNodegroup.QTYPE_SELECT/**
 		return ret + SparqlServerResult.prototype.ESCAPE_HTML;
     };
 
-    /** Get query options **/
-
-    // returns "SELECT", "COUNT", "CONSTRUCT", or "DELETE"
-    var getQueryType = function () {
-    	var s = document.getElementById("SGQueryType");
-    	return s.options[s.selectedIndex].value;
-    };
 
     // returns "DIRECT", or "SERVICES"
     var getQuerySource = function () {
@@ -1995,12 +1993,58 @@ SemanticNodegroup.QTYPE_SELECT/**
 
     };
 
+    //
+    // Translate the query type select into gNodeGroup queryType and setReturnTypeOverride
+    //
     var onchangeQueryType1 = function () {
-    	// clear query test
+        var s = document.getElementById("SGQueryType");
+        switch (s.options[s.selectedIndex].value) {
+            case "SELECT":
+                gNodeGroup.setQueryType(SemanticNodeGroup.QT_DISTINCT);
+                gNodeGroup.setReturnTypeOverride(null);
+                break;
+            case "COUNT":
+                gNodeGroup.setQueryType(SemanticNodeGroup.QT_COUNT);
+                gNodeGroup.setReturnTypeOverride(null);
+                break;
+            case "CONSTRUCT":
+                gNodeGroup.setQueryType(SemanticNodeGroup.QT_CONSTRUCT);
+                gNodeGroup.setReturnTypeOverride(null);
+                break;
+            case "DELETE":
+                gNodeGroup.setQueryType(SemanticNodeGroup.QT_DELETE);
+                gNodeGroup.setReturnTypeOverride(null);
+                break;
+            default:
+                throw new Error("Internal error: Unknown query type.");
+        }
+        gRenderer.draw(gNodeGroup, gInvalidItems);
     	document.getElementById('queryText').value = "";
-
         buildQuery();
     };
+
+    setQueryTypeSelect = function() {
+        require(['sparqlgraph/js/iidxhelper'],
+            function(IIDXHelper) {
+            var name;
+            switch (gNodeGroup.getQueryType()) {
+                case SemanticNodeGroup.QT_COUNT:
+                    name = "COUNT";
+                    break;
+                case SemanticNodeGroup.QT_CONSTRUCT:
+                    name = "CONSTRUCT";
+                    break;
+                case SemanticNodeGroup.QT_DELETE:
+                    name = "DELETE";
+                    break;
+                case SemanticNodeGroup.QT_DISTINCT:
+                default:
+                    name = "SELECT";
+                    break;
+            }
+            IIDXHelper.selectFirstMatchingVal(document.getElementById("SGQueryType"), name);
+        });
+    }
 
     // for every key press.
     // Note that onchange will not work if the user presses a button do delete a node
@@ -2094,21 +2138,21 @@ SemanticNodegroup.QTYPE_SELECT/**
             logEvent("SG Build");
             var sparql = "";
             var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, buildQueryFailure.bind(this));
-            switch (getQueryType()) {
-            case "SELECT":
+            switch (gNodeGroup.getQueryType()) {
+            case SemanticNodeGroup.QT_DISTINCT:
                 client.execAsyncGenerateSelect(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
                 break;
-            case SemanticNodegroup.QTYPE_COUNT:
+            case SemanticNodeGroup.QT_COUNT:
                 client.execAsyncGenerateCountAll(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
                 break;
-            case SemanticNodegroup.QTYPE_CONSTRUCT:
+            case SemanticNodeGroup.QT_CONSTRUCT:
                 client.execAsyncGenerateConstruct(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
                 break;
-            case SemanticNodegroup.QTYPE_DELETE:
+            case SemanticNodeGroup.QT_DELETE:
                 client.execAsyncGenerateDelete(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
                 break;
             default:
-                throw new Error("Unknown query type.");
+                throw new Error("Internal error: Unknown query type.");
             }
         });
     };

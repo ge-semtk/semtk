@@ -58,7 +58,6 @@ define([	// properly require.config'ed
 
             this.configdiv = VisJsHelper.createConfigDiv("ngrConfigDiv");
             this.canvasdiv = VisJsHelper.createCanvasDiv("NodegroupRenderer.canvasdiv_" + Math.floor(Math.random() * 10000).toString());
-
             parentdiv.appendChild(this.canvasdiv);
 
             this.network = new vis.Network(this.canvasdiv, {}, NodegroupRenderer.getDefaultOptions(this.configdiv));
@@ -352,7 +351,8 @@ define([	// properly require.config'ed
                             var id = fromID + "-" + toID;
                             var label = this.buildEdgeLabel(nItem, snode2);
 
-                            var edgeFont = {color: NodegroupRenderer.COLOR_FOREGROUND, background: NodegroupRenderer.COLOR_CANVAS};
+                            var foreground = this.calcNodeItemForeground(nItem, snode, snode2);
+                            var edgeFont = {color: foreground, background: NodegroupRenderer.COLOR_CANVAS};
 
                             // color invalid
                             if (this.edgeIsInvalid(nItem, snode2)) {
@@ -472,6 +472,7 @@ define([	// properly require.config'ed
                 var hwd;
                 var maxWidth = 0;
                 var svg = document.createElement("svg");
+
                 var myCallbackData = [];
                 var expandFlag = this.getExpandFlag(snode);
 
@@ -491,6 +492,7 @@ define([	// properly require.config'ed
                 rect.setAttribute('fill', NodegroupRenderer.COLOR_NODE);
                 rect.setAttribute('stroke-width', NodegroupRenderer.STROKE);
                 rect.setAttribute('stroke', foreground);
+                //rect.style.fill = "url(#diagonalHatch)";
                 svg.appendChild(rect);
                 y += NodegroupRenderer.STROKE;
 
@@ -672,17 +674,10 @@ define([	// properly require.config'ed
                 }
                 x += (size);
 
-                if (snode.hasAnyReturn()) {
-                    checked = true;
-                    if (snode.hasConstraints()) {
-                        foreground = NodegroupRenderer.COLOR_RET_CONST;
-                    } else {
-                        foreground = NodegroupRenderer.COLOR_RETURNED;
-                    }
-                } else if (snode.hasConstraints()) {
-                    checked = true;
-                    foreground = NodegroupRenderer.COLOR_CONSTRAINED;
-                }
+
+                foreground = this.calcSnodeForeground(snode);
+                checked = (foreground != NodegroupRenderer.COLOR_FOREGROUND);
+
                 this.drawCheckBox(svg, x, bot, size, checked, foreground );
 
                 var text = document.createElement('text');
@@ -707,6 +702,83 @@ define([	// properly require.config'ed
                 svg.appendChild(text);
 
                 return({"height":height, "width":width, "data":callbackData});
+            },
+
+            calcSnodeForeground : function(snode) {
+                var redFlag = false;
+
+                switch(this.nodegroup.getQueryType()) {
+                    case SemanticNodeGroup.QT_CONSTRUCT:
+                        redFlag = snode.getIsConstructed();
+                        break;
+                    case SemanticNodeGroup.QT_DELETE:
+                        redFlag = snode.getDeletionMode() != NodeDeletionTypes.NO_DELETE;
+                        break;
+                    default:
+                        redFlag = snode.hasAnyReturn();
+                }
+
+                if (redFlag) {
+                    if (snode.hasConstraints()) {
+                        return NodegroupRenderer.COLOR_RET_CONST;
+                    } else {
+                        return NodegroupRenderer.COLOR_RETURNED;
+                    }
+                } else if (snode.hasConstraints()) {
+                    return NodegroupRenderer.COLOR_CONSTRAINED;
+                } else {
+                    return NodegroupRenderer.COLOR_FOREGROUND;
+                }
+            },
+
+            calcPropForeground : function(item) {
+                var redFlag = false;
+
+                switch(this.nodegroup.getQueryType()) {
+
+                    case SemanticNodeGroup.QT_CONSTRUCT:
+                        redFlag = this.nodegroup.getPropertyItemParentSNode(item).getIsConstructed() && item.hasAnyReturn();
+                        break;
+                    case SemanticNodeGroup.QT_DELETE:
+                        var snodeParent = this.nodegroup.getPropertyItemParentSNode(item);
+                        redFlag = item.getIsMarkedForDeletion() || snodeParent.getAreEdgesMarkedForDeletion();
+
+                        break;
+                    default:
+                        redFlag = item.hasAnyReturn();
+                }
+                if (redFlag) {
+                    if (item.hasConstraints()) {
+                        return NodegroupRenderer.COLOR_RET_CONST;
+                    } else {
+                        return NodegroupRenderer.COLOR_RETURNED;
+                    }
+                } else if (item.hasConstraints()) {
+                    return NodegroupRenderer.COLOR_CONSTRAINED;
+                } else {
+                    return NodegroupRenderer.COLOR_FOREGROUND;
+                }
+
+            },
+
+            calcNodeItemForeground : function(item, snodeParent, snodeTarget) {
+                var redFlag = false;
+                switch(this.nodegroup.getQueryType()) {
+                    case SemanticNodeGroup.QT_DELETE:
+                        redFlag = item.getSnodeDeletionMarker(snodeTarget) ||
+                            snodeParent.getAreEdgesMarkedForDeletion() ||
+                            snodeTarget.getAreEdgesMarkedForDeletion();
+                        break;
+                    case SemanticNodeGroup.QT_CONSTRUCT:
+                        redFlag = snodeParent.getIsConstructed() && snodeTarget.getIsConstructed();
+                        break;
+                    default:
+                }
+                if (redFlag ) {
+                    return NodegroupRenderer.COLOR_RETURNED;
+                } else {
+                    return NodegroupRenderer.COLOR_FOREGROUND;
+                }
             },
 
             // add property line
@@ -734,21 +806,13 @@ define([	// properly require.config'ed
                 }
                 x += (size);
 
-                var checked = false;
+
                 var foreground = NodegroupRenderer.COLOR_FOREGROUND;
                 if (item instanceof PropertyItem) {
-                    if (item.hasAnyReturn() ) {
-                        checked = true;
-                        if (item.hasConstraints()) {
-                            foreground = NodegroupRenderer.COLOR_RET_CONST;
-                        } else {
-                            foreground = NodegroupRenderer.COLOR_RETURNED;
-                        }
-                    } else if (item.hasConstraints()) {
-                        checked = true;
-                        foreground = NodegroupRenderer.COLOR_CONSTRAINED;
-                    }
-                }
+                    foreground = this.calcPropForeground(item);
+                } 
+                var checked = (foreground != NodegroupRenderer.COLOR_FOREGROUND);
+
                 this.drawCheckBox(svg, x, bot, size, checked, foreground);
                 x += (size + NodegroupRenderer.INDENT);
 
