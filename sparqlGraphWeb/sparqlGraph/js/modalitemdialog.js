@@ -106,7 +106,7 @@ define([	// properly require.config'ed
                 this.maxValues = mv;
             },
 
-			selectCheckOnChange : function () {
+			selectValsOnChange : function () {
 				// build the text field using the selected fields in the <select>
 
 				var select = this.getFieldElement(ModalItemDialog.VALS_SELECT);
@@ -150,7 +150,7 @@ define([	// properly require.config'ed
 				if (! this.sparqlformFlag) {
 					var returnCheck = this.getFieldElement(ModalItemDialog.RETURN_CHECK);
 					returnCheck.checked = false;
-					this.selectCheckOnChange();   // handles any disabling fields
+					this.selectValsOnChange();   // handles any disabling fields
 				}
 
                 // return type
@@ -221,12 +221,7 @@ define([	// properly require.config'ed
 					delMarker = null;
 				}
 
-                var functions = [];
-                for (var f of SemanticNodeGroup.FUNCTION_LIST) {
-                    if (this.isFunctionChecked(f)) {
-                        functions.push(SemanticNodeGroup.getFunctionName(f));
-                    }
-                }
+                var functions = this.getCheckedFunctions();
 
                 var constructedChecked = this.item.getItemType() == "SemanticNode" ? this.getFieldElement(ModalItemDialog.CONSTRUCT_CHECK).checked : undefined;
 
@@ -508,7 +503,7 @@ define([	// properly require.config'ed
 						select[pos].selected = true;
 					}
 
-					this.selectCheckOnChange();
+					this.selectValsOnChange();
 					this.getFieldElement(ModalItemDialog.AUTO_TEXT).value="";
 				}
 
@@ -588,16 +583,31 @@ define([	// properly require.config'ed
                 this.sparqlIDOnFocusOut();
             },
 
+            functionCheckCallback : function() {
+                if (this.getCheckedFunctions().length > 0) {
+                    this.getFieldElement(ModalItemDialog.RETURN_CHECK).checked = false;
+                    this.returnCheckCallback();
+                }
+            },
+
             returnCheckCallback : function() {
                 // property items:
                 // user can't change getIsConstruct
                 // it is determined by isReturned and parentSNode.isConstructed()
+                var returnCheck = this.getFieldElement(ModalItemDialog.RETURN_CHECK);
+
                 if (this.item.getItemType() == "PropertyItem") {
-                    var returnCheck = this.getFieldElement(ModalItemDialog.RETURN_CHECK);
+
                     var constructCheck = this.getFieldElement(ModalItemDialog.CONSTRUCT_CHECK);
                     var snode = this.nodegroup.getPropertyItemParentSNode(this.item);
 
                     constructCheck.checked = returnCheck.checked && snode.getIsConstructed();
+                }
+
+                if (returnCheck.checked) {
+                    for (var f of SemanticNodeGroup.FUNCTION_LIST) {
+                        this.getFieldElement(this.getFunctionFieldNumber(f)).checked = false;
+                    }
                 }
             },
 
@@ -1051,7 +1061,7 @@ define([	// properly require.config'ed
 				elem.multiple = true;
 				elem.id = this.getFieldID(ModalItemDialog.VALS_SELECT);
 				elem.size = "10";
-				elem.onchange = this.selectCheckOnChange.bind(this);
+				elem.onchange = this.selectValsOnChange.bind(this);
 				elem.style.width = "100%";
 				dom.appendChild(elem);
 
@@ -1124,12 +1134,22 @@ define([	// properly require.config'ed
                 return table;
             },
 
-            buildFunctionTd : function(text, id, checked, callback) {
+            buildFunctionTd : function(text, id) {
                 td = document.createElement("td");
                 td.appendChild(document.createTextNode(" "));
-                td.appendChild(IIDXHelper.createVAlignedCheckbox(id, this.item.getFunctions().indexOf(text) > -1, "btn", callback));
+                td.appendChild(IIDXHelper.createVAlignedCheckbox(id, this.item.getFunctions().indexOf(text) > -1, "btn", this.functionCheckCallback.bind(this)));
                 td.appendChild(document.createTextNode(" " + text + " "));
                 return td;
+            },
+
+            getCheckedFunctions : function() {
+                var functions = [];
+                for (var f of SemanticNodeGroup.FUNCTION_LIST) {
+                    if (this.isFunctionChecked(f)) {
+                        functions.push(SemanticNodeGroup.getFunctionName(f));
+                    }
+                }
+                return functions;
             },
 
             isFunctionChecked : function(f) {
