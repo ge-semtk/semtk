@@ -2173,8 +2173,10 @@ public class NodeGroup {
 				}
 			}
 			if (missing.size() > 0) {
-				throw new NoValidSparqlException("Functions in use and return(s) are missing from GROUP BY: " + String.join(", ", missing));
+				throw new NoValidSparqlException("Select IDs must be changed to functions or added to GROUP BY: " + String.join(", ", missing));
 			}
+		} else if (this.groupBy.size() > 0) {
+			throw new NoValidSparqlException("GROUP BY clause used without any aggregate functions");
 		}
 		
 		
