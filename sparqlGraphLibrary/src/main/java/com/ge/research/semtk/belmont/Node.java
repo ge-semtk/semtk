@@ -877,6 +877,32 @@ public class Node extends Returnable {
 			return this.props.get(i);
 	}
 	
+	public PropertyItem getPropertyItemByBindingOrSparqlID(String currID){
+		/* 
+		 * return the given property item, if we can find it. if not, 
+		 * just return null. 
+		 * if an ID not prefixed with ? is passed, we are just going to add it.
+		 */
+		
+		int i = this.getPropertyItemIndexByBindingOrSparqlID(currID);
+		if (i == -1) 
+			return null;
+		else
+			return this.props.get(i);
+	}
+	
+	public int getPropertyItemIndexByBindingOrSparqlID(String currID) {
+		if(currID != null && !currID.isEmpty() && !currID.startsWith("?")){
+			currID = "?" + currID;
+		}
+		for (int i = 0; i < this.props.size(); i++) {
+			if (this.props.get(i).getBindingOrSparqlID().equals(currID)) {
+				return i;
+			}
+		}
+		return -1;
+	}
+	
 	public int getPropertyItemIndexBySparqlID(String currID) {
 		if(currID != null && !currID.isEmpty() && !currID.startsWith("?")){
 			currID = "?" + currID;

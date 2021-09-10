@@ -17,6 +17,7 @@ package com.ge.research.semtk.load.utility;
  */
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.regex.Pattern;
 
 import org.json.simple.JSONArray;
@@ -353,38 +354,46 @@ public class ImportSpec {
 	}
 	
 	public String addColumn(String colName) {
+		String name = colName.trim();
+		
 		JSONArray columnsJson = (JSONArray) this.json.get(JKEY_IS_COLUMNS);
 
-			
 		JSONObject colJson = new JSONObject();
-		String id = "col_" + String.valueOf(columnsJson.size());
-		String name = colName.trim();
+		String id = this.generateColID();
+		
 		colJson.put(JKEY_IS_COL_COL_ID, id);
 		colJson.put(JKEY_IS_COL_COL_NAME, name);
 		columnsJson.add(colJson);
 		return id;
 	}
 	
-	public String findOrAddColumn(String colName) {
-		String ret = this.findColumnOrNull(colName);
-		if (ret != null) {
-			return ret;
-		} else {
-			return this.addColumn(colName);
+	private String generateColID() {
+		
+		// hash existing col names
+		HashSet<String> colIds = new HashSet<String>();
+		for (Object o : (JSONArray) this.json.get(JKEY_IS_COLUMNS)) {
+			colIds.add((String)((JSONObject) o).get(JKEY_IS_COL_COL_ID));
 		}
 		
+		// generate a new one not in the hash
+		int i = this.getNumColumns();
+		String ret;
+		do {
+			ret = "col_" + i++;
+		} while (colIds.contains(ret));
+		
+		return ret;
 	}
 	
-	private String findColumn(String colName) throws Exception {
-		String ret = this.findColumnOrNull(colName);
-		if (ret == null) {
-			throw new Exception ("Can't find column " + colName);
-		} else {
-			return ret;
+	public String findOrAddColByName(String colName) {
+		try {
+			return this.findColId(colName);
+		} catch (Exception e) {
+			return this.addColumn(colName);
 		}
 	}
 	
-	private String findColumnOrNull(String colName) {
+	private String findColId(String colName) throws Exception {
 		String name = colName.toLowerCase().trim();
 		JSONArray columnsJson = (JSONArray) this.json.get(JKEY_IS_COLUMNS);
 		
@@ -395,7 +404,21 @@ public class ImportSpec {
 				return (String) colJson.get(JKEY_IS_COL_COL_ID);
 			}
 		}
-		return null;
+		
+		throw new Exception ("Can't find column id " + colName);
+	}
+	
+	private JSONObject findColumn(String colId) throws Exception {
+		JSONArray columnsJson = (JSONArray) this.json.get(JKEY_IS_COLUMNS);
+		
+		for (Object o : columnsJson) {
+			JSONObject colJson = (JSONObject) o;
+			if (colId.equals((String)colJson.get(JKEY_IS_COL_COL_ID))) {
+				return colJson;
+			}
+		}
+		
+		throw new Exception ("Can't find column " + colId);
 	}
 	
 	private JSONObject findNode(String sparqlId) throws Exception {
@@ -433,7 +456,8 @@ public class ImportSpec {
 	 * @param typeUri
 	 * @param lookupMode
 	 */
-	public void addNode(String sparqlId, String typeUri, String lookupMode) {
+	public JSONObject addNode(String sparqlId, String typeUri, String lookupMode) {
+		
 		JSONArray nodeArr = (JSONArray) json.get(JKEY_IS_NODES);
 		JSONObject node = new JSONObject();
 		node.put(JKEY_IS_NODE_SPARQL_ID, sparqlId);
@@ -444,6 +468,7 @@ public class ImportSpec {
 		node.put(JKEY_IS_MAPPING, new JSONArray());
 		node.put(JKEY_IS_PROPS, new JSONArray());
 		nodeArr.add(node);
+		return node;
 	}
 	
 	public void addLookupMode(String nodeSparqlId, String lookupMode) throws Exception {
@@ -458,7 +483,7 @@ public class ImportSpec {
 	 * @param relationUri
 	 * @throws Exception
 	 */
-	public void addProp(String nodeSparqlId, String relationUri) throws Exception {
+	public JSONObject addProp(String nodeSparqlId, String relationUri) throws Exception {
 		JSONObject node = this.findNode(nodeSparqlId);
 		
 		JSONObject prop = new JSONObject();
@@ -467,6 +492,7 @@ public class ImportSpec {
 		
 		JSONArray props = (JSONArray) node.get(JKEY_IS_PROPS);
 		props.add(prop);
+		return prop;
 	}
 	
 	/**
@@ -476,7 +502,7 @@ public class ImportSpec {
 	 * @throws Exception
 	 */
 	public JSONObject buildMappingWithCol(String colName) throws Exception {
-		String colId = this.findColumn(colName);
+		String colId = this.findColId(colName);
 		
 		JSONObject ret = new JSONObject();
 		ret.put(JKEY_IS_COL_COL_ID, colId);
@@ -554,6 +580,165 @@ public class ImportSpec {
 		return spec;
 	}
 	
+	
+	/**
+	 * Delete import spec columns which are not nodegroup sparqlIds
+	 * @param ng
+	 * @throws Exception
+	 */
+	public void deleteInvalidColumns(NodeGroup ng) throws Exception {
+		JSONArray newCols = new JSONArray();
+		for (int i=0; i < this.getNumColumns(); i++) {
+			String colName = this.getColName(i);
+			if (ng.getItemByBindingOrSparqlID(ImportSpec.colnameToSparqlID(colName)) != null) {
+				newCols.add(this.getCol(i));
+			}
+		}
+		this.json.put(JKEY_IS_COLUMNS, newCols);
+	}
+	
+	public void addMissingColumns(NodeGroup ng) throws Exception {
+		for (String id : ng.getReturnedSparqlIDs()) {
+			String colName = ImportSpec.sparqlIDToColname(id);
+			try {
+				this.findColId(colName);
+			} catch (Exception e) {
+				this.addColumn(colName);
+			}
+		}
+	}
+	
+	public void deleteInvalidMappings() throws Exception {
+		
+		for (Object n : (JSONArray) this.json.get(JKEY_IS_NODES)) {
+			JSONObject nodeJson = (JSONObject) n;
+			
+			// copy only good mappings
+			JSONArray good1 = new JSONArray();
+			for (Object m1 : (JSONArray) nodeJson.get(JKEY_IS_MAPPING)) {
+				JSONObject mapping = (JSONObject) m1;
+				try {
+					this.findColumn((String) mapping.get(JKEY_IS_MAPPING_COL_ID));
+					good1.add(mapping);
+				} catch (Exception e) {}
+			}
+			nodeJson.put(JKEY_IS_MAPPING, good1);
+		
+			for (Object p : (JSONArray) nodeJson.get(JKEY_IS_PROPS)) {
+				JSONObject propJson = (JSONObject) p;
+				
+				// copy only good mappings
+				JSONArray good2 = new JSONArray();
+				for (Object m1 : (JSONArray) propJson.get(JKEY_IS_MAPPING)) {
+					JSONObject mapping = (JSONObject) m1;
+					// if mapping is a column
+
+					try {
+						// only copy good columns
+						if (mapping.containsKey(JKEY_IS_MAPPING_COL_ID)) {
+							this.findColumn((String) mapping.get(JKEY_IS_MAPPING_COL_ID));
+						}
+						good2.add(mapping);
+					} catch (Exception e) {}
+				}
+				propJson.put(JKEY_IS_MAPPING, good2);
+			}
+		}
+	}
+	
+	private void deleteInvalidProperties(NodeGroup ng) {
+		// loop through nodes
+		for (Object n : (JSONArray) this.json.get(JKEY_IS_NODES)) {
+			JSONObject nodeJson = (JSONObject) n;
+			
+			// copy only good props
+			JSONArray good = new JSONArray();
+			
+			for (Object p : (JSONArray) nodeJson.get(JKEY_IS_PROPS)) {
+				JSONObject propJson = (JSONObject) p;
+				
+				Node node = ng.getNodeBySparqlID((String) nodeJson.get(JKEY_IS_NODE_SPARQL_ID));
+				PropertyItem prop = node.getPropertyByURIRelation((String) propJson.get(JKEY_IS_MAPPING_PROPS_URI_REL));
+				
+				if (prop != null) {
+					good.add(propJson);
+				}
+			}
+			nodeJson.put(JKEY_IS_PROPS, good);
+		}
+	}
+	
+	public void updateSpecFromReturns(NodeGroup ng) throws Exception {
+		String lookupMode = null;
+		
+		this.deleteInvalidColumns(ng);
+		this.deleteInvalidMappings();
+		this.addMissingColumns(ng);
+		this.deleteInvalidProperties(ng);
+		
+		// Update each node in ng
+		for (Node node : ng.getOrderedNodeList()) {
+			JSONObject nObj;
+			try {
+				// find node and make sure TYPE is correct
+				nObj = this.findNode(node.getSparqlID());
+				nObj.put(JKEY_IS_NODE_TYPE, node.getUri());
+				
+			} catch (Exception e) {
+				// add the node if it wasn't found
+				nObj = this.addNode(node.getSparqlID(), node.getUri(), lookupMode);
+			}
+			
+			// if node is returned in nodegroup
+			if (node.getIsReturned() || node.getIsBindingReturned()) {
+				JSONArray mapping = (JSONArray) nObj.get(JKEY_IS_MAPPING);
+				// if mapping is empty
+				if (mapping.size() == 0) {
+					// build a new mapping
+					String colName = ImportSpec.sparqlIDToColname(node.getBindingOrSparqlID());
+					
+					this.addMapping(node.getSparqlID(), this.buildMappingWithCol(colName));
+				} // else leave old mapping
+			} else {
+				// node not returned so make sure mapping is empty
+				nObj.put(JKEY_IS_MAPPING, new JSONArray());
+			}
+			
+			// loop through properties that are returned
+			for (PropertyItem prop : node.getPropertyItems()) {
+				JSONObject pObj;
+				
+				// props are only found/added if returned
+				if (prop.getIsReturned() || prop.getIsBindingReturned()) {
+					// find or add
+					try {
+						pObj = this.findProp(node.getSparqlID(), prop.getUriRelationship());
+					} catch (Exception e) {
+						pObj = this.addProp(node.getSparqlID(), prop.getUriRelationship());
+					}
+					
+					// if mapping is empty
+					JSONArray mapping = (JSONArray) pObj.get(JKEY_IS_MAPPING);
+					if (mapping.size() == 0) {
+						// add a column and simple mapping
+						String colName = ImportSpec.sparqlIDToColname(prop.getBindingOrSparqlID());
+						this.addMapping(node.getSparqlID(), prop.getUriRelationship(), this.buildMappingWithCol(colName));
+					}
+				} else {
+					// remove if no longer returned
+					try {
+						pObj = this.findProp(node.getSparqlID(), prop.getUriRelationship());
+						JSONArray mapping = (JSONArray) pObj.get(JKEY_IS_MAPPING);
+						if (mapping.size() == 0)
+							this.deleteProperty(node.getSparqlID(), prop.getUriRelationship());
+					} catch (Exception e) {
+						// ignore if findProp failed
+					}
+				}
+			}
+		}
+	}
+	
 	public static ImportSpec createSpecFromReturns(NodeGroup ng) throws Exception {
 		ImportSpec spec = new ImportSpec();
 		String lookupMode = null;
@@ -565,10 +750,9 @@ public class ImportSpec {
 			// if node is returned, add a column and mapping
 			// which match the binding or sparqlID
 			if (node.getIsReturned() || node.getIsBindingReturned()) {
-				String colName = node.getBindingOrSparqlID();
-				if (colName.startsWith("?")) {
-					colName = colName.substring(1);
-				}
+				String id = node.getBindingOrSparqlID();
+				String colName = ImportSpec.sparqlIDToColname(id);
+				
 				spec.addColumn(colName);
 				spec.addMapping(node.getSparqlID(), spec.buildMappingWithCol(colName));
 			}
@@ -581,9 +765,7 @@ public class ImportSpec {
 					
 					// add a column and simple mapping
 					String colName = prop.getBindingOrSparqlID();
-					if (colName.startsWith("?")) {
-						colName = colName.substring(1);
-					}
+					
 					spec.addColumn(colName);
 					spec.addMapping(node.getSparqlID(), prop.getUriRelationship(), spec.buildMappingWithCol(colName));
 				}
@@ -664,8 +846,7 @@ public class ImportSpec {
 		if (n < 0) throw new Exception("Can't find node in import spec: " + nodeSparqlID);
 		int p = this.getNodePropIndex(n, uriRelationship);
 		
-		// if property had no mappings.  Done.
-		// if property is here, change it.
+		// if property is here, delete it
 		if (p >= 0) {
 			int numProps = this.getNodeNumProperties(n);
 			JSONArray newProps = new JSONArray();
@@ -682,6 +863,17 @@ public class ImportSpec {
 	public void changeNodeDomain(String nodeSparqlID, String newURI) {
 		int n = this.getNodeIndex(nodeSparqlID);
 		this.getNode(n).put(JKEY_IS_NODE_TYPE, newURI);
+	}
+	
+	public static String sparqlIDToColname(String sparqlID) {
+		if (sparqlID.startsWith("?"))
+			return sparqlID.substring(1);
+		else
+			return sparqlID;
+	}
+	
+	public static String colnameToSparqlID(String colname) {
+		return "?" + colname;
 	}
 	
 }

@@ -926,7 +926,8 @@ public class NodeGroupServiceRestController {
 			
 			// generate the columns  OR  copy the old spec
 			if (requestBody.getAction().equals("Build from nodegroup")) {
-				newSpec = ImportSpec.createSpecFromReturns(ng);
+				newSpec = oldSpec;
+				newSpec.updateSpecFromReturns(ng);
 			} else {
 				newSpec = oldSpec;
 			}

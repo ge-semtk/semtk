@@ -1885,6 +1885,29 @@ public class NodeGroup {
     }
 	
 	/**
+	 * Find item by binding or sparqlid.  If binding, then sparqlid will not match
+	 * @param id
+	 * @return
+	 */
+	public Returnable getItemByBindingOrSparqlID(String id) {
+		String search = id;
+		if (!search.startsWith("?"))
+			search = "?" + search;
+		
+        for (Node n : this.nodes) {
+            if (n.getBindingOrSparqlID().equals(search)) {
+                return n;
+            }
+            
+            Returnable item = n.getPropertyItemByBindingOrSparqlID(search);
+            if (item != null) {
+                return item;
+            }
+        }
+		return null;
+    }
+	
+	/**
 	 * Find all items in nodegroup with this uri
 	 * @param uri
 	 * @return

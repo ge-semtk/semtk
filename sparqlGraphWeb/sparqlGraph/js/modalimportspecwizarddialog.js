@@ -92,10 +92,10 @@ define([	// properly require.config'ed
                         if (this.lookupModeSelect.disabled) {
                             this.messageDiv.innerHTML = "";
                         } else {
-                            this.messageDiv.innerHTML = "<center><span class='label label-info'>This will overwrite the existing URI lookups.</span></center>";
+                            this.messageDiv.innerHTML = "<center><span class='label label-info'>This may update the existing URI lookups.</span></center>";
                         }
                     } else {
-                        this.messageDiv.innerHTML = "<center><span class='label label-info'>This will overwrite the existing import mapping and CSV.</span></center>";
+                        this.messageDiv.innerHTML = "<center><span class='label label-info'>This may update the existing import mappings and CSV.</span></center>";
                     }
                 }
             },
