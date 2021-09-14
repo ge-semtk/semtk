@@ -1199,14 +1199,14 @@ SemanticNode.prototype = {
 
     getFunctionSparqlIDs : function() {
         ret = [];
-        for (var f of this.functions) {
-            ret.push(this.getFunctionSparqlID(f));
+        for (var fname of this.functions) {
+            ret.push(this.getFunctionSparqlID(fname));
         }
         return ret;
     },
 
-    getFunctionSparqlID : function(f) {
-        return this.getBindingOrSparqlID() + "_" + SemanticNodeGroup.getFunctionName(f);
+    getFunctionSparqlID : function(fname) {
+        return this.getBindingOrSparqlID() + "_" + fname;
     },
 
 	buildFilterConstraint : function(op, val) {
@@ -1901,7 +1901,7 @@ SemanticNodeGroup.prototype = {
 		};
 
         // optional things
-        if (this.queryType != SemanticNodeGroup.QT_DISTINCT) {
+        if (this.queryType != null && this.queryType != SemanticNodeGroup.QT_DISTINCT) {
             ret.queryType = this.queryType;
         }
         if (this.returnTypeOverride) {
@@ -3756,15 +3756,17 @@ SemanticNodeGroup.prototype = {
 	},
 
 	clear : function() {
-
+        console.log("SemanticNodeGroup.clear() is deprecated.")
 		this.SNodeList = [];
-		this.sparqlNameHash = {};
-		this.conn = null;
-        this.limit = 0;
+		this.limit = 0;
         this.offset = 0;
         this.orderBy = [];
         this.groupBy = [];
+
         this.unionHash = {};
+
+		this.conn = null;
+        this.sparqlNameHash = {};
 
 	},
 
