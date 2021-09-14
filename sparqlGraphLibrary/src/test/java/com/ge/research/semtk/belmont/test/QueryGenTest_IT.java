@@ -234,6 +234,16 @@ public class QueryGenTest_IT {
 	}
 	
 	@Test
+	public void selectFunctionGroupOrder() throws Exception {
+		// count the number of links per chain and sort
+		
+		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(this, "/chain_count_links.json");
+
+		TestGraph.queryAndCheckResults(sgjson, this, "/chain_count_links_results.csv");		// get every pair of links that is NOT attached to a chain
+		
+	}
+	
+	@Test
 	public void qualifiersAndOptionalMinus() throws Exception {
 		SparqlEndpointInterface sei =  TestGraph.getSei();
 		
@@ -570,6 +580,24 @@ public class QueryGenTest_IT {
 		assertEquals("Wrong number of name attributes", 1, countAttributes(graph, "name", null));
 		assertEquals("Wrong number of cellId attributes", 1, countAttributes(graph, "cellId", null));
 		assertEquals("Wrong number of color attributes", 1, countAttributes(graph, "color", null));
+	}
+	
+	@Test
+	public void constructWhere() throws Exception {		
+		// virtuoso is unreliable with CONSTRUCT
+		assumeFalse(TestGraph.getSei().getServerType().equals(SparqlEndpointInterface.VIRTUOSO_SERVER));
+				
+		// Prevent recurrence of bug in CONSTRUCT when nodes have bindings
+
+		JSONArray res = TestGraph.execConstructFromResource(this.getClass(), "chain_construct_where1.json");
+		String resStr = res.toJSONString();
+		
+		assertEquals("Construct returned wrong number of items", 4, res.size());
+		assertTrue("Construct results do not contain linkB1", resStr.contains("linkB1"));
+		assertTrue("Construct results do not contain linkB2", resStr.contains("linkB2"));
+		assertTrue("Construct results do not contain linkB3", resStr.contains("linkB3"));
+		assertTrue("Construct results do not contain linkB4", resStr.contains("linkB4"));
+		
 	}
 	
 	@Test
