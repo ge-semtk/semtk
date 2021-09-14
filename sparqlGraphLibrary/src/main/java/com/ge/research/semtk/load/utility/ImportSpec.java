@@ -741,36 +741,7 @@ public class ImportSpec {
 	
 	public static ImportSpec createSpecFromReturns(NodeGroup ng) throws Exception {
 		ImportSpec spec = new ImportSpec();
-		String lookupMode = null;
-		
-		// Add all nodes to the spec
-		for (Node node : ng.getOrderedNodeList()) {
-			spec.addNode(node.getSparqlID(), node.getUri(), lookupMode);
-			
-			// if node is returned, add a column and mapping
-			// which match the binding or sparqlID
-			if (node.getIsReturned() || node.getIsBindingReturned()) {
-				String id = node.getBindingOrSparqlID();
-				String colName = ImportSpec.sparqlIDToColname(id);
-				
-				spec.addColumn(colName);
-				spec.addMapping(node.getSparqlID(), spec.buildMappingWithCol(colName));
-			}
-			
-			// loop through properties that are returned
-			for (PropertyItem prop : node.getPropertyItems()) {
-				if (prop.getIsReturned() || prop.getIsBindingReturned()) {
-					// add the property to the spec
-					spec.addProp(node.getSparqlID(), prop.getUriRelationship());
-					
-					// add a column and simple mapping
-					String colName = prop.getBindingOrSparqlID();
-					
-					spec.addColumn(colName);
-					spec.addMapping(node.getSparqlID(), prop.getUriRelationship(), spec.buildMappingWithCol(colName));
-				}
-			}
-		}
+		spec.updateSpecFromReturns(ng);
 		
 		return spec;
 	}

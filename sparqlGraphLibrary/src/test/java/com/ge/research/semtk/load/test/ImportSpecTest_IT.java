@@ -2,6 +2,7 @@ package com.ge.research.semtk.load.test;
 
 import static org.junit.Assert.*;
 
+import org.json.simple.JSONObject;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -33,7 +34,6 @@ public class ImportSpecTest_IT {
 		dl.importData(true);
 		assertEquals(dl.getTotalRecordsProcessed(), 4);
 		Table resTable1 = TestGraph.execTableSelect(sgJson);
-		System.out.println(resTable1.toCSVString());
 
 		// createSpecFromReturns()
 		ImportSpec specFromRet = ImportSpec.createSpecFromReturns(sgJson.getNodeGroup());
