@@ -748,12 +748,12 @@ define([	// properly require.config'ed
                         redFlag = item.hasAnyReturn();
                 }
                 if (redFlag) {
-                    if (item.hasConstraints()) {
+                    if (item.hasConstraints() || item.getOptMinusIsUsed()) {
                         return NodegroupRenderer.COLOR_RET_CONST;
                     } else {
                         return NodegroupRenderer.COLOR_RETURNED;
                     }
-                } else if (item.hasConstraints()) {
+                } else if (item.hasConstraints() || item.getOptMinusIsUsed()) {
                     return NodegroupRenderer.COLOR_CONSTRAINED;
                 } else {
                     return NodegroupRenderer.COLOR_FOREGROUND;
@@ -761,16 +761,15 @@ define([	// properly require.config'ed
 
             },
 
-            calcNodeItemForeground : function(item, snodeParent, snodeTarget) {
+            calcNodeItemForeground : function(item, snodeParent, optSnodeTarget) {
                 var redFlag = false;
                 switch(this.nodegroup.getQueryType()) {
                     case SemanticNodeGroup.QT_DELETE:
-                        redFlag = item.getSnodeDeletionMarker(snodeTarget) ||
-                            snodeParent.getAreEdgesMarkedForDeletion() ||
-                            snodeTarget.getAreEdgesMarkedForDeletion();
+                        redFlag = snodeParent.getAreEdgesMarkedForDeletion() ||
+                                    (optSnodeTarget && (item.getSnodeDeletionMarker(optSnodeTarget) || optSnodeTarget.getAreEdgesMarkedForDeletion()));
                         break;
                     case SemanticNodeGroup.QT_CONSTRUCT:
-                        redFlag = snodeParent.getIsConstructed() && snodeTarget.getIsConstructed();
+                        redFlag = snodeParent.getIsConstructed() && optSnodeTarget && optSnodeTarget.getIsConstructed();
                         break;
                     default:
                 }
@@ -810,7 +809,10 @@ define([	// properly require.config'ed
                 var foreground = NodegroupRenderer.COLOR_FOREGROUND;
                 if (item instanceof PropertyItem) {
                     foreground = this.calcPropForeground(item);
-                } 
+                } else if (item instanceof NodeItem) {
+                    // get NodeItem foreground without knowing target
+                    foreground = this.calcNodeItemForeground(item, this.nodegroup.getNodeItemParentSNode(item), undefined);
+                }
                 var checked = (foreground != NodegroupRenderer.COLOR_FOREGROUND);
 
                 this.drawCheckBox(svg, x, bot, size, checked, foreground);

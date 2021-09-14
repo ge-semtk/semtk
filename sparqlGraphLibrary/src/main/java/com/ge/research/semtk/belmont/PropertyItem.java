@@ -30,6 +30,7 @@ public class PropertyItem extends Returnable {
 	public static final int OPT_MINUS_NONE = 0;
 	public static final int OPT_MINUS_OPTIONAL = 1;
 	public static final int OPT_MINUS_MINUS = 2;
+	public static final int OPT_MINUS_EXIST = 3;
 	
 	private XSDSupportedType valueType = null;
 	private String valueTypeURI = null;  
@@ -179,8 +180,17 @@ public class PropertyItem extends Returnable {
 	}
 
 	public boolean isUsed() {
-		return (this.hasAnyReturn() || this.constraints != null || this.isRuntimeConstrained || this.instanceValues.size() > 0 || this.isMarkedForDeletion);
+		return (this.hasAnyReturn() || this.constraints != null || this.isRuntimeConstrained || this.instanceValues.size() > 0 || this.isMarkedForDeletion || this.getOptMinusIsUsed());
 	}
+	
+	/**
+	 * Is optMinus alone enough to make the property .isUsed() == true
+	 * @return
+	 */
+	public boolean getOptMinusIsUsed() {
+        return this.optMinus == PropertyItem.OPT_MINUS_MINUS || this.optMinus == PropertyItem.OPT_MINUS_EXIST;
+    }
+	
 	public ArrayList<String> getInstanceValues() {
 		return this.instanceValues;
 	}

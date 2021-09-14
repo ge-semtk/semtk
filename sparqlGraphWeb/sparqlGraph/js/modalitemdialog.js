@@ -665,6 +665,8 @@ define([	// properly require.config'ed
                     optMinusText = "optional";
                 } else if (optMin == PropertyItem.OPT_MINUS_MINUS) {
                     optMinusText = "minus";
+                } else if (optMin == PropertyItem.OPT_MINUS_EXIST) {
+                    optMinusText = "exists";
                 }
                 return optMinusText;
             },
@@ -691,6 +693,7 @@ define([	// properly require.config'ed
 				var tr;
 				var td;
 				var but;
+                var anythingSetFlag = false;   // something on this item is non-default, not first time editing
 
 				// table for return items
 				table = document.createElement("table");
@@ -711,7 +714,6 @@ define([	// properly require.config'ed
 				td = document.createElement("td");
 				tr.appendChild(td);
 
-				// return input
 				sparqlIDTxt = document.createElement("input");
 				sparqlIDTxt.type = "text";
 				sparqlIDTxt.style.margin = 0;
@@ -729,6 +731,7 @@ define([	// properly require.config'ed
 				sparqlIDTxt.onfocusout = this.sparqlIDOnFocusOut.bind(this);
 				sparqlIDTxt.style.disabled = this.sparqlformFlag;
 				td.appendChild(sparqlIDTxt);
+                anythingSetFlag = anythingSetFlag || (binding != null && binding != sparqlID);
 
 				// row 1 col 3  "returned checkbox"
 				td = document.createElement("td");
@@ -744,6 +747,7 @@ define([	// properly require.config'ed
                                 );
 
                 IIDXHelper.appendCheckBox(td, returnCheck, "select");
+                anythingSetFlag = anythingSetFlag || returnCheck.checked;
 
                 // construct checkbox
 				constructCheck = IIDXHelper.createVAlignedCheckbox(
@@ -764,6 +768,8 @@ define([	// properly require.config'ed
                     } else {
                         constructCheck.disabled = false;
                         constructCheck.checked = this.item.getIsConstructed();
+                        // NOT constructing the non-default behavior
+                        anythingSetFlag = anythingSetFlag || ! constructCheck.checked;
                     }
                 }
 
@@ -806,11 +812,8 @@ define([	// properly require.config'ed
 
                     td.appendChild(span);
                     td.appendChild(document.createElement("br"));
+                    anythingSetFlag = anythingSetFlag || returnClassCheck.checked;
                 }
-
-                // add here
-                // <input type="checkbox" id="something" class="btn" style="vertical-align: middle; position: relative; bottom: 0.25em;"> exact type
-                // <br>
 
                 // cell 2,2 continued: functions
 
@@ -818,6 +821,7 @@ define([	// properly require.config'ed
                     td.appendChild(document.createElement("br"));
 
                     td.appendChild(this.buildFunctionTable());
+                    anythingSetFlag = anythingSetFlag || this.item.getFunctions().length > 0;
                 }
 
 				// cell 2,3: batch of controls:  opt/min, delete, runtime constrain
@@ -868,6 +872,7 @@ define([	// properly require.config'ed
                             [this.getOptMinusText(PropertyItem.OPT_MINUS_NONE), PropertyItem.OPT_MINUS_NONE],
         					[this.getOptMinusText(PropertyItem.OPT_MINUS_OPTIONAL), PropertyItem.OPT_MINUS_OPTIONAL],
                             [this.getOptMinusText(PropertyItem.OPT_MINUS_MINUS), PropertyItem.OPT_MINUS_MINUS],
+                            [this.getOptMinusText(PropertyItem.OPT_MINUS_EXIST), PropertyItem.OPT_MINUS_EXIST],
                             ["- new union -",    ModalItemDialog.UNION_NEW + 100]
                         ];
                     } else {
@@ -911,6 +916,7 @@ define([	// properly require.config'ed
                         );
                     select.onfocus    = this.unionSelectOnFocus.bind(this);
                     select.onfocusout = this.unionSelectOnFocusOut.bind(this);
+                    anythingSetFlag = anythingSetFlag || select.selectedIndex != 0;
 				}
 
 				runtimeConstrainedCheck = IIDXHelper.createVAlignedCheckbox(
@@ -918,6 +924,7 @@ define([	// properly require.config'ed
                                             this.item.getIsRuntimeConstrained(),
                                             "btn"
                                         );
+                anythingSetFlag = anythingSetFlag || runtimeConstrainedCheck.checked;
 
 				// Top section is handled totally differently with sparqlformFlag
 				if (this.sparqlformFlag) {
@@ -954,6 +961,7 @@ define([	// properly require.config'ed
 						                    this.item.getIsMarkedForDeletion()
                                         );
                         IIDXHelper.appendCheckBox(td, deleteCheck, "mark for delete");
+                        anythingSetFlag = anythingSetFlag || deleteCheck.checked;
 
 					} else {
                         // deleting a Semantic node has many options
@@ -977,6 +985,7 @@ define([	// properly require.config'ed
 
                         td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
 						td.appendChild(deleteSelect);
+                        anythingSetFlag = anythingSetFlag || deleteSelect.selectedIndex != 0;
 					}
 
 					td.appendChild(document.createElement("br"));
@@ -1010,6 +1019,7 @@ define([	// properly require.config'ed
                 elem.onkeydown = function(event) { return event.keyCode != 13; };   // disallow line returns
 
 				dom.appendChild(elem);
+                anythingSetFlag = anythingSetFlag || this.item.getConstraints().length > 0;
 
 				// -----  Auto-complete section ------
 				var list = document.createElement("datalist");
@@ -1097,11 +1107,15 @@ define([	// properly require.config'ed
 				if (this.sparqlformFlag) {
 					this.query();
 				} else {
-                    returnCheck.checked =this.item.getIsReturned() ||this.item.getIsBindingReturned();
-				}
+                    if (! anythingSetFlag) {
+                        returnCheck.checked = true;
+                        this.returnCheckCallback();
+                    }
+                }
 
 				// tooltips
 				$("#" + this.getFieldID(ModalItemDialog.OPTMINUNI_SELECT)).tooltip({placement: "left"});
+
 			},
 
             // table of aggregate SPARQL function buttons

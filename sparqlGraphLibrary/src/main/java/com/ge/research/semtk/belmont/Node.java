@@ -669,6 +669,12 @@ public class Node extends Returnable {
 		return retval;
 	}	
 	
+	/**
+	 * Disturbingly not quite equal to p.isUsed() because of forceReturn and deleteQueryFlag
+	 * @param forceReturn
+	 * @param deleteQueryFlag
+	 * @return
+	 */
 	public ArrayList<PropertyItem> getPropsForSparql(Returnable forceReturn, boolean deleteQueryFlag) {
 		ArrayList<PropertyItem> retval = new ArrayList<PropertyItem>();
 		// spin through the list of values and add the correct ones. 
@@ -684,6 +690,9 @@ public class Node extends Returnable {
 				retval.add(pi);
 			}
 			else if(pi.equals(forceReturn)){
+				retval.add(pi);
+			} 
+			else if (pi.getOptMinusIsUsed()) {
 				retval.add(pi);
 			}
 		}

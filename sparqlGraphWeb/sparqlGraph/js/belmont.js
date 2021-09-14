@@ -694,6 +694,7 @@ var PropertyItem = function(keyname, valType, valueTypeURI, UriRelationship, jOb
 PropertyItem.OPT_MINUS_NONE = 0;
 PropertyItem.OPT_MINUS_OPTIONAL = 1;
 PropertyItem.OPT_MINUS_MINUS = 2;
+PropertyItem.OPT_MINUS_EXIST = 3;
 
 // the functions used by the property item to keep its stuff in order.
 PropertyItem.prototype = {
@@ -834,7 +835,8 @@ PropertyItem.prototype = {
             this.hasConstraints() ||
             this.instanceValues.length > 0 ||
             this.isRuntimeConstrained ||
-            this.isMarkedForDeletion)
+            this.isMarkedForDeletion ||
+            this.getOptMinusIsUsed())
     },
 	clearInstanceValues : function() {
 		this.instanceValues = [];
@@ -890,6 +892,7 @@ PropertyItem.prototype = {
 	setIsRuntimeConstrained : function(bool) {
 		this.isRuntimeConstrained = bool;
 	},
+
 	// return values from the propertyItem
 
     hasAnyReturn : function() {
@@ -946,10 +949,14 @@ PropertyItem.prototype = {
     },
 
 	getIsOptional : function() {
-		return this.isOptional == PropertyItem.OPT_MINUS_OPTIONAL;
+		return this.optMinus == PropertyItem.OPT_MINUS_OPTIONAL;
 	},
     getOptMinus : function() {
         return this.optMinus;
+    },
+    // can optMinus alone make the property .isUsed() == true
+    getOptMinusIsUsed : function() {
+        return this.optMinus == PropertyItem.OPT_MINUS_MINUS || this.optMinus == PropertyItem.OPT_MINUS_EXIST;
     },
 	getIsRuntimeConstrained : function() {
 		// boolean for PropertyItems
@@ -1219,7 +1226,8 @@ SemanticNode.prototype = {
 	},
 	setSparqlID : function(id) {
 		if (this.SparqlID != null && this.hasConstraints()) {
-			this.Constraints = this.Constraints.replace(new RegExp('\\'+this.SparqlID+'\\b', 'g'), id);
+
+			this.valueConstraint = this.valueConstraint.replace(new RegExp('\\'+this.SparqlID+'\\b', 'g'), id);
 		}
         if (id != null && id != "" && ! id.startsWith("?")) {
             this.SparqlID = "?" + id;
@@ -1348,6 +1356,17 @@ SemanticNode.prototype = {
 		var t = this.propList.length;
 		for (var s = 0; s < t; s++) {
 			if (this.propList[s].hasAnyReturn()) {
+				retprops.push(this.propList[s]);
+			}
+		}
+		return retprops;
+	},
+
+    getUsedPropertyItems : function() {
+		var retprops = [];
+		var t = this.propList.length;
+		for (var s = 0; s < t; s++) {
+			if (this.propList[s].isUsed()) {
 				retprops.push(this.propList[s]);
 			}
 		}
@@ -2247,7 +2266,7 @@ SemanticNodeGroup.prototype = {
                         this.addtoUnionMembershipHashes(unionKey, entryStr, subgraphNode);
 
                         // add its props
-                        for (var prop of subgraphNode.getReturnedPropertyItems()) {
+                        for (var prop of subgraphNode.getUsedPropertyItems()) {
                             this.addtoUnionMembershipHashes(unionKey, entryStr, subgraphNode, prop);
                         }
 

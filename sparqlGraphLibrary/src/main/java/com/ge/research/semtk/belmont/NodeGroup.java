@@ -2595,7 +2595,7 @@ public class NodeGroup {
 	private String generateSparqlSubgraphClausesPropItem(ClauseTypes clauseType, Node snode, PropertyItem prop, Returnable targetObj, String tab) throws Exception {
 		boolean indentFlag = false;
 		StringBuilder sparql = new StringBuilder();		
-				
+		
 		if (prop.getSparqlID().isEmpty()) {
 			throw new Error ("Can't create SPARQL for property with empty sparql ID: " + prop.getKeyName());
 		}
