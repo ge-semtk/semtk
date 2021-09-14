@@ -1303,7 +1303,7 @@
         }
 
         // do either way
-        gNodeGroup.clear();
+        gNodeGroup = new SemanticNodeGroup();
         gNodeGroup.addJson(nodegroupJson);
         nodeGroupChanged(false);
         buildQuery();
@@ -1342,7 +1342,7 @@
             callback();
         }
         gNodegroupInvalidItems = invalidItemStrings;
-        gNodeGroup.clear();
+        gNodeGroup = new SemanticNodeGroup();
         gNodeGroup.addJson(nodegroupJson);
         nodeGroupChanged(true);
         buildQuery();
@@ -2419,7 +2419,7 @@
 	};
 
 	var clearGraph = function () {
-    	gNodeGroup.clear();
+        gNodeGroup = new SemanticNodeGroup();
         gInvalidItems = [];
         gNodeGroup.setSparqlConnection(gConn);
         gMappingTab.clear();
