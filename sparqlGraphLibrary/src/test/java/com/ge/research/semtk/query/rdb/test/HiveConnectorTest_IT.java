@@ -22,6 +22,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.sql.SQLException;
+
 import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -29,6 +31,7 @@ import org.junit.Test;
 import com.ge.research.semtk.query.rdb.HiveConnector;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.test.IntegrationTestUtility;
+import static org.junit.Assume.*;
 
 public class HiveConnectorTest_IT {
 
@@ -49,6 +52,14 @@ public class HiveConnectorTest_IT {
 		
 		// if needed variables are not configured, then skip test(s)
 		Assume.assumeTrue("No Hive server configured in environment", HOST != null && !HOST.trim().isEmpty());
+		
+		try {
+			
+			new HiveConnector(HOST, PORT, DATABASE, USER, PASSWORD);
+		} catch ( SQLException e ) {
+			e.printStackTrace();
+			assumeFalse("Can not connect to hive server for testing", e.getMessage().contains("Connection reset"));
+		}
 	}
 	
 	@Test
@@ -94,18 +105,6 @@ public class HiveConnectorTest_IT {
 		}
 		assertTrue(thrown);	
 	}
-	
-	
-	@Test
-	public void testGoodConnection() {
-		boolean thrown = false;
-		try {
-			new HiveConnector(HOST, PORT, DATABASE, USER, PASSWORD);
-		} catch (Exception e) {
-			thrown = true;
-		}
-		assertFalse(thrown);	
-	}	
 	
 	
 	@Test
