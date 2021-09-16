@@ -775,6 +775,10 @@ define([	// properly require.config'ed
 
                 IIDXHelper.appendCheckBox(td, constructCheck, "construct");
 
+                if (this.item.getItemType() == "PropertyItem") {
+                    td.append(document.createTextNode(" "));
+                    td.appendChild(ModalIidx.createInfoButton("To construct this data property, check 'select' and make sure the parent node is constructed."));
+                }
 				// row #2
 				tr = document.createElement("tr");
 				table.appendChild(tr);
