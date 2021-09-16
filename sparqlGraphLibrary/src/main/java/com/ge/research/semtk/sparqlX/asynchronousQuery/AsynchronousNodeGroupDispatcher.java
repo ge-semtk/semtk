@@ -26,6 +26,7 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.utility.LocalLogger;
 
 /**
@@ -74,11 +75,11 @@ public class AsynchronousNodeGroupDispatcher extends AsynchronousNodeGroupBasedQ
 	 * Simplest form of dispatcher execute:  get SPARQL and execute it.
 	 */
 	@Override
-	public void execute(Object executionSpecificObject1, Object executionSpecificObject2, DispatcherSupportedQueryTypes qt, String targetSparqlID) {
+	public void execute(Object executionSpecificObject1, Object executionSpecificObject2, DispatcherSupportedQueryTypes qt, SparqlResultTypes rt, String targetSparqlID) {
 		
 		try{
 			String sparqlQuery = this.getSparqlQuery(qt, targetSparqlID);
-			this.executePlainSparqlQuery(sparqlQuery, qt);
+			this.executePlainSparqlQuery(sparqlQuery, rt);
 		}
 		catch(Exception e){
 			// something went awry. set the job to failure. 

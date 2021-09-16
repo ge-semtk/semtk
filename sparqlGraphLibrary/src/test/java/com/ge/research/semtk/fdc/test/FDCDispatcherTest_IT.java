@@ -33,6 +33,7 @@ import com.ge.research.semtk.fdc.FdcClientConfig;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
 import com.ge.research.semtk.sparqlX.dispatch.FdcDispatcher;
 import com.ge.research.semtk.sparqlX.dispatch.FdcServiceManager;
@@ -186,7 +187,7 @@ public class FDCDispatcherTest_IT {
 												false, 
 												IntegrationTestUtility.getOntologyInfoClient(), 
 												IntegrationTestUtility.getNodeGroupStoreRestClient());
-		fdc.execute(null, null, DispatcherSupportedQueryTypes.SELECT_DISTINCT, null);
+		fdc.execute(null, null, DispatcherSupportedQueryTypes.SELECT_DISTINCT, SparqlResultTypes.TABLE, null);
 		
 		if (! sClient.execIsSuccess() ) {
 			fail(sClient.execGetStatusMessage());

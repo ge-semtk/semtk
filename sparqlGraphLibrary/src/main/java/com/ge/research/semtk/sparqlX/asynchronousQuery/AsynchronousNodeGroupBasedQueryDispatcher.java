@@ -90,7 +90,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		return this.jobID;
 	}
 	
-	public abstract void execute(Object executionSpecificObject1, Object executionSpecificObject2, DispatcherSupportedQueryTypes qt, String targetSparqlID);
+	public abstract void execute(Object executionSpecificObject1, Object executionSpecificObject2, DispatcherSupportedQueryTypes qt, SparqlResultTypes rt, String targetSparqlID);
 	
 	/**
 	 * Send the results to the results service. 
@@ -201,8 +201,8 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	
 	public abstract String[] getConstraintVariableNames() throws Exception;
 	
-	public void executePlainSparqlQuery(String sparqlQuery, DispatcherSupportedQueryTypes supportedQueryType) throws Exception{
-		TableResultSet retval = null;
+	public void executePlainSparqlQuery(String sparqlQuery, SparqlResultTypes resType) throws Exception{
+		TableResultSet ret = null;
 		this.jobTracker.incrementPercentComplete(this.jobID, 1, 10);
 
 		try{
@@ -213,47 +213,50 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			LocalLogger.logToStdErr(sparqlQuery);
 			
 			// run the actual query and get a result. 
-			GeneralResultSet preRet = null;
+			GeneralResultSet genResult = null;
 			
-			if(supportedQueryType == DispatcherSupportedQueryTypes.CONSTRUCT){
+			if(resType == SparqlResultTypes.GRAPH_JSONLD ){
 				// constructs require particular support for a different result set.
-				preRet = this.querySei.executeQueryAndBuildResultSet(sparqlQuery, SparqlResultTypes.GRAPH_JSONLD);
-				retval = new TableResultSet(true);
-			}
-			else if (supportedQueryType == DispatcherSupportedQueryTypes.DELETE || supportedQueryType == DispatcherSupportedQueryTypes.RAW_SPARQL_UPDATE) {
-				SimpleResultSet simpleRes = (SimpleResultSet) this.querySei.executeQueryAndBuildResultSet(sparqlQuery, SparqlResultTypes.CONFIRM);
-				retval = new TableResultSet(simpleRes);
+				genResult = this.querySei.executeQueryAndBuildResultSet(sparqlQuery, resType);
+				ret = new TableResultSet(true);
 				
-			} else {
+			} else if (resType == SparqlResultTypes.CONFIRM ){
+
+	                SimpleResultSet simpleRes = (SimpleResultSet) this.querySei.executeQueryAndBuildResultSet(sparqlQuery, SparqlResultTypes.CONFIRM);
+	                ret = new TableResultSet(simpleRes);
+	                
+			} else if (resType == SparqlResultTypes.TABLE) {
 				// all other types
-				preRet = this.querySei.executeQueryAndBuildResultSet(sparqlQuery, SparqlResultTypes.TABLE);
-				retval = (TableResultSet) preRet;
+				genResult = this.querySei.executeQueryAndBuildResultSet(sparqlQuery, SparqlResultTypes.TABLE);
+				ret = (TableResultSet) genResult;
+			} else {
+				throw new Exception("Unsupported result type: " + resType.toString());
 			}
 
 			
-			if (retval.getSuccess()) {
+			if (ret.getSuccess()) {
 				
 				// uncache SEI if delete query
-				if (supportedQueryType == DispatcherSupportedQueryTypes.DELETE && retval.getTable().getNumRows() > 0) {
+				if (resType == SparqlResultTypes.CONFIRM) {
 					SparqlConnection conn = new SparqlConnection();
 					conn.addDataInterface(this.querySei);
 					this.oInfoClient.uncacheChangedConn(conn);
 				}
 				
 				LocalLogger.logToStdErr("about to write results for " + this.jobID);
-				if(supportedQueryType == DispatcherSupportedQueryTypes.CONSTRUCT){
+				if (resType == SparqlResultTypes.GRAPH_JSONLD) {
 					// constructs require particular support in the results client and the results service. this support would start here.
-					this.sendResultsToService((NodeGroupResultSet) preRet);
+					this.sendResultsToService((NodeGroupResultSet) genResult);
 				}
-				else {
+				else if(resType == SparqlResultTypes.TABLE || resType == SparqlResultTypes.CONFIRM ){
 					// all other types
-					LocalLogger.logToStdErr("Query returned " + retval.getTable().getNumRows() + " results.");
-					this.sendResultsToService(retval);
+					LocalLogger.logToStdErr("Query returned " + ret.getTable().getNumRows() + " results.");
+					this.sendResultsToService(ret);
 				}
 				this.updateStatus(100);		// work's done
 			}
 			else {
-				this.updateStatusToFailed("Query client returned error to dispatch client: \n" + retval.getRationaleAsString("\n"));
+				this.updateStatusToFailed("Query client returned error to dispatch client: \n" + ret.getRationaleAsString("\n"));
 			}
 			
 			LocalLogger.logToStdErr("Job " + this.jobID + ": AsynchronousNodeGroupExecutor end ");

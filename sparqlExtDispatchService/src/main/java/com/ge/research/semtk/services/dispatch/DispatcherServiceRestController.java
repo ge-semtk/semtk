@@ -51,7 +51,7 @@ import com.ge.research.semtk.services.dispatch.NodegroupRequestBody;
 import com.ge.research.semtk.services.dispatch.WorkThread;
 import com.ge.research.semtk.sparqlX.BadQueryException;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
-
+import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
@@ -107,7 +107,7 @@ public class DispatcherServiceRestController {
 	public JSONObject querySelectFromNodeGroup_BC(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT, true);
+			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT, SparqlResultTypes.TABLE,  true);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -119,7 +119,7 @@ public class DispatcherServiceRestController {
 	public JSONObject querySelectFromNodeGroup(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT, true);
+			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.SELECT_DISTINCT, SparqlResultTypes.TABLE, true);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -131,7 +131,7 @@ public class DispatcherServiceRestController {
 	public JSONObject queryCounttFromNodeGroup(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.COUNT, true);
+			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.COUNT, SparqlResultTypes.TABLE, true);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -143,7 +143,7 @@ public class DispatcherServiceRestController {
 	public JSONObject queryDeleteFromNodeGroup(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.DELETE, true);
+			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.DELETE, SparqlResultTypes.CONFIRM, true);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -155,7 +155,7 @@ public class DispatcherServiceRestController {
 	public JSONObject queryFilterFromNodeGroup(@RequestBody FilterConstraintsRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT, true);
+			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.FILTERCONSTRAINT, SparqlResultTypes.TABLE, true);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -167,7 +167,7 @@ public class DispatcherServiceRestController {
 	public JSONObject asynchronousDirectQuery(@RequestBody SparqlRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			return queryFromSparql(requestBody, DispatcherSupportedQueryTypes.RAW_SPARQL);
+			return queryFromSparql(requestBody, SparqlResultTypes.TABLE);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -179,7 +179,7 @@ public class DispatcherServiceRestController {
 	public JSONObject asynchronousDirectUpdateQuery(@RequestBody SparqlRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			return queryFromSparql(requestBody, DispatcherSupportedQueryTypes.RAW_SPARQL_UPDATE);
+			return queryFromSparql(requestBody, SparqlResultTypes.CONFIRM);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -191,14 +191,14 @@ public class DispatcherServiceRestController {
 	public JSONObject queryConstructFromNodeGroup(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT, true);
+			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT, SparqlResultTypes.GRAPH_JSONLD, true);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
 	}
 		
-	public JSONObject queryFromSparql(@RequestBody SparqlRequestBody requestBody, DispatcherSupportedQueryTypes qt){
+	public JSONObject queryFromSparql(@RequestBody SparqlRequestBody requestBody, SparqlResultTypes rt){
 		String jobId = this.generateJobId();
 		SimpleResultSet retval = new SimpleResultSet(true);
 		retval.addResult("requestID", jobId);
@@ -218,15 +218,9 @@ public class DispatcherServiceRestController {
 			dsp = getDispatcher(props, jobId, ngrb, true, true);
 			dsp.getJobTracker().incrementPercentComplete(dsp.getJobId(), 1, 10);
 			
-			WorkThread thread = new WorkThread(dsp, null, null, qt);
-
-			if(qt.equals(DispatcherSupportedQueryTypes.RAW_SPARQL) || qt.equals(DispatcherSupportedQueryTypes.RAW_SPARQL_UPDATE)) {
-				// we are going to launch straight from the raw sparql
-				String qry = ((SparqlRequestBody)requestBody).getRawSparqlQuery();
-				thread.setRawSparqlSquery(qry);
-			}
+			WorkThread thread = new WorkThread(dsp, null, null, null, rt);
+			thread.setRawSparqlSquery(requestBody.getRawSparqlQuery());
 			
-			// set up a thread for the actual processing of the request
 			thread.start();
 			 
 		} catch (Exception e) {
@@ -255,7 +249,7 @@ public class DispatcherServiceRestController {
 	 * @param useAuth    NOTE - set to true for performance.  Non-auth queries containing FROM clauses are very slow when using the non-auth endpoint.
 	 * @return
 	 */
-	public JSONObject queryFromNodeGroup(@RequestBody QueryRequestBody requestBody, DispatcherSupportedQueryTypes qt, Boolean useAuth){
+	public JSONObject queryFromNodeGroup(@RequestBody QueryRequestBody requestBody, DispatcherSupportedQueryTypes qt, SparqlResultTypes rt, Boolean useAuth){
 		String jobId = this.generateJobId();
 		SimpleResultSet retval = new SimpleResultSet(true);
 		retval.addResult("requestID", jobId);
@@ -269,7 +263,7 @@ public class DispatcherServiceRestController {
 			dsp = getDispatcher(props, jobId, (NodegroupRequestBody) requestBody, useAuth, true);
 			dsp.getJobTracker().incrementPercentComplete(dsp.getJobId(), 1, 10);
 
-			WorkThread thread = new WorkThread(dsp, requestBody.getExternalConstraints(), requestBody.getFlags(), qt);
+			WorkThread thread = new WorkThread(dsp, requestBody.getExternalConstraints(), requestBody.getFlags(), qt, rt);
 			
 			if(qt.equals(DispatcherSupportedQueryTypes.FILTERCONSTRAINT)){
 				// we should have a potential target object.				

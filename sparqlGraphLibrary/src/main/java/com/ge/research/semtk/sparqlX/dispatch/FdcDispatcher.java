@@ -33,6 +33,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -73,7 +74,7 @@ public class FdcDispatcher extends EdcDispatcher {
 	 * @throws Exception 
 	 */
 	@Override
-	public void execute(Object extConstraintsJsonObj, Object flagsObj, DispatcherSupportedQueryTypes qt, String targetSparqlID) {
+	public void execute(Object extConstraintsJsonObj, Object flagsObj, DispatcherSupportedQueryTypes qt, SparqlResultTypes rt, String targetSparqlID) {
 		TableResultSet retval = null; // expect this to get instantiated with the appropriate subclass.		
 		
 		try {
@@ -89,17 +90,17 @@ public class FdcDispatcher extends EdcDispatcher {
 				// fdc
 				} else {
 					try {
-						this.executeFdc(qt, targetSparqlID);
+						this.executeFdc(qt, rt, targetSparqlID);
 					} catch (Exception e) {
 						// on failure: try reloading the FdcCache
 						FdcServiceManager.cacheFdcConfig(extConfigSei, oInfoClient);
-						this.executeFdc(qt, targetSparqlID);
+						this.executeFdc(qt, rt, targetSparqlID);
 					}
 					
 				}
 			} else {
 				// EDC or plain queries
-				super.execute(extConstraintsJsonObj, flagsObj, qt, targetSparqlID);
+				super.execute(extConstraintsJsonObj, flagsObj, qt, rt, targetSparqlID);
 			}
 		} catch (Exception e) {
 			this.updateStatusToFailed(e.getLocalizedMessage());
@@ -110,7 +111,7 @@ public class FdcDispatcher extends EdcDispatcher {
 	/**
 	 * Execute query for known FDC nodegroup
 	 */
-	private void executeFdc(DispatcherSupportedQueryTypes qt, String targetSparqlID) {
+	private void executeFdc(DispatcherSupportedQueryTypes qt, SparqlResultTypes rt, String targetSparqlID) {
 		String errorHeader = "";
 
 		try {
@@ -210,7 +211,7 @@ public class FdcDispatcher extends EdcDispatcher {
 			this.queryNodeGroup.setSparqlConnection(expandedConn);
 			
 			String query = this.getSparqlQuery(qt, targetSparqlID);
-			this.executePlainSparqlQuery(query, qt);
+			this.executePlainSparqlQuery(query, rt);
 			
 			//--- At this point results have been sent ---
 						

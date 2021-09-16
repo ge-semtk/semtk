@@ -25,6 +25,7 @@ import org.json.simple.JSONObject;
 import com.ge.research.semtk.auth.HeaderTable;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.AsynchronousNodeGroupBasedQueryDispatcher;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.DispatcherSupportedQueryTypes;
 import com.ge.research.semtk.sparqlX.dispatch.QueryFlags;
@@ -37,13 +38,23 @@ public class WorkThread extends Thread {
 	QueryFlags queryFlags;
 
 	DispatcherSupportedQueryTypes myQT;
+	SparqlResultTypes myRT;
 	String targetObjectSparqlID;
 	String rawSparqlQuery;
 	HeaderTable headerTable = null;
 	
-	public WorkThread(AsynchronousNodeGroupBasedQueryDispatcher dsp, JSONObject constraintJson, QueryFlags flags, DispatcherSupportedQueryTypes qt){
+	/**
+	 * 
+	 * @param dsp
+	 * @param constraintJson
+	 * @param flags
+	 * @param qt - may be null if this thread will only be used for raw SPARQL
+	 * @param rt
+	 */
+	public WorkThread(AsynchronousNodeGroupBasedQueryDispatcher dsp, JSONObject constraintJson, QueryFlags flags, DispatcherSupportedQueryTypes qt, SparqlResultTypes rt){
 		this.dsp = dsp;
 		this.myQT = qt;
+		this.myRT = rt;
 		this.externalConstraintsJson = constraintJson;
 		this.queryFlags = flags;
 		headerTable = ThreadAuthenticator.getThreadHeaderTable();
@@ -68,12 +79,12 @@ public class WorkThread extends Thread {
 		try {
 			if(this.rawSparqlQuery != null){
 				// a query was passed. use it.
-				this.dsp.executePlainSparqlQuery(rawSparqlQuery, myQT);
+				this.dsp.executePlainSparqlQuery(rawSparqlQuery, myRT);
 			}
 			
 			else{
 				// query from the node group itself. 
-				this.dsp.execute(externalConstraintsJson, queryFlags, this.myQT, targetObjectSparqlID);
+				this.dsp.execute(externalConstraintsJson, queryFlags, this.myQT, this.myRT, targetObjectSparqlID);
 			}	
 		} catch (Exception e) {
 			LocalLogger.printStackTrace(e);		
