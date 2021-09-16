@@ -32,28 +32,19 @@ public enum SparqlResultTypes {
 	CONFIRM, 		// expect a confirmation message (e.g. "inserted 5 tuples", "cleared graph")
 	RDF,            // 
 	HTML;           // e.g. uploading owl to strange endpoint
+	
 	/**
-	 * Determines if a query is a DROP GRAPH query or not.
-	 * e.g. clear graph <http://com.ge.research/knowledge/graph>
+	 * Leaving room for looser matching
+	 * @param string
+	 * @return
 	 */
-	// TODO move, does not really belong here any more
-	public static boolean isDropGraphQuery(String query){
-		return containsRegexIgnoreCase(query, "drop\\s+graph\\s+\\<");
-	}
+	public static SparqlResultTypes getMatchingValue(String string) {
+		return SparqlResultTypes.valueOf(string);
+	}	
+	
+	
 
 
-	/**
-	 * Determine if a string contains a regular expression
-	 */
-	// TODO move, does not really belong here any more
-	public static boolean containsRegexIgnoreCase(String s, String regex){
-		s = s.toLowerCase().trim();		
-		Pattern whitespace = Pattern.compile(regex);    
-		Matcher matcher = whitespace.matcher(s);
-		if (matcher.find()) {
-			return true;
-		}
-		return false;
-	}		
+	
 
 }

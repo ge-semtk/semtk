@@ -1847,8 +1847,10 @@ SemanticNodeGroup.QT_ASK = "QUERY_ASK";
 SemanticNodeGroup.QT_DELETE = "QUERY_DELETE";
 
 SemanticNodeGroup.RT_TABLE = "TABLE";
-SemanticNodeGroup.RT_JSONLD = "JSONLD";
-SemanticNodeGroup.RT_OWLRDF = "OWLRDF";
+SemanticNodeGroup.RT_JSONLD = "GRAPH_JSONLD";
+SemanticNodeGroup.RT_CONFIRM = "CONFIRM";
+SemanticNodeGroup.RT_OWLRDF = "RDF";
+SemanticNodeGroup.RT_HTML = "HTML";
 
 SemanticNodeGroup.FUNCTION_MIN = 0;
 SemanticNodeGroup.FUNCTION_MAX = 1;

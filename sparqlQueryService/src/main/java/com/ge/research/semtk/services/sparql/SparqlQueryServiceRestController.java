@@ -33,6 +33,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
@@ -141,7 +143,7 @@ public class SparqlQueryServiceRestController {
 			
 			
 			// disallow running drop graph query here (keep this check first, before the subsequent check)
-			if(SparqlResultTypes.isDropGraphQuery(requestBody.query)){ 
+			if(SparqlQueryServiceRestController.isDropGraphQuery(requestBody.query)){ 
 				SimpleResultSet res = new SimpleResultSet(false);
 				res.addRationaleMessage(SERVICE_NAME, "query", "This query must be run using the /dropGraph endpoint");
 				return res.toJson();
@@ -192,7 +194,7 @@ public class SparqlQueryServiceRestController {
 
 		try{
 			// disallow running drop graph query here - require client to explicitly use /dropGraph to avoid accidental drops
-			if(SparqlResultTypes.isDropGraphQuery(requestBody.query)){ 
+			if(SparqlQueryServiceRestController.isDropGraphQuery(requestBody.query)){ 
 				return (new SimpleResultSet(false, "This query must be run using the /dropGraph endpoint")).toJson();
 			}
 			requestBody.printInfo(); 	// print info to console			
@@ -621,5 +623,27 @@ public class SparqlQueryServiceRestController {
 		SparqlConnection conn = new SparqlConnection();
 		conn.addModelInterface(sei);
 		oClient.uncacheChangedConn(conn);
+	}
+	
+	/**
+	 * Determines if a query is a DROP GRAPH query or not.
+	 * e.g. clear graph <http://com.ge.research/knowledge/graph>
+	 */
+	private static boolean isDropGraphQuery(String query){
+		return containsRegexIgnoreCase(query, "drop\\s+graph\\s+\\<");
+	}
+
+
+	/**
+	 * Determine if a string contains a regular expression
+	 */
+	private static boolean containsRegexIgnoreCase(String s, String regex){
+		s = s.toLowerCase().trim();		
+		Pattern whitespace = Pattern.compile(regex);    
+		Matcher matcher = whitespace.matcher(s);
+		if (matcher.find()) {
+			return true;
+		}
+		return false;
 	}
 }
