@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import com.arangodb.internal.util.IOUtils;
 import com.ge.research.semtk.aws.S3Connector;
+import com.ge.research.semtk.utility.LocalLogger;
 
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;
@@ -30,6 +31,7 @@ public class S3ConnectorTest_IT {
 		try {
 			String region = System.getenv("NEPTUNE_UPLOAD_S3_CLIENT_REGION");
 			String name = System.getenv("NEPTUNE_UPLOAD_S3_BUCKET_NAME");
+			LocalLogger.logToStdOut("S3ConnectorTest_IT test with region " + region + ", bucket " + name);
 			s3conn = new S3Connector(region, name);
 		} catch (Exception e) {
 			assumeTrue(e.getMessage(), false);

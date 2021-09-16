@@ -402,33 +402,6 @@ public class NodeGroupServiceRestController {
 	}
 	
 	@CrossOrigin
-	@RequestMapping(value="/generateConstructForInstanceManipulation", method=RequestMethod.POST)
-	public JSONObject generateConstructSparqlForInstanceManipulation(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
-		HeadersManager.setHeaders(headers);
-		SimpleResultSet retval = null;
-		
-		try{
-			NodeGroup ng = requestBody.buildNodeGroup();
-			ng.noInflateNorValidate(retrieveOInfo(requestBody.buildConnection()));
-
-			String query = ng.generateSparqlConstruct();
-			
-			retval = this.generateSuccessOutput("CONSTRUCT", query);
-			
-		}
-		catch(NoValidSparqlException ise) {
-			retval = this.generateNoValidSparqlOutput("generateConstruct", ise.getMessage());
-		}
-		catch(Exception eee){
-			retval = new SimpleResultSet(false);
-			retval.addRationaleMessage(SERVICE_NAME, "generateConstruct", eee);
-			LocalLogger.printStackTrace(eee);
-		}
-		
-		return retval.toJson();
-	}
-	
-	@CrossOrigin
 	@RequestMapping(value="/generateConstruct", method=RequestMethod.POST)
 	public JSONObject generateConstructSparql(@RequestBody NodegroupRequest requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);

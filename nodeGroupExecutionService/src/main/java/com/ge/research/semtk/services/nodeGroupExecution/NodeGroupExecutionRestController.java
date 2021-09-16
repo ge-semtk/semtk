@@ -763,37 +763,6 @@ public class NodeGroupExecutionRestController {
 
 	}
 	
-	@CrossOrigin
-	@RequestMapping(value="/dispatchConstructForInstanceManipulationById", method=RequestMethod.POST)
-	public JSONObject dispatchConstructInstanceJobById(@RequestBody DispatchByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
-		final String ENDPOINT_NAME="dispatchConstructForInstanceManipulationById";
-		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
-		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodeGroupId());
-    	try {
-			return dispatchAnyJobById(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION);
-		    
-		} finally {
-	    	HeadersManager.clearHeaders();
-	    }
-	}
-	
-	@CrossOrigin
-	@RequestMapping(value="/dispatchConstructForInstanceManipulationFromNodegroup", method=RequestMethod.POST)
-	public JSONObject dispatchConstructInstanceJobFromNodegroup(@RequestBody DispatchFromNodegroupRequestBody requestBody, @RequestHeader HttpHeaders headers) {
-		final String ENDPOINT_NAME="dispatchConstructForInstanceManipulationFromNodegroup";
-		HeadersManager.setHeaders(headers);	
-		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
-		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME);
-    	try {
-			return dispatchAnyJobFromNodegroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION);
-		    
-		} finally {
-	    	HeadersManager.clearHeaders();
-	    }
-
-	}
-	
 	@ApiOperation(
 			value=	"COUNT query on nodegroup id",
 			notes=	"result has 'JobId' field"

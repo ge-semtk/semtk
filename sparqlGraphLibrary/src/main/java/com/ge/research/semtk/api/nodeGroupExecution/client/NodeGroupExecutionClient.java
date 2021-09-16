@@ -108,9 +108,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	private static final String dispatchRawSparqlEndpoint = "/dispatchRawSparql";
 	private static final String dispatchConstructByIdEndpoint = "/dispatchConstructById";
 	private static final String dispatchConstructFromNodegroupEndpoint = "/dispatchConstructFromNodegroup";
-	private static final String dispatchConstructByIdEndpointForInstanceManipulationEndpoint = "/dispatchConstructForInstanceManipulationById";
-	private static final String dispatchConstructFromNodegroupEndpointForInstanceManipulationEndpoint = "/dispatchConstructForInstanceManipulationFromNodegroup";
-
+	
 	/**
 	 * Constructor
 	 */

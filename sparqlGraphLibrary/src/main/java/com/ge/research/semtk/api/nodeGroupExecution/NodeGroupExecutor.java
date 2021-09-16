@@ -358,9 +358,6 @@ public class NodeGroupExecutor {
 		else if(qt.equals(DispatcherSupportedQueryTypes.CONSTRUCT)){
 			simpleRes = this.dispatchClient.executeConstructQueryFromNodeGroup(sendable, externalConstraints);
 		}
-		else if(qt.equals(DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION)){
-			simpleRes = this.dispatchClient.executeConstructQueryForInstanceManipulationFromNodeGroup(sendable, externalConstraints);
-		}
 		else{
 			throw new Exception("NodeGroupExecutor:dispatchJob :: DispatcherSupportedQueryTypes type " + qt.name() + " is not currently supported.");
 		}

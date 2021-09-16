@@ -13,8 +13,8 @@ import com.ge.research.semtk.edc.client.FileStagingClient;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.utility.Utility;
-
-
+import static org.junit.Assume.*
+;
 public class FileStagingClientTest_IT {
 
 	private static String SERVICE_PROTOCOL;
@@ -28,6 +28,8 @@ public class FileStagingClientTest_IT {
 		SERVICE_PROTOCOL = IntegrationTestUtility.get("protocol");
 		SERVICE_SERVER = IntegrationTestUtility.get("filestaging.server");
 		SERVICE_PORT = IntegrationTestUtility.getInt("filestaging.port");
+		
+		assumeTrue("No file staging service server is configured for JUNIT", ! SERVICE_SERVER.isEmpty());
 	}	
 	
 	@Test

@@ -197,18 +197,6 @@ public class DispatcherServiceRestController {
 	    	HeadersManager.clearHeaders();
 	    }
 	}
-	
-	@CrossOrigin
-	@RequestMapping(value="/queryConstructFromNodeGroupForInstanceManipulation", method=RequestMethod.POST)
-	public JSONObject queryConstructFromNodeGroupForInstanceManipulation(@RequestBody QueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
-		HeadersManager.setHeaders(headers);
-		try {
-			return queryFromNodeGroup(requestBody, DispatcherSupportedQueryTypes.CONSTRUCT_FOR_INSTANCE_DATA_MANIPULATION, true);
-		    
-		} finally {
-	    	HeadersManager.clearHeaders();
-	    }
-	}
 		
 	public JSONObject queryFromSparql(@RequestBody SparqlRequestBody requestBody, DispatcherSupportedQueryTypes qt){
 		String jobId = this.generateJobId();
