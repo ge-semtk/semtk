@@ -66,7 +66,13 @@ public class DispatchRestClient extends RestClient{
 		
 	}
 	
+	@Deprecated
 	public SimpleResultSet executeSelectQueryFromNodeGroup(JSONObject nodeGroupWithConnection, JSONObject externalConstraints, QueryFlags flags) throws Exception{
+		return executeSelectQueryFromNodeGroup(new SparqlGraphJson(nodeGroupWithConnection), externalConstraints, flags);
+	}
+	
+	public SimpleResultSet executeSelectQueryFromNodeGroup(SparqlGraphJson sgjson, JSONObject externalConstraints, QueryFlags flags) throws Exception{
+			
 		SimpleResultSet retval = null;
 		
 		// in the event a null set of constraints was passed, create the minimally valid set.
@@ -80,7 +86,7 @@ public class DispatchRestClient extends RestClient{
 		
 		// setup the arguments we intend to send.
 		conf.setServiceEndpoint("dispatcher/querySelectFromNodeGroup");
-		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupWithConnection.toJSONString());
+		this.parametersJSON.put("jsonRenderedNodeGroup", sgjson.toJson().toJSONString());
 		this.parametersJSON.put("constraintSet", externalConstraints.toJSONString());
 		if (flags != null) {
 			this.parametersJSON.put("flags", flags.toJSONString());
@@ -101,7 +107,12 @@ public class DispatchRestClient extends RestClient{
 		return retval;
 	}
 	
+	@Deprecated
 	public SimpleResultSet executeConstructQueryFromNodeGroup(JSONObject nodeGroupWithConnection, JSONObject externalConstraints) throws Exception{
+		return this.executeConstructQueryFromNodeGroup(new SparqlGraphJson(nodeGroupWithConnection), externalConstraints);
+	}
+	
+	public SimpleResultSet executeConstructQueryFromNodeGroup(SparqlGraphJson sgjson, JSONObject externalConstraints) throws Exception{
 		SimpleResultSet retval = null;
 		
 		// in the event a null set of constraints was passed, create the minimally valid set.
@@ -115,7 +126,7 @@ public class DispatchRestClient extends RestClient{
 		
 		// setup the arguments we intend to send.
 		conf.setServiceEndpoint("dispatcher/queryConstructFromNodeGroup");
-		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupWithConnection.toJSONString());
+		this.parametersJSON.put("jsonRenderedNodeGroup", sgjson.toJson().toJSONString());
 		this.parametersJSON.put("constraintSet", externalConstraints.toJSONString());
 		
 		try{
@@ -132,7 +143,12 @@ public class DispatchRestClient extends RestClient{
 		return retval;
 	}
 	
+	@Deprecated
 	public SimpleResultSet executeCountQueryFromNodeGroup(JSONObject nodeGroupWithConnection, JSONObject externalConstraints) throws Exception{
+		return this.executeCountQueryFromNodeGroup(new SparqlGraphJson(nodeGroupWithConnection), externalConstraints);
+	} 
+	
+	public SimpleResultSet executeCountQueryFromNodeGroup(SparqlGraphJson sgjson, JSONObject externalConstraints) throws Exception{
 		SimpleResultSet retval = null;
 		
 		// in the event a null set of constraints was passed, create the minimally valid set.
@@ -146,7 +162,7 @@ public class DispatchRestClient extends RestClient{
 		
 		// setup the arguments we intend to send.
 		conf.setServiceEndpoint("dispatcher/queryCountFromNodeGroup");
-		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupWithConnection.toJSONString());
+		this.parametersJSON.put("jsonRenderedNodeGroup", sgjson.toJson().toJSONString());
 		this.parametersJSON.put("constraintSet", externalConstraints.toJSONString());
 		
 		try{
@@ -163,7 +179,12 @@ public class DispatchRestClient extends RestClient{
 		return retval;
 	}
 	
+	@Deprecated
 	public SimpleResultSet executeDeleteQueryFromNodeGroup(JSONObject nodeGroupWithConnection, JSONObject externalConstraints) throws Exception{
+		return this.executeDeleteQueryFromNodeGroup(new SparqlGraphJson(nodeGroupWithConnection), externalConstraints);
+	}
+	
+	public SimpleResultSet executeDeleteQueryFromNodeGroup(SparqlGraphJson sgjson, JSONObject externalConstraints) throws Exception{
 		SimpleResultSet retval = null;
 		
 		// in the event a null set of constraints was passed, create the minimally valid set.
@@ -177,7 +198,7 @@ public class DispatchRestClient extends RestClient{
 		
 		// setup the arguments we intend to send.
 		conf.setServiceEndpoint("dispatcher/queryDeleteFromNodeGroup");
-		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupWithConnection.toJSONString());
+		this.parametersJSON.put("jsonRenderedNodeGroup", sgjson.toJson().toJSONString());
 		this.parametersJSON.put("constraintSet", externalConstraints.toJSONString());
 		
 		
@@ -195,7 +216,12 @@ public class DispatchRestClient extends RestClient{
 		return retval;
 	}
 	
+	@Deprecated
 	public SimpleResultSet executeFilterQueryFromNodeGroup(JSONObject nodeGroupWithConnection, String targetObjectSparqlId, JSONObject externalConstraints) throws Exception{
+		return this.executeFilterQueryFromNodeGroup(new SparqlGraphJson(nodeGroupWithConnection), targetObjectSparqlId, externalConstraints);
+	}
+	
+	public SimpleResultSet executeFilterQueryFromNodeGroup(SparqlGraphJson sgjson, String targetObjectSparqlId, JSONObject externalConstraints) throws Exception{
 		SimpleResultSet retval = null;
 		
 		// in the event a null set of constraints was passed, create the minimally valid set.
@@ -209,7 +235,7 @@ public class DispatchRestClient extends RestClient{
 		
 		// setup the arguments we intend to send.
 		conf.setServiceEndpoint("dispatcher/queryFilterFromNodeGroup");
-		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupWithConnection.toJSONString());
+		this.parametersJSON.put("jsonRenderedNodeGroup", sgjson.toJson().toJSONString());
 		this.parametersJSON.put("constraintSet", externalConstraints.toJSONString());
 		this.parametersJSON.put("targetObjectSparqlID", targetObjectSparqlId);
 		
@@ -228,6 +254,7 @@ public class DispatchRestClient extends RestClient{
 		
 		return retval;
 	}
+	
 	
 	public SimpleResultSet executeRawSparqlQuery(SparqlConnection sc, String rawSparqlQuery) throws Exception{
 		SimpleResultSet retval = null;
@@ -283,11 +310,11 @@ public class DispatchRestClient extends RestClient{
 		return retval;
 	}
 
-	public TableResultSet executeGetConstraintInfo(JSONObject nodeGroup) throws Exception{
+	public TableResultSet executeGetConstraintInfo(JSONObject nodeGroupJson) throws Exception{
 		TableResultSet retval = new TableResultSet();
 		
 		conf.setServiceEndpoint("dispatcher/getConstraintInfo");
-		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroup.toJSONString());
+		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupJson.toJSONString());
 		
 		try{
 			JSONObject jobj = (JSONObject) this.execute();
