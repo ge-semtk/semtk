@@ -141,7 +141,7 @@
 		"orderBy": [],
 		"groupBy": [],
 		"unionHash": {},
-		"queryType": "QUERY_CONSTRUCT"
+		"queryType": "CONSTRUCT"
 	},
 	"importSpec": {
 		"version": "1",
