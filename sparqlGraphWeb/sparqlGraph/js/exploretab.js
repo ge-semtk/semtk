@@ -552,6 +552,42 @@ define([	// properly require.config'ed
                 this.updateInfo();
             },
 
+            // https://stackoverflow.com/questions/12043187/how-to-check-if-hex-color-is-too-black
+            // 40 or less is pretty black
+            getLuminocity : function(colorCode) {
+                var c = colorCode.substring(1);      // strip #
+                var rgb = parseInt(c, 16);   // convert rrggbb to decimal
+                var r = (rgb >> 16) & 0xff;  // extract red
+                var g = (rgb >>  8) & 0xff;  // extract green
+                var b = (rgb >>  0) & 0xff;  // extract blue
+
+                var luma = 0.2126 * r + 0.7152 * g + 0.0722 * b; // per ITU-R BT.709
+
+                return luma
+            },
+
+            // "get" the groups in sorted order so they are the same color regardless of in what order they appear in data
+            //
+            // set up and return a hash of fonts with color black or white to match background
+            setupGroups : function(nameList, network) {
+                var fontHash = {};
+
+                // get groups alphabetically instead of getting them in the order the classes might appear in exactTab.
+                // This hopefully forces order.
+                // Set up foreground color hash
+                for (var ns of nameList.sort()) {
+                    // force order
+                    var g = network.groups.get(ns);
+                    // set foreground based on luminocity
+                    if (this.getLuminocity(g.color.background) < 80 ) {
+                        fontHash[ns] = { color: "white"};
+                    } else {
+                        fontHash[ns] = { color: "black"};
+                    }
+                }
+                return fontHash;
+            },
+
             drawPredicateStats : function(json) {
                 var SHOW_DATA = true;
                 this.clearNetwork();
@@ -560,6 +596,7 @@ define([	// properly require.config'ed
                 var edgeData = [];
 
                 var blob = json.xhr;
+                var fontHash = this.setupGroups(this.oInfo.getNamespaceNames(), this.networkHash[ExploreTab.MODE_STATS]);
 
                 // first pass: add nodes for each type with count
                 for (var key in blob.exactTab) {
@@ -575,7 +612,8 @@ define([	// properly require.config'ed
                         // skipping Type since w already have oSubjectClass
                         if ( oPredicate.getLocalName() == "type") {
                             var myLabel = oSubjectClass.getLocalName() + " " + count;
-                            nodeData.push({id: oSubjectClass.getFullName(), label: myLabel, title: oSubjectClass.getFullName(), group: oSubjectClass.getNamespace() });
+                            var ns = oSubjectClass.getNamespace();
+                            nodeData.push({id: oSubjectClass.getFullName(), font: fontHash[ns], label: myLabel, title: oSubjectClass.getFullName(), group: ns });
                         }
                     }
                 }
@@ -624,10 +662,12 @@ define([	// properly require.config'ed
                 var edgeData = [];
                 var SHOW_NAMESPACE = false;
 
+                var fontHash = this.setupGroups(this.oInfo.getNamespaceNames(), this.networkHash[ExploreTab.MODE_ONTOLOGY]);
+
                 // namespace nodes
                 if (SHOW_NAMESPACE) {
                     for (var namespace of this.oInfo.getNamespaceNames()) {
-                        nodeData.push({id: namespace, label: namespace, group: namespace , shape: 'box'});
+                        nodeData.push({id: namespace, font: fontHash[namespace], label: namespace, group: namespace , shape: 'box'});
                     }
                 }
 
@@ -635,7 +675,7 @@ define([	// properly require.config'ed
                 for (var className of this.oInfo.getClassNames()) {
                     var oClass = this.oInfo.getClass(className);
 
-                    nodeData.push({id: className, label: oClass.getNameStr(true), title: oClass.getNameStr(false), group: oClass.getNamespaceStr() });
+                    nodeData.push({id: className, label: oClass.getNameStr(true), font: fontHash[oClass.getNamespaceStr()], title: oClass.getNameStr(false), group: oClass.getNamespaceStr() });
                 }
 
                 // edges
