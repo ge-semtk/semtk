@@ -102,7 +102,7 @@ public class OntologyInfo {
 	private int pathFindingMaxPathLength = 10;
 	private int pathFindingMaxPathCount = 100;
 	
-	final boolean CONSOLE_LOG = true;
+	final boolean CONSOLE_LOG = false;
 
 	/**
 	 * Default constructor
@@ -1662,6 +1662,9 @@ public class OntologyInfo {
 			return this.findExactPaths(fromClassName, targetClassNames);
 		} else {
 			
+			// with predStats, findExactPaths will only find exact matches.
+			// So fromClassNames and TargetsWithSubClasses are built containing all subclasses.
+			
 			// add subclasses to fromClassName
 			HashSet<String> fromClassNames = new HashSet<String>();
 			fromClassNames.add(fromClassName);
@@ -1683,16 +1686,16 @@ public class OntologyInfo {
 			// find exact paths
 			ArrayList<OntologyPath> paths =  this.findExactPaths(fromClassNames, targetsWithSubclasses, predStats, ng, conn);
 		
-			// find paths that starts or ends on a subclass
-			ArrayList<OntologyPath> removedPaths = new ArrayList<OntologyPath>();
+			// Pull out all the paths that starts or ends on a subclass
+			ArrayList<OntologyPath> subclassPaths = new ArrayList<OntologyPath>();
 			for (OntologyPath p : paths) {
 				// if end class is not in the target list or start class is not fromClass
 				if (! targetClassNames.contains(p.getEndClassName()) || !p.getStartClassName().equals(fromClassName) ) {
-					removedPaths.add(p);
+					subclassPaths.add(p);
 				}
 			}
 			// do actual removal from results, and save for next step
-			for (OntologyPath p : removedPaths) {
+			for (OntologyPath p : subclassPaths) {
 				paths.remove(p);
 			}
 			
@@ -1702,8 +1705,8 @@ public class OntologyInfo {
 				pathsHash.add(p.asString());
 			}			
 						
-			// try to promote each removed path to a correct endClass
-			for (OntologyPath p : removedPaths) {
+			// try to promote each removed path to a correct endClass and re-add to results
+			for (OntologyPath p : subclassPaths) {
 				if (! targetClassNames.contains(p.getEndClassName())) {
 					// find a parent that is in targetClassNames
 					for (String superClassName : this.getSuperclassNames(p.getEndClassName())) {
@@ -1826,7 +1829,11 @@ public class OntologyInfo {
 				while (ret.size() > pathFindingMaxPathCount) {
 					ret.remove(ret.size() -1);
 				}
-				this.pathWarnings.add(String.format("Found first %d paths.", pathFindingMaxPathCount));
+				if (predStats == null) {
+					this.pathWarnings.add(String.format("Found first %d paths.", pathFindingMaxPathCount));
+				} else {
+					this.pathWarnings.add(String.format("Stopped at %d raw paths.", pathFindingMaxPathCount));
+				}
 				break;
 			}
 			
