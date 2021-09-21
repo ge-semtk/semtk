@@ -24,7 +24,10 @@ import org.json.simple.parser.ParseException;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.utility.LocalLogger;
 
+import io.swagger.annotations.ApiModelProperty;
+
 public class NodegroupRequestBody {
+	@ApiModelProperty(required = true,  example = "{ \"contents\" : \"Internal SemTK-formmated JSON\" } ")
 	private String jsonRenderedNodeGroup;
 	 
 	public void setjsonRenderedNodeGroup(String jsonRenderedNodeGroup){
@@ -35,13 +38,13 @@ public class NodegroupRequestBody {
 		return this.jsonRenderedNodeGroup;
 	}
 	
-	public NodeGroup getNodeGroup() throws Exception{
+	public NodeGroup buildNodeGroup() throws Exception{
 		JSONParser prsr = new JSONParser();
 		JSONObject jNodeGroup = (JSONObject) prsr.parse(this.jsonRenderedNodeGroup);
 		return NodeGroup.getInstanceFromJson(jNodeGroup);		
 	}
 	
-	public JSONObject getJsonNodeGroup(){
+	public JSONObject buildNodeGroupJson(){
 		JSONParser prsr = new JSONParser();
 		JSONObject retval = null;
 		try {

@@ -26,6 +26,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.edc.client.EndpointNotFoundException;
+import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 
 
 public class SimpleResultSet extends GeneralResultSet{
@@ -34,6 +35,7 @@ public class SimpleResultSet extends GeneralResultSet{
 	public static final String MESSAGE_JSONKEY = "@message";
  	public static final String JOB_ID_RESULT_KEY = "JobId";
  	public static final String STATUS_RESULT_KEY = "status";
+ 	public static final String RESULT_TYPE_KEY = "resultType";
  	public static final String STATUS_MESSAGE_RESULT_KEY = "statusMessage";
  	public static final String PERCENT_COMPLETE_RESULT_KEY = "percentComplete";
 	
@@ -66,6 +68,14 @@ public class SimpleResultSet extends GeneralResultSet{
 	
 	public void setMessage(String msg) {
 		this.addResult(SimpleResultSet.MESSAGE_JSONKEY, msg);
+	}
+	
+	public SparqlResultTypes getResultType() throws Exception {
+		return SparqlResultTypes.getMatchingValue( this.getResult(SimpleResultSet.RESULT_TYPE_KEY) );		
+	}
+	
+	public void addResultType(SparqlResultTypes rt) {
+		this.addResult(SimpleResultSet.RESULT_TYPE_KEY, rt.toString());
 	}
 	
 	public String getJobId() throws Exception {

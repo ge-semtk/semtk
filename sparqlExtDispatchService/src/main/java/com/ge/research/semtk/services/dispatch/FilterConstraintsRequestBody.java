@@ -17,7 +17,11 @@
 
 package com.ge.research.semtk.services.dispatch;
 
+import io.swagger.annotations.ApiModelProperty;
+
 public class FilterConstraintsRequestBody extends QueryRequestBody {
+
+	@ApiModelProperty(example = "?name")
 	private String targetObjectSparqlID;
 
 	public String getTargetObjectSparqlID() {
