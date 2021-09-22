@@ -1082,9 +1082,10 @@
                                           action();
                                       },
                                       function(){
-                                          doNodeGroupDownload();
-                                          nodeGroupChanged(false);
-                                          action();
+                                          doNodeGroupDownload(undefined, function() {
+                                              nodeGroupChanged(false);
+                                              action();
+                                          });
                                       },
                                      ]
                                 );
@@ -1268,10 +1269,11 @@
     };
     var validateFailure = function(msgHtml) {
         require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
-            doNodeGroupDownload();
-            nodeGroupChanged(false);
-            ModalIidx.alert("Nodegroup validation call failed", msgHtml + "<hr>Nodegroup downloaded", false);
-            clearGraph();
+            doNodeGroupDownload(undefined, function() {
+                nodeGroupChanged(false);
+                ModalIidx.alert("Nodegroup validation call failed", msgHtml + "<hr>Nodegroup downloaded", false);
+                clearGraph();
+            });
         });
     };
 
@@ -1357,7 +1359,7 @@
         });
     };
 
-    var doNodeGroupDownload = function (optDeflateFlag) {
+    var doNodeGroupDownload = function (optDeflateFlag, optCallback) {
         let deflateFlag = (typeof optDeflateFlag != "undefined") ? optDeflateFlag : true;
     	logEvent("SG menu: File->Download");
     	if (gNodeGroup == null || gNodeGroup.getNodeCount() == 0) {
@@ -1374,6 +1376,10 @@
 
 	    		IIDXHelper.downloadFile(sgJson.stringify(), "sparql_graph.json", "text/csv;charset=utf8");
                 nodeGroupChanged(false);
+
+                if (optCallback) {
+                    optCallback();
+                }
     		});
     	}
     };
