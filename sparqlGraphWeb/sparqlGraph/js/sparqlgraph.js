@@ -1268,8 +1268,9 @@
     };
     var validateFailure = function(msgHtml) {
         require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
+            doNodeGroupDownload();
             nodeGroupChanged(false);
-            ModalIidx.alert("Nodegroup validation call failed", msgHtml, false);
+            ModalIidx.alert("Nodegroup validation call failed", msgHtml + "<hr>Nodegroup downloaded", false);
             clearGraph();
         });
     };
