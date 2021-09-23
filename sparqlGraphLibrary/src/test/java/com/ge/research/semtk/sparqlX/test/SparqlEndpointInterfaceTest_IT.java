@@ -24,6 +24,11 @@ import org.junit.Test;
 
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.resultSet.GeneralResultSet;
+import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
@@ -59,6 +64,18 @@ public class SparqlEndpointInterfaceTest_IT {
 		OntologyInfo oInfo = new OntologyInfo();
 		oInfo.load(TestGraph.getSei(), false );
 		assertTrue("Can't find the 'Dog' class", oInfo.getClassNames().contains("http://research.ge.com/kdl/pet#Dog"));
+	}
+	
+	@Test
+	public void testRDFReturn() throws Exception {
+		TestGraph.clearGraph();
+		String s = Utility.getResourceAsString(this, "/Pet.owl");
+		SparqlEndpointInterface sei = TestGraph.getSei();
+		sei.executeUpload(s.getBytes());
+		
+		String sparql = SparqlToXUtils.generateConstructSPOSparql(sei, null) + " LIMIT 1 ";
+		String rdf = sei.executeQueryToRdf(sparql);
+		assertTrue("RDF wasn't returned", rdf.contains("<rdf:RDF"));
 	}
 
 }

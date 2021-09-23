@@ -240,11 +240,11 @@ public class SparqlToXUtils {
   }
   
   public static String generateSelectSPOSparql(SparqlEndpointInterface sei, String clause) {
-	  return "SELECT ?s ?p ?o FROM <" + sei.getGraph() + "> WHERE { ?s ?p ?o. " + clause + "}";
+	  return "SELECT ?s ?p ?o FROM <" + sei.getGraph() + "> WHERE { ?s ?p ?o. " + (clause == null ? "" : clause) + "}";
   }
   
   public static String generateConstructSPOSparql(SparqlEndpointInterface sei, String clause) {
-	  return "CONSTRUCT { ?s ?p ?o } FROM <" + sei.getGraph() + "> WHERE { ?s ?p ?o. " + clause + "}";
+	  return "CONSTRUCT { ?s ?p ?o } FROM <" + sei.getGraph() + "> WHERE { ?s ?p ?o. " + (clause == null ? "" : clause) + "}";
   }
   
   /**
