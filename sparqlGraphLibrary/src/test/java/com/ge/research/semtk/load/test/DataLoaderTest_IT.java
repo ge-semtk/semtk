@@ -1161,6 +1161,65 @@ public class DataLoaderTest_IT {
 	}
 	
 	@Test
+	public void testMissingURILookups() throws Exception {
+		//  Combinations of missing URI Lookups
+		//      1) error:  1 of 2 missing
+		//      2) success:  both missing and item can be pruned
+		//      3) error:   both missing but can't be pruned do to data property being ingested on looked up item
+		Dataset ds = new CSVDataset("src/test/resources/loadTestDuraBatteryFirst4Data.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+
+		// import durabattery first4.  
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		TestGraph.queryAndCheckResults(sgJson, this, "/loadTestDuraBatteryFirst4Results.csv");
+
+		// Lookup up Battery by two fields battery id and connected cell's id.
+		// The battery id is missing
+		// Fails:  to URI lookups with one non-empty and one empty
+		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBatteryLookupXEmptyLookup.json");
+		ds = new CSVDataset("src/test/resources/loadTestDuraBatteryLookupXEmptyLookupFail.csv", false);
+		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		assertEquals("Expected one error due to missing lookup", 1, err.getNumRows());
+		
+		// Lookup up Battery by two fields battery id and connected cell's id.
+		// Succeeds:  Both URI lookups are missing, so 
+		//            battery is pruned and cell is inserted with no connection
+		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBatteryLookupXEmptyLookup.json");
+		ds = new CSVDataset("src/test/resources/loadTestDuraBatteryLookupXEmptyLookupsOK.csv", false);
+		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBatteryFindOrphanCells.json");
+		TestGraph.queryAndCheckResults(sgJson, this, "/loadTestDuraBatteryLookupXEmptyLookupsOKResults.csv");
+		
+		// Lookup up Battery by two fields battery id and connected cell's id.
+		// Fails:  Both URI lookups are missing, but 
+		//            battery can not be pruned because battery_desc is not empty
+		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBatteryLookupXEmptyLookup.json");
+		ds = new CSVDataset("src/test/resources/loadTestDuraBatteryLookupXEmptyLookupsFail2.csv", false);
+		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		assertEquals("Expected one error when can't prune empty battery lookup due to battery desc", 1, err.getNumRows());
+	}
+	
+	@Test
 	public void testLoadLookXNodesTwoConn() throws Exception {
 		assumeTrue("Test skipped due to recurring virtuoso error on v-test", TestGraph.getSei().getServerType() != "virtuoso");
 		doLoadLookXNodesTwoConn(true);
