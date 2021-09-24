@@ -395,7 +395,7 @@ public class Node extends Returnable {
 				}
 				inputNItemHash.remove(ontPropURI);
 			
-			} else if (!oInfo.containsClass(ontProp.getRangeStr())) {
+			} else if (!oInfo.containsClass(ontProp.getRangeStr()) && !ontProp.getRange().isDefaultClass()) {
 				// Range class is not found: property deflated out of the nodegroup: inflate
 				PropertyItem propItem = new PropertyItem(	
 						ontProp.getNameStr(true), 

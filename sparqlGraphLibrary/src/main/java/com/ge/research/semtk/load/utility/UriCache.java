@@ -189,5 +189,9 @@ public class UriCache {
 			return this.isGenerated.containsKey(uri);
 		}
 	}
+
+	public boolean isEmptyLookup(String instanceValue) {
+		return instanceValue != null && instanceValue.equals(EMPTY_LOOKUP);
+	}
 	
 }

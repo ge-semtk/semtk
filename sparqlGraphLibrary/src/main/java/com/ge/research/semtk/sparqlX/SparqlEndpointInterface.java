@@ -513,6 +513,11 @@ public abstract class SparqlEndpointInterface {
 		
 		return resultSet;
 	}	
+	public String executeQueryToRdf(String query) throws Exception {
+		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(query, SparqlResultTypes.RDF);
+		res.throwExceptionIfUnsuccessful();
+		return (String) res.getResult(SparqlResultTypes.RDF.toString());
+	}
 	
 	/**
 	 * Execute query to table

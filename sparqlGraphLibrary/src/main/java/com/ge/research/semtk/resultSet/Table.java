@@ -632,6 +632,21 @@ public class Table {
 	}
 	
 	/**
+	 * 
+	 * @return  Data as double array of Objects
+	 * @throws Exception
+	 */
+	public Object[][] getDataArray() {
+		Object [][] ret = new Object[this.getNumRows()][this.getNumColumns()];
+		for (int r=0; r < this.getNumRows(); r++) {
+			for (int c=0; c < this.getNumColumns(); c++) {
+				ret[r][c] = this.getCellAsObject(r, c);
+			}
+		}
+		return ret;
+	}
+	
+	/**
 	 * Replace an existing cell value with no checking
 	 * @param row
 	 * @param col
@@ -653,8 +668,28 @@ public class Table {
 		this.rows.get(row).set(this.getColumnIndexOrError(colName), String.valueOf(val));
 	}
 	
+	
 	public String getCell(int row, int col) {
 		return this.rows.get(row).get(col);
+	}
+	
+	public Object getCellAsObject(int row, int col) {
+	
+		XSDSupportedType t;
+		
+		try {
+			t = XSDSupportedType.getMatchingValue(this.columnTypes[row]);
+		} catch (Exception e) {
+			return getCellAsString(row, col);
+		}
+
+		if (t.isInt()) {
+			return getCellAsInt(row, col);
+		} else if (t.isFloat()) {
+			return getCellAsFloat(row, col);
+		} else {
+			return getCellAsString(row, col);
+		}
 	}
 	
 	public String getCellAsString(int row, int col) {

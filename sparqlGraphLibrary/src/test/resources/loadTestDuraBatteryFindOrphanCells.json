@@ -1,0 +1,278 @@
+{
+	"version": 3,
+	"sparqlConn": {
+		"name": "Junit fuseki",
+		"domain": "",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 15,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/durabattery#cellId",
+						"Constraints": "",
+						"SparqlID": "?cellId_1",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false,
+						"binding": "?cellId_lookup",
+						"isBindingReturned": true
+					}
+				],
+				"nodeList": [],
+				"fullURIName": "http://kdl.ge.com/durabattery#Cell",
+				"SparqlID": "?Cell1",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Cell1"
+						],
+						"OptionalMinus": [
+							-2
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"ValueType": "Cell",
+						"UriValueType": "http://kdl.ge.com/durabattery#Cell",
+						"ConnectBy": "cell4",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/durabattery#cell4"
+					}
+				],
+				"fullURIName": "http://kdl.ge.com/durabattery#DuraBattery",
+				"SparqlID": "?DuraBattery_2",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Cell1"
+						],
+						"OptionalMinus": [
+							-2
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"ValueType": "Cell",
+						"UriValueType": "http://kdl.ge.com/durabattery#Cell",
+						"ConnectBy": "cell3",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/durabattery#cell3"
+					}
+				],
+				"fullURIName": "http://kdl.ge.com/durabattery#DuraBattery",
+				"SparqlID": "?DuraBattery_1",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Cell1"
+						],
+						"OptionalMinus": [
+							-2
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"ValueType": "Cell",
+						"UriValueType": "http://kdl.ge.com/durabattery#Cell",
+						"ConnectBy": "cell2",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/durabattery#cell2"
+					}
+				],
+				"fullURIName": "http://kdl.ge.com/durabattery#DuraBattery",
+				"SparqlID": "?DuraBattery_0",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"ValueType": "string",
+						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/durabattery#batteryId",
+						"Constraints": "",
+						"SparqlID": "?batteryId",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Cell1"
+						],
+						"OptionalMinus": [
+							-2
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"ValueType": "Cell",
+						"UriValueType": "http://kdl.ge.com/durabattery#Cell",
+						"ConnectBy": "cell1",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/durabattery#cell1"
+					}
+				],
+				"fullURIName": "http://kdl.ge.com/durabattery#DuraBattery",
+				"SparqlID": "?DuraBattery",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": [
+			{
+				"sparqlID": "?cellId_lookup"
+			}
+		],
+		"groupBy": [],
+		"unionHash": {}
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "batt_id"
+			},
+			{
+				"colId": "col_1",
+				"colName": "cell_id"
+			},
+			{
+				"colId": "col_2",
+				"colName": "add_cell_id"
+			}
+		],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?DuraBattery",
+				"type": "http://kdl.ge.com/durabattery#DuraBattery",
+				"URILookupMode": "noCreate",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/durabattery#batteryId",
+						"URILookup": [
+							"?DuraBattery"
+						],
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?DuraBattery_0",
+				"type": "http://kdl.ge.com/durabattery#DuraBattery",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?DuraBattery_1",
+				"type": "http://kdl.ge.com/durabattery#DuraBattery",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?DuraBattery_2",
+				"type": "http://kdl.ge.com/durabattery#DuraBattery",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Cell1",
+				"type": "http://kdl.ge.com/durabattery#Cell",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/durabattery#cellId",
+						"URILookup": [
+							"?DuraBattery"
+						],
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					}
+				]
+			}
+		]
+	},
+	"plotSpecs": []
+}

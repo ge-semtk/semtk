@@ -599,10 +599,17 @@ public class ImportSpecHandler {
 			this.addMappingToNodegroup(retNodegroup, this.importMappings[i], record, skipValidation);
 		}
 		
-		// also do lookupMappings for any URI that was just generated
+		// do lookupMappings for any URI that was just generated - creating so fill it in
+		// also fill in EMPTY-LOOKUPs so they don't get pruned.  This will throw an error later: empty lookup column
 		for (int i=0; i < retNodegroup.getNodeCount(); i++) {
 			Node n = retNodegroup.getNode(i);
-			if (this.uriCache.isGenerated(n.getInstanceValue())) {
+			
+			// Fixed a bug here by adding this.uriCache.isEmptyLookup() condition.
+			// EMPTY-LOOKUPs should have any other mappings added so that error handling works later
+			// If all mappings are empty then the empty node might be prunable and the ingestion succeeds without it.
+			// See git commit 9/24/2021
+			// See DataLoaderTest_IT.testMissingURILookups()
+			if (this.uriCache.isGenerated(n.getInstanceValue()) || this.uriCache.isEmptyLookup(n.getInstanceValue())) {   
 				for (ImportMapping lookupMapping : this.lookupMappings.get(n.getSparqlID())) {
 					this.addMappingToNodegroup(retNodegroup,  lookupMapping, record, skipValidation);
 				}
