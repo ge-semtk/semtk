@@ -341,7 +341,7 @@ public class NodeGroupExecutor {
 		SparqlGraphJson sgjson = new SparqlGraphJson(ng, sc);
 		SimpleResultSet simpleRes = null;
 		
-		simpleRes = this.dispatchClient.executeQuery(sgjson, qt, rt, externalConstraints, flags);
+		simpleRes = this.dispatchClient.executeQuery(sgjson, qt, rt, externalConstraints, flags, targetObjectSparqlID);
 		simpleRes.throwExceptionIfUnsuccessful();
 		
 		// set up the Job ID
