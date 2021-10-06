@@ -551,66 +551,6 @@ define([	// properly require.config'ed   bootstrap-modal
             /**
 			 * build an html iidx datagrid and add it to the div.
 			 * return the datagrid table element.
-             *
-             * params:
-             *    optSortList - see IIDXHelper.buildDatagridInDiv
-			 */
-			putJsonLdResultsInDiv : function (div, headerHtml) {
-
-				if (! this.isJsonLdResults()) {
-					div.innerHTML =  "<b>Error:</b> Results returned from service are not JSON-LD";
-					return;
-				}
-
-                var jsonResultStr = JSON.stringify(this.getGraphResultsJson(), null, 4);
-
-                // header download link and menu
-                var headerTable = IIDXHelper.buildResultsHeaderTable(
-                    (jsonResultStr === "{}") ? "No results returned" : headerHtml,
-                    [ "Save JSON" ] ,
-                    [ IIDXHelper.downloadFile.bind(IIDXHelper, "jsonResultStr", "results.json", "text/json;charset=utf8") ]
-                );
-                div.appendChild(headerTable);
-
-                // canvas
-                var canvasDiv = document.createElement("div");
-                canvasDiv.style.width="100%";
-                canvasDiv.style.height="650px";
-                canvasDiv.style.margin="1ch";
-                div.appendChild(canvasDiv);
-
-                var configDiv = document.createElement("div");
-                configDiv.style.width="100%";
-                configDiv.style.height="100%";
-                div.appendChild(document.createElement("hr"));
-                div.appendChild(configDiv);
-
-                var jsonLd = this.getGraphResultsJson();
-                var nodeDict = {};   // dictionary of nodes with @id as the key
-                var edgeList = [];   // "normal" list of edges
-
-                var network = new vis.Network(
-                    canvasDiv,
-                    {nodes: Object.values(nodeDict), edges: edgeList },
-                    VisJsHelper.getDefaultOptions(configDiv)
-                );
-
-                for (var i=0; i < jsonLd.length; i++) {
-                    VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList);
-                    if (i % 20 == 0) {
-                        network.body.data.nodes.update(Object.values(nodeDict));
-                        network.body.data.edges.update(edgeList);
-                    }
-                }
-                network.body.data.nodes.update(Object.values(nodeDict));
-                network.body.data.edges.update(edgeList);
-
-                network.startSimulation();
-			},
-
-            /**
-			 * build an html iidx datagrid and add it to the div.
-			 * return the datagrid table element.
 			 */
 			putTableSelectDatagridInDiv : function (div, optFinishedCallback) {
 

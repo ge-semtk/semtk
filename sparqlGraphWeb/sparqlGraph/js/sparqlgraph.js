@@ -1277,6 +1277,21 @@
         });
     };
 
+    /**
+     **  good for any rest client.
+     **    titleBindMe = bind a string for dialog title
+     **    callbackBindMe = bind something undefined is ok.
+     **/
+    var failureCallback = function(titleBindMe, callbackBindMe, msgHtml) {
+        require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
+            doNodeGroupDownload(undefined, function() {
+                nodeGroupChanged(false);
+                ModalIidx.alert(titleBindMe, msgHtml + "<hr>Nodegroup downloaded", false, callbackBindMe);
+                clearGraph();
+            });
+        });
+    };
+
     // callback: successfully determined whether there are modelErrors
     var validateCallback = function(nodegroupJson, modelErrors, invalidItemStrings, warnings) {
 
@@ -1806,17 +1821,123 @@
                                                                 }.bind(this, jsonLdResults)
                                                             );
 
-            var header = document.createElement("span");
-            header.innerHTML =  "Download json: ";
-            header.appendChild(anchor);
-            header.appendChild(document.createElement("hr"));
+            var linkdom = document.createElement("span");
+            linkdom.innerHTML =  "Download json: ";
+            linkdom.appendChild(anchor);
 
-            jsonLdResults.putJsonLdResultsInDiv(document.getElementById("resultsParagraph"), header);
+            displayConstructResults(jsonLdResults, linkdom);
 
             guiUnDisableAll();
             guiResultsNonEmpty();
             setStatus("");
         });
+    };
+
+    /**
+     * Put json-ld results into a visjs display
+     *
+     * params:
+     *    res - json results
+     *    linkdom - standard SPARQLgraph link to download results
+     */
+    var displayConstructResults = function (res, linkdom) {
+        require(['sparqlgraph/js/iidxhelper',
+                'sparqlgraph/js/visjshelper',
+                'visjs/vis.min'],
+                function(IIDXHelper, VisJsHelper, vis) {
+            var div = document.getElementById("resultsParagraph");
+
+            if (! res.isJsonLdResults()) {
+                div.innerHTML =  "<b>Error:</b> Results returned from service are not JSON-LD";
+                return;
+            }
+
+            var jsonResultStr = JSON.stringify(res.getGraphResultsJson(), null, 4);
+
+            // make a menu button bar
+            var editDom = document.createElement("span");
+            var deleteButton = IIDXHelper.createIconButton("icon-trash", function(){}, ["btn","btn-danger"], undefined, "Delete", "Remove selected item(s)" );
+            deleteButton.disabled = true;
+            editDom.appendChild(deleteButton);
+            IIDXHelper.appendSpace(editDom);
+            var expandButton = IIDXHelper.createIconButton("icon-sitemap", function(){}, ["btn","btn-success"], undefined, "Expand", "Add all connected instance data" );
+            expandButton.disabled = true;
+            editDom.appendChild(expandButton);
+
+            var headerTable = IIDXHelper.buildResultsHeaderTable(
+                (jsonResultStr === "{}") ? "No results returned" : linkdom,
+                [ "Save JSON" ] ,
+                [ IIDXHelper.downloadFile.bind(IIDXHelper, jsonResultStr, "results.json", "text/json;charset=utf8") ],
+                editDom
+            );
+            div.appendChild(headerTable);
+            var hr = document.createElement("hr");
+            hr.style.margin="2px";
+            div.appendChild(hr);
+
+            // canvas
+            var canvasDiv = document.createElement("div");
+            canvasDiv.style.width="100%";
+            canvasDiv.style.height="650px";
+            canvasDiv.style.margin="1ch";
+            div.appendChild(canvasDiv);
+
+            // add network config to bottom
+            var configDiv = document.createElement("div");
+            configDiv.style.width="100%";
+            configDiv.style.height="100%";
+            div.appendChild(document.createElement("hr"));
+            div.appendChild(configDiv);
+
+            // setup empty network
+            var jsonLd = res.getGraphResultsJson();
+            var nodeDict = {};   // dictionary of nodes with @id as the key
+            var edgeList = [];   // "normal" list of edges
+
+            var options = VisJsHelper.getDefaultOptions(configDiv);
+            options = VisJsHelper.setCustomEditingOptions(options);
+
+            var network = new vis.Network(canvasDiv, {nodes: Object.values(nodeDict), edges: edgeList }, options);
+
+            // callback: when selection changes, disable/enable buttons
+            network.on('select', function(n) {
+                var disableFlag = n.getSelectedNodes().length == 0;
+                deleteButton.disabled=disableFlag;
+                expandButton.disabled=disableFlag;
+            }.bind(this, network));
+
+            // button callbacks
+            network.on('doubleClick', this.constructAddCallback.bind(this, network));
+            expandButton.onclick = this.constructAddCallback.bind(this, network);
+            deleteButton.onclick = this.constructRemoveCallback.bind(this, network);
+
+            // add data
+            for (var i=0; i < jsonLd.length; i++) {
+                VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList);
+                if (i % 20 == 0) {
+                    network.body.data.nodes.update(Object.values(nodeDict));
+                    network.body.data.edges.update(edgeList);
+                }
+            }
+            network.body.data.nodes.update(Object.values(nodeDict));
+            network.body.data.edges.update(edgeList);
+
+            network.startSimulation();
+        });
+    };
+
+    var constructRemoveCallback = function(n) {
+        var idList = n.getSelectedNodes();
+        n.body.data.nodes.remove(idList);
+    };
+
+    var constructAddCallback = function(n) {
+        var idList = n.getSelectedNodes();
+        var classList = [];
+        for (var i of idList) {
+            classList.push(n.body.data.nodes.get(i).group);
+        }
+        alert(idList + " " + classList);
     };
 
    	var doRetrieveFromNGStore = function() {

@@ -1,5 +1,6 @@
 define([	// properly require.config'ed
             'sparqlgraph/js/modaliidx',
+            'sparqlgraph/js/iidxhelper',
 
         	'jquery',
 
@@ -7,7 +8,7 @@ define([	// properly require.config'ed
 			// shimmed
 
 		],
-        function(ModalIidx, $, vis) {
+        function(ModalIidx, IIDXHelper, $, vis) {
 
     var VisJsHelper = function () {
     };
@@ -44,7 +45,8 @@ define([	// properly require.config'ed
 
         var m = new ModalIidx("ModalIidxAlert");
         m.showOK("Network physics", configdiv, saveConfigCallback);
-    },
+    };
+
     VisJsHelper.getDefaultOptions = function(configdiv) {
         return {
             configure: {
@@ -59,6 +61,10 @@ define([	// properly require.config'ed
             },
             interaction: {
                 multiselect: true,
+                navigationButtons: true,
+                keyboard: {
+                    bindToWindow: false
+                }
             },
             manipulation: {
                 initiallyActive: false,
@@ -66,6 +72,24 @@ define([	// properly require.config'ed
                 deleteEdge: true,
             }
         };
+    };
+
+    VisJsHelper.setCustomEditingOptions = function(options) {
+        options.manipulation.enabled = false;    // turn off built-in editing
+        return options;
+    };
+
+    VisJsHelper.buildCustomEditDOM = function() {
+        var span = document.createElement("span");
+        var but;
+
+        but = IIDXHelper.createIconButton("icon-remove", function(){ alert("delete");}, undefined, undefined, "Delete", "click to delete" );
+        span.appendChild(but);
+
+        but = IIDXHelper.createIconButton("icon-plus", function(){ alert("add");}, undefined, undefined, "Add", "click to add" );
+        span.appendChild(but);
+
+        return span;
     };
 
     // get the shortened "local" readable type name(s)

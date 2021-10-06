@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -596,6 +597,56 @@ public class NodeGroupTest_IT {
 		sgjson.setNodeGroup(nodegroup);
 		Table resTab = TestGraph.execTableSelect(sgjson);
 		assertEquals("Corrected nodegroup did not return correct rows of data", 3, resTab.getNumRows());
+	}
+	
+	@Test
+	public void test_createConstructAllConnectedCell() throws Exception {	
+		// test where cell has incoming and outgoing connections
+		OntologyInfo oInfo = TestGraph.getOInfo();
+		NodeGroup ng1 = new NodeGroup();
+		ng1.setSparqlConnection(TestGraph.getSparqlConn());
+		Node node = ng1.addNode(cellNodeURI, oInfo);
+		ng1.setIsReturned(node, true);
+		ng1.orderByAll();
+		
+		Table tab = TestGraph.execTableSelect(ng1.generateSparqlSelect());
+		String instanceUri = tab.getCell(0, 0);
+		
+		NodeGroup ng = NodeGroup.createConstructAllConnected(
+							cellNodeURI, instanceUri, 
+							TestGraph.getSparqlConn(), TestGraph.getOInfo(), TestGraph.getPredicateStats()
+							);
+		
+		JSONArray jArr = TestGraph.execJsonConstruct(ng);
+		String res = jArr.toJSONString();
+		for (String lookup : new String [] {"battA", "red", "cellId", "color", "\"cell200\""}) {
+			assertTrue("Results are missing: " + lookup, res.contains(lookup));
+		}
+	}
+	
+	@Test
+	public void test_createConstructAllConnectedBattery() throws Exception {	
+		// test where all Battery links are out-going
+		OntologyInfo oInfo = TestGraph.getOInfo();
+		NodeGroup ng1 = new NodeGroup();
+		ng1.setSparqlConnection(TestGraph.getSparqlConn());
+		Node battNode = ng1.addNode(batteryURI, oInfo);
+		ng1.setIsReturned(battNode, true);
+		ng1.orderByAll();
+		
+		Table tab = TestGraph.execTableSelect(ng1.generateSparqlSelect());
+		String instanceUri = tab.getCell(0, 0);
+		
+		NodeGroup ng = NodeGroup.createConstructAllConnected(
+							batteryURI, instanceUri, 
+							TestGraph.getSparqlConn(), TestGraph.getOInfo(), TestGraph.getPredicateStats()
+							);
+		
+		JSONArray jArr = TestGraph.execJsonConstruct(ng);
+		String res = jArr.toJSONString();
+		for (String lookup : new String [] {"Cell_cell300", "battA", "1966", "Cell_cell200", "1979"}) {
+			assertTrue("Results are missing: " + lookup, res.contains(lookup));
+		}
 	}
 	
 }

@@ -172,10 +172,8 @@ public class OntologyInfoClientTest_IT {
 	public void testGetPredicateStats() throws Exception {
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this.getClass(), "sampleBattery.owl");
-		OntologyInfoClient client = this.getClient();
-		String jobId = client.execGetPredicateStats(TestGraph.getSparqlConn());
-		IntegrationTestUtility.getStatusClient(jobId).waitForCompletionSuccess();
-		PredicateStats stats = new PredicateStats(IntegrationTestUtility.getResultsClient().execGetBlobResult(jobId));
+		
+		PredicateStats stats = TestGraph.getPredicateStats();
 		
 	}
 }

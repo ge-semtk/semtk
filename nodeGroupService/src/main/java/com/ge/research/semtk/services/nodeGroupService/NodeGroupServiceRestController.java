@@ -837,6 +837,38 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 
+	@ApiOperation(
+			value="Create a nodegroup to retrieve"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/createConstructAllConnected", method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
+	public JSONObject createConstructAllConnected(@RequestBody ConnectionUriClassRequest requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "createConstructAllConnected";
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {
+			// requestBody holds sparqlGraphJson for consistency.  It only contains a connection.
+			
+			SparqlConnection conn = requestBody.buildSparqlConnection();
+			OntologyInfo oInfo = retrieveOInfo(conn);
+			PredicateStats stats = retrievePredicateStats(conn);
+			
+			NodeGroup ng = NodeGroup.createConstructAllConnected(requestBody.getClassName(), requestBody.getInstanceUri(), conn, oInfo, stats);
+			
+			SparqlGraphJson sgjson = new SparqlGraphJson(ng, conn);
+			retval.addResult(RET_KEY_NODEGROUP, sgjson.toJson());
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+
 
 	@ApiOperation(
 			value="Adds a new node to an existing nodeGroup"
@@ -1178,6 +1210,7 @@ public class NodeGroupServiceRestController {
 		
 	}
 	
+	
 	/**
 	 * Retrieve predicate stats only if already cached and ready, else null.
 	 * @param conn
@@ -1192,10 +1225,22 @@ public class NodeGroupServiceRestController {
 	}
 	
 	/**
-	 * Retrieve predicate stats asynchronously.
+	 * Retrieve predicate stats with no parent jobId
 	 * @param conn
 	 * @return
-	 * 
+	 * @throws Exception
+	 */
+	private PredicateStats retrievePredicateStats(SparqlConnection conn) throws Exception {
+		return this.retrievePredicateStats(conn, null, 0, 0);
+	}
+	
+	/**
+	 * Retrieve predicate stats
+	 * @param conn
+	 * @param parentJobId - to update.  Null to skip this feature.
+	 * @param startPercent - for parentJobId percent complete updates
+	 * @param endPercent - for parentJobId percent complete updates
+	 * @return
 	 * @throws Exception
 	 */
 	private PredicateStats retrievePredicateStats(SparqlConnection conn, String parentJobId, int startPercent, int endPercent) throws Exception {
@@ -1203,7 +1248,10 @@ public class NodeGroupServiceRestController {
 		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
 		String jobId = oClient.execGetPredicateStats(conn);
 		JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
-		tracker.waitTilCompleteUpdatingParent(jobId, parentJobId, "Getting stats on predicate usage", 1000, startPercent, endPercent);
+		
+		if (parentJobId != null) {
+			tracker.waitTilCompleteUpdatingParent(jobId, parentJobId, "Getting stats on predicate usage", 1000, startPercent, endPercent);
+		}
 		
 		if (tracker.jobSucceeded(jobId)) {
 			ResultsClient rclient = new ResultsClient(new ResultsClientConfig(results_props.getProtocol(), results_props.getServer(), results_props.getPort()));

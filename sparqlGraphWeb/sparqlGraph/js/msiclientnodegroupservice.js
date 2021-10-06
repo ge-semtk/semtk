@@ -134,6 +134,19 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.msi.postToEndpoint("findAllPaths", data, "application/json", simpleResultsCallback, this.optFailureCallback, this.optTimeout);
             },
 
+            /* this sync call has no "execAsync" Version
+            */
+            execCreateconstructAllConnected : function (conn, classUri, instanceUri, sgjsonCallback) {
+                var data = JSON.stringify ({
+					  "conn": JSON.stringify(conn.toJson()),
+                      "classUri" : classUri,
+                      "instanceUri" : instanceUri
+					});
+
+                var cb = this.asyncSgJsonCallback.bind(this, "createConstructAllConnected", sgjsonCallback, this.optFailureCallback));
+				this.msi.postToEndpoint("createConstructAllConnected", data, "application/json", cb, this.optFailureCallback, this.optTimeout);
+            },
+
             /*
             **  Asynchronous functions: perform the whole async chain and return a "real" value.  failureCalback on any error.
             **  (Name is confusing. All these functions in the file are Async.)
