@@ -2445,7 +2445,7 @@ public class NodeGroup {
 		
 		// open optional block
 		if (incomingFlag) {
-			if (nItem.getOptionalMinus(targetNode) == NodeItem.OPTIONAL_REVERSE && nItem.getNodeList().size() > 0 ) {
+			if (nItem.getOptionalMinus(targetNode) == NodeItem.OPTIONAL_REVERSE && nItem.getNodeList().size() > 0 && clauseType != ClauseTypes.CONSTRUCT_LEADER) {
 				blockOpenSparql.append(tab + "optional {\n");
 				tab = SparqlToXUtils.tabIndent(tab);
 				blockFlag = true;
