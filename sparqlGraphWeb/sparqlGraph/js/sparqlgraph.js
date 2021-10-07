@@ -79,7 +79,7 @@
 
 	              'local/sparqlgraphlocal'
                 ],
-                function (ExploreTab, MappingTab, ModalIIDX, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupService, MsiClientNodeGroupStore, NodegroupRenderer, UploadTab) {
+                function (ExploreTab, MappingTab, ModalIidx, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupService, MsiClientNodeGroupStore, NodegroupRenderer, UploadTab) {
 
 	    	console.log(".ready()");
 
@@ -132,7 +132,7 @@
 
 			} else if (g.customization.autoRunDemo.toLowerCase() == "true") {
 
-                ModalIIDX.okCancel( "Demo",
+                ModalIidx.okCancel( "Demo",
                                     "Loading demo nodegroup, and<br>Launching demo documentation pop-up.<br>(You may need to override your pop-up blocker.)<br>",
                                     function() {
                                         window.open(g.help.url.base + "/" + g.help.url.demo, "_blank","location=yes");
@@ -164,7 +164,7 @@
 	   	    logEvent("SG Page Load");
 
             if (g.customization.startupDialogHtml != 'none' && g.customization.startupDialogHtml.length > 2) {
-                ModalIIDX.alert(g.customization.startupDialogTitle, g.customization.startupDialogHtml);
+                ModalIidx.alert(g.customization.startupDialogTitle, g.customization.startupDialogHtml);
             }
 
             if (g.customization.bannerText != 'none' && g.customization.bannerText.length > 2) {
@@ -1277,21 +1277,6 @@
         });
     };
 
-    /**
-     **  good for any rest client.
-     **    titleBindMe = bind a string for dialog title
-     **    callbackBindMe = bind something undefined is ok.
-     **/
-    var failureCallback = function(titleBindMe, callbackBindMe, msgHtml) {
-        require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
-            doNodeGroupDownload(undefined, function() {
-                nodeGroupChanged(false);
-                ModalIidx.alert(titleBindMe, msgHtml + "<hr>Nodegroup downloaded", false, callbackBindMe);
-                clearGraph();
-            });
-        });
-    };
-
     // callback: successfully determined whether there are modelErrors
     var validateCallback = function(nodegroupJson, modelErrors, invalidItemStrings, warnings) {
 
@@ -1907,8 +1892,8 @@
             }.bind(this, network));
 
             // button callbacks
-            network.on('doubleClick', this.constructAddCallback.bind(this, network));
-            expandButton.onclick = this.constructAddCallback.bind(this, network);
+            network.on('doubleClick', this.constructAddCallback.bind(this, res, network));
+            expandButton.onclick = this.constructAddCallback.bind(this, res, network);
             deleteButton.onclick = this.constructRemoveCallback.bind(this, network);
 
             // add data
@@ -1931,13 +1916,61 @@
         n.body.data.nodes.remove(idList);
     };
 
-    var constructAddCallback = function(n) {
-        var idList = n.getSelectedNodes();
-        var classList = [];
-        for (var i of idList) {
-            classList.push(n.body.data.nodes.get(i).group);
-        }
-        alert(idList + " " + classList);
+    // user clicked to add to CONSTRUCT graph
+    var constructAddCallback = function(origRes, network) {
+        require(['sparqlgraph/js/msiclientnodegroupservice',
+			    ], function(MsiClientNodeGroupService) {
+
+            var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, asyncFailureCallback);
+            var idList = network.getSelectedNodes();
+            var classList = [];
+            for (var instanceUri of idList) {
+                var classUri = origRes.expandJsonLdContext(network.body.data.nodes.get(instanceUri).group);
+                client.execCreateConstructAllConnected(gConn, classUri, instanceUri, this.constructAddCallbackGotQuery.bind(this, network));
+            }
+        });
+    };
+
+    // return from getting CONSTRUCT query to add to CONSTRUCT graph
+    // sync return
+    var constructAddCallbackGotQuery = function(network, sgjson) {
+        require(['sparqlgraph/js/msiclientnodegroupexec',
+                 'sparqlgraph/js/modaliidx'],
+    	         function (MsiClientNodeGroupExec, ModalIidx) {
+            var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.longTimeoutMsec);
+            var jsonLdCallback = MsiClientNodeGroupExec.buildJsonLdCallback(
+                constructAddCallbackGotJson.bind(this, network),
+                ModalIidx.alert.bind(this, "NodeGroup Exec Service Failure"),
+                function() {}, // no status updates
+                function() {}, // no check for cancel
+                g.service.status.url,
+                g.service.results.url);
+            ng = new SemanticNodeGroup();
+            sgjson.getNodeGroup(ng);
+            client.execAsyncDispatchConstructFromNodeGroup(ng, gConn, null, null, jsonLdCallback, ModalIidx.alert.bind(this, "NodeGroup Exec Service Failure"));
+        });
+    };
+
+    var constructAddCallbackGotJson = function(network, res) {
+        require(['sparqlgraph/js/modaliidx',
+                 'sparqlgraph/js/visjshelper'],
+                 function (ModalIidx, VisJsHelper) {
+            if (! res.isJsonLdResults()) {
+                ModalIidx.alert("NodeGroup Exec Service Failure", "<b>Error:</b> Results returned from service are not JSON-LD");
+                return;
+            }
+
+            // add data
+            var jsonLd = res.getGraphResultsJson();
+            var nodeDict = {};   // dictionary of nodes with @id as the key
+            var edgeList = [];
+            for (var i=0; i < jsonLd.length; i++) {
+                VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList);
+            }
+            network.body.data.nodes.update(Object.values(nodeDict));
+            network.body.data.edges.update(edgeList);
+        });
+
     };
 
    	var doRetrieveFromNGStore = function() {

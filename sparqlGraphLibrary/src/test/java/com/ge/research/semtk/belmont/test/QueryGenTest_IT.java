@@ -758,8 +758,59 @@ public class QueryGenTest_IT {
 			assertTrue("Expected 'GROUP BY' ng.checkNodegroup() message, got: " + e.getMessage(), e.getMessage().contains("GROUP BY"));
 		}
 		
+	}
+	
+	@Test
+	public void test_createConstructAllConnectedCell() throws Exception {	
+		// test where cell has incoming and outgoing connections
 		
+		final String CELL = "http://kdl.ge.com/batterydemo#Cell";
+		OntologyInfo oInfo = TestGraph.getOInfo();
+		NodeGroup ng1 = new NodeGroup();
+		ng1.setSparqlConnection(TestGraph.getSparqlConn());
+		Node node = ng1.addNode(CELL, oInfo);
+		ng1.setIsReturned(node, true);
+		ng1.orderByAll();
 		
+		Table tab = TestGraph.execTableSelect(ng1.generateSparqlSelect());
+		String instanceUri = tab.getCell(0, 0);
+		
+		NodeGroup ng = NodeGroup.createConstructAllConnected(
+							CELL, instanceUri, 
+							TestGraph.getSparqlConn(), TestGraph.getOInfo(), TestGraph.getPredicateStats()
+							);
+		
+		JSONArray jArr = TestGraph.execJsonConstruct(ng);
+		String res = jArr.toJSONString();
+		for (String lookup : new String [] {"battA", "red", "cellId", "color", "\"cell200\""}) {
+			assertTrue("Results are missing: " + lookup, res.contains(lookup));
+		}
+	}
+	
+	@Test
+	public void test_createConstructAllConnectedBattery() throws Exception {	
+		final String BATTERY = "http://kdl.ge.com/batterydemo#Battery";
+		// test where all Battery links are out-going
+		OntologyInfo oInfo = TestGraph.getOInfo();
+		NodeGroup ng1 = new NodeGroup();
+		ng1.setSparqlConnection(TestGraph.getSparqlConn());
+		Node battNode = ng1.addNode(BATTERY, oInfo);
+		ng1.setIsReturned(battNode, true);
+		ng1.orderByAll();
+		
+		Table tab = TestGraph.execTableSelect(ng1.generateSparqlSelect());
+		String instanceUri = tab.getCell(0, 0);
+		
+		NodeGroup ng = NodeGroup.createConstructAllConnected(
+				BATTERY, instanceUri, 
+							TestGraph.getSparqlConn(), TestGraph.getOInfo(), TestGraph.getPredicateStats()
+							);
+		
+		JSONArray jArr = TestGraph.execJsonConstruct(ng);
+		String res = jArr.toJSONString();
+		for (String lookup : new String [] {"Cell_cell300", "battA", "1966", "Cell_cell200", "1979"}) {
+			assertTrue("Results are missing: " + lookup, res.contains(lookup));
+		}
 	}
 	/**
 	 * Count the number of attributes of items in a Graph where key.contains(keyContains) and value.contains(valContains)

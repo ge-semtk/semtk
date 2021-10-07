@@ -136,14 +136,14 @@ define([	// properly require.config'ed   bootstrap-modal
 
             /* this sync call has no "execAsync" Version
             */
-            execCreateconstructAllConnected : function (conn, classUri, instanceUri, sgjsonCallback) {
+            execCreateConstructAllConnected : function (conn, classUri, instanceUri, sgjsonCallback) {
                 var data = JSON.stringify ({
 					  "conn": JSON.stringify(conn.toJson()),
-                      "classUri" : classUri,
+                      "className" : classUri,
                       "instanceUri" : instanceUri
 					});
 
-                var cb = this.asyncSgJsonCallback.bind(this, "createConstructAllConnected", sgjsonCallback, this.optFailureCallback));
+                var cb = this.asyncSgJsonCallback.bind(this, "createConstructAllConnected", sgjsonCallback, this.optFailureCallback);
 				this.msi.postToEndpoint("createConstructAllConnected", data, "application/json", cb, this.optFailureCallback, this.optTimeout);
             },
 

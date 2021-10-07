@@ -102,6 +102,21 @@ define([	// properly require.config'ed   bootstrap-modal
                 }
             },
 
+            // for any value in json-ld,
+            // attempt to expand it using @context
+            expandJsonLdContext : function(abbrev) {
+                if (this.xhr.hasOwnProperty("@context")) {
+                    var context = this.xhr["@context"];
+                    var parts = abbrev.split(":");
+                    if (parts.length > 1) {
+                        if (context.hasOwnProperty(parts[0])) {
+                            return context[parts[0]] + parts.slice(1).join(":");
+                        }
+                    }
+                }
+                return abbrev;
+            },
+
             /*
              * If simple results, build html out of just those fields
              * otherwise, do general results html
