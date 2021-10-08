@@ -29,7 +29,7 @@ import java.nio.file.Paths;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.ge.research.semtk.edc.client.EndpointNotFoundException;
+import com.ge.research.semtk.connutil.EndpointNotFoundException;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;

@@ -26,8 +26,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import com.ge.research.semtk.belmont.XSDSupportedType;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.sparqlX.XSDSupportedType;
 import com.ge.research.semtk.utility.Utility;
 
 /**

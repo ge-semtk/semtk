@@ -128,6 +128,7 @@
 		<module>nodeGroupService</module>
 		<module>springSecurityLibrary</module>
 		<module>springUtilLibrary</module>
+		<module>restClients</module>
 		<module>fdcCacheService</module>
 		<module>fdcSampleService</module>
 		<module>edcQueryGenerationService</module>

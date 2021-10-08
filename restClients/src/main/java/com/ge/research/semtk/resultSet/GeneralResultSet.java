@@ -25,7 +25,6 @@ import java.util.regex.Pattern;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.AuthorizationException;
-import com.ge.research.semtk.edc.client.EndpointNotFoundException;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public abstract class GeneralResultSet {

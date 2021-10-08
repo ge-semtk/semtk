@@ -57,7 +57,6 @@ import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
-import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -77,6 +76,7 @@ import com.ge.research.semtk.services.nodeGroupExecution.requests.NodegroupReque
 import com.ge.research.semtk.services.nodeGroupExecution.requests.StatusRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.TypedDispatchByIdRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.TypedDispatchFromNodeGroupRequestBody;
+import com.ge.research.semtk.sparqlToXLib.SparqlToXLibUtil;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
@@ -384,35 +384,6 @@ public class NodeGroupExecutionRestController {
 	    }
 	}
 	
-	
-	@CrossOrigin
-	@RequestMapping(value="/getResultsJsonLd", method=RequestMethod.POST)
-	public JSONObject getResultsJsonLd(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
-		//final String ENDPOINT_NAME="getResultsJsonLd";
-		HeadersManager.setHeaders(headers);
-		//LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
-		try {
-			NodeGroupResultSet retval = new NodeGroupResultSet();
-			
-			try{
-				NodeGroupExecutor nge = this.getExecutor(requestBody.getJobID());
-				JSONObject retLd = nge.getJsonLdResults();
-				retval.setSuccess(true);
-				retval.addResultsJSON(retLd);
-			}
-			catch(Exception e){
-				//LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
-			    LocalLogger.printStackTrace(e);
-				retval = new NodeGroupResultSet();
-				retval.setSuccess(false);
-				retval.addRationaleMessage(SERVICE_NAME, "getResultsJsonLd", e);
-			} 
-			return retval.toJson();
-		    
-		} finally {
-	    	HeadersManager.clearHeaders();
-	    }
-	}
 	
 	// getJsonBlob : can't implement here because of
 	//    1) can't figure out how to stream results from results service through
@@ -907,7 +878,7 @@ public class NodeGroupExecutionRestController {
     			if (pairsList.size() == 0) {
     				pairsList = oInfo.getPropertyPairs();
     			}
-				String sparql = SparqlToXUtils.generateSelectInstanceDataPredicates(	
+				String sparql = SparqlToXLibUtil.generateSelectInstanceDataPredicates(	
 						conn, 
 						oInfo,
 						pairsList,
@@ -963,7 +934,7 @@ public class NodeGroupExecutionRestController {
     			if (classList.size() == 0) {
     				classList = oInfo.getClassNames();
     			}
-				String sparql = SparqlToXUtils.generateSelectInstanceDataSubjects(	
+				String sparql = SparqlToXLibUtil.generateSelectInstanceDataSubjects(	
 						conn, 
 						oInfo,
 						classList,

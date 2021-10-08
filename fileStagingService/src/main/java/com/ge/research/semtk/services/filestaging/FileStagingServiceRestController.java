@@ -36,10 +36,10 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.aws.S3Connector;
+import com.ge.research.semtk.connutil.DirectoryConnector;
+import com.ge.research.semtk.connutil.FileSystemConnector;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
-import com.ge.research.semtk.load.DirectoryConnector;
-import com.ge.research.semtk.load.FileSystemConnector;
 import com.ge.research.semtk.resultSet.ResultType;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;

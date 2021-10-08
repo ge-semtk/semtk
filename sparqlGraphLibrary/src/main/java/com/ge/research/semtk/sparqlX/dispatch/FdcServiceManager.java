@@ -97,7 +97,7 @@ public class FdcServiceManager {
 		InputStream owlStream = DispatchServiceManager.class.getResourceAsStream("/semantics/OwlModels/fdcServices.owl");
 		try {
 			AuthorizationManager.setSemtkSuper();
-			extConfigSei.uploadOwlModelIfNeeded(owlStream);
+			OntologyInfo.uploadOwlModelIfNeeded(extConfigSei, owlStream);
 		} finally {
 			AuthorizationManager.clearSemtkSuper();
 		}

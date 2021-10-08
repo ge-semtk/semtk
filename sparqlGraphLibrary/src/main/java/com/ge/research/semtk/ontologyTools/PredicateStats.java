@@ -8,6 +8,7 @@ import org.json.simple.JSONObject;
 import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.sparqlToXLib.SparqlToXLibUtil;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -34,7 +35,7 @@ public class PredicateStats {
 	public PredicateStats(SparqlConnection conn, OntologyInfo oInfo) throws Exception {
 		SparqlConnection dataConn = SparqlConnection.deepCopy(conn);
 		dataConn.clearModelInterfaces();
-		String sparql = SparqlToXUtils.generatePredicateStatsQuery(dataConn, oInfo);
+		String sparql = SparqlToXLibUtil.generatePredicateStatsQuery(dataConn, oInfo);
 		Table statsTab = conn.getDefaultQueryInterface().executeQueryToTable(sparql);
 		this.storeStats(statsTab, oInfo, dataConn, null, null, 0, 0);
 	}	
@@ -52,7 +53,7 @@ public class PredicateStats {
 	public PredicateStats(SparqlConnection conn, OntologyInfo oInfo, JobTracker tracker, String jobId, int startPercent, int endPercent) throws Exception {
 		SparqlConnection dataConn = SparqlConnection.deepCopy(conn);
 		dataConn.clearModelInterfaces();
-		String sparql = SparqlToXUtils.generatePredicateStatsQuery(dataConn, oInfo);
+		String sparql = SparqlToXLibUtil.generatePredicateStatsQuery(dataConn, oInfo);
 		
 		tracker.setJobPercentComplete(jobId, startPercent, "querying predicate statistics");
 		Table statsTab = conn.getDefaultQueryInterface().executeQueryToTable(sparql);
@@ -246,7 +247,7 @@ public class PredicateStats {
 	}
 	
 	private int countInstanceData(OntologyPath path, SparqlConnection conn, OntologyInfo oInfo) throws Exception {
-		String query = SparqlToXUtils.generatePathInstanceCountQuery(path, conn, oInfo);
+		String query = SparqlToXLibUtil.generatePathInstanceCountQuery(path, conn, oInfo);
 		Table tab = conn.getDefaultQueryInterface().executeQueryToTable(query);
 		return tab.getCellAsInt(0, 0);
 	}

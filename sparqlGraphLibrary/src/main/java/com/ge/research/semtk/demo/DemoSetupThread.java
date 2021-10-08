@@ -10,6 +10,7 @@ import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.services.nodegroupStore.NgStore;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -66,9 +67,9 @@ public class DemoSetupThread extends Thread {
 	
 			// load demo model owl
 			InputStream owlStream = JobTracker.class.getResourceAsStream("/semantics/OwlModels/hardware.owl");
-			demoSei.uploadOwlModelIfNeeded(owlStream);
+			OntologyInfo.uploadOwlModelIfNeeded(demoSei, owlStream);
 			owlStream = JobTracker.class.getResourceAsStream("/semantics/OwlModels/testconfig.owl");
-			demoSei.uploadOwlModelIfNeeded(owlStream);
+			OntologyInfo.uploadOwlModelIfNeeded(demoSei, owlStream);
 			
 			// ingest demo csv
 			demoSei.clearPrefix("http://demo/prefix");  // extra safe.  No clear graph inside nodegroup store

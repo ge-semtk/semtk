@@ -28,8 +28,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.auth.AuthorizationException;
+import com.ge.research.semtk.connutil.EndpointNotFoundException;
 import com.ge.research.semtk.load.dataset.CSVDataset;
-import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -78,7 +78,6 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobID);
 		this.parametersJSON.put("jsonRenderedGraph", resJSON.toJSONString());
-		this.parametersJSON.put("jsonRenderedHeader", NodeGroupResultSet.getJsonLdResultsMetaData(resJSON).toJSONString());
 
 		try {
 			JSONObject res = (JSONObject)execute(false);

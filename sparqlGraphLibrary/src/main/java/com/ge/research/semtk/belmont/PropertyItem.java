@@ -25,6 +25,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.ontologyTools.OntologyName;
+import com.ge.research.semtk.sparqlX.XSDSupportedType;
 
 public class PropertyItem extends Returnable {
 	public static final int OPT_MINUS_NONE = 0;

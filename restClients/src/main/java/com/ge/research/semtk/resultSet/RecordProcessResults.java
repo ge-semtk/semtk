@@ -21,7 +21,7 @@ package com.ge.research.semtk.resultSet;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.AuthorizationException;
-import com.ge.research.semtk.edc.client.EndpointNotFoundException;
+import com.ge.research.semtk.connutil.EndpointNotFoundException;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.utility.LocalLogger;
 

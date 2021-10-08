@@ -69,9 +69,7 @@ import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.auth.AuthorizationManager;
-import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
-import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -495,7 +493,7 @@ public abstract class SparqlEndpointInterface {
 		GeneralResultSet resultSet = null;
 				
 		if(resultType == SparqlResultTypes.GRAPH_JSONLD){ 
-			resultSet = new NodeGroupResultSet();  // construct queries produce graphs
+			resultSet = new SimpleResultSet();  // construct queries produce graphs
 		}else if(resultType == SparqlResultTypes.CONFIRM){
 			resultSet = new SimpleResultSet();		// auth queries produce messages
 		}else if(resultType == SparqlResultTypes.TABLE){	
@@ -1523,29 +1521,11 @@ public abstract class SparqlEndpointInterface {
 		return newType;
 	}
 	
-	/**
-	 * Checks an sei to see if any version of the owl in owlInputStream is loaded
-	 * (any class with the base specified in the owl)
-	 * If owl is not loaded to the sei, then load it
-	 * See "internal use" note
-	 * @param sei
-	 * @param owlInputStream
-	 * @return True if load occurred, False if it wasn't needed
-	 * @throws Exception otherwise
-	 */
-	public boolean uploadOwlModelIfNeeded(InputStream owlInputStream) throws Exception {
-		
-		OntologyInfo oInfo = new OntologyInfo(new SparqlConnection("name", this));
-
-		byte [] owl = IOUtils.toByteArray(owlInputStream);
-
-		if (! oInfo.containsClassWithBase(new ByteArrayInputStream(owl))) {
-			JSONObject retJson = this.executeAuthUploadOwl(owl);
-			SimpleResultSet res = SimpleResultSet.fromJson(retJson);
-			res.throwExceptionIfUnsuccessful();
-			return true;
-		}
-		return false;
+	
+	public void uploadOwlModelNoClear(byte [] owl) throws Exception {
+		JSONObject retJson = this.executeAuthUploadOwl(owl);
+		SimpleResultSet res = SimpleResultSet.fromJson(retJson);
+		res.throwExceptionIfUnsuccessful();
 	}
 	
 	/**
@@ -1559,9 +1539,7 @@ public abstract class SparqlEndpointInterface {
 		byte [] owl = IOUtils.toByteArray(owlInputStream);
 		String base = Utility.getXmlBaseFromOwlRdf(new ByteArrayInputStream(owl));
 		this.clearPrefix(base);
-		JSONObject retJson = this.executeAuthUploadOwl(owl);
-		SimpleResultSet res = SimpleResultSet.fromJson(retJson);
-		res.throwExceptionIfUnsuccessful();
+		this.uploadOwlModelNoClear(owl);
 	}
 
 

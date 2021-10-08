@@ -22,6 +22,7 @@ import java.net.ConnectException;
 
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.connutil.EndpointNotFoundException;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;

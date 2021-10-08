@@ -25,7 +25,7 @@ import java.util.Iterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
-import com.ge.research.semtk.edc.client.EndpointNotFoundException;
+import com.ge.research.semtk.connutil.EndpointNotFoundException;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 
 

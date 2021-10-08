@@ -28,9 +28,9 @@ import org.junit.Test;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.sparqlToXLib.SparqlToXLibUtil;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
-import com.ge.research.semtk.sparqlX.SparqlToXUtils;
+
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 
@@ -48,12 +48,12 @@ public class SparqlToXUtilsTest_IT {
 		// get color classes
 		ArrayList<String> classList = new ArrayList<String>();
 		classList.add("http://kdl.ge.com/batterydemo#Color");
-		String query = SparqlToXUtils.generateSelectInstanceDataSubjects(conn, oInfo,classList, -1, -1, false);
+		String query = SparqlToXLibUtil.generateSelectInstanceDataSubjects(conn, oInfo,classList, -1, -1, false);
 		Table resTab = TestGraph.execTableSelect(query);
 		assertEquals(resTab.toCSVString() + "\nWrong number of rows.", 3, resTab.getNumRows());
 		
 		// count query
-		query = SparqlToXUtils.generateSelectInstanceDataSubjects(conn, oInfo,classList, -1, -1, true);
+		query = SparqlToXLibUtil.generateSelectInstanceDataSubjects(conn, oInfo,classList, -1, -1, true);
 		resTab = TestGraph.execTableSelect(query);
 		assertEquals("wrong subject count", 3, resTab.getCellAsInt(0, 0));
 		
@@ -62,12 +62,12 @@ public class SparqlToXUtilsTest_IT {
 		ArrayList<String[]> predList = new ArrayList<String[]>();
 		predList.add(new String [] {"http://kdl.ge.com/batterydemo#Battery", "http://kdl.ge.com/batterydemo#cell"});
 		predList.add(new String [] {"http://kdl.ge.com/batterydemo#Battery", "http://kdl.ge.com/batterydemo#name"});
-		query = SparqlToXUtils.generateSelectInstanceDataPredicates(conn, oInfo, predList, -1, -1, false);
+		query = SparqlToXLibUtil.generateSelectInstanceDataPredicates(conn, oInfo, predList, -1, -1, false);
 		resTab = TestGraph.execTableSelect(query);
 		assertEquals(resTab.toCSVString() + "\nWrong number of rows.", 6, resTab.getNumRows());
 		
 		// get just the count
-		query = SparqlToXUtils.generateSelectInstanceDataPredicates(conn, oInfo, predList, -1, -1, true);
+		query = SparqlToXLibUtil.generateSelectInstanceDataPredicates(conn, oInfo, predList, -1, -1, true);
 		resTab = TestGraph.execTableSelect(query);
 		assertEquals("wrong predicate count", 6, resTab.getCellAsInt(0, 0));
 		

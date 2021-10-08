@@ -155,7 +155,7 @@ public class DispatchServiceManager {
 			// load the owl if needed, so that nodegroups will work
 			InputStream owlStream = DispatchServiceManager.class.getResourceAsStream("/semantics/OwlModels/sparqlEdcServices.owl");
 		
-			sei.uploadOwlModelIfNeeded(owlStream);
+			OntologyInfo.uploadOwlModelIfNeeded(sei, owlStream);
 			owlStream.close();
 			
 			// run the queries to build static mnemonics cache

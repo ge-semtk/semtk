@@ -25,7 +25,7 @@ import java.net.ConnectException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.ge.research.semtk.edc.client.EndpointNotFoundException;
+import com.ge.research.semtk.connutil.EndpointNotFoundException;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.resultSet.Table;

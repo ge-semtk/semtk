@@ -19,7 +19,6 @@ package com.ge.research.semtk.sparqlX.dispatch;
 import java.util.ArrayList;
 
 import com.ge.research.semtk.resultSet.GeneralResultSet;
-import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 
@@ -82,10 +81,7 @@ public class ResultSetHandler {
 				}
 				retval = TableResultSet.merge(tableResultSets);				
 			}
-			else if(this.resultSets.get(0).getResultsBlockName().equalsIgnoreCase(NodeGroupResultSet.RESULTS_BLOCK_NAME)){
-				// merge all node groups 
-				throw new Exception("Node group result set merge not implemented yet"); // TODO
-			}
+			
 			else{
 				throw new FusionNotAvailableException("Desired type (" + this.resultSets.get(0).getResultsBlockName() + ") has no implemented fusion method.");
 			}
@@ -99,8 +95,5 @@ public class ResultSetHandler {
 		return null;
 	}
 
-	public NodeGroupResultSet fuseNodeGroupResults(){
-		// TODO: implement later
-		return null;
-	}
+	
 }

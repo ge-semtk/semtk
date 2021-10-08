@@ -21,8 +21,8 @@ import java.util.ArrayList;
 
 import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.ValueConstraint;
-import com.ge.research.semtk.belmont.XSDSupportedType;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager.SupportedTypes;
+import com.ge.research.semtk.sparqlX.XSDSupportedType;
 
 public class RuntimeConstraintMetaData{
 	// Meta data about operators, operands, and items involved in each constraint

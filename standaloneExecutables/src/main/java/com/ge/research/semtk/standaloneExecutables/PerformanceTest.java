@@ -29,7 +29,6 @@ import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.ValueConstraint;
-import com.ge.research.semtk.belmont.XSDSupportedType;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
@@ -40,6 +39,7 @@ import com.ge.research.semtk.sparqlX.NeptuneSparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
+import com.ge.research.semtk.sparqlX.XSDSupportedType;
 import com.ge.research.semtk.utility.Utility;
 
 public class PerformanceTest {

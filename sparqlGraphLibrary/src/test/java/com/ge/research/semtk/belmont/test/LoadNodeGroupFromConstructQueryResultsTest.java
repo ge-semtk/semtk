@@ -29,7 +29,7 @@ import org.junit.Test;
 import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
-import com.ge.research.semtk.belmont.XSDSupportedType;
+import com.ge.research.semtk.sparqlX.XSDSupportedType;
 
 
 public class LoadNodeGroupFromConstructQueryResultsTest {

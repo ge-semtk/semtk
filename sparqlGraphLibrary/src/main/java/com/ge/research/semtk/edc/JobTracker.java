@@ -44,6 +44,7 @@ import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.properties.SemtkEndpointProperties;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -97,7 +98,7 @@ public class JobTracker {
 			checkedOwl.add(key);
 			SparqlEndpointInterface sei = tracker.createSuperuserEndpoint();
 			InputStream owlStream = JobTracker.class.getResourceAsStream("/semantics/OwlModels/serviceJob.owl");
-			sei.uploadOwlModelIfNeeded(owlStream);
+			OntologyInfo.uploadOwlModelIfNeeded(sei, owlStream);
 			owlStream.close();
 		}
 		

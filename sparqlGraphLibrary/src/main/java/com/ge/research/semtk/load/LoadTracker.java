@@ -33,13 +33,13 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.ValueConstraint;
-import com.ge.research.semtk.belmont.XSDSupportedType;
 
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
-
+import com.ge.research.semtk.sparqlX.XSDSupportedType;
 import com.ge.research.semtk.utility.Utility;
 
 
@@ -237,7 +237,7 @@ public class LoadTracker {
 				AuthorizationManager.setSemtkSuper();
 
 				InputStream owlStream = LoadTracker.class.getResourceAsStream("/semantics/OwlModels/loadLog.owl");
-				tracker.getModelSei().uploadOwlModelIfNeeded(owlStream);
+				OntologyInfo.uploadOwlModelIfNeeded(tracker.getModelSei(), owlStream);
 				owlStream.close();
 				
 				LoadTracker.firstConstruct = false;
