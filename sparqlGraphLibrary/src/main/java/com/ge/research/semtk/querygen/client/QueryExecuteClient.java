@@ -22,7 +22,7 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.client.ExecuteClientConfig;
-import com.ge.research.semtk.resultSet.TableOrJobIdResultSet;
+import com.ge.research.semtk.lib.resultSet.TableOrJobIdResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 

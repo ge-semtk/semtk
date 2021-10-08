@@ -48,6 +48,7 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.demo.DemoSetupThread;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -101,7 +102,7 @@ public class NodeGroupStoreRestController {
 		
 		try {
 			AuthorizationManager.setSemtkSuper();
-			modelSei.uploadOwlModelIfNeeded(owlStream);
+			OntologyInfo.uploadOwlModelIfNeeded(modelSei, owlStream);
 		} finally {
 			AuthorizationManager.clearSemtkSuper();
 		}

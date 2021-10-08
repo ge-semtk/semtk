@@ -50,7 +50,6 @@ import com.ge.research.semtk.aws.AWSSessionTokenApacheInterceptor;
 import com.ge.research.semtk.aws.AwsCredentialsProviderAdaptor;
 import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.aws.SemtkAwsCredentialsProviderBuilder;
-import com.ge.research.semtk.propertygraph.NeptuneGremlinTable;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -225,9 +224,6 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		return this.executeUploadAPI(csv.getBytes(), "csv");
 	}
 	
-	public JSONObject executeUploadGremlinCSV(NeptuneGremlinTable table) throws Exception{
-		return this.executeUploadGremlinCSV(table.toGremlinCSVString());
-	}
 	
 	public JSONObject executeUpload(byte[] data, String format) throws Exception {
 		return this.executeUploadAPI(data, format);

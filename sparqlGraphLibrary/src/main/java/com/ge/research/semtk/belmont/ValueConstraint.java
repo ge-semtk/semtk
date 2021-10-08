@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 import org.apache.jena.sparql.lang.SPARQLParserFactory;
 
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.sparqlX.XSDSupportedType;
 import com.ge.research.semtk.utility.Utility;
 import com.github.jsonldjava.shaded.com.google.common.base.Strings;
 

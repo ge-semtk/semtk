@@ -1,5 +1,5 @@
 /**
- ** Copyright 2020 General Electric Company
+ ** Copyright 2016 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,11 +16,18 @@
  */
 
 
-package com.ge.research.semtk.load;
+package com.ge.research.semtk.connutil;
 
-public class NothingToInsertException extends Exception{
+public class EndpointNotFoundException extends Exception {
 
-	public NothingToInsertException(String message){
+	private static final long serialVersionUID = 1L;
+	
+	//Parameterless Constructor
+	public EndpointNotFoundException() {}
+	
+	//Constructor that accepts a message
+	public EndpointNotFoundException(String message)
+	{
 		super(message);
 	}
 }

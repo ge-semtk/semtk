@@ -4,7 +4,7 @@ import java.io.DataInputStream;
 import java.io.IOException;
 
 import com.arangodb.internal.util.IOUtils;
-import com.ge.research.semtk.load.FileSystemConnector;
+import com.ge.research.semtk.connutil.FileSystemConnector;
 
 import software.amazon.awssdk.core.ResponseInputStream;
 import software.amazon.awssdk.core.sync.RequestBody;

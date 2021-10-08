@@ -24,7 +24,6 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
-import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
@@ -166,7 +165,7 @@ public class SparqlQueryClient extends RestClient {
 		// TODO parse these based on results block name, instead of query type?
 		
 		if(resultType == SparqlResultTypes.GRAPH_JSONLD){
-			retval = new NodeGroupResultSet(true);
+			retval = new SimpleResultSet(true);
 			retval.readJson(resultJSON);
 		}else if(resultType == SparqlResultTypes.CONFIRM){
 			retval = new SimpleResultSet(true);

@@ -34,7 +34,6 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.query.rdb.HiveConnector;
 import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.resultSet.TableOrJobIdResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.springutilib.requests.DatabaseQueryRequest;
 import com.ge.research.semtk.springutilib.requests.DatabaseRequest;
@@ -43,6 +42,7 @@ import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.edc.services.hive.HiveProperties;
+import com.ge.research.semtk.lib.resultSet.TableOrJobIdResultSet;
 
 /**
  * Service to execute queries on Hive

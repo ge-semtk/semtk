@@ -1,4 +1,4 @@
-package com.ge.research.semtk.load;
+package com.ge.research.semtk.connutil;
 
 
 import java.io.File;
@@ -9,8 +9,6 @@ import java.io.IOException;
 import java.nio.file.Paths;
 
 import org.apache.commons.io.IOUtils;
-
-import com.ge.research.semtk.load.FileSystemConnector;
 
 
 /**

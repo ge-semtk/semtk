@@ -19,7 +19,8 @@ package com.ge.research.semtk.resultSet;
 
 import org.json.simple.JSONObject;
 
-import com.ge.research.semtk.edc.client.EndpointNotFoundException;
+import com.ge.research.semtk.connutil.EndpointNotFoundException;
+
 
 public class DeleteResultSet extends GeneralResultSet {
 

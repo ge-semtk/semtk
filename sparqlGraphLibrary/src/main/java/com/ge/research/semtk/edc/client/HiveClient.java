@@ -23,8 +23,8 @@ import java.util.List;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.lib.resultSet.TableOrJobIdResultSet;
 import com.ge.research.semtk.querygen.client.QueryExecuteClient;
-import com.ge.research.semtk.resultSet.TableOrJobIdResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 
 /**

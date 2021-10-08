@@ -1,4 +1,4 @@
-package com.ge.research.semtk.load;
+package com.ge.research.semtk.connutil;
 
 import com.ge.research.semtk.utility.Utility;
 

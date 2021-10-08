@@ -20,8 +20,6 @@ package com.ge.research.semtk.services.sparql;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import com.ge.research.semtk.aws.NeptuneS3Properties;
-
 @Configuration
 @ConfigurationProperties(prefix="query.neptuneupload", ignoreUnknownFields = true)
 public class QueryUploadNeptuneProperties extends NeptuneS3Properties {

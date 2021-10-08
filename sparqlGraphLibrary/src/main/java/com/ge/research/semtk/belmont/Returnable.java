@@ -24,6 +24,8 @@ import java.util.HashSet;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.sparqlX.XSDSupportedType;
+
 public abstract class Returnable {
 	
 	protected String sparqlID = "";

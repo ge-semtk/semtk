@@ -1,9 +1,11 @@
-package com.ge.research.semtk.resultSet;
+package com.ge.research.semtk.lib.resultSet;
 
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
+import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.utility.LocalLogger;
 
 /**

@@ -15,12 +15,10 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.belmont;
+package com.ge.research.semtk.sparqlX;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 
 public enum XSDSupportedType {
 
