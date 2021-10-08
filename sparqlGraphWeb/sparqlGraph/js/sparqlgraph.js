@@ -1794,20 +1794,7 @@
          });
     };
 
-    // simplified status callback for quick-ish network operations
-    var networkBusy = function(canvasDiv, flag) {
-        var canvas = canvasDiv.getElementsByTagName("canvas")[0];
-        canvas.style.cursor = (flag ? "wait" : "");
-    };
 
-    var networkFailureCallback = function (canvas, html) {
-        require(['sparqlgraph/js/modaliidx'],
-                function(ModalIidx) {
-
-            ModalIidx.alert("Service Failure", html);
-            networkBusy(canvas, false);
-        });
-    };
 
     var queryJsonLdCallback = function(jsonLdResults) {
         require(['sparqlgraph/js/iidxhelper'], function(IIDXHelper) {
@@ -1899,23 +1886,14 @@
 
             // callback: when selection changes, disable/enable buttons
             network.on('select', function(n) {
-                // count non-data nodes
-                var noNodes = true;
-                for (var id of n.getSelectedNodes()) {
-                    if (network.body.data.nodes.get(id).group != "data") {
-                        noNodes = false;
-                        break;
-                    }
-                };
-                // count all edges
-                var noEdges = n.getSelectedEdges().length == 0;
-                deleteButton.disabled=noNodes && noEdges;
-                expandButton.disabled=noNodes;
+                var disableFlag = n.getSelectedNodes().length == 0;
+                deleteButton.disabled=disableFlag;
+                expandButton.disabled=disableFlag;
             }.bind(this, network));
 
             // button callbacks
-            network.on('doubleClick', this.constructAddCallback.bind(this, res, canvasDiv, network));
-            expandButton.onclick = this.constructAddCallback.bind(this, res, canvasDiv, network);
+            network.on('doubleClick', this.constructAddCallback.bind(this, res, network));
+            expandButton.onclick = this.constructAddCallback.bind(this, res, network);
             deleteButton.onclick = this.constructRemoveCallback.bind(this, network);
 
             // add data
@@ -1934,55 +1912,46 @@
     };
 
     var constructRemoveCallback = function(n) {
-        var nodeList = n.getSelectedNodes();
-        var edgeList = n.getSelectedEdges();
-        n.body.data.nodes.remove(nodeList);
-        n.body.data.edges.remove(edgeList);
+        var idList = n.getSelectedNodes();
+        n.body.data.nodes.remove(idList);
     };
 
     // user clicked to add to CONSTRUCT graph
-    var constructAddCallback = function(origRes, canvasDiv, network) {
+    var constructAddCallback = function(origRes, network) {
         require(['sparqlgraph/js/msiclientnodegroupservice',
 			    ], function(MsiClientNodeGroupService) {
 
-            networkBusy(canvasDiv, true);
-            var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, networkFailureCallback.bind(this, canvasDiv));
+            var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, asyncFailureCallback);
             var idList = network.getSelectedNodes();
             var classList = [];
             for (var instanceUri of idList) {
                 var classUri = origRes.expandJsonLdContext(network.body.data.nodes.get(instanceUri).group);
-
-                if (classUri == "data") {
-                    // hmmm.  what to do...  bail.
-                    networkBusy(canvasDiv, false);
-                } else {
-                    client.execCreateConstructAllConnected(gConn, classUri, instanceUri, this.constructAddCallbackGotQuery.bind(this, canvasDiv, network));
-                }
+                client.execCreateConstructAllConnected(gConn, classUri, instanceUri, this.constructAddCallbackGotQuery.bind(this, network));
             }
         });
     };
 
     // return from getting CONSTRUCT query to add to CONSTRUCT graph
     // sync return
-    var constructAddCallbackGotQuery = function(canvasDiv, network, sgjson) {
+    var constructAddCallbackGotQuery = function(network, sgjson) {
         require(['sparqlgraph/js/msiclientnodegroupexec',
                  'sparqlgraph/js/modaliidx'],
     	         function (MsiClientNodeGroupExec, ModalIidx) {
             var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.longTimeoutMsec);
             var jsonLdCallback = MsiClientNodeGroupExec.buildJsonLdCallback(
-                constructAddCallbackGotJson.bind(this, canvasDiv, network),
-                networkFailureCallback.bind(this, canvasDiv),
+                constructAddCallbackGotJson.bind(this, network),
+                ModalIidx.alert.bind(this, "NodeGroup Exec Service Failure"),
                 function() {}, // no status updates
                 function() {}, // no check for cancel
                 g.service.status.url,
                 g.service.results.url);
             ng = new SemanticNodeGroup();
             sgjson.getNodeGroup(ng);
-            client.execAsyncDispatchConstructFromNodeGroup(ng, gConn, null, null, jsonLdCallback, networkFailureCallback.bind(this, canvasDiv));
+            client.execAsyncDispatchConstructFromNodeGroup(ng, gConn, null, null, jsonLdCallback, ModalIidx.alert.bind(this, "NodeGroup Exec Service Failure"));
         });
     };
 
-    var constructAddCallbackGotJson = function(canvasDiv, network, res) {
+    var constructAddCallbackGotJson = function(network, res) {
         require(['sparqlgraph/js/modaliidx',
                  'sparqlgraph/js/visjshelper'],
                  function (ModalIidx, VisJsHelper) {
@@ -2000,7 +1969,6 @@
             }
             network.body.data.nodes.update(Object.values(nodeDict));
             network.body.data.edges.update(edgeList);
-            networkBusy(canvasDiv, false);
         });
 
     };
