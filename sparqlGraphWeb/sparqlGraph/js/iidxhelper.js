@@ -931,6 +931,11 @@ define([	// properly require.config'ed
         return anchor;
     };
 
+    // Build a standard header for SPARQLgraph results
+    //
+    // header - html link(s) results is standard.  This goes top left
+    // menuLabelList and menuCallbackList - standard menu.  This goes top right
+    // optFormDom - additional controls to be centered
     IIDXHelper.buildResultsHeaderTable = function (header, menuLabelList, menuCallbackList, optFormDom) {
         var menuDiv = IIDXHelper.buildMenuDiv(menuLabelList, menuCallbackList);
 
