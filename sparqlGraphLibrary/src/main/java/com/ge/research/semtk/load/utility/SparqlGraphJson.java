@@ -444,6 +444,7 @@ public class SparqlGraphJson {
 		String query = sgjson.getNodeGroupNoInflateNorValidate(oInfoClient).generateSparqlConstruct();
 		return conn.getDefaultQueryInterface().executeQueryToGraph(query);
 	}
+	
 	/**
 	 * Execute a select query from a JSON representation of SparqlGraphJson and an override connection
 	 * @param sgJsonJson

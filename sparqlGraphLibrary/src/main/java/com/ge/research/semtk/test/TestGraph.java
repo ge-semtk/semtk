@@ -43,6 +43,7 @@ import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.ontologyTools.PredicateStats;
 import com.ge.research.semtk.properties.EndpointProperties;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -248,8 +249,13 @@ public class TestGraph {
 	public static JSONArray execJsonConstruct(SparqlGraphJson sgJson) throws Exception {
 		// execute a construct query
 		// exception if there's any problem
-		// return the table
+		// return the jsonArray
 		
+		return SparqlGraphJson.executeConstructToJson(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
+	}
+	
+	public static JSONArray execJsonConstruct(NodeGroup ng) throws Exception {
+		SparqlGraphJson sgJson = new SparqlGraphJson(ng, getSparqlConn());
 		return SparqlGraphJson.executeConstructToJson(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
 	}
 	
@@ -587,6 +593,14 @@ public class TestGraph {
 	public static void queryAndCheckResults(SparqlGraphJson sgjson, Object caller, String expectedFileName) throws Exception {
 		NodeGroup ng = sgjson.getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient());
 		IntegrationTestUtility.querySeiAndCheckResults(ng, TestGraph.getSei(), caller, expectedFileName);
+	}
+	
+	public static PredicateStats getPredicateStats() throws Exception {
+		SparqlConnection conn = TestGraph.getSparqlConn();
+		OntologyInfoClient client = IntegrationTestUtility.getOntologyInfoClient();
+		String jobId = client.execGetPredicateStats(TestGraph.getSparqlConn());
+		IntegrationTestUtility.getStatusClient(jobId).waitForCompletionSuccess();
+		return new PredicateStats(IntegrationTestUtility.getResultsClient().execGetBlobResult(jobId));
 	}
 	
 

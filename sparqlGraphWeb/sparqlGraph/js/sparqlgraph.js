@@ -79,7 +79,7 @@
 
 	              'local/sparqlgraphlocal'
                 ],
-                function (ExploreTab, MappingTab, ModalIIDX, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupService, MsiClientNodeGroupStore, NodegroupRenderer, UploadTab) {
+                function (ExploreTab, MappingTab, ModalIidx, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupService, MsiClientNodeGroupStore, NodegroupRenderer, UploadTab) {
 
 	    	console.log(".ready()");
 
@@ -132,7 +132,7 @@
 
 			} else if (g.customization.autoRunDemo.toLowerCase() == "true") {
 
-                ModalIIDX.okCancel( "Demo",
+                ModalIidx.okCancel( "Demo",
                                     "Loading demo nodegroup, and<br>Launching demo documentation pop-up.<br>(You may need to override your pop-up blocker.)<br>",
                                     function() {
                                         window.open(g.help.url.base + "/" + g.help.url.demo, "_blank","location=yes");
@@ -164,7 +164,7 @@
 	   	    logEvent("SG Page Load");
 
             if (g.customization.startupDialogHtml != 'none' && g.customization.startupDialogHtml.length > 2) {
-                ModalIIDX.alert(g.customization.startupDialogTitle, g.customization.startupDialogHtml);
+                ModalIidx.alert(g.customization.startupDialogTitle, g.customization.startupDialogHtml);
             }
 
             if (g.customization.bannerText != 'none' && g.customization.bannerText.length > 2) {
@@ -1794,7 +1794,20 @@
          });
     };
 
+    // simplified status callback for quick-ish network operations
+    var networkBusy = function(canvasDiv, flag) {
+        var canvas = canvasDiv.getElementsByTagName("canvas")[0];
+        canvas.style.cursor = (flag ? "wait" : "");
+    };
 
+    var networkFailureCallback = function (canvas, html) {
+        require(['sparqlgraph/js/modaliidx'],
+                function(ModalIidx) {
+
+            ModalIidx.alert("Service Failure", html);
+            networkBusy(canvas, false);
+        });
+    };
 
     var queryJsonLdCallback = function(jsonLdResults) {
         require(['sparqlgraph/js/iidxhelper'], function(IIDXHelper) {
@@ -1806,17 +1819,190 @@
                                                                 }.bind(this, jsonLdResults)
                                                             );
 
-            var header = document.createElement("span");
-            header.innerHTML =  "Download json: ";
-            header.appendChild(anchor);
-            header.appendChild(document.createElement("hr"));
+            var linkdom = document.createElement("span");
+            linkdom.innerHTML =  "Download json: ";
+            linkdom.appendChild(anchor);
 
-            jsonLdResults.putJsonLdResultsInDiv(document.getElementById("resultsParagraph"), header);
+            displayConstructResults(jsonLdResults, linkdom);
 
             guiUnDisableAll();
             guiResultsNonEmpty();
             setStatus("");
         });
+    };
+
+    /**
+     * Put json-ld results into a visjs display
+     *
+     * params:
+     *    res - json results
+     *    linkdom - standard SPARQLgraph link to download results
+     */
+    var displayConstructResults = function (res, linkdom) {
+        require(['sparqlgraph/js/iidxhelper',
+                'sparqlgraph/js/visjshelper',
+                'visjs/vis.min'],
+                function(IIDXHelper, VisJsHelper, vis) {
+            var div = document.getElementById("resultsParagraph");
+
+            if (! res.isJsonLdResults()) {
+                div.innerHTML =  "<b>Error:</b> Results returned from service are not JSON-LD";
+                return;
+            }
+
+            var jsonResultStr = JSON.stringify(res.getGraphResultsJson(), null, 4);
+
+            // make a menu button bar
+            var editDom = document.createElement("span");
+            var deleteButton = IIDXHelper.createIconButton("icon-trash", function(){}, ["btn","btn-danger"], undefined, "Delete", "Remove selected item(s)" );
+            deleteButton.disabled = true;
+            editDom.appendChild(deleteButton);
+            IIDXHelper.appendSpace(editDom);
+            var expandButton = IIDXHelper.createIconButton("icon-sitemap", function(){}, ["btn","btn-success"], undefined, "Expand", "Add all connected instance data" );
+            expandButton.disabled = true;
+            editDom.appendChild(expandButton);
+
+            var headerTable = IIDXHelper.buildResultsHeaderTable(
+                (jsonResultStr === "{}") ? "No results returned" : linkdom,
+                [ "Save JSON" ] ,
+                [ IIDXHelper.downloadFile.bind(IIDXHelper, jsonResultStr, "results.json", "text/json;charset=utf8") ],
+                editDom
+            );
+            div.appendChild(headerTable);
+            var hr = document.createElement("hr");
+            hr.style.margin="2px";
+            div.appendChild(hr);
+
+            // canvas
+            var canvasDiv = document.createElement("div");
+            canvasDiv.style.width="100%";
+            canvasDiv.style.height="650px";
+            canvasDiv.style.margin="1ch";
+            div.appendChild(canvasDiv);
+
+            // add network config to bottom
+            var configDiv = document.createElement("div");
+            configDiv.style.width="100%";
+            configDiv.style.height="100%";
+            div.appendChild(document.createElement("hr"));
+            div.appendChild(configDiv);
+
+            // setup empty network
+            var jsonLd = res.getGraphResultsJson();
+            var nodeDict = {};   // dictionary of nodes with @id as the key
+            var edgeList = [];   // "normal" list of edges
+
+            var options = VisJsHelper.getDefaultOptions(configDiv);
+            options = VisJsHelper.setCustomEditingOptions(options);
+
+            var network = new vis.Network(canvasDiv, {nodes: Object.values(nodeDict), edges: edgeList }, options);
+
+            // callback: when selection changes, disable/enable buttons
+            network.on('select', function(n) {
+                // count non-data nodes
+                var noNodes = true;
+                for (var id of n.getSelectedNodes()) {
+                    if (network.body.data.nodes.get(id).group != "data") {
+                        noNodes = false;
+                        break;
+                    }
+                };
+                // count all edges
+                var noEdges = n.getSelectedEdges().length == 0;
+                deleteButton.disabled=noNodes && noEdges;
+                expandButton.disabled=noNodes;
+            }.bind(this, network));
+
+            // button callbacks
+            network.on('doubleClick', this.constructAddCallback.bind(this, res, canvasDiv, network));
+            expandButton.onclick = this.constructAddCallback.bind(this, res, canvasDiv, network);
+            deleteButton.onclick = this.constructRemoveCallback.bind(this, network);
+
+            // add data
+            for (var i=0; i < jsonLd.length; i++) {
+                VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList);
+                if (i % 20 == 0) {
+                    network.body.data.nodes.update(Object.values(nodeDict));
+                    network.body.data.edges.update(edgeList);
+                }
+            }
+            network.body.data.nodes.update(Object.values(nodeDict));
+            network.body.data.edges.update(edgeList);
+
+            network.startSimulation();
+        });
+    };
+
+    var constructRemoveCallback = function(n) {
+        var nodeList = n.getSelectedNodes();
+        var edgeList = n.getSelectedEdges();
+        n.body.data.nodes.remove(nodeList);
+        n.body.data.edges.remove(edgeList);
+    };
+
+    // user clicked to add to CONSTRUCT graph
+    var constructAddCallback = function(origRes, canvasDiv, network) {
+        require(['sparqlgraph/js/msiclientnodegroupservice',
+			    ], function(MsiClientNodeGroupService) {
+
+            networkBusy(canvasDiv, true);
+            var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, networkFailureCallback.bind(this, canvasDiv));
+            var idList = network.getSelectedNodes();
+            var classList = [];
+            for (var instanceUri of idList) {
+                var classUri = origRes.expandJsonLdContext(network.body.data.nodes.get(instanceUri).group);
+
+                if (classUri == "data") {
+                    // hmmm.  what to do...  bail.
+                    networkBusy(canvasDiv, false);
+                } else {
+                    client.execCreateConstructAllConnected(gConn, classUri, instanceUri, this.constructAddCallbackGotQuery.bind(this, canvasDiv, network));
+                }
+            }
+        });
+    };
+
+    // return from getting CONSTRUCT query to add to CONSTRUCT graph
+    // sync return
+    var constructAddCallbackGotQuery = function(canvasDiv, network, sgjson) {
+        require(['sparqlgraph/js/msiclientnodegroupexec',
+                 'sparqlgraph/js/modaliidx'],
+    	         function (MsiClientNodeGroupExec, ModalIidx) {
+            var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.longTimeoutMsec);
+            var jsonLdCallback = MsiClientNodeGroupExec.buildJsonLdCallback(
+                constructAddCallbackGotJson.bind(this, canvasDiv, network),
+                networkFailureCallback.bind(this, canvasDiv),
+                function() {}, // no status updates
+                function() {}, // no check for cancel
+                g.service.status.url,
+                g.service.results.url);
+            ng = new SemanticNodeGroup();
+            sgjson.getNodeGroup(ng);
+            client.execAsyncDispatchConstructFromNodeGroup(ng, gConn, null, null, jsonLdCallback, networkFailureCallback.bind(this, canvasDiv));
+        });
+    };
+
+    var constructAddCallbackGotJson = function(canvasDiv, network, res) {
+        require(['sparqlgraph/js/modaliidx',
+                 'sparqlgraph/js/visjshelper'],
+                 function (ModalIidx, VisJsHelper) {
+            if (! res.isJsonLdResults()) {
+                ModalIidx.alert("NodeGroup Exec Service Failure", "<b>Error:</b> Results returned from service are not JSON-LD");
+                return;
+            }
+
+            // add data
+            var jsonLd = res.getGraphResultsJson();
+            var nodeDict = {};   // dictionary of nodes with @id as the key
+            var edgeList = [];
+            for (var i=0; i < jsonLd.length; i++) {
+                VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList);
+            }
+            network.body.data.nodes.update(Object.values(nodeDict));
+            network.body.data.edges.update(edgeList);
+            networkBusy(canvasDiv, false);
+        });
+
     };
 
    	var doRetrieveFromNGStore = function() {

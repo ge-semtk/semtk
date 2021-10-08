@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.BeforeClass;
 import org.junit.Test;
