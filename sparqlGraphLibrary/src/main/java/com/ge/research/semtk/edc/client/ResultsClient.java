@@ -78,6 +78,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.conf.setMethod(RestClientConfig.Methods.POST);
 		this.parametersJSON.put("jobId", jobID);
 		this.parametersJSON.put("jsonRenderedGraph", resJSON.toJSONString());
+		this.parametersJSON.put("jsonRenderedHeader", "{ \"NO_LONGER_USED\": 1 }");
 
 		try {
 			JSONObject res = (JSONObject)execute(false);

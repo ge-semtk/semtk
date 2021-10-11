@@ -95,7 +95,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	 * Send the results to the results service. 
 	 * @return true/false about whether the results were likely sent
 	 */
-	protected void sendResultsToService(TableResultSet currResults) throws ConnectException, EndpointNotFoundException, Exception{
+	protected void sendResultsToService(Table resTable) throws ConnectException, EndpointNotFoundException, Exception{
 				
 		HashMap<String, Integer> colInstCounter = new HashMap<String, Integer>();
 			
@@ -103,7 +103,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			
 			// repair column headers in the event that a duplicate header is encountered. by convention (established and existing only here), the first instance of a column name 
 			// will remain unchanged, all future instances will be postfixed with "[X]" where X is the count encountered so far. this count will start at 1. 
-			Table resTable = currResults.getTable();
+			
 			String[] unModColnames = resTable.getColumnNames(); 	// pre-modification column names
 			String[] modColnames = new String[unModColnames.length];
 			
@@ -136,7 +136,17 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		}
 	}
 
-	
+	private void sendResultsToService(JSONObject resJSON)  throws ConnectException, EndpointNotFoundException, Exception{
+		try{
+			
+			(new ResultsClient(this.resConfig)).execStoreGraphResults(this.jobID, resJSON);
+		}
+		catch(Exception e){
+			this.jobTracker.setJobFailure(this.jobID, "Failed to write results: " + e.getMessage());
+			LocalLogger.printStackTrace(e);
+			throw new Exception("Unable to write results", e);
+		}
+	}
 	/**
 	 * send updates to the status service. 
 	 */
@@ -201,26 +211,17 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			// run the actual query and get a result. 
 			GeneralResultSet genResult = null;
 			
-			if(resType == SparqlResultTypes.GRAPH_JSONLD ){
-				// constructs require particular support for a different result set.
-				genResult = this.querySei.executeQueryAndBuildResultSet(sparqlQuery, resType);
-				ret = new TableResultSet(genResult);  //fixed2
+			if(	resType == SparqlResultTypes.GRAPH_JSONLD ||
+					resType == SparqlResultTypes.CONFIRM ||
+					resType == SparqlResultTypes.TABLE) {
 				
-			} else if (resType == SparqlResultTypes.CONFIRM ){
-
-	                SimpleResultSet simpleRes = (SimpleResultSet) this.querySei.executeQueryAndBuildResultSet(sparqlQuery, SparqlResultTypes.CONFIRM);
-	                ret = new TableResultSet(simpleRes);
-	                
-			} else if (resType == SparqlResultTypes.TABLE) {
-				// all other types
-				genResult = this.querySei.executeQueryAndBuildResultSet(sparqlQuery, SparqlResultTypes.TABLE);
-				ret = (TableResultSet) genResult;
+				genResult = this.querySei.executeQueryAndBuildResultSet(sparqlQuery, resType);
 			} else {
 				throw new Exception("Unsupported result type: " + resType.toString());
 			}
 
 			
-			if (ret.getSuccess()) {
+			if (genResult.getSuccess()) {
 				
 				// uncache SEI if delete query
 				if (resType == SparqlResultTypes.CONFIRM) {
@@ -231,17 +232,19 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 				
 				LocalLogger.logToStdErr("about to write results for " + this.jobID);
 				if (resType == SparqlResultTypes.GRAPH_JSONLD) {
-					this.sendResultsToService(ret);
+					LocalLogger.logToStdErr("Query returned JSON-LD");
+					this.sendResultsToService(genResult.getResultsJSON());
 				}
 				else if(resType == SparqlResultTypes.TABLE || resType == SparqlResultTypes.CONFIRM ){
 					// all other types
-					LocalLogger.logToStdErr("Query returned " + ret.getTable().getNumRows() + " results.");
-					this.sendResultsToService(ret);
+					Table tab = ((TableResultSet)genResult).getTable();
+					LocalLogger.logToStdErr("Query returned " + tab.getNumRows() + " results.");
+					this.sendResultsToService(tab);
 				}
 				this.updateStatus(100);		// work's done
 			}
 			else {
-				this.updateStatusToFailed("Query client returned error to dispatch client: \n" + ret.getRationaleAsString("\n"));
+				this.updateStatusToFailed("Query client returned error to dispatch client: \n" + genResult.getRationaleAsString("\n"));
 			}
 			
 			LocalLogger.logToStdErr("Job " + this.jobID + ": AsynchronousNodeGroupExecutor end ");

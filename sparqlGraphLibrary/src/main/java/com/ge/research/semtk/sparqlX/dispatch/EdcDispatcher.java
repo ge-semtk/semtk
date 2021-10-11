@@ -212,7 +212,7 @@ public class EdcDispatcher extends AsynchronousNodeGroupBasedQueryDispatcher {
 			// send to results service
 			LocalLogger.logToStdOut("Job " + this.jobID + ": write results");	
 			startTimeMillis = System.currentTimeMillis();
-			this.sendResultsToService(retval); 			
+			this.sendResultsToService(retval.getTable()); 			
 			LocalLogger.logToStdOut("Job " + this.jobID + ": write results completed in " + com.ge.research.semtk.utility.Utility.getSecondsSince(startTimeMillis) + " sec");
 			
 			this.updateStatus(100);		

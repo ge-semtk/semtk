@@ -526,28 +526,6 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 			throw new Exception(String.format("Error executing SELECT on nodegroup id='%s'", nodegroupID), e);
 		}
 	}
-	
-	/**
-	 * Run a construct query to JSON-LD
-	 * @param nodegroupID
-	 * @param overrideConn
-	 * @param edcConstraintsJson
-	 * @param runtimeConstraintsJson
-	 * @return JSON-LD results
-	 * @throws Exception
-	 */
-	public JSONObject execDispatchConstructByIdToJsonLd(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception {
-		
-		// dispatch the job
-		String jobId = this.dispatchConstructByIdToJobId(nodegroupID, overrideConn, edcConstraintsJson, runtimeConstraintsJson);
-		
-		try {
-			return this.waitForJobAndGetJsonLd(jobId);			
-		} catch (Exception e) {
-			// Add nodegroupID and "SELECT" to the error message
-			throw new Exception(String.format("Error executing Construct on nodegroup id='%s'", nodegroupID), e);
-		}		
-	}
 
 	
 	/**
@@ -613,25 +591,6 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		} else {
 			String msg = this.getResultsTable(jobId).toCSVString();
 			throw new Exception(String.format("Job %s failed with error table:\n%s", jobId, msg));
-		}
-	}
-
-	/**
-	 * For use with construct, wait for job and get the results
-	 * @param jobId
-	 * @return JSON-LD results
-	 * @throws Exception
-	 */
-	public JSONObject waitForJobAndGetJsonLd(String jobId) throws Exception {
-		
-		waitForCompletion(jobId);
-		
-		// check for success
-		if (this.getJobSuccess(jobId)) {
-			return this.execGetResultsJsonLd(jobId);
-		} else {
-			String msg = this.getJobStatusMessage(jobId);
-			throw new Exception(String.format("Job %s failed with message='%s'", jobId, msg));
 		}
 	}
 	
@@ -752,7 +711,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	 * @throws Exception
 	 */
 	public SimpleResultSet execDispatchConstructById(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
-		return this.execDispatchById(nodegroupID, overrideConn, edcConstraintsJson, null, runtimeConstraintsJson, -1, -1);
+		return this.execDispatchConstructById(nodegroupID, overrideConn, edcConstraintsJson, runtimeConstraintsJson, -1, -1);
 	}
 		
 	/**
@@ -780,9 +739,9 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
 		
 		try{
-			LocalLogger.logToStdErr("sending executeDispatchSelectById request");
+			LocalLogger.logToStdErr("sending executeDispatchConstructById request");
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
-			retval.throwExceptionIfUnsuccessful(String.format("Error running SELECT on nodegroup id='%s'", nodegroupID));
+			retval.throwExceptionIfUnsuccessful(String.format("Error running CONSTRUCT on nodegroup id='%s'", nodegroupID));
 		}
 		finally{
 			this.reset();
@@ -1223,22 +1182,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		return retval;
 	}	
 	
-	/**
-	 * Run a construct query given a nodegroup and wait for results JSON
-	 * @param ng
-	 * @param conn
-	 * @param edcConstraintsJson
-	 * @param runtimeConstraints
-	 * @return JSONObject with JSON-LD results
-	 * @throws Exception
-	 */
-	public JSONObject dispatchConstructFromNodeGroup(NodeGroup ng, SparqlConnection conn, JSONObject edcConstraintsJson, RuntimeConstraintManager runtimeConstraints) throws Exception{
-		
-		SimpleResultSet ret = this.execDispatchConstructFromNodeGroup(ng, conn, edcConstraintsJson, runtimeConstraints);
-		
-		return this.waitForJobAndGetJsonLd(ret.getResult("JobId"));
-	}
-	
+
 	/**
 	 * Run a delete query given a nodegroup and wait for results Table
 	 * @param ng

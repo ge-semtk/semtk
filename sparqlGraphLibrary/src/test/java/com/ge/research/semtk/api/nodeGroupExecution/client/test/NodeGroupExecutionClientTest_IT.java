@@ -174,8 +174,6 @@ public class NodeGroupExecutionClientTest_IT {
 			Table tab = nodeGroupExecutionClient.execDispatchSelectByIdToTable(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
 			assertEquals("Select returned wrong number of rows", 4, tab.getNumRows());
 			
-			JSONObject jObj = nodeGroupExecutionClient.execDispatchConstructByIdToJsonLd(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
-			assertTrue(true);
 		}
 		
 		@Test
