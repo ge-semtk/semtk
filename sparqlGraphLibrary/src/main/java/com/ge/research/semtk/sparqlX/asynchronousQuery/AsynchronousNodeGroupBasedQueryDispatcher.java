@@ -204,7 +204,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			if(resType == SparqlResultTypes.GRAPH_JSONLD ){
 				// constructs require particular support for a different result set.
 				genResult = this.querySei.executeQueryAndBuildResultSet(sparqlQuery, resType);
-				ret = new TableResultSet(true);
+				ret = new TableResultSet(genResult);  //fixed2
 				
 			} else if (resType == SparqlResultTypes.CONFIRM ){
 
