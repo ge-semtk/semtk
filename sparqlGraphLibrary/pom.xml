@@ -10,7 +10,7 @@
 	<dependencies>
 	    <dependency>
 			<groupId>com.ge.research.semtk</groupId>
-			<artifactId>restClients</artifactId>
+			<artifactId>connectionUtils</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 		<!-- License: Apache 2.0 -->

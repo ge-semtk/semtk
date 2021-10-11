@@ -7,8 +7,8 @@
 		<version>2.3.0-SNAPSHOT</version>
 	</parent>
 	
-	<artifactId>restClients</artifactId>
-	<name>restClients</name>
+	<artifactId>connectionUtils</artifactId>
+	<name>connectionUtils</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>

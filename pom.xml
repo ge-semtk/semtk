@@ -114,6 +114,7 @@
 	</profiles>
 
 	<modules>
+		<module>connectionUtils</module>
 		<module>sparqlGraphLibrary</module>
 		<module>sparqlGraphIngestionService</module>
 		<module>hiveService</module>
@@ -128,7 +129,6 @@
 		<module>nodeGroupService</module>
 		<module>springSecurityLibrary</module>
 		<module>springUtilLibrary</module>
-		<module>restClients</module>
 		<module>fdcCacheService</module>
 		<module>fdcSampleService</module>
 		<module>edcQueryGenerationService</module>
