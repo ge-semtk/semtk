@@ -2501,7 +2501,7 @@ public class NodeGroup {
 			
 			if (clauseType == ClauseTypes.CONSTRUCT_LEADER) {
 				if (nItem.getQualifier(targetNode).length() > 0) {
-					throw new NoValidSparqlException("Qualifier unsupported for CONSTRUCT queries: " + nItem.getKeyName() + nItem.getQualifier(targetNode) );
+					throw new NoValidSparqlException("Qualifier unsupported in CONSTRUCT clause: " + nItem.getKeyName() + nItem.getQualifier(targetNode) );
 				}
 			}
 			

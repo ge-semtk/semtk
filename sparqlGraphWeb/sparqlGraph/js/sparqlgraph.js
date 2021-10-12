@@ -1924,8 +1924,10 @@
             var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, asyncFailureCallback);
             var idList = network.getSelectedNodes();
             var classList = [];
-            for (var instanceUri of idList) {
-                var classUri = origRes.expandJsonLdContext(network.body.data.nodes.get(instanceUri).group);
+            for (var id of idList) {
+                // get classname and instance name with ':' prefex expanded out to full '#' uri
+                var classUri = origRes.expandJsonLdContext(network.body.data.nodes.get(id).group);
+                var instanceUri = origRes.expandJsonLdContext(id);
                 client.execCreateConstructAllConnected(gConn, classUri, instanceUri, this.constructAddCallbackGotQuery.bind(this, network));
             }
         });
