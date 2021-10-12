@@ -1794,7 +1794,20 @@
          });
     };
 
+    // simplified status callback for quick-ish network operations
+    var networkBusy = function(canvasDiv, flag) {
+        var canvas = canvasDiv.getElementsByTagName("canvas")[0];
+        canvas.style.cursor = (flag ? "wait" : "");
+    };
 
+    var networkFailureCallback = function (canvas, html) {
+        require(['sparqlgraph/js/modaliidx'],
+                function(ModalIidx) {
+
+            ModalIidx.alert("Service Failure", html);
+            networkBusy(canvas, false);
+        });
+    };
 
     var queryJsonLdCallback = function(jsonLdResults) {
         require(['sparqlgraph/js/iidxhelper'], function(IIDXHelper) {
@@ -1886,14 +1899,23 @@
 
             // callback: when selection changes, disable/enable buttons
             network.on('select', function(n) {
-                var disableFlag = n.getSelectedNodes().length == 0;
-                deleteButton.disabled=disableFlag;
-                expandButton.disabled=disableFlag;
+                // count non-data nodes
+                var noNodes = true;
+                for (var id of n.getSelectedNodes()) {
+                    if (network.body.data.nodes.get(id).group != "data") {
+                        noNodes = false;
+                        break;
+                    }
+                };
+                // count all edges
+                var noEdges = n.getSelectedEdges().length == 0;
+                deleteButton.disabled=noNodes && noEdges;
+                expandButton.disabled=noNodes;
             }.bind(this, network));
 
             // button callbacks
-            network.on('doubleClick', this.constructAddCallback.bind(this, res, network));
-            expandButton.onclick = this.constructAddCallback.bind(this, res, network);
+            network.on('doubleClick', this.constructAddCallback.bind(this, res, canvasDiv, network));
+            expandButton.onclick = this.constructAddCallback.bind(this, res, canvasDiv, network);
             deleteButton.onclick = this.constructRemoveCallback.bind(this, network);
 
             // add data
@@ -1912,48 +1934,57 @@
     };
 
     var constructRemoveCallback = function(n) {
-        var idList = n.getSelectedNodes();
-        n.body.data.nodes.remove(idList);
+        var nodeList = n.getSelectedNodes();
+        var edgeList = n.getSelectedEdges();
+        n.body.data.nodes.remove(nodeList);
+        n.body.data.edges.remove(edgeList);
     };
 
     // user clicked to add to CONSTRUCT graph
-    var constructAddCallback = function(origRes, network) {
+    var constructAddCallback = function(origRes, canvasDiv, network) {
         require(['sparqlgraph/js/msiclientnodegroupservice',
 			    ], function(MsiClientNodeGroupService) {
 
-            var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, asyncFailureCallback);
+            networkBusy(canvasDiv, true);
+            var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, networkFailureCallback.bind(this, canvasDiv));
             var idList = network.getSelectedNodes();
             var classList = [];
             for (var id of idList) {
-                // get classname and instance name with ':' prefex expanded out to full '#' uri
-                var classUri = origRes.expandJsonLdContext(network.body.data.nodes.get(id).group);
-                var instanceUri = origRes.expandJsonLdContext(id);
-                client.execCreateConstructAllConnected(gConn, classUri, instanceUri, this.constructAddCallbackGotQuery.bind(this, network));
+                if (classUri == "data") {
+                    // hmmm.  what to do...  bail.
+                    alert("Expanding data isn't implemented");
+                    networkBusy(canvasDiv, false);
+                } else {
+                    // get classname and instance name with ':' prefex expanded out to full '#' uri
+                    var classUri = origRes.expandJsonLdContext(network.body.data.nodes.get(id).group);
+                    var instanceUri = origRes.expandJsonLdContext(id);
+                    client.execCreateConstructAllConnected(gConn, classUri, instanceUri, this.constructAddCallbackGotQuery.bind(this, canvasDiv, network));
+                }
             }
         });
     };
 
     // return from getting CONSTRUCT query to add to CONSTRUCT graph
     // sync return
-    var constructAddCallbackGotQuery = function(network, sgjson) {
+    var constructAddCallbackGotQuery = function(canvasDiv, network, sgjson) {
         require(['sparqlgraph/js/msiclientnodegroupexec',
                  'sparqlgraph/js/modaliidx'],
     	         function (MsiClientNodeGroupExec, ModalIidx) {
             var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.longTimeoutMsec);
             var jsonLdCallback = MsiClientNodeGroupExec.buildJsonLdCallback(
-                constructAddCallbackGotJson.bind(this, network),
-                ModalIidx.alert.bind(this, "NodeGroup Exec Service Failure"),
+                constructAddCallbackGotJson.bind(this, canvasDiv, network),
+                networkFailureCallback.bind(this, canvasDiv),
                 function() {}, // no status updates
                 function() {}, // no check for cancel
                 g.service.status.url,
                 g.service.results.url);
             ng = new SemanticNodeGroup();
             sgjson.getNodeGroup(ng);
-            client.execAsyncDispatchConstructFromNodeGroup(ng, gConn, null, null, jsonLdCallback, ModalIidx.alert.bind(this, "NodeGroup Exec Service Failure"));
+            client.execAsyncDispatchConstructFromNodeGroup(ng, gConn, null, null, jsonLdCallback, networkFailureCallback.bind(this, canvasDiv));
         });
     };
 
-    var constructAddCallbackGotJson = function(network, res) {
+    var constructAddCallbackGotJson = function(canvasDiv, network, res) {
         require(['sparqlgraph/js/modaliidx',
                  'sparqlgraph/js/visjshelper'],
                  function (ModalIidx, VisJsHelper) {
@@ -1971,6 +2002,7 @@
             }
             network.body.data.nodes.update(Object.values(nodeDict));
             network.body.data.edges.update(edgeList);
+            networkBusy(canvasDiv, false);
         });
 
     };

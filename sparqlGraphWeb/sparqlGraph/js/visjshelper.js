@@ -194,7 +194,7 @@ define([	// properly require.config'ed
                         }
                         // add edge to a jsonLd object
                         edgeList.push({
-                            //id: p_id,
+                            id: j["@id"]+"-"+predName+"-"+objectId,  // prevent duplicate edges
                             from: j["@id"],
                             to: objectId,
                             label: predName,
@@ -222,7 +222,7 @@ define([	// properly require.config'ed
 
                         // add the edge
                         edgeList.push({
-                            //id: p_id,
+                            id: j["@id"]+"-"+predName+"-"+objectId,   // prevent duplicate edges
                             from: j["@id"],
                             to: val,
                             label: predName,
