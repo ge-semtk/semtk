@@ -530,6 +530,43 @@ public abstract class SparqlEndpointInterface {
 		return res.getTable();
 	}
 	
+	/**
+	 * Always contains { "@graph" : [] }
+	 * @param query
+	 * @return
+	 * @throws Exception
+	 */
+	public JSONObject executeQueryToJsonLd(String query) throws Exception {
+		JSONObject ret = this.executeQuery(query, SparqlResultTypes.GRAPH_JSONLD);
+		
+		if (ret.containsKey("@graph") ) {
+			return ret;
+			
+		} else if (ret.containsKey("@id")) {
+			// only one object returned, no array (fuseki behavior)
+			// add as part of @graph
+			JSONArray graph = new JSONArray();
+			graph.add(ret);
+			JSONObject newRet = new JSONObject();
+			newRet.put("@graph", graph);
+			return newRet;
+			
+		} else if (ret.containsKey("@context")) {
+			// @context, but no @graph or @id: so empty (fuseki behavior)
+			// add empty @graph
+			JSONArray graph = new JSONArray();
+			ret.put("@graph", graph);
+			return ret;
+			
+		} else {
+			throw new Exception("Invalid json-ld response: " + ret.toJSONString());
+		}
+	}
+	/**
+	 * @param query
+	 * @return
+	 * @throws Exception
+	 */
 	public JSONArray executeQueryToGraph(String query) throws Exception {
 		JSONObject responseJson = this.executeQuery(query, SparqlResultTypes.GRAPH_JSONLD);
 		

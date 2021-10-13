@@ -411,6 +411,7 @@ public class OntologyInfoServiceRestController {
 				// spin up an async thread
 				new Thread(() -> {
 					try {
+						HeadersManager.setHeaders(headers);
 						// since getIfCached() failed, presume this get() will lead to creating a new one
 						PredicateStats newStats = this.predStatsCache.get(conn, this.oInfoCache.get(conn), tracker, jobId, 1, 99);
 						

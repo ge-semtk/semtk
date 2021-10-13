@@ -266,5 +266,18 @@ public class SparqlToXLibUtil {
 		return sparql.toString();
 	}
 
+	public static String generateConstructConnected(SparqlConnection conn, OntologyInfo oInfo, String instance, XSDSupportedType instanceType) throws Exception {
+		
+		String val = instanceType.buildRDF11ValueString(instance);
+		
+		return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st. ?o a ?ot } \n" +
+				generateSparqlFromOrUsing("", "FROM", conn, oInfo) +
+				"WHERE { " + 
+				"{ " + val + " ?p ?o. } UNION { ?s ?p " + val + "} \n" +
+				"OPTIONAL { ?s a ?st } \n" +
+				"OPTIONAL { ?o a ?ot } \n" +
+				"}";
+	}
+
 	
 }

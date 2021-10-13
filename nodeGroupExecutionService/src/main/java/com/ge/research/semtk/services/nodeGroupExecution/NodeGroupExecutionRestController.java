@@ -56,12 +56,14 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
+import com.ge.research.semtk.ontologyTools.ConnectedDataConstructor;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.ConstraintsFromIdRequestBody;
+import com.ge.research.semtk.services.nodeGroupExecution.requests.ConstructConnectedDataRequest;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.DispatchByIdRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.DispatchFromNodegroupRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.DispatchRawSparqlRequestBody;
@@ -81,6 +83,7 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
+import com.ge.research.semtk.sparqlX.XSDSupportedType;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 import com.ge.research.semtk.springutilib.requests.IdRequest;
@@ -91,6 +94,7 @@ import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
+import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.LocalLogger;
 
 import io.swagger.annotations.ApiOperation;
@@ -968,6 +972,40 @@ public class NodeGroupExecutionRestController {
 	}
 
 	@ApiOperation(
+			value=	"CONSTRUCT connected data",
+			notes=	"result has 'JobId' field"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/constructConnectedData", method=RequestMethod.POST)
+	public JSONObject constructConnectedData(@RequestBody ConstructConnectedDataRequest requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="constructConnectedData";
+		HeadersManager.setHeaders(headers);
+		SimpleResultSet retval = new SimpleResultSet();
+		try {	
+			
+			SparqlConnection conn = requestBody.buildSparqlConnection();
+			ResultsClient resClient = getResultsClient();
+			
+			ConnectedDataConstructor constructor = new ConnectedDataConstructor(
+					requestBody.getInstanceVal(), requestBody.buildInstanceType(),
+					conn, this.retrieveOInfo(conn), getJobTracker(), resClient);
+			
+			constructor.start();
+			
+			retval.setSuccess(true);
+			retval.addResult(JOB_ID_RESULT_KEY, constructor.getJobId());
+			
+		} catch(Exception e){
+			retval.setSuccess(false);
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			LocalLogger.printStackTrace(e);
+		}
+	
+		return retval.toJson();
+	}
+		
+		
+	@ApiOperation(
 			value=	"DELETE query nodegroup id",
 			notes=	"result has 'JobId' field"
 			)
@@ -1631,6 +1669,11 @@ public class NodeGroupExecutionRestController {
 		return new JobTracker(servicesgraph_props.buildSei());
 	}
 	
+	private ResultsClient getResultsClient() throws Exception {
+		ResultsClientConfig  rConf   = new ResultsClientConfig(results_prop.getProtocol(), results_prop.getServer(), results_prop.getPort());
+		ResultsClient resClient = new ResultsClient(rConf);
+		return resClient;
+	}
 	
 }
 
