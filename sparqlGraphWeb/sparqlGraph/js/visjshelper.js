@@ -98,7 +98,7 @@ define([	// properly require.config'ed
     // or has a single type
     // or has an array of types
     VisJsHelper.getShortType = function(j) {
-        var typ = j.hasOwnProperty("@type") ? j["@type"] : "prefix#untyped";
+        var typ = j["@type"] || "prefix#untyped";
 
         // TODO: instead, we should be honoring fuseki's @prefix fields
         // if there's no # and there is : then replace the last : with #
@@ -120,9 +120,10 @@ define([	// properly require.config'ed
         return ret;
     };
 
-    // get the full type name
+    // get the full type name, not including any context expansion
+    // concatenates multiple types into a string
     VisJsHelper.getLongType = function(j) {
-        var typ = j.hasOwnProperty("@type") ? j["@type"] : "untyped";
+        var typ = j["@type"] || "untyped";
         if (Array.isArray(typ)) {
             ret = "";
             for (var i=0; i < typ.length; i++ ) {
@@ -154,6 +155,7 @@ define([	// properly require.config'ed
             group: groupVal
         };
 
+        console.log(groupVal);
         // handle slightly buggy behavior in visJs:
         // if potentially changing the node's group from a known group back to a useDefaultGroups
         // (this happens if node was originally a data property but now we run across it in the JSON-LD)
@@ -193,6 +195,8 @@ define([	// properly require.config'ed
                             throw "VisJsHelper can not determine object of predicate " + predName + " found " + o;
                         }
                         // add edge to a jsonLd object
+                        console.log(j["@id"]+"-"+predName+"-"+objectId);
+
                         edgeList.push({
                             id: j["@id"]+"-"+predName+"-"+objectId,  // prevent duplicate edges
                             from: j["@id"],
@@ -221,8 +225,9 @@ define([	// properly require.config'ed
                         };
 
                         // add the edge
+                        console.log(j["@id"]+"-"+predName+"-"+val);
                         edgeList.push({
-                            id: j["@id"]+"-"+predName+"-"+objectId,   // prevent duplicate edges
+                            id: j["@id"]+"-"+predName+"-"+val,   // prevent duplicate edges
                             from: j["@id"],
                             to: val,
                             label: predName,
