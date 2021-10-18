@@ -32,8 +32,9 @@ public class ConnectedDataConstructor extends Thread {
 	 * @param oInfo - oInfo if cached, leave null and it will be read from conn
 	 * @param tracker - may be null if not intending to use as a thread
 	 * @param resClient - "
+	 * @throws Exception 
 	 */
-	public ConnectedDataConstructor(String instanceVal, XSDSupportedType instanceType, SparqlConnection conn, OntologyInfo oInfo, JobTracker tracker, ResultsClient resClient) {
+	public ConnectedDataConstructor(String instanceVal, XSDSupportedType instanceType, SparqlConnection conn, OntologyInfo oInfo, JobTracker tracker, ResultsClient resClient) throws Exception {
 		
 		this.instanceVal = instanceVal;
 		this.instanceType = instanceType;
@@ -42,12 +43,13 @@ public class ConnectedDataConstructor extends Thread {
 		this.tracker = tracker;
 		if (tracker != null) {
 			this.jobId = JobTracker.generateJobId();
+			tracker.createJob(this.jobId);
 		}
 		this.headerTable = ThreadAuthenticator.getThreadHeaderTable();
 		this.resClient = resClient;
 	}
 	
-	public ConnectedDataConstructor(String instanceVal, XSDSupportedType instanceType, SparqlConnection conn) {
+	public ConnectedDataConstructor(String instanceVal, XSDSupportedType instanceType, SparqlConnection conn) throws Exception {
 		this(instanceVal, instanceType, conn, null, null, null);
 	}
 
@@ -76,8 +78,6 @@ public class ConnectedDataConstructor extends Thread {
     		
     		ThreadAuthenticator.authenticateThisThread(this.headerTable);
     		
-    		
-    		tracker.createJob(this.jobId);
     		this.tracker.setJobPercentComplete(this.jobId, 10, "Querying data");
     		
     		JSONObject jObj = this.queryJsonLd();

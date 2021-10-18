@@ -18,6 +18,7 @@
 package com.ge.research.semtk.sparqlX;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 
 public enum XSDSupportedType {
@@ -113,6 +114,42 @@ public enum XSDSupportedType {
 			// default is a plain quoted value
 			return "\"" + val + "\"";
 		}
+				
+	}
+	
+
+	/**
+	 * Return a list of possible rdf11 versions of val.
+	 * Note: can not guess NODE_URI.
+	 * @param val
+	 * @return
+	 */
+	public static ArrayList<String> buildPossibleRDF11Values(String val) {
+		ArrayList<String> ret = new ArrayList<String>();
+		
+		// numbers
+		try {
+			// return as-is
+			Double.valueOf(val);
+			ret.add(val);
+			return ret;
+		} catch (Exception e) {}
+		
+
+		// dates
+		for (XSDSupportedType t : new XSDSupportedType [] { XSDSupportedType.DATE, XSDSupportedType.DATETIME, XSDSupportedType.TIME } ) {
+			try {
+				t.validate(val);
+				ret.add(t.buildRDF11ValueString(val));
+			} catch (Exception e) {}
+		}
+		if (ret.size() > 0) {
+			return ret;
+		}
+		
+		// default is a plain quoted value
+		ret.add("\"" + val + "\"");
+		return ret;
 				
 	}
 	/**

@@ -336,6 +336,30 @@ public class ValueConstraint {
 	}
 	
 	/**
+	 * This version takes all values at face value: no typing is done
+	 * @param sparqlId
+	 * @param valList
+	 * @return
+	 * @throws Exception
+	 */
+	public static String buildValuesConstraint(String sparqlId, ArrayList<String> valList) throws Exception{
+		
+		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
+		
+		// VALUES ?trNum { '1278'^^<http://www.w3.org/2001/XMLSchema#int> '1279'^^<http://www.w3.org/2001/XMLSchema#int> } 
+	
+		StringBuffer retval = new StringBuffer();
+		retval.append("VALUES " + sparqlId + " { ");
+		for(String v : valList){
+			retval.append(v + " ");
+		}
+		
+		retval.append(" }");
+		
+		return retval.toString();
+	}
+	
+	/**
 	 * Build a FILTER IN clause
 	 * @param sparqlId
 	 * @param valList

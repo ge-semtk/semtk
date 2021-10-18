@@ -36,7 +36,7 @@ public class ConstructConnectedDataRequest extends SparqlConnectionRequest {
     		value = "instanceType",
             required = false,
             example = "node_uri")
-    private String instanceType = "node_uri";
+    private String instanceType = null;
 
  
     public String getInstanceVal() {
@@ -48,7 +48,7 @@ public class ConstructConnectedDataRequest extends SparqlConnectionRequest {
 	}
 
 	public XSDSupportedType buildInstanceType() throws Exception {
-        return XSDSupportedType.getMatchingValue(this.instanceType);
+        return this.instanceType == null ? null :  XSDSupportedType.getMatchingValue(this.instanceType);
     }
 
 }

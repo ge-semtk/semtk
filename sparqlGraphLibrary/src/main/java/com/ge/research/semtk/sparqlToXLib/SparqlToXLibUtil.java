@@ -268,15 +268,40 @@ public class SparqlToXLibUtil {
 
 	public static String generateConstructConnected(SparqlConnection conn, OntologyInfo oInfo, String instance, XSDSupportedType instanceType) throws Exception {
 		
-		String val = instanceType.buildRDF11ValueString(instance);
-		
-		return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st. ?o a ?ot } \n" +
+		if (instanceType == XSDSupportedType.NODE_URI) {
+			String val = instanceType.buildRDF11ValueString(instance);
+			
+			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st. ?o a ?ot } \n" +
+					generateSparqlFromOrUsing("", "FROM", conn, oInfo) +
+					"WHERE { " + 
+					"{ BIND ( " + val + " as ?s) . ?s ?p ?o } \n" +
+					"UNION \n" +
+					"{ BIND ( " + val + " as ?o) . ?s ?p ?o } \n" +
+					"OPTIONAL { ?s a ?st } \n" +
+					"OPTIONAL { ?o a ?ot } \n" +
+					"}";
+		} else if (instanceType != null) {
+			String val = instanceType.buildRDF11ValueString(instance);
+			
+			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st.  } \n" +
+					generateSparqlFromOrUsing("", "FROM", conn, oInfo) +
+					"WHERE { " + 
+					"BIND ( " + val + " as ?o) . ?s ?p ?o . \n" +
+					"OPTIONAL { ?s a ?st } \n" +
+					"}";
+		} else {
+			
+			// try to guess whether type matters (only if it is a date
+			ArrayList<String> rdf11vals = XSDSupportedType.buildPossibleRDF11Values(instance);
+			
+			String values = ValueConstraint.buildValuesConstraint("?o", rdf11vals);
+			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st.  } \n" +
 				generateSparqlFromOrUsing("", "FROM", conn, oInfo) +
 				"WHERE { " + 
-				"{ " + val + " ?p ?o. } UNION { ?s ?p " + val + "} \n" +
+				values + ". ?s ?p ?o . \n"  +
 				"OPTIONAL { ?s a ?st } \n" +
-				"OPTIONAL { ?o a ?ot } \n" +
 				"}";
+		}
 	}
 
 	

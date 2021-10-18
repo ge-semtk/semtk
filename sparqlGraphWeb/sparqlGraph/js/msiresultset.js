@@ -92,28 +92,138 @@ define([	// properly require.config'ed   bootstrap-modal
 				return html;
 			},
 
-            getGraphResultsJson : function () {
+            // return raw @graph
+            getGraphResultsJsonArr : function (expandContext, fixRdfTypes, removeBlankNodes) {
+                var graphArr = [];
+
+                // get a copy of @graph
                 if (this.xhr.hasOwnProperty("@graph")) {
-                    return this.xhr["@graph"];
+                    graphArr = JSON.parse(JSON.stringify(this.xhr["@graph"]));
                 } else if (this.xhr.hasOwnProperty("@id")) {
-                    return [this.xhr];
-                } else {
-                    return {};
+                    graphArr = JSON.parse(JSON.stringify([this.xhr]));
+                }
+
+                if (expandContext) {
+                    this.expandJsonArrWithContext(graphArr);
+                }
+
+                if (fixRdfTypes) {
+                    this.changeRdfTypesToJsonLdTypes(graphArr);
+                }
+
+                if (removeBlankNodes) {
+                    this.removeJsonLdBlankNodes(graphArr);
+                }
+                return graphArr;
+            },
+
+            // use json-ld @context to expand a json-ld array
+            expandJsonArrWithContext : function(jArr) {
+
+                var graphArr = [];
+                for (let jObj of jArr) {
+                    this.expandJsonObjWithContext(jObj);
                 }
             },
 
-            // for any value in json-ld,
-            // attempt to expand it using @context
-            expandJsonLdContext : function(abbrev) {
-                if (this.xhr.hasOwnProperty("@context")) {
-                    var context = this.xhr["@context"];
-                    var parts = abbrev.split(":");
-                    if (parts.length > 1) {
-                        if (context.hasOwnProperty(parts[0])) {
-                            return context[parts[0]] + parts.slice(1).join(":");
+            // use json-ld @context to expand a json-ld obj
+            expandJsonObjWithContext : function(jObj) {
+                // context might be in the object (??) or at the top level
+                var context = jObj["@context"] || this.xhr["@context"] || {};
+
+                for (var key in jObj) {
+                    // expand value
+                    if (typeof(jObj[key]) == 'string') {
+                        jObj[key] = this.getValExpandedWithContext(jObj[key], context);
+                    } else {
+                        this.expandJsonObjWithContext(jObj[key]);
+                    }
+                    // expand key
+                    if (key in context) {
+                        var newKey = context[key]["@id"];
+                        jObj[newKey] = jObj[key];
+                        delete jObj[key];
+                    }
+                }
+
+                // remove @context if it is there for some reason
+                if (jObj.hasOwnProperty("@context")) {
+                    delete jObj["@context"];
+                }
+            },
+
+            // change rdf:type to @type
+            changeRdfTypesToJsonLdTypes : function(jArr) {
+
+                typeIds = [];
+                for (var jObj of jArr) {
+                    for (var rdfType of ["rdf:type", "http://www.w3.org/1999/02/22-rdf-syntax-ns#type"]) {
+                        if (rdfType in jObj) {
+                            // change objects with @id into just a string with value obj[@id]
+                            if (Array.isArray(jObj[rdfType])) {
+                                for (var i in jObj[rdfType]) {
+                                    // if it's an object with @id, then change into string with that value;
+                                    if (jObj[rdfType][i]["@id"]) {
+                                        jObj[rdfType][i] = jObj[rdfType][i]["@id"];
+                                        typeIds.push(jObj[rdfType][i]);
+                                    }
+                                }
+                            } else {
+                                // if it's an object with @id, then change into string with that value;
+                                if (jObj[rdfType]["@id"]) {
+                                    jObj[rdfType] = jObj[rdfType]["@id"];
+                                    typeIds.push(jObj[rdfType]);
+                                }
+                            }
+
+                            // change the rdf:type into @type
+                            jObj["@type"] = jObj[rdfType];
+                            delete jObj[rdfType];
                         }
                     }
                 }
+
+                // find indices of items with @id that is a type we just removed
+                var deleteIndices = [];
+                for (let i=0; i < jArr.length; i++) {
+                    if (typeIds.indexOf(jArr[i]["@id"]) > -1 ) {
+                        // make sure it's sorted high to low
+                        deleteIndices.unshift(i);
+                    }
+                }
+                // delete type type items
+                for (let i of deleteIndices) {
+                    jArr.splice(i,1);
+                }
+            },
+
+            // change rdf:type to @type
+            removeJsonLdBlankNodes : function(jArr) {
+
+                // find indices of items with @id that is a type we just removed
+                var deleteIndices = [];
+                for (let i=0; i < jArr.length; i++) {
+                    if (jArr[i]["@id"].startsWith("_:b") ) {
+                        // make sure it's sorted high to low
+                        deleteIndices.unshift(i);
+                    }
+                }
+                // delete type type items
+                for (let i of deleteIndices) {
+                    jArr.splice(i,1);
+                }
+            },
+            // for any value in json-ld,
+            // attempt to expand it using @context
+            getValExpandedWithContext : function(abbrev, context) {
+
+                var parts = abbrev.split(":");
+                if (parts.length > 1) {
+                    if (context.hasOwnProperty(parts[0])) {
+                        return context[parts[0]] + parts.slice(1).join(":");
+                    }
+                }
+
                 return abbrev;
             },
 
