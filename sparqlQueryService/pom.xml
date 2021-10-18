@@ -37,12 +37,6 @@
 		
 		<dependency>
 			<groupId>com.ge.research.semtk</groupId>
-			<artifactId>restClients</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		
-		<dependency>
-			<groupId>com.ge.research.semtk</groupId>
 			<artifactId>springUtilLibrary</artifactId>
 			<version>${project.version}</version>
 		</dependency>
