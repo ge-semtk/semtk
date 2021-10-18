@@ -18,6 +18,7 @@
 package com.ge.research.semtk.sparqlX.asynchronousQuery;
 
 import java.net.ConnectException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.json.simple.JSONObject;
@@ -235,9 +236,23 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 					LocalLogger.logToStdErr("Query returned JSON-LD");
 					this.sendResultsToService(genResult.getResultsJSON());
 				}
-				else if(resType == SparqlResultTypes.TABLE || resType == SparqlResultTypes.CONFIRM ){
+				else if(resType == SparqlResultTypes.TABLE) {
 					// all other types
 					Table tab = ((TableResultSet)genResult).getTable();
+					LocalLogger.logToStdErr("Query returned " + tab.getNumRows() + " results.");
+					this.sendResultsToService(tab);
+				} else if(resType == SparqlResultTypes.CONFIRM ){
+					// Confirm:  change results into a table with a column for each field
+					ArrayList<String> colnames = ((SimpleResultSet)genResult).getResultsKeys();
+					ArrayList<String> coltypes = new ArrayList<String>();
+					ArrayList<String> row0 = new ArrayList<String>();
+					for (String c : colnames) {
+						coltypes.add("string");
+						row0.add(((SimpleResultSet)genResult).getResult(c));
+					}
+					ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+					rows.add(row0);
+					Table tab = new Table(colnames, coltypes, rows);
 					LocalLogger.logToStdErr("Query returned " + tab.getNumRows() + " results.");
 					this.sendResultsToService(tab);
 				}
