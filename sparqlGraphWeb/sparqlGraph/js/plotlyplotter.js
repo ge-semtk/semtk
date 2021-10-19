@@ -21,7 +21,8 @@ define([	// properly require.config'ed   bootstrap-modal
             'sparqlgraph/js/msiresultset',
             'sparqlgraph/js/msiclientutility',
 
-            'plotly/plotly-basic-2.0.0-rc.0.min'
+            //'plotly/plotly-basic-2.0.0-rc.0.min'
+            'plotly/plotly-2.4.2.min'
             //                       OR should we presume the internet is available?  and pull from there?
 			// shimmed
 		],
@@ -73,7 +74,8 @@ define([	// properly require.config'ed   bootstrap-modal
                 this.adjustLayoutDimensions(layout, plotDiv);
 
                 Plotly.newPlot( plotDiv, data, layout, config );
-
+                
+                //Plotly.newPlot( plotDiv, [ {    x: [0,1,2,3,1,1,6],type: 'histogram',}]);
                 div.appendChild(plotDiv);
             },
 
