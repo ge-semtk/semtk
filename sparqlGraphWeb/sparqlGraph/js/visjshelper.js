@@ -155,7 +155,7 @@ define([	// properly require.config'ed
             group: groupVal
         };
 
-        console.log(groupVal);
+        //console.log(groupVal);
         // handle slightly buggy behavior in visJs:
         // if potentially changing the node's group from a known group back to a useDefaultGroups
         // (this happens if node was originally a data property but now we run across it in the JSON-LD)
@@ -195,7 +195,7 @@ define([	// properly require.config'ed
                             throw "VisJsHelper can not determine object of predicate " + predName + " found " + o;
                         }
                         // add edge to a jsonLd object
-                        console.log(j["@id"]+"-"+predName+"-"+objectId);
+                        //console.log(j["@id"]+"-"+predName+"-"+objectId);
 
                         edgeList.push({
                             id: j["@id"]+"-"+predName+"-"+objectId,  // prevent duplicate edges
@@ -225,7 +225,7 @@ define([	// properly require.config'ed
                         };
 
                         // add the edge
-                        console.log(j["@id"]+"-"+predName+"-"+val);
+                        //console.log(j["@id"]+"-"+predName+"-"+val);
                         edgeList.push({
                             id: j["@id"]+"-"+predName+"-"+val,   // prevent duplicate edges
                             from: j["@id"],
