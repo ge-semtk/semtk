@@ -2653,9 +2653,6 @@
 		        if (event.currentTarget.id == "anchorTab1") {
 		        	tabSparqlGraphActivated();
 
-		        } else if (event.currentTarget.id == "anchorTabE") {
-		        	tabEditActivated();
-
 			    } else if (event.currentTarget.id == "anchorTab2") {
 		        	tabMappingActivated();
 
