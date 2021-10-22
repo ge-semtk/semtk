@@ -469,8 +469,12 @@ public class Table {
 		String t = this.getColumnType(columnName);
 		if (t.contains("#")) {
 			t = t.split("#")[1];
+		} 
+		if (t.isEmpty()) {
+			return XSDSupportedType.STRING;
+		} else {
+			return XSDSupportedType.valueOf(t.toUpperCase());
 		}
-		return XSDSupportedType.valueOf(t.toUpperCase());
 	}
 	
 	/**
