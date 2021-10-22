@@ -261,10 +261,13 @@ public class OntologyInfo {
 	 **/
 	private HashSet<String> getSubclassNames(String superClassName, HashSet<String> stopList){
 		// check the speedup hash
-		if (this.subclassNamesSpeedup.containsKey(superClassName)) {
+		
+		HashSet<String> speedup = this.subclassNamesSpeedup.get(superClassName);
+		
+		if (speedup != null) {
 			// return a copy
 			HashSet<String> ret = new HashSet<String>();
-			ret.addAll(this.subclassNamesSpeedup.get(superClassName));
+			ret.addAll(speedup);
 			return ret;
 		}
 		HashSet<String> ret = new HashSet<String>();
@@ -464,8 +467,10 @@ public class OntologyInfo {
 	
 	public HashSet<String> getSuperPropNames(String subPropName, HashSet<String> stopList) {
 		// check the speedup hash
-		if (this.superPropNamesSpeedup.containsKey(subPropName)) {
-			return new HashSet<String>(this.superPropNamesSpeedup.get(subPropName));
+		HashSet<String> speedup = this.superPropNamesSpeedup.get(subPropName);
+		
+		if (speedup != null) {
+			return new HashSet<String>(speedup);
 		}
 		HashSet<String> ret = new HashSet<String>();
 		
@@ -510,8 +515,9 @@ public class OntologyInfo {
 	 **/
 	private HashSet<String> getSuperClassNames(String subclassName, HashSet<String> stopList){
 		// check the speedup hash
-		if (this.superclassNamesSpeedup.containsKey(subclassName)) {
-			return new HashSet<String>(this.superclassNamesSpeedup.get(subclassName));
+		HashSet<String> speedup = this.superclassNamesSpeedup.get(subclassName);
+		if (speedup != null) {
+			return new HashSet<String>(speedup);
 		}
 		HashSet<String> ret = new HashSet<String>();
 		
