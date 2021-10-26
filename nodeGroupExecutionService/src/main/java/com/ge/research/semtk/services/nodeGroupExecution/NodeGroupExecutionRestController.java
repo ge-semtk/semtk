@@ -58,6 +58,7 @@ import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.ontologyTools.ConnectedDataConstructor;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -388,7 +389,35 @@ public class NodeGroupExecutionRestController {
 	    }
 	}
 	
-	
+    @CrossOrigin
+    @RequestMapping(value="/getResultsJsonLd", method=RequestMethod.POST)
+    public JSONObject getResultsJsonLd(@RequestBody StatusRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+        //final String ENDPOINT_NAME="getResultsJsonLd";
+        HeadersManager.setHeaders(headers);
+        //LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
+        try {
+            SimpleResultSet retval = new SimpleResultSet();
+            
+            try{
+                NodeGroupExecutor nge = this.getExecutor(requestBody.getJobID());
+                JSONObject retLd = nge.getJsonLdResults();
+                retval.setSuccess(true);
+                retval.addResultsJSON(retLd);
+            }
+            catch(Exception e){
+                //LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
+                LocalLogger.printStackTrace(e);
+                retval = new SimpleResultSet();
+                retval.setSuccess(false);
+                retval.addRationaleMessage(SERVICE_NAME, "getResultsJsonLd", e);
+            } 
+            return retval.toJson();
+            
+        } finally {
+            HeadersManager.clearHeaders();
+        }
+    }
+    
 	// getJsonBlob : can't implement here because of
 	//    1) can't figure out how to stream results from results service through
 	//    2) don't know the results file location so can't instantiate a GenericJsonBlobResultsStorage
