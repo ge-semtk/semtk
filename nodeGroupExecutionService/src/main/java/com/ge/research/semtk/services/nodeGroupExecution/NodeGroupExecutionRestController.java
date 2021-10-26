@@ -59,6 +59,7 @@ import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.ontologyTools.ConnectedDataConstructor;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
+import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -396,7 +397,7 @@ public class NodeGroupExecutionRestController {
         HeadersManager.setHeaders(headers);
         //LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
         try {
-            SimpleResultSet retval = new SimpleResultSet();
+            NodeGroupResultSet retval = new NodeGroupResultSet();
             
             try{
                 NodeGroupExecutor nge = this.getExecutor(requestBody.getJobID());
@@ -407,7 +408,7 @@ public class NodeGroupExecutionRestController {
             catch(Exception e){
                 //LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
                 LocalLogger.printStackTrace(e);
-                retval = new SimpleResultSet();
+                retval = new NodeGroupResultSet();
                 retval.setSuccess(false);
                 retval.addRationaleMessage(SERVICE_NAME, "getResultsJsonLd", e);
             } 
