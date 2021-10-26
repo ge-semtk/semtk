@@ -399,6 +399,16 @@ define([	// properly require.config'ed
         return false;
     };
 
+    IIDXHelper.createElement = function (tag, innerHTML, className) {
+        var elem = document.createElement(tag);
+        if (innerHTML) {
+            elem.innerHTML = innerHTML;
+        }
+        if (className) {
+            elem.classList.add(className);
+        }
+        return elem;
+    };
     /* Creates a label element with the given text.  Optionally provide a tooltip. */
     IIDXHelper.createLabel = function (labelText, optTooltip) {
         var labelElem = document.createElement("label");

@@ -242,6 +242,10 @@ define([	// properly require.config'ed   bootstrap-modal
             },
 
             /*==========  functions with jobIdCallback ============*/
+            /*
+            **   You can build a jobIdCallback with one of the
+            **   MsiClientNodeGroupExec.build___Callback() functions
+            */
             execAsyncDispatchConstructFromNodeGroup : function(nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
                 this.runAsyncNodegroup("dispatchConstructFromNodegroup",
                                         nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);

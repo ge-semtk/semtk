@@ -58,6 +58,8 @@
 
     	setTabButton("upload-tab-but", true);
     	setTabButton("mapping-tab-but", true);
+        setTabButton("explore-tab-but", true);
+        setTabButton("report-tab-but", true);
 
     	// checkBrowser();
 
@@ -72,6 +74,7 @@
                   'sparqlgraph/js/msiclientnodegroupservice',
                   'sparqlgraph/js/msiclientnodegroupstore',
                   'sparqlgraph/js/nodegrouprenderer',
+                  'sparqlgraph/js/reporttab',
                   'sparqlgraph/js/uploadtab',
 
                   // shim
@@ -79,7 +82,7 @@
 
 	              'local/sparqlgraphlocal'
                 ],
-                function (ExploreTab, MappingTab, ModalIidx, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupService, MsiClientNodeGroupStore, NodegroupRenderer, UploadTab) {
+                function (ExploreTab, MappingTab, ModalIidx, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupService, MsiClientNodeGroupStore, NodegroupRenderer, ReportTab, UploadTab) {
 
 	    	console.log(".ready()");
 
@@ -108,7 +111,7 @@
 	    			                    g.service.sparqlQuery.url);
 	    	setTabButton("upload-tab-but", false);
 
-            // edit tab
+            // explore tab
             gExploreTab = new ExploreTab( document.getElementById("exploreTreeDiv"),
                                        document.getElementById("exploreCanvasDiv"),
                                        document.getElementById("exploreButtonDiv"),
@@ -122,7 +125,15 @@
 			gMappingTab =  new MappingTab(importoptionsdiv, importcanvasdiv, importcolsdiv, gUploadTab.setDataFile.bind(gUploadTab), logAndAlert, ngClient );
 	    	setTabButton("mapping-tab-but", false);
 
-            // load gExploreTab
+            // init gExploreTab
+            setTabButton("explore-tab-but", false);
+
+            // init gReportTab
+            setTabButton("report-tab-but", false);
+            gReportTab = new ReportTab(
+                                    document.getElementById("reportOptionsDiv"),
+                                    document.getElementById("reportDiv"),
+                                    g);
 
 	        // load last connection
 			var conn = gLoadDialog.getLastConnectionInvisibly();
@@ -884,6 +895,7 @@
 	    gOInfoLoadTime = new Date();
 
         gExploreTab.setConn(gConn, gOInfo);
+        gReportTab.setConn(gConn);
 
 		setStatus("");
 		guiTreeNonEmpty();
@@ -909,6 +921,7 @@
 		    gOInfoLoadTime = new Date();
 
             gExploreTab.setConn(gConn, gOInfo);
+            gReportTab.setConn(gConn);
 
 	    	gMappingTab.updateNodegroup(gNodeGroup, gConn);
 			gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
@@ -2641,6 +2654,7 @@
     	clearTree();
     	gOInfo = new OntologyInfo();
         gExploreTab.setConn(gConn, gOInfo);
+        gReportTab.setConn(gConn);
     	setConn(null);
 	    gOInfoLoadTime = new Date();
     };
@@ -2661,6 +2675,9 @@
 
                 } else if (event.currentTarget.id == "anchorTabX") {
 		        	tabExploreActivated();
+
+                } else if (event.currentTarget.id == "anchorTabR") {
+		        	tabReportActivated();
 		        }
 		    }
 		});
@@ -2682,20 +2699,12 @@
         setTabButton("explore-tab-but", false);
  		setTabButton("mapping-tab-but", false);
 		setTabButton("upload-tab-but", false);
+        setTabButton("report-tab-but", false);
 
         gExploreTab.releaseFocus();
 	};
 
-    var tabExploreActivated = function() {
-		gCurrentTab = g.tab.explore;
 
-		setTabButton("query-tab-but", false);
-        setTabButton("explore-tab-but", true);
-		setTabButton("mapping-tab-but", false);
-		setTabButton("upload-tab-but", false);
-
-        gExploreTab.takeFocus();
-	};
 
     var tabMappingActivated = function() {
 		gCurrentTab = g.tab.mapping;
@@ -2704,6 +2713,7 @@
         setTabButton("explore-tab-but", false);
  		setTabButton("mapping-tab-but", true);
 		setTabButton("upload-tab-but", false);
+        setTabButton("report-tab-but", false);
 
         gExploreTab.releaseFocus();
 
@@ -2711,6 +2721,17 @@
 
         resizeWindow();
 	};
+    var tabExploreActivated = function() {
+        gCurrentTab = g.tab.explore;
+
+        setTabButton("query-tab-but", false);
+        setTabButton("explore-tab-but", true);
+        setTabButton("mapping-tab-but", false);
+        setTabButton("upload-tab-but", false);
+        setTabButton("report-tab-but", false);
+
+        gExploreTab.takeFocus();
+    };
 
 	var tabUploadActivated = function() {
 		 gCurrentTab = g.tab.upload;
@@ -2719,10 +2740,24 @@
         setTabButton("explore-tab-but", false);
   		setTabButton("mapping-tab-but", false);
 		setTabButton("upload-tab-but", true);
+        setTabButton("report-tab-but", false);
 
         gExploreTab.releaseFocus();
 
 		gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
+
+	};
+
+    var tabReportActivated = function() {
+		 gCurrentTab = g.tab.report;
+
+		setTabButton("query-tab-but", false);
+        setTabButton("explore-tab-but", false);
+  		setTabButton("mapping-tab-but", false);
+		setTabButton("upload-tab-but", false);
+        setTabButton("report-tab-but", true);
+
+        gExploreTab.releaseFocus();
 
 	};
 
