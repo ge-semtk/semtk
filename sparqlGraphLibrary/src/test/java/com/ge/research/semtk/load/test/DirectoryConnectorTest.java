@@ -10,7 +10,7 @@ import java.util.UUID;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
-import com.ge.research.semtk.load.DirectoryConnector;
+import com.ge.research.semtk.connutil.DirectoryConnector;
 import com.google.common.io.Files;
 
 public class DirectoryConnectorTest {

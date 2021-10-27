@@ -8,7 +8,11 @@
 	<artifactId>sparqlGraphLibrary</artifactId>
 
 	<dependencies>
-	
+	    <dependency>
+			<groupId>com.ge.research.semtk</groupId>
+			<artifactId>connectionUtils</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>

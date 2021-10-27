@@ -9,10 +9,10 @@ import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
+import com.ge.research.semtk.lib.resultSet.TableOrJobIdResultSet;
 import com.ge.research.semtk.properties.ServiceProperties;
 import com.ge.research.semtk.querygen.client.QueryExecuteClient;
 import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.resultSet.TableOrJobIdResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.utility.LocalLogger;
 

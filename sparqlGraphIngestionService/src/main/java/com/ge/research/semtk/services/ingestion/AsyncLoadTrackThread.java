@@ -2,8 +2,8 @@ package com.ge.research.semtk.services.ingestion;
 
 import com.ge.research.semtk.auth.HeaderTable;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
+import com.ge.research.semtk.connutil.FileSystemConnector;
 import com.ge.research.semtk.edc.JobTracker;
-import com.ge.research.semtk.load.FileSystemConnector;
 import com.ge.research.semtk.load.LoadTracker;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;

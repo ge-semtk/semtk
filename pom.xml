@@ -114,6 +114,7 @@
 	</profiles>
 
 	<modules>
+		<module>connectionUtils</module>
 		<module>sparqlGraphLibrary</module>
 		<module>sparqlGraphIngestionService</module>
 		<module>hiveService</module>

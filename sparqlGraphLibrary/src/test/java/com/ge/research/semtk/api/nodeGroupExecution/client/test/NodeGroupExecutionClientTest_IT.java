@@ -16,6 +16,7 @@
  */
 package com.ge.research.semtk.api.nodeGroupExecution.client.test;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -33,6 +34,7 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
+import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.test.IntegrationTestUtility;
@@ -170,8 +172,8 @@ public class NodeGroupExecutionClientTest_IT {
 			OntologyInfo oInfo = new OntologyInfo(TestGraph.getSparqlConn());
 			
 			Table tab = nodeGroupExecutionClient.execDispatchSelectByIdToTable(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null);
+			assertEquals("Select returned wrong number of rows", 4, tab.getNumRows());
 			
-			assert(true);
 		}
 		
 		@Test

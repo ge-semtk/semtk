@@ -24,7 +24,7 @@ import java.util.regex.Pattern;
 
 import org.json.simple.JSONObject;
 
-import com.ge.research.semtk.belmont.XSDSupportedType;
+import com.ge.research.semtk.sparqlX.XSDSupportedType;
 import com.ge.research.semtk.utility.Utility;
 
 public class ColumnValidator {

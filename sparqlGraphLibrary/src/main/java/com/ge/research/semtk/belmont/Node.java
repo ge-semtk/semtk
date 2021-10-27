@@ -33,6 +33,7 @@ import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
 import com.ge.research.semtk.ontologyTools.OntologyRange;
 import com.ge.research.semtk.ontologyTools.ValidationException;
+import com.ge.research.semtk.sparqlX.XSDSupportedType;
 
 //the nodes which represent any given entity the user/caller intends to manipulate. 
 

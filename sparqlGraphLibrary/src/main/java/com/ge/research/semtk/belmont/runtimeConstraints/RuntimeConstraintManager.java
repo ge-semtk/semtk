@@ -28,9 +28,9 @@ import org.json.simple.JSONObject;
 import com.ge.research.semtk.belmont.BelmontUtil;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.ValueConstraint;
-import com.ge.research.semtk.belmont.XSDSupportedType;
 import com.ge.research.semtk.load.utility.ImportSpecHandler;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.sparqlX.XSDSupportedType;
 
 /**
  * Helps manage all of the runtime constraints in a given nodegroup

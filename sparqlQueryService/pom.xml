@@ -25,6 +25,12 @@
 		
 		<dependency>
 			<groupId>com.ge.research.semtk</groupId>
+			<artifactId>connectionUtils</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.ge.research.semtk</groupId>
 			<artifactId>sparqlGraphLibrary</artifactId>
 			<version>${project.version}</version>
 		</dependency>

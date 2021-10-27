@@ -19,8 +19,8 @@ package com.ge.research.semtk.edc.client;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.ThreadAuthenticator;
+import com.ge.research.semtk.lib.resultSet.TableOrJobIdResultSet;
 import com.ge.research.semtk.querygen.client.QueryExecuteClient;
-import com.ge.research.semtk.resultSet.TableOrJobIdResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 
 /**

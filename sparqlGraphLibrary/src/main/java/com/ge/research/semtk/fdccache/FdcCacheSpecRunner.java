@@ -35,6 +35,7 @@ import com.ge.research.semtk.fdc.FdcClient;
 import com.ge.research.semtk.fdc.FdcClientConfig;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
@@ -95,7 +96,7 @@ public class FdcCacheSpecRunner extends Thread {
 			InputStream owlStream = FdcCacheSpecRunner.class.getResourceAsStream("/semantics/OwlModels/fdcCacheSpec.owl");
 			try {
 				AuthorizationManager.setSemtkSuper();
-				servicesSei.uploadOwlModelIfNeeded(owlStream);
+				OntologyInfo.uploadOwlModelIfNeeded(servicesSei, owlStream);
 			} finally {
 				AuthorizationManager.clearSemtkSuper();
 			}

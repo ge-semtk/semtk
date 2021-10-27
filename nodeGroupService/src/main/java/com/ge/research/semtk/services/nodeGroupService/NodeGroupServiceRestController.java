@@ -154,7 +154,7 @@ public class NodeGroupServiceRestController {
 			
 			new Thread(() -> {
 				try {
-					
+					HeadersManager.setHeaders(headers);
 					SparqlGraphJson sgJson = requestBody.buildSparqlGraphJson();
 					SparqlConnection conn = sgJson.getSparqlConn();
 					NodeGroup ng = sgJson.getNodeGroup();

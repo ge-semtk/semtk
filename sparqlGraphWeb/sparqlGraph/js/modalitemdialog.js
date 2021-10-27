@@ -157,7 +157,6 @@ define([	// properly require.config'ed
                 var retTypeCheck = this.getFieldElement(ModalItemDialog.RETURN_TYPE_CHECK);
                 if (retTypeCheck != null) {
                     retTypeCheck.checked = false;
-                    this.returnTypeCheckOnClick();
                 }
 
                 // delete check

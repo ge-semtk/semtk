@@ -23,6 +23,7 @@ import java.util.HashMap;
 import com.ge.research.semtk.auth.HeaderTable;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.connutil.NothingToInsertException;
 import com.ge.research.semtk.load.utility.DataLoadBatchHandler;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;

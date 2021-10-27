@@ -23,6 +23,7 @@ import java.net.ConnectException;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.ThreadAuthenticator;
+import com.ge.research.semtk.connutil.EndpointNotFoundException;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.PredicateStats;

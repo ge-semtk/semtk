@@ -1827,7 +1827,7 @@
 
             var anchor = IIDXHelper.buildAnchorWithCallback(    "results.json",
                                                                 function (res) {
-                                                                    var str = JSON.stringify(res.getGraphResultsJson(), null, 4);
+                                                                    var str = JSON.stringify(res.getGraphResultsJsonArr(), null, 4);
                                                                     IIDXHelper.downloadFile(str, "results.json",  "application/json");
                                                                 }.bind(this, jsonLdResults)
                                                             );
@@ -1863,22 +1863,22 @@
                 return;
             }
 
-            var jsonResultStr = JSON.stringify(res.getGraphResultsJson(), null, 4);
+            var jsonDownloadStr = JSON.stringify(res.getGraphResultsJsonArr(), null, 4);
 
             // make a menu button bar
             var editDom = document.createElement("span");
-            var deleteButton = IIDXHelper.createIconButton("icon-trash", function(){}, ["btn","btn-danger"], undefined, "Delete", "Remove selected item(s)" );
-            deleteButton.disabled = true;
-            editDom.appendChild(deleteButton);
+            var removeButton = IIDXHelper.createIconButton("icon-trash", function(){}, ["btn","btn-danger"], undefined, "Remove", "Remove selected item(s) from this display" );
+            removeButton.disabled = true;
+            editDom.appendChild(removeButton);
             IIDXHelper.appendSpace(editDom);
             var expandButton = IIDXHelper.createIconButton("icon-sitemap", function(){}, ["btn","btn-success"], undefined, "Expand", "Add all connected instance data" );
             expandButton.disabled = true;
             editDom.appendChild(expandButton);
 
             var headerTable = IIDXHelper.buildResultsHeaderTable(
-                (jsonResultStr === "{}") ? "No results returned" : linkdom,
+                (jsonDownloadStr === "{}") ? "No results returned" : linkdom,
                 [ "Save JSON" ] ,
-                [ IIDXHelper.downloadFile.bind(IIDXHelper, jsonResultStr, "results.json", "text/json;charset=utf8") ],
+                [ IIDXHelper.downloadFile.bind(IIDXHelper, jsonDownloadStr, "results.json", "text/json;charset=utf8") ],
                 editDom
             );
             div.appendChild(headerTable);
@@ -1901,7 +1901,6 @@
             div.appendChild(configDiv);
 
             // setup empty network
-            var jsonLd = res.getGraphResultsJson();
             var nodeDict = {};   // dictionary of nodes with @id as the key
             var edgeList = [];   // "normal" list of edges
 
@@ -1922,16 +1921,17 @@
                 };
                 // count all edges
                 var noEdges = n.getSelectedEdges().length == 0;
-                deleteButton.disabled=noNodes && noEdges;
+                removeButton.disabled=noNodes && noEdges;
                 expandButton.disabled=noNodes;
             }.bind(this, network));
 
             // button callbacks
-            network.on('doubleClick', this.constructAddCallback.bind(this, res, canvasDiv, network));
-            expandButton.onclick = this.constructAddCallback.bind(this, res, canvasDiv, network);
-            deleteButton.onclick = this.constructRemoveCallback.bind(this, network);
+            network.on('doubleClick', this.constructExpandCallback.bind(this, res, canvasDiv, network));
+            expandButton.onclick = this.constructExpandCallback.bind(this, res, canvasDiv, network);
+            removeButton.onclick = this.constructRemoveCallback.bind(this, network);
 
             // add data
+            var jsonLd = res.getGraphResultsJsonArr(true, true, true);
             for (var i=0; i < jsonLd.length; i++) {
                 VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList);
                 if (i % 20 == 0) {
@@ -1954,48 +1954,37 @@
     };
 
     // user clicked to add to CONSTRUCT graph
-    var constructAddCallback = function(origRes, canvasDiv, network) {
-        require(['sparqlgraph/js/msiclientnodegroupservice',
-			    ], function(MsiClientNodeGroupService) {
+    var constructExpandCallback = function(origRes, canvasDiv, network) {
+        require(['sparqlgraph/js/msiclientnodegroupexec',
+			    ], function(MsiClientNodeGroupExec) {
 
             networkBusy(canvasDiv, true);
-            var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, networkFailureCallback.bind(this, canvasDiv));
-            var idList = network.getSelectedNodes();
-            var classList = [];
-            for (var instanceUri of idList) {
-                var classUri = origRes.expandJsonLdContext(network.body.data.nodes.get(instanceUri).group);
-
-                if (classUri == "data") {
-                    // hmmm.  what to do...  bail.
-                    networkBusy(canvasDiv, false);
-                } else {
-                    client.execCreateConstructAllConnected(gConn, classUri, instanceUri, this.constructAddCallbackGotQuery.bind(this, canvasDiv, network));
-                }
-            }
-        });
-    };
-
-    // return from getting CONSTRUCT query to add to CONSTRUCT graph
-    // sync return
-    var constructAddCallbackGotQuery = function(canvasDiv, network, sgjson) {
-        require(['sparqlgraph/js/msiclientnodegroupexec',
-                 'sparqlgraph/js/modaliidx'],
-    	         function (MsiClientNodeGroupExec, ModalIidx) {
             var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.longTimeoutMsec);
             var jsonLdCallback = MsiClientNodeGroupExec.buildJsonLdCallback(
-                constructAddCallbackGotJson.bind(this, canvasDiv, network),
+                constructExpandCallbackGotJson.bind(this, canvasDiv, network),
                 networkFailureCallback.bind(this, canvasDiv),
                 function() {}, // no status updates
                 function() {}, // no check for cancel
                 g.service.status.url,
                 g.service.results.url);
-            ng = new SemanticNodeGroup();
-            sgjson.getNodeGroup(ng);
-            client.execAsyncDispatchConstructFromNodeGroup(ng, gConn, null, null, jsonLdCallback, networkFailureCallback.bind(this, canvasDiv));
+            var idList = network.getSelectedNodes();
+            var classList = [];
+            for (var id of idList) {
+                var classUri = network.body.data.nodes.get(id).group;
+                if (classUri == "data") {
+                    var instanceUri = id;
+                    client.execAsyncConstructConnectedData(instanceUri, null, gConn, jsonLdCallback, networkFailureCallback.bind(this, canvasDiv));
+
+                } else {
+                    // get classname and instance name with ':' prefex expanded out to full '#' uri
+                    var instanceUri = id;
+                    client.execAsyncConstructConnectedData(instanceUri, "node_uri", gConn, jsonLdCallback, networkFailureCallback.bind(this, canvasDiv));
+                }
+            }
         });
     };
 
-    var constructAddCallbackGotJson = function(canvasDiv, network, res) {
+    var constructExpandCallbackGotJson = function(canvasDiv, network, res) {
         require(['sparqlgraph/js/modaliidx',
                  'sparqlgraph/js/visjshelper'],
                  function (ModalIidx, VisJsHelper) {
@@ -2005,7 +1994,7 @@
             }
 
             // add data
-            var jsonLd = res.getGraphResultsJson();
+            var jsonLd = res.getGraphResultsJsonArr(true, true, true);
             var nodeDict = {};   // dictionary of nodes with @id as the key
             var edgeList = [];
             for (var i=0; i < jsonLd.length; i++) {
