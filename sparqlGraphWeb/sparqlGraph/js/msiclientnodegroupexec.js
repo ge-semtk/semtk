@@ -173,6 +173,36 @@ define([	// properly require.config'ed   bootstrap-modal
             return ngExecJobIdCallback;
         };
 
+        MsiClientNodeGroupExec.buildJsonBlobCallback = function(jsonBlobCallback, failureCallback, percentCallback, checkForCancelCallback, statusUrl, resultUrl) {
+
+            // callback for the nodegroup execution service to send jobId
+            var ngExecJobIdCallback = function(jobId) {
+
+                // callback for status service after job successfully finishes
+                var ngStatusSuccessCallback = function() {
+
+                    // callback for results service
+                    var ngResultsSuccessCallback = function (jsonLdCallback, percentCallback, results) {
+                        jsonLdCallback(results);
+                    };
+
+                    // send json results to jsonLdCallback
+                    var resultsClient = new MsiClientResults(resultUrl, jobId, failureCallback);
+                    resultsClient.execGetJsonBlobRes( ngResultsSuccessCallback.bind(this, jsonBlobCallback, percentCallback) );
+
+                }.bind(this);
+
+                var sProgress = MsiClientNodeGroupExec.scaleProgress.bind(this, percentCallback, 10, 90);
+
+                // call status service loop
+                var statusClient = new MsiClientStatus(statusUrl, jobId, failureCallback);
+                statusClient.execAsyncWaitUntilDone(ngStatusSuccessCallback, checkForCancelCallback, sProgress);
+
+            }.bind(this);
+
+            return ngExecJobIdCallback;
+        };
+
 
 		MsiClientNodeGroupExec.prototype = {
 
@@ -290,6 +320,11 @@ define([	// properly require.config'ed   bootstrap-modal
 
             execAsyncDispatchSelectById : function(nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
                 this.runAsyncNodegroupId("dispatchSelectById",
+                                         nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
+            },
+
+            execAsyncDispatchCountById : function(nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
+                this.runAsyncNodegroupId("dispatchCountById",
                                          nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
             },
 

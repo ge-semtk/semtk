@@ -18,13 +18,15 @@
 
 define([	// properly require.config'ed   bootstrap-modal
         	'sparqlgraph/js/microserviceinterface',
+            'sparqlgraph/js/msiclientstatus',
+        	'sparqlgraph/js/msiclientresults',
         	'sparqlgraph/js/msiresultset',
 
 			// shimmed
 
 		],
 
-	function(MicroServiceInterface, MsiResultSet) {
+	function(MicroServiceInterface, MsiClientStatus, MsiClientResults, MsiResultSet) {
 
 
 		var MsiClientOntologyInfo = function (serviceURL, optFailureCallback, optTimeout) {
@@ -34,6 +36,39 @@ define([	// properly require.config'ed   bootstrap-modal
 			this.optTimeout = optTimeout;
 		};
 
+        MsiClientOntologyInfo.buildPredicateStatsCallback = function(jsonBlobCallback, failureCallback, progressCallback, checkForCancelCallback, optLoPercent, optHiPercent) {
+
+            // callback for the nodegroup execution service to send jobId
+            var simpleResCallback = function(simpleResJson) {
+
+                var resultSet = new MsiResultSet(simpleResJson.serviceURL, simpleResJson.xhr);
+                if (!resultSet.isSuccess()) {
+                    failureCallback(resultSet.getFailureHtml());
+                } else {
+                    var jobId = resultSet.getSimpleResultField("JobId");
+                    // callback for status service after job successfully finishes
+                    var statusSuccessCallback = function() {
+                        // callback for results service
+                        var resultsSuccessCallback = function (results) {
+                            progressCallback("finishing up", 99);
+                            jsonBlobCallback(results);
+                            progressCallback("");
+                        };
+                        var resultsClient = new MsiClientResults(g.service.results.url, jobId);
+                        resultsClient.execGetJsonBlobRes(resultsSuccessCallback);
+                    };
+
+                    progressCallback("", 1);
+
+                    // call status service loop
+                    var statusClient = new MsiClientStatus(g.service.status.url, jobId, failureCallback);
+                    statusClient.execAsyncWaitUntilDone(statusSuccessCallback, checkForCancelCallback, progressCallback);
+                }
+
+            };
+
+            return simpleResCallback;
+        };
 
 		MsiClientOntologyInfo.prototype = {
 

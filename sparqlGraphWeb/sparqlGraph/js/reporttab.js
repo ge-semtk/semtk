@@ -53,12 +53,10 @@ define([	// properly require.config'ed
             this.conn = null;
             this.optionsDiv = optionsDiv;
             this.reportDiv = reportDiv;
+            this.g = g;
 
             this.initOptionsDiv();
             this.initReportDiv();
-
-            this.ngExecClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url);
-            this.ngStoreClient =  new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
         };
 
         ReportTab.CSS = `
@@ -104,6 +102,18 @@ define([	// properly require.config'ed
          margin-right: 3em;
          }
 
+        .report-table {
+            padding-left: 2em;
+            padding-right: 2em;
+        }
+        .report-table th {
+          background-color: var(--main-dark);
+          font-weight: bold;
+        }
+        .report-table td {
+          background-color: white;
+          border: 1px solid var(--main-medium);
+        }
 
         .report-title {
          font-size: 30px;
@@ -166,6 +176,17 @@ define([	// properly require.config'ed
           text-align: center;
           font-weight: bold;
           border: 2px solid var(--error);
+        }
+
+        .report-wait-spinner {
+          border: 1em solid #f3f3f3;
+          border-radius: 50%;
+          border-top: 1em solid #3498db;
+          width: 10em;
+          height: 10em;
+          margin-left: 40%;
+          -webkit-animation: spin 2s linear infinite; /* Safari */
+          animation: spin 2s linear infinite;
         }
         `.replaceAll("var(--main-dark)","#0c2333")
         .replaceAll("var(--main-light)","#91bbe5")
@@ -295,6 +316,7 @@ define([	// properly require.config'ed
             drawReport : function(select) {
                 // TODO: always draws the rack report
                 report = ReportTab.RACK;
+                this.initReportDiv();
 
                 var reportName = select.options[select.selectedIndex].text;
                 this.appendStyles();
@@ -317,52 +339,207 @@ define([	// properly require.config'ed
                 div.appendChild(h);
 
                 // description
-                if (section["description"]) {
+                if (section["description"] != undefined) {
                     let p = IIDXHelper.createElement("p", section["description"], undefined);
                     div.appendChild(p);
                 }
 
                 try {
-                    if (section["nodegroup"]) {
+                    if (section["nodegroup"] != undefined) {
                         // create a blank div to cover for async behavior
-                        let nodegroupDiv = IIDXHelper.createElement("div", "", undefined);
-                        div.appendChild(nodegroupDiv);
+                        let ngDiv = IIDXHelper.createElement("div", "", undefined);
+                        ngDiv.appendChild(IIDXHelper.createElement("div", "", "report-wait-spinner"));
+                        div.appendChild(ngDiv);
 
-                        if (section["plot"]) {
-                            this.ngStoreClient.getNodeGroupByIdToJsonStr(section["nodegroup"], this.asyncPlotSection.bind(this, nodegroupDiv, section, level));
-                        } else if (section["count"]) {
-
+                        if (section["plot"] != undefined) {
+                            var ngStoreClient = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
+                            ngStoreClient.getNodeGroupByIdToJsonStr(section["nodegroup"], this.plotGetNgCallback.bind(this, ngDiv, section, level));
+                        } else if (section["count"] != undefined) {
+                            var ngExecClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url);
+                            var countCallback = MsiClientNodeGroupExec.buildFullJsonCallback(this.countGetTableCallback.bind(this, ngDiv, section, level),
+                                                                                             this.failureCallback.bind(this, ngDiv),
+                                                                                             this.statusCallback.bind(this, ngDiv),
+                                                                                             this.checkForCallback.bind(this, ngDiv),
+                                                                                             this.g.service.status.url,
+                                                                                             this.g.service.results.url);
+                            ngExecClient.execAsyncDispatchCountById(section["nodegroup"], this.conn, null, null, countCallback, this.failureCallback.bind(this, ngDiv));
                         } else {
-
+                            var ngExecClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url);
+                            var tableCallback = MsiClientNodeGroupExec.buildFullJsonCallback(this.tableGetTableCallback.bind(this, ngDiv),
+                                                                                             this.failureCallback.bind(this, ngDiv),
+                                                                                             this.statusCallback.bind(this, ngDiv),
+                                                                                             this.checkForCallback.bind(this, ngDiv),
+                                                                                             this.g.service.status.url,
+                                                                                             this.g.service.results.url);
+                            ngExecClient.execAsyncDispatchSelectById(section["nodegroup"], this.conn, null, null, tableCallback, this.failureCallback.bind(this, ngDiv));
                         }
 
-                    } else if (section["special"]) {
+                    } else if (section["special"] != undefined) {
+                        let spDiv = IIDXHelper.createElement("div", "", undefined);
+                        spDiv.appendChild(IIDXHelper.createElement("div", "", "report-wait-spinner"));
+                        div.appendChild(spDiv);
 
+                        if (section["special"] == "class_count") {
+                            var client = new MsiClientOntologyInfo(this.g.service.ontologyInfo.url, this.failureCallback.bind(this, spDiv));
+                            var jsonBlobCallback = MsiClientOntologyInfo.buildPredicateStatsCallback(this.specialClassCountCallback.bind(this, spDiv),
+                                                                                                this.failureCallback.bind(this, spDiv),
+                                                                                                this.statusCallback.bind(this, spDiv),
+                                                                                                this.checkForCallback.bind(this, spDiv));
+                            client.execGetPredicateStats(this.conn, jsonBlobCallback);
+                        }
                     }
 
-                    if (section["sections"]) {
+                    if (section["sections"] != undefined) {
                         for (subSection of section["sections"]) {
                             div.appendChild(this.generateSection(subSection, level+1));
                         }
                     }
                 } catch (e) {
-                    let errorDiv = IIDXHelper.createElement("div", "Error generating this section.", "report-error");
-                    div.appendChild(errorDiv);
-    				console.error(e);
-    				return;
+                    this.failureCallback(div, e)
     			}
 
                 return div;
             },
 
-            asyncPlotSection : function(div, section, level, jsonStr) {
-                var sgJson = new SparqlGraphJson().fromJson(jsonStr);
-                var ng = sgJson.getNodeGroup();
+            plotGetNgCallback : function(div, section, level, jsonStr) {
+                var sgJson = new SparqlGraphJson();
+                sgJson.parse(jsonStr);
+                var ng = new SemanticNodeGroup();
+                sgJson.getNodeGroup(ng);
                 var conn = sgJson.getSparqlConn();
                 var plotSpecHandler = sgJson.getPlotSpecsHandler();
-                var plotter = plotSpecHandler.getPlotByName(section["plot"]);
-                div.innerHTML = "Hope to add plot " + section["plot"];
-            }
+                var plotter = plotSpecHandler.getPlotterByName(section["plot"]);
+
+                var ngExecClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url);
+                var jsonCallback = MsiClientNodeGroupExec.buildFullJsonCallback(this.plotGetTableCallback.bind(this, div, plotter),
+                                                                                 this.failureCallback.bind(this, div),
+                                                                                 this.statusCallback.bind(this, div),
+                                                                                 this.checkForCallback.bind(this.div),
+                                                                                 this.g.service.status.url,
+                                                                                 this.g.service.results.url);
+                ngExecClient.execAsyncDispatchSelectFromNodeGroup(ng, conn, null, null, jsonCallback, this.failureCallback.bind(this, div));
+            },
+
+            plotGetTableCallback : function(div, plotter, tableRes) {
+                div.innerHTML="";
+                plotter.addPlotToDiv(div, tableRes);
+            },
+
+            countGetTableCallback : function(div, section, level, tableRes) {
+                div.innerHTML="";
+                var count = tableRes.getTable().rows[0][0];
+
+                var r = undefined;
+                if (section["ranges"] != undefined) {
+                    for (var this_range of section["ranges"]) {
+                        if (this_range["gte"] != undefined) {
+                            if (count >= this_range["gte"]) {
+                                r = this_range;
+                                break;
+                            }
+                        } else if (this_range["lte"] != undefined) {
+                            if (count <= this_range["lte"]) {
+                                r = this_range;
+                                break;
+                            }
+                        } else {
+                            r = this_range;
+                            break;
+                        }
+                    }
+                }
+
+                // no ranges, or none matched, then look for data in the section instead
+                if (r) {
+                    if (r["status"] != undefined) {
+                        if (r["status"] == "success") {
+                            div.appendChild(IIDXHelper.createElement("span", "\u2705 ", className="success-icon"));
+                        } else if (r["status"] == "failure") {
+                            div.appendChild(IIDXHelper.createElement("span", "\u26d4 ", className="failure-icon"));
+                        }
+
+                        fmt = r["format"] || "count: {0}";
+                        div.appendChild(IIDXHelper.createElement("span", this.format(fmt, count)));
+                   }
+                   if (r["sections"] != undefined) {
+                       for (subSection of r["sections"]) {
+                           div.appendChild(this.generateSection(subSection, level+1));
+                       }
+                   }
+               } else {
+                   fmt = section["format"] || "count: {0}";
+                   div.appendChild(IIDXHelper.createElement("span", this.format(fmt, count)));
+               }
+            },
+
+            specialClassCountCallback : function(div, res) {
+                div.innerHTML = "";
+                var blob = res.xhr;
+
+                var rows = [];
+                for (var key in blob.exactTab) {
+                    var jObj = JSON.parse(key);
+
+                    // only visualize one-hops
+                    if (jObj.triples.length == 1) {
+                        var count = blob.exactTab[key];
+                        var oSubjectClass = new OntologyName(jObj.triples[0].s);
+                        var oPredicate = new OntologyName(jObj.triples[0].p);
+
+                        // skipping Type since w already have oSubjectClass
+                        if ( jObj.triples[0].p.endsWith("type")) {
+                            rows.push([jObj.triples[0].s, count]);
+                        }
+                    }
+                }
+
+                var tableElem = IIDXHelper.buildDatagridInDiv( div,
+    								           function() { return [{sTitle: "class", sType: "string", filter: true},
+                                                                    {sTitle: "count", sType: "numeric", filter: true}]; },
+								               function() { return rows; },
+	                                           undefined,
+                                               [[1,'desc']]
+                                           );
+
+                this.fixTableStyle(div, tableElem);
+            },
+
+            // do sprintf that only knows {0}
+            format : function(fmt, val) {
+                var split = fmt.split("{0}");
+                if (split.length == 1) {
+                    return split[0];
+                } else {
+                    return split[0] + val.toString() + split[1];
+                }
+            },
+
+            tableGetTableCallback : function(div, tableRes) {
+                div.innerHTML="";
+                var tableElem = tableRes.putTableResultsDatagridInDiv(div, undefined, []);
+                this.fixTableStyle(div, tableElem);
+            },
+
+            fixTableStyle : function(div, tableElem) {
+                tableElem.classList.add("report-table");
+                tableElem.style.width="100%";
+                div.appendChild(document.createElement("br"));
+                div.appendChild(document.createElement("br"));
+            },
+
+            statusCallback : function(div, eOrMsg) {
+            },
+            checkForCallback : function(div, eOrMsg) {
+                return false;
+            },
+
+            failureCallback : function(div, eOrMsg) {
+                var msg = eOrMsg.toString();
+                let errorDiv = IIDXHelper.createElement("div", "Error generating this section.", "report-error");
+                div.innerHTML = "";
+                div.appendChild(errorDiv);
+                console.error(eOrMsg);
+            },
 
         }
 
