@@ -1072,6 +1072,10 @@ public class ImportSpecHandler {
 		 *  https://github.com/ge-semtk/semtk/wiki/Ingestion-type-handling
 		 */
 		
+		/**
+		 *  Somewhere along this journey, this functionality is almost duplicated inside XSDSupportedType
+		 */
+		
 		
 		// perform validations that change the input
 		switch (expectedType) {
@@ -1110,11 +1114,13 @@ public class ImportSpecHandler {
 			}
 			break;		
 		case BOOLEAN:
-			try{
-				Boolean.parseBoolean(input);
-			}
-			catch(Exception e){
-				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. assumed cause:" + e.getMessage());
+			String cmp = input.toLowerCase().strip();
+			switch (cmp) {
+			case "true" :
+			case "false":
+				break;
+			default:
+				throw new Exception("attempt to use value \"" + input + "\" as type \"" + expectedType + "\" failed. Use 'true' or 'false'");
 			}
 			break;
 		case DECIMAL:

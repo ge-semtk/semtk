@@ -310,13 +310,14 @@ public enum XSDSupportedType {
 			ret = proposedValue;
 			return;
 		case BOOLEAN:
-			try {
-				ret = Boolean.parseBoolean(proposedValue);
+			String cmp = proposedValue.toLowerCase().strip();
+			switch (cmp) {
+			case "true" :
+			case "false":
 				return;
+			default:
+				throw new Exception(proposedValue + " can't be converted to a boolean." );
 			}
-			catch(Exception e){
-			}
-			break;
 		case INT:
 		case INTEGER:
 		case NEGATIVEINTEGER:

@@ -1,0 +1,9 @@
+uri "http://SimpleBoolean".
+
+
+Thing is a class,
+	described by name with a single value of type string,
+	described by isHappy with a single value of type boolean.
+
+
+
