@@ -1114,7 +1114,7 @@ public class ImportSpecHandler {
 			}
 			break;		
 		case BOOLEAN:
-			String cmp = input.toLowerCase().strip();
+			String cmp = input.toLowerCase().trim();
 			switch (cmp) {
 			case "true" :
 			case "false":
