@@ -282,6 +282,9 @@ define([	// properly require.config'ed
 		ReportTab.prototype = {
             setConn : function(conn) {
                 this.conn = conn;
+                this.initReportDiv();
+                var select = document.getElementById("reportSelect");
+                select.selectedIndex = 0;
             },
 
             // print a div
@@ -303,7 +306,6 @@ define([	// properly require.config'ed
 
             initReportDiv : function() {
                 this.reportDiv.innerHTML = "";
-
 
             },
 
@@ -406,7 +408,6 @@ define([	// properly require.config'ed
                 sgJson.parse(jsonStr);
                 var ng = new SemanticNodeGroup();
                 sgJson.getNodeGroup(ng);
-                var conn = sgJson.getSparqlConn();
                 var plotSpecHandler = sgJson.getPlotSpecsHandler();
                 var plotter = plotSpecHandler.getPlotterByName(section["plot"]);
 
@@ -417,7 +418,7 @@ define([	// properly require.config'ed
                                                                                  this.checkForCallback.bind(this.div),
                                                                                  this.g.service.status.url,
                                                                                  this.g.service.results.url);
-                ngExecClient.execAsyncDispatchSelectFromNodeGroup(ng, conn, null, null, jsonCallback, this.failureCallback.bind(this, div));
+                ngExecClient.execAsyncDispatchSelectFromNodeGroup(ng, this.conn, null, null, jsonCallback, this.failureCallback.bind(this, div));
             },
 
             plotGetTableCallback : function(div, plotter, tableRes) {
