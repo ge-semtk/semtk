@@ -310,7 +310,7 @@ public enum XSDSupportedType {
 			ret = proposedValue;
 			return;
 		case BOOLEAN:
-			String cmp = proposedValue.toLowerCase().strip();
+			String cmp = proposedValue.toLowerCase().trim();
 			switch (cmp) {
 			case "true" :
 			case "false":
