@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>SemTK Report Editor</title>
+
+    <!-- Bootstrap4 copied locally-->
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- fontawesome5 -->
+    <link rel='stylesheet' href='https://use.fontawesome.com/releases/v5.12.1/css/all.css'>
+
+    <!-- jquery and jsoneditor copied locally -->
+    <script src="./js/jquery.min.js"></script>
+    <script src="./js/jsoneditor.min.js"></script>
+
+    <script>
+    // Set the default CSS theme and icon library globally
+    JSONEditor.defaults.theme = 'bootstrap4';
+    JSONEditor.defaults.iconlib = 'fontawesome5';
+    </script>
+    <style>
+      body {
+        background-color: #e1e2e5;
+      }
+      .container {
+        max-width:960px;
+        margin: 0 auto
+      }
+
+      .jsoneditor-title {
+        width: 100%;
+        background-color: #274396;
+        color: white;
+        margin: 0;
+        padding-top: 1em;
+        padding-bottom: 1em;
+      }
+      .jsoneditor-toolbar {
+        width: 100%;
+        background-color: white;
+        margin: 0;
+        margin-bottom: 2em;
+      }
+      .jsoneditor-subtitle {
+        color: lightgray;
+        margin: 0;
+      }
+      .jsoneditor-menu-td {
+        padding-left: 0em;
+        padding-right: 2em;
+      }
+      #editor_holder {
+        overflow-y: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class='jsoneditor-title'>
+      <div class='container'>
+      <h2 class='col-md-12'>SemTK Report Editor</h2>
+      <p class = 'jsoneditor-subtitle'> A local twist on <a href="https://github.com/json-editor/json-editor">JSON Editor</a></p>
+      </div class='container'>
+    </div>
+    <div class='jsoneditor-toolbar'>
+      <div class='container'>
+      <table style="width: 100%;%">
+        <tr>
+          <td class='jsoneditor-menu-td'>
+            <button id='submit' class='btn btn-secondary'>Download</button>
+          </td><td class='jsoneditor-menu-td'>
+            <div style="border: solid 3px lightgray;"><span id='dropzone'></span> </div>
+          </td><td class='jsoneditor-menu-td'>
+            <span><b>status: </b></span><span id='valid_indicator' class='label'></span>
+          </td>
+        </tr>
+      </table>
+      </div>
+    </div>
+
+    <div class='container'>
+      <div class='columns'>
+        <div class='column col-md-12' id='editor_holder'></div>
+      </div>
+    </div>
+
+    <script>
+
+      // Initialize the editor
+      var editor = new JSONEditor(document.getElementById('editor_holder'),{
+        // Enable fetching schemas via ajax
+        ajax: true,
+        no_additional_properties: true,
+        display_required_only: true,
+        show_errors: 'always',
+        enable_array_copy: true,
+        // The schema for the editor
+        schema: {
+          $ref: "../sparqlGraph/json/report-schema.json"
+        },
+        // Seed the form with a starting value
+        startval: {}
+      });
+
+      // Hook up the submit button to log to the console
+      document.getElementById('submit').addEventListener('click',function() {
+        // Get the value from the editor
+        var json = editor.getValue();
+        var jsonStr = JSON.stringify(json, null, 4);
+        var title = json.title ? (json.title.replaceAll(" ", "_") + ".json") : "report.json";
+        downloadFile(jsonStr, title, "text/json");
+        console.log(jsonStr);
+      });
+
+      // Hook up the validation indicator to update its
+      // status whenever the editor changes
+      editor.on('change',function() {
+        // Get an array of errors from the validator
+        var errors = editor.validate();
+
+        var indicator = document.getElementById('valid_indicator');
+
+        // Not valid
+        if(errors.length) {
+          indicator.className = 'label alert';
+          indicator.textContent = 'not valid';
+        }
+        // Valid
+        else {
+          indicator.className = 'label success';
+          indicator.textContent = 'valid';
+        }
+      });
+
+      downloadFile = function (data, filename, mimetype) {
+        // http://stackoverflow.com/questions/13405129/javascript-create-and-save-file
+        // This handles bigger files than the OLD version
+        // because a blob doesn't need to be URI-encoded
+        // Paul April 2017
+        var file = new Blob([data], {type: mimetype});
+
+        if (window.navigator.msSaveOrOpenBlob) // IE10+
+            window.navigator.msSaveOrOpenBlob(file, filename);
+        else { // Others
+            var url = URL.createObjectURL(file);
+            downloadUrl(url, filename);
+        }
+     };
+
+     downloadUrl = function (url, optFilename) {
+
+        var a = document.createElement("a");
+        a.href = url;
+        if (typeof optFilename != "undefined") {
+            a.download = optFilename;
+        }
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function() {
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }, 0);
+
+     };
+
+     dropReport = function (ev) {
+        var files = ev.dataTransfer.files;
+
+        readNext = function(index) {
+
+            // error
+            var file = files[index];
+            if (file.name.slice(-5) != ".json" && file.name.slice(-5) != ".JSON") {
+                alert("Error dropping data file", "Only json is supported: " + file.name);
+                editor.setValue({});
+                return;
+            }
+
+            // normal
+            var reader = new FileReader();
+            reader.onload = function(f) {
+                console.log(file.name);
+                file.text().then(
+                  function(jsonStr) {
+                    editor.setValue(JSON.parse(jsonStr));
+                  }
+                );
+                return;
+            }.bind(this);
+            reader.readAsText(file);
+        }.bind(this);
+
+        readNext(0);
+    };
+
+     createDropzone = function (labelText, isDroppableCallback, doDropCallback) {
+        // create a dropzone element.  It changes colors nicely, etc.
+        // callbacks take event parameters.
+
+        var icon = document.createElement("icon");
+        icon.className = "fa fa-list";
+        icon.style = "font-size: 3em; color: orange";
+
+        var div = document.createElement("div");
+        div.className = "label-inverse";
+        var center = document.createElement("center");
+        center.style.color = "orange";
+        div.appendChild(center);
+
+        center.appendChild(icon);
+
+        var br = document.createElement("br");
+        br.style.color = "orange";    // NOTE: hide the color on the <BR> element
+        center.appendChild(br);
+
+        var label = document.createTextNode(labelText);
+        center.appendChild(label);
+
+        // dragover changes color.  dropping or dragging out restores color.
+
+        div.ondrop = function (ev) {
+            if (isDroppableCallback(ev)) {
+                doDropCallback(ev, label);
+
+                center.style.color = br.style.color;
+                icon.style.color = br.style.color;
+            }
+
+            ev.preventDefault();
+            ev.stopPropagation();
+        };
+
+        div.ondragover = function (ev) {
+            if (ev.target.nodeType == 1) {
+                if (isDroppableCallback(ev)) {
+                    center.style.color = "blue";
+                    icon.style.color = "blue";
+                    ev.preventDefault();
+                }
+
+                ev.stopPropagation();
+            }
+        };
+
+        div.ondragleave = function (ev) {
+            center.style.color = br.style.color;
+            icon.style.color = br.style.color;
+
+        };
+
+        return div;
+    };
+
+    var zone = createDropzone("Drop Report JSON", function() { return true; }, dropReport);
+    document.getElementById("dropzone").appendChild(zone);
+
+    </script>
+  </body>
+</html>

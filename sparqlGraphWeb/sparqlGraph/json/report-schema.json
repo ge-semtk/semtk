@@ -1,0 +1,163 @@
+{
+          "definitions": {
+            "Plot": {
+              "type": "object",
+              "required": [
+                "nodegroup",
+                "plotname"
+              ],
+              "headerTemplate" : "Plot: {{self.nodegroup}}",
+             "properties": {
+                "nodegroup": {
+                  "type": "string",
+                  "minLength": 4
+                },
+                "plotname": {
+                  "type": "string",
+                  "minLength": 2
+                }
+              }
+            },
+            "Table": {
+              "type": "object",
+              "required": [
+                "nodegroup"
+              ],
+              "headerTemplate" : "Table: {{self.nodegroup}}",
+             "properties": {
+                "nodegroup": {
+                  "type": "string",
+                  "minLength": 4
+                }
+              }
+            },
+            "Range": {
+              "type": "object",
+              "required": [
+                "format"
+              ],
+              "headerTemplate" : "{{self.format}}",
+              "properties": {
+                  "lte": {
+                  "type": "integer",
+                  "default": 0
+                },
+                "gte": {
+                  "type": "integer",
+                  "default": 1
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "success",
+                    "failure"
+                  ]
+                },
+                "format": {
+                  "type": "string"
+                },
+                "sections": {
+                  "$ref": "#/definitions/Sections"
+                }
+              }
+            },
+            "Count": {
+              "type": "object",
+              "required": [
+                "nodegroup"
+              ],
+              "headerTemplate" : "Count: {{self.nodegroup}}",
+              "properties": {
+                "nodegroup": {
+                  "type": "string",
+                  "minLength": 4
+                },
+                "ranges": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Range"
+                  }
+                }
+              }
+            },
+            "Special": {
+              "type": "object",
+              "required": [
+                "id"
+              ],
+              "headerTemplate" : "Special: {{self.id}}",
+             "properties": {
+                "id": {
+                  "type": "string",
+                  "enum": [
+                    "class_count"
+                  ]
+                }
+              }
+            },
+            "Sections": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Section"
+              }
+            },
+            "Section": {
+              "type": "object",
+              "headerTemplate" : "{{self.header}}",
+              "required": [
+                "header"
+              ],
+            "not": {
+                "anyOf": [
+                    {"required": ["special","plot"]},
+                    {"required": ["special","count"]},
+                    {"required": ["special","table"]},
+                    {"required": ["plot","count"]},
+                    {"required": ["plot","table"]},
+                    {"required": ["count","table"]}
+                ]
+            },
+              "properties": {
+                "header": {
+                "type": "string",
+                  "minLength": 4
+                },
+                "description": {
+                  "type": "string"
+                },
+                "special": {
+                  "$ref": "#/definitions/Special"
+                },
+                "plot": {
+                  "$ref": "#/definitions/Plot"
+                },
+                "count": {
+                  "$ref": "#/definitions/Count"
+                },
+                "table": {
+                  "$ref": "#/definitions/Table"
+                },
+                "sections": {
+                  "$ref": "#/definitions/Sections"
+                }
+              }
+            }
+          },
+          "title": "Report",
+          "type": "object",
+          "required": [
+            "title"
+          ],
+          "properties": {
+            "title": {
+              "type": "string",
+              "minLength": 4
+            },
+            "description": {
+              "type": "string"
+            },
+            "sections": {
+              "$ref": "#/definitions/Sections"
+            }
+          }
+        }

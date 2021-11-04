@@ -34,29 +34,43 @@ define([	// properly require.config'ed
             'sparqlgraph/js/visjshelper',
 
          	'jquery',
-
             'visjs/vis.min',
+            'jsoneditor',
 
 			// shimmed
          	'sparqlgraph/dynatree-1.2.5/jquery.dynatree',
             'sparqlgraph/js/ontologytree',
-            'sparqlgraph/js/belmont'
+            'sparqlgraph/js/belmont',
+
 
 		],
 
     // TODO: this isn't leveraging VisJsHelper properly.  Code duplication.
-	function(IIDXHelper, ModalIidx, MsiClientNodeGroupExec, MsiClientNodeGroupStore, MsiClientOntologyInfo, MsiClientStatus, MsiClientResults, MsiResultSet, OntologyInfo, SparqlGraphJson, VisJsHelper, $, vis) {
+	function(IIDXHelper, ModalIidx, MsiClientNodeGroupExec, MsiClientNodeGroupStore, MsiClientOntologyInfo, MsiClientStatus, MsiClientResults, MsiResultSet, OntologyInfo, SparqlGraphJson, VisJsHelper, $, vis, JSONEditor) {
 
 
 		//============ local object  ExploreTab =============
-		var ReportTab = function(optionsDiv, reportDiv, g) {
+		var ReportTab = function(toolForm, optionsDiv, editorDiv, reportDiv, g) {
             this.conn = null;
+            this.toolForm = toolForm;
             this.optionsDiv = optionsDiv;
+
+            editorDiv.innerHTML = "";
+            var div = document.createElement("div");
+            div.id="editWrapper";
+            div.style.paddingBottom="10em";  // leave space for menus to overflow
+            editorDiv.appendChild(div);
+            this.editorDiv = div;
             this.reportDiv = reportDiv;
             this.g = g;
+            this.editor = null;
 
+            this.initToolForm();
             this.initOptionsDiv();
+            this.initEditorDiv();
             this.initReportDiv();
+
+            this.reportJSON = null;
         };
 
         ReportTab.CSS = `
@@ -198,93 +212,49 @@ define([	// properly require.config'ed
         ;
 
         // load this from triplestore
-        ReportTab.RACK = {
-            "title": "A sample report on RACK",
-            "sections": [
-                {
-                    "header" : "Data statistics",
-                    "sections" : [
-                        {
-                            "header" : "Class count",
-                            "description" : "Number of instances of each exact class",
-                            "special" : "class_count"
-                        }
-                    ]
-                },
-                {
-                    "header" : "Show TESTS verifying REQUIREMENTS",
-                    "description" : "This is a display section that doesn't test anything",
-                    "sections" : [
-                        {
-                            "header" : "Histogram: Number of TESTS verifying REQUIREMENTS",
-                            "description" : "This section simply demonstrates histograms.  It shows up whether it is needed or not.",
-                            "nodegroup" : "report_count_test_verifies_req",
-                            "plot" : "hist",
-                        },
-                        {
-                            "header" : "Requirements sorted by number of tests verifying",
-                            "description" : "This also always shows up.",
-                            "nodegroup" : "report_count_test_verifies_req",
-                        },
-                    ]
-                },
-                {
-                    "header" : "Search for TESTs that do not verify requirements",
-                    "nodegroup" : "query Testcase without requirement",
-                    "count" : true,
-                    "ranges" : [
-                        {
-                            "lte" : 0,
-                            "status" : "success",
-                            "format" : "No test cases found which do not verify a requirement",
-                        },
-                        {
-                            "gte" : 1,
-                            "status" : "failure",
-                            "format": "Found {0} test cases that do not verify a requirement",
-                            "sections": [
-                                {
-                                    "header" : "TESTs that do not verify requirements",
-                                    "nodegroup" : "query Testcase without requirement",
-                                },
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "header" : "TESTs  confirmed by a TEST_RESULT",
-                    "description" : "All TESTs should be confirmed by at least one TEST_RESULT",
-                    "nodegroup" : "report_test_without_result",
-                    "count" : true,
-                    // first range that matches will be used
-                    "ranges" : [
-                        {
-                            "lte" : 0,
-                            "status" : "success",
-                            "format" : "No tests found without a confirming test result",
-                        },
-                        {
-                            "gte" : 1,
-                            "status" : "failure",
-                            "format": "Found {0} tests that are not confirmed.",
-                            "sections" : [
-                                {
-                                    "header" : "TESTs that are not confirmed by a TEST_RESULT",
-                                    "nodegroup" : "report_test_without_result",
-                                },
-                            ]
-                        },
-                    ]
-                },
-            ]
-        };
+
+        // built and verified at  https://json-editor.github.io/json-editor/
 
 		ReportTab.prototype = {
             setConn : function(conn) {
                 this.conn = conn;
                 this.initReportDiv();
-                var select = document.getElementById("reportSelect");
-                select.selectedIndex = 0;
+                this.initToolForm();
+            },
+
+            updateToolForm : function() {
+                var span = document.getElementById("reportConnSpan");
+                var connHTML = (this.conn != null && this.conn.getName() != null) ? ("<b>Conn: </b>" + this.conn.getName()) : "";
+                span.innerHTML = connHTML;
+            },
+
+            initToolForm : function() {
+                var table = document.createElement("table");
+                table.classList = [];
+                table.style.width="100%";
+                var tr = document.createElement("tr");
+                table.appendChild(tr);
+                this.toolForm.appendChild(table);
+
+                // left (empty)
+                var td = document.createElement("td");
+                td.align="right";
+                tr.appendChild(td);
+
+                // center
+                td = document.createElement("td");
+                td.align="center";
+                tr.appendChild(td);
+
+                var span = IIDXHelper.createElement("span", "");
+                span.id = "reportConnSpan";
+                td.appendChild(span);
+                this.updateToolForm();
+
+                // right (empty)
+                td = document.createElement("td");
+                td.align="right";
+                tr.appendChild(td);
             },
 
             // print a div
@@ -294,14 +264,169 @@ define([	// properly require.config'ed
             initOptionsDiv : function() {
 				this.optionsDiv.innerHTML = "";
 
-				// baseURI
-				var form = IIDXHelper.buildHorizontalForm();
-                var select = IIDXHelper.createSelect("reportSelect", ["", "RACK"], [""]);
-                select.onchange = this.drawReport.bind(this, select);
+                var table = IIDXHelper.createElement("table", "");
+                table.style.width = "100%";
+                var tr = document.createElement("tr");
 
-				var group = IIDXHelper.buildControlGroup("Report: ", select, "choose a report", "reportSelectHelp");
-                form.appendChild(group);
-				this.optionsDiv.appendChild(form);
+                // ===== drop json cell =====
+                var td1 = document.createElement("td");
+                td1.id = "tdSyncOwl1";
+                td1.style.width="25%";
+                td1.appendChild(IIDXHelper.createDropzone("icon-tasks", "Drop Report JSON", function(e) {return true;}, this.dropReportJSON.bind(this)));
+                tr.appendChild(td1);
+
+                // run button cell
+                var td2 = document.createElement("td");
+                var button = document.createElement("button");
+                button.id = "butSyncOwl";
+                button.classList.add("btn");
+                button.innerHTML = "Run";
+                button.onclick = this.runReport.bind(this);
+                td2.appendChild(IIDXHelper.createNbspText());
+                td2.appendChild(button);
+                td2.appendChild(IIDXHelper.createNbspText());
+                tr.appendChild(td2);
+
+                // run button cell
+                var td3 = document.createElement("td");
+                td3.align="right";
+                td3.style.width = "20em";
+                var span = document.createElement("span");
+                span.id = "valid_indicator";
+                td3.appendChild(span);
+                tr.appendChild(td3);
+
+                table.appendChild(tr);
+                this.optionsDiv.appendChild(table);
+                return;
+            },
+
+            dropReportJSON : function (ev, label) {
+                this.reportJSON = [];
+                var files = ev.dataTransfer.files;
+
+                readNext = function(index) {
+                    // done
+                    if (index == 1) {
+                        return;
+                    }
+
+                    // error
+                    var file = files[index];
+                    if (file.name.slice(-5) != ".json" && file.name.slice(-5) != ".JSON") {
+                        this.logAndAlert("Error dropping data file", "Only .json is supported: " + file.name);
+                        return;
+                    }
+
+                    // normal
+                    var reader = new FileReader();
+                    reader.onload = function(f) {
+                        console.log(file.name);
+                        this.reportJSON.push(file);
+                        label.data = file.name;
+                        file.text().then(
+                            function(jsonStr) {
+                                this.editor.setValue(JSON.parse(jsonStr));
+                            }.bind(this));
+                        // chain next read
+                        readNext(1);
+                    }.bind(this);
+                    reader.readAsText(file);
+                }.bind(this);
+                readNext(0);
+            },
+
+            initEditorDiv : function () {
+                // make sure this stylesheet is the last (closest/overriding) sheet
+                var link1 = document.createElement("link");
+                link1.rel='stylesheet';
+                link1.type='text/css';
+                link1.href = '../css/json-editor.css';
+                this.editorDiv.appendChild(link1);
+
+                var link2 = document.createElement("link");
+                link2.rel='stylesheet';
+                link2.type='text/css';
+                link2.href = 'https://use.fontawesome.com/releases/v5.12.1/css/all.css';
+                this.editorDiv.appendChild(link2);
+
+                var table = document.createElement("table");
+                this.editorDiv.appendChild(table);
+                table.style.width="100%";
+
+                var tr = document.createElement("tr");
+                table.appendChild(tr);
+                var left = document.createElement("td");
+                tr.appendChild(left);
+                var middle = document.createElement("td");
+                middle.align = "center";
+                tr.appendChild(middle);
+
+                var right = document.createElement("td");
+                right.align = "right";
+                tr.appendChild(right);
+
+                // download button cell
+                right.appendChild(IIDXHelper.createButton("Download", this.downloadReport.bind(this), ["btn", "btn-primary"]));
+                right.appendChild(IIDXHelper.createNbspText());
+
+                // json editor info button
+                right.appendChild(IIDXHelper.createIconButton("icon-info-sign",
+                                    function() {
+                                        window.open('https://github.com/json-editor/json-editor', "_blank","location=yes");
+                                    },
+                                    ["icon-white", "btn-small", "btn-info"],
+                                    undefined,
+                                    "JSONEditor",
+                                    "Built with JSONEditor"
+                                ));
+
+
+
+                var options = {
+                    ajax: true,
+                    display_required_only: true,
+                    schema : { $ref: "../json/report-schema.json" },
+                    theme : "barebones",
+                    iconlib: "fontawesome5"
+                };
+                this.editor = new JSONEditor.JSONEditor(this.editorDiv, options);
+                this.initValidator();
+
+            },
+
+            initValidator : function() {
+                // Hook up the validation indicator to update its
+                // status whenever the editor changes
+                this.editor.on('change',function() {
+                    // Get an array of errors from the validator
+                    var errors = this.editor.validate();
+                    var indicator = document.getElementById('valid_indicator');
+
+                    // Not valid
+                    if(errors.length) {
+                        indicator.className = 'reports-invalid';
+                        indicator.textContent = 'JSON is invalid';
+                    }
+                    // Valid
+                    else {
+                        indicator.className = 'reports-valid';
+                        indicator.textContent = 'JSON is valid';
+                    }
+                }.bind(this));
+            },
+
+            downloadReport : function() {
+                var json = this.editor.getValue();
+                var jsonStr = JSON.stringify(json, null, 4);
+                var title = json.title ? (json.title.replaceAll(" ", "_") + ".json") : "report.json";
+                IIDXHelper.downloadFile(jsonStr, title, "text/json");
+            },
+
+            runReport : function() {
+                if (! this.reportJSON || this.reportJSON.length != 1) { ModalIidx.alert("Error", "No report to run."); return;}
+
+                this.reportJSON[0].text().then(this.drawReport.bind(this));
             },
 
             initReportDiv : function() {
@@ -315,16 +440,19 @@ define([	// properly require.config'ed
                 this.reportDiv.appendChild(style);
             },
 
-            drawReport : function(select) {
+            drawReport : function(jsonStr) {
                 // TODO: always draws the rack report
-                report = ReportTab.RACK;
+                report = JSON.parse(jsonStr);
                 this.initReportDiv();
-
-                var reportName = select.options[select.selectedIndex].text;
                 this.appendStyles();
 
                 var p = IIDXHelper.createElement("p", report["title"], "report-title");
                 this.reportDiv.appendChild(p);
+
+                if (report["description"]) {
+                    p = IIDXHelper.createElement("p", report["description"], undefined);
+                    this.reportDiv.appendChild(p);
+                }
 
                 for (var section of report["sections"]) {
                     this.reportDiv.appendChild(this.generateSection(section, 1));
@@ -335,8 +463,8 @@ define([	// properly require.config'ed
 
                 var div = IIDXHelper.createElement("div", "", "report-div-level-" + level);
 
-                // print header
-                var header = section["header"] || ""
+                // required: header
+                var header = section["header"] || "<No Header Specified>"
                 let h = IIDXHelper.createElement("h" + level, header, "report-h" + level);
                 div.appendChild(h);
 
@@ -346,70 +474,113 @@ define([	// properly require.config'ed
                     div.appendChild(p);
                 }
 
-                try {
-                    if (section["nodegroup"] != undefined) {
-                        // create a blank div to cover for async behavior
-                        let ngDiv = IIDXHelper.createElement("div", "", undefined);
-                        ngDiv.appendChild(IIDXHelper.createElement("div", "", "report-wait-spinner"));
-                        div.appendChild(ngDiv);
+                if (section["special"] != undefined) {
+                    var id = section["special"]["id"]
 
-                        if (section["plot"] != undefined) {
-                            var ngStoreClient = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
-                            ngStoreClient.getNodeGroupByIdToJsonStr(section["nodegroup"], this.plotGetNgCallback.bind(this, ngDiv, section, level));
-                        } else if (section["count"] != undefined) {
-                            var ngExecClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url);
-                            var countCallback = MsiClientNodeGroupExec.buildFullJsonCallback(this.countGetTableCallback.bind(this, ngDiv, section, level),
-                                                                                             this.failureCallback.bind(this, ngDiv),
-                                                                                             this.statusCallback.bind(this, ngDiv),
-                                                                                             this.checkForCallback.bind(this, ngDiv),
-                                                                                             this.g.service.status.url,
-                                                                                             this.g.service.results.url);
-                            ngExecClient.execAsyncDispatchCountById(section["nodegroup"], this.conn, null, null, countCallback, this.failureCallback.bind(this, ngDiv));
-                        } else {
-                            var ngExecClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url);
-                            var tableCallback = MsiClientNodeGroupExec.buildFullJsonCallback(this.tableGetTableCallback.bind(this, ngDiv),
-                                                                                             this.failureCallback.bind(this, ngDiv),
-                                                                                             this.statusCallback.bind(this, ngDiv),
-                                                                                             this.checkForCallback.bind(this, ngDiv),
-                                                                                             this.g.service.status.url,
-                                                                                             this.g.service.results.url);
-                            ngExecClient.execAsyncDispatchSelectById(section["nodegroup"], this.conn, null, null, tableCallback, this.failureCallback.bind(this, ngDiv));
-                        }
+                    let spDiv = IIDXHelper.createElement("div", "", undefined);
+                    spDiv.appendChild(IIDXHelper.createElement("div", "", "report-wait-spinner"));
+                    div.appendChild(spDiv);
 
-                    } else if (section["special"] != undefined) {
-                        let spDiv = IIDXHelper.createElement("div", "", undefined);
-                        spDiv.appendChild(IIDXHelper.createElement("div", "", "report-wait-spinner"));
-                        div.appendChild(spDiv);
+                    try {
+                        if (! id ) throw new Error("Report section['special'] is missing field 'id'");
 
-                        if (section["special"] == "class_count") {
+                        if (id == "class_count") {
                             var client = new MsiClientOntologyInfo(this.g.service.ontologyInfo.url, this.failureCallback.bind(this, spDiv));
                             var jsonBlobCallback = MsiClientOntologyInfo.buildPredicateStatsCallback(this.specialClassCountCallback.bind(this, spDiv),
                                                                                                 this.failureCallback.bind(this, spDiv),
                                                                                                 this.statusCallback.bind(this, spDiv),
                                                                                                 this.checkForCallback.bind(this, spDiv));
                             client.execGetPredicateStats(this.conn, jsonBlobCallback);
+                        } else {
+                            throw new Error("Report 'special.id' has unknown value value: " + id);
                         }
+
+                    } catch (e) {
+                        this.failureCallback(spDiv, e)
+        			}
+
+                } else if (section["plot"] != undefined) {
+                    var nodegroup = section["plot"]["nodegroup"];
+                    var plotId = section["plot"]["plotname"];
+
+                    // create a blank div to cover for async behavior
+                    let ngDiv = IIDXHelper.createElement("div", "", undefined);
+                    ngDiv.appendChild(IIDXHelper.createElement("div", "", "report-wait-spinner"));
+                    div.appendChild(ngDiv);
+
+                    try {
+                        if (!nodegroup) throw new Error("Report section['plot'] is missing field 'nodegroup'");
+                        if (! plotId) throw new Error("Report section['plot'] is missing field 'plotname'");
+
+                        var ngStoreClient = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
+                        ngStoreClient.getNodeGroupByIdToJsonStr(nodegroup, this.plotGetNgCallback.bind(this, ngDiv, plotId, level));
+
+                    } catch (e) {
+                        this.failureCallback(ngDiv, e)
                     }
 
-                    if (section["sections"] != undefined) {
-                        for (subSection of section["sections"]) {
-                            div.appendChild(this.generateSection(subSection, level+1));
-                        }
+                } else if (section["table"] != undefined) {
+                    var nodegroup = section["table"]["nodegroup"];
+
+                    let ngDiv = IIDXHelper.createElement("div", "", undefined);
+                    ngDiv.appendChild(IIDXHelper.createElement("div", "", "report-wait-spinner"));
+                    div.appendChild(ngDiv);
+
+                    try {
+                        if (! nodegroup) throw new Error("Report section['table'] is missing field 'nodegroup'");
+
+                        var ngExecClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url);
+                        var tableCallback = MsiClientNodeGroupExec.buildFullJsonCallback(this.tableGetTableCallback.bind(this, ngDiv),
+                                                                                         this.failureCallback.bind(this, ngDiv),
+                                                                                         this.statusCallback.bind(this, ngDiv),
+                                                                                         this.checkForCallback.bind(this, ngDiv),
+                                                                                         this.g.service.status.url,
+                                                                                         this.g.service.results.url);
+                        ngExecClient.execAsyncDispatchSelectById(nodegroup, this.conn, null, null, tableCallback, this.failureCallback.bind(this, ngDiv));
+                    } catch (e) {
+                        this.failureCallback(ngDiv, e);
                     }
-                } catch (e) {
-                    this.failureCallback(div, e)
-    			}
+
+                } else if (section["count"] != undefined) {
+                    var nodegroup = section["count"]["nodegroup"];
+
+                    let ngDiv = IIDXHelper.createElement("div", "", undefined);
+                    ngDiv.appendChild(IIDXHelper.createElement("div", "", "report-wait-spinner"));
+                    div.appendChild(ngDiv);
+
+                    try {
+                        if (!nodegroup) throw new Error("Report section['count'] is missing field 'nodegroup'");
+
+                        var ngExecClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url);
+                        var countCallback = MsiClientNodeGroupExec.buildFullJsonCallback(this.countGetTableCallback.bind(this, ngDiv, section["count"], level),
+                                                                                         this.failureCallback.bind(this, ngDiv),
+                                                                                         this.statusCallback.bind(this, ngDiv),
+                                                                                         this.checkForCallback.bind(this, ngDiv),
+                                                                                         this.g.service.status.url,
+                                                                                         this.g.service.results.url);
+                        ngExecClient.execAsyncDispatchCountById(nodegroup, this.conn, null, null, countCallback, this.failureCallback.bind(this, ngDiv));
+
+                    } catch (e) {
+                        this.failureCallback(div, e)
+        			}
+                }
+
+                if (section["sections"] != undefined) {
+                    for (subSection of section["sections"]) {
+                        div.appendChild(this.generateSection(subSection, level+1));
+                    }
+                }
 
                 return div;
             },
 
-            plotGetNgCallback : function(div, section, level, jsonStr) {
+            plotGetNgCallback : function(div, plotId, level, jsonStr) {
                 var sgJson = new SparqlGraphJson();
                 sgJson.parse(jsonStr);
                 var ng = new SemanticNodeGroup();
                 sgJson.getNodeGroup(ng);
                 var plotSpecHandler = sgJson.getPlotSpecsHandler();
-                var plotter = plotSpecHandler.getPlotterByName(section["plot"]);
+                var plotter = plotSpecHandler.getPlotterByName(plotId);
 
                 var ngExecClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url);
                 var jsonCallback = MsiClientNodeGroupExec.buildFullJsonCallback(this.plotGetTableCallback.bind(this, div, plotter),
@@ -426,51 +597,52 @@ define([	// properly require.config'ed
                 plotter.addPlotToDiv(div, tableRes);
             },
 
-            countGetTableCallback : function(div, section, level, tableRes) {
+            countGetTableCallback : function(div, countJson, level, tableRes) {
                 div.innerHTML="";
                 var count = tableRes.getTable().rows[0][0];
 
-                var r = undefined;
-                if (section["ranges"] != undefined) {
-                    for (var this_range of section["ranges"]) {
-                        if (this_range["gte"] != undefined) {
-                            if (count >= this_range["gte"]) {
-                                r = this_range;
-                                break;
+                var rangeFlag = false;
+                if (countJson["ranges"] != undefined) {
+
+                    for (var this_range of countJson["ranges"]) {
+                        var match = true;
+
+                        if (this_range["gte"] != undefined && count < this_range["gte"]) {
+                            match = false;
+                        }
+                        if (this_range["lte"] != undefined && count > this_range["lte"]) {
+                            match = false;
+                        }
+                        if (match) {
+                            rangeFlag = true;
+
+                            // print status if it is there
+                            if (this_range["status"] != undefined) {
+                                if (this_range["status"] == "success") {
+                                    div.appendChild(IIDXHelper.createElement("span", "\u2705 ", className="success-icon"));
+                                } else if (this_range["status"] == "failure") {
+                                    div.appendChild(IIDXHelper.createElement("span", "\u26d4 ", className="failure-icon"));
+                                }
                             }
-                        } else if (this_range["lte"] != undefined) {
-                            if (count <= this_range["lte"]) {
-                                r = this_range;
-                                break;
-                            }
-                        } else {
-                            r = this_range;
-                            break;
+
+                            // use format to print count, or just a simple one if none
+                            var fmt = this_range["format"] || "count: {0}";
+                            div.appendChild(IIDXHelper.createElement("span", this.format(fmt, count)));
+
+                           // do sections
+                           if (this_range["sections"] != undefined) {
+                               for (subSection of this_range["sections"]) {
+                                   div.appendChild(this.generateSection(subSection, level+1));
+                               }
+                           }
                         }
                     }
                 }
 
-                // no ranges, or none matched, then look for data in the section instead
-                if (r) {
-                    if (r["status"] != undefined) {
-                        if (r["status"] == "success") {
-                            div.appendChild(IIDXHelper.createElement("span", "\u2705 ", className="success-icon"));
-                        } else if (r["status"] == "failure") {
-                            div.appendChild(IIDXHelper.createElement("span", "\u26d4 ", className="failure-icon"));
-                        }
-
-                        fmt = r["format"] || "count: {0}";
-                        div.appendChild(IIDXHelper.createElement("span", this.format(fmt, count)));
-                   }
-                   if (r["sections"] != undefined) {
-                       for (subSection of r["sections"]) {
-                           div.appendChild(this.generateSection(subSection, level+1));
-                       }
-                   }
-               } else {
-                   fmt = section["format"] || "count: {0}";
-                   div.appendChild(IIDXHelper.createElement("span", this.format(fmt, count)));
-               }
+                // no ranges matched, just print the count
+                if (!rangeFlag) {
+                    div.appendChild(IIDXHelper.createElement("span", this.format("count: {0}", count)));
+                }
             },
 
             specialClassCountCallback : function(div, res) {
@@ -537,6 +709,26 @@ define([	// properly require.config'ed
             failureCallback : function(div, eOrMsg) {
                 var msg = eOrMsg.toString();
                 let errorDiv = IIDXHelper.createElement("div", "Error generating this section.", "report-error");
+
+                var summary = null;
+                if (msg.indexOf("special.id") > -1) {
+                    summary = "Unknown special section: " + msg.split(":")[2];
+                } else if (msg.indexOf("Could not find nodegroup with id")) {
+                    let lines = msg.split('<br>');
+                    for (let l of lines) {
+                        if (l.indexOf("rationale") > -1) {
+                            summary = l.split('\\n')[0];
+                            if (summary.indexOf("Exception") > -1) {
+                                summary = summary.split("Exception")[1];
+                            }
+                        }
+                    }
+                }
+                if (summary != null) {
+                    let errorP = IIDXHelper.createElement("p", summary, undefined);
+                    errorDiv.appendChild(errorP);
+                }
+
                 div.innerHTML = "";
                 div.appendChild(errorDiv);
                 console.error(eOrMsg);

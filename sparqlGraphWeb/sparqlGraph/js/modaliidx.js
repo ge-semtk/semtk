@@ -236,6 +236,15 @@ define([	// properly require.config'ed   bootstrap-modal
                                                 optId);
         };
 
+        ModalIidx.createLinkButton = function(link, optId) {
+            return IIDXHelper.createIconButton("icon-info-sign",
+                                                function() {
+                                                    window.open(link, "_blank","location=yes");
+                                                },
+                                                ["icon-white", "btn-small", "btn-default"],
+                                                optId);
+        };
+
 		ModalIidx.prototype = {
 
             showOK : function (headerText, bodyDOM, callback, optWidthPercent) {

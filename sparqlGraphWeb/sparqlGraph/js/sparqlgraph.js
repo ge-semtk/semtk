@@ -131,7 +131,9 @@
             // init gReportTab
             setTabButton("report-tab-but", false);
             gReportTab = new ReportTab(
+                                    document.getElementById("reportToolForm"),
                                     document.getElementById("reportOptionsDiv"),
+                                    document.getElementById("reportEditDiv"),
                                     document.getElementById("reportDiv"),
                                     g);
 

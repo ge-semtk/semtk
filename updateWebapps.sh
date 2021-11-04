@@ -44,6 +44,7 @@ done
 
 # get list of dirs to copy to webapps
 COPYDIRS=( "iidx-oss"
+           "jsoneditor"
            "plotly"
            "sparqlForm/main-oss"
            "sparqlGraph/css"
@@ -51,6 +52,7 @@ COPYDIRS=( "iidx-oss"
            "sparqlGraph/images"
            "sparqlGraph/jquery"
            "sparqlGraph/js"
+           "sparqlGraph/json"
            "sparqlGraph/main-oss"
            "vis-4.21.0"
          )

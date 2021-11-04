@@ -42,9 +42,7 @@
     <!-- script src='../dynatree-1.2.5/jquery.dynatree.js' type="text/javascript"></script>
 
 	<!-- CSS stuff -->
-	<!--  PEC TODO use the iids modal dialog -->
 	<link rel="stylesheet" type="text/css" href="../css/modaldialog.css" />
-
 
 	<!-- Include local javascript -->
 	<script type="text/javascript" src="./sparqlgraphconfigOss.js"></script>
@@ -72,9 +70,10 @@
 				baseUrl : '../../iidx-oss',
 				paths : {
 					"jquery-csv" : "../sparqlGraph/jquery/jquery.csv-0.71.min",
+          "jsoneditor" : "../jsoneditor/js/jsoneditor.min",
           "local" :      "../sparqlGraph/main-oss",
           "visjs" :      "../vis-4.21.0/dist",
-          "plotly":      "../plotly"
+          "plotly":      "../plotly",
 			    }
 	        });
 	</script>
@@ -478,18 +477,18 @@
               <header class="module-header">Graph Tools</header>
             <div id="uploadtoolsdiv" class="module-body collapse">
             </div>
-            </section>
-            <br>
-            <section class="module collapsible">
+          </section>
+          <br>
+          <section class="module collapsible">
               <header class="module-header">Triplestore Tools</header>
             <div id="uploadmiscdiv" class="module-body collapse">
             </div>
-            </section>
+          </section>
           <br>
-            <section class="module">
+          <section class="module">
             <div id="uploadtabdiv" class="module-body">
             </div>
-            </section>
+          </section>
         </div>
       </div>
     </div>
@@ -497,12 +496,21 @@
   <!------  Report Tab ------>
   <div id="tabs-r">
     <div class="semtkcontainer semtktab">
+      <!------------  button toolbar ------------>
+      <form id="reportToolForm" class="form-search"  style="margin-bottom:1ch;">
+      </form>
       <div id="reporttabdiv">
         <br>
         <section class="module">
           <div id="reportOptionsDiv" class="module-body"></div>
         </section>
         <br>
+        <section class="module collapsible">
+            <header class="module-header">Edit</header>
+          <div id="reportEditDiv" class="module-body collapse">
+          </div>
+        </section>
+        <br -->
         <section class="module">
           <div id="reportDiv" class="module-body"></div>
         </section>
