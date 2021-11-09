@@ -405,8 +405,14 @@ define([	// properly require.config'ed
 
                     // Not valid
                     if(errors.length) {
-                        indicator.className = 'reports-invalid';
-                        indicator.textContent = 'JSON is invalid';
+                        var json = this.editor.getValue();
+                        if (Object.keys(json).length == 1 && json.title == "") {
+                            indicator.className = 'reports-valid';
+                            indicator.textContent = 'JSON is empty';
+                        } else {
+                            indicator.className = 'reports-invalid';
+                            indicator.textContent = 'JSON is invalid';
+                        }
                     }
                     // Valid
                     else {
