@@ -8,7 +8,8 @@ SemTkConnection is a class,
 	described by dsKsURL  with a single value of type string,
 	described by dsDataset with a single value of type string,
 	described by domain with a single value of type string.
-		
+
+// Original	is kept for backwards compatibility
 PrefabNodeGroup is a class,
 	described by ID with a single value of type string,
 	described by NodeGroup with a single value of type string,
@@ -21,4 +22,14 @@ PrefabNodeGroup is a class,
 StringChunk is a class,
 	described by counter with a single value of type int,
 	described by chunk with a single value of type string.
+
+// more general and modern ish	
+StringBlob is a class,
+	described by id with a single value of type string,
+	described by stringChunk with values of type StringChunk,
+	described by comments with values of type string,
+	described by creator with a single value of type string,
+	described by creationDate with a single value of type date.
+	
+Report is a type of StringBlob.
 	

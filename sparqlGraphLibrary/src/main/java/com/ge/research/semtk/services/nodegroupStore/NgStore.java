@@ -38,6 +38,8 @@ import com.ge.research.semtk.utility.Utility;
  */
 public class NgStore {
 	
+	public static enum StringBlobTypes { Report };
+	
 	private String dataGraph = null;
 	private SparqlEndpointInterface sei = null;
 	
@@ -71,8 +73,24 @@ public class NgStore {
 			
 	}
 	
+	public String getStringBlob(String id, StringBlobTypes blobType) throws Exception {
+		Table tbl = this.getStringBlobTable(id, blobType);
+		if (tbl.getNumRows() == 0) {
+			return null;
+		} else if (tbl.getNumRows() == 1) {
+			return tbl.getCell(0, "stringChunk");
+		} else {
+			throw new Exception("Internal error: muliple rows found");
+		}
+		
+	}
+	
 	public Table getNodegroupTable(String id)  throws Exception {
 		return this.getNodegroupTable(id, false);
+	}
+	
+	public Table getStringBlobTable(String id, StringBlobTypes blobType)  throws Exception {
+		return this.getStringBlobTable(id, blobType, false);
 	}
 	
 	/**
@@ -105,6 +123,35 @@ public class NgStore {
 		return retTable;
 	}
 	
+	/**
+	 * Return nodegroup table with zero rows, or one row containing full nodegroup json string
+	 * @param id
+	 * @return table with 0 or 1 rows
+	 * @throws Exception
+	 */
+	public Table getStringBlobTable(String id, StringBlobTypes blobType, boolean suFlag)  throws Exception {
+		String query = this.genSparqlGetStringBlobById(id, blobType);
+		
+		Table retTable = this.executeQuery(query, suFlag);
+		
+		if (retTable.getNumRows() > 1) {
+			// combine rows into one by appending "stringChunk"
+			StringBuilder blob = new StringBuilder();
+
+			for (int i=0; i < retTable.getNumRows(); i++) {
+				blob.append(retTable.getCellAsString(i, "stringChunk"));
+			}
+			
+			ArrayList<String> row0 = retTable.getRow(0);
+			retTable.clearRows();
+			retTable.addRow(row0);
+			retTable.setCell(0, "stringChunk", blob.toString());
+						
+		} 
+		return retTable;
+		
+	}
+	
 	public Table getNodeGroupIdList() throws Exception {
 		return this.getNodeGroupIdList(false);
 	}
@@ -129,6 +176,14 @@ public class NgStore {
 		return this.executeQuery(this.genSparqlGetNodeGroupMetadata(), suFlag);
 	}
 	
+	public Table getStringBlobMetadata(StringBlobTypes blobType) throws Exception {
+		return this.getStringBlobMetadata(blobType, false);
+	}
+	
+	public Table getStringBlobMetadata(StringBlobTypes blobType, boolean suFlag) throws Exception {
+		return this.executeQuery(this.genSparqlGetStringBlobMetadata(blobType), suFlag);
+	}
+	
 	public void deleteNodeGroup(String id) throws Exception {
 		this.deleteNodeGroup(id, false);
 	}
@@ -137,12 +192,32 @@ public class NgStore {
 		this.executeConfirmQuery(this.genSparqlDeleteNodeGroup(id), suFlag);
 	}
 	
+	public void deleteStringBlob(String id, StringBlobTypes blobType) throws Exception {
+		this.deleteStringBlob(id, blobType, false);
+	}
+	
+	public void deleteStringBlob(String id, StringBlobTypes blobType, boolean suFlag) throws Exception {
+		this.executeConfirmQuery(this.genSparqlDeleteStringBlob(id), suFlag);
+	}
+	
 	public void insertNodeGroup(JSONObject sgJsonJson, JSONObject connJson, String id, String comments, String creator ) throws Exception {
 		this.insertNodeGroup(sgJsonJson, connJson, id, comments, creator, false);
 	}
 	
 	public void insertNodeGroup(JSONObject sgJsonJson, JSONObject connJson, String id, String comments, String creator, boolean suFlag ) throws Exception {
 		ArrayList<String> insertQueries = this.genSparqlInsertNodeGroup(sgJsonJson, connJson, id, comments, creator);
+	
+		for (String insertQuery : insertQueries) {
+			this.executeConfirmQuery(insertQuery, suFlag);
+		}
+	}
+	
+	public void insertStringBlob(String blob, StringBlobTypes blobType, String id, String comments, String creator ) throws Exception {
+		this.insertStringBlob(blob, blobType, id, comments, creator, false);
+	}
+	
+	public void insertStringBlob(String blob, StringBlobTypes blobType, String id, String comments, String creator, boolean suFlag ) throws Exception {
+		ArrayList<String> insertQueries = this.genSparqlInsertStringBlob(blob, blobType, id, comments, creator);
 	
 		for (String insertQuery : insertQueries) {
 			this.executeConfirmQuery(insertQuery, suFlag);
@@ -199,37 +274,28 @@ public class NgStore {
 		return ret;
 	}
 	
-	private String genSparqlGetNodeGroupByConnAlias(String connectionAlias){
-		String rdf10ValuesClause = "VALUES ?connectionAlias { \"" + connectionAlias + "\" \"" + connectionAlias + "\"^^<http://www.w3.org/2001/XMLSchema#string>} . ";
+	// get sparql queries for getting the needed info. 
+	// returns multiple rows for each id, sorted by counter
+	private String genSparqlGetStringBlobById(String id, StringBlobTypes blobType){
+		String rdf10ValuesClause = "VALUES ?ID { \"" + id + "\"} . ";
 
-		String retval = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
-						"SELECT distinct ?ID ?NodeGroup ?comments " +
-						"FROM <" + this.dataGraph + "> WHERE { " +
-						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
-						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
-						"?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup . " +
-						"optional { ?PrefabNodeGroup prefabNodeGroup:comments ?comments . } " +
-						"?PrefabNodeGroup prefabNodeGroup:originalConnection ?SemTkConnection. " +
-						"?SemTkConnection prefabNodeGroup:connectionAlias  . " +
-						rdf10ValuesClause +
-						"}";
-		return retval;
+		String query  = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
+				"SELECT distinct ?stringChunk ?counter" +
+				"FROM <" + this.dataGraph + "> WHERE { " +
+				"?blob a prefabNodeGroup:" + blobType.toString() + " . " +
+				"?blob prefabNodeGroup:id ?ID . " +
+				rdf10ValuesClause +
+				"?blob prefabNodeGroup:stringChunk ?stringChunkObj . " +
+				"  ?strungChunkObj prefabNodeGroup:chunk ?stringChunk . " +
+				"  ?strungChunkObj prefabNodeGroup:counter ?counter . " +
+				"} ORDER BY ?counter";		
+		
+		return query;
 	}
 	
-	private String genSparqlGetConnectionInfo(){
-		String retval = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
-						"SELECT distinct ?connectionAlias ?domain ?dsDataset ?dsKsURL ?dsURL ?originalServerType " +
-						"FROM <" + this.dataGraph + "> WHERE { " +
-						"?SemTkConnection a prefabNodeGroup:SemTkConnection. " +
-						"?SemTkConnection prefabNodeGroup:connectionAlias ?connectionAlias . " +
-						"?SemTkConnection prefabNodeGroup:domain ?domain . " +
-						"?SemTkConnection prefabNodeGroup:dsDataset ?dsDataset . " +
-						"?SemTkConnection prefabNodeGroup:dsKsURL ?dsKsURL . " +
-						"?SemTkConnection prefabNodeGroup:dsURL ?dsURL . " +
-						"?SemTkConnection prefabNodeGroup:originalServerType ?originalServerType . " +
-						"}";
-		return retval;	
-	}
+	
+	
+	
 	
 	private String genSparqlGetFullNodeGroupList(){
 		String retval = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
@@ -243,17 +309,6 @@ public class NgStore {
 		return retval;
 	}
 
-	private String genSparqlGetNodeGroupIdCommentList(){
-		String retval = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
-						"SELECT distinct ?ID ?comments " +
-						"FROM <" + this.dataGraph + "> WHERE { " +
-						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
-						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
-						"?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup . " +
-						"optional { ?PrefabNodeGroup prefabNodeGroup:comments ?comments . } " +
-						"}";
-		return retval;
-	}
 	
 	private String genSparqlGetNodeGroupIdList(){
 		String retval = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
@@ -278,6 +333,22 @@ public class NgStore {
 						"}";
 		return retval;
 	}
+	
+	private String genSparqlGetStringBlobMetadata(StringBlobTypes blobType){
+		String retval = "PREFIX XMLSchema:<http://www.w3.org/2001/XMLSchema#> " +
+						"PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
+						"SELECT distinct ?ID ?comments ?creationDate ?creator " +
+						"FROM <" + this.dataGraph + "> WHERE { " +
+						"?blob a prefabNodeGroup:" + blobType.toString() + " . " +
+						"?blob prefabNodeGroup:id ?ID . " +
+						"optional { ?blob prefabNodeGroup:comments ?comments . } " +
+				   		"optional { ?blob prefabNodeGroup:creationDate ?creationDate . } " +
+				   		"optional { ?blob prefabNodeGroup:creator ?creator . } " +
+						"}";
+		return retval;
+	}
+	
+
 
 	private String genSparqlDeleteNodeGroup(String jobId) {
 		String rdf10ValuesClause = "VALUES ?jobId { \"" + jobId + "\" \"" + jobId + "\"^^<http://www.w3.org/2001/XMLSchema#string>} . ";
@@ -304,6 +375,24 @@ public class NgStore {
 		return ret;
 	}
 	
+	private String genSparqlDeleteStringBlob(String id) {
+		String rdf10ValuesClause = "VALUES ?id { \"" + id + "\" \"" + id + "\" } . ";
+
+		String ret = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
+				"PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
+				"WITH <" + this.dataGraph + "> DELETE { " +
+                "  ?stringChunkObj ?scPred ?scObj . " +
+				"  ?PrefabNodeGroup ?pred ?obj." +
+				"} WHERE { " +
+				"  ?PrefabNodeGroup prefabNodeGroup:id ?id . " + 
+				   rdf10ValuesClause +
+                "  ?PrefabNodeGroup prefabNodeGroup:stringChunk ?stringChunkObj . " +
+                "  ?stringChunkObj ?scPred ?scObj . " +
+				"  ?PrefabNodeGroup ?pred ?obj." +
+				"}";
+		return ret;
+	}
+
 	private ArrayList<String> genSparqlInsertNodeGroup(JSONObject sgJsonJson, JSONObject connJson, String id, String comments, String creator) throws Exception {
 		final int SPLIT = 20000;
 		
@@ -361,6 +450,69 @@ public class NgStore {
 				    " WHERE {     " +
 				    "      BIND (generateSparqlInsert:semtk_cat_" + UUID.randomUUID().toString() + " AS ?SemTkStringChunk__0)." +
 				    "      BIND (" + ngURI + " AS ?PrefabNodeGroup__0)." +
+				    "  }";
+			ret.add(query);
+		}
+		return ret;
+	}
+//	String rdf10ValuesClause = "VALUES ?ID { \"" + id + "\"} . ";
+//
+//	String query  = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
+//			"SELECT distinct ?stringChunk ?counter" +
+//			"FROM <" + this.dataGraph + "> WHERE { " +
+//			"?blob a prefabNodeGroup:" + blobType.toString() + " . " +
+//			"?blob prefabNodeGroup:ID ?ID . " +
+//			rdf10ValuesClause +
+//			"?blob prefabNodeGroup:stringChunk ?stringChunkObj . " +
+//			"  ?strungChunkObj prefabNodeGroup:chunk ?stringChunk . " +
+//			"  ?strungChunkObj prefabNodeGroup:counter ?counter . " +
+//			"} ORDER BY ?counter";		
+//	
+//	return query;
+	private ArrayList<String> genSparqlInsertStringBlob(String blob, StringBlobTypes blobType, String id, String comments, String creator) throws Exception {
+		final int SPLIT = 20000;
+		
+		// extract the connJson
+		
+		String blobStr = legalizeSparqlInputString(blob);
+		String [] chunks = getNextChunk(blobStr, SPLIT);
+		
+		ArrayList<String> ret = new ArrayList<String>();
+		String uri = "generateSparqlInsert:semtk_blob_" +  UUID.randomUUID().toString();
+		String query = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
+				"PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
+				"PREFIX generateSparqlInsert:<http://semtk.research.ge.com/generated#> " +
+				"PREFIX XMLSchema:<http://www.w3.org/2001/XMLSchema#> " +
+				"INSERT { GRAPH <" + this.dataGraph + "> { " +
+			    "	   ?BlobString__0 a prefabNodeGroup:" + blobType + " . " +
+			    "	   ?BlobString__0 prefabNodeGroup:id \""            + id +   "\" ." +
+			    "	   ?BlobString__0 prefabNodeGroup:comments \""      + SparqlToXUtils.safeSparqlString(comments) +   "\" ." +
+			    "	   ?BlobString__0 prefabNodeGroup:creationDate \""  + Utility.getSPARQLCurrentDateString() +   "\" ." +
+			    "	   ?BlobString__0 prefabNodeGroup:creator \""       + creator.trim() +   "\" ." +
+			    "} } " +
+			    " WHERE {     " +
+			    "      BIND (" + uri + " AS ?BlobString__0)." +
+			    "  }";
+		ret.add(query);
+		
+		int i=0;
+		while (chunks[1].length() > 0) {
+			chunks = getNextChunk(chunks[1], SPLIT);
+			
+			query = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
+					"PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
+					"PREFIX generateSparqlInsert:<http://semtk.research.ge.com/generated#> " +
+					"PREFIX XMLSchema:<http://www.w3.org/2001/XMLSchema#> " +
+					"INSERT { GRAPH <" + this.dataGraph + "> { " +
+					"      ?SemTkStringChunk__0 a prefabNodeGroup:StringChunk . " +
+					"      ?SemTkStringChunk__0 prefabNodeGroup:counter \""    + i++  +   "\" ." +
+					"      ?SemTkStringChunk__0 prefabNodeGroup:chunk \""    + chunks[0]  +   "\" ." +
+
+				    "	   ?BlobString__0 prefabNodeGroup:stringChunk ?SemTkStringChunk__0 . " +
+				    "} } " +
+				    " WHERE {     " +
+				    "      BIND (generateSparqlInsert:semtk_cat_" + UUID.randomUUID().toString() + " AS ?SemTkStringChunk__0)." +
+				    "      BIND (" + uri + " AS ?BlobString__0)." +
 				    "  }";
 			ret.add(query);
 		}
