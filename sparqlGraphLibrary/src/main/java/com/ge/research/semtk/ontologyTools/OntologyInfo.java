@@ -231,7 +231,15 @@ public class OntologyInfo {
 			throw new Exception("Internal error: class already exists in ontology.  Cannot re-add it: " + classnameStr);
 		}
 		this.classHash.put(classnameStr, oClass);
+		this.updateSuperSubClassHash(oClass);
 		
+	}
+	
+	/**
+	 * Needs to be called any time new superclasses are added.
+	 * @param oClass
+	 */
+	private void updateSuperSubClassHash(OntologyClass oClass) {
 		// store info on the related subclasses
 		ArrayList<String> superClassNames = oClass.getParentNameStrings(false); // get the parents. there may be more than one. 
 		// spin through the list and find the ones that need to be added.
@@ -248,6 +256,7 @@ public class OntologyInfo {
 			}
 		}
 	}
+	
 	public boolean hasSubclass(String className) {
 		return this.subclassHash.get(className) != null;
 	}
@@ -1145,28 +1154,23 @@ public class OntologyInfo {
 		}
 	}
 	
-	/**
-	 * process the results of the query to get all of the sub- and super-class query and loads
-	 * them into the OntologyInfo object.
-	 * 
-	 * for unknown historical reasons, the subclass is added along with names of superclasses
-	 * but the superclasses are added later.
-	 * 
-	 **/
+
+	
 	public void loadSuperSubClasses(String subList[], String superList[]) throws Exception{
-
+				
 		for (int i=0; i < subList.length; i++) {
-			String subClassUri = subList[i];
-			String superClassUri = superList[i];
-
-			// create subclass if it is missing
-			if (!this.containsClass(subClassUri)) {
-				OntologyClass subClass =  new OntologyClass(subClassUri, null);
-				this.addClass(subClass);
+			
+			// check for the existence of the current class.
+			// (loading multiple graphs or a class with multiple superclasses)
+			if(!this.containsClass(subList[i])){
+				OntologyClass c = new OntologyClass(subList[i], null);
+				this.addClass(c);
 			}
 			
-			// get the subclass and add the parent.
-			this.getClass(subClassUri).addParentName(superClassUri);
+			// get the current class and add the parent.
+			OntologyClass c = this.getClass(subList[i]);
+			c.addParentName(superList[i]);
+			this.updateSuperSubClassHash(c);
 		}
 		
 	}
