@@ -22,6 +22,7 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.utility.LocalLogger;
 
 import io.swagger.annotations.ApiModelProperty;
@@ -41,7 +42,12 @@ public class NodegroupRequestBody {
 	public NodeGroup buildNodeGroup() throws Exception{
 		JSONParser prsr = new JSONParser();
 		JSONObject jNodeGroup = (JSONObject) prsr.parse(this.jsonRenderedNodeGroup);
-		return NodeGroup.getInstanceFromJson(jNodeGroup);		
+		if (SparqlGraphJson.isSparqlGraphJson(jNodeGroup)) {
+			SparqlGraphJson sgJson = new SparqlGraphJson(jNodeGroup);
+			jNodeGroup = sgJson.getSNodeGroupJson();
+		} 
+		
+		return NodeGroup.getInstanceFromJson(jNodeGroup);
 	}
 	
 	public JSONObject buildNodeGroupJson(){

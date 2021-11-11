@@ -112,7 +112,6 @@ import io.swagger.annotations.ApiOperation;
 public class NodeGroupExecutionRestController {
 	
  	static final String SERVICE_NAME = "nodeGroupExecutionService";
- 	static final String JOB_ID_RESULT_KEY = SimpleResultSet.JOB_ID_RESULT_KEY;
  	
  	// updated
  	@Autowired
@@ -523,10 +522,10 @@ public class NodeGroupExecutionRestController {
 					requestBody.getLimitOverride(),
 					requestBody.getOffsetOverride(),
 					targetId);
-			String id = ngExecutor.getJobID();
 			
 			retval.setSuccess(true);
-			retval.addResult(JOB_ID_RESULT_KEY, id); 
+			retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, ngExecutor.getJobID()); 
+			retval.addResult(SimpleResultSet.RESULT_TYPE_KEY, ngExecutor.getResultType().toString());
 
 		}
 		catch(Exception e){
@@ -718,7 +717,7 @@ public class NodeGroupExecutionRestController {
 					ret = new TableResultSet(simpleJson);
 				} else {
 					// wait for job to complete
-					String jobId = jobIdRes.getResult(JOB_ID_RESULT_KEY);
+					String jobId = jobIdRes.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
 			    	JobTracker tracker = this.getJobTracker();
 			    	int percentComplete = tracker.waitForPercentOrMsec(jobId, 100, TIMEOUT_SEC * 1000);
 			    	if (percentComplete < 100) {
@@ -926,7 +925,7 @@ public class NodeGroupExecutionRestController {
 				String id = ngExecutor.getJobID();
 
 				retval.setSuccess(true);
-				retval.addResult(JOB_ID_RESULT_KEY, id);
+				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, id);
 
 			}
 			catch(Exception e){
@@ -982,7 +981,7 @@ public class NodeGroupExecutionRestController {
 				String id = ngExecutor.getJobID();
 
 				retval.setSuccess(true);
-				retval.addResult(JOB_ID_RESULT_KEY, id);
+				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, id);
 
 			}
 			catch(Exception e){
@@ -1023,7 +1022,7 @@ public class NodeGroupExecutionRestController {
 			constructor.start();
 			
 			retval.setSuccess(true);
-			retval.addResult(JOB_ID_RESULT_KEY, constructor.getJobId());
+			retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, constructor.getJobId());
 			
 		} catch(Exception e){
 			retval.setSuccess(false);
@@ -1100,7 +1099,7 @@ public class NodeGroupExecutionRestController {
 				String id = ngExecutor.getJobID();
 				
 				retval.setSuccess(true);
-				retval.addResult(JOB_ID_RESULT_KEY, id);
+				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, id);
 	
 			}
 			catch(Exception e){
@@ -1144,7 +1143,7 @@ public class NodeGroupExecutionRestController {
 				String id = ngExecutor.getJobID();
 				
 				retval.setSuccess(true);
-				retval.addResult(JOB_ID_RESULT_KEY, id);
+				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, id);
 	
 			}
 			catch(Exception e){

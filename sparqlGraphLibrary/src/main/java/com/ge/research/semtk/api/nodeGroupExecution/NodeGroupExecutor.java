@@ -64,6 +64,7 @@ public class NodeGroupExecutor {
 	private IngestorRestClient ingestClient = null;
 	// internal data.
 	private String currentJobId = null;
+	private SparqlResultTypes resultType = null;
 	
 	// the Stored Query Executor will be the heart of the stored Query Executor Service.
 	// all of the most important actions will occur in this class
@@ -93,7 +94,6 @@ public class NodeGroupExecutor {
 		return new SparqlConnection(USE_NODEGROUP_CONN_STR);
 	}
 	
-	//Job ID related
 	public String getJobID(){
 		return this.currentJobId;
 	}
@@ -102,6 +102,14 @@ public class NodeGroupExecutor {
 		this.currentJobId = jobID;
 	}
 	
+	public SparqlResultTypes getResultType() {
+		return resultType;
+	}
+
+	public void setResultType(SparqlResultTypes resultType) {
+		this.resultType = resultType;
+	}
+
 	
 	
 	
@@ -308,6 +316,13 @@ public class NodeGroupExecutor {
 		// externalConstraints as used by executeQueryFromNodeGroup
 
 		LocalLogger.logToStdOut("Sending a " + qt + " query to the dispatcher...");
+		
+		// Determine and set resultType
+		if (rt != null) {
+			this.setResultType(rt);
+		} else {
+			this.setResultType(ng.getResultType());
+		}
 		
 		if(externalConstraints != null){
 			LocalLogger.logToStdOut("Setting external constraints: " + externalConstraints.toJSONString());
