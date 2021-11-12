@@ -328,6 +328,11 @@ define([	// properly require.config'ed   bootstrap-modal
                                          nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
             },
 
+            execAsyncDispatchConstructById : function(nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
+                this.runAsyncNodegroupId("dispatchConstructById",
+                                         nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
+            },
+
             execAsyncDispatchClearGraph : function(sei, jobIdCallback, failureCallback) {
                 this.runAsyncSei(   "dispatchClearGraph",
                                     sei, jobIdCallback, failureCallback);

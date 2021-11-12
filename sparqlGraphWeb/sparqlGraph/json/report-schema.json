@@ -24,7 +24,20 @@
                 "nodegroup"
               ],
               "headerTemplate" : "Table: {{self.nodegroup}}",
-             "properties": {
+              "properties": {
+                "nodegroup": {
+                  "type": "string",
+                  "minLength": 4
+                }
+              }
+            },
+			"Graph": {
+              "type": "object",
+              "required": [
+                "nodegroup"
+              ],
+              "headerTemplate" : "Graph: {{self.nodegroup}}",
+              "properties": {
                 "nodegroup": {
                   "type": "string",
                   "minLength": 4
@@ -112,9 +125,12 @@
                     {"required": ["special","plot"]},
                     {"required": ["special","count"]},
                     {"required": ["special","table"]},
+					{"required": ["special","graph"]},
                     {"required": ["plot","count"]},
                     {"required": ["plot","table"]},
-                    {"required": ["count","table"]}
+					{"required": ["plot","graph"]},
+                    {"required": ["count","table"]},
+                    {"required": ["count","graph"]}
                 ]
             },
               "properties": {
@@ -136,6 +152,9 @@
                 },
                 "table": {
                   "$ref": "#/definitions/Table"
+                },
+				"graph": {
+                  "$ref": "#/definitions/Graph"
                 },
                 "sections": {
                   "$ref": "#/definitions/Sections"

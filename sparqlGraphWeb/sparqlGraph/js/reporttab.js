@@ -569,6 +569,28 @@ define([	// properly require.config'ed
                     } catch (e) {
                         this.failureCallback(div, e)
         			}
+                } else if (section["graph"] != undefined) {
+                    var nodegroup = section["graph"]["nodegroup"];
+
+                    let ngDiv = IIDXHelper.createElement("div", "", undefined);
+                    ngDiv.appendChild(IIDXHelper.createElement("div", "", "report-wait-spinner"));
+                    div.appendChild(ngDiv);
+
+                    try {
+                        if (! nodegroup) throw new Error("Report section['graph'] is missing field 'nodegroup'");
+
+                        var ngExecClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url);
+                        var graphCallback = MsiClientNodeGroupExec.buildJsonLdCallback(this.graphGetGraphCallback.bind(this, ngDiv),
+                                                                                         this.failureCallback.bind(this, ngDiv),
+                                                                                         this.statusCallback.bind(this, ngDiv),
+                                                                                         this.checkForCallback.bind(this, ngDiv),
+                                                                                         this.g.service.status.url,
+                                                                                         this.g.service.results.url);
+                        ngExecClient.execAsyncDispatchConstructById(nodegroup, this.conn, null, null, graphCallback, this.failureCallback.bind(this, ngDiv));
+                    } catch (e) {
+                        this.failureCallback(ngDiv, e);
+                    }
+
                 }
 
                 if (section["sections"] != undefined) {
@@ -697,6 +719,63 @@ define([	// properly require.config'ed
                 div.innerHTML="";
                 var tableElem = tableRes.putTableResultsDatagridInDiv(div, undefined, []);
                 this.fixTableStyle(div, tableElem);
+            },
+
+            graphGetGraphCallback : function(div, res) {
+
+                if (! res.isJsonLdResults()) {
+                    div.innerHTML =  "<b>Error:</b> Results returned from service are not JSON-LD";
+                    return;
+                }
+                div.innerHTML="";  // clear the spinner
+
+                // canvas
+                var canvasDiv = document.createElement("div");
+                canvasDiv.style.width="100%";
+                canvasDiv.style.height="650px";
+                canvasDiv.style.margin="1ch";
+                div.appendChild(canvasDiv);
+
+                // add network config
+                var configDiv = document.createElement("div");
+                var showConfig = function() {
+                    VisJsHelper.showConfigDialog(configDiv, function(){});
+                    return false;
+                }.bind(this);
+
+                but = IIDXHelper.createIconButton("icon-magnet", showConfig, undefined, undefined, undefined, "Network physics");
+                table = document.createElement("table");
+                table.width="100%";
+                tr = document.createElement("tr");
+                td = document.createElement("td");
+                td.align="center";
+                table.appendChild(tr);
+                tr.appendChild(td);
+                td.appendChild(document.createTextNode("Network physics: "));
+                td.appendChild(but);
+                div.appendChild(table);
+
+                // setup empty network
+                var nodeDict = {};   // dictionary of nodes with @id as the key
+                var edgeList = [];   // "normal" list of edges
+
+                var options = VisJsHelper.getDefaultOptions(configDiv);
+                var network = new vis.Network(canvasDiv, {nodes: Object.values(nodeDict), edges: edgeList }, options);
+
+                // add data
+                var jsonLd = res.getGraphResultsJsonArr(true, true, true);
+                for (var i=0; i < jsonLd.length; i++) {
+                    VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList);
+                    if (i % 200 == 0) {
+                        network.body.data.nodes.update(Object.values(nodeDict));
+                        network.body.data.edges.update(edgeList);
+                    }
+                }
+                network.body.data.nodes.update(Object.values(nodeDict));
+                network.body.data.edges.update(edgeList);
+
+                network.startSimulation();
+                setTimeout(function(network){ network.fit(); }.bind(this, network), 2500);
             },
 
             fixTableStyle : function(div, tableElem) {
