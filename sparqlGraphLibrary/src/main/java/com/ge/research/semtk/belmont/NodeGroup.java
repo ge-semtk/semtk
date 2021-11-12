@@ -461,6 +461,20 @@ public class NodeGroup {
 	public void setReturnTypeOverride(SparqlResultTypes returnTypeOverride) {
 		this.returnTypeOverride = returnTypeOverride;
 	}
+	
+	/**
+	 * Get the result type that will be returned by this query
+	 * @return
+	 */
+	public SparqlResultTypes getResultType() {
+		if (this.returnTypeOverride != null) {
+			return this.returnTypeOverride;
+		} else if (this.queryType != null) {
+			return this.queryType.getDefaultResultType();
+		} else {
+			return SparqlResultTypes.TABLE;
+		}
+	}
 
 	public void clearOrderBy() {
 		this.orderBy = new ArrayList<OrderElement>();

@@ -214,14 +214,32 @@ public class OntologyInfo {
     }
 	
 	/**
-	 * add a new class to the ontology info object. this includes information on super/sub classes
-	 * being added to a hash of the known entities.
+	
 	 **/
-	public void addClass(OntologyClass oClass){
+	
+	/**
+	 * add a new class to the ontology info object. this includes information on super/sub classes
+	 * being added to a hash of the known entities. 
+	 * @param oClass
+	 * @throws Exception - if class already exists
+	 */
+	public void addClass(OntologyClass oClass) throws Exception {
 		String classnameStr = oClass.getNameString(false);	// get the full name of the class and do not strip URI info.
 		this.connHash.clear(); 
 		
-		this.classHash.put(classnameStr, oClass);	// silently overwrites if the class is already present.
+		if (this.classHash.containsKey(classnameStr)) {
+			throw new Exception("Internal error: class already exists in ontology.  Cannot re-add it: " + classnameStr);
+		}
+		this.classHash.put(classnameStr, oClass);
+		this.updateSuperSubClassHash(oClass);
+		
+	}
+	
+	/**
+	 * Needs to be called any time new superclasses are added.
+	 * @param oClass
+	 */
+	private void updateSuperSubClassHash(OntologyClass oClass) {
 		// store info on the related subclasses
 		ArrayList<String> superClassNames = oClass.getParentNameStrings(false); // get the parents. there may be more than one. 
 		// spin through the list and find the ones that need to be added.
@@ -238,6 +256,7 @@ public class OntologyInfo {
 			}
 		}
 	}
+	
 	public boolean hasSubclass(String className) {
 		return this.subclassHash.get(className) != null;
 	}
@@ -1135,29 +1154,23 @@ public class OntologyInfo {
 		}
 	}
 	
-	/**
-	 * process the results of the query to get all of the sub- and super-class query and loads
-	 * them into the OntologyInfo object.
-	 **/
-	public void loadSuperSubClasses(String xList[], String yList[]) throws Exception{
 
-		HashMap<String, OntologyClass> tempClasses = new HashMap<String, OntologyClass>();
+	
+	public void loadSuperSubClasses(String subList[], String superList[]) throws Exception{
 				
-		for (int i=0; i < xList.length; i++) {
-			// check for the existence of the current class. 
-			if(!tempClasses.containsKey(xList[i])){
-				OntologyClass c = new OntologyClass(xList[i], null);
-				tempClasses.put(xList[i], c);
+		for (int i=0; i < subList.length; i++) {
+			
+			// check for the existence of the current class.
+			// (loading multiple graphs or a class with multiple superclasses)
+			if(!this.containsClass(subList[i])){
+				OntologyClass c = new OntologyClass(subList[i], null);
+				this.addClass(c);
 			}
+			
 			// get the current class and add the parent.
-			OntologyClass c = tempClasses.get(xList[i]);
-			c.addParentName(yList[i]);
-		}
-
-		// call addClass() on the temp list.
-		for(String keyName : tempClasses.keySet()){
-			OntologyClass oClass = tempClasses.get(keyName);
-			this.addClass(oClass);
+			OntologyClass c = this.getClass(subList[i]);
+			c.addParentName(superList[i]);
+			this.updateSuperSubClassHash(c);
 		}
 		
 	}
@@ -1188,9 +1201,10 @@ public class OntologyInfo {
 	public void loadTopLevelClasses(String xList[]) throws Exception{
 		
 		for (int i=0; i < xList.length; i++) {
-			// add it.
-			OntologyClass c = new OntologyClass(xList[i], null);
-			this.addClass(c);
+			if (!this.containsClass(xList[i])) {
+				OntologyClass c = new OntologyClass(xList[i], null);
+				this.addClass(c);
+			}
 		}
 		
 	}
@@ -2316,6 +2330,7 @@ public class OntologyInfo {
         
         // classPropertyRangeList
         for (String c : this.classHash.keySet()) {
+        	
             ArrayList<OntologyProperty> propList = this.classHash.get(c).getProperties();
             for (int i=0; i < propList.size(); i++) {
                 OntologyProperty oProp = propList.get(i);
