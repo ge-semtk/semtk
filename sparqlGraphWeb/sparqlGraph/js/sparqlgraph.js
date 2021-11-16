@@ -1749,9 +1749,13 @@
                 }
             }
 
+            // build column order button
+
+            var butColOrder = IIDXHelper.createIconButton("icon-random", saveColumnOrder.bind(this), undefined, undefined, "Save column order");
+
             // build select
             select = IIDXHelper.createSelect(null, textValArray, selectedTexts);
-            select.onchange = function(select) {
+            select.onchange = function(select, butCO) {
                 var i = parseInt(select.value);
 
                 // empty w/o shrinking so screen might now bounce
@@ -1760,12 +1764,14 @@
 
                 if (i < 0) {
                     tableResults.putTableResultsDatagridInDiv(resultsDiv, undefined, noSort);
+                    butCO.disabled = false;
                 } else {
                     gPlotSpecsHandler.getPlotter(i).addPlotToDiv(resultsDiv, tableResults);
+                    butCO.disabled = true;
                 }
-            }.bind(this, select);
+            }.bind(this, select, butColOrder);
 
-            // build button
+            // build plots button
             var plotsCallback = function(plotSpecsHandler) {
                 gPlotSpecsHandler = plotSpecsHandler;
                 queryTableResCallback(csvFilename, fullURL, tableResults);
@@ -1779,7 +1785,7 @@
                 dialog.show(parseInt(sel.value));
             }.bind(this, plotsDialog, select);
 
-            var but = IIDXHelper.createIconButton("icon-picture", plotsLauncher, undefined, undefined, "Plots");
+            var butPlots = IIDXHelper.createIconButton("icon-picture", plotsLauncher, undefined, undefined, "Plots");
 
             // assemble the span
             var span = document.createElement("span");
@@ -1787,7 +1793,9 @@
             select.style.margin="0";
             span.appendChild(select);
             span.appendChild(document.createTextNode(" "));
-            span.appendChild(but);
+            span.appendChild(butPlots);
+            span.appendChild(document.createTextNode(" "));
+            span.appendChild(butColOrder);
 
             // add header to results
             var headerTable = IIDXHelper.buildResultsHeaderTable(headerHtml, ["Save table csv"], [tableResults.tableDownloadCsv.bind(tableResults)], span);
@@ -1799,14 +1807,29 @@
             var plotter = gPlotSpecsHandler == null ? null : gPlotSpecsHandler.getDefaultPlotter();
             if (plotter != null) {
                 plotter.addPlotToDiv(resultsDiv, tableResults);
+                butColOrder.disabled = true;
             } else {
                 tableResults.putTableResultsDatagridInDiv(resultsDiv, undefined, noSort);
+                butColOrder.disabled = false;
             }
 
             guiUnDisableAll();
             guiResultsNonEmpty();
             setStatus("");
          });
+    };
+
+    var saveColumnOrder = function() {
+        var tables = document.getElementById("resultsParagraph").getElementsByTagName("table");
+        if (tables == null || tables.length < 2) {
+            throw new Error("Internal: no table in the results section");
+        }
+        var thList = tables[1].getElementsByTagName("thead")[0].getElementsByTagName("tr")[0].getElementsByTagName("th");
+        var colNames = [];
+        for (var th of thList) {
+            colNames.push(th.innerHTML);
+        }
+        alert("unimplemented: " + colNames);
     };
 
     // simplified status callback for quick-ish network operations
