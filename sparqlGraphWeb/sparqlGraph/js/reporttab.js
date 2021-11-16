@@ -133,6 +133,7 @@ define([	// properly require.config'ed
          font-size: 30px;
          text-align: center;
          color: var(--main-dark);
+         counter-reset:h1counter;
         }
 
         .table-header {
@@ -140,17 +141,35 @@ define([	// properly require.config'ed
          fontWeight: bold;
         }
 
+        .report-h1:before
+        {
+            counter-increment: h1counter;
+            content: counter(h1counter) ". ";
+            font-weight:bold;
+        }
+        .report-h2:before
+        {
+            counter-increment: h2counter;
+            content:counter(h1counter) "." counter(h2counter) ". ";
+        }
+        .report-h3:before
+        {
+            counter-increment: h3counter;
+            content:counter(h1counter) "." counter(h2counter) "." counter(h3counter) ". ";
+        }
         .report-h1 {
          font-family: Georgia, serif;
          font-size: 24px;
          letter-spacing: 2.5px;
          border-bottom: 1px solid main-dark;
-         }
+         counter-reset:h2counter;
+        }
 
         .report-h2 {
          color: #034f84;
          font-size: 18px;
          color: var(--main-medium);
+         counter-reset:h3counter;
         }
 
         .report-h3 {
@@ -430,9 +449,15 @@ define([	// properly require.config'ed
             },
 
             runReport : function() {
-                if (! this.reportJSON || this.reportJSON.length != 1) { ModalIidx.alert("Error", "No report to run."); return;}
+                var json = this.editor.getValue();
 
-                this.reportJSON[0].text().then(this.drawReport.bind(this));
+                if (Object.keys(json).length == 1 && json.title == "") {
+                    ModalIidx.alert("Error", "Report JSON is empty");
+                } else if (this.editor.validate().length > 0) {
+                    ModalIidx.alert("Error", "Report JSON is not valid");
+                } else {
+                    this.drawReport(json);
+                }
             },
 
             initReportDiv : function() {
@@ -446,9 +471,8 @@ define([	// properly require.config'ed
                 this.reportDiv.appendChild(style);
             },
 
-            drawReport : function(jsonStr) {
-                // TODO: always draws the rack report
-                report = JSON.parse(jsonStr);
+            drawReport : function(report) {
+
                 this.initReportDiv();
                 this.appendStyles();
 
