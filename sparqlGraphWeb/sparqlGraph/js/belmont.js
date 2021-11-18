@@ -1794,6 +1794,7 @@ var SemanticNodeGroup = function() {
     this.groupBy = [];
     this.queryType = null;
     this.returnTypeOverride = null;
+    this.columnOrder = [];
 
 	this.sparqlNameHash = {};
 
@@ -1815,7 +1816,8 @@ var SemanticNodeGroup = function() {
                                     // where parent is one of the items in tmpUnionMemberHash[key]
 };
 
-SemanticNodeGroup.JSON_VERSION = 15;
+SemanticNodeGroup.JSON_VERSION = 16;
+// version 16 - columnOrder
 // version 15 - node.isConstructed  ng.queryType ng.returnTypeOverride
 // version 14 - added functions (optional)
 // version 13 - removed node.NodeName
@@ -1909,6 +1911,10 @@ SemanticNodeGroup.prototype = {
         if (this.returnTypeOverride) {
             ret.returnTypeOverride = this.returnTypeOverride;
         }
+        if (this.columnOrder != null && this.columnOrder != []) {
+            this.removeInvalidColumnOrder();
+            ret.columnOrder = this.columnOrder;
+        }
 
 		// add json snodes to sNodeList
 		for (var i = 0; i < snList.length; i++) {
@@ -1955,6 +1961,10 @@ SemanticNodeGroup.prototype = {
 
         if (jObj.hasOwnProperty("returnTypeOverride")) {
             this.returnTypeOverride = jObj.returnTypeOverride;
+        }
+
+        if (jObj.hasOwnProperty("columnOrder")) {
+            this.columnOrder = jObj.columnOrder;
         }
 
 		// loop through SNodes in the json
@@ -2062,6 +2072,14 @@ SemanticNodeGroup.prototype = {
 
     setReturnTypeOverride : function(rt) {
         this.returnTypeOverride = rt;
+    },
+
+    getColumnOrder : function() {
+        return this.columnOrder;
+    },
+
+    setColumnOrder : function(strList) {
+        this.columnOrder = strList;
     },
 
     // get text for menu
@@ -2753,6 +2771,19 @@ SemanticNodeGroup.prototype = {
         }
 
         this.groupBy = keep;
+    },
+
+    removeInvalidColumnOrder : function() {
+        var keep = [];
+        var returnedSparqlIDs = this.getReturnedSparqlIDs();
+        for (var i=0; i < this.columnOrder.length; i++) {
+            var s = this.columnOrder[i];
+            if (returnedSparqlIDs.indexOf(s) != -1 && keep.indexOf(s) == -1) {
+                keep.push(s);
+            }
+        }
+
+        this.columnOrder = keep;
     },
 
     updateGroupBy : function(oldID, newID) {
@@ -3764,6 +3795,7 @@ SemanticNodeGroup.prototype = {
         this.offset = 0;
         this.orderBy = [];
         this.groupBy = [];
+        this.columnOrder = [];
 
         this.unionHash = {};
 
@@ -3805,6 +3837,7 @@ SemanticNodeGroup.prototype = {
 
         this.removeInvalidOrderBy();
         this.removeInvalidGroupBy();
+        this.removeInvalidColumnOrder();
 
 	},
 

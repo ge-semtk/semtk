@@ -1827,9 +1827,9 @@
         var thList = tables[1].getElementsByTagName("thead")[0].getElementsByTagName("tr")[0].getElementsByTagName("th");
         var colNames = [];
         for (var th of thList) {
-            colNames.push(th.innerHTML);
+            colNames.push('?'+th.innerHTML);
         }
-        alert("unimplemented: " + colNames);
+        gNodeGroup.setColumnOrder(colNames);
     };
 
     // simplified status callback for quick-ish network operations
