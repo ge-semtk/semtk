@@ -1751,7 +1751,8 @@
 
             // build column order button
 
-            var butColOrder = IIDXHelper.createIconButton("icon-random", saveColumnOrder.bind(this), undefined, undefined, "Save column order");
+            var butColOrder = IIDXHelper.createIconButton("icon-random", null,  ["btn"], undefined, "Save column order");
+            butColOrder.onclick = saveColumnOrder.bind(this, butColOrder);
 
             // build select
             select = IIDXHelper.createSelect(null, textValArray, selectedTexts);
@@ -1785,7 +1786,7 @@
                 dialog.show(parseInt(sel.value));
             }.bind(this, plotsDialog, select);
 
-            var butPlots = IIDXHelper.createIconButton("icon-picture", plotsLauncher, undefined, undefined, "Plots");
+            var butPlots = IIDXHelper.createIconButton("icon-picture", plotsLauncher, ["btn"], undefined, "Plots");
 
             // assemble the span
             var span = document.createElement("span");
@@ -1819,7 +1820,11 @@
          });
     };
 
-    var saveColumnOrder = function() {
+    var saveColumnOrder = function(button) {
+        // make it a little clear that something happened
+        button.classList.add("btn-info");
+        setTimeout(function(){button.classList.remove("btn-info")}, 600);
+
         var tables = document.getElementById("resultsParagraph").getElementsByTagName("table");
         if (tables == null || tables.length < 2) {
             throw new Error("Internal: no table in the results section");
