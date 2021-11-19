@@ -37,7 +37,8 @@
 .json-editor-btntype-move,
 .json-editor-btntype-delete,
 .json-editor-btntype-deletelast,
-.json-editor-btntype-deleteall
+.json-editor-btntype-deleteall,
+.json-editor-btntype-expand
 {
 	background-color: #f7f8fa;
 	border: 1px solid;

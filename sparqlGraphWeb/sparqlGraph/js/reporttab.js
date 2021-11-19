@@ -58,7 +58,7 @@ define([	// properly require.config'ed
             editorDiv.innerHTML = "";
             var div = document.createElement("div");
             div.id="editWrapper";
-            div.style.paddingBottom="10em";  // leave space for menus to overflow
+            div.style.paddingBottom="4em";  // leave space for menus to overflow
             editorDiv.appendChild(div);
             this.editorDiv = div;
             this.reportDiv = reportDiv;
@@ -346,6 +346,7 @@ define([	// properly require.config'ed
                         file.text().then(
                             function(jsonStr) {
                                 this.editor.setValue(JSON.parse(jsonStr));
+                                this.expandOrCollapseAll(false);
                             }.bind(this));
                         // chain next read
                         readNext(1);
@@ -386,7 +387,7 @@ define([	// properly require.config'ed
                 tr.appendChild(right);
 
                 // download button cell
-                right.appendChild(IIDXHelper.createButton("Download", this.downloadReport.bind(this), ["btn", "btn-primary"]));
+                right.appendChild(IIDXHelper.createButton("Download", this.downloadReport.bind(this), ["btn"]));
                 right.appendChild(IIDXHelper.createNbspText());
 
                 // json editor info button
@@ -412,6 +413,73 @@ define([	// properly require.config'ed
                 this.editor = new JSONEditor.JSONEditor(this.editorDiv, options);
                 this.initValidator();
 
+                this.editor.on('ready',function() {
+                    // Create buttom and insert it after the root header
+                    var button = this.editor.root.getButton('Expand All','expand','Expand All');
+                    button.classList.add("json-editor-btntype-expand");
+                    button.value = '0';
+                    var button_holder = this.editor.root.theme.getHeaderButtonHolder();
+                    button_holder.appendChild(button);
+                    this.editor.root.header.parentNode.insertBefore(button_holder, this.editor.root.header.nextSibling);
+
+                    button.onclick = this.clickExpandCollapse.bind(this, button);
+                }.bind(this));
+            },
+
+            //
+            // click the expand collapse button
+            //
+            clickExpandCollapse: function(thisButton, e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Toggle the value on the button
+                thisButton.value = thisButton.value == '1' ? '0' : '1';
+
+                // Change the text/icon on the button
+                if (thisButton.value == '1') {
+                  // Expand
+                  this.editor.root.setButtonText(thisButton,'Collapse All','collapse','Collapse All');
+                }
+                else {
+                  // Collapse
+                  this.editor.root.setButtonText(thisButton,'Expand All','expand','Expand All');
+                }
+                this.expandOrCollapseAll(thisButton.value == '1');
+
+            },
+
+            expandOrCollapseAll : function(expandFlag) {
+                var exempt = ["root", "root.sections"];
+
+                // Loop through all editors
+                for (var key in this.editor.editors) {
+                    if (exempt.indexOf(key) == -1) {
+                        var ed = this.editor.editors[key];
+                        this.expandOrCollapse(ed, expandFlag);
+                    }
+                }
+            },
+
+            expandOrCollapse : function(ed, expandFlag) {
+                if (['array', 'object'].indexOf(ed.schema.type) !== -1 && ed.editor_holder) {
+                    if (expandFlag) {
+                        // Expand
+                        ed.editor_holder.style.display = '';
+                        ed.collapsed = false;
+                        if (ed.toggle_button) {
+                            ed.setButtonText(ed.toggle_button,'','collapse',ed.translate('button_collapse'));
+                        }
+                    }
+                    else {
+                        // Collapse
+                        ed.editor_holder.style.display = 'none';
+                        ed.collapsed = true;
+                        if (ed.toggle_button) {
+                            ed.setButtonText(ed.toggle_button,'','expand',ed.translate('button_expand'));
+                        }
+                    }
+                }
             },
 
             initValidator : function() {
