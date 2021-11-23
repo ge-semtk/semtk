@@ -103,7 +103,8 @@
                 "id": {
                   "type": "string",
                   "enum": [
-                    "class_count"
+                    "class_count",
+					"cardinality"
                   ]
                 }
               }

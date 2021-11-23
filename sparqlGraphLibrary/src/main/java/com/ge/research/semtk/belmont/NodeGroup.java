@@ -2865,7 +2865,7 @@ public class NodeGroup {
 							node.getTypeSparqlID(), 
 							this.applyPrefixing(node.getFullUriName()),
 							classNames, 
-							this.conn.getInsertInterface())+ " .\n";
+							this.conn.getInsertInterface()) + " .\n";
 				}
 			} else {
 				if(clauseType == ClauseTypes.CONSTRUCT_LEADER) {	
@@ -2885,6 +2885,21 @@ public class NodeGroup {
 		}
 		
 		return retval;
+	}
+	
+	public String generateTypeClause(String typeSparqlID, String typeURI, boolean prefixFlag) throws Exception {
+		// get a prefixed list of classNames
+		ArrayList<String> classNames = new ArrayList<String>();
+		classNames.addAll(this.oInfo.getSubclassNames(typeURI));
+		for (int i=0; i < classNames.size(); i++) {
+			classNames.set(i, prefixFlag? this.applyPrefixing(classNames.get(i)) : classNames.get(i));
+		}
+		
+		return ValueConstraint.buildBestSubclassConstraint(
+				typeSparqlID, 
+				prefixFlag ? this.applyPrefixing(typeURI) : typeURI,
+				classNames, 
+				this.conn.getInsertInterface())+ " .\n";
 	}
 
 	public void expandOptionalSubgraphs() throws Exception  {

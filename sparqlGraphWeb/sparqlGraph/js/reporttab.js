@@ -204,6 +204,16 @@ define([	// properly require.config'ed
           font-size: 18px;
         }
 
+        .report-desc-div {
+            padding-top: 1em;
+            padding-bottom: 1em;
+            padding: 2em;
+        }
+
+        .report-desc-div p, list {
+            padding-top: 1em;
+        }
+
         .report-error {
           color: var(--error);
           text-align: center;
@@ -547,10 +557,7 @@ define([	// properly require.config'ed
                 var p = IIDXHelper.createElement("p", report["title"], "report-title");
                 this.reportDiv.appendChild(p);
 
-                if (report["description"]) {
-                    p = IIDXHelper.createElement("p", report["description"], undefined);
-                    this.reportDiv.appendChild(p);
-                }
+                this.addDescription(this.reportDiv, report["description"]);
 
                 for (var section of report["sections"]) {
                     this.reportDiv.appendChild(this.generateSection(section, 1));
@@ -566,11 +573,7 @@ define([	// properly require.config'ed
                 let h = IIDXHelper.createElement("h" + level, header, "report-h" + level);
                 div.appendChild(h);
 
-                // description
-                if (section["description"] != undefined) {
-                    let p = IIDXHelper.createElement("p", section["description"], undefined);
-                    div.appendChild(p);
-                }
+                this.addDescription(div, section["description"]);
 
                 if (section["special"] != undefined) {
                     var id = section["special"]["id"]
@@ -589,6 +592,14 @@ define([	// properly require.config'ed
                                                                                                 this.statusCallback.bind(this, spDiv),
                                                                                                 this.checkForCallback.bind(this, spDiv));
                             client.execGetPredicateStats(this.conn, jsonBlobCallback);
+
+                        } else if (id == "cardinality") {
+                            var client = new MsiClientOntologyInfo(this.g.service.ontologyInfo.url, this.failureCallback.bind(this, spDiv));
+                            var tableCallback = MsiClientOntologyInfo.buildCardinalityViolationsCallback(this.cardinalityGetTableCallback.bind(this, spDiv),
+                                                                                                this.failureCallback.bind(this, spDiv),
+                                                                                                this.statusCallback.bind(this, spDiv),
+                                                                                                this.checkForCallback.bind(this, spDiv));
+                            client.execGetCardinalityViolations(this.conn, tableCallback);
                         } else {
                             throw new Error("Report 'special.id' has unknown value value: " + id);
                         }
@@ -692,6 +703,13 @@ define([	// properly require.config'ed
                 }
 
                 return div;
+            },
+
+            addDescription : function (div, optDesc) {
+                if (optDesc) {
+                    var descDiv = IIDXHelper.createElement("div", optDesc, "report-desc-div");
+                    div.appendChild(descDiv);
+                }
             },
 
             plotGetNgCallback : function(div, plotId, level, jsonStr) {
@@ -811,6 +829,46 @@ define([	// properly require.config'ed
                 div.innerHTML="";
                 var tableElem = tableRes.putTableResultsDatagridInDiv(div, undefined, []);
                 this.fixTableStyle(div, tableElem);
+            },
+
+            cardinalityGetTableCallback : function(div, tableRes) {
+                div.innerHTML="";
+
+                var descDiv = IIDXHelper.createElement("div", "", className="report-desc-div");
+                div.appendChild(descDiv);
+
+                if (tableRes.getRowCount() == 0) {
+                    // print success and no table
+                    descDiv.appendChild(IIDXHelper.createElement("span", "\u2705 ", className="success-icon"));
+                    descDiv.appendChild(IIDXHelper.createElement("span", "No cardinality violations were found."));
+                } else {
+                    // print failure
+                    descDiv.appendChild(IIDXHelper.createElement("span", "\u26d4 ", className="failure-icon"));
+                    descDiv.appendChild(IIDXHelper.createElement("span", "Cardinality violations were found."));
+                    descDiv.appendChild(document.createElement("br"));
+
+                    if (tableRes.getRowCount() == 5000) {
+                        descDiv.appendChild(IIDXHelper.createElement("span", "\u26d4 ", className="failure-icon"));
+                        descDiv.appendChild(IIDXHelper.createElement("span", "Only the first 5000 violations are shown."));
+                        descDiv.appendChild(document.createElement("br"));
+                    }
+
+                    // add a table description
+                    descDiv.appendChild(IIDXHelper.createElement("p",
+                        "This table shows one line for each violation. <list>" +
+                        "<li><b>class</b> - the class with the restricted property</li>" +
+                        "<li><b>property</b> - the property being restricted</li>" +
+                        "<li><b>restriction</b> - type of restriction</li>" +
+                        "<li><b>limit</b> - cardinality limit declared in the model and violated in the data</li>" +
+                        "<li><b>subject</b> - the instance of the class which violates the restriction</li>" +
+                        "<li><b>class</b> - the actual cardinality of <b>property</b> for this <b>subject</b></li>" +
+                        "</list>"
+                    ));
+
+                    // print the table
+                    var tableElem = tableRes.putTableResultsDatagridInDiv(div, undefined, []);
+                    this.fixTableStyle(div, tableElem);
+                }
             },
 
             graphGetGraphCallback : function(div, res) {

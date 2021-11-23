@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.ontologyTools;
 
+import java.util.ArrayList;
+
 public class OntologyRange {
 	public static final String CLASS = "http://www.w3.org/2002/07/owl#Class";
 	private String name = "";
@@ -45,8 +47,16 @@ public class OntologyRange {
 		}
 	}
 	
+	// Hoping to allow complex ranges soon, so start using getClassNameList() instead
+	@Deprecated
 	public String getFullName(){
 		return this.name;
+	}
+	
+	public ArrayList<String> getClassNameList() {
+		ArrayList<String> ret = new ArrayList<String>();
+		ret.add(this.name);
+		return ret;
 	}
 
 	public String getNamespace(){

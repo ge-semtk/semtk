@@ -304,5 +304,66 @@ public class SparqlToXLibUtil {
 		}
 	}
 
+	/**
+	 * Get cardinality restrictions from every graph in the conn.
+	 * Table ?class, ?property ?restriction ?limit
+	 * where ?class is optional
+	 *       ?property is the property
+	 *       ?restriction contains "ardinality"
+	 *       ?limit is the integer cardinality limit
+	 * @param conn
+	 * @param oInfo
+	 * @return
+	 * @throws Exception
+	 */
+	public static String generateGetCardinalityRestrictions(SparqlConnection conn, OntologyInfo oInfo) throws Exception {
+		StringBuffer sparql = new StringBuffer();
+		sparql.append("SELECT DISTINCT ?class ?property ?restriction ?limit  \n");
+		sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
+		sparql.append("WHERE { \n");
+		sparql.append("  ?r  a <http://www.w3.org/2002/07/owl#Restriction>. \n");
+		sparql.append("  ?r <http://www.w3.org/2002/07/owl#onProperty> ?property.  \n");
+		// note:  very weird that the class is subClassOf the restriction -Paul
+		sparql.append("  OPTIONAL { ?class <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?r. }  \n");   
+		sparql.append("  ?r  ?restriction ?limit. \n");
+		sparql.append("  FILTER REGEX (str(?restriction), \"ardinality\" ). \n");  
+		sparql.append("} ORDER BY ?class ?property ?restriction \n");
+		return sparql.toString();
+	}
 	
+	/**
+	 * 
+	 * @param conn - data connections
+	 * @param oInfo
+	 * @param className - class or null
+	 * @param predName - predicate to check
+	 * @param op - operator for the check
+	 * @param limit - limit for the check
+	 * @return - sparql that will  return table ?subject ?object_COUNT  for any that match the subject className, predicate, op, and limit
+	 * @throws Exception
+	 */
+	public static String generateCheckCardinalityRestrictions(SparqlConnection conn, OntologyInfo oInfo, String className, String predName, String op, int limit) throws Exception {
+		StringBuffer sparql = new StringBuffer();
+		sparql.append("SELECT DISTINCT ?subject (COUNT(?object) AS ?object_COUNT)  \n");
+		sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
+		sparql.append("WHERE { \n");
+		
+		if (! className.isEmpty()) {
+			sparql.append("  ?subject a ?subject_class . ");
+			ArrayList<String> classNames = new ArrayList<String>();
+			classNames.addAll(oInfo.getSubclassNames(className));
+			
+			sparql.append("  " + ValueConstraint.buildBestSubclassConstraint(
+					"?subject_class", 
+					className,
+					classNames, 
+					conn.getDefaultQueryInterface()) + " .\n");
+		}
+		
+		sparql.append(" OPTIONAL { ?subject <" + predName + "> ?object } . \n");
+		sparql.append("} GROUP BY ?subject \n");
+		sparql.append("  HAVING ( ?object_COUNT " + op + " " + Integer.toString(limit) + " ) \n");
+		
+		return sparql.toString();
+	}
 }

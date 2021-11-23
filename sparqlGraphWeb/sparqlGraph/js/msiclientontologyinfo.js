@@ -35,8 +35,17 @@ define([	// properly require.config'ed   bootstrap-modal
 			this.optFailureCallback = optFailureCallback;
 			this.optTimeout = optTimeout;
 		};
-
         MsiClientOntologyInfo.buildPredicateStatsCallback = function(jsonBlobCallback, failureCallback, progressCallback, checkForCancelCallback, optLoPercent, optHiPercent) {
+            return MsiClientOntologyInfo.buildAsyncCallback("blob", jsonBlobCallback, failureCallback, progressCallback, checkForCancelCallback, optLoPercent, optHiPercent);
+        };
+        MsiClientOntologyInfo.buildCardinalityViolationsCallback = function(tableCallback, failureCallback, progressCallback, checkForCancelCallback, optLoPercent, optHiPercent) {
+            return MsiClientOntologyInfo.buildAsyncCallback("table", tableCallback, failureCallback, progressCallback, checkForCancelCallback, optLoPercent, optHiPercent);
+        };
+
+        //
+        // Build a callback for a table or Blob
+        //
+        MsiClientOntologyInfo.buildAsyncCallback = function(tableOrBlob, successCallback, failureCallback, progressCallback, checkForCancelCallback, optLoPercent, optHiPercent) {
 
             // callback for the nodegroup execution service to send jobId
             var simpleResCallback = function(simpleResJson) {
@@ -51,11 +60,15 @@ define([	// properly require.config'ed   bootstrap-modal
                         // callback for results service
                         var resultsSuccessCallback = function (results) {
                             progressCallback("finishing up", 99);
-                            jsonBlobCallback(results);
+                            successCallback(results);
                             progressCallback("");
                         };
                         var resultsClient = new MsiClientResults(g.service.results.url, jobId);
-                        resultsClient.execGetJsonBlobRes(resultsSuccessCallback);
+                        if (tableOrBlob == "blob") {
+                            resultsClient.execGetJsonBlobRes(resultsSuccessCallback);
+                        } else {
+                            resultsClient.execGetTableResultsJsonTableRes(5000, resultsSuccessCallback);
+                        }
                     };
 
                     progressCallback("", 1);
@@ -131,6 +144,14 @@ define([	// properly require.config'ed   bootstrap-modal
 				});
 
 				this.msi.postToEndpoint("getPredicateStats", myData, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+            },
+
+            execGetCardinalityViolations : function (conn, successCallback) {
+                var myData = JSON.stringify ({
+					"conn" : JSON.stringify(conn.toJson()),
+				});
+
+				this.msi.postToEndpoint("getCardinalityViolations", myData, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
             },
 		};
 

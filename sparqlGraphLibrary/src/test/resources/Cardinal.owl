@@ -1,0 +1,490 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns="http://Cardinal#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+  xml:base="http://Cardinal">
+  <owl:Ontology rdf:about="http://Cardinal">
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'Cardinal.sadl' and should not be edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:ID="UnrestrictedCardinal"/>
+  <owl:Class rdf:ID="Value"/>
+  <owl:Class rdf:ID="Cardinal">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="maxOneData1"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:minCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="exactOneData3"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="exactOneData2"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="maxOneObject2"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="maxOneData2"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass rdf:resource="http://Cardinal#Value"/>
+        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxQualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="maxOneObject1"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://Cardinal#exactOneData3"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="exactOneObject3"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="exactOneData1"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:minCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="exactOneObject1"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass rdf:resource="http://Cardinal#Value"/>
+        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxQualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://Cardinal#maxOneObject1"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:minCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://Cardinal#exactOneData1"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass rdf:resource="http://Cardinal#Value"/>
+        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxQualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://Cardinal#exactOneObject1"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://Cardinal#exactOneObject3"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass rdf:resource="http://Cardinal#Value"/>
+        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxQualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="http://Cardinal#exactOneObject1"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="exactOneObject2"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:ID="SubCardinal">
+    <rdfs:subClassOf rdf:resource="http://Cardinal#Cardinal"/>
+  </owl:Class>
+  <owl:ObjectProperty rdf:ID="anyObject">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinal#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinal#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://Cardinal#Value"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://Cardinal#exactOneObject1">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinal#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinal#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://Cardinal#Value"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://Cardinal#exactOneObject3">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinal#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinal#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://Cardinal#Value"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://Cardinal#maxOneObject2">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinal#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinal#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://Cardinal#Value"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://Cardinal#exactOneObject2">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinal#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinal#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://Cardinal#Value"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://Cardinal#maxOneObject1">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinal#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinal#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://Cardinal#Value"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="http://Cardinal#exactOneData3">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinal#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinal#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://Cardinal#maxOneData1">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinal#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinal#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://Cardinal#maxOneData2">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinal#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinal#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://Cardinal#exactOneData2">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinal#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinal#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="http://Cardinal#exactOneData1">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinal#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinal#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:ID="anyData">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://Cardinal#Cardinal"/>
+          <owl:Class rdf:about="http://Cardinal#UnrestrictedCardinal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+  </owl:DatatypeProperty>
+  <UnrestrictedCardinal rdf:ID="unrest1">
+    <exactOneObject1>
+      <Value rdf:ID="val1"/>
+    </exactOneObject1>
+    <maxOneObject2 rdf:resource="http://Cardinal#val1"/>
+    <maxOneObject1 rdf:resource="http://Cardinal#val1"/>
+    <anyObject rdf:resource="http://Cardinal#val1"/>
+    <exactOneData2 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</exactOneData2>
+    <exactOneData1 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</exactOneData1>
+    <exactOneData3 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</exactOneData3>
+    <rdfs:comment>instance with one of each property</rdfs:comment>
+    <maxOneData2 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</maxOneData2>
+    <maxOneData1 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</maxOneData1>
+    <exactOneObject3 rdf:resource="http://Cardinal#val1"/>
+    <anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</anyData>
+    <exactOneObject2 rdf:resource="http://Cardinal#val1"/>
+  </UnrestrictedCardinal>
+  <Cardinal rdf:ID="card2">
+    <exactOneData3 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</exactOneData3>
+    <maxOneObject1>
+      <Value rdf:ID="val2"/>
+    </maxOneObject1>
+    <exactOneObject3 rdf:resource="http://Cardinal#val2"/>
+    <exactOneObject1 rdf:resource="http://Cardinal#val1"/>
+    <maxOneObject2 rdf:resource="http://Cardinal#val2"/>
+    <maxOneData2 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</maxOneData2>
+    <exactOneData3 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</exactOneData3>
+    <exactOneData1 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</exactOneData1>
+    <rdfs:comment>instance with two of each property</rdfs:comment>
+    <maxOneData2 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</maxOneData2>
+    <anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</anyData>
+    <exactOneData2 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</exactOneData2>
+    <exactOneData1 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</exactOneData1>
+    <exactOneData2 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</exactOneData2>
+    <maxOneData1 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</maxOneData1>
+    <exactOneObject2 rdf:resource="http://Cardinal#val1"/>
+    <maxOneData1 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</maxOneData1>
+    <maxOneObject1 rdf:resource="http://Cardinal#val1"/>
+    <exactOneObject1 rdf:resource="http://Cardinal#val2"/>
+    <exactOneObject3 rdf:resource="http://Cardinal#val1"/>
+    <maxOneObject2 rdf:resource="http://Cardinal#val1"/>
+    <exactOneObject2 rdf:resource="http://Cardinal#val2"/>
+    <anyObject rdf:resource="http://Cardinal#val2"/>
+    <anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</anyData>
+    <anyObject rdf:resource="http://Cardinal#val1"/>
+  </Cardinal>
+  <Cardinal rdf:ID="card1">
+    <anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</anyData>
+    <rdfs:comment>instance with one of each property</rdfs:comment>
+    <maxOneData1 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</maxOneData1>
+    <anyObject rdf:resource="http://Cardinal#val1"/>
+    <maxOneData2 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</maxOneData2>
+    <exactOneData3 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</exactOneData3>
+    <maxOneObject2 rdf:resource="http://Cardinal#val1"/>
+    <exactOneObject1 rdf:resource="http://Cardinal#val1"/>
+    <exactOneData2 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</exactOneData2>
+    <exactOneObject3 rdf:resource="http://Cardinal#val1"/>
+    <maxOneObject1 rdf:resource="http://Cardinal#val1"/>
+    <exactOneData1 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</exactOneData1>
+    <exactOneObject2 rdf:resource="http://Cardinal#val1"/>
+  </Cardinal>
+  <UnrestrictedCardinal rdf:ID="unrest0">
+    <rdfs:comment>instance with no properties</rdfs:comment>
+  </UnrestrictedCardinal>
+  <SubCardinal rdf:ID="sub2">
+    <exactOneData2 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</exactOneData2>
+    <maxOneObject2 rdf:resource="http://Cardinal#val2"/>
+    <maxOneData1 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</maxOneData1>
+    <maxOneObject1 rdf:resource="http://Cardinal#val1"/>
+    <maxOneData2 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</maxOneData2>
+    <exactOneData1 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</exactOneData1>
+    <exactOneData3 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</exactOneData3>
+    <maxOneObject1 rdf:resource="http://Cardinal#val2"/>
+    <anyObject rdf:resource="http://Cardinal#val2"/>
+    <maxOneData1 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</maxOneData1>
+    <rdfs:comment>instance with two of each property</rdfs:comment>
+    <exactOneObject2 rdf:resource="http://Cardinal#val1"/>
+    <exactOneObject1 rdf:resource="http://Cardinal#val2"/>
+    <exactOneObject3 rdf:resource="http://Cardinal#val1"/>
+    <anyObject rdf:resource="http://Cardinal#val1"/>
+    <exactOneObject3 rdf:resource="http://Cardinal#val2"/>
+    <exactOneObject1 rdf:resource="http://Cardinal#val1"/>
+    <anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</anyData>
+    <exactOneObject2 rdf:resource="http://Cardinal#val2"/>
+    <maxOneData2 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</maxOneData2>
+    <exactOneData1 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</exactOneData1>
+    <exactOneData3 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</exactOneData3>
+    <anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</anyData>
+    <exactOneData2 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</exactOneData2>
+    <maxOneObject2 rdf:resource="http://Cardinal#val1"/>
+  </SubCardinal>
+  <Cardinal rdf:ID="card0">
+    <rdfs:comment>instance with no properties</rdfs:comment>
+  </Cardinal>
+  <SubCardinal rdf:ID="sub1">
+    <anyObject rdf:resource="http://Cardinal#val1"/>
+    <maxOneObject1 rdf:resource="http://Cardinal#val1"/>
+    <maxOneData2 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</maxOneData2>
+    <maxOneObject2 rdf:resource="http://Cardinal#val1"/>
+    <exactOneData3 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</exactOneData3>
+    <anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</anyData>
+    <exactOneData1 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</exactOneData1>
+    <maxOneData1 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</maxOneData1>
+    <exactOneData2 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</exactOneData2>
+    <exactOneObject2 rdf:resource="http://Cardinal#val1"/>
+    <rdfs:comment>instance with one of each property</rdfs:comment>
+    <exactOneObject3 rdf:resource="http://Cardinal#val1"/>
+    <exactOneObject1 rdf:resource="http://Cardinal#val1"/>
+  </SubCardinal>
+  <UnrestrictedCardinal rdf:ID="unrest2">
+    <maxOneData2 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</maxOneData2>
+    <exactOneObject2 rdf:resource="http://Cardinal#val1"/>
+    <exactOneObject1 rdf:resource="http://Cardinal#val2"/>
+    <anyObject rdf:resource="http://Cardinal#val2"/>
+    <exactOneObject3 rdf:resource="http://Cardinal#val1"/>
+    <exactOneData1 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</exactOneData1>
+    <exactOneObject3 rdf:resource="http://Cardinal#val2"/>
+    <maxOneData1 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</maxOneData1>
+    <exactOneObject1 rdf:resource="http://Cardinal#val1"/>
+    <exactOneData2 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</exactOneData2>
+    <exactOneData2 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</exactOneData2>
+    <maxOneObject2 rdf:resource="http://Cardinal#val1"/>
+    <exactOneObject2 rdf:resource="http://Cardinal#val2"/>
+    <anyObject rdf:resource="http://Cardinal#val1"/>
+    <exactOneData3 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</exactOneData3>
+    <maxOneObject2 rdf:resource="http://Cardinal#val2"/>
+    <exactOneData1 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</exactOneData1>
+    <maxOneObject1 rdf:resource="http://Cardinal#val1"/>
+    <anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</anyData>
+    <maxOneData2 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</maxOneData2>
+    <maxOneObject1 rdf:resource="http://Cardinal#val2"/>
+    <rdfs:comment>instance with two of each property</rdfs:comment>
+    <anyData rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</anyData>
+    <exactOneData3 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</exactOneData3>
+    <maxOneData1 rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</maxOneData1>
+  </UnrestrictedCardinal>
+  <SubCardinal rdf:ID="sub0">
+    <rdfs:comment>instance with no properties</rdfs:comment>
+  </SubCardinal>
+</rdf:RDF>

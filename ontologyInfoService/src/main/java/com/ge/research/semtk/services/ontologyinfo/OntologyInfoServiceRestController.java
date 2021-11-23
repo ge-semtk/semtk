@@ -41,6 +41,7 @@ import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.ontologyTools.DataDictionaryGenerator;
+import com.ge.research.semtk.ontologyTools.RestrictionChecker;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyInfoCache;
@@ -55,6 +56,7 @@ import com.ge.research.semtk.services.ontologyinfo.requests.OntologyInfoRequestB
 import com.ge.research.semtk.services.ontologyinfo.requests.SparqlConnectionRequestBody;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
@@ -430,6 +432,60 @@ public class OntologyInfoServiceRestController {
 			}
 			
 			retval.addJobId(jobId);
+			retval.setSuccess(true);
+		}
+		catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+
+		return retval.toJson();		
+	}
+	
+	@ApiOperation(
+			value="Check for violations of cardinality restrictions.",
+			notes="Async.  Returns a jobID."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getCardinalityViolations", method=RequestMethod.POST)
+	public JSONObject getCardinalityViolations(@RequestBody SparqlConnectionRequest requestBody, @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "getCardinalityViolations";
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {		
+			String jobId = JobTracker.generateJobId();
+			JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
+			ResultsClient rclient = new ResultsClient(new ResultsClientConfig(results_props.getProtocol(), results_props.getServer(), results_props.getPort()));
+			
+			SparqlConnection conn = requestBody.buildSparqlConnection();
+			tracker.createJob(jobId);
+			
+			// spin up an async thread
+			new Thread(() -> {
+				try {
+					HeadersManager.setHeaders(headers);
+					
+					OntologyInfo oInfo = oInfoCache.get(conn);
+					RestrictionChecker checker = new RestrictionChecker(conn, oInfo);
+					Table violationTab = checker.checkCardinality();
+					rclient.execStoreTableResults(jobId, violationTab);
+					tracker.setJobSuccess(jobId);
+					
+				} catch (Exception e) {
+					try {
+						tracker.setJobFailure(jobId, e.getMessage());
+					} catch (Exception ee) {
+						LocalLogger.logToStdErr(ENDPOINT_NAME + " error accessing job tracker");
+						LocalLogger.printStackTrace(ee);
+					}
+				}
+			}).start();
+			
+			
+			retval.addJobId(jobId);
+			retval.addResultType(SparqlResultTypes.TABLE);
 			retval.setSuccess(true);
 		}
 		catch (Exception e) {
