@@ -75,6 +75,7 @@
                   'sparqlgraph/js/msiclientnodegroupstore',
                   'sparqlgraph/js/nodegrouprenderer',
                   'sparqlgraph/js/reporttab',
+                  'sparqlgraph/js/undomanager',
                   'sparqlgraph/js/uploadtab',
 
                   // shim
@@ -82,9 +83,11 @@
 
 	              'local/sparqlgraphlocal'
                 ],
-                function (ExploreTab, MappingTab, ModalIidx, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupService, MsiClientNodeGroupStore, NodegroupRenderer, ReportTab, UploadTab) {
+                function (ExploreTab, MappingTab, ModalIidx, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupService, MsiClientNodeGroupStore, NodegroupRenderer, ReportTab, UndoManager, UploadTab) {
 
 	    	console.log(".ready()");
+
+            gUndoManager = new UndoManager();
 
 	    	// create the modal dialogue
             var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
@@ -215,7 +218,9 @@
 
             // Handle no paths or shift key during drag: drop node with no connections
             if (noPathFlag) {
+
                 gNodeGroup.addNode(dragLabel, gOInfo);
+                undoSaveState();
                 nodeGroupChanged(true);
                 guiGraphNonEmpty();
 
@@ -261,7 +266,9 @@
         var pathWarnings = simpleRes.getSimpleResultField("pathWarnings");
 
         if (pathListJson.length == 0) {
+
             gNodeGroup.addNode(addClassStr, gOInfo);
+            undoSaveState();
             nodeGroupChanged(true);
             guiGraphNonEmpty();
 
@@ -326,11 +333,13 @@
     	var anchorNode = val[1];
     	var singleLoopFlag = val[2];
 
+
     	if (anchorNode == null) {
     		gNodeGroup.addNode(path.getStartClassName(), gOInfo);
     	} else {
     		gNodeGroup.addPath(path, anchorNode, gOInfo, singleLoopFlag);
     	}
+        undoSaveState();
         nodeGroupChanged(true);
       	guiGraphNonEmpty();
     };
@@ -634,7 +643,10 @@
 	var linkEditorCallback = function(snode, nItem, targetSNode, data, optionalMinusVal, qualifierVal, union, unionReverse, deleteMarkerVal, deleteFlag) {
         require([ 'sparqlgraph/js/modallinkdialog',
                          ], function (ModalLinkDialog) {
-    		// optionalFlag
+
+
+
+            // optionalFlag
     		nItem.setOptionalMinus(targetSNode, optionalMinusVal);
             nItem.setQualifier(targetSNode, qualifierVal);
     		nItem.setSnodeDeletionMarker(targetSNode, deleteMarkerVal);
@@ -655,6 +667,7 @@
     		}
 
             nodeGroupChanged(true, gNodeGroup.getSNodeSparqlIDs());
+            undoSaveState();
         });
 	};
 
@@ -735,7 +748,9 @@
     };
 
     var snodeRemover1 = function (snode) {
+
         snode.removeFromNodeGroup(false);
+        undoSaveState();
 
         if (gInvalidItems.length > 0) {
             reValidateNodegroup();
@@ -751,6 +766,7 @@
 	 * @param rangeSnode - range node, if null then create it
 	 */
 	var buildLink = function(snode, nItem, rangeSnode) {
+
 		var snodeClass = gOInfo.getClass(snode.fullURIName);
 		var domainStr = gOInfo.getInheritedPropertyByKeyname(snodeClass, nItem.getKeyName()).getNameStr();
 		if (rangeSnode == null) {
@@ -760,6 +776,7 @@
 		} else {
 			snode.setConnection(rangeSnode, domainStr);
 		}
+        undoSaveState();
         nodeGroupChanged(true);
 	};
 
@@ -768,6 +785,8 @@
 
         require([ 'sparqlgraph/js/modalitemdialog',
                 ], function (ModalItemDialog) {
+
+
 
             // update the binding or sparqlID based on varName and returnFalg
             if (propItem.getSparqlID() == "") {
@@ -805,6 +824,7 @@
             propItem.setFunctions(functions);
 
             nodeGroupChanged(true);
+            undoSaveState();
         });
     };
 
@@ -813,6 +833,7 @@
                 ], function (ModalItemDialog) {
 
             // Note: ModalItemDialog validates that sparqlID is legal
+
 
             // update the binding or sparqlID based on varName and returnFalg
             if (varName == snodeItem.getSparqlID()) {
@@ -850,6 +871,7 @@
 
             snodeItem.setIsConstructed(constructFlag);
             nodeGroupChanged(true);
+            undoSaveState();
         });
     };
 
@@ -985,6 +1007,7 @@
     };
 
     var setConn = function (conn) {
+        undoReset();   // changing connection clears out Undo
         gConn = conn;
         this.updateStoreConnStr();
     };
@@ -1321,9 +1344,11 @@
         }
 
         // do either way
+
         gNodeGroup = new SemanticNodeGroup();
         gNodeGroup.addJson(nodegroupJson);
         nodeGroupChanged(false);
+        undoSaveState();
         buildQuery();
     };
 
@@ -1341,8 +1366,10 @@
     var reValidateCallback = function(callback, nodegroupJson, modelErrors, invalidItemStrings, warnings) {
 
         gInvalidItems = invalidItemStrings;
+
         gNodeGroup = new SemanticNodeGroup();
         gNodeGroup.addJson(nodegroupJson);
+        undoSaveState();
         nodeGroupChanged(true);
         buildQuery();
 
@@ -1360,8 +1387,10 @@
             callback();
         }
         gNodegroupInvalidItems = invalidItemStrings;
+
         gNodeGroup = new SemanticNodeGroup();
         gNodeGroup.addJson(nodegroupJson);
+        undoSaveState();
         nodeGroupChanged(true);
         buildQuery();
     };
@@ -1501,7 +1530,9 @@
     	         function (ModalOrderByDialog) {
 
             var callback = function (x) {
+
                 gNodeGroup.setOrderBy(x);
+                undoSaveState();
                 nodeGroupChanged(true);
             };
 
@@ -1516,7 +1547,9 @@
     	         function (ModalGroupByDialog) {
 
             var callback = function (x) {
+
                 gNodeGroup.setGroupBy(x);
+                undoSaveState();
                 nodeGroupChanged(true);
             };
 
@@ -2109,8 +2142,8 @@
     	return document.getElementById("SGQueryNamespace").checked;
     };
 
-    // Set nodeGroupChangedFlag and update GUI for new nodegroup
-    // unchangeSNodeIDs : snodes who shouldn't be redrawn and potentially moved
+    // Tell GUI that nodegroup has changed, and display needs updating
+    // flag - there are unsaved changes
     var nodeGroupChanged = function(flag) {
         gNodeGroupChangedFlag = flag;
 
@@ -2164,7 +2197,9 @@
             function(el, l) {
                 // get legal new value
                 var newLimit = parseInt(document.getElementById("SGQueryLimit").value.replace(/\D/g,''), 10);
+
                 gNodeGroup.setLimit(isNaN(newLimit) ? 0 : newLimit);
+                undoSaveState();
                 nodeGroupChanged(true);
             },
 
@@ -2651,6 +2686,7 @@
         gNodeGroupName = null;
         gNodeGroupChangedFlag = false;
         gPlotSpecsHandler = null;
+        undoSaveState();
         nodeGroupChanged(false);
     	clearQuery();
     	giuGraphEmpty();
@@ -2780,6 +2816,31 @@
 
 	};
 
+
+    // Just changed (or maybe changed) the nodegroup.
+    // Save states
+    var undoSaveState = function() {
+        console.log("undo SAVE");
+        gUndoManager.saveState(gNodeGroup.toJson())
+    };
+
+    var undoReset = function() {
+        gUndoManager.reset();
+    };
+
+    var doUndo = function() {
+        var stateJson = gUndoManager.undo();
+        var gNodeGroup = new SemanticNodeGroup();
+        gNodeGroup.addJson(stateJson);
+        nodeGroupChanged(true);
+    };
+
+    var doRedo = function() {
+        var stateJson = gUndoManager.redo();
+        var gNodeGroup = new SemanticNodeGroup();
+        gNodeGroup.addJson(stateJson);
+        nodeGroupChanged(true);
+    };
     //
     // Build a callback which uses the status and results service to get to completion.
     //     callback parameter:  simpleResults with jobID
