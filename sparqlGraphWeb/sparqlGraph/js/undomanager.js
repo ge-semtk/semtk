@@ -45,8 +45,8 @@ define([	// properly require.config'ed
 
 	function() {
 
-		var UndoManager = function (setStateCallback) {
-            this.setStateCallback = setStateCallback;
+		var UndoManager = function (maxDepth) {
+            this.maxDepth = maxDepth || 20;
 			this.reset();
 		};
 
@@ -54,38 +54,66 @@ define([	// properly require.config'ed
             reset : function() {
                 this.undoStack = [];
                 this.redoStack = [];
-                this.currentState = null;
+                this.currentState = undefined;
             },
 
+            getUndoSize : function() {
+                return this.undoStack.length;
+            },
+            
+            getRedoSize : function() {
+                return this.redoStack.length;
+            },
+
+            //
+            // Set a stateJson, which is allowed to be null
+            //
             saveState : function (stateJson) {
                 state = stateJson ? JSON.stringify(stateJson) : null;
                 // save state if it has changed
                 if (state != this.currentState) {
                     this.redoStack = [];
-                    // don't stack multiple empties in a row
-                    if (this.currentState != null || this.undoStack.at(-1) != null) {
+                    // push current state if there is one
+                    if (typeof(this.currentState) != 'undefined') {
                         this.undoStack.push(this.currentState);
+                        if (this.undoStack.length > this.maxDepth) {
+                            this.undoStack.shift();
+                        }
                     }
                     this.currentState = state;
                 }
             },
 
+            // return the appropriate state json
+            //  null is legal
+            //  undefined if there's nothing to undo
 			undo : function () {
-                // don't stack multiple empties in a row
-                if (this.currentState != null || this.redoStack.at(-1) != null) {
+                if (this.undoStack.length == 0) {
+                    return undefined;
+                } else {
                     this.redoStack.push(this.currentState);
+                    if (this.redoStack.length > this.maxDepth) {
+                        this.redoStack.shift();
+                    }
+                    this.currentState = this.undoStack.pop();
+                    return this.currentState ? JSON.parse(this.currentState) : null;
                 }
-                this.currentState = this.undoStack.pop();
-                return this.currentState? JSON.parse(this.currentState) : null;
 			},
 
+            // return the appropriate state json
+            //  null is legal
+            //  undefined if there's nothing to undo
             redo : function () {
-                this.undoStack.push(this.currentState);
-                // don't stack multiple empties in a row
-                if (this.currentState != null || this.redoStack.at(-1) != null) {
+                if (this.redoStack.length == 0) {
+                    return undefined;
+                } else {
+                    this.undoStack.push(this.currentState);
+                    if (this.undoStack.length > this.maxDepth) {
+                        this.undoStack.shift();
+                    }
                     this.currentState = this.redoStack.pop();
+                    return this.currentState ? JSON.parse(this.currentState) : null;
                 }
-                return this.currentState? JSON.parse(this.currentState) : null;
 			},
 		};
 

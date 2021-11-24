@@ -220,7 +220,7 @@
             if (noPathFlag) {
 
                 gNodeGroup.addNode(dragLabel, gOInfo);
-                undoSaveState();
+                saveUndoState();
                 nodeGroupChanged(true);
                 guiGraphNonEmpty();
 
@@ -268,7 +268,7 @@
         if (pathListJson.length == 0) {
 
             gNodeGroup.addNode(addClassStr, gOInfo);
-            undoSaveState();
+            saveUndoState();
             nodeGroupChanged(true);
             guiGraphNonEmpty();
 
@@ -339,7 +339,7 @@
     	} else {
     		gNodeGroup.addPath(path, anchorNode, gOInfo, singleLoopFlag);
     	}
-        undoSaveState();
+        saveUndoState();
         nodeGroupChanged(true);
       	guiGraphNonEmpty();
     };
@@ -667,7 +667,7 @@
     		}
 
             nodeGroupChanged(true, gNodeGroup.getSNodeSparqlIDs());
-            undoSaveState();
+            saveUndoState();
         });
 	};
 
@@ -750,7 +750,7 @@
     var snodeRemover1 = function (snode) {
 
         snode.removeFromNodeGroup(false);
-        undoSaveState();
+        saveUndoState();
 
         if (gInvalidItems.length > 0) {
             reValidateNodegroup();
@@ -776,7 +776,7 @@
 		} else {
 			snode.setConnection(rangeSnode, domainStr);
 		}
-        undoSaveState();
+        saveUndoState();
         nodeGroupChanged(true);
 	};
 
@@ -824,7 +824,7 @@
             propItem.setFunctions(functions);
 
             nodeGroupChanged(true);
-            undoSaveState();
+            saveUndoState();
         });
     };
 
@@ -871,7 +871,7 @@
 
             snodeItem.setIsConstructed(constructFlag);
             nodeGroupChanged(true);
-            undoSaveState();
+            saveUndoState();
         });
     };
 
@@ -1007,7 +1007,7 @@
     };
 
     var setConn = function (conn) {
-        undoReset();   // changing connection clears out Undo
+        resetUndo();   // changing connection clears out Undo
         gConn = conn;
         this.updateStoreConnStr();
     };
@@ -1348,7 +1348,7 @@
         gNodeGroup = new SemanticNodeGroup();
         gNodeGroup.addJson(nodegroupJson);
         nodeGroupChanged(false);
-        undoSaveState();
+        saveUndoState();
         buildQuery();
     };
 
@@ -1369,7 +1369,7 @@
 
         gNodeGroup = new SemanticNodeGroup();
         gNodeGroup.addJson(nodegroupJson);
-        undoSaveState();
+        saveUndoState();
         nodeGroupChanged(true);
         buildQuery();
 
@@ -1390,7 +1390,7 @@
 
         gNodeGroup = new SemanticNodeGroup();
         gNodeGroup.addJson(nodegroupJson);
-        undoSaveState();
+        saveUndoState();
         nodeGroupChanged(true);
         buildQuery();
     };
@@ -1532,7 +1532,7 @@
             var callback = function (x) {
 
                 gNodeGroup.setOrderBy(x);
-                undoSaveState();
+                saveUndoState();
                 nodeGroupChanged(true);
             };
 
@@ -1549,7 +1549,7 @@
             var callback = function (x) {
 
                 gNodeGroup.setGroupBy(x);
-                undoSaveState();
+                saveUndoState();
                 nodeGroupChanged(true);
             };
 
@@ -2199,7 +2199,7 @@
                 var newLimit = parseInt(document.getElementById("SGQueryLimit").value.replace(/\D/g,''), 10);
 
                 gNodeGroup.setLimit(isNaN(newLimit) ? 0 : newLimit);
-                undoSaveState();
+                saveUndoState();
                 nodeGroupChanged(true);
             },
 
@@ -2686,7 +2686,7 @@
         gNodeGroupName = null;
         gNodeGroupChangedFlag = false;
         gPlotSpecsHandler = null;
-        undoSaveState();
+        saveUndoState();
         nodeGroupChanged(false);
     	clearQuery();
     	giuGraphEmpty();
@@ -2819,28 +2819,46 @@
 
     // Just changed (or maybe changed) the nodegroup.
     // Save states
-    var undoSaveState = function() {
+    var saveUndoState = function() {
         console.log("undo SAVE");
         gUndoManager.saveState(gNodeGroup.toJson())
+        updateUndoButtons();
     };
 
-    var undoReset = function() {
+    var resetUndo = function() {
         gUndoManager.reset();
+        gUndoManager.saveState((new SemanticNodeGroup()).toJson());
+        updateUndoButtons();
     };
 
     var doUndo = function() {
         var stateJson = gUndoManager.undo();
-        var gNodeGroup = new SemanticNodeGroup();
-        gNodeGroup.addJson(stateJson);
+        updateUndoButtons();
+        if (stateJson == undefined) return;
+
+        gNodeGroup = new SemanticNodeGroup();
+        if (stateJson) {
+            gNodeGroup.addJson(stateJson);
+        }
         nodeGroupChanged(true);
     };
 
     var doRedo = function() {
         var stateJson = gUndoManager.redo();
-        var gNodeGroup = new SemanticNodeGroup();
-        gNodeGroup.addJson(stateJson);
+        updateUndoButtons();
+        if (stateJson == undefined) return;
+
+        gNodeGroup = new SemanticNodeGroup();
+        if (stateJson) {
+            gNodeGroup.addJson(stateJson);
+        }
         nodeGroupChanged(true);
     };
+
+    var updateUndoButtons = function() {
+        document.getElementById("btnUndo").disabled = (gUndoManager.getUndoSize() < 1);
+        document.getElementById("btnRedo").disabled = (gUndoManager.getRedoSize() < 1);
+    }
     //
     // Build a callback which uses the status and results service to get to completion.
     //     callback parameter:  simpleResults with jobID
