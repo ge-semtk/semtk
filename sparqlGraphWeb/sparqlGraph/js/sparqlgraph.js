@@ -700,7 +700,7 @@
 
             } else if (item.getItemType() == "PropertyItem") {
                 var parent = gNodeGroup.getPropertyItemParentSNode(item);
-                ngClient.execAsyncChangeItemURI(sgJson, gNodeGroup.buildItemStr(parent, item),  newURI, domainOrRange, changeItemURICallback.bind(this, optSuccessC), ModalIidx.alert.bind(this, "NodeGroup Service failure"));
+                ngClient.execAsyncChangeItemURI(sgJson, gNodeGroup.buildItemStr(parent, item),  newURI, domainOrRange, changeItemURICallback.bind(this, optSuccessCallback), ModalIidx.alert.bind(this, "NodeGroup Service failure"));
 
             } else if (item.getItemType() == "NodeItem") {
                 var parent = gNodeGroup.getNodeItemParentSNode(item);
