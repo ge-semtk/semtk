@@ -98,6 +98,7 @@
 
             canvasWrapper = document.getElementById("canvasWrapper");
             canvasWrapper.innerHTML = "";
+            canvasWrapper.onkeyup = onkeyupCanvas;
             gRenderer = new NodegroupRenderer(canvasWrapper);
 	        gRenderer.setPropEditorCallback(launchPropertyItemDialog);
 	        gRenderer.setSNodeEditorCallback(launchSNodeItemDialog);
@@ -191,6 +192,16 @@
 
 		});
     });
+
+    var onkeyupCanvas = function(e) {
+        if (e.ctrlKey) {
+            if (e.key == 'z') {
+                doUndo();
+            } else if (e.key == 'y') {
+                doRedo();
+            }
+        }
+    };
 
     var checkBrowser = function() {
      	// Detect Browser
