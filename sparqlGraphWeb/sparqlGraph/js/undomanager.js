@@ -60,7 +60,7 @@ define([	// properly require.config'ed
             getUndoSize : function() {
                 return this.undoStack.length;
             },
-            
+
             getRedoSize : function() {
                 return this.redoStack.length;
             },
@@ -76,7 +76,7 @@ define([	// properly require.config'ed
                     // push current state if there is one
                     if (typeof(this.currentState) != 'undefined') {
                         this.undoStack.push(this.currentState);
-                        if (this.undoStack.length > this.maxDepth) {
+                        while (this.undoStack.length > this.maxDepth) {
                             this.undoStack.shift();
                         }
                     }
@@ -92,7 +92,7 @@ define([	// properly require.config'ed
                     return undefined;
                 } else {
                     this.redoStack.push(this.currentState);
-                    if (this.redoStack.length > this.maxDepth) {
+                    while (this.redoStack.length > this.maxDepth) {
                         this.redoStack.shift();
                     }
                     this.currentState = this.undoStack.pop();
