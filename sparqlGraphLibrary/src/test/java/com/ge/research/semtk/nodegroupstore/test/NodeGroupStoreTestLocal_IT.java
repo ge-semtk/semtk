@@ -2,6 +2,10 @@ package com.ge.research.semtk.nodegroupstore.test;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
+import java.nio.charset.Charset;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.jena.atlas.json.JSON;
 import org.apache.jena.atlas.json.io.parserjavacc.JSONPrinter;
 import org.junit.BeforeClass;
@@ -153,10 +157,11 @@ public class NodeGroupStoreTestLocal_IT {
 
 		store.insertStringBlob(str, StringBlobTypes.Report, ID, "junit_comments", "junit");
 		
-		String str2 = store.getStringBlob(ID, StringBlobTypes.Report);
+		String retrieved = store.getStringBlob(ID, StringBlobTypes.Report);
+		String expected = str.replaceAll("[\n\r]+", "\n");
 		
-		assertNotEquals("String blob returned null", null, str2);
-		assertTrue("String blobs do not match", str2.equals(str));
+		assertNotEquals("String blob returned null", null, retrieved);
+		assertTrue("String blobs do not match", retrieved.equals(expected));
 	}
 	
 	@Test

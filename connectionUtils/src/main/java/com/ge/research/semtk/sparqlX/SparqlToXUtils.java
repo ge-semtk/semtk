@@ -367,10 +367,10 @@ public class SparqlToXUtils {
 	 * @return
 	 */
 	public static String unescapeFromSparql(String s) {
-		String ret = s.replaceAll("&#38;", "&")
-				.replaceAll("&#10;", "\n")
-				.replaceAll("&#92;", "\\\\")
-				.replaceAll("&#34;", "\"")
+		String ret = s.replace("&#38;", "&")
+				.replace("&#10;", "\n")
+				.replace("&#92;", "\\\\")
+				.replace("&#34;", "\"")
 				;
 		return ret;
 	}

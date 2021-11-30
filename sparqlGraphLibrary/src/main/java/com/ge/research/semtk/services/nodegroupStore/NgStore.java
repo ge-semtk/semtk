@@ -138,13 +138,13 @@ public class NgStore {
 		StringBuilder blob = new StringBuilder();
 
 		for (int i=0; i < retTable.getNumRows(); i++) {
-			blob.append(SparqlToXUtils.unescapeFromSparql( retTable.getCellAsString(i, "stringChunk")));
+			blob.append(retTable.getCellAsString(i, "stringChunk"));
 		}
 		
 		ArrayList<String> row0 = retTable.getRow(0);
 		retTable.clearRows();
 		retTable.addRow(row0);
-		retTable.setCell(0, "stringChunk", blob.toString());		
+		retTable.setCell(0, "stringChunk", SparqlToXUtils.unescapeFromSparql(blob.toString()));		
 		
 		return retTable;
 		
@@ -215,7 +215,8 @@ public class NgStore {
 	}
 	
 	public void insertStringBlob(String blob, StringBlobTypes blobType, String id, String comments, String creator, boolean suFlag ) throws Exception {
-		ArrayList<String> insertQueries = this.genSparqlInsertStringBlob(blob, blobType, id, comments, creator);
+		String safeBlob = SparqlToXUtils.escapeForSparql(blob);
+		ArrayList<String> insertQueries = this.genSparqlInsertStringBlob(safeBlob, blobType, id, comments, creator);
 	
 		for (String insertQuery : insertQueries) {
 			this.executeConfirmQuery(insertQuery, suFlag);
@@ -453,26 +454,22 @@ public class NgStore {
 		}
 		return ret;
 	}
-//	String rdf10ValuesClause = "VALUES ?ID { \"" + id + "\"} . ";
-//
-//	String query  = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
-//			"SELECT distinct ?stringChunk ?counter" +
-//			"FROM <" + this.dataGraph + "> WHERE { " +
-//			"?blob a prefabNodeGroup:" + blobType.toString() + " . " +
-//			"?blob prefabNodeGroup:ID ?ID . " +
-//			rdf10ValuesClause +
-//			"?blob prefabNodeGroup:stringChunk ?stringChunkObj . " +
-//			"  ?strungChunkObj prefabNodeGroup:chunk ?stringChunk . " +
-//			"  ?strungChunkObj prefabNodeGroup:counter ?counter . " +
-//			"} ORDER BY ?counter";		
-//	
-//	return query;
+
+	
+	/**
+	 * 
+	 * @param blob - MUST BE already made safe with something like SparqlToXUtils.escapeForSparql(blob);
+	 * @param blobType
+	 * @param id
+	 * @param comments
+	 * @param creator
+	 * @return
+	 * @throws Exception
+	 */
 	private ArrayList<String> genSparqlInsertStringBlob(String blob, StringBlobTypes blobType, String id, String comments, String creator) throws Exception {
 		final int SPLIT = 20000;
 		
 		// extract the connJson
-		
-		String blobStr = SparqlToXUtils.escapeForSparql(blob);
 		
 		ArrayList<String> ret = new ArrayList<String>();
 		String uri = "generateSparqlInsert:semtk_blob_" +  UUID.randomUUID().toString();
@@ -493,7 +490,7 @@ public class NgStore {
 		ret.add(query);
 		
 		// to mimic the nodegroup function, start with chunks[0] empty and chunks[1] containing the whole blob
-		String [] chunks = new String [] { "", blobStr};
+		String [] chunks = new String [] { "", blob};
 		int i=0;
 		while (chunks[1].length() > 0) {
 			chunks = getNextChunk(chunks[1], SPLIT);
