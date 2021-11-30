@@ -133,21 +133,19 @@ public class NgStore {
 		String query = this.genSparqlGetStringBlobById(id, blobType);
 		
 		Table retTable = this.executeQuery(query, suFlag);
-		
-		if (retTable.getNumRows() > 1) {
-			// combine rows into one by appending "stringChunk"
-			StringBuilder blob = new StringBuilder();
 
-			for (int i=0; i < retTable.getNumRows(); i++) {
-				blob.append(retTable.getCellAsString(i, "stringChunk"));
-			}
-			
-			ArrayList<String> row0 = retTable.getRow(0);
-			retTable.clearRows();
-			retTable.addRow(row0);
-			retTable.setCell(0, "stringChunk", blob.toString());
-						
-		} 
+		// combine rows into one by appending "stringChunk"
+		StringBuilder blob = new StringBuilder();
+
+		for (int i=0; i < retTable.getNumRows(); i++) {
+			blob.append(SparqlToXUtils.unescapeFromSparql( retTable.getCellAsString(i, "stringChunk")));
+		}
+		
+		ArrayList<String> row0 = retTable.getRow(0);
+		retTable.clearRows();
+		retTable.addRow(row0);
+		retTable.setCell(0, "stringChunk", blob.toString());		
+		
 		return retTable;
 		
 	}
@@ -280,14 +278,14 @@ public class NgStore {
 		String rdf10ValuesClause = "VALUES ?ID { \"" + id + "\"} . ";
 
 		String query  = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
-				"SELECT distinct ?stringChunk ?counter" +
-				"FROM <" + this.dataGraph + "> WHERE { " +
-				"?blob a prefabNodeGroup:" + blobType.toString() + " . " +
-				"?blob prefabNodeGroup:id ?ID . " +
+				"SELECT distinct ?stringChunk ?counter \n" +
+				"FROM <" + this.dataGraph + "> WHERE { \n" +
+				"?blob a prefabNodeGroup:" + blobType.toString() + " . \n" +
+				"?blob prefabNodeGroup:id ?ID . \n" +
 				rdf10ValuesClause +
-				"?blob prefabNodeGroup:stringChunk ?stringChunkObj . " +
-				"  ?strungChunkObj prefabNodeGroup:chunk ?stringChunk . " +
-				"  ?strungChunkObj prefabNodeGroup:counter ?counter . " +
+				"?blob prefabNodeGroup:stringChunk ?stringChunkObj . \n" +
+				"  ?strungChunkObj prefabNodeGroup:chunk ?stringChunk . \n" +
+				"  ?strungChunkObj prefabNodeGroup:counter ?counter . \n" +
 				"} ORDER BY ?counter";		
 		
 		return query;
@@ -474,8 +472,7 @@ public class NgStore {
 		
 		// extract the connJson
 		
-		String blobStr = legalizeSparqlInputString(blob);
-		String [] chunks = getNextChunk(blobStr, SPLIT);
+		String blobStr = SparqlToXUtils.escapeForSparql(blob);
 		
 		ArrayList<String> ret = new ArrayList<String>();
 		String uri = "generateSparqlInsert:semtk_blob_" +  UUID.randomUUID().toString();
@@ -495,6 +492,8 @@ public class NgStore {
 			    "  }";
 		ret.add(query);
 		
+		// to mimic the nodegroup function, start with chunks[0] empty and chunks[1] containing the whole blob
+		String [] chunks = new String [] { "", blobStr};
 		int i=0;
 		while (chunks[1].length() > 0) {
 			chunks = getNextChunk(chunks[1], SPLIT);

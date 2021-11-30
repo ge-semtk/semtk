@@ -25,6 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.ge.research.semtk.utility.LocalLogger;
+import org.apache.commons.lang.StringEscapeUtils;
 
 public class SparqlToXUtils {
 	static final Pattern PATTERN_BAD_FIRST_CHAR = Pattern.compile("#[^a-zA-Z0-9]");
@@ -300,6 +301,16 @@ public class SparqlToXUtils {
 		return "?" + s.replaceAll("[^a-zA-Z0-9]+", "_");
 	}
 	
+	// legacy
+	// this makes some changes to the string to try to make a safe and reasonable sparql INSERT.
+	// Example flaw:  round trip "hi\\nthere" (slash n) and "hi\nthere" (return) each comes back as "hi\nthere" (return)
+	// it is retained for backwards compatibility.  It seems to work with nodegroup json storage.
+	//
+	// Use this function when you can't control how/when strings will be queried back out.
+	//
+	// If you can control the query exit point, then use:
+	// 	  escapeForSparql() before INSERT
+	//    unescapeFromSparql() after the SELECT back out
 	public static String safeSparqlString(String s) {
 		
 		StringBuilder out = new StringBuilder();
@@ -330,6 +341,38 @@ public class SparqlToXUtils {
 	    }
 	    return out.toString();
 		
+	}
+	
+	/**
+	 * Escape a string so it won't mess up a sparql query.
+	 * Querying back out will require unescapeFromSparql()
+	 * @param s
+	 * @return
+	 */
+	public static String escapeForSparql(String s) {
+
+		String ret = s.replaceAll("&", "&#38;")
+				.replaceAll("[\n\r]+", "&#10;")
+				.replace("\\", "&#92;")
+				.replace("\"", "&#34;")
+				;
+					
+		return ret;
+		
+	}
+	
+	/**
+	 * Undo the escapeForSparql()
+	 * @param s
+	 * @return
+	 */
+	public static String unescapeFromSparql(String s) {
+		String ret = s.replaceAll("&#38;", "&")
+				.replaceAll("&#10;", "\n")
+				.replaceAll("&#92;", "\\\\")
+				.replaceAll("&#34;", "\"")
+				;
+		return ret;
 	}
 	
 	public static boolean isLegalURI(String uri) {

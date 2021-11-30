@@ -10,6 +10,7 @@ import org.junit.Test;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.services.nodegroupStore.NgStore;
+import com.ge.research.semtk.services.nodegroupStore.NgStore.StringBlobTypes;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
@@ -114,6 +115,48 @@ public class NodeGroupStoreTestLocal_IT {
 		String sparql = "select ?s ?p ?o from <" + TestGraph.getDataset() + "> where { ?s ?p ?o . } limit 10 ";
 		Table t = TestGraph.execTableSelect(sparql);
 		assertTrue("Dangling triples in store after delete.", t.getNumRows() == 0);
+	}
+	
+	@Test
+	/**
+	 * Insert, get, delete a nodegroup
+	 * @throws Exception
+	 */
+	public void testString() throws Exception {
+		TestGraph.clearGraph();
+		String ID = "junit_test_ID";
+
+		// add nodegroup
+		NgStore store = new NgStore(TestGraph.getSei());
+		String str    = "hi there \n two \r \\ \\\\ \\n \\t \\g \' \\\' \" \\\" \\\\\" \\\\\\\" &quot; \\";
+		String expect = "hi there \n two \n \\ \\\\ \\n \\t \\g \' \\\' \" \\\" \\\\\" \\\\\\\" &quot; \\";
+
+		store.insertStringBlob(str, StringBlobTypes.Report, ID, "junit_comments", "junit");
+		
+		String str2 = store.getStringBlob(ID, StringBlobTypes.Report);
+		assertNotEquals("String blob returned null", null, str2);
+		assertTrue("String blobs do not match\nExpected: " + expect + "\nFound:" + str2, str2.equals(expect));
+	}
+	
+	@Test
+	/**
+	 * Insert, get, delete a nodegroup
+	 * @throws Exception
+	 */
+	public void testBigString() throws Exception {
+		TestGraph.clearGraph();
+		String ID = "junit_test_ID";
+
+		// add nodegroup
+		NgStore store = new NgStore(TestGraph.getSei());
+		String str = Utility.getResourceAsString(this, "/very-big-nodegroup.json");
+
+		store.insertStringBlob(str, StringBlobTypes.Report, ID, "junit_comments", "junit");
+		
+		String str2 = store.getStringBlob(ID, StringBlobTypes.Report);
+		
+		assertNotEquals("String blob returned null", null, str2);
+		assertTrue("String blobs do not match", str2.equals(str));
 	}
 	
 	@Test
