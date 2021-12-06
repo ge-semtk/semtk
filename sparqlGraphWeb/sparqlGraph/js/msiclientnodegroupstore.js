@@ -34,24 +34,26 @@ define([	// properly require.config'ed   bootstrap-modal
 			this.msi = new MicroServiceInterface(serviceURL);
 		};
 
+        MsiClientNodeGroupStore.TYPE_NODEGROUP = "PrefabNodeGroup";
+        MsiClientNodeGroupStore.TYPE_REPORT = "Report";
 
 		MsiClientNodeGroupStore.prototype = {
-			deleteStoredNodeGroup : function (id, successCallback) {
-				var data = JSON.stringify ({ "id": id });
-				this.msi.postToEndpoint("deleteStoredNodeGroup", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+			deleteStoredItem : function (id, itemType, successCallback) {
+				var data = JSON.stringify ({ "id": id, "itemType" : itemType });
+				this.msi.postToEndpoint("deleteStoredItem", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
 
-			getNodeGroupById : function (id, successCallback) {
-				var data = JSON.stringify ({ "id": id });
-				this.msi.postToEndpoint("getNodeGroupById", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+			getStoredItemById : function (id, itemType, successCallback) {
+				var data = JSON.stringify ({ "id": id, "itemType" : itemType });
+				this.msi.postToEndpoint("getStoredItemById", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
 
-            getNodeGroupByIdToJsonStr : function (id, jsonStrCallback) {
+            getStoredItemByIdToStr : function (id, itemType, jsonStrCallback) {
                 var successCallback = function(jsCallback, ngId, resultSet) {
                     if (! resultSet.isSuccess()) {
                         this.msi.userFailureCallback(resultSet.getGeneralResultHtml());
                     } else {
-                        var nodegroupArr = resultSet.getStringResultsColumn("NodeGroup");
+                        var nodegroupArr = resultSet.getStringResultsColumn("item");
 
                         if (nodegroupArr.length < 1) {
                              this.msi.userFailureCallback("<b>Failure retrieving nodegroup.</b><br>Nodegroup was not found: " + ngId);
@@ -61,22 +63,17 @@ define([	// properly require.config'ed   bootstrap-modal
                     }
                 }.bind(this, jsonStrCallback, id);
 
-                this.getNodeGroupById(id, successCallback);
+                this.getStoredItemById(id, itemType, successCallback);
             },
-
-			getNodeGroupList : function (successCallback) {
-				var data = JSON.stringify ({});
-				this.msi.postToEndpoint("getNodeGroupList", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
-			},
 
             getNodeGroupList : function (successCallback) {
 				var data = JSON.stringify ({});
 				this.msi.postToEndpoint("getNodeGroupList", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
 
-			getNodeGroupMetadata : function (successCallback) {
-				var data = JSON.stringify ({});
-				this.msi.postToEndpoint("getNodeGroupMetadata", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+            getStoredItemsMetadata : function (itemType, successCallback) {
+				var data = JSON.stringify ({"itemType": itemType});
+				this.msi.postToEndpoint("getStoredItemsMetadata", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
 
             getNodeGroupRuntimeConstraints : function (id, successCallback) {
@@ -84,14 +81,16 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.msi.postToEndpoint("getNodeGroupRuntimeConstraints", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
 
-			storeNodeGroup : function (sgJson, creator, name, comments, successCallback) {
+			storeItem : function (itemStr, creator, name, comments, itemType, successCallback) {
 				var data = JSON.stringify ({
                       "creator" : creator,
 					  "comments": comments,
-					  "jsonRenderedNodeGroup": JSON.stringify(sgJson.toJson()),
-					  "name": name
+					  "item" : itemStr,
+					  "name": name,
+                      "itemType" : itemType
 					});
-				this.msi.postToEndpoint("storeNodeGroup", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+
+				this.msi.postToEndpoint("storeItem", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
 
 		};

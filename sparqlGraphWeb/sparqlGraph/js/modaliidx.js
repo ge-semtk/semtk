@@ -62,7 +62,7 @@ define([	// properly require.config'ed   bootstrap-modal
         //
         // msgHtmlOrDom - can be an html string or a dom
         //
-		ModalIidx.okCancel = function (titleTxt, msgHtmlOrDom, okCallback, optOkButtonText, optCancelCallback, optValidate) {
+		ModalIidx.okCancel = function (titleTxt, msgHtmlOrDom, okCallback, optOkButtonText, optCancelCallback, optValidate, optOkClass) {
 			// ok cancel
 
             var dom;
@@ -80,7 +80,9 @@ define([	// properly require.config'ed   bootstrap-modal
 							optValidate ? optValidate : function() {return null;},
 							okCallback,
 							optCancelCallback,
-							optOkButtonText
+							optOkButtonText,
+                            undefined,
+                            optOkClass
 							);
             return m;
 		};
@@ -269,7 +271,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 $(this.div).modal('show');
             },
 
-            showOKCancel : function (headerText, bodyDOM, validate, callbackSuccess, callbackCancel, optOkButtonText, optWidthPercent) {
+            showOKCancel : function (headerText, bodyDOM, validate, callbackSuccess, callbackCancel, optOkButtonText, optWidthPercent, optOkClass) {
                 // show a modal with header, body and callback.
                 // validate must return one of:
                 //      error message : display an alert
@@ -287,7 +289,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 body.appendChild(bodyDOM);
                 this.div.appendChild(body);
 
-                var footer = this.createFooter("Cancel", callbackCancel, okButText, validate, callbackSuccess);
+                var footer = this.createFooter("Cancel", callbackCancel, okButText, validate, callbackSuccess, optOkClass);
                 this.div.appendChild(footer);
 
                 $(this.div).modal('show');
@@ -337,11 +339,11 @@ define([	// properly require.config'ed   bootstrap-modal
                 $(this.div).modal('show');
             },
 
-            showChoices : function (headerText, bodyDOM, buttonNameList, callbackList, optWidthPercent) {
+            showChoices : function (headerText, bodyDOM, buttonNameList, callbackList, optWidthPercent, optButtonClassList, optButtonIdList) {
                 // show modal with optional number of buttons
                 // matching number of callbacks
                 // no validation functionality
-                // last button is the primary choice
+                // last button is always the primary choice
 
                 this.div = this.createModalDiv(optWidthPercent);
 
@@ -355,20 +357,20 @@ define([	// properly require.config'ed   bootstrap-modal
                 this.div.appendChild(body);
 
 
-                // make the last button the default and "cancel" danger style
+                // make the last button the default and others from optButtonClassList if any
                 var classList = [];
                 for (var i=0; i < buttonNameList.length; i++) {
-                    if (buttonNameList[i].toLowerCase() == "cancel") {
-                        classList.push("btn-danger");
-                    } else if (i == buttonNameList.length - 1) {
+                    if (i == buttonNameList.length - 1) {
                         classList.push("btn-primary");
+                    } else if (optButtonClassList && optButtonClassList[i]) {
+                        classList.push(optButtonClassList[i]);
                     } else {
                         classList.push("");
                     }
                 }
 
                 // ----- footer -----
-                var footer = this.createChoicesFooter(buttonNameList, callbackList, classList);
+                var footer = this.createChoicesFooter(buttonNameList, callbackList, classList, optButtonIdList);
                 this.div.appendChild(footer);
 
                 $(this.div).modal('show');
@@ -441,7 +443,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 var callback2 = function () {
                     this.hide();
                 }.bind(this);
-                var a2 = IIDXHelper.createButton("Cancel", callback2, ["btn-danger"]);
+                var a2 = IIDXHelper.createButton("Cancel", callback2, []);  // used to be "btn-danger"
                 footer.appendChild(a2);
 
                 var callback3 = function (valCb, subCb) {
@@ -475,7 +477,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 var callback2 = function () {
                     this.hide();
                 }.bind(this);
-                var a2 = IIDXHelper.createButton("Cancel", callback2, ["btn-danger"]);
+                var a2 = IIDXHelper.createButton("Cancel", callback2);  // , ["btn-danger"]
                 footer.appendChild(a2);
 
                 var callback3 = function (valCb, subCb) {
@@ -510,7 +512,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 var callback2 = function () {
                     this.hide();
                 }.bind(this);
-                var a2 = IIDXHelper.createButton("Cancel", callback2, ["btn-danger"]);
+                var a2 = IIDXHelper.createButton("Cancel", callback2); //, ["btn-danger"]
                 footer.appendChild(a2);
 
                 var callback3 = function (vsCb) {
@@ -524,12 +526,12 @@ define([	// properly require.config'ed   bootstrap-modal
                 return footer;
             },
 
-            createFooter : function(but1text, callback1, but2text, validate2, callback2) {
+            createFooter : function(but1text, callback1, but2text, validate2, callback2, optOkClass) {
                 //----- footer -----
                 var footer = document.createElement("div");
                 footer.className = "modal-footer";
 
-                var a1 = IIDXHelper.createButton(but1text, callback1, (but1text=="Cancel") ? ["btn-danger"] : undefined);
+                var a1 = IIDXHelper.createButton(but1text, callback1); //, (but1text=="Cancel") ? ["btn-danger"] : undefined);
                 a1.setAttribute("data-dismiss", "modal");
                 footer.appendChild(a1);
 
@@ -547,7 +549,7 @@ define([	// properly require.config'ed   bootstrap-modal
                     }
                 }.bind(this);
 
-                var a2 = IIDXHelper.createButton(but2text, callback1, ["btn-primary"]);
+                var a2 = IIDXHelper.createButton(but2text, callback1, [optOkClass || "btn-primary"]);
                 footer.appendChild(a2);
 
                 return footer;
@@ -561,7 +563,7 @@ define([	// properly require.config'ed   bootstrap-modal
               *      - btn-primary
               *      - btn-danger
              **/
-            createChoicesFooter : function(buttonNameList, callbackList, classList) {
+            createChoicesFooter : function(buttonNameList, callbackList, classList, optButtonIdList) {
                 var footer = document.createElement("div");
                 footer.className = "modal-footer";
 
@@ -575,6 +577,9 @@ define([	// properly require.config'ed   bootstrap-modal
                     var butClassList = (classList.length > i  && classList[i] != "") ? [classList[i]] : undefined;
                     var a1 = IIDXHelper.createButton(buttonNameList[i], click, butClassList);
                     a1.setAttribute("data-dismiss", "modal");
+                    if (optButtonIdList && optButtonIdList[i]) {
+                        a1.id = optButtonIdList[i];
+                    }
 
                     footer.appendChild(a1);
                 }

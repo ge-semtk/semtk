@@ -134,12 +134,16 @@
 
             // init gReportTab
             setTabButton("report-tab-but", false);
+            var user = localStorage.getItem("SPARQLgraph_user");
+
             gReportTab = new ReportTab(
                                     document.getElementById("reportToolForm"),
                                     document.getElementById("reportOptionsDiv"),
                                     document.getElementById("reportEditDiv"),
                                     document.getElementById("reportDiv"),
-                                    g);
+                                    g,
+                                    user || "",
+                                    function(u) {localStorage.setItem("SPARQLgraph_user", u);});
 
 	        // load last connection
 			var conn = gLoadDialog.getLastConnectionInvisibly();
@@ -155,7 +159,7 @@
                                         window.open(g.help.url.base + "/" + g.help.url.demo, "_blank","location=yes");
 
                                         var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
-                                        mq.getNodeGroupByIdToJsonStr("demoNodegroup", doQueryLoadJsonStr);
+                                        mq.getStoredItemByIdToStr("demoNodegroup", MsiClientNodeGroupStore.TYPE_NODEGROUP, doQueryLoadJsonStr);
                                     }
                                   );
 
@@ -2090,10 +2094,6 @@
         );
     };
 
-   	var doDeleteFromNGStore = function() {
-        gStoreDialog.launchDeleteDialog();
-    };
-
   	var doStoreNodeGroup = function () {
 
         require(['sparqlgraph/js/sparqlgraphjson'], function(SparqlGraphJson) {
@@ -2107,7 +2107,7 @@
             }
 
             var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), true, gPlotSpecsHandler);
-            gStoreDialog.launchStoreDialog(sgJson, doneCallback);
+            gStoreDialog.launchStoreDialog(JSON.stringify(sgJson.toJson()), doneCallback);
 
         });
 

@@ -116,8 +116,8 @@ define([	// properly require.config'ed
             </table>\
             <div class="form-actions" style="padding-top:1ch; padding-bottom:1ch;"  align="right"> \
                 <input type="checkbox" id="mdNoCacheCheckbox" style="margin: 0"><span style="padding-right:4ch;"> clear cache</span> \
-                <input type="button" id="mdCancel" class="btn-danger" value="Cancel" ></input> \
-                <input type="submit" class="btn-primary" value="Submit"></input>\
+                <input type="button" id="mdCancel" class="btn" value="Cancel" ></input> \
+                <input type="submit" class="btn btn-primary" value="Submit"></input>\
             </div>\
         </form>\
         </center>\

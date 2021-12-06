@@ -63,7 +63,7 @@ public class DemoSetupThread extends Thread {
 			NgStore store = new NgStore(this.storeSei);	
 			JSONObject connJson = sgJson.getSparqlConnJson();
 			store.deleteNodeGroup("demoNodegroup");
-			store.insertNodeGroup(sgJsonJson, connJson, "demoNodegroup", "demo comments", "semTK", true);
+			store.insertNodeGroup(sgJsonJson, connJson, "demoNodegroup", "demo comments", "semTK");
 	
 			// load demo model owl
 			InputStream owlStream = JobTracker.class.getResourceAsStream("/semantics/OwlModels/hardware.owl");

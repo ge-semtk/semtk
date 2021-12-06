@@ -23,6 +23,7 @@
 define([	// properly require.config'ed
          	'sparqlgraph/js/iidxhelper',
             'sparqlgraph/js/modaliidx',
+            'sparqlgraph/js/modalstoredialog',
             'sparqlgraph/js/msiclientnodegroupexec',
             'sparqlgraph/js/msiclientnodegroupstore',
             'sparqlgraph/js/msiclientontologyinfo',
@@ -46,14 +47,16 @@ define([	// properly require.config'ed
 		],
 
     // TODO: this isn't leveraging VisJsHelper properly.  Code duplication.
-	function(IIDXHelper, ModalIidx, MsiClientNodeGroupExec, MsiClientNodeGroupStore, MsiClientOntologyInfo, MsiClientStatus, MsiClientResults, MsiResultSet, OntologyInfo, SparqlGraphJson, VisJsHelper, $, vis, JSONEditor) {
+	function(IIDXHelper, ModalIidx, ModalStoreDialog, MsiClientNodeGroupExec, MsiClientNodeGroupStore, MsiClientOntologyInfo, MsiClientStatus, MsiClientResults, MsiResultSet, OntologyInfo, SparqlGraphJson, VisJsHelper, $, vis, JSONEditor) {
 
 
 		//============ local object  ExploreTab =============
-		var ReportTab = function(toolForm, optionsDiv, editorDiv, reportDiv, g) {
+		var ReportTab = function(toolForm, optionsDiv, editorDiv, reportDiv, g, initialUser, setUser) {
             this.conn = null;
             this.toolForm = toolForm;
             this.optionsDiv = optionsDiv;
+            this.setUser = setUser;
+            this.storeDialog = new ModalStoreDialog(initialUser || "", g.service.nodeGroupStore.url, MsiClientNodeGroupStore.TYPE_REPORT);
 
             editorDiv.innerHTML = "";
             var div = document.createElement("div");
@@ -70,7 +73,6 @@ define([	// properly require.config'ed
             this.initEditorDiv();
             this.initReportDiv();
 
-            this.reportJSON = null;
         };
 
         ReportTab.CSS = `
@@ -248,7 +250,7 @@ define([	// properly require.config'ed
             setConn : function(conn) {
                 this.conn = conn;
                 this.initReportDiv();
-                this.initToolForm();
+                this.updateToolForm();
             },
 
             updateToolForm : function() {
@@ -265,25 +267,31 @@ define([	// properly require.config'ed
                 table.appendChild(tr);
                 this.toolForm.appendChild(table);
 
-                // left (empty)
+                // left
                 var td = document.createElement("td");
+                td.style.width="35%";
                 td.align="right";
                 tr.appendChild(td);
 
                 // center
                 td = document.createElement("td");
+                td.style.width="30%";
                 td.align="center";
                 tr.appendChild(td);
 
                 var span = IIDXHelper.createElement("span", "");
                 span.id = "reportConnSpan";
                 td.appendChild(span);
-                this.updateToolForm();
 
-                // right (empty)
+                // right
                 td = document.createElement("td");
                 td.align="right";
+                td.style.width="35%";
                 tr.appendChild(td);
+
+                td.appendChild(this.buildButtonToolbar());
+
+                this.updateToolForm();
             },
 
             // print a div
@@ -304,35 +312,69 @@ define([	// properly require.config'ed
                 td1.appendChild(IIDXHelper.createDropzone("icon-tasks", "Drop Report JSON", function(e) {return true;}, this.dropReportJSON.bind(this)));
                 tr.appendChild(td1);
 
-                // run button cell
-                var td2 = document.createElement("td");
-                var button = document.createElement("button");
-                button.id = "butSyncOwl";
-                button.classList.add("btn");
-                button.innerHTML = "Run";
-                button.onclick = this.runReport.bind(this);
-                td2.appendChild(IIDXHelper.createNbspText());
-                td2.appendChild(button);
-                td2.appendChild(IIDXHelper.createNbspText());
-                tr.appendChild(td2);
-
-                // run button cell
+                // validator cell
                 var td3 = document.createElement("td");
-                td3.align="right";
-                td3.style.width = "20em";
+                td3.style.width = "50%";
+                td3.align="center";
                 var span = document.createElement("span");
                 span.id = "valid_indicator";
                 td3.appendChild(span);
                 tr.appendChild(td3);
+
+                // info button cell
+                var td4 = document.createElement("td");
+                td4.align = "right";
+                td4.style.width = "25%";
+                td4.appendChild(IIDXHelper.createIconButton("icon-play", this.doRunReport.bind(this), ["btn", "btn-primary"], undefined, "Run", "Generate the report"));
+
+                tr.appendChild(td4);
 
                 table.appendChild(tr);
                 this.optionsDiv.appendChild(table);
                 return;
             },
 
+            buildButtonToolbar : function() {
+                //var toolbar = IIDXHelper.createElement("div", "", "btn-toolbar");
+                //toolbar.style.marginTop="0px";
+                //var group1 = IIDXHelper.createElement("div", "", "btn-group");
+                //toolbar.appendChild(group1);
+                var group1 = document.createElement("span");
+                group1.appendChild(IIDXHelper.createIconButton("icon-cloud", this.doOpenStore.bind(this), ["btn"], undefined, "Open store", "Open cloud storage"));
+                IIDXHelper.appendSpace(group1);
+                group1.appendChild(IIDXHelper.createIconButton("icon-cloud-upload", this.doSaveToStore.bind(this), ["btn"], undefined, "Save", "Save to cloud storage"));
+                IIDXHelper.appendSpace(group1);
+                group1.appendChild(IIDXHelper.createIconButton("icon-save", this.doDownloadReport.bind(this), ["btn"], undefined, "Download", "Save to disk"));
+                IIDXHelper.appendSpace(group1);
+                group1.appendChild(IIDXHelper.createIconButton("icon-info-sign",
+                                    function() {
+                                        window.open('https://github.com/json-editor/json-editor', "_blank","location=yes");
+                                    },
+                                    ["icon-white", "btn", "btn-info"],
+                                    undefined,
+                                    "JSONEditor",
+                                    "Built with JSONEditor"
+                                ));return group1;
+                //return toolbar;
+            },
+
+            // check for changes then dropReportJSONOK
             dropReportJSON : function (ev, label) {
-                this.reportJSON = [];
-                var files = ev.dataTransfer.files;
+                var file = ev.dataTransfer.files[0];
+                var okCallback = function(f, l) {
+                    this.dropReportJSONOK(f, l);
+                }.bind(this, file, label);
+
+                if (this.reportChanged()) {
+                    ModalIidx.okCancel("Overwrite warning", "Report has been edited.  <br><br>Discard changes and continue?", okCallback, "Discard", function(){}, undefined, "btn-danger");
+                } else {
+                    okCallback();
+                }
+            },
+
+            // drop a file w/o checking
+            dropReportJSONOK : function(file, label) {
+                var reportJSON = [];
 
                 readNext = function(index) {
                     // done
@@ -341,7 +383,6 @@ define([	// properly require.config'ed
                     }
 
                     // error
-                    var file = files[index];
                     if (file.name.slice(-5) != ".json" && file.name.slice(-5) != ".JSON") {
                         this.logAndAlert("Error dropping data file", "Only .json is supported: " + file.name);
                         return;
@@ -351,12 +392,11 @@ define([	// properly require.config'ed
                     var reader = new FileReader();
                     reader.onload = function(f) {
                         console.log(file.name);
-                        this.reportJSON.push(file);
+                        reportJSON.push(file);
                         label.data = file.name;
                         file.text().then(
                             function(jsonStr) {
-                                this.editor.setValue(JSON.parse(jsonStr));
-                                this.expandOrCollapseAll(false);
+                                this.setReport(jsonStr);
                             }.bind(this));
                         // chain next read
                         readNext(1);
@@ -396,22 +436,7 @@ define([	// properly require.config'ed
                 right.align = "right";
                 tr.appendChild(right);
 
-                // download button cell
-                right.appendChild(IIDXHelper.createButton("Download", this.downloadReport.bind(this), ["btn"]));
-                right.appendChild(IIDXHelper.createNbspText());
-
-                // json editor info button
-                right.appendChild(IIDXHelper.createIconButton("icon-info-sign",
-                                    function() {
-                                        window.open('https://github.com/json-editor/json-editor', "_blank","location=yes");
-                                    },
-                                    ["icon-white", "btn-small", "btn-info"],
-                                    undefined,
-                                    "JSONEditor",
-                                    "Built with JSONEditor"
-                                ));
-
-
+                // right is now empty
 
                 var options = {
                     ajax: true,
@@ -459,6 +484,29 @@ define([	// properly require.config'ed
 
             },
 
+
+            //
+            // set the report
+            setReport : function(reportJsonStr) {
+                this.editor.setValue(JSON.parse(reportJsonStr));
+                this.expandOrCollapseAll(false);
+                this.setReportAsUnchanged();
+            },
+
+            //
+            // mark the existing report as unchanged
+            setReportAsUnchanged : function() {
+                var curReportStr = JSON.stringify(this.editor.getValue());
+                this.lastSetReportStr = curReportStr;
+            },
+
+            //
+            // has report been edited with the editor
+            reportChanged : function() {
+                var curReportStr = JSON.stringify(this.editor.getValue());
+                return (this.lastSetReportStr != undefined && curReportStr != this.lastSetReportStr);
+            },
+
             expandOrCollapseAll : function(expandFlag) {
                 var exempt = ["root", "root.sections"];
 
@@ -472,23 +520,27 @@ define([	// properly require.config'ed
             },
 
             expandOrCollapse : function(ed, expandFlag) {
-                if (['array', 'object'].indexOf(ed.schema.type) !== -1 && ed.editor_holder) {
-                    if (expandFlag) {
-                        // Expand
-                        ed.editor_holder.style.display = '';
-                        ed.collapsed = false;
-                        if (ed.toggle_button) {
-                            ed.setButtonText(ed.toggle_button,'','collapse',ed.translate('button_collapse'));
+                try {
+                    if (['array', 'object'].indexOf(ed.schema.type) !== -1 && ed.editor_holder) {
+                        if (expandFlag) {
+                            // Expand
+                            ed.editor_holder.style.display = '';
+                            ed.collapsed = false;
+                            if (ed.toggle_button) {
+                                ed.setButtonText(ed.toggle_button,'','collapse',ed.translate('button_collapse'));
+                            }
+                        }
+                        else {
+                            // Collapse
+                            ed.editor_holder.style.display = 'none';
+                            ed.collapsed = true;
+                            if (ed.toggle_button) {
+                                ed.setButtonText(ed.toggle_button,'','expand',ed.translate('button_expand'));
+                            }
                         }
                     }
-                    else {
-                        // Collapse
-                        ed.editor_holder.style.display = 'none';
-                        ed.collapsed = true;
-                        if (ed.toggle_button) {
-                            ed.setButtonText(ed.toggle_button,'','expand',ed.translate('button_expand'));
-                        }
-                    }
+                } catch (err) {
+                    // Json is so bad everthing is fubar
                 }
             },
 
@@ -499,34 +551,69 @@ define([	// properly require.config'ed
                     // Get an array of errors from the validator
                     var errors = this.editor.validate();
                     var indicator = document.getElementById('valid_indicator');
+                    var json = this.editor.getValue();
 
-                    // Not valid
                     if(errors.length) {
-                        var json = this.editor.getValue();
+                        // Not valid
                         if (Object.keys(json).length == 1 && json.title == "") {
                             indicator.className = 'reports-valid';
-                            indicator.textContent = 'JSON is empty';
+                            indicator.textContent = 'Report JSON is empty';
                         } else {
                             indicator.className = 'reports-invalid';
-                            indicator.textContent = 'JSON is invalid';
+                            indicator.textContent = 'Report JSON is invalid';
                         }
                     }
-                    // Valid
                     else {
+                        // Valid
                         indicator.className = 'reports-valid';
-                        indicator.textContent = 'JSON is valid';
+                        indicator.textContent = 'Report: ' + json.title;
                     }
                 }.bind(this));
             },
 
-            downloadReport : function() {
-                var json = this.editor.getValue();
-                var jsonStr = JSON.stringify(json, null, 4);
-                var title = json.title ? (json.title.replaceAll(" ", "_") + ".json") : "report.json";
-                IIDXHelper.downloadFile(jsonStr, title, "text/json");
+            doSaveToStore : function() {
+                try {
+                    this.storeDialog.launchStoreDialog(JSON.stringify(this.editor.getValue()), this.setReportAsUnchanged.bind(this));
+                } catch (err) {
+                    console.log(err.stack);
+                    alert(err);   // need to make it to "return false" so page doesn't reload
+                }
+                return false;
             },
 
-            runReport : function() {
+            doOpenStore : function() {
+                try {
+                    if (this.reportChanged()) {
+                        ModalIidx.okCancel("Overwrite warning", "Report has been edited.  <br><br>Discard changes and continue?", this.doOpenStoreOk.bind(this), "Discard", function(){}, undefined, "btn-danger");
+                    } else {
+                        this.doOpenStoreOk();
+                    }
+                } catch (err) {
+                    console.log(err.stack);
+                    alert(err);   // need to make it to "return false" so page doesn't reload
+                }
+                return false;
+            },
+
+            doOpenStoreOk : function() {
+                this.storeDialog.launchRetrieveDialog(this.setReport.bind(this));
+            },
+
+            doDownloadReport : function() {
+                try {
+                    var json = this.editor.getValue();
+                    var jsonStr = JSON.stringify(json, null, 4);
+                    var title = json.title ? (json.title.replaceAll(" ", "_") + ".json") : "report.json";
+                    IIDXHelper.downloadFile(jsonStr, title, "text/json");
+                    this.setReportAsUnchanged();
+                } catch (err) {
+                    console.log(err.stack);
+                    alert(err);   // need to make it to "return false" so page doesn't reload
+                }
+                return false;
+            },
+
+            doRunReport : function() {
                 var json = this.editor.getValue();
 
                 if (Object.keys(json).length == 1 && json.title == "") {
@@ -534,8 +621,14 @@ define([	// properly require.config'ed
                 } else if (this.editor.validate().length > 0) {
                     ModalIidx.alert("Error", "Report JSON is not valid");
                 } else {
-                    this.drawReport(json);
+                    try {
+                        this.drawReport(json);
+                    } catch (err) {
+                        console.log(err.stack);
+                        alert(err); // need to make it to "return false" so page doesn't reload
+                    }
                 }
+                return false;
             },
 
             initReportDiv : function() {
@@ -559,8 +652,10 @@ define([	// properly require.config'ed
 
                 this.addDescription(this.reportDiv, report["description"]);
 
-                for (var section of report["sections"]) {
-                    this.reportDiv.appendChild(this.generateSection(section, 1));
+                if (report.hasOwnProperty("sections")) {
+                    for (var section of report["sections"]) {
+                        this.reportDiv.appendChild(this.generateSection(section, 1));
+                    }
                 }
             },
 
@@ -622,7 +717,7 @@ define([	// properly require.config'ed
                         if (! plotId) throw new Error("Report section['plot'] is missing field 'plotname'");
 
                         var ngStoreClient = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
-                        ngStoreClient.getNodeGroupByIdToJsonStr(nodegroup, this.plotGetNgCallback.bind(this, ngDiv, plotId, level));
+                        ngStoreClient.getStoredItemByIdToStr(nodegroup, this.plotGetNgCallback.bind(this, ngDiv, plotId, level));
 
                     } catch (e) {
                         this.failureCallback(ngDiv, e)

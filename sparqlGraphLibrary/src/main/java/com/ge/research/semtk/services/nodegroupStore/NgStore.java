@@ -33,12 +33,17 @@ import com.ge.research.semtk.utility.Utility;
 
 /**
  * Store nodegroups in triplestore graph "sei"
+ * 
+ * It can also store generic StoredItems, of which Report and PrefabNodeGroup are subtypes.
+ * 
+ * Deleting and retrieving the contents of PrefabNodeGroups require different operations than other StoredItems.
+ * 
  * @author 200001934
  *
  */
 public class NgStore {
 	
-	public static enum StringBlobTypes { Report };
+	public static enum StoredItemTypes { Report, StoredItem, PrefabNodeGroup };
 	
 	private String dataGraph = null;
 	private SparqlEndpointInterface sei = null;
@@ -47,7 +52,7 @@ public class NgStore {
 		this.dataGraph = sei.getGraph();
 		this.sei = sei;
 	}
-	
+	 
 	/**
 	 * Get sgJson or null
 	 * @param id
@@ -73,24 +78,41 @@ public class NgStore {
 			
 	}
 	
-	public String getStringBlob(String id, StringBlobTypes blobType) throws Exception {
-		Table tbl = this.getStringBlobTable(id, blobType);
+	/**
+	 * Return any type of stored item
+	 * @param id
+	 * @param blobType
+	 * @return
+	 * @throws Exception
+	 */
+	public String getStoredItem(String id, StoredItemTypes blobType) throws Exception {
+		Table tbl = this.getStoredItemTable(id, blobType);
 		if (tbl.getNumRows() == 0) {
 			return null;
 		} else if (tbl.getNumRows() == 1) {
-			return tbl.getCell(0, "stringChunk");
+			if (blobType == StoredItemTypes.PrefabNodeGroup)
+				return tbl.getCell(0, "NodeGroup");
+			else
+				return tbl.getCell(0, "stringChunk");
 		} else {
 			throw new Exception("Internal error: muliple rows found");
 		}
-		
 	}
 	
-	public Table getNodegroupTable(String id)  throws Exception {
-		return this.getNodegroupTable(id, false);
-	}
-	
-	public Table getStringBlobTable(String id, StringBlobTypes blobType)  throws Exception {
-		return this.getStringBlobTable(id, blobType, false);
+
+	/**
+	 * Return item as a table.  Column will be NodeGroup or stringChunk
+	 * @param id
+	 * @param blobType
+	 * @param suFlag
+	 * @return
+	 * @throws Exception
+	 */
+	public Table getStoredItemTable(String id, StoredItemTypes blobType)  throws Exception {
+		if (blobType == StoredItemTypes.PrefabNodeGroup) 
+			return this.getNodegroupTable(id);
+		else
+			return this.getStringBlobTable(id, blobType);
 	}
 	
 	/**
@@ -99,17 +121,17 @@ public class NgStore {
 	 * @return table with 0 or 1 rows
 	 * @throws Exception
 	 */
-	public Table getNodegroupTable(String id, boolean suFlag)  throws Exception {
+	public Table getNodegroupTable(String id)  throws Exception {
 		StringBuilder ngStr = new StringBuilder();
 		ArrayList<String> queries = this.genSparqlGetNodegroupById(id);
 		
-		Table retTable = this.executeQuery(queries.get(0), suFlag);
+		Table retTable = this.executeQuery(queries.get(0));
 		
 		if (retTable.getNumRows() > 0) {
 			ngStr = new StringBuilder(retTable.getCellAsString(0,  "NodeGroup"));
 
 			// look for additional text, using second query
-			Table catTable =  this.executeQuery(queries.get(1), suFlag);
+			Table catTable =  this.executeQuery(queries.get(1));
 		
 			for (int i=0; i < catTable.getNumRows(); i++) {
 				ngStr.append(catTable.getCellAsString(i, "NodeGroup"));
@@ -129,113 +151,122 @@ public class NgStore {
 	 * @return table with 0 or 1 rows
 	 * @throws Exception
 	 */
-	public Table getStringBlobTable(String id, StringBlobTypes blobType, boolean suFlag)  throws Exception {
+	public Table getStringBlobTable(String id, StoredItemTypes blobType)  throws Exception {
 		String query = this.genSparqlGetStringBlobById(id, blobType);
 		
-		Table retTable = this.executeQuery(query, suFlag);
+		Table retTable = this.executeQuery(query);
 
-		// combine rows into one by appending "stringChunk"
-		StringBuilder blob = new StringBuilder();
-
-		for (int i=0; i < retTable.getNumRows(); i++) {
-			blob.append(retTable.getCellAsString(i, "stringChunk"));
+		if (retTable.getNumRows() > 0) {
+			// combine rows into one by appending "stringChunk"
+			StringBuilder blob = new StringBuilder();
+	
+			for (int i=0; i < retTable.getNumRows(); i++) {
+				blob.append(retTable.getCellAsString(i, "stringChunk"));
+			}
+			
+			ArrayList<String> row0 = retTable.getRow(0);
+			retTable.clearRows();
+			retTable.addRow(row0);
+			retTable.setCell(0, "stringChunk", SparqlToXUtils.unescapeFromSparql(blob.toString()));		
 		}
-		
-		ArrayList<String> row0 = retTable.getRow(0);
-		retTable.clearRows();
-		retTable.addRow(row0);
-		retTable.setCell(0, "stringChunk", SparqlToXUtils.unescapeFromSparql(blob.toString()));		
 		
 		return retTable;
 		
 	}
-	
+
+	// use getStoredItemIdList()
+	@Deprecated 
 	public Table getNodeGroupIdList() throws Exception {
 		return this.getNodeGroupIdList(false);
 	}
-	
+	// use getStoredItemIdList()
+	@Deprecated
 	public Table getNodeGroupIdList(boolean suFlag) throws Exception {
-		return this.executeQuery(this.genSparqlGetNodeGroupIdList(), suFlag);
+		return this.executeQuery(this.genSparqlGetStoredItemIdList(StoredItemTypes.PrefabNodeGroup));
 	}
-	
+
+	// use getFullStoredItemList()
+	@Deprecated
 	public Table getFullNodeGroupList() throws Exception {
 		return this.getFullNodeGroupList(false);
 	}
 	
+	// use getFullStoredItemList()
+	@Deprecated
 	public Table getFullNodeGroupList(boolean suFlag) throws Exception {
-		return this.executeQuery(this.genSparqlGetFullNodeGroupList(), suFlag);
+		return this.executeQuery(this.genSparqlGetFullStoredItemList(StoredItemTypes.PrefabNodeGroup));
 	}
-	
+	// use getStoredItemMetadata
+	@Deprecated
 	public Table getNodeGroupMetadata() throws Exception {
 		return this.getNodeGroupMetadata(false);
 	}
 	
+	// use getStoredItemMetadata
+	@Deprecated
 	public Table getNodeGroupMetadata(boolean suFlag) throws Exception {
-		return this.executeQuery(this.genSparqlGetNodeGroupMetadata(), suFlag);
+		return this.executeQuery(this.genSparqlGetStoredItemMetadata(StoredItemTypes.PrefabNodeGroup));
+	}
+		
+		
+	public Table getStoredItemIdList(StoredItemTypes itemType) throws Exception {
+		return this.executeQuery(this.genSparqlGetStoredItemIdList(itemType));
 	}
 	
-	public Table getStringBlobMetadata(StringBlobTypes blobType) throws Exception {
-		return this.getStringBlobMetadata(blobType, false);
+	public Table getFullStoredItemList(StoredItemTypes itemType) throws Exception {
+		return this.executeQuery(this.genSparqlGetFullStoredItemList(itemType));
 	}
 	
-	public Table getStringBlobMetadata(StringBlobTypes blobType, boolean suFlag) throws Exception {
-		return this.executeQuery(this.genSparqlGetStringBlobMetadata(blobType), suFlag);
+	
+	public Table getStoredItemMetadata(StoredItemTypes itemType) throws Exception {
+		return this.executeQuery(this.genSparqlGetStoredItemMetadata(itemType));
 	}
+	
 	
 	public void deleteNodeGroup(String id) throws Exception {
-		this.deleteNodeGroup(id, false);
+		this.executeConfirmQuery(this.genSparqlDeleteNodeGroup(id));
 	}
 	
-	public void deleteNodeGroup(String id, boolean suFlag) throws Exception {
-		this.executeConfirmQuery(this.genSparqlDeleteNodeGroup(id), suFlag);
-	}
-	
-	public void deleteStringBlob(String id, StringBlobTypes blobType) throws Exception {
-		this.deleteStringBlob(id, blobType, false);
-	}
-	
-	public void deleteStringBlob(String id, StringBlobTypes blobType, boolean suFlag) throws Exception {
-		this.executeConfirmQuery(this.genSparqlDeleteStringBlob(id), suFlag);
+	/**
+	 * Delete any type of stored item
+	 * @param id
+	 * @param blobType
+	 * @throws Exception
+	 */
+
+	public void deleteStoredItem(String id, StoredItemTypes blobType) throws Exception {
+		if (blobType == StoredItemTypes.PrefabNodeGroup) 
+			this.executeConfirmQuery(this.genSparqlDeleteNodeGroup(id));
+		else
+			this.executeConfirmQuery(this.genSparqlDeleteStringBlob(id));
 	}
 	
 	public void insertNodeGroup(JSONObject sgJsonJson, JSONObject connJson, String id, String comments, String creator ) throws Exception {
-		this.insertNodeGroup(sgJsonJson, connJson, id, comments, creator, false);
-	}
-	
-	public void insertNodeGroup(JSONObject sgJsonJson, JSONObject connJson, String id, String comments, String creator, boolean suFlag ) throws Exception {
 		ArrayList<String> insertQueries = this.genSparqlInsertNodeGroup(sgJsonJson, connJson, id, comments, creator);
 	
 		for (String insertQuery : insertQueries) {
-			this.executeConfirmQuery(insertQuery, suFlag);
+			this.executeConfirmQuery(insertQuery);
 		}
 	}
 	
-	public void insertStringBlob(String blob, StringBlobTypes blobType, String id, String comments, String creator ) throws Exception {
-		this.insertStringBlob(blob, blobType, id, comments, creator, false);
-	}
-	
-	public void insertStringBlob(String blob, StringBlobTypes blobType, String id, String comments, String creator, boolean suFlag ) throws Exception {
+	public void insertStringBlob(String blob, StoredItemTypes blobType, String id, String comments, String creator ) throws Exception {
 		String safeBlob = SparqlToXUtils.escapeForSparql(blob);
 		ArrayList<String> insertQueries = this.genSparqlInsertStringBlob(safeBlob, blobType, id, comments, creator);
 	
 		for (String insertQuery : insertQueries) {
-			this.executeConfirmQuery(insertQuery, suFlag);
+			this.executeConfirmQuery(insertQuery);
 		}
 	}
 	
 	//-------------------- private -------------------
 	
-	private Table executeQuery(String sparql, boolean suFlag) throws Exception {
-		if (suFlag) {
-			AuthorizationManager.nextQuerySemtkSuper();
-		}
+	private Table executeQuery(String sparql) throws Exception {
+		AuthorizationManager.nextQuerySemtkSuper();
 		return this.sei.executeQueryToTable(sparql);
 	}
 	
-	private void executeConfirmQuery(String sparql, boolean suFlag) throws Exception {
-		if (suFlag) {
-			AuthorizationManager.nextQuerySemtkSuper();
-		}
+	private void executeConfirmQuery(String sparql) throws Exception {
+		AuthorizationManager.nextQuerySemtkSuper();
 		this.sei.executeQueryAndConfirm(sparql);
 	}
 	
@@ -275,18 +306,18 @@ public class NgStore {
 	
 	// get sparql queries for getting the needed info. 
 	// returns multiple rows for each id, sorted by counter
-	private String genSparqlGetStringBlobById(String id, StringBlobTypes blobType){
+	private String genSparqlGetStringBlobById(String id, StoredItemTypes blobType){
 		String rdf10ValuesClause = "VALUES ?ID { \"" + id + "\"} . ";
 
 		String query  = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 				"SELECT distinct ?stringChunk ?counter \n" +
 				"FROM <" + this.dataGraph + "> WHERE { \n" +
-				"?blob a prefabNodeGroup:" + blobType.toString() + " . \n" +
-				"?blob prefabNodeGroup:id ?ID . \n" +
+				"?item a prefabNodeGroup:" + blobType.toString() + " . \n" +
+				"?item prefabNodeGroup:ID ?ID . \n" +
 				rdf10ValuesClause +
-				"?blob prefabNodeGroup:stringChunk ?stringChunkObj . \n" +
-				"  ?strungChunkObj prefabNodeGroup:chunk ?stringChunk . \n" +
-				"  ?strungChunkObj prefabNodeGroup:counter ?counter . \n" +
+				"?item prefabNodeGroup:stringChunk ?stringChunkObj . \n" +
+				"  ?stringChunkObj prefabNodeGroup:chunk ?stringChunk . \n" +
+				"  ?stringChunkObj prefabNodeGroup:counter ?counter . \n" +
 				"} ORDER BY ?counter";		
 		
 		return query;
@@ -296,53 +327,42 @@ public class NgStore {
 	
 	
 	
-	private String genSparqlGetFullNodeGroupList(){
+	private String genSparqlGetFullStoredItemList(StoredItemTypes itemType){
 		String retval = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 						"SELECT distinct ?ID ?NodeGroup ?comments " +
 						"FROM <" + this.dataGraph + "> WHERE { " +
-						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
-						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
-						"?PrefabNodeGroup prefabNodeGroup:NodeGroup ?NodeGroup . " +
-						"optional { ?PrefabNodeGroup prefabNodeGroup:comments ?comments . } " +
+						"?item a prefabNodeGroup:" + itemType.toString() + " . " +
+						"?item a prefabNodeGroup:PrefabNodeGroup. " +
+						"?item prefabNodeGroup:ID ?ID . " +
+						"?item prefabNodeGroup:NodeGroup ?NodeGroup . " +
+						"optional { ?item prefabNodeGroup:comments ?comments . } " +
 						"}";
 		return retval;
 	}
 
 	
-	private String genSparqlGetNodeGroupIdList(){
+	private String genSparqlGetStoredItemIdList(StoredItemTypes itemType){
 		String retval = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 						"SELECT distinct ?ID " +
 						"FROM <" + this.dataGraph + "> WHERE { " +
-						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
-						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
+						"?item a prefabNodeGroup:" + itemType.toString() + " . " +
+						"?item a prefabNodeGroup:PrefabNodeGroup. " +
+						"?item prefabNodeGroup:ID ?ID . " +
 						"}";
 		return retval;
 	}
 	
-	private String genSparqlGetNodeGroupMetadata(){
+	private String genSparqlGetStoredItemMetadata(StoredItemTypes itemType){
 		String retval = "PREFIX XMLSchema:<http://www.w3.org/2001/XMLSchema#> " +
 						"PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
-						"SELECT distinct ?ID ?comments ?creationDate ?creator " +
+						"SELECT distinct ?ID ?comments ?creationDate ?creator ?itemType " +
 						"FROM <" + this.dataGraph + "> WHERE { " +
-						"?PrefabNodeGroup a prefabNodeGroup:PrefabNodeGroup. " +
-						"?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
-						"optional { ?PrefabNodeGroup prefabNodeGroup:comments ?comments . } " +
-				   		"optional { ?PrefabNodeGroup prefabNodeGroup:creationDate ?creationDate . } " +
-				   		"optional { ?PrefabNodeGroup prefabNodeGroup:creator ?creator . } " +
-						"}";
-		return retval;
-	}
-	
-	private String genSparqlGetStringBlobMetadata(StringBlobTypes blobType){
-		String retval = "PREFIX XMLSchema:<http://www.w3.org/2001/XMLSchema#> " +
-						"PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
-						"SELECT distinct ?ID ?comments ?creationDate ?creator " +
-						"FROM <" + this.dataGraph + "> WHERE { " +
-						"?blob a prefabNodeGroup:" + blobType.toString() + " . " +
-						"?blob prefabNodeGroup:id ?ID . " +
-						"optional { ?blob prefabNodeGroup:comments ?comments . } " +
-				   		"optional { ?blob prefabNodeGroup:creationDate ?creationDate . } " +
-				   		"optional { ?blob prefabNodeGroup:creator ?creator . } " +
+						"?item a ?itemType . " +
+						"FILTER (?itemType = prefabNodeGroup:" + itemType.toString() + ") . " +
+						"?item prefabNodeGroup:ID ?ID . " +
+						"optional { ?item prefabNodeGroup:comments ?comments . } " +
+				   		"optional { ?item prefabNodeGroup:creationDate ?creationDate . } " +
+				   		"optional { ?item prefabNodeGroup:creator ?creator . } " +
 						"}";
 		return retval;
 	}
@@ -375,7 +395,7 @@ public class NgStore {
 	}
 	
 	private String genSparqlDeleteStringBlob(String id) {
-		String rdf10ValuesClause = "VALUES ?id { \"" + id + "\" \"" + id + "\" } . ";
+		String rdf10ValuesClause = "VALUES ?ID { \"" + id + "\" \"" + id + "\" } . ";
 
 		String ret = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 				"PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
@@ -383,7 +403,7 @@ public class NgStore {
                 "  ?stringChunkObj ?scPred ?scObj . " +
 				"  ?PrefabNodeGroup ?pred ?obj." +
 				"} WHERE { " +
-				"  ?PrefabNodeGroup prefabNodeGroup:id ?id . " + 
+				"  ?PrefabNodeGroup prefabNodeGroup:ID ?ID . " + 
 				   rdf10ValuesClause +
                 "  ?PrefabNodeGroup prefabNodeGroup:stringChunk ?stringChunkObj . " +
                 "  ?stringChunkObj ?scPred ?scObj . " +
@@ -466,7 +486,7 @@ public class NgStore {
 	 * @return
 	 * @throws Exception
 	 */
-	private ArrayList<String> genSparqlInsertStringBlob(String blob, StringBlobTypes blobType, String id, String comments, String creator) throws Exception {
+	private ArrayList<String> genSparqlInsertStringBlob(String blob, StoredItemTypes blobType, String id, String comments, String creator) throws Exception {
 		final int SPLIT = 20000;
 		
 		// extract the connJson
@@ -479,7 +499,7 @@ public class NgStore {
 				"PREFIX XMLSchema:<http://www.w3.org/2001/XMLSchema#> " +
 				"INSERT { GRAPH <" + this.dataGraph + "> { " +
 			    "	   ?BlobString__0 a prefabNodeGroup:" + blobType + " . " +
-			    "	   ?BlobString__0 prefabNodeGroup:id \""            + id +   "\" ." +
+			    "	   ?BlobString__0 prefabNodeGroup:ID \""            + id +   "\" ." +
 			    "	   ?BlobString__0 prefabNodeGroup:comments \""      + SparqlToXUtils.safeSparqlString(comments) +   "\" ." +
 			    "	   ?BlobString__0 prefabNodeGroup:creationDate \""  + Utility.getSPARQLCurrentDateString() +   "\" ." +
 			    "	   ?BlobString__0 prefabNodeGroup:creator \""       + creator.trim() +   "\" ." +

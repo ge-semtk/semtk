@@ -14,7 +14,7 @@ import org.junit.Test;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.services.nodegroupStore.NgStore;
-import com.ge.research.semtk.services.nodegroupStore.NgStore.StringBlobTypes;
+import com.ge.research.semtk.services.nodegroupStore.NgStore.StoredItemTypes;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
@@ -135,9 +135,9 @@ public class NodeGroupStoreTestLocal_IT {
 		String str    = "hi there \n two \r \\ \\\\ \\n \\t \\g \' \\\' \" \\\" \\\\\" \\\\\\\" &quot; \\";
 		String expect = "hi there \n two \n \\ \\\\ \\n \\t \\g \' \\\' \" \\\" \\\\\" \\\\\\\" &quot; \\";
 
-		store.insertStringBlob(str, StringBlobTypes.Report, ID, "junit_comments", "junit");
+		store.insertStringBlob(str, StoredItemTypes.Report, ID, "junit_comments", "junit");
 		
-		String str2 = store.getStringBlob(ID, StringBlobTypes.Report);
+		String str2 = store.getStoredItem(ID, StoredItemTypes.Report);
 		assertNotEquals("String blob returned null", null, str2);
 		assertTrue("String blobs do not match\nExpected: " + expect + "\nFound:" + str2, str2.equals(expect));
 	}
@@ -155,9 +155,9 @@ public class NodeGroupStoreTestLocal_IT {
 		NgStore store = new NgStore(TestGraph.getSei());
 		String str = Utility.getResourceAsString(this, "/very-big-nodegroup.json");
 
-		store.insertStringBlob(str, StringBlobTypes.Report, ID, "junit_comments", "junit");
+		store.insertStringBlob(str, StoredItemTypes.Report, ID, "junit_comments", "junit");
 		
-		String retrieved = store.getStringBlob(ID, StringBlobTypes.Report);
+		String retrieved = store.getStoredItem(ID, StoredItemTypes.Report);
 		String expected = str.replaceAll("[\n\r]+", "\n");
 		
 		assertNotEquals("String blob returned null", null, retrieved);
