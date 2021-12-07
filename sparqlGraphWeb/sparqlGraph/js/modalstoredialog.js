@@ -160,6 +160,14 @@ define([	// properly require.config'ed
                 this.lastRetrievedId = idList[0];
             },
 
+            getSuggestedId : function() {
+                return this.lastRetrievedId;
+            },
+
+            suggestId : function(suggestion) {
+                this.lastRetrievedId = suggestion.substring(0,32).replace(/\W+/g, "_");
+            },
+
             /**
               * Callback after deletion
               * @param id is nodegroup just deleted

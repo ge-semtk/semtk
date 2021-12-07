@@ -340,6 +340,8 @@ define([	// properly require.config'ed
                 //var group1 = IIDXHelper.createElement("div", "", "btn-group");
                 //toolbar.appendChild(group1);
                 var group1 = document.createElement("span");
+                group1.appendChild(IIDXHelper.createIconButton("icon-remove-circle", this.doClear.bind(this), ["btn"], undefined, "Clear", "Clear the report"));
+                IIDXHelper.appendSpace(group1);
                 group1.appendChild(IIDXHelper.createIconButton("icon-cloud", this.doOpenStore.bind(this), ["btn"], undefined, "Open store", "Open cloud storage"));
                 IIDXHelper.appendSpace(group1);
                 group1.appendChild(IIDXHelper.createIconButton("icon-cloud-upload", this.doSaveToStore.bind(this), ["btn"], undefined, "Save", "Save to cloud storage"));
@@ -488,7 +490,9 @@ define([	// properly require.config'ed
             //
             // set the report
             setReport : function(reportJsonStr) {
+                var json = JSON.parse(reportJsonStr);
                 this.editor.setValue(JSON.parse(reportJsonStr));
+                this.storeDialog.suggestId(json.title || "");
                 this.expandOrCollapseAll(false);
                 this.setReportAsUnchanged();
             },
@@ -573,7 +577,11 @@ define([	// properly require.config'ed
 
             doSaveToStore : function() {
                 try {
-                    this.storeDialog.launchStoreDialog(JSON.stringify(this.editor.getValue()), this.setReportAsUnchanged.bind(this));
+                    var reportJson = this.editor.getValue();
+                    if (! this.storeDialog.getSuggestedId() && reportJson.title) {
+                        this.storeDialog.suggestId(reportJson.title);
+                    }
+                    this.storeDialog.launchStoreDialog(JSON.stringify(reportJson), this.setReportAsUnchanged.bind(this));
                 } catch (err) {
                     console.log(err.stack);
                     alert(err);   // need to make it to "return false" so page doesn't reload
@@ -627,6 +635,16 @@ define([	// properly require.config'ed
                         console.log(err.stack);
                         alert(err); // need to make it to "return false" so page doesn't reload
                     }
+                }
+                return false;
+            },
+
+            doClear : function() {
+                try {
+                    this.setReport("{\"title\": \"\"}");
+                } catch (err) {
+                    console.log(err.stack);
+                    alert(err); // need to make it to "return false" so page doesn't reload
                 }
                 return false;
             },
