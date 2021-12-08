@@ -20,23 +20,45 @@ package com.ge.research.semtk.services.ingestion;
 
 import javax.validation.constraints.NotNull;
 
+import com.ge.research.semtk.sparqlX.SparqlConnection;
+
 import io.swagger.annotations.ApiModelProperty;
 
 
-public class IngestionFromStringsRequestBody extends FromStringsRequestBody {
+public class IngestionFromStringsAndClassRequestBody extends FromStringsRequestBody {
 	@NotNull
 	@ApiModelProperty(
-			value = "template",
+			value = "classURI",
 			required = true,
-			example = "{ nodegroup json with ingestion template }")
-	public String template;
+			example = "http://myprefix#className")
+	public String classURI;
+	
+	@NotNull
+	@ApiModelProperty(
+			value = "connection",
+			required = true,
+			example = "{ connection json }")
+	private String connection;
 
-	public String getTemplate() {
-		return template;
+	@ApiModelProperty(
+			value = "idRegex",
+			required = false,
+			example = "identifier")
+	private String idRegex = "identifier";
+	
+	public String getClassURI() {
+		return classURI;
+	}
+
+	public String getConnection() {
+		return this.connection;
 	}
 	
-	public void setTemplate(String template) {
-		this.template = template;
+	public SparqlConnection buildConnection() throws Exception {
+		return new SparqlConnection(this.connection);
 	}
 	
+	public String getIdRegex() {
+		return idRegex;
+	}
 }
