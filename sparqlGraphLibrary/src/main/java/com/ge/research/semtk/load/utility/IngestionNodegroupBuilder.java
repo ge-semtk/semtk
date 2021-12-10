@@ -41,6 +41,7 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
  *    - ingestion columns:  properties of the main class and <idRegex> properties of linked objects
  *          - properties of main class column is named propKeyName
  *    		- idRegex property of linked object column is named linkPropKeyname_propKeyName
+ *          - columns have these patterns removed from key names:  "^is", "^is-", and "^has"
  *    
  * @author 200001934
  *
