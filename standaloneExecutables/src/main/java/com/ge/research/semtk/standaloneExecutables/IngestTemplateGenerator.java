@@ -24,6 +24,7 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.NodeItem;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.load.utility.ImportSpec;
+import com.ge.research.semtk.load.utility.IngestionNodegroupBuilder;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
@@ -46,11 +47,7 @@ public class IngestTemplateGenerator {
 	private static String BASE_URI_REGEX = null;
 	private static String DELETE_FROM_FILENAMES = null;
 	
-	private String className;
-	private SparqlConnection conn;
-	private OntologyInfo oInfo;
-	private SparqlGraphJson sgjson;
-	private StringBuilder csvTemplate;
+	
 	
 	/**
 	 * Set constants from cmd line
@@ -187,8 +184,9 @@ public class IngestTemplateGenerator {
 			
 			if ( baseURIPattern.matcher(className).find()) {
 				// generate
-				IngestTemplateGenerator generator = new IngestTemplateGenerator(className, conn, oInfo);
-				generator.generate();
+				IngestionNodegroupBuilder builder = new IngestionNodegroupBuilder(className, conn, oInfo);
+				builder.setIdRegex(ID_REGEX);
+				builder.build();
 				
 				// write json
 				String localClassName = new OntologyName(className).getLocalName();
@@ -214,7 +212,7 @@ public class IngestTemplateGenerator {
 				fileName = id + ".json";
 				path = Paths.get(dirHash.get(className), fileName);
 				System.out.println(path.toString());
-				FileUtils.writeStringToFile(path.toFile(), generator.getNodegroupJsonStr(), Charset.defaultCharset());
+				FileUtils.writeStringToFile(path.toFile(), builder.getNodegroupJsonStr(), Charset.defaultCharset());
 				
 				// add to store.csv
 				NgStore.addRowToStoreCsvTable(storeTableHash.get(classDir), id, comments, "auto", fileName);
@@ -227,7 +225,7 @@ public class IngestTemplateGenerator {
 					throw new Exception("File already exists (check for duplicate class names in model) : " + path.toString());
 				}
 				System.out.println(path.toString());
-				FileUtils.writeStringToFile(path.toFile(), generator.getCsvTemplate(), Charset.defaultCharset());
+				FileUtils.writeStringToFile(path.toFile(), builder.getCsvTemplate(), Charset.defaultCharset());
 			} else {
 				System.out.println("skipping: " + className);
 			}
@@ -269,122 +267,5 @@ public class IngestTemplateGenerator {
 		}
 	}
 	
-	public IngestTemplateGenerator(String className, SparqlConnection conn, OntologyInfo oInfo) {
-		this.className = className;
-		this.conn = conn;
-		this.oInfo = oInfo;
-	}
-		
-	private String getNodegroupJsonStr() {
-		return this.sgjson.prettyPrint();
-	}
 	
-	private String getCsvTemplate() {
-		return this.csvTemplate.toString();
-	}
-	private void generate() throws Exception {
-		this.csvTemplate = new StringBuilder();
-		ImportSpec ispecBuilder = new ImportSpec();
-		
-		// create nodegroup with single node of stated type
-		NodeGroup nodegroup = new NodeGroup();
-		nodegroup.addNode(this.className, this.oInfo);
-		
-		Node node = nodegroup.getNode(0);
-		ispecBuilder.addNode(node.getSparqlID(), node.getUri(), null);
-		
-		// build a rm_null transform
-		String transformId = ispecBuilder.addTransform("rm_null", "replaceAll", "^(null|Null|NULL)$", "");
-		
-		// set all data properties to returned, ensuring they get sparqlIDs
-		for (PropertyItem pItem : node.getPropertyItems()) {
-			// add to nodegroup return / optional
-			nodegroup.setIsReturned(pItem, true);
-			
-			// add to import spec
-			ispecBuilder.addProp(node.getSparqlID(), pItem.getUriRelationship());
-			
-			if (pItem.getKeyName().matches(ID_REGEX)) {
-				// lookup ID is a lookup and is NOT optional
-				ispecBuilder.addURILookup(node.getSparqlID(), pItem.getUriRelationship(), node.getSparqlID());
-				ispecBuilder.addLookupMode(node.getSparqlID(), ImportSpec.LOOKUP_MODE_CREATE);
-			} else {
-				// normal properties ARE optional
-				pItem.setOptMinus(PropertyItem.OPT_MINUS_OPTIONAL);
-			}
-			
-			String colName = buildColName(pItem.getSparqlID());
-			ispecBuilder.addColumn(colName);
-			ispecBuilder.addMapping(node.getSparqlID(), pItem.getUriRelationship(), ispecBuilder.buildMappingWithCol(colName, new String [] {transformId}));
-			
-			// add to csvTemplate
-			csvTemplate.append(colName + ",");
-		}
-		
-		// connect a node for each object property
-		for (NodeItem nItem : node.getNodeItemList()) {
-			
-			// Add object property node to nodegroup (optional) and importSpec
-			Node objNode = nodegroup.addNode(nItem.getUriValueType(), node, null, nItem.getUriConnectBy());
-			nItem.setOptionalMinus(objNode, NodeItem.OPTIONAL_TRUE);
-			
-			if (oInfo.hasSubclass(className)) {
-				// If node has subclasses then NO_CREATE ("error if missing")
-				// This will create the need for ingestion order to matter:  linked items must be ingested first.
-				ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_NO_CREATE);
-			} else {
-				// If node has NO subclasses then we may create it.
-				ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_CREATE);
-			}
-			
-			// give it a name, e.g.: verifies_ENTITY
-			String objNodeName = nItem.getKeyName() + "_" + new OntologyName(nItem.getUriValueType()).getLocalName();
-			nodegroup.setBinding(objNode, objNodeName);
-			
-			// set data property matching ID_REGEX returned
-			for (PropertyItem pItem : objNode.getPropertyItems()) {
-				if (pItem.getKeyName().matches(ID_REGEX)) {
-					// set the lookup ID to be returned
-					// but not optional (link to node is optional instead)
-					nodegroup.setIsReturned(pItem, true);
-					
-					// give it a meaningful name
-					if (nItem.getKeyName().contains("suing")) {
-						int i=2;
-						i += 1;
-					}
-					String propId = nodegroup.changeSparqlID(pItem, nItem.getKeyName() + "_" + pItem.getKeyName());
-					
-					
-					
-					// add to importspec, using it to look up parent node
-					ispecBuilder.addProp(objNode.getSparqlID(), pItem.getUriRelationship());
-					ispecBuilder.addURILookup(objNode.getSparqlID(), pItem.getUriRelationship(), objNode.getSparqlID());
-					
-					// add the column and mapping to the importspec
-					String colName = buildColName(propId);
-					ispecBuilder.addColumn(colName);
-					ispecBuilder.addMapping(objNode.getSparqlID(), pItem.getUriRelationship(), ispecBuilder.buildMappingWithCol(colName, new String [] {transformId}));
-					
-					// add to csvTemplate
-					csvTemplate.append(colName + ",");
-					break;
-				}
-			}
-		}
-		
-		// set up the SparqlGraphJson
-		this.sgjson = new SparqlGraphJson(nodegroup, conn);
-		this.sgjson.setImportSpecJson(ispecBuilder.toJson());
-		
-		// replace last comma in csvTemplate with a line return
-		csvTemplate.setLength(csvTemplate.length()-1);
-		csvTemplate.append("\n");
-		
-	}
-	
-	private static String buildColName(String sparqlIdSuggestion) {
-		return sparqlIdSuggestion.replace("?", "");
-	}
-
 }
