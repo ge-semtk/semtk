@@ -353,12 +353,21 @@ public class NgStore {
 	}
 	
 	private String genSparqlGetStoredItemMetadata(StoredItemTypes itemType){
+		// Note that generating sparql properly requires oInfo and conn.  OInfo requires oinfo_client.  Do that some day.
+		
+		// StoredItem is a superclass, rest are not.
+		String filter;
+		if (itemType == StoredItemTypes.StoredItem) {
+			filter = "VALUES ?itemType { prefabNodeGroup:StoredItem prefabNodeGroup:PrefabNodeGroup prefabNodeGroup:Report  } . ";
+		} else {
+			filter = "FILTER (?itemType = prefabNodeGroup:" + itemType.toString() + ") . ";
+		}
 		String retval = "PREFIX XMLSchema:<http://www.w3.org/2001/XMLSchema#> " +
 						"PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 						"SELECT distinct ?ID ?comments ?creationDate ?creator ?itemType " +
 						"FROM <" + this.dataGraph + "> WHERE { " +
 						"?item a ?itemType . " +
-						"FILTER (?itemType = prefabNodeGroup:" + itemType.toString() + ") . " +
+						filter +
 						"?item prefabNodeGroup:ID ?ID . " +
 						"optional { ?item prefabNodeGroup:comments ?comments . } " +
 				   		"optional { ?item prefabNodeGroup:creationDate ?creationDate . } " +

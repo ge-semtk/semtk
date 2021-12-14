@@ -397,7 +397,7 @@ public class NodeGroupStoreRestController {
 	 * generate a deletion query itself. 
 	 * @param requestBody - defaults to nodegroup
 	 * @return
-	 * @throws Exception 
+	 * @throws Exception on error or if item does not exist
 	 */
 	@CrossOrigin
 	@RequestMapping(value={"/deleteStoredNodeGroup", "/deleteStoredItem"}, method=RequestMethod.POST)
@@ -408,10 +408,24 @@ public class NodeGroupStoreRestController {
 	
 			NgStore store = new NgStore(this.getStoreDataSei());
 
+			
+			
 			try{
-				// attempt to delete the nodegroup, name and comments where there is a give ID.
-				store.deleteStoredItem(requestBody.getId(), requestBody.getItemType());
-				retval = new SimpleResultSet(true);
+				// check that the ID does not already exist. if it does, fail.
+				Table instanceTable = store.getStoredItemTable(requestBody.getId(), requestBody.getItemType());
+				
+				if(instanceTable.getNumRows() < 1){
+					throw new Exception("No stored item exists with id: " + requestBody.getId() + " and type: " + requestBody.getItemType());
+				
+				} else if(instanceTable.getNumRows() > 1){
+					throw new Exception("Internal error: multiple stored items exists with id: " + requestBody.getId() + " and type: " + requestBody.getItemType());
+				
+				} else {
+				
+					// attempt to delete the nodegroup, name and comments where there is a give ID.
+					store.deleteStoredItem(requestBody.getId(), requestBody.getItemType());
+					retval = new SimpleResultSet(true);
+				}
 			}
 			catch(Exception e){
 
