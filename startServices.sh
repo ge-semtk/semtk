@@ -75,6 +75,11 @@ fi
 
 echo "=== START MICROSERVICES... ==="
 
+# non-override-able options for vulnerability patching
+SAFE_JVM="-Dlog4j2.formatMsgNoLookups=true"
+JVM_OPTIONS="${JVM_OPTIONS} ${SAFE_JVM}"
+JVM_OPTIONS_LARGE_MEMORY="${JVM_OPTIONS_LARGE_MEMORY} ${SAFE_JVM}"
+
 PID_ARRAY=()
 PROC_ARRAY=()
 PORT_ARRAY=()
