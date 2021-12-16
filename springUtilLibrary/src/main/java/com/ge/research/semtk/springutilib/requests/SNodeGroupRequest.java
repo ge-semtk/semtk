@@ -18,7 +18,7 @@
 package com.ge.research.semtk.springutilib.requests;
 
 import org.json.simple.JSONObject;
-import org.mortbay.util.ajax.JSON;
+import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
@@ -40,6 +40,6 @@ public class SNodeGroupRequest {
 	 * @throws Exception
 	 */
 	public NodeGroup getNodeGroup() throws Exception {
-		return NodeGroup.getInstanceFromJson((JSONObject) JSON.parse(this.nodeGroup));
+		return NodeGroup.getInstanceFromJson((JSONObject) new JSONParser().parse(this.nodeGroup));
 	}
 }
