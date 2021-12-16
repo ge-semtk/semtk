@@ -22,7 +22,6 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
 
-import org.apache.curator.framework.recipes.locks.PredicateResults;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.AfterClass;

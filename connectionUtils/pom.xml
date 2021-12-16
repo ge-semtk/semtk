@@ -83,34 +83,19 @@
 			<version>29.0-jre</version>
 		</dependency>
 
-		<!-- License: Apache 2.0 -->
-		<dependency>     
-			<groupId>org.apache.hadoop</groupId>     
-			<artifactId>hadoop-common</artifactId>     
-			<version>2.6.0</version>
-			<exclusions>
-				<exclusion>
-					<groupId>javax.servlet</groupId>
-					<artifactId>servlet-api</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.google.guava</groupId>
-					<artifactId>guava</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>jdk.tools</groupId>
-					<artifactId>jdk.tools</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>log4j</groupId>
-					<artifactId>log4j</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-log4j12</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>  
+		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-collections4 -->
+		<dependency>
+    	 		<groupId>commons-collections</groupId>
+    			<artifactId>commons-collections</artifactId>
+    			<version>3.2.2</version>
+		</dependency>
+			<!-- https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api -->
+		<dependency>
+    			<groupId>javax.xml.bind</groupId>
+    			<artifactId>jaxb-api</artifactId>
+    			<version>2.4.0-b180830.0359</version>
+		</dependency>
+
 
 		<!-- License: Apache 2.0 -->
 		<dependency>
