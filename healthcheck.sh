@@ -48,7 +48,6 @@ fi
 declare -a PORTS=("$PORT_SPARQLGRAPH_STATUS_SERVICE"
                   "$PORT_SPARQLGRAPH_RESULTS_SERVICE"
                   "$PORT_DISPATCH_SERVICE"
-                  "$PORT_HIVE_SERVICE"
                   "$PORT_NODEGROUPSTORE_SERVICE"
                   "$PORT_ONTOLOGYINFO_SERVICE"
                   "$PORT_NODEGROUPEXECUTION_SERVICE"

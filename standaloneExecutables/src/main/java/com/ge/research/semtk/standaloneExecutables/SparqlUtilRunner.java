@@ -18,8 +18,6 @@
 
 package com.ge.research.semtk.standaloneExecutables;
 
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.load.DataLoader;

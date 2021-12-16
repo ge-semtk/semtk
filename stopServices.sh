@@ -40,7 +40,6 @@ multikill ontologyInfoService
 multikill nodeGroupStoreService
 multikill sparqlGraphStatusService
 multikill sparqlGraphResultsService
-multikill hiveService
 multikill sparqlExtDispatchService
 multikill nodeGroupExecutionService
 multikill nodeGroupService

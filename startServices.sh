@@ -113,13 +113,6 @@ if [[ "$ENABLED_SERVICES" == *sparqlGraphResultsService* ]]; then
 	PORT_ARRAY+=($PORT_SPARQLGRAPH_RESULTS_SERVICE)
 fi
 
-if [[ "$ENABLED_SERVICES" == *hiveService* ]]; then
-	"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/hiveService/target/hiveService-*.jar > "$LOGS"/hiveService.log 2>&1 &
-	PID_ARRAY+=($!)
-	PROC_ARRAY+=("hiveService");
-	PORT_ARRAY+=($PORT_HIVE_SERVICE)
-fi
-
 if [[ "$ENABLED_SERVICES" == *sparqlExtDispatchService* ]]; then
 	"$JAVA_HOME"/bin/java $JVM_OPTIONS_LARGE_MEMORY -Dloader.path="${LOCATION_ADDITIONAL_DISPATCHER_JARS}" -jar "$SEMTK"/sparqlExtDispatchService/target/sparqlExtDispatchService-*.jar > "$LOGS"/sparqlExtDispatchService.log 2>&1 &
 	PID_ARRAY+=($!)

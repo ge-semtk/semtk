@@ -21,7 +21,6 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 
-import org.datanucleus.store.rdbms.schema.PostgresqlTypeInfo;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
