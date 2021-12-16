@@ -9,7 +9,6 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
 import org.json.simple.JSONArray;
-import org.mortbay.util.ajax.JSON;
 
 import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 
