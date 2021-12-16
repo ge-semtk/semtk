@@ -28,7 +28,6 @@ import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.utility.LocalLogger;
-import com.google.protobuf.TextFormat.ParseException;
 
 public class NodeItem {
 	// this is the class that controls the access to nodes that a given belmont node 

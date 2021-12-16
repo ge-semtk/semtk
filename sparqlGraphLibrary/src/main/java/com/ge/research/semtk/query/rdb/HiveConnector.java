@@ -18,8 +18,6 @@
 
 package com.ge.research.semtk.query.rdb;
 
-import com.ge.research.semtk.query.rdb.JdbcConnector;
-
 
 /**
  * Hive connector

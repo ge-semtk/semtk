@@ -18,7 +18,6 @@
 package com.ge.research.semtk.nodeGroupStore.client;
 
 import org.json.simple.JSONObject;
-import org.mortbay.util.ajax.JSON;
 
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.SimpleResultSet;

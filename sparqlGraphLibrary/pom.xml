@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>com.ge.research.semtk</groupId>
 		<artifactId>semtk-oss</artifactId>
-		<version>2.3.0-SNAPSHOT</version>
+		<version>2.4.0-SNAPSHOT</version>
 	</parent>
 	<artifactId>sparqlGraphLibrary</artifactId>
 
@@ -18,6 +18,13 @@
 			<groupId>com.googlecode.json-simple</groupId>
 			<artifactId>json-simple</artifactId>
 			<version>1.1.1</version>
+		</dependency>
+
+		<!-- https://mvnrepository.com/artifact/org.apache.commons/commons-math3 -->
+		<dependency>
+    			<groupId>org.apache.commons</groupId>
+    			<artifactId>commons-math3</artifactId>
+    			<version>3.6.1</version>
 		</dependency>
 
 		<!-- License: Apache 2.0 -->
@@ -56,14 +63,14 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-csv</artifactId>
-			<version>1.4</version>
+			<version>1.9.0</version>
 		</dependency>
 
 		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.6</version>
+			<version>2.7</version>
 		</dependency>
 
 		<!-- License: MIT -->
@@ -79,63 +86,6 @@
 			<version>27.0.1-jre</version>
 		</dependency>
 
-		<!-- License: Apache 2.0 -->
-		<dependency>
-			<groupId>org.apache.hive</groupId>
-			<artifactId>hive-jdbc</artifactId>
-			<version>1.1.1</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.eclipse.jetty.aggregate</groupId>
-					<artifactId>jetty-all</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.google.guava</groupId>
-					<artifactId>guava</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.apache.hive</groupId>
-					<artifactId>hive-exec</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>log4j</groupId>
-					<artifactId>log4j</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-log4j12</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		
-		<!-- License: Apache 2.0 -->
-		<dependency>     
-			<groupId>org.apache.hadoop</groupId>     
-			<artifactId>hadoop-common</artifactId>     
-			<version>2.6.0</version>
-			<exclusions>
-				<exclusion>
-					<groupId>javax.servlet</groupId>
-					<artifactId>servlet-api</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.google.guava</groupId>
-					<artifactId>guava</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>jdk.tools</groupId>
-					<artifactId>jdk.tools</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>log4j</groupId>
-					<artifactId>log4j</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.slf4j</groupId>
-					<artifactId>slf4j-log4j12</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>  
 
 		<!-- License: Apache 2.0 -->
 		<dependency>
@@ -178,7 +128,7 @@
 		<dependency>
 			<groupId>com.arangodb</groupId>
 			<artifactId>arangodb-java-driver</artifactId>
-			<version>4.2.2</version>
+			<version>6.14.0</version>
 		</dependency>
 
 		<!-- License: Apache 2.0 -->
@@ -199,7 +149,7 @@
 		<dependency>
 			<groupId>com.microsoft.sqlserver</groupId>
 			<artifactId>mssql-jdbc</artifactId>
-			<version>8.2.2.jre8</version>
+			<version>9.5.0.jre8-preview</version>
 		</dependency>
 
 		<!--  License EDL 1.0 -->

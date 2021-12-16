@@ -75,6 +75,11 @@ fi
 
 echo "=== START MICROSERVICES... ==="
 
+# non-override-able options for vulnerability patching
+SAFE_JVM="-Dlog4j2.formatMsgNoLookups=true"
+JVM_OPTIONS="${JVM_OPTIONS} ${SAFE_JVM}"
+JVM_OPTIONS_LARGE_MEMORY="${JVM_OPTIONS_LARGE_MEMORY} ${SAFE_JVM}"
+
 PID_ARRAY=()
 PROC_ARRAY=()
 PORT_ARRAY=()
@@ -106,13 +111,6 @@ if [[ "$ENABLED_SERVICES" == *sparqlGraphResultsService* ]]; then
 	PID_ARRAY+=($!)
 	PROC_ARRAY+=("sparqlGraphResultsService");
 	PORT_ARRAY+=($PORT_SPARQLGRAPH_RESULTS_SERVICE)
-fi
-
-if [[ "$ENABLED_SERVICES" == *hiveService* ]]; then
-	"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/hiveService/target/hiveService-*.jar > "$LOGS"/hiveService.log 2>&1 &
-	PID_ARRAY+=($!)
-	PROC_ARRAY+=("hiveService");
-	PORT_ARRAY+=($PORT_HIVE_SERVICE)
 fi
 
 if [[ "$ENABLED_SERVICES" == *sparqlExtDispatchService* ]]; then
