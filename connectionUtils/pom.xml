@@ -174,7 +174,7 @@
 		<dependency>
 			<groupId>com.microsoft.sqlserver</groupId>
 			<artifactId>mssql-jdbc</artifactId>
-			<version>8.2.2.jre8</version>
+			<version>9.5.0.jre8-preview</version>
 		</dependency>
 
 		<!--  License EDL 1.0 -->
