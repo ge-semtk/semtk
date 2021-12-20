@@ -90,21 +90,21 @@ public class TypedUntypedLiteralsTestRDF11 {
 		String insertQuery = "prefix XMLSchema:<http://www.w3.org/2001/XMLSchema#> " +
 				"INSERT DATA " + 
 				"  { GRAPH <" + TestGraph.getSei().getGraph() + ">   { " + 
-				"        <http:/test/book1> a                                         <http://semtk/junit/book#Book> . " + 
-				"        <http:/test/book1> <http://semtk/junit/book#title>           \"OLD Typed Raw SPARQL\"^^XMLSchema:string . " + 
-				"        <http:/test/book1> <http://semtk/junit/book#publishDate>     \"1961-01-01\"^^XMLSchema:date . " + 
-				"        <http:/test/book1> <http://semtk/junit/book#publishDateTime> \"1961-01-01T01:00:00\"^^XMLSchema:dateTime . " + 
-				"        <http:/test/book1> <http://semtk/junit/book#publishTime>     \"1:00:00\"^^XMLSchema:time . " + 
-				"        <http:/test/book1> <http://semtk/junit/book#pages>           \"100\"^^XMLSchema:int . " + 
-				"        <http:/test/book1> <http://semtk/junit/book#price>           \"10.99\"^^XMLSchema:double . " + 
+				"        <http://test/book1> a                                         <http://semtk/junit/book#Book> . " + 
+				"        <http://test/book1> <http://semtk/junit/book#title>           \"OLD Typed Raw SPARQL\"^^XMLSchema:string . " + 
+				"        <http://test/book1> <http://semtk/junit/book#publishDate>     \"1961-01-01\"^^XMLSchema:date . " + 
+				"        <http://test/book1> <http://semtk/junit/book#publishDateTime> \"1961-01-01T01:00:00\"^^XMLSchema:dateTime . " + 
+				"        <http://test/book1> <http://semtk/junit/book#publishTime>     \"1:00:00\"^^XMLSchema:time . " + 
+				"        <http://test/book1> <http://semtk/junit/book#pages>           \"100\"^^XMLSchema:int . " + 
+				"        <http://test/book1> <http://semtk/junit/book#price>           \"10.99\"^^XMLSchema:double . " + 
 
-				"        <http:/test/book2> a                                         <http://semtk/junit/book#Book> . " + 
-				"        <http:/test/book2> <http://semtk/junit/book#title>           \"NEW Untyped Raw SPARQL\" . " + 
-				"        <http:/test/book2> <http://semtk/junit/book#publishDate>     \"1962-02-02\"^^XMLSchema:date . " + 
-				"        <http:/test/book2> <http://semtk/junit/book#publishDateTime> \"1962-02-02T02:00:00\"^^XMLSchema:dateTime . " + 
-				"        <http:/test/book2> <http://semtk/junit/book#publishTime>     \"2:00:00\"^^XMLSchema:time . " + 
-				"        <http:/test/book2> <http://semtk/junit/book#pages>           200 . " + 
-				"        <http:/test/book2> <http://semtk/junit/book#price>           20.99 . " + 
+				"        <http://test/book2> a                                         <http://semtk/junit/book#Book> . " + 
+				"        <http://test/book2> <http://semtk/junit/book#title>           \"NEW Untyped Raw SPARQL\" . " + 
+				"        <http://test/book2> <http://semtk/junit/book#publishDate>     \"1962-02-02\"^^XMLSchema:date . " + 
+				"        <http://test/book2> <http://semtk/junit/book#publishDateTime> \"1962-02-02T02:00:00\"^^XMLSchema:dateTime . " + 
+				"        <http://test/book2> <http://semtk/junit/book#publishTime>     \"2:00:00\"^^XMLSchema:time . " + 
+				"        <http://test/book2> <http://semtk/junit/book#pages>           200 . " + 
+				"        <http://test/book2> <http://semtk/junit/book#price>           20.99 . " + 
 
 				"      }  } ";
 		

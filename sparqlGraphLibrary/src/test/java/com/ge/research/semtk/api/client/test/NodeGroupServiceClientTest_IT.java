@@ -194,8 +194,10 @@ public class NodeGroupServiceClientTest_IT {
 			Table res = ngServiceClient.execGetRuntimeConstraints(sgJson);
 			String csvString = res.toCSVString();
 			
-			// NOTE: returning a table is awful
-			assertTrue(csvString.contains("\"?hdid\",PROPERTYITEM,INTEGER"));
+			assertTrue(res.getCellAsString(0, "valueId").contains("?hdid"));
+			assertTrue(res.getCellAsString(0, "itemType").equals("PROPERTYITEM"));
+			assertTrue(res.getCellAsString(0, "valueType").contains("INTEGER"));	
+
 		}
 		
 		/**

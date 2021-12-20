@@ -1082,7 +1082,7 @@ public class OntologyInfo {
 	private static String getDomainFilterStatement(String varName, String domain, String clause) {
 		if (domain == null || domain.isEmpty()) {
 			// remove blank nodes
-			String ret = "filter (!regex(str(?" + varName + "),'^nodeID://') " + clause + ") ";
+			String ret = "filter (!regex(str(?" + varName + "),'^(nodeID://|_:)') " + clause + ") ";
 			return ret;
 			
 		} else {

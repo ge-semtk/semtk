@@ -78,8 +78,8 @@ public class KairosDBQueryGenClientTest_IT {
 
 		// check query - can't rely on internal order
 		String queryJsonStr = resultTable.getCell(0, resultTable.getColumnIndex(Utility.COL_NAME_QUERY));
-		assertTrue(queryJsonStr.contains("{\"name\":\"TAG1\",\"tags\":{},\"group_by\":[],\"aggregators\":[]}"));
-		assertTrue(queryJsonStr.contains("{\"name\":\"TAG2\",\"tags\":{},\"group_by\":[],\"aggregators\":[]}"));
+		assertTrue(queryJsonStr.contains("{\"name\":\"TAG1\",\"tags\":{},\"group_by\":[],\"aggregators\":[]"));
+		assertTrue(queryJsonStr.contains("{\"name\":\"TAG2\",\"tags\":{},\"group_by\":[],\"aggregators\":[]"));
 
 		// check configJson
 		String configJsonStr = resultTable.getCell(0, resultTable.getColumnIndex(Utility.COL_NAME_CONFIGJSON));
