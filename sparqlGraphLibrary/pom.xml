@@ -44,7 +44,7 @@
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpcore</artifactId>
 			<!-- version is forced to fix AWS incompatibility. see https://github.com/aws/aws-sdk-java-v2/issues/652 -->
-			<version>4.4.9</version>
+			<version>4.4.15</version>
 		</dependency>
 		
 		<!-- License: Apache 2.0 -->
@@ -135,7 +135,7 @@
 		<dependency>
 			<groupId>org.kairosdb</groupId>
 			<artifactId>client</artifactId>
-			<version>2.0</version>
+			<version>3.0.1</version>
 		</dependency>
 
 		<!-- License: Apache 2.0 -->
