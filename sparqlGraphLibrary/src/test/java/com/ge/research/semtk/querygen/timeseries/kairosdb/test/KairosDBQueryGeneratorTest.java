@@ -57,12 +57,12 @@ public class KairosDBQueryGeneratorTest {
 		
 		// check for a query like this, but can't assume order: "{\"start_relative\":{\"value\":10,\"unit\":\"YEARS\"},\"cacheTime\":0,\"metrics\":[{\"name\":\"build1a.SPEED1\",\"tags\":{},\"group_by\":[],\"aggregators\":[]},{\"name\":\"build1b.SPEED2\",\"tags\":{},\"group_by\":[],\"aggregators\":[]}]}	
 		assertTrue(queriesForUUID1.getQueries().get(0).getQuery().contains("\"start_relative\":{\"value\":10,\"unit\":\"YEARS\"}"));
-		assertTrue(queriesForUUID1.getQueries().get(0).getQuery().contains("{\"name\":\"build1a.SPEED1\",\"tags\":{},\"group_by\":[],\"aggregators\":[]}"));
-		assertTrue(queriesForUUID1.getQueries().get(0).getQuery().contains("{\"name\":\"build1b.SPEED2\",\"tags\":{},\"group_by\":[],\"aggregators\":[]}"));
+		assertTrue(queriesForUUID1.getQueries().get(0).getQuery().contains("{\"name\":\"build1a.SPEED1\",\"tags\":{},\"group_by\":[],\"aggregators\":[]"));
+		assertTrue(queriesForUUID1.getQueries().get(0).getQuery().contains("{\"name\":\"build1b.SPEED2\",\"tags\":{},\"group_by\":[],\"aggregators\":[]"));
 		assertEquals(queriesForUUID1.getConfig().get("kairosDBUrl"), KAIROS_CONNECTION_URL_1);
 		assertTrue(queriesForUUID2.getQueries().get(0).getQuery().contains("\"start_relative\":{\"value\":10,\"unit\":\"YEARS\"}"));
-		assertTrue(queriesForUUID2.getQueries().get(0).getQuery().contains("{\"name\":\"build2a.TEMPERATURE\",\"tags\":{},\"group_by\":[],\"aggregators\":[]}"));
-		assertTrue(queriesForUUID2.getQueries().get(0).getQuery().contains("{\"name\":\"build2b.PRESSURE\",\"tags\":{},\"group_by\":[],\"aggregators\":[]}"));
+		assertTrue(queriesForUUID2.getQueries().get(0).getQuery().contains("{\"name\":\"build2a.TEMPERATURE\",\"tags\":{},\"group_by\":[],\"aggregators\":[]"));
+		assertTrue(queriesForUUID2.getQueries().get(0).getQuery().contains("{\"name\":\"build2b.PRESSURE\",\"tags\":{},\"group_by\":[],\"aggregators\":[]"));
 		assertEquals(queriesForUUID2.getConfig().get("kairosDBUrl"), KAIROS_CONNECTION_URL_2);
 	}
 	
@@ -98,12 +98,12 @@ public class KairosDBQueryGeneratorTest {
 		
 		// check for a query like this, but can't assume order: {\"start_relative\":{\"value\":10,\"unit\":\"YEARS\"},\"cacheTime\":0,\"metrics\":[{\"name\":\"TEMPERATURE\",\"tags\":{},\"group_by\":[],\"aggregators\":[]},{\"name\":\"PRESSURE\",\"tags\":{},\"group_by\":[],\"aggregators\":[]}]}		 
 		assertTrue(queriesForUUID1.getQueries().get(0).getQuery().contains("\"start_relative\":{\"value\":10,\"unit\":\"YEARS\"}"));
-		assertTrue(queriesForUUID1.getQueries().get(0).getQuery().contains("{\"name\":\"SPEED1\",\"tags\":{},\"group_by\":[],\"aggregators\":[]}"));
-		assertTrue(queriesForUUID1.getQueries().get(0).getQuery().contains("{\"name\":\"SPEED2\",\"tags\":{},\"group_by\":[],\"aggregators\":[]}"));
+		assertTrue(queriesForUUID1.getQueries().get(0).getQuery().contains("{\"name\":\"SPEED1\",\"tags\":{},\"group_by\":[],\"aggregators\":[]"));
+		assertTrue(queriesForUUID1.getQueries().get(0).getQuery().contains("{\"name\":\"SPEED2\",\"tags\":{},\"group_by\":[],\"aggregators\":[]"));
 		assertEquals(queriesForUUID1.getConfig().get("kairosDBUrl"), KAIROS_CONNECTION_URL_1);
 		assertTrue(queriesForUUID2.getQueries().get(0).getQuery().contains("\"start_relative\":{\"value\":10,\"unit\":\"YEARS\"}"));
-		assertTrue(queriesForUUID2.getQueries().get(0).getQuery().contains("{\"name\":\"TEMPERATURE\",\"tags\":{},\"group_by\":[],\"aggregators\":[]}"));
-		assertTrue(queriesForUUID2.getQueries().get(0).getQuery().contains("{\"name\":\"PRESSURE\",\"tags\":{},\"group_by\":[],\"aggregators\":[]}"));
+		assertTrue(queriesForUUID2.getQueries().get(0).getQuery().contains("{\"name\":\"TEMPERATURE\",\"tags\":{},\"group_by\":[],\"aggregators\":[]"));
+		assertTrue(queriesForUUID2.getQueries().get(0).getQuery().contains("{\"name\":\"PRESSURE\",\"tags\":{},\"group_by\":[],\"aggregators\":[]"));
 		assertEquals(queriesForUUID2.getConfig().get("kairosDBUrl"), KAIROS_CONNECTION_URL_2);
 	}
 	
