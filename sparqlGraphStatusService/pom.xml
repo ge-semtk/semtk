@@ -13,7 +13,6 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
-			<version>2.6.1</version>
 		</dependency>
 		
 		<!-- License: Apache 2.0 -->

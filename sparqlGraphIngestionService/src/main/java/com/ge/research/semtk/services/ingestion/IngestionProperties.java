@@ -18,7 +18,6 @@
 
 package com.ge.research.semtk.services.ingestion;
 
-import org.hibernate.validator.internal.constraintvalidators.bv.notempty.NotEmptyValidatorForMap;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 

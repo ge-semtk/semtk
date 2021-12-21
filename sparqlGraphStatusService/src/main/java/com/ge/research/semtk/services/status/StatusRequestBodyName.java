@@ -18,7 +18,7 @@
 
 package com.ge.research.semtk.services.status;
 
-import org.hibernate.validator.constraints.NotBlank;
+import javax.validation.constraints.NotBlank;
 
 public class StatusRequestBodyName extends StatusRequestBody {
 	@NotBlank(message="name can not be blank")
