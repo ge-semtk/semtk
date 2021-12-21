@@ -167,7 +167,7 @@
 			<dependency>
 				<groupId>org.springframework.cloud</groupId>
 				<artifactId>spring-cloud-dependencies</artifactId>
-				<version>Finchley.SR2</version> <!-- compatible with spring-boot 2.0.x -->
+				<version>Hoxton.SR10</version> <!-- compatible with spring-boot 2.0.x -->
 				<!-- <version>Greenwich.RELEASE</version> --> <!-- compatible with spring-boot 2.1.x -->
 				<type>pom</type>
 				<scope>import</scope>
