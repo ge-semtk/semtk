@@ -597,7 +597,7 @@
 
     var launchLinkBuilder2 = function(snode, nItem) {
 		// callback when user clicks on a nodeItem
-    	var rangeStr = nItem.getUriValueType();
+    	var rangeStr = nItem.getValueTypeURI();
 
     	// find nodes that might connect
     	var targetSNodes = gNodeGroup.getNodesBySuperclassURI(rangeStr, gOInfo);
@@ -785,7 +785,7 @@
 		var snodeClass = gOInfo.getClass(snode.fullURIName);
 		var domainStr = gOInfo.getInheritedPropertyByKeyname(snodeClass, nItem.getKeyName()).getNameStr();
 		if (rangeSnode == null) {
-			var rangeStr = nItem.getUriValueType();
+			var rangeStr = nItem.getValueTypeURI();
 			var newNode = gNodeGroup.returnBelmontSemanticNode(rangeStr, gOInfo);
 			gNodeGroup.addOneNode(newNode, snode, null, domainStr);
 		} else {
@@ -2184,7 +2184,7 @@
         var elem = document.getElementById("SGQueryLimit");
         elem.value = (limit < 1) ? "" : limit;
 
-        gRenderer.draw(gNodeGroup, gInvalidItems);
+        gRenderer.draw(gNodeGroup, gOInfo, gInvalidItems);
         if (flag) {
             buildQuery();
             gMappingTab.updateNodegroup(gNodeGroup, gConn);
@@ -2289,7 +2289,7 @@
             default:
                 throw new Error("Internal error: Unknown query type.");
         }
-        gRenderer.draw(gNodeGroup, gInvalidItems);
+        gRenderer.draw(gNodeGroup, gOInfo, gInvalidItems);
     	document.getElementById('queryText').value = "";
         buildQuery();
     };

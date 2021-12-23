@@ -248,7 +248,7 @@ public class NodeGroup {
 		        		String propertyValueType = valueJSONObject.get("@type").toString();	// e.g. http://www.w3.org/2001/XMLSchema#string
 		        		String relationshipLocal = new OntologyName(relationship).getLocalName();   // e.g. pasteMaterial
 		        		String propertyValueTypeLocal = new OntologyName(propertyValueType).getLocalName();	// e.g. string
-		        		property = new PropertyItem(relationshipLocal, XSDSupportedType.getMatchingValue(propertyValueTypeLocal), propertyValueType, relationship); 		        		
+		        		property = new PropertyItem(XSDSupportedType.getMatchingValue(propertyValueTypeLocal), propertyValueType, relationship); 		        		
 		        	}
 		        	String propertyValue = valueJSONObject.get("@value").toString();  // e.g. Ce0.8Sm0.2 Oxide Paste
 		        	property.addInstanceValue(propertyValue);		        
@@ -3652,16 +3652,21 @@ public class NodeGroup {
 			String propRangeNameLocal = props.get(i).getRange().getLocalName();
 			String propRangeNameFull = props.get(i).getRange().getFullName();
 
-			// is the range a class ?
+	
 			if (oInfo.containsClass(propRangeNameFull)) {
+				// range is a class
 				NodeItem p = new NodeItem(propNameFull, propRangeNameLocal, propRangeNameFull);
 				belnodes.add(p);
 
 			}
-			// range is string, int, etc.
-			else {
-
-				// create a new belmont property object and add it to the list.
+			
+			else if (oInfo.containsDatatype(propRangeNameFull)) {
+				// range is a datatype
+				PropertyItem p = new PropertyItem(oInfo.getDatatype(propRangeNameFull).getEquivalentXSDType(), propRangeNameFull, propNameFull);
+				belprops.add(p);
+				
+			} else {
+				// range is a raw OWL data type
 				PropertyItem p = new PropertyItem(XSDSupportedType.getMatchingValue(propRangeNameLocal), propRangeNameFull, propNameFull);
 				belprops.add(p);
 			}

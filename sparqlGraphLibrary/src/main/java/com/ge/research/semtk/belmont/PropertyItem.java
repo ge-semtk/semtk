@@ -42,24 +42,6 @@ public class PropertyItem extends Returnable {
 	
 	private Boolean isMarkedForDeletion = false;
 
-	
-	/**
-	 * Constructor
-	 * @param nome (e.g. pasteMaterial)
-	 * @param valueType (e.g. string)
-	 * @param valueTypeURI (e.g. http://www.w3.org/2001/XMLSchema#string)
-	 * @param uriRelationship (e.g. http://research.ge.com/print/testconfig#material)
-	 */
-	@Deprecated
-	public PropertyItem(String nomeDEPRECATED, XSDSupportedType valueType, String valueTypeURI, String uriRelationship){
-		this.valueType = valueType;
-		this.valueTypeURI = valueTypeURI;   
-		this.uriRelationship = uriRelationship;
-	}
-	@Deprecated
-	public PropertyItem(String nomeDEPRECATED, String valueTypeStr, String valueTypeURI, String uriRelationship) throws Exception {
-		this(nomeDEPRECATED, XSDSupportedType.getMatchingValue(valueTypeStr), valueTypeURI, uriRelationship);
-	}
 
 	public PropertyItem(XSDSupportedType valueType, String valueTypeURI, String uriRelationship){
 		this.valueType = valueType;
@@ -218,9 +200,9 @@ public class PropertyItem extends Returnable {
 		this.instanceValues.add(value);
 	}
 	
-	public void changeValueType(XSDSupportedType type) {
+	public void changeValueType(XSDSupportedType type, String fullURI) {
 		this.valueType = type;
-		this.valueTypeURI = type.getFullName();
+		this.valueTypeURI = fullURI;
 	}
 	
 	public void setIsReturned(boolean b) throws Exception {

@@ -205,7 +205,7 @@ public class NodeGroupTest_IT {
 		String badURI = "http://bad_URI";
 		String badKeyname = "bad_URI";
 		Node n = nodegroup.getNodeBySparqlID("?Battery");
-		PropertyItem pi = new PropertyItem(badKeyname, XSDSupportedType.STRING.getSimpleName(), XSDSupportedType.STRING.getPrefixedName(), badURI);
+		PropertyItem pi = new PropertyItem(XSDSupportedType.STRING.getSimpleName(), XSDSupportedType.STRING.getPrefixedName(), badURI);
 	
 		n.getPropertyItems().add(pi);
 		nodegroup.changeSparqlID(pi, "?random");
@@ -249,7 +249,7 @@ public class NodeGroupTest_IT {
 		PropertyItem pi = null;
 		for (PropertyItem p : n.getPropertyItems()) {
 			if (p.getKeyName().equals(badKeyname)) {
-				p.changeValueType(XSDSupportedType.DOUBLE);
+				p.changeValueType(XSDSupportedType.DOUBLE, XSDSupportedType.DOUBLE.getFullName());
 				pi = p;
 				break;
 			}

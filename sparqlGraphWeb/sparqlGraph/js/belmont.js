@@ -601,6 +601,10 @@ NodeItem.prototype = {
 	getValueType : function() {
 		return this.valueType;
 	},
+    // for item (match propertyItem)
+    getValueTypeURI : function() {
+        return this.UriValueType;
+    },
 	getUriValueType : function() {
 		return this.UriValueType;
 	},
@@ -666,7 +670,11 @@ NodeItem.prototype = {
 };
 
 /* the property item */
-var PropertyItem = function(keyname, valType, valueTypeURI, UriRelationship, jObj) {
+// valType      - XSD style string, e.g. "int"
+// valueTypeURI - full uri may be http://owl/whatever#int  or a local datatype http://myOntology#MyDataType
+// UriRelationship - the property URI
+// jObj - if not null then use json instead of any of these other params
+var PropertyItem = function(valType, valueTypeURI, UriRelationship, jObj) {
 
 	if (jObj) {
 		this.fromJson(jObj);
@@ -1165,7 +1173,7 @@ SemanticNode.prototype = {
 
 		// load JSON properties as-is
 		for (var i = 0; i < jObj.propList.length; i++) {
-			var p = new PropertyItem(null, null, null, null, jObj.propList[i]);
+			var p = new PropertyItem(null, null, null, jObj.propList[i]);
 			this.propList.push(p);
 		}
 
@@ -1643,16 +1651,16 @@ SemanticNode.prototype = {
 
 	// TODO: Justin plumb in additional details about where
 	//       these properties came from
-	addNonDomainProperty : function (keyname, valType, relation, uriRelation ) {
+	addNonDomainProperty : function (keynameDeprecated, valType, relation, uriRelation ) {
 		// force-add a property that isn't in the domain
-		prop = new PropertyItem(keyname, valType, relation, uriRelation);
+		prop = new PropertyItem(valType, relation, uriRelation);
 		this.propList.push(prop);
 		return prop;
 	},
 
-	addSubclassProperty : function (keyname, valType, relation, uriRelation ) {
+	addSubclassProperty : function (keynameDeprecated, valType, relation, uriRelation ) {
 		// force-add a subclass property.   So it must be optional.
-		prop = new PropertyItem(keyname, valType, relation, uriRelation);
+		prop = new PropertyItem(valType, relation, uriRelation);
 		prop.optMinus = PropertyItem.OPT_MINUS_OPTIONAL;
 		this.propList.push(prop);
 		return prop;
@@ -3014,12 +3022,15 @@ SemanticNodeGroup.prototype = {
 						propRangeNameFull);
 				belnodes.push(p);
 
-			}
-			// range is string, int, etc.
-			else {
+			} else if (oInfo.containsDatatype(propRangeNameFull)) {
+                // range is a datatype
+				var p = new PropertyItem(oInfo.getDatatype(propRangeNameFull).getEquivalentXSDType(),
+						propRangeNameFull, propNameFull);
+				belprops.push(p);
 
-				// create a new belmont property object and add it to the list.
-				var p = new PropertyItem(propNameLocal, propRangeNameLocal,
+            } else {
+                // range is a raw owl data type
+				var p = new PropertyItem(propRangeNameLocal,
 						propRangeNameFull, propNameFull);
 				belprops.push(p);
 			}
@@ -3259,7 +3270,7 @@ SemanticNodeGroup.prototype = {
 		var nodeItems = this.getConnectingNodeItems(sNode);
 		for (j=0; j < nodeItems.length; j++) {
 			if (nodeItems[j].getOptionalMinus(sNode) != NodeItem.OPTIONAL_REVERSE) {
-				var uriValType = nodeItems[j].getUriValueType();
+				var uriValType = nodeItems[j].getValueTypeURI();
 				if (ret.indexOf(uriValType) < 0)
 					ret.push(uriValType);
 			}

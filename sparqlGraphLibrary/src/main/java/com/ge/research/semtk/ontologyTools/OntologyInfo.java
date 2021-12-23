@@ -54,6 +54,9 @@ import com.ge.research.semtk.utility.Utility;
  * properties. 
  * it provides functionality for determining pathing between two arbitrary classes, enumeration
  * values, and types for properties.
+ * 
+ * "Class" will be something of type class
+ * "Datatype" will be something of type datatype (even though it apparently has an equivalentClass)
  **/
 public class OntologyInfo {
 
@@ -62,6 +65,8 @@ public class OntologyInfo {
 	private HashMap<String, OntologyClass> classHash = new HashMap<String, OntologyClass>();
 	// indexed list of all of the properties in the ontology of interest
 	private HashMap<String, OntologyProperty> propertyHash = new HashMap<String, OntologyProperty>();
+	private HashMap<String, OntologyDatatype> datatypeHash = new HashMap<String, OntologyDatatype>();
+	
 	// for each class, list its subclasses. the superclasses are stored in the class object itself. 
 	private HashMap<String, HashSet<OntologyClass>> subclassHash = new HashMap<String, HashSet<OntologyClass>>();
 	
@@ -89,10 +94,9 @@ public class OntologyInfo {
 	private ArrayList<String> pathWarnings = new ArrayList<String>();  // problems incurred searching for a path.	
 
 	private static int restCount = 0;               // a list counter
-	private final static long JSON_VERSION = 3;
-	// used in the serialization and have to be held internally in the event that an oInfo is generated 
-	// be de-serializing a json blob.
-	private SparqlConnection modelConnection;
+	
+	// version 4 adds datatypeList
+	private final static long JSON_VERSION = 4;
 	
 	private ArrayList<String> loadWarnings = new ArrayList<String>();
 	private ArrayList<String> importedGraphs = new ArrayList<String>();
@@ -118,7 +122,6 @@ public class OntologyInfo {
 	 */
 	public OntologyInfo(SparqlConnection conn) throws Exception {
 		this.loadSparqlConnection(conn);
-		this.modelConnection = conn;
 	}
 	
 	/**
@@ -131,7 +134,6 @@ public class OntologyInfo {
 	@Deprecated
 	public OntologyInfo(SparqlQueryClientConfig clientConfig, SparqlConnection conn) throws Exception{
 		this.loadSparqlConnection(clientConfig, conn);
-		this.modelConnection = conn;
 	
 	}
 	
@@ -232,6 +234,16 @@ public class OntologyInfo {
 		}
 		this.classHash.put(classnameStr, oClass);
 		this.updateSuperSubClassHash(oClass);
+		
+	}
+	
+	public void addDatatype(OntologyDatatype oDatatype) throws Exception {
+		String nameStr = oDatatype.getNameString(false);	// get the full name of the class and do not strip URI info.
+		
+		if (this.datatypeHash.containsKey(nameStr)) {
+			throw new Exception("Internal error: datatype already exists in ontology.  Cannot re-add it: " + nameStr);
+		}
+		this.datatypeHash.put(nameStr, oDatatype);
 		
 	}
 	
@@ -755,6 +767,42 @@ public class OntologyInfo {
 	}
 	
 	/**
+	 * Returns an instance of OntologyDatatype for a given URI. 
+	 * if the OntologyInfo object has no entry for the URI, null is returned.
+	 * 
+	 **/
+	public OntologyDatatype getDatatype(String fullUriName){
+		// get the requested class
+		OntologyDatatype retval = null;
+		if (this.datatypeHash.containsKey(fullUriName)) { retval = this.datatypeHash.get(fullUriName); }
+		return retval;
+	}
+	
+	/**
+	 * Given the range of a property, get the XSDSupported type.
+	 * @param rangeUri
+	 * @return
+	 * @throws Exception
+	 */
+	public XSDSupportedType getPropertyRangeXSDType(String rangeUri) throws Exception {
+		XSDSupportedType xsdType = null;
+		if (this.containsDatatype(rangeUri)) {
+			// named datatype: get equivalent type
+			xsdType = this.getDatatype(rangeUri).getEquivalentXSDType();
+		} else {
+			try {
+				// hope it is a regular owl type or something ending in #int, #date, etc.
+				xsdType = XSDSupportedType.getMatchingValue(new OntologyName(rangeUri).getLocalName());
+			} catch (Exception e) {
+				
+				// leftovers are URI's.  This is slightly illogical.  Properties shouldn't point to objects.
+				xsdType = XSDSupportedType.NODE_URI;
+			}
+		}
+		return xsdType;
+	}
+	
+	/**
 	 * Does oInfo contain any classes starting with this owl file's base
 	 * In English: was any version of this owl file loaded into this graph
 	 * @param owlStream
@@ -848,6 +896,10 @@ public class OntologyInfo {
 	 **/
 	public Boolean containsClass(String classNameString){
 		return this.classHash.containsKey(classNameString);
+	}
+	
+	public Boolean containsDatatype(String nameString){
+		return this.datatypeHash.containsKey(nameString);
 	}
 	
 	/**
@@ -1066,6 +1118,52 @@ public class OntologyInfo {
 				        " filter (?x != ?y). } order by ?x";
 		
 		return retval;
+	}
+	
+	/**
+	 * Query will return ?dataType ?equivType 
+	 * where ?dataType is a datatype URI and ?equivType is the equivalent data type
+	 * @param graphName
+	 * @param domain
+	 * @return
+	 */
+	private static String getDatatypeQuery(String graphName, String domain){
+
+		String retval = "PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
+				"PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> \n" +
+				"PREFIX testy:<http://testy#> \n" +
+				"PREFIX XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
+				"PREFIX generated:<http://semtk.research.ge.com/generated#> \n" +
+				"PREFIX owl:<http://www.w3.org/2002/07/owl#> \n" +
+				"SELECT DISTINCT ?dataType ?equivType \n" +
+				"		FROM <http://junit/GG2NQYY2E/200001934/both> \n" +
+				"WHERE { \n" +
+				"	?dataType rdf:type rdfs:Datatype . \n" +
+				getDomainFilterStatement("dataType", domain) + "\n" +
+				"   ?dataType owl:equivalentClass* ?e . \n" +
+				"   ?e owl:onDatatype ?equivType \n " +
+				"} ";
+		return retval;
+	}
+	
+	/**
+	 * 
+	 * @param dataTypeList - the datatype uri
+	 * @param equivTypeList - the equivalent datatype (e.g. XMLSchema:int)
+	 * @throws Exception
+	 */
+	public void loadDatatypes(String dataTypeList[], String equivTypeList[]) throws Exception{
+		
+		for (int i=0; i < dataTypeList.length; i++) {
+
+			if(this.containsClass(dataTypeList[i])) {
+				throw new Exception("Error loading ontology.  Datatype URI is already a class: " + dataTypeList[i]);
+			}
+		
+			OntologyDatatype d = new OntologyDatatype(dataTypeList[i], equivTypeList[i]);
+			this.addDatatype(d);
+		}
+		
 	}
 
 	private static String getDomainFilterStatement(String varName, String domain) {
@@ -2220,6 +2318,9 @@ public class OntologyInfo {
 		tab = endpoint.executeQueryToTable(OntologyInfo.getTopLevelClassQuery(endpoint.getGraph(), domain));
 		this.loadTopLevelClasses(tab.getColumn("Class"));
 		
+		tab = endpoint.executeQueryToTable(OntologyInfo.getDatatypeQuery(endpoint.getGraph(), domain));
+		this.loadDatatypes(tab.getColumn("dataType"), tab.getColumn("equivType"));
+		
 		tab = endpoint.executeQueryToTable(OntologyInfo.getLoadPropertiesQuery(endpoint.getGraph(), domain));
 		this.loadProperties(tab.getColumn("Class"),tab.getColumn("Property"),tab.getColumn("Range"));
 		
@@ -2291,6 +2392,7 @@ public class OntologyInfo {
     	JSONObject json = new JSONObject();
     	
     	JSONArray topLevelClassList =  new JSONArray();
+    	JSONArray datatypeList =  new JSONArray();
     	JSONArray subClassSuperClassList =  new JSONArray();
     	JSONArray subSuperPropList = new JSONArray();
     	JSONArray classPropertyRangeList =  new JSONArray();
@@ -2317,6 +2419,15 @@ public class OntologyInfo {
 	            	subClassSuperClassList.add(a);
             	}
             }
+        }
+        
+        // datatypeList
+        for (String d : this.datatypeHash.keySet()) {
+        	String equivType = this.datatypeHash.get(d).getEquivalentType();
+        	JSONArray a = new JSONArray();
+        	a.add(Utility.prefixURI(d, prefixToIntHash));
+        	a.add(Utility.prefixURI(equivType, prefixToIntHash));
+        	datatypeList.add(a);
         }
         
         for (String superName : this.subPropHash.keySet()) {
@@ -2408,6 +2519,7 @@ public class OntologyInfo {
         
         json.put("version", OntologyInfo.JSON_VERSION);
         json.put("topLevelClassList", topLevelClassList);
+        json.put("datatypeList", datatypeList);
     	json.put("subClassSuperClassList", subClassSuperClassList);
     	json.put("classPropertyRangeList",classPropertyRangeList);
     	json.put("subSuperPropList", subSuperPropList);
@@ -2446,6 +2558,9 @@ public class OntologyInfo {
         }
         
         this.loadTopLevelClasses(topLevelClassList);
+        this.loadDatatypes(	Utility.unPrefixJsonTableColumn((JSONArray)json.get("datatypeList"), 0, intToPrefixHash),
+							Utility.unPrefixJsonTableColumn((JSONArray)json.get("datatypeList"), 1, intToPrefixHash)     
+        					);
         this.loadSuperSubClasses(Utility.unPrefixJsonTableColumn((JSONArray)json.get("subClassSuperClassList"), 0, intToPrefixHash),
         						 Utility.unPrefixJsonTableColumn((JSONArray)json.get("subClassSuperClassList"), 1, intToPrefixHash)     
                                 );

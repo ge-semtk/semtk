@@ -215,11 +215,17 @@ public class Node extends Returnable {
 	 * @param importSpec - if non-null then check for isUsed() before refusing to inflate invalid
 	 * @param modelErrList - if null, throw exception on first error : else collect a list of text model errors
 	 * @param itemStrList - if null, nothing, else list will have a NodeGroupItemStr for each invalid item found
+	 * @param warningList - if null, nothing, else list of warnings: items that were fixed so the nodegroup is now changed
 	 * @return
 	 * @throws Exception
 	 */
 	public void inflateAndValidate(OntologyInfo oInfo, ImportSpec importSpec, ArrayList<String> modelErrList, ArrayList<NodeGroupItemStr> itemStrList, ArrayList<String> warningList) throws Exception {
 		if (oInfo == null) { return; }
+		
+		// build throw-away warningList if none was given
+		if (warningList == null) {
+			warningList = new ArrayList<String>();
+		}
 		
 		ArrayList<PropertyItem> inflatedPItems = new ArrayList<PropertyItem>();
 		ArrayList<NodeItem> inflatedNItems = new ArrayList<NodeItem>();
@@ -288,7 +294,8 @@ public class Node extends Returnable {
 						// fix range
 						if (! oInfo.containsClass(modelRangeStr)) {
 							// normal fix: property
-							propItem.changeValueType(XSDSupportedType.getMatchingValue(ontProp.getRangeStr(true)));
+							String fullRangeUri = ontProp.getRangeStr(false);
+							propItem.changeValueType(oInfo.getPropertyRangeXSDType(fullRangeUri), fullRangeUri);
 						} else {
 							// change to nodeItem
 							 NodeItem nodeItem = new NodeItem(   
@@ -301,6 +308,18 @@ public class Node extends Returnable {
 						}
 						
 					}
+				}
+				
+				// if ValueTypeURI is correct but the value type is wrong
+				// (a declared datatype whose onDatatype has been changed)
+				XSDSupportedType propItemValType = propItem.getValueType();
+				XSDSupportedType ontPropValType = oInfo.getPropertyRangeXSDType(ontProp.getRangeStr());
+				if (propItemValType != ontPropValType) {
+					String msg = this.getBindingOrSparqlID() + " property " + localPropURI + " data type " + propItemValType.getSimpleName() + " changed to: " + ontPropValType.getSimpleName();
+					warningList.add(msg);
+					
+					// change: send the new XSDType and the existing valueTypeURI
+					propItem.changeValueType(ontPropValType, propItem.getValueTypeURI());
 				}
 				
 				// add the propItem, unless emergency switch to nodeItem
@@ -349,10 +368,10 @@ public class Node extends Returnable {
 						if (oInfo.containsClass(correctRangeStr)) {
 							nodeItem.changeUriValueType(correctRangeStr);
 						} else {
+							
 							// "emergency" switch to a propItem
 							PropertyItem propItem = new PropertyItem(	
-									ontProp.getNameStr(true), 
-									ontProp.getRangeStr(true), 
+									oInfo.getPropertyRangeXSDType(ontProp.getRangeStr()), 
 									ontProp.getRangeStr(false),
 									ontProp.getNameStr(false));
 							
@@ -399,8 +418,7 @@ public class Node extends Returnable {
 			} else if (!oInfo.containsClass(ontProp.getRangeStr()) && !ontProp.getRange().isDefaultClass()) {
 				// Range class is not found: property deflated out of the nodegroup: inflate
 				PropertyItem propItem = new PropertyItem(	
-						ontProp.getNameStr(true), 
-						ontProp.getRangeStr(true), 
+						oInfo.getPropertyRangeXSDType(ontProp.getRangeStr()), 
 						ontProp.getRangeStr(false),
 						ontProp.getNameStr(false));
 				

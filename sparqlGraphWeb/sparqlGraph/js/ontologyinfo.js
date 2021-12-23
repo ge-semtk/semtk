@@ -30,6 +30,7 @@
  */
 var OntologyInfo = function(optJson) {
     this.classHash = {};        // classHash[classURI] = oClass object
+    this.datatypeHash = {};     // datatypeHash[URI] = oDatatype object
     this.propertyHash = {};         // propertyHash[propURI] = oProp object
     this.subclassHash = {};     // for each class list of sub-classes names  (NOTE: super-classes are stored in the class itsself)
     this.enumHash = {};         // this.enumHash[className] = [ full-uri-of-enum-val, full-uri-of-enum_val2... ]
@@ -57,7 +58,8 @@ var OntologyInfo = function(optJson) {
     }
 };
 
-OntologyInfo.JSON_VERSION = 3;
+// version 4 adds datatypeList
+OntologyInfo.JSON_VERSION = 4;
 
 OntologyInfo.localizeNamespace = function(fullNamespace) {
    return fullNamespace.substring(fullNamespace.lastIndexOf('/')+1);
@@ -160,6 +162,16 @@ OntologyInfo.prototype = {
         }
 
 	},
+
+    addDatatype : function (oDatatype) {
+		var nameStr = oDatatype.getNameStr();
+
+		if (this.containsDatatype(nameStr)) {
+			throw new Error("Internal error: datatype already exists in ontology.  Cannot re-add it: " + nameStr);
+		}
+		this.datatypeHash[nameStr] = oDatatype;
+	},
+
 	setGetFlag : function() {
 		this.getFlag = true;
 	},
@@ -204,6 +216,13 @@ OntologyInfo.prototype = {
 
 		// returns undefined if class does not exist
 		return this.classHash[classNameStr];
+	},
+
+    // get named datatypes.
+    // in owl  ?x a rdfs:Datatype   with  ?x owl:onDatatype ?equivType
+    //    and ?equivType is an owl datatype like "owl#int"
+    getDatatype : function(nameStr) {
+		return this.datatypeHash[nameStr];
 	},
 
 	getClassNames : function() {
@@ -446,6 +465,11 @@ OntologyInfo.prototype = {
 		return (classNameStr in this.classHash);
 	},
 
+    containsDatatype : function(nameStr) {
+		// returns an array of all known classes
+		return (nameStr in this.datatypeHash);
+	},
+
 	containsProperty : function(propNameStr) {
 		// does this contain given property
 		return (propNameStr in this.propertyHash);
@@ -608,6 +632,14 @@ OntologyInfo.prototype = {
 		for (var i=0; i < classList.length; i++) {
 			var x = new OntologyClass(classList[i], "");
 			this.addClass(x);
+		}
+	},
+
+    loadDatatypes : function(dataTypeList, equivTypeList) {
+		// load from rows of [class]
+		for (var i=0; i < dataTypeList.length; i++) {
+			var x = new OntologyDatatype(dataTypeList[i], equivTypeList[i]);
+			this.addDatatype(x);
 		}
 	},
 
@@ -962,6 +994,7 @@ OntologyInfo.prototype = {
         var json = {
             "version" : OntologyInfo.JSON_VERSION,
             "topLevelClassList" : [],
+            "datatypeList" : [],
             "subClassSuperClassList" : [],
             "classPropertyRangeList" : [],
             "subSuperPropList" : [],
@@ -987,6 +1020,13 @@ OntologyInfo.prototype = {
                                                       this.prefixURI(parents[i], prefixToIntHash) ]);
                 }
             }
+        }
+
+        // datatypeList
+        for (var d in this.datatypeHash) {
+            var equivType = this.datatypeHash[d].getEquivalentType();
+        	var a = [this.prefixURI(d, prefixToIntHash), this.prefixURI(equivType, prefixToIntHash)];
+        	json.datatypeList.push(a);
         }
 
         for (var superProp in this.subPropHash) {
@@ -1086,9 +1126,12 @@ OntologyInfo.prototype = {
         }
 
         this.loadTopLevelClasses(topLevelClassList);
+        this.loadDatatypes(getColumn(json.datatypeList, 0),
+                           getColumn(json.datatypeList, 1)
+                       );
         this.loadSuperSubClasses(getColumn(json.subClassSuperClassList, 0),
                                  getColumn(json.subClassSuperClassList, 1)
-                                );
+                             );
         this.loadProperties(getColumn(json.classPropertyRangeList, 0),
                             getColumn(json.classPropertyRangeList, 1),
                             getColumn(json.classPropertyRangeList, 2)
@@ -1694,6 +1737,48 @@ OntologyAnnotation.prototype = {
 
     	return ret;
     },
+};
+/*
+ * OntologyDatatype
+ */
+var OntologyDatatype = function(name, equivalentType) {
+    // parentName can be ""
+    this.name = new OntologyName(name);
+    this.equivalentType = equivalentType;
+    this.annotation = new OntologyAnnotation();
+};
+
+OntologyDatatype.prototype = {
+    // In java, sub-classing takes care of this
+    addAnnotationComment :        function(c) { return this.annotation.addAnnotationComment(c); },
+    clearAnnotationComments:      function()  { return this.annotation.clearAnnotationComments(); },
+    addAnnotationLabel :          function(l) { return this.annotation.addAnnotationLabel(l); },
+    clearAnnotationLabels:        function()  { return this.annotation.clearAnnotationLabels(); },
+    getAnnotationComments :       function()  { return this.annotation.getAnnotationComments(); },
+    getAnnotationLabels :         function()  { return this.annotation.getAnnotationLabels(); },
+    getAnnotationCommentsString : function()  { return this.annotation.getAnnotationCommentsString(); },
+    getAnnotationLabelsString :   function()  { return this.annotation.getAnnotationLabelsString(); },
+    generateAnnotationRdf :       function(d) { return this.annotation.generateAnnotationRdf(d); },
+    generateAnnotationsSADL :     function()  { return this.annotation.generateAnnotationsSADL(); },
+
+    getName : function () {
+        return this.name;
+    },
+
+    getNameStr : function(stripNsFlag) {
+		if (stripNsFlag)
+			return this.name.getLocalName();
+		else
+			return this.name.getFullName();
+	},
+
+    getEquivalentType : function() {
+        return this.equivalentType;
+    },
+
+    getEquivalentXSDType : function() {
+        return new OntologyName(this.equivalentType).getLocalName();
+    }
 };
 
 /*

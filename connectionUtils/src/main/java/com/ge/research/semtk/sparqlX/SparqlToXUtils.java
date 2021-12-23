@@ -25,7 +25,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.ge.research.semtk.utility.LocalLogger;
-import org.apache.commons.lang.StringEscapeUtils;
 
 public class SparqlToXUtils {
 	static final Pattern PATTERN_BAD_FIRST_CHAR = Pattern.compile("#[^a-zA-Z0-9]");

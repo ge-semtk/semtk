@@ -49,6 +49,8 @@ define([	// properly require.config'ed
             this.ctx = document.createElement("canvas").getContext("2d");
 
             this.nodegroup = null;
+            this.oInfo = null;
+
             this.invalidItemTuples = [];    // NodeGroup entryTuple for each item invalid re the model
             this.propEditorCallback = null;
             this.snodeEditorCallback = null;  //done
@@ -67,6 +69,8 @@ define([	// properly require.config'ed
             this.nodeCallbackData = {};
 
             this.edgeCallbackData = {};
+
+
         };
 
         NodegroupRenderer.OPTIONS_COOKIE = "ngrenderOptions";
@@ -258,11 +262,14 @@ define([	// properly require.config'ed
             },
 
             // Update the display to reflect the nodegroup
-
-            draw : function (nodegroup, invalidItemStrings) {
+            // nodegroup - nodegroup to draw
+            // oInfo - current OntologyInfo for decorating with additional info (e.g. named datatypes)
+            // invalidItemStrings - invalid item strings of the EntryTuple format
+            draw : function (nodegroup, oInfo, invalidItemStrings) {
 
                 this.nodegroup = nodegroup;
                 this.nodegroup.updateUnionMemberships();  // do this expensive operation once per draw
+                this.oInfo = oInfo;
 
                 this.invalidItemTuples = [];
                 for (let itemStr of invalidItemStrings) {
@@ -825,7 +832,13 @@ define([	// properly require.config'ed
                 text.setAttribute('font-family', "Arial");
                 text.setAttribute('fill', foreground);
 
-                text.innerHTML = item.getKeyName() + " : " + item.getValueType();
+                if (item instanceof PropertyItem && this.oInfo.containsDatatype(item.getValueTypeURI())) {
+                    // keyname : Datatype (XSDtype)
+                    text.innerHTML = item.getKeyName() + " : " + this.oInfo.getDatatype(item.getValueTypeURI()).getNameStr(true) + " (" + item.getValueType() + ")";
+                } else {
+                    // keyname : short type name
+                    text.innerHTML = item.getKeyName() + " : " + item.getValueType();
+                }
                 if (! (item instanceof NodeItem)) {
                     var retName = item.getBindingOrSparqlID();
                     if (retName != "") {
