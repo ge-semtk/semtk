@@ -35,17 +35,6 @@ import java.util.HashMap;
 
 import javax.annotation.PostConstruct;
 
-import org.eclipse.jgit.api.CloneCommand;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.PullCommand;
-import org.eclipse.jgit.api.PullResult;
-import org.eclipse.jgit.api.TransportConfigCallback;
-import org.eclipse.jgit.transport.JschConfigSessionFactory;
-import org.eclipse.jgit.transport.OpenSshConfig.Host;
-import org.eclipse.jgit.transport.SshSessionFactory;
-import org.eclipse.jgit.transport.SshTransport;
-import org.eclipse.jgit.transport.Transport;
-import org.eclipse.jgit.util.FS;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
@@ -57,7 +46,6 @@ import com.ge.research.semtk.services.fdc.FdcProperties;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.dispatch.FdcServiceManager;
 import com.ge.research.semtk.springutilib.requests.FdcRequest;
-import com.ge.research.semtk.springutillib.controllers.GitAndNodegroupFDCRestController;
 import com.ge.research.semtk.springutillib.controllers.NodegroupProviderRestController;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
@@ -66,9 +54,7 @@ import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
-import com.jcraft.jsch.JSch;
-import com.jcraft.jsch.JSchException;
-import com.jcraft.jsch.Session;
+
 
 import io.swagger.annotations.ApiOperation;
 
@@ -79,7 +65,7 @@ import io.swagger.annotations.ApiOperation;
 @RestController
 @RequestMapping("/fdcSample")
 @ComponentScan(basePackages = {"com.ge.research.semtk.springutillib"})
-public class FdcSampleRestController extends GitAndNodegroupFDCRestController {
+public class FdcSampleRestController extends NodegroupProviderRestController {
 	private static final String SERVICE_NAME = "fdcSample";
 	@Autowired
 	FdcProperties fdc_props;
