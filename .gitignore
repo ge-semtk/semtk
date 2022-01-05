@@ -20,7 +20,9 @@ auth_settings.json
 *.rej
 *.class
 release.properties
-sparqlGraphLibrary/src/main/resources/semantics/OwlModels/ont-policy.rdf
 sparqlGraphIngestionService/hs_err_pid23408.log
 *.log
 *.isOpen
+ont-policy.rdf
+SadlBuiltinFunctions.sadl
+SadlImplicitModel.sadl
