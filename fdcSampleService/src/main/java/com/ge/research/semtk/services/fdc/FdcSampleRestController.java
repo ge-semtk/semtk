@@ -57,7 +57,6 @@ import com.ge.research.semtk.services.fdc.FdcProperties;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.dispatch.FdcServiceManager;
 import com.ge.research.semtk.springutilib.requests.FdcRequest;
-import com.ge.research.semtk.springutillib.controllers.GitAndNodegroupFDCRestController;
 import com.ge.research.semtk.springutillib.controllers.NodegroupProviderRestController;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
@@ -79,7 +78,7 @@ import io.swagger.annotations.ApiOperation;
 @RestController
 @RequestMapping("/fdcSample")
 @ComponentScan(basePackages = {"com.ge.research.semtk.springutillib"})
-public class FdcSampleRestController extends GitAndNodegroupFDCRestController {
+public class FdcSampleRestController extends NodegroupProviderRestController {
 	private static final String SERVICE_NAME = "fdcSample";
 	@Autowired
 	FdcProperties fdc_props;

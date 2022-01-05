@@ -168,13 +168,6 @@
 			<version>10.1.0.jre8-preview</version>
 		</dependency>
 
-		<!--  License EDL 1.0 -->
-		<!-- https://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit -->
-		<dependency>
-		    <groupId>org.eclipse.jgit</groupId>
-		    <artifactId>org.eclipse.jgit</artifactId>
-		    <version>6.0.0.202111291000-r</version>
-		</dependency>
 
 		<!-- License: MIT -->
 		<dependency>
