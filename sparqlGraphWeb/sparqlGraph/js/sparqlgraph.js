@@ -486,7 +486,7 @@
                 // when this is finally called, propItem and gNodeGroup have changed
                 // gNodeGroup - fine, it's a global
                 // propItem - need to find it in the current gNodeGroup
-                var p = gNodeGroup.getNodeBySparqlID(snodeID).getPropertyByURIRelation(propItem.getUriRelation());
+                var p = gNodeGroup.getNodeBySparqlID(snodeID).getPropertyByURIRelation(propItem.getDomainURI());
 
                 var dialog= new ModalItemDialog(p,
                                                 gNodeGroup,
@@ -510,7 +510,7 @@
                         // Domain is already correct.   Range is wrong.
                         // There must be constraints or else this wouldn't have been flagged as an error.
                         var oRangeStr = oClass.getProperty(propItem.getURI()).getRange().getFullName();
-                        var pRangeStr = propItem.getValueTypeURI();
+                        var pRangeStr = propItem.getRangeURI();
                         var hasConstraints = (propItem.getConstraints().length > 0);
                         var hasMapping = gMappingTab.getImportSpec().hasMapping(snodeID, propItem.getURI());
 
@@ -518,7 +518,7 @@
                         var changePropItemURI = function() {
                             // same javascript black magic
                             // propItem - need to find it in the current gNodeGroup
-                            var p = gNodeGroup.getNodeBySparqlID(snodeID).getPropertyByURIRelation(propItem.getUriRelation());
+                            var p = gNodeGroup.getNodeBySparqlID(snodeID).getPropertyByURIRelation(propItem.getDomainURI());
                             changeItemURI(p, undefined, oRangeStr, "range", hasConstraints ? raisePropItemDialog : undefined);
                         };
 
@@ -597,7 +597,7 @@
 
     var launchLinkBuilder2 = function(snode, nItem) {
 		// callback when user clicks on a nodeItem
-    	var rangeStr = nItem.getValueTypeURI();
+    	var rangeStr = nItem.getRangeURI();
 
     	// find nodes that might connect
     	var targetSNodes = gNodeGroup.getNodesBySuperclassURI(rangeStr, gOInfo);
@@ -785,7 +785,7 @@
 		var snodeClass = gOInfo.getClass(snode.fullURIName);
 		var domainStr = gOInfo.getInheritedPropertyByKeyname(snodeClass, nItem.getKeyName()).getNameStr();
 		if (rangeSnode == null) {
-			var rangeStr = nItem.getValueTypeURI();
+			var rangeStr = nItem.getRangeURI();
 			var newNode = gNodeGroup.returnBelmontSemanticNode(rangeStr, gOInfo);
 			gNodeGroup.addOneNode(newNode, snode, null, domainStr);
 		} else {

@@ -19,7 +19,7 @@ package com.ge.research.semtk.sparqlX;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.HashSet;
 
 public enum XSDSupportedType {
 
@@ -64,29 +64,6 @@ public enum XSDSupportedType {
 	
 	public static XSDSupportedType getMatchingValue(String candidate) throws Exception {
 		return XSDSupportedType.valueOf(candidate.toUpperCase());
-	}
-	public static String getMatchingName(String candidate) throws Exception{
-		
-		try{
-			
-		// check the requested type exists in the enumeration.
-		XSDSupportedType.valueOf(candidate.toUpperCase());
-		
-		}catch(Exception e){
-			// build a complete list of the allowed values.
-			String completeList = "";
-			int counter = 0;
-			for (XSDSupportedType curr : XSDSupportedType.values()){
-				
-				if(counter != 0){ completeList += " or "; }
-				completeList +=  "( " + curr.name() + " )";
-				counter++;
-			}
-			// tell the user things were wrong.
-			throw new Exception("the XSDSupportedTypes enumeration contains no entry matching " + candidate + ". Expected entries are: " + completeList);
-		}
-		
-		return candidate.toUpperCase(); // since this passed the check for existence, we can just hand it back. 
 	}
 
 	public String buildRDF11ValueString(String val) {
@@ -331,7 +308,8 @@ public enum XSDSupportedType {
 			}
 			catch(Exception e){
 			}
-			if (this == NEGATIVEINTEGER && i > -1 ||
+			if (i== null ||
+				this == NEGATIVEINTEGER && i > -1 ||
 				this == NONNEGATIVEINTEGER && i < 0 ||
 				this == NONPOSISITIVEINTEGER && i > 0 ||
 				this == POSITIVEINTEGER && i < 1 ||
@@ -406,6 +384,42 @@ public enum XSDSupportedType {
 		
 	}
 
+	public static String buildTypeListString(HashSet<XSDSupportedType> typeList) {
+		int size = typeList.size();
+		if (size == 0) {
+			return "";
+		} else if (size == 1) {
+			// try to be a tiny bit efficient
+			return XSDSupportedType.chooseOne(typeList).getSimpleName();
+		} else {
+			String ret = "";
+			for (XSDSupportedType t : typeList) {
+				ret += t.getSimpleName() + ",";
+			}
+			if (ret.length() > 0)
+				ret = ret.substring(0, ret.length() - 1);
+			return ret;
+		}
+	}
+	
+	/**
+	 * Choose one out of the hashset
+	 * @param typeList
+	 * @return
+	 */
+	public static XSDSupportedType chooseOne(HashSet<XSDSupportedType> typeList) {
+		
+		for (XSDSupportedType t : typeList) {
+			return t;
+		}
+		return XSDSupportedType.STRING;
+	}
+	
+	public static HashSet<XSDSupportedType> asSet(XSDSupportedType t) {
+		HashSet<XSDSupportedType> ret = new HashSet<XSDSupportedType>();
+		ret.add(t);
+		return ret;
+	}
 }
 
 

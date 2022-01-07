@@ -65,7 +65,7 @@ public class NodeGroupStoreTest_IT {
 	@AfterClass
     public static void teardown() throws Exception {
         // delete stored nodegroup when done with all tests
-		nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+		nodeGroupStoreClient.deleteStoredNodeGroupIfExists(ID);
     } 
 	
 	/**
@@ -178,7 +178,7 @@ public class NodeGroupStoreTest_IT {
 			res = nodeGroupStoreClient.executeGetNodeGroupMetadata();
 			int countAfter = res.getResults().getNumRows();
 			assertEquals(countBefore + 3, countAfter);		 // confirm that we get metadata for 3 more nodegroups (imperfect test)
-			assertEquals(res.getTable().getNumColumns(),4);  // confirm that there are 4 columns of metadata
+			assertEquals(res.getTable().getNumColumns(),5);  // confirm that there are 4 columns of metadata
 			// could add more tests.
 		} finally {
 			nodeGroupStoreClient.deleteStoredNodeGroup(ID + "a");

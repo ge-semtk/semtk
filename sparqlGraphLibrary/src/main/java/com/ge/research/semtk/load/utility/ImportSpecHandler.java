@@ -679,7 +679,7 @@ public class ImportSpecHandler {
 			// ---- property ----
 			if(builtString.length() > 0) {
 				propItem = node.getPropertyByURIRelation(mapping.getPropURI());
-				builtString = this.validateDataType(builtString, propItem.getValueType(), skipValidation);						
+				builtString = this.validateDataType(builtString, propItem.getValueTypes(), skipValidation);						
 				propItem.addInstanceValue(builtString);
 			}
 			
@@ -1040,8 +1040,22 @@ public class ImportSpecHandler {
 		return false;
 	}
 
-	public static String validateDataType(String input,  XSDSupportedType expectedType) throws Exception{
-		return validateDataType(input, expectedType, false);
+	public static String validateDataType(String input,  HashSet<XSDSupportedType> expectedTypes) throws Exception{
+		return validateDataType(input, expectedTypes, false);
+	}
+	
+	public static String validateDataType(String input, HashSet<XSDSupportedType> expectedTypes, Boolean skipValidation) throws Exception {
+		Exception eSave = null;
+		
+		for (XSDSupportedType expectedType : expectedTypes) {
+			try {
+				return validateDataType(input, expectedType, skipValidation);
+			} catch (Exception e) {
+				eSave = e;
+			}
+		}
+		// if none of the types worked, throw the last exception
+		throw eSave;
 	}
 	
 	/**
@@ -1456,7 +1470,8 @@ public class ImportSpecHandler {
 			
 			// if it is a single column mapping with no transforms, we can guess type
 			if (items.size() == 1 && items.get(0).isColumnMapping() && items.get(0).getTransformList().length == 0) {
-				XSDSupportedType ngItemType = this.getNodegroupItemType(mapping);
+				XSDSupportedType ngItemType = XSDSupportedType.chooseOne(this.getNodegroupItemTypes(mapping));
+			
 				Integer colIndex = items.get(0).getColumnIndex();
 				String sample = ngItemType.getSampleValue();
 				
@@ -1484,15 +1499,16 @@ public class ImportSpecHandler {
 		return ret;
 	}
 	
-	private XSDSupportedType getNodegroupItemType(ImportMapping map) {
-		XSDSupportedType ret = null;
+	private HashSet<XSDSupportedType> getNodegroupItemTypes(ImportMapping map) {
 		
 		if (map.isNode()) {
-			ret = XSDSupportedType.NODE_URI;
+			HashSet<XSDSupportedType> ret = new HashSet<XSDSupportedType>();
+			ret.add(XSDSupportedType.NODE_URI);
+			return ret;
+			
 		} else {
-			ret = this.ng.getNodeBySparqlID(map.getNodeSparqlID()).getPropertyByURIRelation(map.getPropURI()).getValueType();
+			return this.ng.getNodeBySparqlID(map.getNodeSparqlID()).getPropertyByURIRelation(map.getPropURI()).getValueTypes();
 		}
 		
-		return ret;
 	}
 }

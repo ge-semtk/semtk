@@ -1990,7 +1990,7 @@ public class DataLoaderTest_IT {
 
 	private void constrainPropRegex(NodeGroup nodegroup, String node, String prop, String regex) throws Exception{
 		PropertyItem propItem = nodegroup.getNodeBySparqlID("?" + node).getPropertyByKeyname(prop);
-		ValueConstraint constraint = new ValueConstraint(ValueConstraint.buildRegexConstraint(propItem.getSparqlID(), regex, propItem.getValueType()));
+		ValueConstraint constraint = new ValueConstraint(ValueConstraint.buildRegexConstraint(propItem.getSparqlID(), regex, propItem.getValueTypes()));
 		propItem.setValueConstraint(constraint);
 	}
 	

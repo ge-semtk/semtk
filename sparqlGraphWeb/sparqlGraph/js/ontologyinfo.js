@@ -225,6 +225,18 @@ OntologyInfo.prototype = {
 		return this.datatypeHash[nameStr];
 	},
 
+    getPropertyRangeXSDTypes : function(rangeURI) {
+        if (this.containsDatatype(rangeURI)) {
+            return this.getDatatype(rangeURI).getEquivalentXSDTypes();
+        } else {
+            if ("#" in rangeURI && "w3") {
+                return [(new OntologyName(rangeURI)).getLocalName()];
+            } else {
+                return ["uri"];
+            }
+        }
+    },
+
 	getClassNames : function() {
 		// returns an array of all known classes
 		return Object.keys(this.classHash);
@@ -638,8 +650,12 @@ OntologyInfo.prototype = {
     loadDatatypes : function(dataTypeList, equivTypeList) {
 		// load from rows of [class]
 		for (var i=0; i < dataTypeList.length; i++) {
-			var x = new OntologyDatatype(dataTypeList[i], equivTypeList[i]);
-			this.addDatatype(x);
+            if (this.containsDatatype(dataTypeList[i])) {
+                this.getDatatype(dataTypeList[i]).addEquivalentType(equivTypeList[i]);
+            } else {
+    			var x = new OntologyDatatype(dataTypeList[i], equivTypeList[i]);
+    			this.addDatatype(x);
+            }
 		}
 	},
 
@@ -1024,9 +1040,10 @@ OntologyInfo.prototype = {
 
         // datatypeList
         for (var d in this.datatypeHash) {
-            var equivType = this.datatypeHash[d].getEquivalentType();
-        	var a = [this.prefixURI(d, prefixToIntHash), this.prefixURI(equivType, prefixToIntHash)];
-        	json.datatypeList.push(a);
+            for (var equivType of this.datatypeHash[d].getEquivalentTypes()) {
+            	var a = [this.prefixURI(d, prefixToIntHash), this.prefixURI(equivType, prefixToIntHash)];
+            	json.datatypeList.push(a);
+            }
         }
 
         for (var superProp in this.subPropHash) {
@@ -1744,7 +1761,9 @@ OntologyAnnotation.prototype = {
 var OntologyDatatype = function(name, equivalentType) {
     // parentName can be ""
     this.name = new OntologyName(name);
-    this.equivalentType = equivalentType;
+    this.xsdTypes = [];
+    this.strTypes = [];
+    this.addEquivalentType(equivalentType);
     this.annotation = new OntologyAnnotation();
 };
 
@@ -1772,12 +1791,19 @@ OntologyDatatype.prototype = {
 			return this.name.getFullName();
 	},
 
-    getEquivalentType : function() {
-        return this.equivalentType;
+    getEquivalentTypes : function() {
+        return this.strTypes;
     },
 
-    getEquivalentXSDType : function() {
-        return new OntologyName(this.equivalentType).getLocalName();
+    getEquivalentXSDTypes : function() {
+        return this.xsdTypes;
+    },
+
+    addEquivalentType : function(fullURI) {
+        if (!(fullURI in this.strTypes)) {
+            this.strTypes.push(fullURI);
+            this.xsdTypes.push((new OntologyName(fullURI)).getLocalName());
+        }
     }
 };
 

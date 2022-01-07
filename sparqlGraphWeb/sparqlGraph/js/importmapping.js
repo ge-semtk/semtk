@@ -256,7 +256,7 @@ define([	// properly require.config'ed
 						ret.type = this.node.getURI();
 					} else {
 						// prop row
-						ret.URIRelation = this.propItem.getUriRelation();
+						ret.URIRelation = this.propItem.getDomainURI();
 					}
 
                     // URILookupMode
@@ -282,7 +282,7 @@ define([	// properly require.config'ed
 				},
 
 				getPropUri : function() {
-					return this.propItem ? this.propItem.getUriRelation() : null;
+					return this.propItem ? this.propItem.getDomainURI() : null;
 				},
 
 

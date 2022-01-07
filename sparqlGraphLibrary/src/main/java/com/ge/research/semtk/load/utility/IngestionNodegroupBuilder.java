@@ -106,11 +106,11 @@ public class IngestionNodegroupBuilder {
 			nodegroup.setIsReturned(pItem, true);
 			
 			// add to import spec
-			ispecBuilder.addProp(node.getSparqlID(), pItem.getUriRelationship());
+			ispecBuilder.addProp(node.getSparqlID(), pItem.getDomainURI());
 			
 			if (this.idRegex != null &&  Pattern.compile(this.idRegex).matcher(pItem.getKeyName()).find()) {
 				// lookup ID is a lookup and is NOT optional
-				ispecBuilder.addURILookup(node.getSparqlID(), pItem.getUriRelationship(), node.getSparqlID());
+				ispecBuilder.addURILookup(node.getSparqlID(), pItem.getDomainURI(), node.getSparqlID());
 				ispecBuilder.addLookupMode(node.getSparqlID(), ImportSpec.LOOKUP_MODE_CREATE);
 			} else {
 				// normal properties ARE optional
@@ -119,7 +119,7 @@ public class IngestionNodegroupBuilder {
 			
 			String colName = buildColName(pItem.getSparqlID());
 			ispecBuilder.addColumn(colName);
-			ispecBuilder.addMapping(node.getSparqlID(), pItem.getUriRelationship(), ispecBuilder.buildMappingWithCol(colName, new String [] {transformId}));
+			ispecBuilder.addMapping(node.getSparqlID(), pItem.getDomainURI(), ispecBuilder.buildMappingWithCol(colName, new String [] {transformId}));
 			
 			// add to csvTemplate
 			csvTemplate.append(colName + ",");
@@ -158,13 +158,13 @@ public class IngestionNodegroupBuilder {
 					
 					
 					// add to importspec, using it to look up parent node
-					ispecBuilder.addProp(objNode.getSparqlID(), pItem.getUriRelationship());
-					ispecBuilder.addURILookup(objNode.getSparqlID(), pItem.getUriRelationship(), objNode.getSparqlID());
+					ispecBuilder.addProp(objNode.getSparqlID(), pItem.getDomainURI());
+					ispecBuilder.addURILookup(objNode.getSparqlID(), pItem.getDomainURI(), objNode.getSparqlID());
 					
 					// add the column and mapping to the importspec
 					String colName = buildColName(propId);
 					ispecBuilder.addColumn(colName);
-					ispecBuilder.addMapping(objNode.getSparqlID(), pItem.getUriRelationship(), ispecBuilder.buildMappingWithCol(colName, new String [] {transformId}));
+					ispecBuilder.addMapping(objNode.getSparqlID(), pItem.getDomainURI(), ispecBuilder.buildMappingWithCol(colName, new String [] {transformId}));
 					
 					// add to csvTemplate
 					csvTemplate.append(colName + ",");

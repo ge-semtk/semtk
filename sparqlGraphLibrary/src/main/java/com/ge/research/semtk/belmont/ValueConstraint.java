@@ -20,6 +20,7 @@ package com.ge.research.semtk.belmont;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -117,16 +118,16 @@ public class ValueConstraint {
 		}
 	}
 	
-	public static String buildBestListConstraint(String sparqlId, ArrayList<String> valList, XSDSupportedType valType, SparqlEndpointInterface sei) throws Exception {
+	public static String buildBestListConstraint(String sparqlId, ArrayList<String> valList, HashSet<XSDSupportedType> valTypes, SparqlEndpointInterface sei) throws Exception {
 		switch (sei.getServerType()) {
 		case SparqlEndpointInterface.NEPTUNE_SERVER:
-			return buildFilterInConstraint(sparqlId, valList, valType, sei);
+			return buildFilterInConstraint(sparqlId, valList, valTypes, sei);
 			
 		case SparqlEndpointInterface.BLAZEGRAPH_SERVER:
 		case SparqlEndpointInterface.FUSEKI_SERVER:
 		case SparqlEndpointInterface.VIRTUOSO_SERVER:
 		default:
-			return buildValuesConstraint(sparqlId, valList, valType, sei);
+			return buildValuesConstraint(sparqlId, valList, valTypes, sei);
 		}
 	}
 	
@@ -151,7 +152,9 @@ public class ValueConstraint {
 			ArrayList<String> classList = new ArrayList<String>();
 			classList.add(className);
 			classList.addAll(subclassList);
-			return buildValuesConstraint(sparqlId, classList, XSDSupportedType.NODE_URI, sei);
+			HashSet<XSDSupportedType> valTypes = new HashSet<XSDSupportedType>();
+			valTypes.add(XSDSupportedType.NODE_URI);
+			return buildValuesConstraint(sparqlId, classList, valTypes, sei);
 		}
 	}
 	
@@ -193,7 +196,7 @@ public class ValueConstraint {
 			throw new Error("Trying to build VALUES constraint for property with empty sparql ID");
 		}
 
-		return buildValuesConstraint(sparqlID, valList, item.getValueType(), sei);
+		return buildValuesConstraint(sparqlID, valList, item.getValueTypes(), sei);
 	}
 	
 	/**
@@ -205,7 +208,7 @@ public class ValueConstraint {
 	 * @throws Exception
 	 */
 	public static String buildFilterConstraint(Returnable item, String oper, String pred)  throws Exception {
-		String ret;
+		String ret = "";
 		
 		if (!(	oper.equals("=") || 
 				oper.equals("!=") ||
@@ -216,23 +219,29 @@ public class ValueConstraint {
 			throw new Exception("Unknown operator for constraint: " + oper);
 		}
 		
-		XSDSupportedType t = item.getValueType();
+		HashSet<XSDSupportedType> valTypes = item.getValueTypes();
 		
-
 		String v = BelmontUtil.sparqlSafe(pred);
-		if (t.dateOperationAvailable()) {
-			// date
-			ret = String.format("FILTER(%s %s '%s'%s)", item.getSparqlID(), oper, v, t.getXsdSparqlTrailer());
-		} else if (t.regexIsAvailable()) {
-			// string
-			ret = String.format("FILTER(%s %s \"%s\"%s)", item.getSparqlID(), oper, v, t.getXsdSparqlTrailer());
-		} else if (t == XSDSupportedType.NODE_URI) {
-			// URI
-			ret = String.format("FILTER(%s %s <%s>)", item.getSparqlID(), oper, v);
-		} else 	{
-			// leftovers
+		
+		// return first thing that works
+		for (XSDSupportedType t : valTypes) {
+			
+			if (t.dateOperationAvailable()) {
+				// date
+				return String.format("FILTER(%s %s '%s'%s)", item.getSparqlID(), oper, v, t.getXsdSparqlTrailer());
+			} else if (t.regexIsAvailable()) {
+				// string
+				return String.format("FILTER(%s %s \"%s\"%s)", item.getSparqlID(), oper, v, t.getXsdSparqlTrailer());
+			} else if (t == XSDSupportedType.NODE_URI) {
+				// URI
+				return String.format("FILTER(%s %s <%s>)", item.getSparqlID(), oper, v);
+			} 
+		}
+		
+		// leftovers: first one: hard trailer
+		for (XSDSupportedType t : valTypes) {
 			ret = String.format("FILTER(%s %s %s%s)", item.getSparqlID(), oper, v, t.getXsdSparqlTrailer());
-		} 
+		}
 		return ret;
 	}
 	
@@ -247,9 +256,7 @@ public class ValueConstraint {
 				oper.equals("<=")) ) {
 			throw new Exception("Unknown operator for constraint: " + oper);
 		}
-		
-		XSDSupportedType t = item.getValueType();
-		
+				
 		return String.format("FILTER(%s %s %s)", item.getSparqlID(), oper, (variable.startsWith("?") ? "" : "?") + variable);
 	}
 	
@@ -273,17 +280,17 @@ public class ValueConstraint {
 			throw new Exception("Unknown operator for constraint: " + oper);
 		}
 		
-		XSDSupportedType t = item.getValueType();
 		
-
 		String dateStr = BelmontUtil.buildSparqlDate(pred);
-		if (t.dateOperationAvailable()) {
-			// date
-			ret = String.format("FILTER(%s %s '%s'%s)", item.getSparqlID(), oper, dateStr, t.getXsdSparqlTrailer());
-		} else {
-			throw new Exception("Can't apply date value constraint to non-date item: " + item.getSparqlID());
-		} 
-		return ret;
+		for (XSDSupportedType t : item.getValueTypes()) {
+			if (t.dateOperationAvailable()) {
+				// date
+				return String.format("FILTER(%s %s '%s'%s)", item.getSparqlID(), oper, dateStr, t.getXsdSparqlTrailer());
+			} 
+		}
+		
+		throw new Exception("Can't apply date value constraint to non-date item: " + item.getSparqlID());
+		
 	}
 	
 	//
@@ -302,11 +309,11 @@ public class ValueConstraint {
 	 */
 	//  Use sei version to get optimization (avoid de-optimized virtuoso version)
 	@Deprecated
-	public static String buildValuesConstraint(String sparqlId, ArrayList<String> valList, XSDSupportedType valType) throws Exception{
-		return buildValuesConstraint(sparqlId, valList, valType, null);
+	public static String buildValuesConstraint(String sparqlId, ArrayList<String> valList, HashSet<XSDSupportedType> valTypes) throws Exception{
+		return buildValuesConstraint(sparqlId, valList, valTypes, null);
 	}
 
-	public static String buildValuesConstraint(String sparqlId, ArrayList<String> valList, XSDSupportedType valType, SparqlEndpointInterface sei) throws Exception{
+	public static String buildValuesConstraint(String sparqlId, ArrayList<String> valList, HashSet<XSDSupportedType> valTypes, SparqlEndpointInterface sei) throws Exception{
 		
 		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
 		
@@ -317,15 +324,23 @@ public class ValueConstraint {
 		// go through each passed value and add them.
 		for(String v : valList){
 			v = BelmontUtil.sparqlSafe(v);
-			valType.validate(v);
-			retval.append(valType.buildRDF11ValueString(v) + " ");
-			
-			// for strings and numbers:  
-			// SemTK ingestion backwards compatibility:  search for "string" and "string"^^XMLSchema:string
-			if (sei == null || sei.getServerType() == SparqlEndpointInterface.VIRTUOSO_SERVER ) {
-				if (valType == XSDSupportedType.STRING ||
-					valType.numericOperationAvailable()) {
-					retval.append(valType.buildTypedValueString(v) + " ");   
+			for (XSDSupportedType valType : valTypes) {
+				try {
+					valType.validate(v);
+					retval.append(valType.buildRDF11ValueString(v) + " ");
+					
+					// for strings and numbers:  
+					// SemTK ingestion backwards compatibility:  search for "string" and "string"^^XMLSchema:string
+					if (sei == null || sei.getServerType() == SparqlEndpointInterface.VIRTUOSO_SERVER ) {
+						if (valType == XSDSupportedType.STRING ||
+							valType.numericOperationAvailable()) {
+							retval.append(valType.buildTypedValueString(v) + " ");   
+						}
+					}
+					// break after first matching type
+					break;
+				} catch (Exception e) {
+					// try next type
 				}
 			}
 		}
@@ -369,11 +384,11 @@ public class ValueConstraint {
 	 */
 	//  Use sei version to get optimization (avoid de-optimized virtuoso version)
 	@Deprecated
-	public static String buildFilterInConstraint(String sparqlId, ArrayList<String> valList, XSDSupportedType valType) throws Exception{
-		return buildFilterInConstraint(sparqlId, valList, valType, null);
+	public static String buildFilterInConstraint(String sparqlId, ArrayList<String> valList, HashSet<XSDSupportedType> valTypes) throws Exception{
+		return buildFilterInConstraint(sparqlId, valList, valTypes, null);
 	}
 
-	public static String buildFilterInConstraint(String sparqlId, ArrayList<String> valList, XSDSupportedType valType, SparqlEndpointInterface sei) throws Exception{
+	public static String buildFilterInConstraint(String sparqlId, ArrayList<String> valList, HashSet<XSDSupportedType> valTypes, SparqlEndpointInterface sei) throws Exception{
 		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
 		
 		
@@ -383,15 +398,23 @@ public class ValueConstraint {
 		// go through each passed value and add them.
 		for(String v : valList){
 			v = BelmontUtil.sparqlSafe(v);
-			valType.validate(v);
-			list.add(valType.buildRDF11ValueString(v));
-			
-			// for strings only:  
-			// SemTK ingestion backwards compatibility:  search for "string" and "string"^^XMLSchema:string
-			// TODO: remove this some day
-			if (sei == null || sei.getServerType() == SparqlEndpointInterface.VIRTUOSO_SERVER ) {
-				if (valType == XSDSupportedType.STRING ) {
-					list.add(valType.buildTypedValueString(v));   
+			for (XSDSupportedType valType : valTypes) {
+				try {
+					valType.validate(v);
+					list.add(valType.buildRDF11ValueString(v));
+					
+					// for strings only:  
+					// SemTK ingestion backwards compatibility:  search for "string" and "string"^^XMLSchema:string
+					// TODO: remove this some day
+					if (sei == null || sei.getServerType() == SparqlEndpointInterface.VIRTUOSO_SERVER ) {
+						if (valType == XSDSupportedType.STRING ) {
+							list.add(valType.buildTypedValueString(v));   
+						}
+					}
+					// break after first success
+					break;
+				} catch (Exception e) {
+					// try next type
 				}
 			}
 		}
@@ -409,17 +432,17 @@ public class ValueConstraint {
 	 */
 	//  Use sei version to get optimization (avoid de-optimized virtuoso version)
 	@Deprecated
-	public static String buildFilterInConstraint(String sparqlId, String val, XSDSupportedType valType) throws Exception{
-		return buildFilterInConstraint(sparqlId, val, valType, null);
+	public static String buildFilterInConstraint(String sparqlId, String val, HashSet<XSDSupportedType> valTypes) throws Exception{
+		return buildFilterInConstraint(sparqlId, val, valTypes, null);
 	}
-	public static String buildFilterInConstraint(String sparqlId, String val, XSDSupportedType valType, SparqlEndpointInterface sei) throws Exception{
+	public static String buildFilterInConstraint(String sparqlId, String val, HashSet<XSDSupportedType> valTypes, SparqlEndpointInterface sei) throws Exception{
 		
 		
 		// FILTER (?trNum IN ( 1278 )) 
 		
 		ArrayList<String> list = new ArrayList<String>();
 		list.add(val);
-		return ValueConstraint.buildFilterInConstraint(sparqlId, list, valType, sei);
+		return ValueConstraint.buildFilterInConstraint(sparqlId, list, valTypes, sei);
 		
 	}
 	
@@ -431,7 +454,7 @@ public class ValueConstraint {
 	
 	public static String buildFilterInConstraint(Returnable item, ArrayList<String> valList, SparqlEndpointInterface sei) throws Exception{
 
-		return ValueConstraint.buildFilterInConstraint(item.getSparqlID(), valList, item.getValueType(), sei);
+		return ValueConstraint.buildFilterInConstraint(item.getSparqlID(), valList, item.getValueTypes(), sei);
 
 	}
 	
@@ -444,19 +467,27 @@ public class ValueConstraint {
 
 		ArrayList<String> list = new ArrayList<String>();
 		list.add(val);
-		return ValueConstraint.buildFilterInConstraint(item.getSparqlID(), list, item.getValueType(), sei);
+		return ValueConstraint.buildFilterInConstraint(item.getSparqlID(), list, item.getValueTypes(), sei);
 
 	}
 	
-	public static String buildFilterNotInConstraint(String sparqlId, ArrayList<String> valList, XSDSupportedType valType) throws Exception{
+	public static String buildFilterNotInConstraint(String sparqlId, ArrayList<String> valList, HashSet<XSDSupportedType> valTypes) throws Exception{
 		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
 				
 		ArrayList<String> list = new ArrayList<String>();
 		// go through each passed value and add them.
 		for(String v : valList){
 			v = BelmontUtil.sparqlSafe(v);
-			valType.validate(v);
-			list.add(valType.buildRDF11ValueString(v));
+		
+			for (XSDSupportedType valType : valTypes) {
+				try {
+					valType.validate(v);
+					list.add(valType.buildRDF11ValueString(v));
+					break;
+				} catch (Exception e) {
+					// try next one
+				}
+			}
 			
 		}
 		
@@ -471,21 +502,26 @@ public class ValueConstraint {
 	 * @return
 	 * @throws Exception
 	 */
-	public static String buildRegexConstraint(String sparqlId, String regexp, XSDSupportedType valType) throws Exception{
+	public static String buildRegexConstraint(String sparqlId, String regexp, HashSet<XSDSupportedType> valTypes) throws Exception{
 		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
 		
 		String retval = "";
 		
-		valType.validate(regexp);
+		for (XSDSupportedType t :valTypes) {
+			try {
+				t.validate(regexp);
 		
-		if(valType.regexIsAvailable()){
-			retval = "FILTER regex(" + sparqlId + " ,\"" + regexp + "\")";
+				if(t.regexIsAvailable()){
+					return "FILTER regex(" + sparqlId + " ,\"" + regexp + "\")";
+				}
+			} catch (Exception e) {
+				// try next one
+			}
 		}
-		else{
-			// regex is not considered supported here.
-			throw new Exception("requested type (" + valType + ") for the sparqlId (" + sparqlId + ") does not support regex constraints");
-		}
-		return retval;
+		
+		// regex is not considered supported here.
+		throw new Exception("requested type (" + XSDSupportedType.buildTypeListString(valTypes) + ") for the sparqlId (" + sparqlId + ") does not support regex constraints");
+		
 	}
 	
 	/**
@@ -497,24 +533,28 @@ public class ValueConstraint {
 	 * @return
 	 * @throws Exception
 	 */
-	public static String buildGreaterThanConstraint(String sparqlId, String val, XSDSupportedType valType, boolean greaterOrEqual) throws Exception{
+	public static String buildGreaterThanConstraint(String sparqlId, String val, HashSet<XSDSupportedType> valTypes, boolean greaterOrEqual) throws Exception{
 		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
-		valType.validate(val);
-		String retval = "";
+		for (XSDSupportedType valType :valTypes) {
+			try {
+				valType.validate(val);
+			
 		
-		if(valType.rangeOperationsAvailable()) {
-		
-			if(!greaterOrEqual){
-				retval = "FILTER (" + sparqlId + " > " + valType.buildRDF11ValueString(val) + ")";
-			}
-			else{
-				retval = "FILTER (" + sparqlId + " >= " + valType.buildRDF11ValueString(val) + ")";
+				if (valType.rangeOperationsAvailable()) {
+				
+					if(!greaterOrEqual){
+						return "FILTER (" + sparqlId + " > " + valType.buildRDF11ValueString(val) + ")";
+					}
+					else{
+						return "FILTER (" + sparqlId + " >= " + valType.buildRDF11ValueString(val) + ")";
+					}
+				}
+			} catch (Exception e) {
+				// try next one
 			}
 		}
-		else{
-			throw new Exception("requested type (" + valType + ") for the sparqlId (" + sparqlId + ") does not support range operation constraints");
-		}
-		return retval;
+		
+		throw new Exception("requested type (" + XSDSupportedType.buildTypeListString(valTypes) + ") for the sparqlId (" + sparqlId + ") does not support range operation constraints");
 	}
 	
 	/** 
@@ -526,24 +566,28 @@ public class ValueConstraint {
 	 * @return
 	 * @throws Exception
 	 */
-	public static String buildLessThanConstraint(String sparqlId, String val, XSDSupportedType valType, boolean lessOrEqual) throws Exception{
+	public static String buildLessThanConstraint(String sparqlId, String val, HashSet<XSDSupportedType> valTypes, boolean lessOrEqual) throws Exception{
 		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
-		valType.validate(val);
-
-		String retval = "";
 		
-		if(valType.rangeOperationsAvailable()) {
-			if(!lessOrEqual){
-				retval = "FILTER (" + sparqlId + " < " + valType.buildRDF11ValueString(val) + ")";
-			}
-			else{
-				retval = "FILTER (" + sparqlId + " <= " + valType.buildRDF11ValueString(val) + ")";
+		for (XSDSupportedType valType :valTypes) {
+			try {
+				valType.validate(val);
+			
+				if (valType.rangeOperationsAvailable()) {
+					if(!lessOrEqual){
+						return "FILTER (" + sparqlId + " < " + valType.buildRDF11ValueString(val) + ")";
+					}
+					else{
+						return "FILTER (" + sparqlId + " <= " + valType.buildRDF11ValueString(val) + ")";
+					}
+				}
+			} catch (Exception e) {
+				// try next one
 			}
 		}
-		else{
-			throw new Exception("requested type (" + valType + ") for the sparqlId (" + sparqlId + ") does not support range operation constraints");
-		}
-		return retval;
+				
+		throw new Exception("requested type (" + XSDSupportedType.buildTypeListString(valTypes) + ") for the sparqlId (" + sparqlId + ") does not support range operation constraints");
+		
 	}
 	
 	/**
@@ -557,39 +601,45 @@ public class ValueConstraint {
 	 * @return
 	 * @throws Exception
 	 */
-	public static String buildRangeConstraint(String sparqlId, String valLow, String valHigh, XSDSupportedType valType, boolean greaterOrEqual, boolean lessThanOrEqual) throws Exception{
+	public static String buildRangeConstraint(String sparqlId, String valLow, String valHigh, HashSet<XSDSupportedType> valTypes, boolean greaterOrEqual, boolean lessThanOrEqual) throws Exception{
 		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
-		valType.validate(valHigh);
-		valType.validate(valLow);
-
 		String retval = "";
 		
-		if(valType.rangeOperationsAvailable()) {
+		for (XSDSupportedType valType : valTypes) {
 			
-			StringBuilder ret = new StringBuilder("FILTER (");
-			
-			if(greaterOrEqual){
-				ret.append(" " + sparqlId + " >= " + valType.buildRDF11ValueString(valLow) + " ");
+			try {
+				valType.validate(valHigh);
+				valType.validate(valLow);
+		
+				if(valType.rangeOperationsAvailable()) {
+					
+					StringBuilder ret = new StringBuilder("FILTER (");
+					
+					if(greaterOrEqual){
+						ret.append(" " + sparqlId + " >= " + valType.buildRDF11ValueString(valLow) + " ");
+					}
+					else{
+						ret.append(" " + sparqlId + " > " + valType.buildRDF11ValueString(valLow) + " ");
+					}
+					
+					// add a conjunction
+					ret.append(" && ");
+					
+					if(lessThanOrEqual){
+						ret.append(" " + sparqlId + " <= " + valType.buildRDF11ValueString(valHigh) + " ");
+					}
+					else{
+						ret.append(" " + sparqlId + " < " + valType.buildRDF11ValueString(valHigh) + " ");
+					}
+					ret.append(")");
+					return ret.toString();
+				}
+			} catch (Exception e) {
+				// try next type
 			}
-			else{
-				ret.append(" " + sparqlId + " > " + valType.buildRDF11ValueString(valLow) + " ");
-			}
-			
-			// add a conjunction
-			ret.append(" && ");
-			
-			if(lessThanOrEqual){
-				ret.append(" " + sparqlId + " <= " + valType.buildRDF11ValueString(valHigh) + " ");
-			}
-			else{
-				ret.append(" " + sparqlId + " < " + valType.buildRDF11ValueString(valHigh) + " ");
-			}
-			ret.append(")");
-			retval = ret.toString();
 		}
-		else{
-			throw new Exception("requested type (" + valType + ") for the sparqlId (" + sparqlId + ") does not support range operation constraints");
-		}
-		return retval;
+		
+		throw new Exception("requested type (" + XSDSupportedType.buildTypeListString(valTypes) + ") for the sparqlId (" + sparqlId + ") does not support range operation constraints");
+		
 	}
 }

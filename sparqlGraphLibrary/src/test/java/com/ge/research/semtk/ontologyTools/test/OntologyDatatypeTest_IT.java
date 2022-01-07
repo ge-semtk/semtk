@@ -23,7 +23,7 @@ public class OntologyDatatypeTest_IT {
 	}
 	
 	@Test
-	public void testLoadingAndValidating() throws Exception {
+	public void testLoadingAndValidatingDAL() throws Exception {
 		ArrayList<String> errors = new ArrayList<String>();
 		ArrayList<String> warnings = new ArrayList<String>();
 		
@@ -36,24 +36,24 @@ public class OntologyDatatypeTest_IT {
 		
 		// inflate from deflated nodegroup
 		PropertyItem pItem = sgjson.getNodeGroupInflateAndValidate(oInfo, errors, null, warnings).getNode(0).getPropertyByKeyname("dal");
-		assertEquals("Inflating datatype_dal_deflated.json valueType error", XSDSupportedType.INT, pItem.getValueType());
-		assertEquals("Inflating datatype_dal_deflated.json valueTypeURI error", "http://testy#DAL", pItem.getValueTypeURI());
+		assertTrue("Inflating datatype_dal_deflated.json valueType error",  pItem.getValueTypes().contains(XSDSupportedType.INT) && pItem.getValueTypes().size() == 1);
+		assertEquals("Inflating datatype_dal_deflated.json valueTypeURI error", "http://testy#DAL", pItem.getRangeURI());
 		assertEquals("Inflating datatype_dal_deflated.json produced errors", 0, errors.size());
 		assertEquals("Inflating datatype_dal_deflated.json produced warnings", 0, warnings.size());
 		
 		// loading a normal nodegroup
 		sgjson = TestGraph.getSparqlGraphJsonFromResource(getClass(), "datatype_dal_ok.json");
 		pItem = sgjson.getNodeGroupInflateAndValidate(oInfo, errors, null, warnings).getNode(0).getPropertyByKeyname("dal");
-		assertEquals("Inflating datatype_dal_ok.json valueType error", XSDSupportedType.INT, pItem.getValueType());
-		assertEquals("Inflating datatype_dal_ok.json valueTypeURI error", "http://testy#DAL", pItem.getValueTypeURI());
+		assertTrue("Inflating datatype_dal_ok.json valueType error", pItem.getValueTypes().contains(XSDSupportedType.INT) && pItem.getValueTypes().size() == 1);
+		assertEquals("Inflating datatype_dal_ok.json valueTypeURI error", "http://testy#DAL", pItem.getRangeURI());
 		assertEquals("Inflating datatype_dal_ok.json produced errors", 0, errors.size());
 		assertEquals("Inflating datatype_dal_ok.json produced warnings", 0, warnings.size());
 		
 		// loading invalid wrong ValueType should produce a warning and correct to int
 		sgjson = TestGraph.getSparqlGraphJsonFromResource(getClass(), "datatype_dal_wrong_xsd.json");
 		pItem = sgjson.getNodeGroupInflateAndValidate(oInfo, errors, null, warnings).getNode(0).getPropertyByKeyname("dal");
-		assertEquals("Inflating datatype_dal_wrong_xsd.json valueType error", XSDSupportedType.INT, pItem.getValueType());
-		assertEquals("Inflating datatype_dal_wrong_xsd.json valueTypeURI error", "http://testy#DAL", pItem.getValueTypeURI());
+		assertTrue("Inflating datatype_dal_wrong_xsd.json valueType error", pItem.getValueTypes().contains(XSDSupportedType.INT) && pItem.getValueTypes().size() == 1);
+		assertEquals("Inflating datatype_dal_wrong_xsd.json valueTypeURI error", "http://testy#DAL", pItem.getRangeURI());
 		assertEquals("Inflating datatype_dal_wrong_xsd.json valueTypeURI error", 0, errors.size());
 		assertEquals("Inflating datatype_dal_wrong_xsd.json number of warnings", 1, warnings.size());
 		assertTrue("Inflating datatype_dal_wrong_xsd.json error produced a warning without the word 'date'", warnings.get(0).contains("date"));
@@ -61,8 +61,8 @@ public class OntologyDatatypeTest_IT {
 		// loading invalid datatype should produce 2 warnings and correct to DAL int
 		sgjson = TestGraph.getSparqlGraphJsonFromResource(getClass(), "datatype_dal_unknown.json");
 		pItem = sgjson.getNodeGroupInflateAndValidate(oInfo, errors, null, warnings).getNode(0).getPropertyByKeyname("dal");
-		assertEquals("Inflating datatype_dal_unknown.json valueType error", XSDSupportedType.INT, pItem.getValueType());
-		assertEquals("Inflating datatype_dal_unknown.json with unknown datatype", "http://testy#DAL", pItem.getValueTypeURI());
+		assertTrue("Inflating datatype_dal_unknown.json valueType error", pItem.getValueTypes().contains(XSDSupportedType.INT) && pItem.getValueTypes().size() == 1);
+		assertEquals("Inflating datatype_dal_unknown.json with unknown datatype", "http://testy#DAL", pItem.getRangeURI());
 		assertEquals("Inflating datatype_dal_unknown.json valueTypeURI error ", 0, errors.size());
 		assertEquals("Inflating datatype_dal_unknown.json number of warnings", 2, warnings.size());
 		String warn = warnings.get(0) + warnings.get(1);
@@ -71,7 +71,7 @@ public class OntologyDatatypeTest_IT {
 	}
 	
 	@Test
-	public void testLoadData() throws Exception {
+	public void testLoadDataDAL() throws Exception {
 
 		// load model
 		TestGraph.clearGraph();
@@ -92,6 +92,24 @@ public class OntologyDatatypeTest_IT {
 			String mustHave = "\"a\" as type \"INT\"";
 			assertTrue("Load error doesn't contain " + mustHave, e.getMessage().contains(mustHave));
 		}
+	}
+	
+	@Test
+	public void testLoadDataMultiTypesSuccess() throws Exception {
+		// datatypetest.SADL has examples of complex datatypes with restrictions etc. from SADL 3 documentation
+		// This test loads a variety of legal values
+		
+		// load model
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "datatypetest.owl");		
+		
+		// load three rows of data
+		int rows = TestGraph.ingestFromResources(getClass(), "datatype_exampleA.json", "datatype_exampleA_pass.csv");
+		assertEquals("Ingestion produced wrong number of rows", 4, rows);
+		
+		// check the round trip results
+		TestGraph.queryAndCheckResults(this, "datatype_exampleA.json", "datatype_exampleA_pass.csv");
+		
 	}
 	
 }

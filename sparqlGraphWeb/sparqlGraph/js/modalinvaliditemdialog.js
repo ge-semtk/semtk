@@ -182,7 +182,7 @@ define([	// properly require.config'ed
                 if (errMsg != null) {
                     this.setStatus(errMsg.replaceAll("\n", "<br>"));
                 } else if (this.item.getItemType() == "PropertyItem" && this.item.hasConstraints()) {
-                    var currRange = this.item.getValueTypeURI();
+                    var currRange = this.item.getRangeURI();
                     var oClass = this.oInfo.getClass(this.nodegroup.getPropertyItemParentSNode(this.item).getURI());
                     var oProp = oClass.getProperty(this.getSelectedDomain());
                     var oRange = (oProp != null) ? oProp.getRange() : null;

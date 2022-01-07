@@ -21,6 +21,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -175,7 +176,7 @@ public class RuntimeConstraintManager {
 			// check that the sparqlID exists skipped because it will be checked when a direct assignment is made.
 			String sparqlId = getConstraintSparqlId(constraintJson);
 			String operator = constraintJson.get(KEY_OPERATOR).toString();
-			XSDSupportedType operandType;
+			HashSet<XSDSupportedType> operandTypes = null; 
 			ArrayList<String> operands = new ArrayList<String>();   // however obvious, the operands will go here. 
 			
 			// get the object referenced by this sparql ID.
@@ -184,11 +185,12 @@ public class RuntimeConstraintManager {
 			}
 			if( this.rtcObjectHash.get(sparqlId).getObjectType().equals(SupportedTypes.NODE) ){
 				// this was a node and the type should be URI.
-				operandType = XSDSupportedType.NODE_URI;
+				operandTypes = new HashSet<XSDSupportedType>();
+				operandTypes.add(XSDSupportedType.NODE_URI);
 			}			
 			else if ( this.rtcObjectHash.get(sparqlId).getObjectType().equals(SupportedTypes.PROPERTYITEM) ){
 				// check the property item itself to get the expected type.
-				operandType = this.rtcObjectHash.get(sparqlId).getValueType();  // this should return the expected XSD type with no prefix. 
+				operandTypes = this.rtcObjectHash.get(sparqlId).getValueTypes();  // this should return the expected XSD type with no prefix. 
 			}
 			else{
 				throw new Exception("Can't apply runtime constraints to object type " + this.rtcObjectHash.get(sparqlId).getObjectType() + " for sparqlID: " + sparqlId);
@@ -201,12 +203,12 @@ public class RuntimeConstraintManager {
 				for( Object currOpperand : opers){
 					// add the next operand to the list if it passes the tests.
 					// check the type are at least convertible. for this, we should reuse the code from the import spec handler.				
-					ImportSpecHandler.validateDataType(currOpperand.toString(), operandType);
+					ImportSpecHandler.validateDataType(currOpperand.toString(), operandTypes);
 					operands.add( currOpperand.toString() );  // here we go. 
 				}
 			} catch(Exception eee){
 				// we were passed a bad value that could not be cast to the suggested type.
-				throw new Exception("Runtime constraint value for " + sparqlId + " type " + operandType + ": " + eee.getMessage());
+				throw new Exception("Runtime constraint value for " + sparqlId + " type " + XSDSupportedType.buildTypeListString(operandTypes) + ": " + eee.getMessage());
 			}
 			
 			SupportedOperations operationValue = null;
@@ -260,18 +262,15 @@ public class RuntimeConstraintManager {
 		this.applyConstraint(sparqlId, operation, operandList);
 	} 
 	
-	private XSDSupportedType getValueType(String itemSparqlId) throws Exception{
-		XSDSupportedType retval = null;
+	private HashSet<XSDSupportedType> getValueTypes(String itemSparqlId) throws Exception{
 		String id = BelmontUtil.formatSparqlId(itemSparqlId);
 		// check to see if this item is in our list.
 		if(rtcObjectHash.containsKey(id)){
-			retval = rtcObjectHash.get(id).getValueType();
+			return rtcObjectHash.get(id).getValueTypes();
 		}
 		else{
 			throw new Exception(itemSparqlId + " does not exist in the available runtime constrained items.");
 		}
-		
-		return retval;
 	}
 		
 	private String getItemType(String itemSparqlId) throws Exception{
@@ -305,7 +304,7 @@ public class RuntimeConstraintManager {
 			
 			currentItemInfo.add(item);
 			currentItemInfo.add(this.getItemType(item));
-			currentItemInfo.add(this.getValueType(item).name());
+			currentItemInfo.add(XSDSupportedType.buildTypeListString(this.getValueTypes(item)));
 			
 			// add to outgoing list
 			itemInfo.add(currentItemInfo);

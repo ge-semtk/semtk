@@ -20,6 +20,7 @@ package com.ge.research.semtk.belmont;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import org.json.simple.JSONArray;
@@ -233,7 +234,7 @@ public class Node extends Returnable {
 		// build hash of suggested properties for this class
 		HashMap<String, PropertyItem> inputPItemHash = new HashMap<>();
 		for (PropertyItem p : this.props) {
-			inputPItemHash.put(p.getUriRelationship(), p);
+			inputPItemHash.put(p.getDomainURI(), p);
 		}
 		
 		// build hash of suggested nodes for this class
@@ -271,31 +272,33 @@ public class Node extends Returnable {
 		// Remember: oProp can be propItem or nodeItem
 		for (OntologyProperty ontProp : ontProps) {
 			String ontPropURI = ontProp.getNameStr(false);			
-			String localPropURI = ontProp.getNameStr(true);
+			String ontPropShortName = ontProp.getNameStr(true);
 
 			if (inputPItemHash.containsKey(ontPropURI)) {
 				// if input nodegroup contains this property
 				
 				PropertyItem propItem = inputPItemHash.get(ontPropURI);
-				if (! propItem.getValueTypeURI().equals(ontProp.getRangeStr())) {
+				HashSet<XSDSupportedType> ontPropValTypes = oInfo.getPropertyRangeXSDTypes(ontProp.getRangeStr());
+				
+				if (! propItem.getRangeURI().equals(ontProp.getRangeStr())) {
 					String modelRangeStr = ontProp.getRangeStr();
-					String propRangeStr = propItem.getValueTypeURI();
+					String propRangeStr = propItem.getRangeURI();
 					String abbrevURI[] = abbreviateURIs(propRangeStr, modelRangeStr);
 					
 					if (propItem.getConstraints() != null || (importSpec != null && importSpec.isUsed(this.getSparqlID(), ontPropURI))) {
 						// ERROR property range doesn't match
-						String msg = this.getBindingOrSparqlID() + " property " + localPropURI + "'s range of " + abbrevURI[0] + " doesn't match model: " + abbrevURI[1];
+						String msg = this.getBindingOrSparqlID() + " property " + ontPropShortName + "'s range of " + abbrevURI[0] + " doesn't match model: " + abbrevURI[1];
 						modelErrList.add(msg);
 						itemStrList.add(new NodeGroupItemStr(this, propItem));
 					} else {
 						// WARNING property range doesn't match
-						String msg = this.getBindingOrSparqlID() + " property " + localPropURI + "'s range of " + abbrevURI[0] + " changed to: " + abbrevURI[1];
+						String msg = this.getBindingOrSparqlID() + " property " + ontPropShortName + "'s range of " + abbrevURI[0] + " changed to: " + abbrevURI[1];
 						warningList.add(msg);
 						// fix range
 						if (! oInfo.containsClass(modelRangeStr)) {
 							// normal fix: property
 							String fullRangeUri = ontProp.getRangeStr(false);
-							propItem.changeValueType(oInfo.getPropertyRangeXSDType(fullRangeUri), fullRangeUri);
+							propItem.setRange(fullRangeUri, oInfo.getPropertyRangeXSDTypes(fullRangeUri));
 						} else {
 							// change to nodeItem
 							 NodeItem nodeItem = new NodeItem(   
@@ -306,20 +309,24 @@ public class Node extends Returnable {
 							 inflatedNItems.add(nodeItem);
 							 propItem = null;
 						}
-						
 					}
-				}
-				
-				// if ValueTypeURI is correct but the value type is wrong
-				// (a declared datatype whose onDatatype has been changed)
-				XSDSupportedType propItemValType = propItem.getValueType();
-				XSDSupportedType ontPropValType = oInfo.getPropertyRangeXSDType(ontProp.getRangeStr());
-				if (propItemValType != ontPropValType) {
-					String msg = this.getBindingOrSparqlID() + " property " + localPropURI + " data type " + propItemValType.getSimpleName() + " changed to: " + ontPropValType.getSimpleName();
-					warningList.add(msg);
 					
-					// change: send the new XSDType and the existing valueTypeURI
-					propItem.changeValueType(ontPropValType, propItem.getValueTypeURI());
+				} else if (! propItem.valueTypesEqual(ontPropValTypes)) {
+					// ValueTypeURI is correct but the value type is wrong
+					// (a declared datatype whose onDatatype has been changed)
+					
+					if (propItem.getConstraints() != null || (importSpec != null && importSpec.isUsed(this.getSparqlID(), ontPropURI))) {
+						// error
+						String msg = this.getBindingOrSparqlID() + " property " + ontPropShortName + " data type: " + XSDSupportedType.buildTypeListString(propItem.getValueTypes()) + " doesn't match model: " + XSDSupportedType.buildTypeListString(ontPropValTypes);
+						modelErrList.add(msg);
+						itemStrList.add(new NodeGroupItemStr(this));
+						
+					} else {
+						// warn
+						String msg = this.getBindingOrSparqlID() + " property " + ontPropShortName + " data type: " + XSDSupportedType.buildTypeListString(propItem.getValueTypes()) + " changed to: " + XSDSupportedType.buildTypeListString(ontPropValTypes);
+						warningList.add(msg);
+						propItem.setRange(propItem.getRangeURI(), ontPropValTypes);
+					}
 				}
 				
 				// add the propItem, unless emergency switch to nodeItem
@@ -364,14 +371,14 @@ public class Node extends Returnable {
 
 					if (targetErrList.size() == 0) {
 						// 5b 5c  Fix nodeitem range
-						warningList.add( this.getBindingOrSparqlID() + " edge " + localPropURI + "'s range of " + abbrevURI[0] + " changed to: " + abbrevURI[1]);
+						warningList.add( this.getBindingOrSparqlID() + " edge " + ontPropShortName + "'s range of " + abbrevURI[0] + " changed to: " + abbrevURI[1]);
 						if (oInfo.containsClass(correctRangeStr)) {
 							nodeItem.changeUriValueType(correctRangeStr);
 						} else {
 							
 							// "emergency" switch to a propItem
 							PropertyItem propItem = new PropertyItem(	
-									oInfo.getPropertyRangeXSDType(ontProp.getRangeStr()), 
+									oInfo.getPropertyRangeXSDTypes(ontProp.getRangeStr()), 
 									ontProp.getRangeStr(false),
 									ontProp.getNameStr(false));
 							
@@ -382,7 +389,7 @@ public class Node extends Returnable {
 					} else {
 						
 						// 5a else bad connections
-						modelErrList.add( this.getBindingOrSparqlID() + " edge " + localPropURI + "'s range of " + abbrevURI[0] + " doesn't match to model: " + abbrevURI[1]);
+						modelErrList.add( this.getBindingOrSparqlID() + " edge " + ontPropShortName + "'s range of " + abbrevURI[0] + " doesn't match to model: " + abbrevURI[1]);
 
 						// all targets are bad items, so is generic "null target"
 						itemStrList.add(new NodeGroupItemStr(this, nodeItem, null));
@@ -396,14 +403,14 @@ public class Node extends Returnable {
 					
 					// somewhat randomly, check for keyname errors
 					if (!nRangeAbbr.equals(new OntologyName(nRangeStr).getLocalName())) {
-						warningList.add(this.getBindingOrSparqlID() + " node property property " + localPropURI + "'s abbrev " + nRangeAbbr + " corrected to match model: " + ontProp.getRangeStr(true));
+						warningList.add(this.getBindingOrSparqlID() + " node property property " + ontPropShortName + "'s abbrev " + nRangeAbbr + " corrected to match model: " + ontProp.getRangeStr(true));
 						nodeItem.setValueType(ontProp.getRangeStr(true));
 					}
 				
 				
 					// report any bad connections 
 					for (Node target : targetErrList) {
-						modelErrList.add( this.getBindingOrSparqlID() + " edge " + localPropURI + "'s range of " + correctRangeAbbrev + " does not allow connection to " + target.getBindingOrSparqlID());
+						modelErrList.add( this.getBindingOrSparqlID() + " edge " + ontPropShortName + "'s range of " + correctRangeAbbrev + " does not allow connection to " + target.getBindingOrSparqlID());
 						itemStrList.add(new NodeGroupItemStr(this, nodeItem, target));
 					}
 					
@@ -418,7 +425,7 @@ public class Node extends Returnable {
 			} else if (!oInfo.containsClass(ontProp.getRangeStr()) && !ontProp.getRange().isDefaultClass()) {
 				// Range class is not found: property deflated out of the nodegroup: inflate
 				PropertyItem propItem = new PropertyItem(	
-						oInfo.getPropertyRangeXSDType(ontProp.getRangeStr()), 
+						oInfo.getPropertyRangeXSDTypes(ontProp.getRangeStr()), 
 						ontProp.getRangeStr(false),
 						ontProp.getNameStr(false));
 				
@@ -518,16 +525,16 @@ public class Node extends Returnable {
 		// check each property's URI and range
 		for (PropertyItem myPropItem : this.props) {
 			// domain
-			if (! oPropHash.containsKey(myPropItem.getUriRelationship())) {
+			if (! oPropHash.containsKey(myPropItem.getDomainURI())) {
 				throw new ValidationException(String.format("Node %s contains property %s which does not exist in the model",
-									this.getSparqlID(), myPropItem.getUriRelationship()));
+									this.getSparqlID(), myPropItem.getDomainURI()));
 			}
 			
 			// range
-			OntologyRange oRange = oPropHash.get(myPropItem.getUriRelationship()).getRange();
+			OntologyRange oRange = oPropHash.get(myPropItem.getDomainURI()).getRange();
 			if (! oRange.getFullName().equals(myPropItem.getValueTypeURI())) {
 				throw new ValidationException(String.format("Node %s, property %s has type %s which doesn't match %s in model", 
-									this.getSparqlID(), myPropItem.getUriRelationship(), myPropItem.getValueTypeURI(), oRange.getFullName()));
+									this.getSparqlID(), myPropItem.getDomainURI(), myPropItem.getValueTypeURI(), oRange.getFullName()));
 			}
 		}
 		
@@ -958,7 +965,7 @@ public class Node extends Returnable {
 	
 	public int getPropertyIndexByURIRelation(String uriRel) {
 		for (int i = 0; i < this.props.size(); i++) {
-			if (this.props.get(i).getUriRelationship().equals(uriRel)) {
+			if (this.props.get(i).getDomainURI().equals(uriRel)) {
 				return i;
 			}
 		}
@@ -967,7 +974,7 @@ public class Node extends Returnable {
 
 	public PropertyItem getPropertyByURIRelation(String uriRel) {
 		for (int i = 0; i < this.props.size(); i++) {
-			if (this.props.get(i).getUriRelationship().equals(uriRel)) {
+			if (this.props.get(i).getDomainURI().equals(uriRel)) {
 				return this.props.get(i);
 			}
 		}
@@ -1072,8 +1079,10 @@ public class Node extends Returnable {
 		
 		return constrainedProperties;
 	}
-	public XSDSupportedType getValueType(){
-		return this.nodeType;
+	public HashSet<XSDSupportedType> getValueTypes(){
+		HashSet<XSDSupportedType> ret = new HashSet<XSDSupportedType>();
+		ret.add(this.nodeType);
+		return ret;
 	}
 	
 	public void setDeletionMode(NodeDeletionTypes ndt){

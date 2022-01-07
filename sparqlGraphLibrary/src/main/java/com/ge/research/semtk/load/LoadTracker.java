@@ -26,6 +26,7 @@ import java.io.InputStream;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
@@ -165,32 +166,32 @@ public class LoadTracker {
 		
 		if (fileKey != null) {
 			pItem = ng.getPropertyItemBySparqlID(KEY_COL);
-			pItem.addConstraint(ValueConstraint.buildFilterInConstraint(KEY_COL, fileKey, XSDSupportedType.STRING));	
+			pItem.addConstraint(ValueConstraint.buildFilterInConstraint(KEY_COL, fileKey, XSDSupportedType.asSet(XSDSupportedType.STRING)));	
 		}
 		
 		if (sei != null) {
 			pItem = ng.getPropertyItemBySparqlID("seiServerAndPort");
-			pItem.addConstraint(ValueConstraint.buildFilterInConstraint("seiServerAndPort", sei.getServerAndPort(), XSDSupportedType.STRING));
+			pItem.addConstraint(ValueConstraint.buildFilterInConstraint("seiServerAndPort", sei.getServerAndPort(), XSDSupportedType.asSet(XSDSupportedType.STRING)));
 			
 			pItem = ng.getPropertyItemBySparqlID("graphName");
-			pItem.addConstraint(ValueConstraint.buildFilterInConstraint("graphName", sei.getGraph(), XSDSupportedType.STRING));
+			pItem.addConstraint(ValueConstraint.buildFilterInConstraint("graphName", sei.getGraph(), XSDSupportedType.asSet(XSDSupportedType.STRING)));
 		
 		}
 		
 		if (user != null) {
 			pItem = ng.getPropertyItemBySparqlID("user");
-			pItem.addConstraint(ValueConstraint.buildFilterInConstraint("user", user, XSDSupportedType.STRING));	
+			pItem.addConstraint(ValueConstraint.buildFilterInConstraint("user", user, XSDSupportedType.asSet(XSDSupportedType.STRING)));	
 		}
 		
 		if (startEpoch != null && endEpoch != null ) {
 			pItem = ng.getPropertyItemBySparqlID("epoch");
-			pItem.addConstraint(ValueConstraint.buildRangeConstraint("epoch", String.valueOf(startEpoch), String.valueOf(endEpoch), XSDSupportedType.LONG, true, true));	
+			pItem.addConstraint(ValueConstraint.buildRangeConstraint("epoch", String.valueOf(startEpoch), String.valueOf(endEpoch), XSDSupportedType.asSet(XSDSupportedType.LONG), true, true));	
 		} else if (startEpoch != null ) {
 			pItem = ng.getPropertyItemBySparqlID("epoch");
-			pItem.addConstraint(ValueConstraint.buildGreaterThanConstraint("epoch", String.valueOf(startEpoch), XSDSupportedType.LONG, true));	
+			pItem.addConstraint(ValueConstraint.buildGreaterThanConstraint("epoch", String.valueOf(startEpoch), XSDSupportedType.asSet(XSDSupportedType.LONG), true));	
 		} else if (endEpoch != null ) {
 			pItem = ng.getPropertyItemBySparqlID("epoch");
-			pItem.addConstraint(ValueConstraint.buildLessThanConstraint("epoch", String.valueOf(endEpoch), XSDSupportedType.LONG, true));	
+			pItem.addConstraint(ValueConstraint.buildLessThanConstraint("epoch", String.valueOf(endEpoch), XSDSupportedType.asSet(XSDSupportedType.LONG), true));	
 		}
 		
 		return ng;

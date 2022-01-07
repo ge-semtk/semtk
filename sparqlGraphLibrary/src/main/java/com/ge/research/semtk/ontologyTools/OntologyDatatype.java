@@ -18,6 +18,8 @@
 
 package com.ge.research.semtk.ontologyTools;
 
+import java.util.HashSet;
+
 import com.ge.research.semtk.sparqlX.XSDSupportedType;
 
 /** 
@@ -33,11 +35,12 @@ import com.ge.research.semtk.sparqlX.XSDSupportedType;
 public class OntologyDatatype extends AnnotatableElement{
 
 	private OntologyName  name = null;
-	private  String equivalentType = null;
+	private HashSet<XSDSupportedType> xsdTypes = new HashSet<XSDSupportedType>();
+	private HashSet<String> strTypes = new HashSet<String>();
 
-	public OntologyDatatype(String name, String equivalentType) {
+	public OntologyDatatype(String name, String equivalentType) throws Exception {
 		this.name  = new OntologyName(name);
-		this.equivalentType = equivalentType;
+		this.addEquivalentType(equivalentType);
 	}
 	
 	public String getName() {
@@ -53,11 +56,17 @@ public class OntologyDatatype extends AnnotatableElement{
 		}
 	}
 	
-	public String getEquivalentType() {
-		return this.equivalentType;
+	public void addEquivalentType(String equivalentType) throws Exception {
+		this.strTypes.add(equivalentType);
+		OntologyName typeName = new OntologyName(equivalentType);
+		this.xsdTypes.add(XSDSupportedType.getMatchingValue(typeName.getLocalName()));
 	}
 	
-	public XSDSupportedType getEquivalentXSDType() throws Exception {
-		return XSDSupportedType.getMatchingValue(new OntologyName(this.equivalentType).getLocalName());
+	public HashSet<String> getEquivalentTypes() {
+		return this.strTypes;
+	}
+	
+	public HashSet<XSDSupportedType> getEquivalentXSDTypes() throws Exception {
+		return this.xsdTypes;
 	}
 }

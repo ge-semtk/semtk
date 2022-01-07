@@ -20,7 +20,7 @@ package com.ge.research.semtk.sparqlToXLib;
 
 
 import java.util.ArrayList;
-
+import java.util.HashSet;
 
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
@@ -226,7 +226,9 @@ public class SparqlToXLibUtil {
 			throw new Exception("class values list is empty");
 		}
 		
-		sClassValuesClause =  ValueConstraint.buildFilterInConstraint("?s_class", classValues, XSDSupportedType.NODE_URI) ;
+		HashSet<XSDSupportedType> uriSet = new HashSet<XSDSupportedType>();
+		uriSet.add(XSDSupportedType.NODE_URI);
+		sClassValuesClause =  ValueConstraint.buildFilterInConstraint("?s_class", classValues, uriSet) ;
 
 		// Start the query
 		if (countQuery) {

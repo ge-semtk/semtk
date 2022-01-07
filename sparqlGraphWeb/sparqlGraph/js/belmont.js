@@ -186,28 +186,9 @@ SparqlFormatter.prototype = {
 		return prefixes + '\n' + query1;
 	},
 
-	buildValueConstraint : function(item, valList) {
-		// build a value constraint for an "item" (see item interface comment)
-		var ret = "";
-
-        if (item.getSparqlID() == "") {
-            throw new Error("Internal: trying to build VALUES constraint for property with empty sparql ID");
-        }
-		if (valList.length > 0) {
-			ret = "VALUES " + item.getSparqlID() + " {";
-
-			for (var i=0; i < valList.length; i++) {
-				if (item.getValueType() == "uri") {
-					ret += " <" + valList[i] + ">";
-				} else {
-					ret += " '" + valList[i] + "'^^" + SemanticNodeGroup.XMLSCHEMA_PREFIX + item.getValueType();
-				}
-			}
-
-			ret += " } ";
-		}
-		return ret;
-	},
+	// buildValueConstraint : function(item, valList) {
+    //       if needed use a service call  1/7/2022 -Paul
+    // }
 
     // TODO: this should be a call to the service layer
     buildFilterInConstraint : function(item, valList) {
@@ -230,7 +211,7 @@ SparqlFormatter.prototype = {
 	},
 
     buildRDF11Literal : function(item, val) {
-        var itemType = item.getValueType();
+        var itemType = item.getValueTypes()[0];
 
         if (itemType == "string") {
             return "'" + val + "', '" + val + "'^^" + SemanticNodeGroup.XMLSCHEMA_PREFIX + itemType;
@@ -252,7 +233,7 @@ SparqlFormatter.prototype = {
 		//        If val == null then use a sample legal value
 
 		var v = val;
-		var itemType = item.getValueType();
+		var itemType = item.getValueTypes()[0];
 
 		if (itemType == "string") {
 			if (!v) v = "example";
@@ -367,7 +348,7 @@ NodeItem.prototype = {
 			OptionalMinus : [],
             Qualifiers : [],
 			DeletionMarkers : [],
-			ValueType : this.valueType,
+			ValueType : this.valueType,              // NodeItem is not yet updated to plural valueTypes
 			UriValueType : this.UriValueType,
 			ConnectBy : this.ConnectBy,
 			Connected : this.Connected,
@@ -485,6 +466,7 @@ NodeItem.prototype = {
 	setKeyName : function(strName) {
 		// Deprecated
 	},
+    // NodeItem js is still singular valueType
 	setValueType : function(strValType) {
 		this.valueType = strValType;
 	},
@@ -598,11 +580,12 @@ NodeItem.prototype = {
 	getKeyName : function() {
 		return new OntologyName(this.UriConnectBy).getLocalName();
 	},
-	getValueType : function() {
-		return this.valueType;
-	},
+    getValueTypes : function() {
+        return [this.valueType];   // NodeItem js is still singular valueType
+    },
+
     // for item (match propertyItem)
-    getValueTypeURI : function() {
+    getRangeURI : function() {
         return this.UriValueType;
     },
 	getUriValueType : function() {
@@ -617,6 +600,7 @@ NodeItem.prototype = {
 	getSNodes : function() {
 		return this.SNodes;
 	},
+    // item function
     getURI : function() {
         return this.getURIConnectBy();
     },
@@ -671,18 +655,17 @@ NodeItem.prototype = {
 
 /* the property item */
 // valType      - XSD style string, e.g. "int"
-// valueTypeURI - full uri may be http://owl/whatever#int  or a local datatype http://myOntology#MyDataType
-// UriRelationship - the property URI
+// rangeU - full uri may be http://owl/whatever#int  or a local datatype http://myOntology#MyDataType
+// domainURI - the property URI
 // jObj - if not null then use json instead of any of these other params
-var PropertyItem = function(valType, valueTypeURI, UriRelationship, jObj) {
+var PropertyItem = function(valTypes, rangeURI, domainURI, jObj) {
 
 	if (jObj) {
 		this.fromJson(jObj);
 	} else {
-		this.valueType = valType; // the type of the value associated with
-								// property in the ontology.
-		this.valueTypeURI = valueTypeURI;
-		this.UriRelationship = UriRelationship;
+		this.valueTypes = valTypes;
+		this.rangeURI = rangeURI;
+		this.domainURI = domainURI;
 		this.Constraints = ''; // the constraints are represented as a str and
 								// will be used in the
 		// in the sparql generation.
@@ -709,9 +692,9 @@ PropertyItem.prototype = {
 	toJson : function() {
 		// return a JSON object of things needed to serialize
 		var ret = {
-			ValueType : this.valueType,
-			relationship : this.valueTypeURI,    // json field is horribly misnamed
-			UriRelationship : this.UriRelationship,
+			valueTypes : this.valueTypes,
+			rangeURI : this.rangeURI,
+			domainURI : this.domainURI,
 			Constraints : this.Constraints,
 			SparqlID : this.SparqlID,
 			isReturned : this.isReturned,
@@ -733,9 +716,9 @@ PropertyItem.prototype = {
 	},
 	fromJson : function(jObj) {
 		// presumes SparqlID's in jObj are already reconciled with the nodeGroup
-		this.valueType = jObj.ValueType;
-		this.valueTypeURI = jObj.relationship;  // JSON field is horribly misnamed
-		this.UriRelationship = jObj.UriRelationship;
+		this.valueTypes = jObj.valueTypes || [jObj.ValueType];   // support version<17 "ValueType"
+		this.rangeURI = jObj.rangeURI || jObj.relationship;      // support version<17 "relationship"
+		this.domainURI = jObj.domainURI || jObj.UriRelationship; // support version<17 "UriRelationship"
 		this.Constraints = jObj.Constraints;
 		this.SparqlID = jObj.SparqlID;
 		this.isReturned = jObj.isReturned;
@@ -787,11 +770,7 @@ PropertyItem.prototype = {
 		f = new SparqlFormatter();
 		return f.buildFilterInConstraint(this, valueList);
 	},
-    buildValueConstraint : function(valueList) {
-		//  build but don't set  a value constraint from a list of values (basic types or fully qualified URIs)
-		f = new SparqlFormatter();
-		return f.buildValueConstraint(this, valueList);
-	},
+
 	// set the values of items in the propertyItem
 	setKeyName : function(keyname) {
 		// deprecated
@@ -850,8 +829,8 @@ PropertyItem.prototype = {
 		this.instanceValues = [];
 	},
 
-	setValueType : function(typ) {
-		this.valueType = typ;
+	setValueTypes : function(types) {
+		this.valueTypes = types;
 	},
 	setSparqlID : function(id) {
 		if (this.SparqlID != null && this.hasConstraints()) {
@@ -870,12 +849,8 @@ PropertyItem.prototype = {
 		this.Constraints = f.tagSparqlID(con, this.SparqlID);
 	},
 
-    // old/new name
-	setRelation : function(rel) {
-		this.valueTypeURI = rel;
-	},
-    setValueTypeUri : function(rel) {
-		this.valueTypeURI = rel;
+    setRangeURI : function(rel) {
+		this.rangeURI = rel;
 	},
 
 	setIsReturned : function(val) {
@@ -929,25 +904,22 @@ PropertyItem.prototype = {
 
 	getKeyName : function() {
 		// return the name of the property
-		return new OntologyName(this.UriRelationship).getLocalName();;
+		return new OntologyName(this.domainURI).getLocalName();;
 	},
-    getValueTypeURI : function() {
-        return this.valueTypeURI;
+    getRangeURI : function() {
+        return this.rangeURI;
     },
-    // horrible old name
-	getRelation : function() {
-		return this.valueTypeURI;
-	},
-    // duplicate name for items
+
+    // item function
     getURI : function() {
-        return this.UriRelationship;
+        return this.domainURI;
     },
-	getUriRelation : function() {
-		return this.UriRelationship;
+	getDomainURI : function() {
+		return this.domainURI;
 	},
-	getValueType : function() {
+	getValueTypes : function() {
 		// return the type, as determined by the ontology
-		return this.valueType;
+		return this.valueTypes;
 	},
 	getIsReturned : function() {
 		return this.isReturned;
@@ -990,8 +962,9 @@ PropertyItem.prototype = {
 		return "PropertyItem";
 	},
 
+    // named for "item"
     getItemUri: function() {
-        return this.UriRelationship;
+        return this.domainURI;
     },
 
 	setIsMarkedForDeletion : function(markToSet) {
@@ -1227,11 +1200,7 @@ SemanticNode.prototype = {
 		f = new SparqlFormatter();
 		return f.buildFilterInConstraint(this, valueList);
 	},
-    buildValueConstraint : function(valueList) {
-		//  build but don't set  a value constraint from a list of values (basic types or fully qualified URIs)
-		f = new SparqlFormatter();
-		return f.buildValueConstraint(this, valueList);
-	},
+
 	setSparqlID : function(id) {
 		if (this.SparqlID != null && this.hasConstraints()) {
 
@@ -1306,9 +1275,9 @@ SemanticNode.prototype = {
 	setConstraints : function(c) {
 		this.valueConstraint = c;
 	},
-	getValueType : function() {
-		// make this look like a propertyItem. Type is always "uri"
-		return "uri";
+	getValueTypes : function() {
+		// make this look like a propertyItem.
+		return ["uri"];
 	},
 	getIsReturned : function() {
 		return this.isReturned;
@@ -1405,6 +1374,7 @@ SemanticNode.prototype = {
 		return ret;
 	},
 
+    // item function
 	getURI : function(optLocalFlag) {
 		var localFlag = (optLocalFlag === undefined) ? false : optLocalFlag;
 
@@ -1562,7 +1532,7 @@ SemanticNode.prototype = {
 	},
 	getPropertyByURIRelation : function(uriRel) {
 		for (var i = 0; i < this.propList.length; i++) {
-			if (this.propList[i].getUriRelation() == uriRel) {
+			if (this.propList[i].getURI() == uriRel) {
 				return this.propList[i];
 			}
 		}
@@ -1649,18 +1619,9 @@ SemanticNode.prototype = {
 		return this.removalTag;
 	},
 
-	// TODO: Justin plumb in additional details about where
-	//       these properties came from
-	addNonDomainProperty : function (keynameDeprecated, valType, relation, uriRelation ) {
-		// force-add a property that isn't in the domain
-		prop = new PropertyItem(valType, relation, uriRelation);
-		this.propList.push(prop);
-		return prop;
-	},
-
-	addSubclassProperty : function (keynameDeprecated, valType, relation, uriRelation ) {
+	addSubclassProperty : function (valTypes, relation, uriRelation ) {
 		// force-add a subclass property.   So it must be optional.
-		prop = new PropertyItem(valType, relation, uriRelation);
+		prop = new PropertyItem(valTypes, relation, uriRelation);
 		prop.optMinus = PropertyItem.OPT_MINUS_OPTIONAL;
 		this.propList.push(prop);
 		return prop;
@@ -1824,7 +1785,8 @@ var SemanticNodeGroup = function() {
                                     // where parent is one of the items in tmpUnionMemberHash[key]
 };
 
-SemanticNodeGroup.JSON_VERSION = 16;
+SemanticNodeGroup.JSON_VERSION = 17;
+// version 17 - propertyItem domainURI, rangeURI, valueTypes (plural)
 // version 16 - columnOrder
 // version 15 - node.isConstructed  ng.queryType ng.returnTypeOverride
 // version 14 - added functions (optional)
@@ -2037,11 +1999,11 @@ SemanticNodeGroup.prototype = {
     buildUnionValueStr : function(snode, optItem, optTarget, optReverse_flag) {
         if (optTarget !== undefined) {
             // nodeItem
-            return snode.getSparqlID() + "|" + optItem.getURIConnectBy() + "|" + optTarget.getSparqlID() + "|" + String(optReverse_flag);
+            return snode.getSparqlID() + "|" + optItem.getURI() + "|" + optTarget.getSparqlID() + "|" + String(optReverse_flag);
 
         } else if (optItem !== undefined) {
             // propItem
-            return snode.getSparqlID() + "|" + optItem.getUriRelation();
+            return snode.getSparqlID() + "|" + optItem.getURI();
 
         } else {
             // node
@@ -2056,9 +2018,9 @@ SemanticNodeGroup.prototype = {
     buildItemStr : function(snode, optItem, optTarget) {
         if (optItem && optItem.getItemType() == "NodeItem") {
             if (optTarget) {
-                return snode.getSparqlID() + "|" + optItem.getURIConnectBy() + "|" + optTarget.getSparqlID();
+                return snode.getSparqlID() + "|" + optItem.getURI() + "|" + optTarget.getSparqlID();
             } else {
-                return snode.getSparqlID() + "|" + optItem.getURIConnectBy() + "|" + SemanticNodeGroup.NULL_TARGET;
+                return snode.getSparqlID() + "|" + optItem.getURI() + "|" + SemanticNodeGroup.NULL_TARGET;
             }
         } else {
             return this.buildUnionValueStr(snode, optItem);
@@ -2631,7 +2593,7 @@ SemanticNodeGroup.prototype = {
 
 			for (var p=0; p < n.propList.length; p++) {
 				var pi = n.getPropertyItem(p);
-				this.addToPrefixHash(pi.getUriRelation());
+				this.addToPrefixHash(pi.getURI());
 			}
 			// add the URIs for the node items
 			for (var q=0; q < n.nodeList.length; q++) {
@@ -3024,14 +2986,13 @@ SemanticNodeGroup.prototype = {
 
 			} else if (oInfo.containsDatatype(propRangeNameFull)) {
                 // range is a datatype
-				var p = new PropertyItem(oInfo.getDatatype(propRangeNameFull).getEquivalentXSDType(),
+				var p = new PropertyItem(oInfo.getDatatype(propRangeNameFull).getEquivalentXSDTypes(),
 						propRangeNameFull, propNameFull);
 				belprops.push(p);
 
             } else {
                 // range is a raw owl data type
-				var p = new PropertyItem(propRangeNameLocal,
-						propRangeNameFull, propNameFull);
+				var p = new PropertyItem([propRangeNameLocal], propRangeNameFull, propNameFull);
 				belprops.push(p);
 			}
 		}
@@ -3270,7 +3231,7 @@ SemanticNodeGroup.prototype = {
 		var nodeItems = this.getConnectingNodeItems(sNode);
 		for (j=0; j < nodeItems.length; j++) {
 			if (nodeItems[j].getOptionalMinus(sNode) != NodeItem.OPTIONAL_REVERSE) {
-				var uriValType = nodeItems[j].getValueTypeURI();
+				var uriValType = nodeItems[j].getRangeURI();
 				if (ret.indexOf(uriValType) < 0)
 					ret.push(uriValType);
 			}
@@ -3952,9 +3913,7 @@ SemanticNodeGroup.prototype = {
 			return null;
 		}
 
-
-		var prop = snode.addSubclassProperty(oProp.getName().getLocalName(),
-				                             oProp.getRange().getLocalName(),
+		var prop = snode.addSubclassProperty(oInfo.getPropertyRangeXSDTypes(oProp.getRange().getFullName()),
 				                             oProp.getRange().getFullName(),
 				                             oProp.getName().getFullName()
 				                             );

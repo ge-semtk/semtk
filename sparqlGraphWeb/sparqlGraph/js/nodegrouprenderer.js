@@ -832,12 +832,12 @@ define([	// properly require.config'ed
                 text.setAttribute('font-family', "Arial");
                 text.setAttribute('fill', foreground);
 
-                if (item instanceof PropertyItem && this.oInfo.containsDatatype(item.getValueTypeURI())) {
+                if (item instanceof PropertyItem && this.oInfo.containsDatatype(item.getRangeURI())) {
                     // keyname : Datatype (XSDtype)
-                    text.innerHTML = item.getKeyName() + " : " + this.oInfo.getDatatype(item.getValueTypeURI()).getNameStr(true) + " (" + item.getValueType() + ")";
+                    text.innerHTML = item.getKeyName() + " : " + this.oInfo.getDatatype(item.getRangeURI()).getNameStr(true) + " (" + item.getValueTypes().join(",") + ")";
                 } else {
                     // keyname : short type name
-                    text.innerHTML = item.getKeyName() + " : " + item.getValueType();
+                    text.innerHTML = item.getKeyName() + " : " + item.getValueTypes().join(",");
                 }
                 if (! (item instanceof NodeItem)) {
                     var retName = item.getBindingOrSparqlID();

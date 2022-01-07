@@ -784,22 +784,22 @@ public class OntologyInfo {
 	 * @return
 	 * @throws Exception
 	 */
-	public XSDSupportedType getPropertyRangeXSDType(String rangeUri) throws Exception {
-		XSDSupportedType xsdType = null;
+	public HashSet<XSDSupportedType> getPropertyRangeXSDTypes(String rangeUri) throws Exception {
+		HashSet<XSDSupportedType> ret = new HashSet<XSDSupportedType>();
 		if (this.containsDatatype(rangeUri)) {
 			// named datatype: get equivalent type
-			xsdType = this.getDatatype(rangeUri).getEquivalentXSDType();
+			ret = this.getDatatype(rangeUri).getEquivalentXSDTypes();
 		} else {
 			try {
 				// hope it is a regular owl type or something ending in #int, #date, etc.
-				xsdType = XSDSupportedType.getMatchingValue(new OntologyName(rangeUri).getLocalName());
+				ret.add(XSDSupportedType.getMatchingValue(new OntologyName(rangeUri).getLocalName()));
 			} catch (Exception e) {
 				
 				// leftovers are URI's.  This is slightly illogical.  Properties shouldn't point to objects.
-				xsdType = XSDSupportedType.NODE_URI;
+				ret.add(XSDSupportedType.NODE_URI);
 			}
 		}
-		return xsdType;
+		return ret;
 	}
 	
 	/**
@@ -1129,20 +1129,24 @@ public class OntologyInfo {
 	 */
 	private static String getDatatypeQuery(String graphName, String domain){
 
+		// SADL makes datatypes either owl:onDatatype or a union of objects w/o the onDatatype predicate (curious)
 		String retval = "PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
-				"PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> \n" +
-				"PREFIX testy:<http://testy#> \n" +
-				"PREFIX XMLSchema:<http://www.w3.org/2001/XMLSchema#> \n" +
-				"PREFIX generated:<http://semtk.research.ge.com/generated#> \n" +
-				"PREFIX owl:<http://www.w3.org/2002/07/owl#> \n" +
-				"SELECT DISTINCT ?dataType ?equivType \n" +
-				"		FROM <http://junit/GG2NQYY2E/200001934/both> \n" +
-				"WHERE { \n" +
-				"	?dataType rdf:type rdfs:Datatype . \n" +
-				getDomainFilterStatement("dataType", domain) + "\n" +
-				"   ?dataType owl:equivalentClass* ?e . \n" +
-				"   ?e owl:onDatatype ?equivType \n " +
-				"} ";
+                		"PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> \n" +
+						"PREFIX owl:<http://www.w3.org/2002/07/owl#> \n" +
+						"SELECT DISTINCT ?dataType ?equivType \n" +
+						"		FROM <http://junit/GG2NQYY2E/200001934/both> \n" +
+						"WHERE { \n" +
+						"	?dataType rdf:type rdfs:Datatype . \n" +
+						getDomainFilterStatement("dataType", domain) + "\n" +
+						"   ?dataType owl:equivalentClass* ?e . \n" +
+						"   { \n " +
+						"       ?e owl:onDatatype ?equivType \n " +
+						"   } UNION { \n " +
+						"       ?e owl:unionOf ?u . \n" +
+						"	    ?u rdf:rest* ?r . \n" +
+						"	    ?r rdf:first ?equivType . \n" +
+						"	} \n" +
+						"} ";
 		return retval;
 	}
 	
@@ -1156,12 +1160,18 @@ public class OntologyInfo {
 		
 		for (int i=0; i < dataTypeList.length; i++) {
 
-			if(this.containsClass(dataTypeList[i])) {
+			if (this.containsClass(dataTypeList[i])) {
 				throw new Exception("Error loading ontology.  Datatype URI is already a class: " + dataTypeList[i]);
+			
+			} else if (this.containsDatatype(dataTypeList[i])) {
+				// already exists: add additional equivalent types
+				this.getDatatype(dataTypeList[i]).addEquivalentType(equivTypeList[i]);
+				
+			} else {
+				// new datatype
+				OntologyDatatype d = new OntologyDatatype(dataTypeList[i], equivTypeList[i]);
+				this.addDatatype(d);
 			}
-		
-			OntologyDatatype d = new OntologyDatatype(dataTypeList[i], equivTypeList[i]);
-			this.addDatatype(d);
 		}
 		
 	}
@@ -2423,11 +2433,12 @@ public class OntologyInfo {
         
         // datatypeList
         for (String d : this.datatypeHash.keySet()) {
-        	String equivType = this.datatypeHash.get(d).getEquivalentType();
-        	JSONArray a = new JSONArray();
-        	a.add(Utility.prefixURI(d, prefixToIntHash));
-        	a.add(Utility.prefixURI(equivType, prefixToIntHash));
-        	datatypeList.add(a);
+        	for (String t : this.datatypeHash.get(d).getEquivalentTypes()) {
+	        	JSONArray a = new JSONArray();
+	        	a.add(Utility.prefixURI(d, prefixToIntHash));
+	        	a.add(Utility.prefixURI(t, prefixToIntHash));
+	        	datatypeList.add(a);
+        	}
         }
         
         for (String superName : this.subPropHash.keySet()) {
@@ -2558,9 +2569,15 @@ public class OntologyInfo {
         }
         
         this.loadTopLevelClasses(topLevelClassList);
-        this.loadDatatypes(	Utility.unPrefixJsonTableColumn((JSONArray)json.get("datatypeList"), 0, intToPrefixHash),
-							Utility.unPrefixJsonTableColumn((JSONArray)json.get("datatypeList"), 1, intToPrefixHash)     
-        					);
+        
+        // datatypeList is only version17 or later
+        JSONArray datatypeList = (JSONArray)json.get("datatypeList");
+        if (datatypeList != null) {
+	        this.loadDatatypes(	Utility.unPrefixJsonTableColumn((JSONArray)json.get("datatypeList"), 0, intToPrefixHash),
+								Utility.unPrefixJsonTableColumn((JSONArray)json.get("datatypeList"), 1, intToPrefixHash)     
+	        					);
+        }
+        
         this.loadSuperSubClasses(Utility.unPrefixJsonTableColumn((JSONArray)json.get("subClassSuperClassList"), 0, intToPrefixHash),
         						 Utility.unPrefixJsonTableColumn((JSONArray)json.get("subClassSuperClassList"), 1, intToPrefixHash)     
                                 );

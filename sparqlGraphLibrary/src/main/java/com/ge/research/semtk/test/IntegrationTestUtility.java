@@ -375,10 +375,10 @@ public class IntegrationTestUtility{
 		FdcServiceManager.cacheFdcConfig(TestGraph.getSei(), IntegrationTestUtility.getOntologyInfoClient());
 
 		// delete just to be sure
-		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroup("fdcSampleDistance");
-		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroup("fdcSampleAircraftLocation");
-		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroup("fdcSampleElevation");
-		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroup("fdcSampleElevation-STORE");
+		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroupIfExists("fdcSampleDistance");
+		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroupIfExists("fdcSampleAircraftLocation");
+		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroupIfExists("fdcSampleElevation");
+		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroupIfExists("fdcSampleElevation-STORE");
 
 		// load one nodegroup to store
 		FdcClient fdcClient = new FdcClient(FdcClientConfig.buildGetNodegroup("http://" + server + ":" + String.valueOf(port) + "/fdcSample/anything", "fdcSampleElevation"));

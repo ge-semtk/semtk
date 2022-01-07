@@ -189,7 +189,26 @@ public class NodeGroupStoreRestClient extends RestClient {
 		return retval;				
 	}
 	
-	public SimpleResultSet deleteStoredNodeGroup(String nodeGroupID) throws Exception{
+	/**
+	 * Delete nodegroup with no error if it doesn't exist, and no return value
+	 * @param nodeGroupID
+	 * @throws Exception
+	 */
+	public void deleteStoredNodeGroupIfExists(String nodeGroupID) throws Exception {
+		try {
+			deleteStoredNodeGroup(nodeGroupID);
+		} catch (DoesNotExistException e) {
+		}
+	}
+	
+	/**
+	 * 
+	 * @param nodeGroupID
+	 * @return
+	 * @throws DoesNotExistException - nodegroup doesn't exist
+	 * @throws Exception - other error in the REST call
+	 */
+	public SimpleResultSet deleteStoredNodeGroup(String nodeGroupID) throws DoesNotExistException, Exception{
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint("nodeGroupStore/deleteStoredNodeGroup");
@@ -198,6 +217,12 @@ public class NodeGroupStoreRestClient extends RestClient {
 		try{
 			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
 			retval.throwExceptionIfUnsuccessful();
+		} catch (Exception e) {
+			if (e.getMessage().contains("No stored item exists with id")) {
+				throw new DoesNotExistException(e.getMessage());
+			} else {
+				throw e;
+			}
 		}
 		finally{
 			// reset conf and parametersJSON
