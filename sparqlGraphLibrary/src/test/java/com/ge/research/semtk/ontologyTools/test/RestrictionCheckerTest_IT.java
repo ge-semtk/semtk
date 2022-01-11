@@ -25,7 +25,7 @@ public class RestrictionCheckerTest_IT {
 		TestGraph.clearGraph();
 		
 		// load Cardinal.sadl : the classes, restrictions, and instance data
-		TestGraph.uploadOwlResource(this, "Cardinal.owl");
+		TestGraph.uploadOwlResource(this, "Cardinality.owl");
 		
 		SparqlConnection conn = TestGraph.getSparqlConn();
 		OntologyInfo oInfo = new OntologyInfo(conn);
