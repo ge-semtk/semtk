@@ -468,7 +468,7 @@ public class OntologyInfoServiceRestController {
 					HeadersManager.setHeaders(headers);
 					
 					OntologyInfo oInfo = oInfoCache.get(conn);
-					RestrictionChecker checker = new RestrictionChecker(conn, oInfo);
+					RestrictionChecker checker = new RestrictionChecker(conn, oInfo, tracker, jobId, 0, 100);
 					Table violationTab = checker.checkCardinality();
 					rclient.execStoreTableResults(jobId, violationTab);
 					tracker.setJobSuccess(jobId);

@@ -408,7 +408,7 @@ public class JobTracker {
 	/**
 	 * Get job status message
 	 * @param jobId
-	 * @return message string
+	 * @return message string or "" if none.
 	 * @throws Exception if jobId can't be found 
 	 */
 	public String getJobStatusMessage(String jobId) throws AuthorizationException, Exception {
@@ -441,7 +441,8 @@ public class JobTracker {
 			if (! this.jobExists(jobId) ) {
 	    		throw new Exception(String.format("Can't find Job %s", jobId));
 	    	} else {
-	    		throw new Exception(String.format("Can't find status message for Job %s",  jobId));
+	    		// job is found but message is empty: return ""
+	    		return "";
 	    	}
 		} else {
 			this.throwExceptionIfNotOwner(endpoint, jobId);

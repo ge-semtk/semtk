@@ -1061,7 +1061,8 @@ define([	// properly require.config'ed
                 var summary = null;
                 if (msg.indexOf("special.id") > -1) {
                     summary = "Unknown special section: " + msg.split(":")[2];
-                } else if (msg.indexOf("Could not find nodegroup with id")) {
+                } else if (msg.indexOf("Could not find nodegroup with id") > -1) {
+                    // give a simple message for this common & likely problem
                     let lines = msg.split('<br>');
                     for (let l of lines) {
                         if (l.indexOf("rationale") > -1) {
@@ -1071,6 +1072,9 @@ define([	// properly require.config'ed
                             }
                         }
                     }
+                } else {
+                    // unknown problem: for now display the whole this_range
+                    summary = msg;
                 }
                 if (summary != null) {
                     let errorP = IIDXHelper.createElement("p", summary, undefined);

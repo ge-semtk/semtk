@@ -21,6 +21,7 @@ package com.ge.research.semtk.ontologyTools;
 import java.util.ArrayList;
 import java.util.HashSet;
 
+import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlToXLib.SparqlToXLibUtil;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
@@ -33,13 +34,27 @@ public class RestrictionChecker {
 	private SparqlConnection dataConn = null;
 	private OntologyInfo oInfo = null;
 	private Table cardinalityTable = null;
+	private JobTracker tracker = null;
+	private String jobId = null;
+	private int startPercent = 0;
+	private int endPercent = 100;
 
 	/**
-	 * T
+	 * This class checks restrictions outside of query and ingestion process.
+	 * e.g. cardinality is either impossible (e.g. min) or too expensive (e.g. max) to check during ingestion
+	 *                     and meaningless during a SELECT
+	 *                     
+	 * It may also re-run oinfo restrictions (more needed for SELECT and INSERT)
+	 * just to double-check nothing slipped by.
+	 * 
 	 * @param conn
 	 * @param oInfo
 	 */
 	public RestrictionChecker(SparqlConnection conn, OntologyInfo oInfo) throws Exception {
+		this(conn, oInfo, null, null, 0, 100);
+	}
+	
+	public RestrictionChecker(SparqlConnection conn, OntologyInfo oInfo, JobTracker tracker, String jobId, int percentStart, int percentEnd) throws Exception {
 		// conn with only the model : set data(0) to model(0)
 		this.modelConn = new SparqlConnection();
 		this.modelConn.setName("model");
@@ -60,9 +75,15 @@ public class RestrictionChecker {
 	}
 	
 	public Table checkCardinality() throws Exception {
+		int percent = this.startPercent;
 		
 		// get restrictions
+		if (this.tracker != null) {
+			this.tracker.setJobPercentComplete("Querying cardinality restrictions", percent);
+			percent += (this.endPercent - percent) / 10;
+		}
 		this.queryCardinalityRestrictions();
+		
 		
 		HashSet<String> COUNT_FUNC = new HashSet<String>();
 		COUNT_FUNC.add("COUNT");
@@ -71,6 +92,9 @@ public class RestrictionChecker {
 		
 		// run a query to check each restriction
 		for (int i=0; i < this.cardinalityTable.getNumRows(); i++) {
+			if (this.tracker != null) {
+				this.tracker.setJobPercentComplete("Checking cardinality restrictions", percent + (this.endPercent - percent) * (i / this.cardinalityTable.getNumRows()));
+			}
 			String className = this.cardinalityTable.getCell(i, 0);
 			String propName = this.cardinalityTable.getCell(i, 1);
 			String restriction = new OntologyName(this.cardinalityTable.getCell(i, 2).toLowerCase()).getLocalName();
