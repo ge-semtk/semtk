@@ -8,7 +8,6 @@ import org.junit.Test;
 import com.ge.research.semtk.ontologyTools.RestrictionChecker;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.sparqlX.FusekiSparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;

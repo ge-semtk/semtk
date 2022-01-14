@@ -37,6 +37,7 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.sparqlToXLib.SparqlToXLibUtil;
 import com.ge.research.semtk.sparqlX.QueryTimeoutException;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -237,6 +238,13 @@ public class OntologyInfo {
 		
 	}
 	
+	/**
+	 * TODO datatype restrictions are read in but not stored in the json.
+	 *      Probably needs a re-design so they are only read during ingestion
+	 *      into a OntologyRestrictions object instead of OntologyInfo
+	 * @param oDatatype
+	 * @throws Exception
+	 */
 	public void addDatatype(OntologyDatatype oDatatype) throws Exception {
 		String nameStr = oDatatype.getNameString(false);	// get the full name of the class and do not strip URI info.
 		
@@ -1113,8 +1121,8 @@ public class OntologyInfo {
 				       	"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
 				       	"select distinct ?x ?y from <" + graphName + "> where { " +
 				       	"?x rdfs:subClassOf ?y " +
-				       	getDomainFilterStatement("x", domain) +
-				       	getDomainFilterStatement("y", domain) + 
+				       	genDomainFilterStatement("x", domain) +
+				       	genDomainFilterStatement("y", domain) + 
 				        " filter (?x != ?y). } order by ?x";
 		
 		return retval;
@@ -1133,11 +1141,11 @@ public class OntologyInfo {
 		String retval = "PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
                 		"PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> \n" +
 						"PREFIX owl:<http://www.w3.org/2002/07/owl#> \n" +
-						"SELECT DISTINCT ?dataType ?equivType \n" +
+						"SELECT DISTINCT ?dataType ?equivType ?r_pred ?r_obj \n" +
 						"		FROM <http://junit/GG2NQYY2E/200001934/both> \n" +
 						"WHERE { \n" +
 						"	?dataType rdf:type rdfs:Datatype . \n" +
-						getDomainFilterStatement("dataType", domain) + "\n" +
+						genDomainFilterStatement("dataType", domain) + "\n" +
 						"   ?dataType owl:equivalentClass* ?e . \n" +
 						"   { \n " +
 						"       ?e owl:onDatatype ?equivType \n " +
@@ -1146,12 +1154,18 @@ public class OntologyInfo {
 						"	    ?u rdf:rest* ?r . \n" +
 						"	    ?r rdf:first ?equivType . \n" +
 						"	} \n" +
+						"   optional {  \n" +
+						"     ?e owl:withRestrictions ?rlist . \n" +
+						"     ?rlist rdf:rest* ?r2 . \n" +
+						"     ?r2 rdf:first ?restriction . \n" +
+						"     ?restriction ?r_pred ?r_obj . \n" +
+						"   } \n" +
 						"} ";
 		return retval;
 	}
 	
 	/**
-	 * 
+	 * TODO: this doesn't do anything with the restriction columns from the DatatypeQuery
 	 * @param dataTypeList - the datatype uri
 	 * @param equivTypeList - the equivalent datatype (e.g. XMLSchema:int)
 	 * @throws Exception
@@ -1176,29 +1190,12 @@ public class OntologyInfo {
 		
 	}
 
-	private static String getDomainFilterStatement(String varName, String domain) {
-		return getDomainFilterStatement(varName, domain, "");
+	private static String genDomainFilterStatement(String varName, String domain) {
+		return SparqlToXLibUtil.genDomainFilterStatement(varName, domain, "");
 	}
 	
-	/**
-	 * Generate the domain filter clause.  If none (the new normal) filter out blank nodes.
-	 * @param varName
-	 * @param domain
-	 * @param clause
-	 * @return
-	 */
-	private static String getDomainFilterStatement(String varName, String domain, String clause) {
-		if (domain == null || domain.isEmpty()) {
-			// remove blank nodes
-			String ret = "filter (!regex(str(?" + varName + "),'^(nodeID://|_:)') " + clause + ") ";
-			return ret;
-			
-		} else {
-			// old-fashioned domain filter
-			String ret = "filter (regex(str(?" + varName + "),'^" + domain + "') " + clause + ") ";
-			return ret;
-			
-		}
+	private static String genDomainFilterStatement(String varName, String domain, String clause) {
+		return SparqlToXLibUtil.genDomainFilterStatement(varName, domain, clause);
 	}
 	
 	/**
@@ -1212,8 +1209,8 @@ public class OntologyInfo {
 				       	"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
 				       	"select distinct ?subProp ?superProp from <" + graphName + "> where { " +
 				       	"?subProp rdfs:subPropertyOf ?superProp " +
-				       	getDomainFilterStatement("subProp", domain) +
-				       	getDomainFilterStatement("superProp", domain) + 
+				       	genDomainFilterStatement("subProp", domain) +
+				       	genDomainFilterStatement("superProp", domain) + 
 				        " filter (?subProp != ?superProp). } order by ?subProp";
 		
 		return retval;
@@ -1293,10 +1290,10 @@ public class OntologyInfo {
 		       			"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " + 
 		       			"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
 		       			"select distinct ?Class from <" + graphName + "> { " +
-		       			"?Class rdf:type owl:Class " + getDomainFilterStatement("Class", domain) + ". " +
+		       			"?Class rdf:type owl:Class " + genDomainFilterStatement("Class", domain) + ". " +
 		       			"MINUS " +
 		       			"{?Class rdfs:subClassOf ?Sup " +
-		       			getDomainFilterStatement("Sup", domain) +
+		       			genDomainFilterStatement("Sup", domain) +
 		       			"   filter (?Class != ?Sup).} }";
 		
 		return retval; 
@@ -1322,7 +1319,7 @@ public class OntologyInfo {
 	 **/
 	private static String getEnumQuery(String graphName, String domain){
 		String retval = "select ?Class ?EnumVal from <" + graphName + "> where { " +
-				"  ?Class <http://www.w3.org/2002/07/owl#equivalentClass> ?ec " + getDomainFilterStatement("Class", domain) +". " + 
+				"  ?Class <http://www.w3.org/2002/07/owl#equivalentClass> ?ec " + genDomainFilterStatement("Class", domain) +". " + 
 				"  ?ec <http://www.w3.org/2002/07/owl#oneOf> ?c . " +
 				"  ?c <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>*/<http://www.w3.org/1999/02/22-rdf-syntax-ns#first> ?EnumVal. " +
 				"}";
@@ -1363,7 +1360,7 @@ public class OntologyInfo {
 				"prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" + 
 				"\n" + 
 				"select distinct ?Elem ?Label from <" + graphName + "> where {\n" + 
-				" ?Elem a ?p " + getDomainFilterStatement("Elem", domain) + ".\r\n" + 
+				" ?Elem a ?p " + genDomainFilterStatement("Elem", domain) + ".\r\n" + 
 				" VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}.\n" + 
 				"    optional { ?Elem rdfs:label ?Label. }\n" + 
 				"}";
@@ -1395,7 +1392,7 @@ public class OntologyInfo {
 				"prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" + 
 				"\n" + 
 				"select distinct ?Elem ?Comment from <" + graphName + "> where { \n" + 
-				" ?Elem a ?p " + getDomainFilterStatement("Elem", domain) + ". \n" + 
+				" ?Elem a ?p " + genDomainFilterStatement("Elem", domain) + ". \n" + 
 				" VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}. \n" + 
 				"    optional { ?Elem rdfs:comment ?Comment. }\n" +
 				"}";
@@ -1440,53 +1437,53 @@ public class OntologyInfo {
 						"PREFIX  list: <http://jena.hpl.hp.com/ARQ/list#> " +
 						"select distinct ?Class ?Property ?Range from <" + graphName + "> where { " + 
 						"{" +
-							"?Property rdfs:range ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
-							"OPTIONAL { ?Property rdfs:domain ?Class " + getDomainFilterStatement("Class", domain) + ". }\n" + 
+							"?Property rdfs:range ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
+							"OPTIONAL { ?Property rdfs:domain ?Class " + genDomainFilterStatement("Class", domain) + ". }\n" + 
 						"} UNION { \n" +
-							"?Property rdfs:domain ?Class " + getDomainFilterStatement("Class", domain) + ". \n" + 
-							"OPTIONAL { ?Property rdfs:range ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + "} \n" +
+							"?Property rdfs:domain ?Class " + genDomainFilterStatement("Class", domain) + ". \n" + 
+							"OPTIONAL { ?Property rdfs:range ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + "} \n" +
 						"} UNION { \n" +
 							"?Property rdfs:domain ?x. \n" +
 							"?x owl:unionOf ?y. \n" +
 							buildListMemberSPARQL("?y", "?Class", "filter regex(str(?Class),'^" + domain + "') \n") +
 							//"?y list:member ?Class filter regex(str(?Class),'^" + domain + "'). " +
-							"?Property rdfs:range ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
+							"?Property rdfs:range ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
 						"} UNION { \n" +
-							"?Property rdfs:domain ?Class " + getDomainFilterStatement("Class", domain) + ". \n" +
+							"?Property rdfs:domain ?Class " + genDomainFilterStatement("Class", domain) + ". \n" +
 							"?Property rdfs:range ?x.  \n" +
 							"?x owl:unionOf ?y. \n" +
-					        buildListMemberSPARQL("?y", "?Range", getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " \n"  + 
+					        buildListMemberSPARQL("?y", "?Range", genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " \n"  + 
 						"} UNION { \n" +
 							"?Property rdfs:domain ?x. \n" +
 							"?x owl:unionOf ?y. \n" +
-							buildListMemberSPARQL("?y", "?Class", getDomainFilterStatement("Class", domain)) + " .\n" +
+							buildListMemberSPARQL("?y", "?Class", genDomainFilterStatement("Class", domain)) + " .\n" +
 							"?Property rdfs:range ?x1. \n" +
 							"?x1 owl:unionOf ?y1. \n" +
-					        buildListMemberSPARQL("?y1", "?Range", getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + 
+					        buildListMemberSPARQL("?y1", "?Range", genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + 
 						"} UNION { \n" +
-							"?Class rdfs:subClassOf ?x " + getDomainFilterStatement("Class", domain) + ". \n" +
+							"?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain) + ". \n" +
 							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. \n" +
-							"?x owl:onClass ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
+							"?x owl:onClass ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
 						"} UNION { \n" +
-							"?Class rdfs:subClassOf ?x " + getDomainFilterStatement("Class", domain) + ". \n" +
+							"?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain) + ". \n" +
 							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. ?x owl:onClass ?y. \n" +
 							"?y owl:unionOf ?z. \n" +
-					        buildListMemberSPARQL("?z", "?Range", getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " .\n" + 
+					        buildListMemberSPARQL("?z", "?Range", genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " .\n" + 
 				        "} UNION { \n" +
 							"?x1 owl:unionOf ?x2. \n" + 
-					        buildListMemberSPARQL("?x2", "?Class", getDomainFilterStatement("Class", domain) ) + " .\n" +
+					        buildListMemberSPARQL("?x2", "?Class", genDomainFilterStatement("Class", domain) ) + " .\n" +
 					        "?x1 rdfs:subClassOf ?x . \n" +
 							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. ?x owl:onClass ?y. \n" +
 					        "?y owl:unionOf ?z. \n" +
-					        buildListMemberSPARQL("?z", "?Range", getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " .\n" + 
+					        buildListMemberSPARQL("?z", "?Range", genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " .\n" + 
 						"} UNION { \n" +
-					        "?Class rdfs:subClassOf ?x " + getDomainFilterStatement("Class", domain) + ". \n" +
+					        "?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain) + ". \n" +
 							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. \n" +
-					        "?x owl:someValuesFrom ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
+					        "?x owl:someValuesFrom ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
 						"} UNION { \n" +
-					        "?Class rdfs:subClassOf ?x " + getDomainFilterStatement("Class", domain) + ". \n" +
+					        "?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain) + ". \n" +
 							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. \n" +
-					        "?x owl:allValuesFrom ?Range " + getDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
+					        "?x owl:allValuesFrom ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
 						"} \n }";
 		return retval;
 	}

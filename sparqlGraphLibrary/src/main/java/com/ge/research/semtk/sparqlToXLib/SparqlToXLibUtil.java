@@ -334,6 +334,63 @@ public class SparqlToXLibUtil {
 	}
 	
 	/**
+	 * Query all distinct ?dataType ?equivType ?r_pred ?r_obj
+	 * Note: does not handle difference due to Domain, since we could not make SADL generate this
+	 * @param graphName 
+	 * @param domain
+	 * @return
+	 */
+	public static String generateGetDatatypeRestriction(String graphName, String domain){
+
+		// SADL makes datatypes either owl:onDatatype or a union of objects w/o the onDatatype predicate (curious)
+		String retval = "PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
+                		"PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> \n" +
+						"PREFIX owl:<http://www.w3.org/2002/07/owl#> \n" +
+						"SELECT DISTINCT ?dataType ?equivType ?r_pred ?r_obj \n" +
+						"		FROM <http://junit/GG2NQYY2E/200001934/both> \n" +
+						"WHERE { \n" +
+						"	?dataType rdf:type rdfs:Datatype . \n" +
+						genDomainFilterStatement("dataType", domain, "") + "\n" +
+						"   ?dataType owl:equivalentClass* ?e . \n" +
+						"   { \n " +
+						"       ?e owl:onDatatype ?equivType \n " +
+						"   } UNION { \n " +
+						"       ?e owl:unionOf ?u . \n" +
+						"	    ?u rdf:rest* ?r . \n" +
+						"	    ?r rdf:first ?equivType . \n" +
+						"	} \n" +
+						"   optional {  \n" +
+						"     ?e owl:withRestrictions ?rlist . \n" +
+						"     ?rlist rdf:rest* ?r2 . \n" +
+						"     ?r2 rdf:first ?restriction . \n" +
+						"     ?restriction ?r_pred ?r_obj . \n" +
+						"   } \n" +
+						"} ";
+		return retval;
+	}
+	
+	/**
+	 * Generate the domain filter clause.  If none (the new normal) filter out blank nodes.
+	 * @param varName
+	 * @param domain
+	 * @param clause
+	 * @return
+	 */
+	public static String genDomainFilterStatement(String varName, String domain, String clause) {
+		if (domain == null || domain.isEmpty()) {
+			// remove blank nodes
+			String ret = "filter (!regex(str(?" + varName + "),'^(nodeID://|_:)') " + clause + ") ";
+			return ret;
+			
+		} else {
+			// old-fashioned domain filter
+			String ret = "filter (regex(str(?" + varName + "),'^" + domain + "') " + clause + ") ";
+			return ret;
+			
+		}
+	}
+	
+	/**
 	 * 
 	 * @param conn - data connections
 	 * @param oInfo

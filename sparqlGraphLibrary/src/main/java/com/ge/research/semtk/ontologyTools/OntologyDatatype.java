@@ -18,7 +18,10 @@
 
 package com.ge.research.semtk.ontologyTools;
 
+import java.util.HashMap;
 import java.util.HashSet;
+
+import org.json.simple.JSONArray;
 
 import com.ge.research.semtk.sparqlX.XSDSupportedType;
 
@@ -37,6 +40,7 @@ public class OntologyDatatype extends AnnotatableElement{
 	private OntologyName  name = null;
 	private HashSet<XSDSupportedType> xsdTypes = new HashSet<XSDSupportedType>();
 	private HashSet<String> strTypes = new HashSet<String>();
+	private HashMap<String, OntologyRestriction> restrictions = new HashMap<String, OntologyRestriction>();   // HashMap instead of HashSet to prevent duplicates
 
 	public OntologyDatatype(String name, String equivalentType) throws Exception {
 		this.name  = new OntologyName(name);
@@ -56,10 +60,26 @@ public class OntologyDatatype extends AnnotatableElement{
 		}
 	}
 	
+	/**
+	 * Adds equivalentType.  No-op if the type is already added.
+	 * @param equivalentType
+	 * @throws Exception
+	 */
 	public void addEquivalentType(String equivalentType) throws Exception {
 		this.strTypes.add(equivalentType);
 		OntologyName typeName = new OntologyName(equivalentType);
 		this.xsdTypes.add(XSDSupportedType.getMatchingValue(typeName.getLocalName()));
+	}
+	
+	/**
+	 * Adds a restriction.  No-op if it already is added.
+	 * @param pred
+	 * @param obj
+	 */
+	public void addRestriction(String pred, String obj) {
+		OntologyRestriction restriction = new OntologyRestriction(pred, obj);
+		
+		this.restrictions.put(restriction.getUniqueKey(), restriction);
 	}
 	
 	public HashSet<String> getEquivalentTypes() {
@@ -68,5 +88,9 @@ public class OntologyDatatype extends AnnotatableElement{
 	
 	public HashSet<XSDSupportedType> getEquivalentXSDTypes() throws Exception {
 		return this.xsdTypes;
+	}
+	
+	public JSONArray generateJSONRows() {
+		return null;  // PEC HERE
 	}
 }

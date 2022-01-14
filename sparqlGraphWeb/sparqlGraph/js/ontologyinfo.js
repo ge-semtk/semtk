@@ -1755,6 +1755,24 @@ OntologyAnnotation.prototype = {
     	return ret;
     },
 };
+
+/*
+ * OntologyRestriction
+ * (Only enough code to store them in oinfo)
+ */
+
+ var OntologyRestriction = function(pred, obj) {
+     this.pred = pred;
+     this.obj = obj;
+ };
+
+ OntologyRestriction.prototype = {
+
+     getUniqueKey : function () {
+         return pred + "," + obj;
+     },
+ };
+
 /*
  * OntologyDatatype
  */
@@ -1765,6 +1783,7 @@ var OntologyDatatype = function(name, equivalentType) {
     this.strTypes = [];
     this.addEquivalentType(equivalentType);
     this.annotation = new OntologyAnnotation();
+    this.restrictions = {};
 };
 
 OntologyDatatype.prototype = {
@@ -1799,11 +1818,26 @@ OntologyDatatype.prototype = {
         return this.xsdTypes;
     },
 
+    /*
+     * Adds equivalentType.  No-op if type already exists
+     */
     addEquivalentType : function(fullURI) {
         if (!(fullURI in this.strTypes)) {
             this.strTypes.push(fullURI);
             this.xsdTypes.push((new OntologyName(fullURI)).getLocalName());
         }
+    },
+
+    addRestriction : function(pred, obj) {
+        var restriction = new OntologyRestriction(pred, obj);
+        var key = restriction.getUniqueKey();
+        if (! key in this.restrictions) {
+            this.restrictions[key] = restriction;
+        }
+    },
+
+    generateJSONRows : function() {
+        // Here
     }
 };
 
