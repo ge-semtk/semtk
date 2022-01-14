@@ -26,3 +26,5 @@ sparqlGraphIngestionService/hs_err_pid23408.log
 ont-policy.rdf
 SadlBuiltinFunctions.sadl
 SadlImplicitModel.sadl
+SadlBuiltinFunctions.owl
+SadlImplicitModel.owl
