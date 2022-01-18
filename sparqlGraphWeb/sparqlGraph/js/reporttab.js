@@ -664,7 +664,10 @@ define([	// properly require.config'ed
                 this.reportDiv.innerHTML = "";
             },
 
+            // Download the report results
             doDownloadResults : function() {
+
+                // switch over to display the static elements and hide the dynamic elements
                 for (var e of this.staticElements) {
                     e.style.display=null;
                 }
@@ -674,6 +677,7 @@ define([	// properly require.config'ed
 
                 IIDXHelper.downloadFile(this.reportDiv.innerHTML, "report.html", "text/html");
 
+                // restore the display elements
                 for (var e of this.staticElements) {
                     e.style.display="none";
                 }
@@ -682,6 +686,7 @@ define([	// properly require.config'ed
                 }
             },
 
+            // Add a display/button bar to the reportDiv
             addReportButtons : function() {
                 var table = document.createElement("table");
                 table.classList = [];
@@ -714,6 +719,7 @@ define([	// properly require.config'ed
 
                 this.reportDiv.appendChild(table);
 
+                // this will be set to display:none during doDownloadResults
                 this.dynamicElements.push(table);
             },
 
@@ -869,6 +875,29 @@ define([	// properly require.config'ed
                         this.failureCallback(ngDiv, e);
                     }
 
+                } else if (section["table_test_row_count"] != undefined) {
+                    var nodegroup = section["table_test_row_count"]["nodegroup"];
+
+                    let ngDiv = IIDXHelper.createElement("div", "", undefined);
+                    ngDiv.appendChild(IIDXHelper.createElement("div", "", "report-wait-spinner"));
+                    div.appendChild(ngDiv);
+
+                    try {
+                        if (!nodegroup) throw new Error("Report section['count'] is missing field 'nodegroup'");
+
+                        var ngExecClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url);
+                        var tableTestRowCountCallback = MsiClientNodeGroupExec.buildFullJsonCallback(this.tableTestRowCountGetTableCallback.bind(this, ngDiv, section, level),
+                                                                                         this.failureCallback.bind(this, ngDiv),
+                                                                                         this.statusCallback.bind(this, ngDiv),
+                                                                                         this.checkForCancelCallback.bind(this, ngDiv),
+                                                                                         this.g.service.status.url,
+                                                                                         this.g.service.results.url);
+                        ngExecClient.execAsyncDispatchSelectById(nodegroup, this.conn, null, null, tableTestRowCountCallback, this.failureCallback.bind(this, ngDiv));
+
+                    } catch (e) {
+                        this.failureCallback(div, e)
+        			}
+
                 } else if (section["count"] != undefined) {
                     var nodegroup = section["count"]["nodegroup"];
 
@@ -962,6 +991,35 @@ define([	// properly require.config'ed
                 this.saveDynamicStaticPair(dynamicDiv, staticDiv);
 
                 plotter.addPlotToDiv(dynamicDiv, tableRes, staticImage);
+                this.sectionThreadDone();
+            },
+
+            //
+            tableTestRowCountGetTableCallback : function(div, sectionJson, level, tableRes) {
+                var tableTestRowCountJson = sectionJson["table_test_row_count"];
+                div.innerHTML="";
+                var count = tableRes.tableGetRowCount();
+                var success_rows = tableTestRowCountJson.success_rows;
+                if (count == success_rows) {
+                    // DUPLICATE CODE
+                    div.appendChild(IIDXHelper.createElement("span", "\u2705 ", className="success-icon"));
+                    div.appendChild(IIDXHelper.createElement("span", success_rows + " found."));
+
+                } else {
+                    div.appendChild(IIDXHelper.createElement("span", "\u26d4 ", className="failure-icon"));
+                    div.appendChild(IIDXHelper.createElement("span", "Found " + count  + (success_rows==0 ? (" failures") : (" Expecting " + success_rows))));
+
+                    var subLevel = level + 1;
+                    var subDiv = IIDXHelper.createElement("div", "", "report-div-level-" + subLevel);
+                    div.appendChild(subDiv);
+
+                    // required: header DUPLICATE CODE
+                    var header = "Failed: " + (sectionJson["header"] || "<No Header Specified>");
+                    let h = IIDXHelper.createElement("h" + level, header, "report-h" + subLevel);
+                    subDiv.appendChild(h);
+                    this.addTableResult(subDiv, tableRes);
+                }
+
                 this.sectionThreadDone();
             },
 
@@ -1059,6 +1117,12 @@ define([	// properly require.config'ed
 
             // designate a pair of elements one for display interactively (dynamic)
             // and one for download (static)
+            //
+            // the strategy for downloading a report is to have two copies of most things
+            // one is dynamic (filter columns, interact with graph, etc)
+            // the other is a static image
+            // The static versions have {display: "none"} most of the time
+            // Downloading report results swaps the display values, downloads, and puts them back.
             saveDynamicStaticPair : function(dynamicElem, staticElem) {
                 this.dynamicElements.push(dynamicElem);
                 staticElem.style.display="none";

@@ -472,6 +472,10 @@ define([	// properly require.config'ed   bootstrap-modal
 				return ret;
 			},
 
+            tableGetRowCount : function () {
+                return this.getTable().rows.length;
+            },
+
 			tableGetRows : function () {
 				var table = this.getTable();
 
