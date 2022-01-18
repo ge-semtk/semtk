@@ -73,6 +73,15 @@ define([	// properly require.config'ed
             this.initEditorDiv();
             this.initReportDiv();
 
+            this.threadCounter = 0;   // how many threads are running
+
+            // some elements will have two versions, one each list
+            this.staticElements = [];
+            this.dynamicElements = [];
+
+            this.downloadReportButton = null;
+            this.statusDiv = null;
+
         };
 
         ReportTab.CSS = `
@@ -125,6 +134,7 @@ define([	// properly require.config'ed
         .report-table th {
           background-color: var(--main-dark);
           font-weight: bold;
+          color: var(--white);
         }
         .report-table td {
           background-color: white;
@@ -259,6 +269,7 @@ define([	// properly require.config'ed
                 span.innerHTML = connHTML;
             },
 
+
             initToolForm : function() {
                 var table = document.createElement("table");
                 table.classList = [];
@@ -346,7 +357,7 @@ define([	// properly require.config'ed
                 IIDXHelper.appendSpace(group1);
                 group1.appendChild(IIDXHelper.createIconButton("icon-cloud-upload", this.doSaveToStore.bind(this), ["btn"], undefined, "Save", "Save to cloud storage"));
                 IIDXHelper.appendSpace(group1);
-                group1.appendChild(IIDXHelper.createIconButton("icon-save", this.doDownloadReport.bind(this), ["btn"], undefined, "Download", "Save to disk"));
+                group1.appendChild(IIDXHelper.createIconButton("icon-save", this.doDownloadReport.bind(this), ["btn"], undefined, "Download", "Download report definition JSON"));
                 IIDXHelper.appendSpace(group1);
                 group1.appendChild(IIDXHelper.createIconButton("icon-info-sign",
                                     function() {
@@ -651,7 +662,59 @@ define([	// properly require.config'ed
 
             initReportDiv : function() {
                 this.reportDiv.innerHTML = "";
+            },
 
+            doDownloadResults : function() {
+                for (var e of this.staticElements) {
+                    e.style.display=null;
+                }
+                for (var e of this.dynamicElements) {
+                    e.style.display="none";
+                }
+
+                IIDXHelper.downloadFile(this.reportDiv.innerHTML, "report.html", "text/html");
+
+                for (var e of this.staticElements) {
+                    e.style.display="none";
+                }
+                for (var e of this.dynamicElements) {
+                    e.style.display=null;
+                }
+            },
+
+            addReportButtons : function() {
+                var table = document.createElement("table");
+                table.classList = [];
+                table.style.width="100%";
+                var tr = document.createElement("tr");
+                table.appendChild(tr);
+                this.toolForm.appendChild(table);
+
+                // left
+                td = document.createElement("td");
+                tr.appendChild(td);
+                // unused
+                this.statusDiv = document.createElement("div");
+                this.statusDiv.style.width="100%";
+                this.statusDiv.id = "rt_statusDiv";
+                td.appendChild(this.statusDiv);
+                td.align="left";
+
+                // center
+
+                // right
+                td = document.createElement("td");
+                td.align="right";
+                td.style.width="35%";
+                tr.appendChild(td);
+
+                this.downloadReportButton = IIDXHelper.createIconButton("icon-save", this.doDownloadResults.bind(this), ["btn", "btn-primary"], undefined, "Download", "Download report results html");
+                this.downloadReportButton.disabled = true;
+                td.appendChild(this.downloadReportButton);
+
+                this.reportDiv.appendChild(table);
+
+                this.dynamicElements.push(table);
             },
 
             appendStyles : function() {
@@ -665,11 +728,14 @@ define([	// properly require.config'ed
                 this.initReportDiv();
                 this.appendStyles();
 
+                this.addReportButtons();
+
                 var p = IIDXHelper.createElement("p", report["title"], "report-title");
                 this.reportDiv.appendChild(p);
 
                 this.addDescription(this.reportDiv, report["description"]);
 
+                this.sectionThreadsReset()
                 if (report.hasOwnProperty("sections")) {
                     for (var section of report["sections"]) {
                         this.reportDiv.appendChild(this.generateSection(section, 1));
@@ -677,9 +743,49 @@ define([	// properly require.config'ed
                 }
             },
 
-            generateSection : function(section, level) {
+            // call this before starting to draw a report
+            sectionThreadsReset : function() {
+                this.threadCounter = 0;
+            },
 
-                var div = IIDXHelper.createElement("div", "", "report-div-level-" + level);
+            // section callback should call this to free up a thread
+            sectionThreadNew : function() {
+                this.threadCounter += 1;
+                if (this.threadCounter == 1) {
+                    document.body.style.cursor='wait';
+
+                    this.downloadReportButton.disabled = true;
+                }
+            },
+
+            // section callback should call this to free up a thread
+            sectionThreadDone : function() {
+                this.threadCounter -= 1;
+
+                if (this.threadCounter == 0) {
+                    document.body.style.cursor='default';
+                    this.downloadReportButton.disabled = null;
+                }
+            },
+
+            generateSection : function(section, level, optDivWaiting) {
+
+                // -------- control threading --------
+                // not positive this is needed, but seems bad to send dozens of large queries to fuseki
+                // need to make sure every callback calls sectionThreadDone() or else this will go wrong
+
+                // create div first time only
+                var div = optDivWaiting ? optDivWaiting : IIDXHelper.createElement("div", "", "report-div-level-" + level);
+
+                if(this.threadCounter >= 3) {
+                    //wait then try again
+                    setTimeout(this.generateSection.bind(this,section,level,div), 500);
+                    //return an empty div
+                    // when thread is available it will get it's header, probably a spinner, then results
+                    return div;
+                }
+                this.sectionThreadNew();
+                // -------- end control threading --------
 
                 // required: header
                 var header = section["header"] || "<No Header Specified>"
@@ -703,7 +809,7 @@ define([	// properly require.config'ed
                             var jsonBlobCallback = MsiClientOntologyInfo.buildPredicateStatsCallback(this.specialClassCountCallback.bind(this, spDiv),
                                                                                                 this.failureCallback.bind(this, spDiv),
                                                                                                 this.statusCallback.bind(this, spDiv),
-                                                                                                this.checkForCallback.bind(this, spDiv));
+                                                                                                this.checkForCancelCallback.bind(this, spDiv));
                             client.execGetPredicateStats(this.conn, jsonBlobCallback);
 
                         } else if (id == "cardinality") {
@@ -711,7 +817,7 @@ define([	// properly require.config'ed
                             var tableCallback = MsiClientOntologyInfo.buildCardinalityViolationsCallback(this.cardinalityGetTableCallback.bind(this, spDiv),
                                                                                                 this.failureCallback.bind(this, spDiv),
                                                                                                 this.statusCallback.bind(this, spDiv),
-                                                                                                this.checkForCallback.bind(this, spDiv));
+                                                                                                this.checkForCancelCallback.bind(this, spDiv));
                             client.execGetCardinalityViolations(this.conn, tableCallback);
                         } else {
                             throw new Error("Report 'special.id' has unknown value value: " + id);
@@ -735,7 +841,7 @@ define([	// properly require.config'ed
                         if (! plotId) throw new Error("Report section['plot'] is missing field 'plotname'");
 
                         var ngStoreClient = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
-                        ngStoreClient.getStoredItemByIdToStr(nodegroup, this.plotGetNgCallback.bind(this, ngDiv, plotId, level));
+                        ngStoreClient.getStoredItemByIdToStr(nodegroup, MsiClientNodeGroupStore.TYPE_NODEGROUP, this.plotGetNgCallback.bind(this, ngDiv, plotId, level));
 
                     } catch (e) {
                         this.failureCallback(ngDiv, e)
@@ -755,7 +861,7 @@ define([	// properly require.config'ed
                         var tableCallback = MsiClientNodeGroupExec.buildFullJsonCallback(this.tableGetTableCallback.bind(this, ngDiv),
                                                                                          this.failureCallback.bind(this, ngDiv),
                                                                                          this.statusCallback.bind(this, ngDiv),
-                                                                                         this.checkForCallback.bind(this, ngDiv),
+                                                                                         this.checkForCancelCallback.bind(this, ngDiv),
                                                                                          this.g.service.status.url,
                                                                                          this.g.service.results.url);
                         ngExecClient.execAsyncDispatchSelectById(nodegroup, this.conn, null, null, tableCallback, this.failureCallback.bind(this, ngDiv));
@@ -777,7 +883,7 @@ define([	// properly require.config'ed
                         var countCallback = MsiClientNodeGroupExec.buildFullJsonCallback(this.countGetTableCallback.bind(this, ngDiv, section["count"], level),
                                                                                          this.failureCallback.bind(this, ngDiv),
                                                                                          this.statusCallback.bind(this, ngDiv),
-                                                                                         this.checkForCallback.bind(this, ngDiv),
+                                                                                         this.checkForCancelCallback.bind(this, ngDiv),
                                                                                          this.g.service.status.url,
                                                                                          this.g.service.results.url);
                         ngExecClient.execAsyncDispatchCountById(nodegroup, this.conn, null, null, countCallback, this.failureCallback.bind(this, ngDiv));
@@ -799,7 +905,7 @@ define([	// properly require.config'ed
                         var graphCallback = MsiClientNodeGroupExec.buildJsonLdCallback(this.graphGetGraphCallback.bind(this, ngDiv),
                                                                                          this.failureCallback.bind(this, ngDiv),
                                                                                          this.statusCallback.bind(this, ngDiv),
-                                                                                         this.checkForCallback.bind(this, ngDiv),
+                                                                                         this.checkForCancelCallback.bind(this, ngDiv),
                                                                                          this.g.service.status.url,
                                                                                          this.g.service.results.url);
                         ngExecClient.execAsyncDispatchConstructById(nodegroup, this.conn, null, null, graphCallback, this.failureCallback.bind(this, ngDiv));
@@ -837,7 +943,7 @@ define([	// properly require.config'ed
                 var jsonCallback = MsiClientNodeGroupExec.buildFullJsonCallback(this.plotGetTableCallback.bind(this, div, plotter),
                                                                                  this.failureCallback.bind(this, div),
                                                                                  this.statusCallback.bind(this, div),
-                                                                                 this.checkForCallback.bind(this.div),
+                                                                                 this.checkForCancelCallback.bind(this.div),
                                                                                  this.g.service.status.url,
                                                                                  this.g.service.results.url);
                 ngExecClient.execAsyncDispatchSelectFromNodeGroup(ng, this.conn, null, null, jsonCallback, this.failureCallback.bind(this, div));
@@ -845,7 +951,18 @@ define([	// properly require.config'ed
 
             plotGetTableCallback : function(div, plotter, tableRes) {
                 div.innerHTML="";
-                plotter.addPlotToDiv(div, tableRes);
+
+                // set up two divs: dynamic and static
+                var dynamicDiv = document.createElement("div");
+                div.appendChild(dynamicDiv);
+                var staticDiv = document.createElement("div");
+                div.appendChild(staticDiv);
+                var staticImage = document.createElement("img");
+                staticDiv.appendChild(staticImage);
+                this.saveDynamicStaticPair(dynamicDiv, staticDiv);
+
+                plotter.addPlotToDiv(dynamicDiv, tableRes, staticImage);
+                this.sectionThreadDone();
             },
 
             countGetTableCallback : function(div, countJson, level, tableRes) {
@@ -879,6 +996,7 @@ define([	// properly require.config'ed
                             // use format to print count, or just a simple one if none
                             var fmt = this_range["format"] || "count: {0}";
                             div.appendChild(IIDXHelper.createElement("span", this.format(fmt, count)));
+                            this.sectionThreadDone();
 
                            // do sections
                            if (this_range["sections"] != undefined) {
@@ -917,15 +1035,16 @@ define([	// properly require.config'ed
                     }
                 }
 
-                var tableElem = IIDXHelper.buildDatagridInDiv( div,
-    								           function() { return [{sTitle: "class", sType: "string", filter: true},
-                                                                    {sTitle: "count", sType: "numeric", filter: true}]; },
-								               function() { return rows; },
-	                                           undefined,
-                                               [[1,'desc']]
+                var tableElem = this.addTable( div,
+    								           [{sTitle: "class", sType: "string", filter: true},
+                                                {sTitle: "count", sType: "numeric", filter: true}],
+								               rows,
+                                               1,
+                                               'desc'
                                            );
 
-                this.fixTableStyle(div, tableElem);
+                this.sectionThreadDone();
+
             },
 
             // do sprintf that only knows {0}
@@ -938,10 +1057,57 @@ define([	// properly require.config'ed
                 }
             },
 
+            // designate a pair of elements one for display interactively (dynamic)
+            // and one for download (static)
+            saveDynamicStaticPair : function(dynamicElem, staticElem) {
+                this.dynamicElements.push(dynamicElem);
+                staticElem.style.display="none";
+                this.staticElements.push(staticElem);
+            },
+
             tableGetTableCallback : function(div, tableRes) {
                 div.innerHTML="";
+                this.addTableResult(div, tableRes);
+                this.sectionThreadDone();
+            },
+
+            // add tableRes to a div
+            addTableResult : function(div, tableRes) {
                 var tableElem = tableRes.putTableResultsDatagridInDiv(div, undefined, []);
-                this.fixTableStyle(div, tableElem);
+                this.fixDynamicDatagrid(div, tableElem);
+
+                var staticTable = tableRes.tableGetElem();
+                this.fixStaticTable(staticTable);
+
+                this.saveDynamicStaticPair(tableElem.parentElement, staticTable);
+                div.appendChild(staticTable);
+            },
+
+            // here : buildDatagridInDiv needs to call this instead
+            addTable : function(div, headerJson, rows, optSortCol, optSortDesc) {
+                // add the "regular" dynamic table
+                var sortOrder = optSortCol ? (optSortDesc ? [[optSortCol, 'desc']] : [[optSortCol]]) : undefined;
+                var tableElem = IIDXHelper.buildDatagridInDiv( div,
+                                               function() { return headerJson; },
+                                               function() { return rows; },
+                                               undefined,
+                                               sortOrder
+                                           );
+
+                this.fixDynamicDatagrid(div, tableElem);
+
+                // add a static table for download
+                var staticTable = IIDXHelper.buildTableElem(
+                                               headerJson,
+                                               rows,
+                                               optSortCol,
+                                               optSortDesc
+                                           );
+                this.fixStaticTable(staticTable);
+
+                this.saveDynamicStaticPair(tableElem.parentElement, staticTable);
+
+                div.appendChild(staticTable);
             },
 
             cardinalityGetTableCallback : function(div, tableRes) {
@@ -979,8 +1145,9 @@ define([	// properly require.config'ed
                     ));
 
                     // print the table
-                    var tableElem = tableRes.putTableResultsDatagridInDiv(div, undefined, []);
-                    this.fixTableStyle(div, tableElem);
+                    this.addTableResult(div, tableRes);
+                    this.sectionThreadDone();
+
                 }
             },
 
@@ -992,12 +1159,21 @@ define([	// properly require.config'ed
                 }
                 div.innerHTML="";  // clear the spinner
 
+                // set up two divs: dynamic and static
+                var dynamicDiv = document.createElement("div");
+                div.appendChild(dynamicDiv);
+                var staticDiv = document.createElement("div");
+                div.appendChild(staticDiv);
+                var staticImage = document.createElement("img");
+                staticDiv.appendChild(staticImage);
+                this.saveDynamicStaticPair(dynamicDiv, staticDiv);
+
                 // canvas
                 var canvasDiv = document.createElement("div");
                 canvasDiv.style.width="100%";
                 canvasDiv.style.height="650px";
                 canvasDiv.style.margin="1ch";
-                div.appendChild(canvasDiv);
+                dynamicDiv.appendChild(canvasDiv);
 
                 // add network config
                 var configDiv = document.createElement("div");
@@ -1016,7 +1192,7 @@ define([	// properly require.config'ed
                 tr.appendChild(td);
                 td.appendChild(document.createTextNode("Network physics: "));
                 td.appendChild(but);
-                div.appendChild(table);
+                dynamicDiv.appendChild(table);
 
                 // setup empty network
                 var nodeDict = {};   // dictionary of nodes with @id as the key
@@ -1037,20 +1213,40 @@ define([	// properly require.config'ed
                 network.body.data.nodes.update(Object.values(nodeDict));
                 network.body.data.edges.update(edgeList);
 
+                this.sectionThreadDone();
+
                 network.startSimulation();
+
+                // give 2.5 seconds to layout, then fit
                 setTimeout(function(network){ network.fit(); }.bind(this, network), 2500);
+
+                // create the static image for download
+                network.on("afterDrawing", function (ctx) {
+                    var dataURL = ctx.canvas.toDataURL();
+                    staticImage.src = dataURL;
+                  });
             },
 
-            fixTableStyle : function(div, tableElem) {
+            // make tweaks needed for datagrid display
+            fixDynamicDatagrid : function(div, tableElem) {
                 tableElem.classList.add("report-table");
                 tableElem.style.width="100%";
                 div.appendChild(document.createElement("br"));
                 div.appendChild(document.createElement("br"));
             },
 
+            // make tweaks needed for static tables
+            fixStaticTable : function(tableElem) {
+                var STATIC_TABLE_TRUNCATE_ROWS = 500;
+
+                IIDXHelper.truncateTableRows(tableElem, STATIC_TABLE_TRUNCATE_ROWS)
+                tableElem.classList.add("table");
+                tableElem.classList.add("report-table");
+            },
+
             statusCallback : function(div, eOrMsg) {
             },
-            checkForCallback : function(div, eOrMsg) {
+            checkForCancelCallback : function(div, eOrMsg) {
                 return false;
             },
 
@@ -1084,7 +1280,10 @@ define([	// properly require.config'ed
                 div.innerHTML = "";
                 div.appendChild(errorDiv);
                 console.error(eOrMsg);
+                this.sectionThreadDone();
+
             },
+
 
         }
 
