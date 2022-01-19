@@ -36,7 +36,7 @@ public class OntologyDatatypeTest_IT {
 		
 		// inflate from deflated nodegroup
 		PropertyItem pItem = sgjson.getNodeGroupInflateAndValidate(oInfo, errors, null, warnings).getNode(0).getPropertyByKeyname("dal");
-		assertTrue("Inflating datatype_dal_deflated.json valueType error",  pItem.getValueTypes().contains(XSDSupportedType.INT) && pItem.getValueTypes().size() == 1);
+		assertTrue("Inflating datatype_dal_deflated.json valueType error expected [INT] found:  " + pItem.getValueTypes().toString(),  pItem.getValueTypes().contains(XSDSupportedType.INT) && pItem.getValueTypes().size() == 1);
 		assertEquals("Inflating datatype_dal_deflated.json valueTypeURI error", "http://testy#DAL", pItem.getRangeURI());
 		assertEquals("Inflating datatype_dal_deflated.json produced errors", 0, errors.size());
 		assertEquals("Inflating datatype_dal_deflated.json produced warnings", 0, warnings.size());
