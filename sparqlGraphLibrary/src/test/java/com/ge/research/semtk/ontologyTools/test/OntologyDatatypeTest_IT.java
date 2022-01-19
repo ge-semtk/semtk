@@ -31,7 +31,39 @@ public class OntologyDatatypeTest_IT {
 		LocalLogger.logToStdErr("119: ----------- START testLoadingAndValidatingDAL ---------------");
 		// load model
 		TestGraph.clearGraph();
-		TestGraph.uploadOwlResource(this, "datatype_dal.owl");		
+		
+		// 119 test
+		Table tab = TestGraph.runQuery("select ?s ?p ?o FROM <http://junit/GG2NQYY2E/200001934/both> where { ?s ?p ?o }");
+		LocalLogger.logToStdErr("119 post clearGraph() triples:\n" + tab.toCSVString());
+				
+		TestGraph.uploadOwlResource(this, "datatype_dal.owl");	
+		
+		// 119 test
+		tab = TestGraph.runQuery("PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n"
+				+ "PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> \n"
+				+ "PREFIX owl:<http://www.w3.org/2002/07/owl#> \n"
+				+ "SELECT DISTINCT ?dataType ?equivType ?r_pred ?r_obj \n"
+				+ "		FROM <http://junit/GG2NQYY2E/200001934/both> \n"
+				+ "WHERE { \n"
+				+ "	?dataType rdf:type rdfs:Datatype . \n"
+				+ "filter (!regex(str(?dataType),'^(nodeID://|_:)') ) \n"
+				+ "   ?dataType owl:equivalentClass* ?e . \n"
+				+ "   { \n"
+				+ "        ?e owl:onDatatype ?equivType \n"
+				+ "    } UNION { \n"
+				+ "        ?e owl:unionOf ?u . \n"
+				+ "	    ?u rdf:rest* ?r . \n"
+				+ "	    ?r rdf:first ?equivType . \n"
+				+ "	} \n"
+				+ "   optional {  \n"
+				+ "     ?e owl:withRestrictions ?rlist . \n"
+				+ "     ?rlist rdf:rest* ?r2 . \n"
+				+ "     ?r2 rdf:first ?restriction . \n"
+				+ "     ?restriction ?r_pred ?r_obj . \n"
+				+ "   } \n"
+				+ "} ");
+		LocalLogger.logToStdErr("119 post load owl datatype query:\n" + tab.toCSVString());
+		
 		OntologyInfo oInfo = TestGraph.getOInfo();
 		assertTrue("http://testy#DAL is not found in oInfo.getDatatype", oInfo.getDatatype("http://testy#DAL") != null);
 		
