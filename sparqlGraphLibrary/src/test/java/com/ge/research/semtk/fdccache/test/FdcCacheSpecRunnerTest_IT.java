@@ -41,7 +41,7 @@ public class FdcCacheSpecRunnerTest_IT {
 		// load all the FDC nodegroups and config
 		IntegrationTestUtility.setupFdcTests(FdcCacheSpecRunnerTest_IT.class);
 		
-		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroup("fdcSampleCacheGetLocations");
+		IntegrationTestUtility.getNodeGroupStoreRestClient().deleteStoredNodeGroupIfExists("fdcSampleCacheGetLocations");
 
 
 		IntegrationTestUtility.getNodeGroupStoreRestClient().executeStoreNodeGroup("fdcSampleCacheGetLocations", "no comment", CREATOR, 
