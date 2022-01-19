@@ -229,8 +229,7 @@ public abstract class Returnable {
 		return this.constraints == null ? "" : this.constraints.toString();
 	}
 	
-	public abstract XSDSupportedType getValueType();
-	
+	public abstract HashSet<XSDSupportedType> getValueTypes();
 
 	
 }

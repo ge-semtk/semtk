@@ -58,7 +58,8 @@ public class NodeGroupExecutorTest_IT {
 	// utility method to store a nodegroup for use in the test
 	private void insertNodeGroupToStore(String ngJsonString) throws Exception{
 		JSONObject ngJson = Utility.getJsonObjectFromString(ngJsonString);
-		nodeGroupStoreRestClient.deleteStoredNodeGroup(ngID); // delete any existing stored nodegroup with the same ID
+		
+		nodeGroupStoreRestClient.deleteStoredNodeGroupIfExists(ngID); // delete any existing stored nodegroup with the same ID
 		SimpleResultSet sim = nodeGroupStoreRestClient.executeStoreNodeGroup(ngID, "integration test node group", CREATOR, ngJson); // store nodegroup
 		assertTrue("failed to store node group: " + sim.getRationaleAsString("||"), sim.getSuccess());		// check success
 	}

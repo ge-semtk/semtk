@@ -1,0 +1,251 @@
+uri "http://Cardinality" alias card.
+
+Value is a class.
+val1 is a Value.
+val2 is a Value.
+
+// test cardinality of data and object properties
+Cardinal is a class,
+	described by anyData with values of type int,
+	described by anyObject with values of type Value,
+	
+	described by singleData with a single value of type int,
+	described by singleObject with a single value of type Value,
+	
+	described by exactly1Data with values of type int,   
+	described by exactly1Object with values of type Value,
+	
+	described by atLeast1Data with values of type int,
+	described by atLeast1Object with values of type Value,
+	
+	described by atMost1Data with values of type int,
+	described by atMost1Object with values of type Value,
+	
+	described by range12Data with values of type int,
+	described by range12Object with values of type Value.
+	
+// Note:   SADL Feature	3.5.0.202112051741	
+//         throws errors if these restrictions are attempted inline above.
+exactly1Data of Cardinal has exactly 1 value.
+exactly1Object of Cardinal has exactly 1 value.
+atLeast1Data of Cardinal has at least 1 value.
+atLeast1Object of Cardinal has at least 1 value.
+range12Data of Cardinal has at least 1 value.
+range12Data of Cardinal has at most 2 values.
+range12Object of Cardinal has at least 1 value.
+range12Object of Cardinal has at most 2 values.
+
+card0 (note "instance with no properties") is a Cardinal.
+	// 6 errors for the "exactly 1" properties since there are none.
+
+card1 (note "instance with one of each property") is a Cardinal, 
+	has anyData 1, 
+	has anyObject val1,
+	has singleData 1,
+	has singleObject val1,
+	has exactly1Data 1,
+	has exactly1Object val1,
+	has atLeast1Data 1,
+	has atLeast1Object val1,
+	has atMost1Data 1,
+	has atMost1Object val1,
+	has range12Data 1,
+	has range12Object val1.
+
+card2 (note "instance with two of each property") is a Cardinal, 
+	has anyData 1, 
+	has anyObject val1,
+	has singleData 1,
+	has singleObject val1,
+	has exactly1Data 1,
+	has exactly1Object val1,
+	has atLeast1Data 1,
+	has atLeast1Object val1,
+	has atMost1Data 1,
+	has atMost1Object val1,
+	has range12Data 1,
+	has range12Object val1,
+	
+	has anyData 2, 
+	has anyObject val2,
+	has singleData 2,
+	has singleObject val2,
+	has exactly1Data 2,
+	has exactly1Object val2,
+	has atLeast1Data 2,
+	has atLeast1Object val2,
+	has atMost1Data 2,
+	has atMost1Object val2,
+	has range12Data 2,
+	has range12Object val2.
+	
+// Repeat with all the same properties but no restrictions on their use in this class 
+UnrestrictedCardinal is a class,
+	described by anyData with values of type int,
+	described by anyObject with values of type Value,
+	
+	described by singleData with values of type int,
+	described by singleObject with values of type Value,
+	
+	described by exactly1Data with values of type int,   
+	described by exactly1Object with values of type Value,
+	
+	described by atLeast1Data with values of type int,
+	described by atLeast1Object with values of type Value,
+	
+	described by atMost1Data with values of type int,
+	described by atMost1Object with values of type Value,
+	
+	described by range12Data with values of type int,
+	described by range12Object with values of type Value.
+
+unrest0 (note "instance with no properties") is a UnrestrictedCardinal.
+
+unrest1 (note "instance with one of each property") is a UnrestrictedCardinal, 
+	has anyData 1, 
+	has anyObject val1,
+	has singleData 1,
+	has singleObject val1,
+	has exactly1Data 1,
+	has exactly1Object val1,
+	has atLeast1Data 1,
+	has atLeast1Object val1,
+	has atMost1Data 1,
+	has atMost1Object val1,
+	has range12Data 1,
+	has range12Object val1.
+
+unrest2 (note "instance with two of each property") is a UnrestrictedCardinal, 
+	has anyData 1, 
+	has anyObject val1,
+	has singleData 1,
+	has singleObject val1,
+	has exactly1Data 1,
+	has exactly1Object val1,
+	has atLeast1Data 1,
+	has atLeast1Object val1,
+	has atMost1Data 1,
+	has atMost1Object val1,
+	has range12Data 1,
+	has range12Object val1,
+	
+	has anyData 2, 
+	has anyObject val2,
+	has singleData 2,
+	has singleObject val2,
+	has exactly1Data 2,
+	has exactly1Object val2,
+	has atLeast1Data 2,
+	has atLeast1Object val2,
+	has atMost1Data 2,
+	has atMost1Object val2,
+	has range12Data 2,
+	has range12Object val2.
+
+// Repeat for a subclass
+SubCardinal is a type of Cardinal.
+
+sub0 (note "instance with no properties") is a SubCardinal.
+    // 6 errors for the "exactly 1" properties since there are none.
+
+sub1 (note "instance with one of each property") is a SubCardinal, 
+	has anyData 1, 
+	has anyObject val1,
+	has singleData 1,
+	has singleObject val1,
+	has exactly1Data 1,
+	has exactly1Object val1,
+	has atLeast1Data 1,
+	has atLeast1Object val1,
+	has atMost1Data 1,
+	has atMost1Object val1,
+	has range12Data 1,
+	has range12Object val1.
+
+sub2 (note "instance with two of each property") is a SubCardinal, 
+    has anyData 1, 
+	has anyObject val1,
+	has singleData 1,
+	has singleObject val1,
+	has exactly1Data 1,
+	has exactly1Object val1,
+	has atLeast1Data 1,
+	has atLeast1Object val1,
+	has atMost1Data 1,
+	has atMost1Object val1,
+	has range12Data 1,
+	has range12Object val1,
+	
+	has anyData 2, 
+	has anyObject val2,
+	has singleData 2,
+	has singleObject val2,
+	has exactly1Data 2,
+	has exactly1Object val2,
+	has atLeast1Data 2,
+	has atLeast1Object val2,
+	has atMost1Data 2,
+	has atMost1Object val2,
+	has range12Data 2,
+	has range12Object val2.
+
+// Add restrictions to a subclass
+RestrictTheUnrestricted is a type of UnrestrictedCardinal.
+// Note:   SADL Feature	3.5.0.202112051741	
+// these two generate syntax error.  Can't figure out how to test.
+//singleData of RestrictTheUnrestricted has a single value.
+//singleObject of RestrictTheUnrestricted has a single value.
+
+// copy the restrictions from Cardinal
+exactly1Data of RestrictTheUnrestricted has exactly 1 value.
+exactly1Object of RestrictTheUnrestricted has exactly 1 value.
+atLeast1Data of RestrictTheUnrestricted has at least 1 value.
+atLeast1Object of RestrictTheUnrestricted has at least 1 value.
+range12Data of RestrictTheUnrestricted has at least 1 value.
+range12Data of RestrictTheUnrestricted has at most 2 values.
+range12Object of RestrictTheUnrestricted has at least 1 value.
+range12Object of RestrictTheUnrestricted has at most 2 values.
+
+rtu0 (note "instance with no properties") is a RestrictTheUnrestricted.
+
+
+rtu1 (note "instance with one of each property") is a RestrictTheUnrestricted, 
+    has anyData 1, 
+	has anyObject val1,
+	has singleData 1,
+	has singleObject val1,
+	has exactly1Data 1,
+	has exactly1Object val1,
+	has atLeast1Data 1,
+	has atLeast1Object val1,
+	has atMost1Data 1,
+	has atMost1Object val1,
+	has range12Data 1,
+	has range12Object val1.
+
+rtu2 (note "instance with two of each property") is a RestrictTheUnrestricted, 
+    has anyData 1, 
+	has anyObject val1,
+	has singleData 1,
+	has singleObject val1,
+	has exactly1Data 1,
+	has exactly1Object val1,
+	has atLeast1Data 1,
+	has atLeast1Object val1,
+	has atMost1Data 1,
+	has atMost1Object val1,
+	has range12Data 1,
+	has range12Object val1,
+	
+	has anyData 2, 
+	has anyObject val2,
+	has singleData 2,
+	has singleObject val2,
+	has exactly1Data 2,
+	has exactly1Object val2,
+	has atLeast1Data 2,
+	has atLeast1Object val2,
+	has atMost1Data 2,
+	has atMost1Object val2,
+	has range12Data 2,
+	has range12Object val2.

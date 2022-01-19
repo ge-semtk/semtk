@@ -1,7 +1,7 @@
 package com.ge.research.semtk.aws;
 
 import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.Assume.*;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -9,18 +9,7 @@ import java.util.UUID;
 
 import org.junit.Test;
 
-import com.arangodb.internal.util.IOUtils;
-import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.utility.LocalLogger;
-
-import software.amazon.awssdk.core.ResponseInputStream;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectRequest;
-import software.amazon.awssdk.services.s3.model.GetObjectResponse;
-import software.amazon.awssdk.services.s3.model.PutObjectRequest;
-import software.amazon.awssdk.services.s3.model.PutObjectResponse;
 
 public class S3ConnectorTest_IT {
 
@@ -44,7 +33,11 @@ public class S3ConnectorTest_IT {
 		byte data[] = origStr.getBytes();
 		
 		// write object to S3
-		s3conn.putObject(keyName, data);
+		try {
+			s3conn.putObject(keyName, data);
+		} catch (Exception e) {
+			assumeFalse(e.getMessage(), e.getMessage().contains("Key Id you provided does not exist"));
+		}
 		
 		// read it back
 	    byte result[] = s3conn.getObject(keyName);

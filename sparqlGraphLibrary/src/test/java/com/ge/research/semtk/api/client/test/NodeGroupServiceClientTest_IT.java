@@ -196,7 +196,7 @@ public class NodeGroupServiceClientTest_IT {
 			
 			assertTrue(res.getCellAsString(0, "valueId").contains("?hdid"));
 			assertTrue(res.getCellAsString(0, "itemType").equals("PROPERTYITEM"));
-			assertTrue(res.getCellAsString(0, "valueType").contains("INTEGER"));	
+			assertTrue(res.getCellAsString(0, "valueType").toUpperCase().startsWith("INT"));	
 
 		}
 		

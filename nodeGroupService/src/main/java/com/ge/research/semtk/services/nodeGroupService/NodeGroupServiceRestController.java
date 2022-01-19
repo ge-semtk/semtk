@@ -1132,15 +1132,17 @@ public class NodeGroupServiceRestController {
 					PropertyItem prop = itemStr.getpItem();
 					if (deleteFlag) {
 						nodegroup.deleteProperty(node, prop);
-						importSpec.deleteProperty(node.getSparqlID(), prop.getUriRelationship());
+						importSpec.deleteProperty(node.getSparqlID(), prop.getDomainURI());
 					} else {
 						PropertyItem newProp = nodegroup.changeItemDomain(node, prop, newURI);
-						importSpec.changePropertyDomain(node.getSparqlID(), prop.getUriRelationship(), newURI);
+						importSpec.changePropertyDomain(node.getSparqlID(), prop.getDomainURI(), newURI);
 						
 						// If newURI is a valid property in ontology, make sure range is correct too
 						OntologyProperty oProp = oInfo.getProperty(newURI);
 						if (oProp != null) {
-							nodegroup.changeItemRange(newProp, oProp.getRangeStr());
+							
+							// oinfo has a function to get the XSDTypesOfAProperty
+							nodegroup.changeItemRange(newProp, oProp.getRangeStr(), oInfo.getPropertyRangeXSDTypes(oProp.getRangeStr()));
 						}
 					}
 					
@@ -1172,7 +1174,7 @@ public class NodeGroupServiceRestController {
 					throw new Exception("Can not change Range of a class node");
 					
 				} else if (itemStr.getType() == PropertyItem.class) {
-					nodegroup.changeItemRange(itemStr.getpItem(), newURI);
+					nodegroup.changeItemRange(itemStr.getpItem(), newURI, oInfo.getPropertyRangeXSDTypes(newURI));
 					// no effect on importSpec
 				} else {
 					// nodeItem

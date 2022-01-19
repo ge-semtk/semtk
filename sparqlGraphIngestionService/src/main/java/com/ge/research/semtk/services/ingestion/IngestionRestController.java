@@ -81,9 +81,11 @@ import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.dataset.ODBCDataset;
 import com.ge.research.semtk.load.utility.ImportSpecHandler;
+import com.ge.research.semtk.load.utility.IngestionNodegroupBuilder;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.logging.DetailsTuple;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
+import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.logging.easyLogger.LoggerClientConfig;
 import com.ge.research.semtk.query.rdb.PostgresConnector;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
@@ -404,6 +406,80 @@ public class IngestionRestController {
 	}
 	
 	@ApiOperation(
+			value=	"Ingest a file against the default ingestion template for this class.",
+			notes=	ASYNC_NOTES
+			)
+	@CrossOrigin
+	@RequestMapping(value="/fromCsvUsingClassTemplate", method= RequestMethod.POST)
+	public JSONObject fromCsvUsingClassTemplate(@RequestBody IngestionFromStringsAndClassRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		
+		// prepare everything with separate error handling
+		SparqlGraphJson sgjson = null;
+		try {
+			
+			IngestionNodegroupBuilder builder = this.buildTemplate(requestBody.buildConnection(), requestBody.getClassURI(), requestBody.getIdRegex());
+			sgjson = builder.getSgjson();
+			
+		} catch (Exception e) {
+			HeadersManager.clearHeaders();
+			return this.buildExceptionReturn(SERVICE_NAME, "fromCsvUsingClassTemplate", e);
+		}
+			
+		try {
+			boolean preCheck = true;
+			boolean skipIngest = false;
+			SimpleResultSet res = this.fromAnyCsvAsync(sgjson, requestBody.getData(), requestBody.getConnection(), false, preCheck, skipIngest, requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
+			return res.toJson();
+			
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
+	}
+	
+	@ApiOperation(
+			value=	"Get a class' default ingestion template and sample CSV file.",
+			notes=	"synchronous.  Returns simpleResult containing \'sgjson\' JSON and \'csv\' String fields."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getClassTemplateAndCsv", method= RequestMethod.POST)
+	public JSONObject getClassTemplateAndCsv(@RequestBody IngestionFromStringsAndClassRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		
+		try {
+			
+			IngestionNodegroupBuilder builder = this.buildTemplate(requestBody.buildConnection(), requestBody.getClassURI(), requestBody.getIdRegex());
+			SimpleResultSet result = new SimpleResultSet(true);
+			result.addResult("sgjson", builder.getSgjson().toJson());
+			result.addResult("csv", builder.getCsvTemplate());
+			return result.toJson();
+			
+		} catch (Exception e) {
+			return this.buildExceptionReturn(SERVICE_NAME, "getClassTemplateAndCsv", e);
+			
+		} finally {
+			HeadersManager.clearHeaders();
+		}
+	}
+	
+	/**
+	 * Build an ingestion template and return the builder
+	 * @param conn
+	 * @param classURI
+	 * @return
+	 * @throws Exception
+	 */
+	private IngestionNodegroupBuilder buildTemplate(SparqlConnection conn, String classURI, String idRegex) throws Exception {
+		// get oInfo from the service (hopefully cached)
+		OntologyInfo oInfo = this.buildOInfoClient().getOntologyInfo(conn);
+		
+		IngestionNodegroupBuilder builder = new IngestionNodegroupBuilder(classURI, conn, oInfo);
+		builder.setIdRegex(idRegex); 
+		builder.build();
+		return builder;
+	}
+	
+	@ApiOperation(
 			value=	"Clear a graph with optional trackFlag."
 			)
 	@CrossOrigin
@@ -434,17 +510,22 @@ public class IngestionRestController {
 				this.trackClear(requestBody.buildSei());
 			}
 					
-		} catch (Exception e) {			
-			LocalLogger.printStackTrace(e);
-			resultSet = new SimpleResultSet(false);
-			resultSet.addRationaleMessage(SERVICE_NAME, "clearGraph", e);
-			return resultSet.toJson();
+		} catch (Exception e) {		
+			return this.buildExceptionReturn(SERVICE_NAME, "clearGraph", e);
+			
 		} finally {
 			HeadersManager.setHeaders(new HttpHeaders());
 		}		
 		
 		return resultSet.toJson();
 	}	
+	
+	private JSONObject buildExceptionReturn(String service, String endpoint, Exception e) {
+		LocalLogger.printStackTrace(e);
+		SimpleResultSet resultSet = new SimpleResultSet(false);
+		resultSet.addRationaleMessage(service, endpoint, e);
+		return resultSet.toJson();
+	}
 	
 	@ApiOperation(
 			value=	"Run a query of tracked events."
@@ -467,10 +548,7 @@ public class IngestionRestController {
 			resultSet.addResults(tab);
 			return resultSet.toJson();
 		} catch (Exception e) {			
-			LocalLogger.printStackTrace(e);
-			SimpleResultSet resultSet = new SimpleResultSet(false);
-			resultSet.addRationaleMessage(SERVICE_NAME, "runTrackingQuery", e);
-			return resultSet.toJson();
+			return this.buildExceptionReturn(SERVICE_NAME, "runTrackingQuery", e);
 		} finally {
 			HeadersManager.setHeaders(new HttpHeaders());
 		}		
@@ -511,9 +589,7 @@ public class IngestionRestController {
 			
 			resultSet = new SimpleResultSet(true);
 		} catch (Exception e) {			
-			LocalLogger.printStackTrace(e);
-			resultSet = new SimpleResultSet(false);
-			resultSet.addRationaleMessage(SERVICE_NAME, "deleteTrackingEvents", e);
+			return this.buildExceptionReturn(SERVICE_NAME, "deleteTrackingEvents", e);
 		} finally {
 			HeadersManager.setHeaders(new HttpHeaders());
 		}		
@@ -534,9 +610,7 @@ public class IngestionRestController {
 			resultSet.addResult("contents", contents);
 			resultSet.setSuccess(true);
 		} catch (Exception e) {			
-			LocalLogger.printStackTrace(e);
-			resultSet.addRationaleMessage(SERVICE_NAME, "getTrackedIngestFile", e);
-			resultSet.setSuccess(false);
+			return this.buildExceptionReturn(SERVICE_NAME, "getTrackedIngestFile", e);
 		} finally {
 			HeadersManager.setHeaders(new HttpHeaders());
 		}		
@@ -556,9 +630,7 @@ public class IngestionRestController {
 			tracker.undoLoad(requestBody.getId());
 			resultSet.setSuccess(true);
 		} catch (Exception e) {			
-			LocalLogger.printStackTrace(e);
-			resultSet.addRationaleMessage(SERVICE_NAME, "undoLoad", e);
-			resultSet.setSuccess(false);
+			return this.buildExceptionReturn(SERVICE_NAME, "undoLoad", e);
 		} finally {
 			HeadersManager.setHeaders(new HttpHeaders());
 		}		
@@ -709,7 +781,6 @@ public class IngestionRestController {
 			retval.setFailuresEncountered(dl.getLoadingErrorReport().getRows().size());
 			retval.addResults(dl.getLoadingErrorReport());
 		} catch (Exception e) {
-			// TODO write failure JSONObject to return and return it.
 			LocalLogger.printStackTrace(e);			
 			retval.setSuccess(false);
 			retval.addRationaleMessage("ingestion", "fromCsv*", e);
@@ -783,17 +854,15 @@ public class IngestionRestController {
 	 * Load data from csv.
 	 * Note this is a newer copy of fromAsynCsv with Async added
 	 *     - more "modern" logging
-	 * @param templateFile the json template (File if fromFiles=true, else String)
+	 * @param template the json template (SparqlGraphJson or MultipartFile if fromFiles=true, else String)
 	 * @param dataFile the data file (File if fromFiles=true, else String)
 	 * @param sparqlConnectionOverride SPARQL connection json (File if fromFiles=true, else String)  If non-null, will override the connection in the template.
 	 * @param fromFiles true to indicate that the 3 above parameters are Files, else Strings
 	 * @param precheck check that the ingest will succeed before starting it
 	 * @param skipIngest skip the actual ingest (e.g. for precheck only)
 	 */
-	private SimpleResultSet fromAnyCsvAsync(Object templateFile, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean precheck, Boolean skipIngest, Boolean trackFlag, String overrideBaseURI){
+	private SimpleResultSet fromAnyCsvAsync(Object template, Object dataFile, Object sparqlConnectionOverride, Boolean fromFiles, Boolean precheck, Boolean skipIngest, Boolean trackFlag, String overrideBaseURI){
 
-		// TODO, difficult to loadTrack because we don't know success
-		int recordsProcessed = 0;
 		SimpleResultSet simpleResult = new SimpleResultSet();
 		
 		// set up the logger
@@ -806,9 +875,16 @@ public class IngestionRestController {
 				this.validateTracker();
 			}
 			
+			SparqlGraphJson sgJson = null;
 			// get SparqlGraphJson from template
-			String templateContent = fromFiles ? new String(((MultipartFile)templateFile).getBytes()) : (String)templateFile;	
-			SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJsonObjectFromString(templateContent));			
+			if (template instanceof SparqlGraphJson) {
+				// newer: just use the  SparqlGraphJson
+				sgJson = (SparqlGraphJson) template;
+			} else {
+				// older: if fromFiles then read from files, else read from String
+				String templateContent = fromFiles ? new String(((MultipartFile)template).getBytes()) : (String)template;	
+				sgJson = new SparqlGraphJson(Utility.getJsonObjectFromString(templateContent));	
+			}
 			
 			// get data file content
 			String dataFileContent = fromFiles ? new String(((MultipartFile)dataFile).getBytes()) : (String)dataFile;
@@ -849,7 +925,6 @@ public class IngestionRestController {
 					
 			
 		} catch (Exception e) {
-			// TODO write failure JSONObject to return and return it.
 			LoggerRestClient.easyLog(logger, SERVICE_NAME, "fromAnyCsvAsync exception", "message", e.toString());
 			LocalLogger.printStackTrace(e);			
 			simpleResult.setSuccess(false);
@@ -929,7 +1004,6 @@ public class IngestionRestController {
 			retval.addResultsJSON(dl.getLoadingErrorReport().toJson());
 
 		} catch (Exception e) {
-			// TODO write failure JSONObject to return and return it.
 			LocalLogger.printStackTrace(e);
 			retval.setSuccess(false);
 			retval.addRationaleMessage("ingestion", "fromPostgresODBC", e);
@@ -961,9 +1035,13 @@ public class IngestionRestController {
 	 * @throws Exception
 	 */
 	private void uncache(SparqlEndpointInterface sei) throws Exception {
-		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
+		OntologyInfoClient oClient = this.buildOInfoClient();
 		SparqlConnection conn = new SparqlConnection();
 		conn.addModelInterface(sei);
 		oClient.uncacheChangedConn(conn);
+	}
+	
+	private OntologyInfoClient buildOInfoClient() throws Exception {
+		return new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
 	}
 }

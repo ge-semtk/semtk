@@ -1,0 +1,175 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns="http://datatypetest#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xml:base="http://datatypetest">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'datatypetest.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <rdfs:Datatype rdf:ID="enumeratedheight">
+    <owl:equivalentClass>
+      <rdfs:Datatype>
+        <owl:withRestrictions rdf:parseType="Collection">
+          <rdf:Description>
+            <xsd:enumeration>"tall"</xsd:enumeration>
+            <xsd:enumeration>"medium"</xsd:enumeration>
+            <xsd:enumeration>"short"</xsd:enumeration>
+          </rdf:Description>
+        </owl:withRestrictions>
+        <owl:onDatatype rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+      </rdfs:Datatype>
+    </owl:equivalentClass>
+  </rdfs:Datatype>
+  <rdfs:Datatype rdf:ID="over12">
+    <owl:equivalentClass>
+      <rdfs:Datatype>
+        <owl:withRestrictions rdf:parseType="Collection">
+          <rdf:Description>
+            <xsd:minInclusive rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+            >12</xsd:minInclusive>
+          </rdf:Description>
+        </owl:withRestrictions>
+        <owl:onDatatype rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+      </rdfs:Datatype>
+    </owl:equivalentClass>
+  </rdfs:Datatype>
+  <rdfs:Datatype rdf:ID="SSN">
+    <owl:equivalentClass>
+      <rdfs:Datatype>
+        <owl:withRestrictions rdf:parseType="Collection">
+          <rdf:Description>
+            <xsd:pattern>[0-9]{3}-[0-9]{2}-[0-9]{4}</xsd:pattern>
+          </rdf:Description>
+        </owl:withRestrictions>
+        <owl:onDatatype rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+      </rdfs:Datatype>
+    </owl:equivalentClass>
+  </rdfs:Datatype>
+  <rdfs:Datatype rdf:ID="year">
+    <owl:equivalentClass>
+      <rdfs:Datatype>
+        <owl:withRestrictions rdf:parseType="Collection">
+          <rdf:Description>
+            <xsd:minInclusive rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+            >0</xsd:minInclusive>
+          </rdf:Description>
+          <rdf:Description>
+            <xsd:maxInclusive rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+            >6</xsd:maxInclusive>
+          </rdf:Description>
+        </owl:withRestrictions>
+        <owl:onDatatype rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+      </rdfs:Datatype>
+    </owl:equivalentClass>
+  </rdfs:Datatype>
+  <rdfs:Datatype rdf:ID="Airport_Ident">
+    <owl:equivalentClass>
+      <rdfs:Datatype>
+        <owl:withRestrictions rdf:parseType="Collection">
+          <rdf:Description>
+            <xsd:minLength>1</xsd:minLength>
+          </rdf:Description>
+          <rdf:Description>
+            <xsd:maxLength>4</xsd:maxLength>
+          </rdf:Description>
+        </owl:withRestrictions>
+        <owl:onDatatype rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+      </rdfs:Datatype>
+    </owl:equivalentClass>
+  </rdfs:Datatype>
+  <rdfs:Datatype rdf:ID="clothingsize">
+    <owl:equivalentClass>
+      <rdfs:Datatype>
+        <owl:unionOf rdf:parseType="Collection">
+          <rdf:Description rdf:about="http://www.w3.org/2001/XMLSchema#int"/>
+          <rdf:Description rdf:about="http://www.w3.org/2001/XMLSchema#time"/>
+          <rdf:Description rdf:about="http://www.w3.org/2001/XMLSchema#date"/>
+        </owl:unionOf>
+      </rdfs:Datatype>
+    </owl:equivalentClass>
+  </rdfs:Datatype>
+  <rdfs:Datatype rdf:ID="DAL">
+    <owl:equivalentClass>
+      <rdfs:Datatype>
+        <owl:withRestrictions rdf:parseType="Collection">
+          <rdf:Description>
+            <xsd:minInclusive rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+            >0</xsd:minInclusive>
+          </rdf:Description>
+          <rdf:Description>
+            <xsd:maxInclusive rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+            >9</xsd:maxInclusive>
+          </rdf:Description>
+        </owl:withRestrictions>
+        <owl:onDatatype rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+      </rdfs:Datatype>
+    </owl:equivalentClass>
+  </rdfs:Datatype>
+  <owl:Class rdf:ID="TestClass">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onDataRange rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+        <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#long"
+        >1</owl:qualifiedCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="num"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onDataRange rdf:resource="#DAL"/>
+        <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#long"
+        >1</owl:qualifiedCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="dal"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:ID="Examples"/>
+  <owl:ObjectProperty rdf:ID="peer">
+    <rdfs:domain rdf:resource="#TestClass"/>
+    <rdfs:range rdf:resource="#TestClass"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:ID="sn">
+    <rdfs:domain rdf:resource="#Examples"/>
+    <rdfs:range rdf:resource="#SSN"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="#num">
+    <rdfs:domain rdf:resource="#TestClass"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:ID="ai">
+    <rdfs:domain rdf:resource="#Examples"/>
+    <rdfs:range rdf:resource="#Airport_Ident"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:ID="y">
+    <rdfs:domain rdf:resource="#Examples"/>
+    <rdfs:range rdf:resource="#year"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:ID="eh">
+    <rdfs:domain rdf:resource="#Examples"/>
+    <rdfs:range rdf:resource="#enumeratedheight"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="#dal">
+    <rdfs:domain rdf:resource="#TestClass"/>
+    <rdfs:range rdf:resource="#DAL"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:ID="cs">
+    <rdfs:domain rdf:resource="#Examples"/>
+    <rdfs:range rdf:resource="#clothingsize"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:ID="o12">
+    <rdfs:domain rdf:resource="#Examples"/>
+    <rdfs:range rdf:resource="#over12"/>
+  </owl:DatatypeProperty>
+</rdf:RDF>

@@ -18,6 +18,7 @@
 package com.ge.research.semtk.belmont.runtimeConstraints;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.ValueConstraint;
@@ -109,8 +110,8 @@ public class RuntimeConstraintMetaData{
 		return this.ngItem.getValueConstraint();
 	}
 	
-	public XSDSupportedType getValueType(){
-		return this.ngItem.getValueType();
+	public HashSet<XSDSupportedType> getValueTypes(){
+		return this.ngItem.getValueTypes();
 	}
 	
 	public SupportedTypes getObjectType(){
@@ -127,44 +128,44 @@ public class RuntimeConstraintMetaData{
 	// matching constraints.
 	private void setMatchesConstraint(String sparqlId, ArrayList<String> inputs) throws Exception{
 		// create the constraint string. 
-		String constraintStr = ValueConstraint.buildFilterInConstraint(sparqlId, inputs, getType(sparqlId));
+		String constraintStr = ValueConstraint.buildFilterInConstraint(sparqlId, inputs, getTypes(sparqlId));
 		this.setValueConstraint(constraintStr);
 	}
 	
 	private void setNotMatchesConstraint(String sparqlId, ArrayList<String> inputs) throws Exception{
 		// create the constraint string. 
-		String constraintStr = ValueConstraint.buildFilterNotInConstraint(sparqlId, inputs, getType(sparqlId));
+		String constraintStr = ValueConstraint.buildFilterNotInConstraint(sparqlId, inputs, getTypes(sparqlId));
 		this.setValueConstraint(constraintStr);
 	}
 	
 	// regex
 	private void setRegexConstraint(String sparqlId, String regexFragment) throws Exception{
-		String constraintStr = ValueConstraint.buildRegexConstraint(sparqlId, regexFragment, getType(sparqlId));
+		String constraintStr = ValueConstraint.buildRegexConstraint(sparqlId, regexFragment, getTypes(sparqlId));
 		this.setValueConstraint(constraintStr);
 	}
 	
 	// intervals.
 	private void setRange(String sparqlId, String lowerBound, String upperBound, Boolean greaterThanOrEqualToLower, Boolean lessThanOrEqualToUpper) throws Exception{
-		String constraintStr = ValueConstraint.buildRangeConstraint(sparqlId, lowerBound.toString(), upperBound.toString(), getType(sparqlId), greaterThanOrEqualToLower, lessThanOrEqualToUpper);
+		String constraintStr = ValueConstraint.buildRangeConstraint(sparqlId, lowerBound.toString(), upperBound.toString(), getTypes(sparqlId), greaterThanOrEqualToLower, lessThanOrEqualToUpper);
 		this.setValueConstraint(constraintStr);
 	}
 	
 	
 	// greater or less than.
 	private void setLessThan(String sparqlId, String upperBound, Boolean lessThanOrEqualTo) throws Exception{
-		String constraintStr = ValueConstraint.buildLessThanConstraint(sparqlId, upperBound.toString(), getType(sparqlId), lessThanOrEqualTo);
+		String constraintStr = ValueConstraint.buildLessThanConstraint(sparqlId, upperBound.toString(), getTypes(sparqlId), lessThanOrEqualTo);
 		this.setValueConstraint(constraintStr);
 	}
 	
 	private void setGreaterThan(String sparqlId, String lowerBound, Boolean greaterThanOrEqualTo) throws Exception{
-		String constraintStr = ValueConstraint.buildGreaterThanConstraint(sparqlId, lowerBound, getType(sparqlId), greaterThanOrEqualTo);
+		String constraintStr = ValueConstraint.buildGreaterThanConstraint(sparqlId, lowerBound, getTypes(sparqlId), greaterThanOrEqualTo);
 		this.setValueConstraint(constraintStr);
 	}
 	
 	// get the value type of the constraint based on the sparqlId
-	private XSDSupportedType getType(String sparqlId) throws Exception{
+	private HashSet<XSDSupportedType> getTypes(String sparqlId) throws Exception{
 		
-		return this.ngItem.getValueType();
+		return this.ngItem.getValueTypes();
 	}
 	
 	

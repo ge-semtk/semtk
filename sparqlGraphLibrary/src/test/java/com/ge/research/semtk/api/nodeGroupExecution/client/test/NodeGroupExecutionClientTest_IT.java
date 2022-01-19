@@ -70,7 +70,7 @@ public class NodeGroupExecutionClientTest_IT {
 		@AfterClass
 	    public static void teardown() throws Exception {
 	        // delete stored nodegroup when done with all tests
-			nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+			nodeGroupStoreClient.deleteStoredNodeGroupIfExists(ID);
 	    } 
 				
 		/**
@@ -156,7 +156,7 @@ public class NodeGroupExecutionClientTest_IT {
 			// store a nodegroup (modified with the test graph)
 			JSONObject ngJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json").getJson();
 			try {
-				nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+				nodeGroupStoreClient.deleteStoredNodeGroupIfExists(ID);
 			} catch (Exception e) {
 			}
 			nodeGroupStoreClient.executeStoreNodeGroup(ID, "testSelectByNodegroupId", CREATOR, ngJson);
@@ -184,7 +184,7 @@ public class NodeGroupExecutionClientTest_IT {
 			// store a nodegroup (modified with the test graph)
 			JSONObject ngJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json").getJson();
 			try {
-				nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+				nodeGroupStoreClient.deleteStoredNodeGroupIfExists(ID);
 			} catch (Exception e) {
 			}
 			nodeGroupStoreClient.executeStoreNodeGroup(ID, "testSelectByNodegroupId", CREATOR, ngJson);
@@ -214,7 +214,7 @@ public class NodeGroupExecutionClientTest_IT {
 				assertTrue("Data remains after delete", tab.getNumRows() == 0);
 				
 			} finally {
-				nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+				nodeGroupStoreClient.deleteStoredNodeGroupIfExists(ID);
 			}
 		}
 		
@@ -228,7 +228,7 @@ public class NodeGroupExecutionClientTest_IT {
 			SparqlGraphJson sgjDelete = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery_DeleteSimple.json");
 
 			try {
-				nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+				nodeGroupStoreClient.deleteStoredNodeGroupIfExists(ID);
 			} catch (Exception e) {
 			}
 			
@@ -256,7 +256,7 @@ public class NodeGroupExecutionClientTest_IT {
 				assertTrue("Data remains after delete", tab.getNumRows() == 0);
 				
 			} finally {
-				nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+				nodeGroupStoreClient.deleteStoredNodeGroupIfExists(ID);
 			}
 		}
 		
@@ -264,7 +264,7 @@ public class NodeGroupExecutionClientTest_IT {
 		public void testIngestByNodegroupByIdAsync() throws Exception {	
 			// tests "dispatch" version of call 
 			
-			nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+			nodeGroupStoreClient.deleteStoredNodeGroupIfExists(ID);
 			SparqlGraphJson sgjSelectInsert = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
 			nodeGroupStoreClient.executeStoreNodeGroup(ID, "sampleBattery_deleteSimple", CREATOR, sgjSelectInsert.toJson());
 				
@@ -282,7 +282,7 @@ public class NodeGroupExecutionClientTest_IT {
 				assertTrue("Select failed to retrieve ingested data", tab.getNumRows() == 4);
 				
 			} finally {
-				nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+				nodeGroupStoreClient.deleteStoredNodeGroupIfExists(ID);
 			}
 		}
 		
@@ -290,7 +290,7 @@ public class NodeGroupExecutionClientTest_IT {
 		public void testIngestByNodegroupByIdAsyncError() throws Exception {	
 			// tests "dispatch" version of call 
 			
-			nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+			nodeGroupStoreClient.deleteStoredNodeGroupIfExists(ID);
 			SparqlGraphJson sgjSelectInsert = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
 			nodeGroupStoreClient.executeStoreNodeGroup(ID, "sampleBattery_deleteSimple", CREATOR, sgjSelectInsert.toJson());
 				
@@ -311,7 +311,7 @@ public class NodeGroupExecutionClientTest_IT {
 				
 				
 			} finally {
-				nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+				nodeGroupStoreClient.deleteStoredNodeGroupIfExists(ID);
 			}
 		}
 		
@@ -322,7 +322,7 @@ public class NodeGroupExecutionClientTest_IT {
 			JSONObject ngJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json").getJson();
 			
 			try {
-				nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+				nodeGroupStoreClient.deleteStoredNodeGroupIfExists(ID);
 			} catch (Exception e) {
 			}
 			nodeGroupStoreClient.executeStoreNodeGroup(ID, "testSelectByNodegroupId", CREATOR, ngJson);

@@ -47,13 +47,14 @@ define([	// properly require.config'ed   bootstrap-modal
          *  Cell widths:  are in percents.  Contents are truncated w/ ellipses
          *  heightRows is approximate
          */
-		var SelectTable = function (rows, cols, widths, heightRows, multiFlag, optFilterFlag) {
+		var SelectTable = function (rows, cols, widths, heightRows, multiFlag, optFilterFlag, optClickCallback) {
 			this.rows = rows;
             this.cols = cols;
             this.widths = widths;
             this.heightRows = heightRows;
             this.multiFlag = multiFlag;
             this.filterFlag = typeof optFilterFlag == "undefined" ? true : optFilterFlag;
+            this.clickCallback = optClickCallback;
 
             this.dom = null;
             this.headTab = null;
@@ -254,6 +255,10 @@ define([	// properly require.config'ed   bootstrap-modal
                     tr.classList.remove("row_selected");
                 } else {
                     tr.classList.add("row_selected");
+                }
+
+                if (this.clickCallback) {
+                    this.clickCallback(tr);
                 }
             },
 

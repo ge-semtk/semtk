@@ -82,6 +82,15 @@ define([	// properly require.config'ed   bootstrap-modal
                 this.defaultIndex = i;
             },
 
+            getPlotterByName : function(name) {
+                for (var i=0; i < this.getNumPlots(); i++) {
+                    if (this.getName(i) == name) {
+                        return this.getPlotter(i);
+                    }
+                }
+                throw "Plots json item has plot named: " + name;
+            },
+
             getPlotter : function (index) {
                 var json = this.plotSpecs[index];
 

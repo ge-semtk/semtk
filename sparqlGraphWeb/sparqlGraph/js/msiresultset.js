@@ -472,6 +472,10 @@ define([	// properly require.config'ed   bootstrap-modal
 				return ret;
 			},
 
+            tableGetRowCount : function () {
+                return this.getTable().rows.length;
+            },
+
 			tableGetRows : function () {
 				var table = this.getTable();
 
@@ -625,6 +629,17 @@ define([	// properly require.config'ed   bootstrap-modal
             tableGetHtml : function () {
 				return this.createHtmlTable(this.getTable());
 			},
+
+            createTableElem : function (tab, optSortCol, optSortDesc) {
+                var headers =  tab.col_names || [];
+                var rows = tab.rows || [];
+
+                return IIDXHelper.buildTableElem(headers, rows, optSortCol, optSortDesc);
+            },
+
+            tableGetElem : function (optSortCol, optSortDesc) {
+                return this.createTableElem(this.getTable(), optSortCol, optSortDesc);
+            },
 
 			tableDownloadCsv : function () {
 				IIDXHelper.downloadFile(this.tableGetCsv(), "table.csv", "text/csv;charset=utf8");

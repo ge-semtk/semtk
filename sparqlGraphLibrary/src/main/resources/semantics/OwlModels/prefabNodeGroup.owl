@@ -1,25 +1,17 @@
 <rdf:RDF
     xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel"
     xmlns:owl="http://www.w3.org/2002/07/owl#"
-    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel"
-    xmlns:builtinfunctions="http://sadl.org/builtinfunctions"
     xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
-    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
-    xmlns:PrefabNodeGroup="http://research.ge.com/semtk/prefabNodeGroup#"
   xml:base="http://research.ge.com/semtk/prefabNodeGroup">
-  <owl:Ontology rdf:about="">
-    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
-    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
-    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+  <owl:Ontology rdf:about="http://research.ge.com/semtk/prefabNodeGroup">
     <owl:versionInfo>$Revision:$ Last modified on   $Date:$</owl:versionInfo>
-    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'prefabNodeGroup.sadl' and should not be directly edited.</rdfs:comment>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'prefabNodeGroup.sadl' and should not be edited.</rdfs:comment>
   </owl:Ontology>
   <owl:Class rdf:ID="SemTkConnection">
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:cardinality>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
         <owl:onProperty>
           <owl:DatatypeProperty rdf:ID="domain"/>
         </owl:onProperty>
@@ -27,8 +19,8 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:cardinality>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
         <owl:onProperty>
           <owl:DatatypeProperty rdf:ID="dsDataset"/>
         </owl:onProperty>
@@ -36,8 +28,8 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:cardinality>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
         <owl:onProperty>
           <owl:DatatypeProperty rdf:ID="dsKsURL"/>
         </owl:onProperty>
@@ -45,8 +37,8 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:cardinality>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
         <owl:onProperty>
           <owl:DatatypeProperty rdf:ID="dsURL"/>
         </owl:onProperty>
@@ -54,8 +46,8 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:cardinality>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
         <owl:onProperty>
           <owl:DatatypeProperty rdf:ID="originalServerType"/>
         </owl:onProperty>
@@ -63,8 +55,8 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:cardinality>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
         <owl:onProperty>
           <owl:DatatypeProperty rdf:ID="connectionAlias"/>
         </owl:onProperty>
@@ -74,8 +66,8 @@
   <owl:Class rdf:ID="StringChunk">
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:cardinality>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
         <owl:onProperty>
           <owl:DatatypeProperty rdf:ID="chunk"/>
         </owl:onProperty>
@@ -83,37 +75,25 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:cardinality>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
         <owl:onProperty>
           <owl:DatatypeProperty rdf:ID="counter"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
   </owl:Class>
+  <owl:Class rdf:ID="Report">
+    <rdfs:subClassOf>
+      <owl:Class rdf:ID="StoredItem"/>
+    </rdfs:subClassOf>
+  </owl:Class>
   <owl:Class rdf:ID="PrefabNodeGroup">
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:cardinality>
-        <owl:onProperty>
-          <owl:DatatypeProperty rdf:ID="creationDate"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:cardinality>
-        <owl:onProperty>
-          <owl:DatatypeProperty rdf:ID="creator"/>
-        </owl:onProperty>
-      </owl:Restriction>
-    </rdfs:subClassOf>
-    <rdfs:subClassOf>
-      <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:cardinality>
+        <owl:onClass rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#SemTkConnection"/>
+        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxQualifiedCardinality>
         <owl:onProperty>
           <owl:ObjectProperty rdf:ID="originalConnection"/>
         </owl:onProperty>
@@ -121,90 +101,114 @@
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:cardinality>
+        <owl:onClass rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#SemTkConnection"/>
+        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxQualifiedCardinality>
         <owl:onProperty>
-          <owl:ObjectProperty rdf:ID="stringChunk"/>
+          <owl:ObjectProperty rdf:about="http://research.ge.com/semtk/prefabNodeGroup#originalConnection"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:cardinality>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
         <owl:onProperty>
           <owl:DatatypeProperty rdf:ID="NodeGroup"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
     <rdfs:subClassOf>
+      <owl:Class rdf:about="http://research.ge.com/semtk/prefabNodeGroup#StoredItem"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://research.ge.com/semtk/prefabNodeGroup#StoredItem">
+    <rdfs:subClassOf>
       <owl:Restriction>
-        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
-        >1</owl:cardinality>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="creationDate"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="creator"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
         <owl:onProperty>
           <owl:DatatypeProperty rdf:ID="ID"/>
         </owl:onProperty>
       </owl:Restriction>
     </rdfs:subClassOf>
   </owl:Class>
-  <owl:ObjectProperty rdf:about="#originalConnection">
-    <rdfs:domain rdf:resource="#PrefabNodeGroup"/>
-    <rdfs:range rdf:resource="#SemTkConnection"/>
+  <owl:ObjectProperty rdf:about="http://research.ge.com/semtk/prefabNodeGroup#originalConnection">
+    <rdfs:domain rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#PrefabNodeGroup"/>
+    <rdfs:range rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#SemTkConnection"/>
   </owl:ObjectProperty>
-  <owl:ObjectProperty rdf:about="#stringChunk">
-    <rdfs:domain rdf:resource="#PrefabNodeGroup"/>
-    <rdfs:range rdf:resource="#StringChunk"/>
+  <owl:ObjectProperty rdf:ID="stringChunk">
+    <rdfs:domain rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#StoredItem"/>
+    <rdfs:range rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#StringChunk"/>
   </owl:ObjectProperty>
-  <owl:DatatypeProperty rdf:about="#dsDataset">
-    <rdfs:domain rdf:resource="#SemTkConnection"/>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/semtk/prefabNodeGroup#dsDataset">
+    <rdfs:domain rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#SemTkConnection"/>
     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
   </owl:DatatypeProperty>
-  <owl:DatatypeProperty rdf:about="#dsKsURL">
-    <rdfs:domain rdf:resource="#SemTkConnection"/>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/semtk/prefabNodeGroup#dsKsURL">
+    <rdfs:domain rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#SemTkConnection"/>
     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
   </owl:DatatypeProperty>
-  <owl:DatatypeProperty rdf:about="#originalServerType">
-    <rdfs:domain rdf:resource="#SemTkConnection"/>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/semtk/prefabNodeGroup#originalServerType">
+    <rdfs:domain rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#SemTkConnection"/>
     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
   </owl:DatatypeProperty>
-  <owl:DatatypeProperty rdf:about="#ID">
-    <rdfs:domain rdf:resource="#PrefabNodeGroup"/>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/semtk/prefabNodeGroup#ID">
+    <rdfs:domain rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#StoredItem"/>
     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
   </owl:DatatypeProperty>
-  <owl:DatatypeProperty rdf:about="#dsURL">
-    <rdfs:domain rdf:resource="#SemTkConnection"/>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/semtk/prefabNodeGroup#dsURL">
+    <rdfs:domain rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#SemTkConnection"/>
     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
   </owl:DatatypeProperty>
-  <owl:DatatypeProperty rdf:about="#domain">
-    <rdfs:domain rdf:resource="#SemTkConnection"/>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/semtk/prefabNodeGroup#domain">
+    <rdfs:domain rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#SemTkConnection"/>
     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
   </owl:DatatypeProperty>
-  <owl:DatatypeProperty rdf:about="#creator">
-    <rdfs:domain rdf:resource="#PrefabNodeGroup"/>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/semtk/prefabNodeGroup#creator">
+    <rdfs:domain rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#StoredItem"/>
     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
   </owl:DatatypeProperty>
-  <owl:DatatypeProperty rdf:about="#counter">
-    <rdfs:domain rdf:resource="#StringChunk"/>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/semtk/prefabNodeGroup#counter">
+    <rdfs:domain rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#StringChunk"/>
     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
   </owl:DatatypeProperty>
-  <owl:DatatypeProperty rdf:about="#connectionAlias">
-    <rdfs:domain rdf:resource="#SemTkConnection"/>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/semtk/prefabNodeGroup#connectionAlias">
+    <rdfs:domain rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#SemTkConnection"/>
     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
   </owl:DatatypeProperty>
-  <owl:DatatypeProperty rdf:about="#chunk">
-    <rdfs:domain rdf:resource="#StringChunk"/>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/semtk/prefabNodeGroup#chunk">
+    <rdfs:domain rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#StringChunk"/>
     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
   </owl:DatatypeProperty>
-  <owl:DatatypeProperty rdf:about="#NodeGroup">
-    <rdfs:domain rdf:resource="#PrefabNodeGroup"/>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/semtk/prefabNodeGroup#NodeGroup">
+    <rdfs:domain rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#PrefabNodeGroup"/>
     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
   </owl:DatatypeProperty>
   <owl:DatatypeProperty rdf:ID="comments">
-    <rdfs:domain rdf:resource="#PrefabNodeGroup"/>
+    <rdfs:domain rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#StoredItem"/>
     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
   </owl:DatatypeProperty>
-  <owl:DatatypeProperty rdf:about="#creationDate">
-    <rdfs:domain rdf:resource="#PrefabNodeGroup"/>
+  <owl:DatatypeProperty rdf:about="http://research.ge.com/semtk/prefabNodeGroup#creationDate">
+    <rdfs:domain rdf:resource="http://research.ge.com/semtk/prefabNodeGroup#StoredItem"/>
     <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#date"/>
   </owl:DatatypeProperty>
 </rdf:RDF>

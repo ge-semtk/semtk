@@ -18,13 +18,15 @@
 
 define([	// properly require.config'ed   bootstrap-modal
         	'sparqlgraph/js/microserviceinterface',
+            'sparqlgraph/js/msiclientstatus',
+        	'sparqlgraph/js/msiclientresults',
         	'sparqlgraph/js/msiresultset',
 
 			// shimmed
 
 		],
 
-	function(MicroServiceInterface, MsiResultSet) {
+	function(MicroServiceInterface, MsiClientStatus, MsiClientResults, MsiResultSet) {
 
 
 		var MsiClientOntologyInfo = function (serviceURL, optFailureCallback, optTimeout) {
@@ -33,7 +35,53 @@ define([	// properly require.config'ed   bootstrap-modal
 			this.optFailureCallback = optFailureCallback;
 			this.optTimeout = optTimeout;
 		};
+        MsiClientOntologyInfo.buildPredicateStatsCallback = function(jsonBlobCallback, failureCallback, progressCallback, checkForCancelCallback, optLoPercent, optHiPercent) {
+            return MsiClientOntologyInfo.buildAsyncCallback("blob", jsonBlobCallback, failureCallback, progressCallback, checkForCancelCallback, optLoPercent, optHiPercent);
+        };
+        MsiClientOntologyInfo.buildCardinalityViolationsCallback = function(tableCallback, failureCallback, progressCallback, checkForCancelCallback, optLoPercent, optHiPercent) {
+            return MsiClientOntologyInfo.buildAsyncCallback("table", tableCallback, failureCallback, progressCallback, checkForCancelCallback, optLoPercent, optHiPercent);
+        };
 
+        //
+        // Build a callback for a table or Blob
+        //
+        MsiClientOntologyInfo.buildAsyncCallback = function(tableOrBlob, successCallback, failureCallback, progressCallback, checkForCancelCallback, optLoPercent, optHiPercent) {
+
+            // callback for the nodegroup execution service to send jobId
+            var simpleResCallback = function(simpleResJson) {
+
+                var resultSet = new MsiResultSet(simpleResJson.serviceURL, simpleResJson.xhr);
+                if (!resultSet.isSuccess()) {
+                    failureCallback(resultSet.getFailureHtml());
+                } else {
+                    var jobId = resultSet.getSimpleResultField("JobId");
+                    // callback for status service after job successfully finishes
+                    var statusSuccessCallback = function() {
+                        // callback for results service
+                        var resultsSuccessCallback = function (results) {
+                            progressCallback("finishing up", 99);
+                            successCallback(results);
+                            progressCallback("");
+                        };
+                        var resultsClient = new MsiClientResults(g.service.results.url, jobId);
+                        if (tableOrBlob == "blob") {
+                            resultsClient.execGetJsonBlobRes(resultsSuccessCallback);
+                        } else {
+                            resultsClient.execGetTableResultsJsonTableRes(5000, resultsSuccessCallback);
+                        }
+                    };
+
+                    progressCallback("", 1);
+
+                    // call status service loop
+                    var statusClient = new MsiClientStatus(g.service.status.url, jobId, failureCallback);
+                    statusClient.execAsyncWaitUntilDone(statusSuccessCallback, checkForCancelCallback, progressCallback);
+                }
+
+            };
+
+            return simpleResCallback;
+        };
 
 		MsiClientOntologyInfo.prototype = {
 
@@ -96,6 +144,14 @@ define([	// properly require.config'ed   bootstrap-modal
 				});
 
 				this.msi.postToEndpoint("getPredicateStats", myData, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+            },
+
+            execGetCardinalityViolations : function (conn, successCallback) {
+                var myData = JSON.stringify ({
+					"conn" : JSON.stringify(conn.toJson()),
+				});
+
+				this.msi.postToEndpoint("getCardinalityViolations", myData, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
             },
 		};
 

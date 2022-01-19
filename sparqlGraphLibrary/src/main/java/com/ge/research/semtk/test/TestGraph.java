@@ -578,6 +578,24 @@ public class TestGraph {
 		return sgJson;
 	}
 	
+	@SuppressWarnings("rawtypes")
+	public static int ingestFromResources(Class c, String sgjsonResource, String csvResource) throws Exception {
+
+		JSONObject jObj = Utility.getResourceAsJson(c, sgjsonResource);
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromJson(jObj); 
+		
+		// load the data
+		String content = Utility.getResourceAsString(c, csvResource);
+		Dataset ds = new CSVDataset(content, true);
+		
+		DataLoader dl = new DataLoader(sgJson, ds, getUsername(), getPassword());
+		int rows = dl.importData(true);
+		if (rows == 0) {
+			throw new Exception(dl.getLoadingErrorReportBrief());
+		}
+		return rows;
+	}
+	
 	public static Table runQuery(String query) throws Exception {
 		return TestGraph.getSei().executeQueryToTable(query);
 	}
@@ -590,6 +608,12 @@ public class TestGraph {
 	 * @throws Exception
 	 */	
 	public static void queryAndCheckResults(SparqlGraphJson sgjson, Object caller, String expectedFileName) throws Exception {
+		NodeGroup ng = sgjson.getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient());
+		IntegrationTestUtility.querySeiAndCheckResults(ng, TestGraph.getSei(), caller, expectedFileName);
+	}
+	
+	public static void queryAndCheckResults(Object caller, String sgjsonResource, String expectedFileName) throws Exception {
+		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(caller, sgjsonResource);
 		NodeGroup ng = sgjson.getNodeGroupNoInflateNorValidate(IntegrationTestUtility.getOntologyInfoClient());
 		IntegrationTestUtility.querySeiAndCheckResults(ng, TestGraph.getSei(), caller, expectedFileName);
 	}

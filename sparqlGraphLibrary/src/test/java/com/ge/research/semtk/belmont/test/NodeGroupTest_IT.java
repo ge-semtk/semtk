@@ -205,7 +205,7 @@ public class NodeGroupTest_IT {
 		String badURI = "http://bad_URI";
 		String badKeyname = "bad_URI";
 		Node n = nodegroup.getNodeBySparqlID("?Battery");
-		PropertyItem pi = new PropertyItem(badKeyname, XSDSupportedType.STRING.getSimpleName(), XSDSupportedType.STRING.getPrefixedName(), badURI);
+		PropertyItem pi = new PropertyItem(XSDSupportedType.STRING, XSDSupportedType.STRING.getPrefixedName(), badURI);
 	
 		n.getPropertyItems().add(pi);
 		nodegroup.changeSparqlID(pi, "?random");
@@ -249,7 +249,7 @@ public class NodeGroupTest_IT {
 		PropertyItem pi = null;
 		for (PropertyItem p : n.getPropertyItems()) {
 			if (p.getKeyName().equals(badKeyname)) {
-				p.changeValueType(XSDSupportedType.DOUBLE);
+				p.setRange(XSDSupportedType.DOUBLE.getFullName(), XSDSupportedType.asSet(XSDSupportedType.DOUBLE));
 				pi = p;
 				break;
 			}
@@ -275,7 +275,7 @@ public class NodeGroupTest_IT {
 		// unused: still there, and fixed range
 		pi = n.getPropertyByKeyname(badKeyname);
 		assertTrue("Invalid unused property item range was not inflated into nodegroup", pi != null);
-		assertEquals("Invid unused property item range was not corrected", XSDSupportedType.DATETIME, pi.getValueType());
+		assertTrue("Invid unused property item range was not corrected", pi.getValueTypes().contains(XSDSupportedType.DATETIME));
 
 	}
 	
@@ -508,7 +508,7 @@ public class NodeGroupTest_IT {
 				new String [] {});
 		
 		// fix
-		nodegroup.changeItemRange(nameProp, "http://www.w3.org/2001/XMLSchema#string");
+		nodegroup.changeItemRange(nameProp, "http://www.w3.org/2001/XMLSchema#string", XSDSupportedType.asSet(XSDSupportedType.STRING));
 		
 		// no validation errors remain
 		inflateAndValidate(nodegroup, 

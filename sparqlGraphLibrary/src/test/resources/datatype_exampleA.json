@@ -1,0 +1,222 @@
+{
+	"version": 3,
+	"sparqlConn": {
+		"name": "Junit fuseki",
+		"domain": "",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 17,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://datatypetest#Airport_Ident",
+						"domainURI": "http://datatypetest#ai",
+						"Constraints": "",
+						"SparqlID": "?ai",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"valueTypes": [
+							"date",
+							"int",
+							"time"
+						],
+						"rangeURI": "http://datatypetest#clothingsize",
+						"domainURI": "http://datatypetest#cs",
+						"Constraints": "",
+						"SparqlID": "?cs",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://datatypetest#enumeratedheight",
+						"domainURI": "http://datatypetest#eh",
+						"Constraints": "",
+						"SparqlID": "?eh",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"valueTypes": [
+							"int"
+						],
+						"rangeURI": "http://datatypetest#over12",
+						"domainURI": "http://datatypetest#o12",
+						"Constraints": "",
+						"SparqlID": "?o12",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://datatypetest#SSN",
+						"domainURI": "http://datatypetest#sn",
+						"Constraints": "",
+						"SparqlID": "?sn",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"valueTypes": [
+							"int"
+						],
+						"rangeURI": "http://datatypetest#year",
+						"domainURI": "http://datatypetest#y",
+						"Constraints": "",
+						"SparqlID": "?y",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"fullURIName": "http://datatypetest#Examples",
+				"SparqlID": "?Examples",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": [],
+		"groupBy": [],
+		"unionHash": {},
+		"columnOrder": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "ai"
+			},
+			{
+				"colId": "col_1",
+				"colName": "cs"
+			},
+			{
+				"colId": "col_2",
+				"colName": "eh"
+			},
+			{
+				"colId": "col_3",
+				"colName": "o12"
+			},
+			{
+				"colId": "col_4",
+				"colName": "sn"
+			},
+			{
+				"colId": "col_5",
+				"colName": "y"
+			}
+		],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Examples",
+				"type": "http://datatypetest#Examples",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://datatypetest#ai",
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://datatypetest#cs",
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://datatypetest#eh",
+						"mapping": [
+							{
+								"colId": "col_2"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://datatypetest#o12",
+						"mapping": [
+							{
+								"colId": "col_3"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://datatypetest#sn",
+						"mapping": [
+							{
+								"colId": "col_4"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://datatypetest#y",
+						"mapping": [
+							{
+								"colId": "col_5"
+							}
+						]
+					}
+				]
+			}
+		]
+	},
+	"plotSpecs": null
+}

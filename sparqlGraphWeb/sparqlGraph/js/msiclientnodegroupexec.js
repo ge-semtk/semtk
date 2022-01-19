@@ -173,6 +173,36 @@ define([	// properly require.config'ed   bootstrap-modal
             return ngExecJobIdCallback;
         };
 
+        MsiClientNodeGroupExec.buildJsonBlobCallback = function(jsonBlobCallback, failureCallback, percentCallback, checkForCancelCallback, statusUrl, resultUrl) {
+
+            // callback for the nodegroup execution service to send jobId
+            var ngExecJobIdCallback = function(jobId) {
+
+                // callback for status service after job successfully finishes
+                var ngStatusSuccessCallback = function() {
+
+                    // callback for results service
+                    var ngResultsSuccessCallback = function (jsonLdCallback, percentCallback, results) {
+                        jsonLdCallback(results);
+                    };
+
+                    // send json results to jsonLdCallback
+                    var resultsClient = new MsiClientResults(resultUrl, jobId, failureCallback);
+                    resultsClient.execGetJsonBlobRes( ngResultsSuccessCallback.bind(this, jsonBlobCallback, percentCallback) );
+
+                }.bind(this);
+
+                var sProgress = MsiClientNodeGroupExec.scaleProgress.bind(this, percentCallback, 10, 90);
+
+                // call status service loop
+                var statusClient = new MsiClientStatus(statusUrl, jobId, failureCallback);
+                statusClient.execAsyncWaitUntilDone(ngStatusSuccessCallback, checkForCancelCallback, sProgress);
+
+            }.bind(this);
+
+            return ngExecJobIdCallback;
+        };
+
 
 		MsiClientNodeGroupExec.prototype = {
 
@@ -242,6 +272,10 @@ define([	// properly require.config'ed   bootstrap-modal
             },
 
             /*==========  functions with jobIdCallback ============*/
+            /*
+            **   You can build a jobIdCallback with one of the
+            **   MsiClientNodeGroupExec.build___Callback() functions
+            */
             execAsyncDispatchConstructFromNodeGroup : function(nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
                 this.runAsyncNodegroup("dispatchConstructFromNodegroup",
                                         nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
@@ -286,6 +320,16 @@ define([	// properly require.config'ed   bootstrap-modal
 
             execAsyncDispatchSelectById : function(nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
                 this.runAsyncNodegroupId("dispatchSelectById",
+                                         nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
+            },
+
+            execAsyncDispatchCountById : function(nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
+                this.runAsyncNodegroupId("dispatchCountById",
+                                         nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
+            },
+
+            execAsyncDispatchConstructById : function(nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
+                this.runAsyncNodegroupId("dispatchConstructById",
                                          nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
             },
 

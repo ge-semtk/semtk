@@ -21,3 +21,6 @@ Includes other open source code:
   See https://github.com/eclipse/jgit/blob/master/LICENSE 
 - plot.ly (c) 2021 Plotly, Inc.  Licensed under MIT
   See https://github.com/plotly/plotly.js
+- json editor by Jeremy Dorn.  Licensed under MIT
+  see https://github.com/jdorn/json-editor/
+  see https://github.com/json-editor/json-editor

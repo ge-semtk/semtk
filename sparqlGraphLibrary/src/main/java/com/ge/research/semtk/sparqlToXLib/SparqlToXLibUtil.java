@@ -20,7 +20,7 @@ package com.ge.research.semtk.sparqlToXLib;
 
 
 import java.util.ArrayList;
-
+import java.util.HashSet;
 
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
@@ -226,7 +226,9 @@ public class SparqlToXLibUtil {
 			throw new Exception("class values list is empty");
 		}
 		
-		sClassValuesClause =  ValueConstraint.buildFilterInConstraint("?s_class", classValues, XSDSupportedType.NODE_URI) ;
+		HashSet<XSDSupportedType> uriSet = new HashSet<XSDSupportedType>();
+		uriSet.add(XSDSupportedType.NODE_URI);
+		sClassValuesClause =  ValueConstraint.buildFilterInConstraint("?s_class", classValues, uriSet) ;
 
 		// Start the query
 		if (countQuery) {
@@ -304,5 +306,123 @@ public class SparqlToXLibUtil {
 		}
 	}
 
+	/**
+	 * Get cardinality restrictions from every graph in the conn.
+	 * Table ?class, ?property ?restriction ?limit
+	 * where ?class is optional
+	 *       ?property is the property
+	 *       ?restriction contains "ardinality"
+	 *       ?limit is the integer cardinality limit
+	 * @param conn
+	 * @param oInfo
+	 * @return
+	 * @throws Exception
+	 */
+	public static String generateGetCardinalityRestrictions(SparqlConnection conn, OntologyInfo oInfo) throws Exception {
+		StringBuffer sparql = new StringBuffer();
+		sparql.append("SELECT DISTINCT ?class ?property ?restriction ?limit  \n");
+		sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
+		sparql.append("WHERE { \n");
+		sparql.append("  ?r  a <http://www.w3.org/2002/07/owl#Restriction>. \n");
+		sparql.append("  ?r <http://www.w3.org/2002/07/owl#onProperty> ?property.  \n");
+		// note:  very weird that the class is subClassOf the restriction -Paul
+		sparql.append("  OPTIONAL { ?class <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?r. }  \n");   
+		sparql.append("  ?r  ?restriction ?limit. \n");
+		sparql.append("  FILTER REGEX (str(?restriction), \"ardinality\" ). \n");  
+		sparql.append("} ORDER BY ?class ?property ?restriction \n");
+		return sparql.toString();
+	}
 	
+	/**
+	 * Query all distinct ?dataType ?equivType ?r_pred ?r_obj
+	 * Note: does not handle difference due to Domain, since we could not make SADL generate this
+	 * @param graphName 
+	 * @param domain
+	 * @return
+	 */
+	public static String generateGetDatatypeRestriction(String graphName, String domain){
+
+		// SADL makes datatypes either owl:onDatatype or a union of objects w/o the onDatatype predicate (curious)
+		String retval = "PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
+                		"PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> \n" +
+						"PREFIX owl:<http://www.w3.org/2002/07/owl#> \n" +
+						"SELECT DISTINCT ?dataType ?equivType ?r_pred ?r_obj \n" +
+						"		FROM <http://junit/GG2NQYY2E/200001934/both> \n" +
+						"WHERE { \n" +
+						"	?dataType rdf:type rdfs:Datatype . \n" +
+						genDomainFilterStatement("dataType", domain, "") + "\n" +
+						"   ?dataType owl:equivalentClass* ?e . \n" +
+						"   { \n " +
+						"       ?e owl:onDatatype ?equivType \n " +
+						"   } UNION { \n " +
+						"       ?e owl:unionOf ?u . \n" +
+						"	    ?u rdf:rest* ?r . \n" +
+						"	    ?r rdf:first ?equivType . \n" +
+						"	} \n" +
+						"   optional {  \n" +
+						"     ?e owl:withRestrictions ?rlist . \n" +
+						"     ?rlist rdf:rest* ?r2 . \n" +
+						"     ?r2 rdf:first ?restriction . \n" +
+						"     ?restriction ?r_pred ?r_obj . \n" +
+						"   } \n" +
+						"} ";
+		return retval;
+	}
+	
+	/**
+	 * Generate the domain filter clause.  If none (the new normal) filter out blank nodes.
+	 * @param varName
+	 * @param domain
+	 * @param clause
+	 * @return
+	 */
+	public static String genDomainFilterStatement(String varName, String domain, String clause) {
+		if (domain == null || domain.isEmpty()) {
+			// remove blank nodes
+			String ret = "filter (!regex(str(?" + varName + "),'^(nodeID://|_:)') " + clause + ") ";
+			return ret;
+			
+		} else {
+			// old-fashioned domain filter
+			String ret = "filter (regex(str(?" + varName + "),'^" + domain + "') " + clause + ") ";
+			return ret;
+			
+		}
+	}
+	
+	/**
+	 * 
+	 * @param conn - data connections
+	 * @param oInfo
+	 * @param className - class or null
+	 * @param predName - predicate to check
+	 * @param op - operator for the check
+	 * @param limit - limit for the check
+	 * @return - sparql that will  return table ?subject ?object_COUNT  for any that match the subject className, predicate, op, and limit
+	 * @throws Exception
+	 */
+	public static String generateCheckCardinalityRestrictions(SparqlConnection conn, OntologyInfo oInfo, String className, String predName, String op, int limit) throws Exception {
+		StringBuffer sparql = new StringBuffer();
+		sparql.append("SELECT DISTINCT ?subject (COUNT(?object) AS ?object_COUNT)  \n");
+		sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
+		sparql.append("WHERE { \n");
+		
+		if (! className.isEmpty()) {
+			sparql.append("  ?subject a ?subject_class . ");
+			ArrayList<String> classNames = new ArrayList<String>();
+			classNames.addAll(oInfo.getSubclassNames(className));
+			
+			sparql.append("  " + ValueConstraint.buildBestSubclassConstraint(
+					"?subject_class", 
+					className,
+					classNames, 
+					conn.getDefaultQueryInterface()) + " .\n");
+		}
+		
+		sparql.append(" OPTIONAL { ?subject <" + predName + "> ?object } . \n");
+		sparql.append("} GROUP BY ?subject \n");
+		sparql.append("  HAVING ( ?object_COUNT " + op + " " + Integer.toString(limit) + " ) \n");
+		
+		return sparql.toString();
+	}
 }

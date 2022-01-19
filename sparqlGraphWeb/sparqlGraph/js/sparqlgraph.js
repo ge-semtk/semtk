@@ -58,6 +58,8 @@
 
     	setTabButton("upload-tab-but", true);
     	setTabButton("mapping-tab-but", true);
+        setTabButton("explore-tab-but", true);
+        setTabButton("report-tab-but", true);
 
     	// checkBrowser();
 
@@ -72,6 +74,8 @@
                   'sparqlgraph/js/msiclientnodegroupservice',
                   'sparqlgraph/js/msiclientnodegroupstore',
                   'sparqlgraph/js/nodegrouprenderer',
+                  'sparqlgraph/js/reporttab',
+                  'sparqlgraph/js/undomanager',
                   'sparqlgraph/js/uploadtab',
 
                   // shim
@@ -79,9 +83,11 @@
 
 	              'local/sparqlgraphlocal'
                 ],
-                function (ExploreTab, MappingTab, ModalIidx, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupService, MsiClientNodeGroupStore, NodegroupRenderer, UploadTab) {
+                function (ExploreTab, MappingTab, ModalIidx, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupService, MsiClientNodeGroupStore, NodegroupRenderer, ReportTab, UndoManager, UploadTab) {
 
 	    	console.log(".ready()");
+
+            gUndoManager = new UndoManager();
 
 	    	// create the modal dialogue
             var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
@@ -92,6 +98,7 @@
 
             canvasWrapper = document.getElementById("canvasWrapper");
             canvasWrapper.innerHTML = "";
+            canvasWrapper.onkeyup = onkeyupCanvas;
             gRenderer = new NodegroupRenderer(canvasWrapper);
 	        gRenderer.setPropEditorCallback(launchPropertyItemDialog);
 	        gRenderer.setSNodeEditorCallback(launchSNodeItemDialog);
@@ -108,7 +115,7 @@
 	    			                    g.service.sparqlQuery.url);
 	    	setTabButton("upload-tab-but", false);
 
-            // edit tab
+            // explore tab
             gExploreTab = new ExploreTab( document.getElementById("exploreTreeDiv"),
                                        document.getElementById("exploreCanvasDiv"),
                                        document.getElementById("exploreButtonDiv"),
@@ -122,7 +129,21 @@
 			gMappingTab =  new MappingTab(importoptionsdiv, importcanvasdiv, importcolsdiv, gUploadTab.setDataFile.bind(gUploadTab), logAndAlert, ngClient );
 	    	setTabButton("mapping-tab-but", false);
 
-            // load gExploreTab
+            // init gExploreTab
+            setTabButton("explore-tab-but", false);
+
+            // init gReportTab
+            setTabButton("report-tab-but", false);
+            var user = localStorage.getItem("SPARQLgraph_user");
+
+            gReportTab = new ReportTab(
+                                    document.getElementById("reportToolForm"),
+                                    document.getElementById("reportOptionsDiv"),
+                                    document.getElementById("reportEditDiv"),
+                                    document.getElementById("reportDiv"),
+                                    g,
+                                    user || "",
+                                    function(u) {localStorage.setItem("SPARQLgraph_user", u);});
 
 	        // load last connection
 			var conn = gLoadDialog.getLastConnectionInvisibly();
@@ -138,7 +159,7 @@
                                         window.open(g.help.url.base + "/" + g.help.url.demo, "_blank","location=yes");
 
                                         var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
-                                        mq.getNodeGroupByIdToJsonStr("demoNodegroup", doQueryLoadJsonStr);
+                                        mq.getStoredItemByIdToStr("demoNodegroup", MsiClientNodeGroupStore.TYPE_NODEGROUP, doQueryLoadJsonStr);
                                     }
                                   );
 
@@ -176,6 +197,16 @@
 		});
     });
 
+    var onkeyupCanvas = function(e) {
+        if (e.ctrlKey) {
+            if (e.key == 'z') {
+                doUndo();
+            } else if (e.key == 'y') {
+                doRedo();
+            }
+        }
+    };
+
     var checkBrowser = function() {
      	// Detect Browser
     	//var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
@@ -202,7 +233,9 @@
 
             // Handle no paths or shift key during drag: drop node with no connections
             if (noPathFlag) {
+
                 gNodeGroup.addNode(dragLabel, gOInfo);
+                saveUndoState();
                 nodeGroupChanged(true);
                 guiGraphNonEmpty();
 
@@ -248,7 +281,9 @@
         var pathWarnings = simpleRes.getSimpleResultField("pathWarnings");
 
         if (pathListJson.length == 0) {
+
             gNodeGroup.addNode(addClassStr, gOInfo);
+            saveUndoState();
             nodeGroupChanged(true);
             guiGraphNonEmpty();
 
@@ -313,11 +348,13 @@
     	var anchorNode = val[1];
     	var singleLoopFlag = val[2];
 
+
     	if (anchorNode == null) {
     		gNodeGroup.addNode(path.getStartClassName(), gOInfo);
     	} else {
     		gNodeGroup.addPath(path, anchorNode, gOInfo, singleLoopFlag);
     	}
+        saveUndoState();
         nodeGroupChanged(true);
       	guiGraphNonEmpty();
     };
@@ -449,7 +486,7 @@
                 // when this is finally called, propItem and gNodeGroup have changed
                 // gNodeGroup - fine, it's a global
                 // propItem - need to find it in the current gNodeGroup
-                var p = gNodeGroup.getNodeBySparqlID(snodeID).getPropertyByURIRelation(propItem.getUriRelation());
+                var p = gNodeGroup.getNodeBySparqlID(snodeID).getPropertyByURIRelation(propItem.getDomainURI());
 
                 var dialog= new ModalItemDialog(p,
                                                 gNodeGroup,
@@ -473,7 +510,7 @@
                         // Domain is already correct.   Range is wrong.
                         // There must be constraints or else this wouldn't have been flagged as an error.
                         var oRangeStr = oClass.getProperty(propItem.getURI()).getRange().getFullName();
-                        var pRangeStr = propItem.getValueTypeURI();
+                        var pRangeStr = propItem.getRangeURI();
                         var hasConstraints = (propItem.getConstraints().length > 0);
                         var hasMapping = gMappingTab.getImportSpec().hasMapping(snodeID, propItem.getURI());
 
@@ -481,7 +518,7 @@
                         var changePropItemURI = function() {
                             // same javascript black magic
                             // propItem - need to find it in the current gNodeGroup
-                            var p = gNodeGroup.getNodeBySparqlID(snodeID).getPropertyByURIRelation(propItem.getUriRelation());
+                            var p = gNodeGroup.getNodeBySparqlID(snodeID).getPropertyByURIRelation(propItem.getDomainURI());
                             changeItemURI(p, undefined, oRangeStr, "range", hasConstraints ? raisePropItemDialog : undefined);
                         };
 
@@ -560,7 +597,7 @@
 
     var launchLinkBuilder2 = function(snode, nItem) {
 		// callback when user clicks on a nodeItem
-    	var rangeStr = nItem.getUriValueType();
+    	var rangeStr = nItem.getRangeURI();
 
     	// find nodes that might connect
     	var targetSNodes = gNodeGroup.getNodesBySuperclassURI(rangeStr, gOInfo);
@@ -621,7 +658,10 @@
 	var linkEditorCallback = function(snode, nItem, targetSNode, data, optionalMinusVal, qualifierVal, union, unionReverse, deleteMarkerVal, deleteFlag) {
         require([ 'sparqlgraph/js/modallinkdialog',
                          ], function (ModalLinkDialog) {
-    		// optionalFlag
+
+
+
+            // optionalFlag
     		nItem.setOptionalMinus(targetSNode, optionalMinusVal);
             nItem.setQualifier(targetSNode, qualifierVal);
     		nItem.setSnodeDeletionMarker(targetSNode, deleteMarkerVal);
@@ -642,6 +682,7 @@
     		}
 
             nodeGroupChanged(true, gNodeGroup.getSNodeSparqlIDs());
+            saveUndoState();
         });
 	};
 
@@ -722,7 +763,9 @@
     };
 
     var snodeRemover1 = function (snode) {
+
         snode.removeFromNodeGroup(false);
+        saveUndoState();
 
         if (gInvalidItems.length > 0) {
             reValidateNodegroup();
@@ -738,15 +781,17 @@
 	 * @param rangeSnode - range node, if null then create it
 	 */
 	var buildLink = function(snode, nItem, rangeSnode) {
+
 		var snodeClass = gOInfo.getClass(snode.fullURIName);
 		var domainStr = gOInfo.getInheritedPropertyByKeyname(snodeClass, nItem.getKeyName()).getNameStr();
 		if (rangeSnode == null) {
-			var rangeStr = nItem.getUriValueType();
+			var rangeStr = nItem.getRangeURI();
 			var newNode = gNodeGroup.returnBelmontSemanticNode(rangeStr, gOInfo);
 			gNodeGroup.addOneNode(newNode, snode, null, domainStr);
 		} else {
 			snode.setConnection(rangeSnode, domainStr);
 		}
+        saveUndoState();
         nodeGroupChanged(true);
 	};
 
@@ -755,6 +800,8 @@
 
         require([ 'sparqlgraph/js/modalitemdialog',
                 ], function (ModalItemDialog) {
+
+
 
             // update the binding or sparqlID based on varName and returnFalg
             if (propItem.getSparqlID() == "") {
@@ -792,6 +839,7 @@
             propItem.setFunctions(functions);
 
             nodeGroupChanged(true);
+            saveUndoState();
         });
     };
 
@@ -800,6 +848,7 @@
                 ], function (ModalItemDialog) {
 
             // Note: ModalItemDialog validates that sparqlID is legal
+
 
             // update the binding or sparqlID based on varName and returnFalg
             if (varName == snodeItem.getSparqlID()) {
@@ -837,6 +886,7 @@
 
             snodeItem.setIsConstructed(constructFlag);
             nodeGroupChanged(true);
+            saveUndoState();
         });
     };
 
@@ -884,6 +934,7 @@
 	    gOInfoLoadTime = new Date();
 
         gExploreTab.setConn(gConn, gOInfo);
+        gReportTab.setConn(gConn);
 
 		setStatus("");
 		guiTreeNonEmpty();
@@ -909,6 +960,7 @@
 		    gOInfoLoadTime = new Date();
 
             gExploreTab.setConn(gConn, gOInfo);
+            gReportTab.setConn(gConn);
 
 	    	gMappingTab.updateNodegroup(gNodeGroup, gConn);
 			gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
@@ -970,6 +1022,7 @@
     };
 
     var setConn = function (conn) {
+        resetUndo();   // changing connection clears out Undo
         gConn = conn;
         this.updateStoreConnStr();
     };
@@ -1306,9 +1359,11 @@
         }
 
         // do either way
+
         gNodeGroup = new SemanticNodeGroup();
         gNodeGroup.addJson(nodegroupJson);
         nodeGroupChanged(false);
+        saveUndoState();
         buildQuery();
     };
 
@@ -1326,8 +1381,10 @@
     var reValidateCallback = function(callback, nodegroupJson, modelErrors, invalidItemStrings, warnings) {
 
         gInvalidItems = invalidItemStrings;
+
         gNodeGroup = new SemanticNodeGroup();
         gNodeGroup.addJson(nodegroupJson);
+        saveUndoState();
         nodeGroupChanged(true);
         buildQuery();
 
@@ -1345,8 +1402,10 @@
             callback();
         }
         gNodegroupInvalidItems = invalidItemStrings;
+
         gNodeGroup = new SemanticNodeGroup();
         gNodeGroup.addJson(nodegroupJson);
+        saveUndoState();
         nodeGroupChanged(true);
         buildQuery();
     };
@@ -1486,7 +1545,9 @@
     	         function (ModalOrderByDialog) {
 
             var callback = function (x) {
+
                 gNodeGroup.setOrderBy(x);
+                saveUndoState();
                 nodeGroupChanged(true);
             };
 
@@ -1501,7 +1562,9 @@
     	         function (ModalGroupByDialog) {
 
             var callback = function (x) {
+
                 gNodeGroup.setGroupBy(x);
+                saveUndoState();
                 nodeGroupChanged(true);
             };
 
@@ -1734,9 +1797,14 @@
                 }
             }
 
+            // build column order button
+
+            var butColOrder = IIDXHelper.createIconButton("icon-random", null,  ["btn"], undefined, "Save column order");
+            butColOrder.onclick = saveColumnOrder.bind(this, butColOrder);
+
             // build select
             select = IIDXHelper.createSelect(null, textValArray, selectedTexts);
-            select.onchange = function(select) {
+            select.onchange = function(select, butCO) {
                 var i = parseInt(select.value);
 
                 // empty w/o shrinking so screen might now bounce
@@ -1745,12 +1813,14 @@
 
                 if (i < 0) {
                     tableResults.putTableResultsDatagridInDiv(resultsDiv, undefined, noSort);
+                    butCO.disabled = false;
                 } else {
                     gPlotSpecsHandler.getPlotter(i).addPlotToDiv(resultsDiv, tableResults);
+                    butCO.disabled = true;
                 }
-            }.bind(this, select);
+            }.bind(this, select, butColOrder);
 
-            // build button
+            // build plots button
             var plotsCallback = function(plotSpecsHandler) {
                 gPlotSpecsHandler = plotSpecsHandler;
                 queryTableResCallback(csvFilename, fullURL, tableResults);
@@ -1764,7 +1834,7 @@
                 dialog.show(parseInt(sel.value));
             }.bind(this, plotsDialog, select);
 
-            var but = IIDXHelper.createIconButton("icon-picture", plotsLauncher, undefined, undefined, "Plots");
+            var butPlots = IIDXHelper.createIconButton("icon-picture", plotsLauncher, ["btn"], undefined, "Plots");
 
             // assemble the span
             var span = document.createElement("span");
@@ -1772,7 +1842,9 @@
             select.style.margin="0";
             span.appendChild(select);
             span.appendChild(document.createTextNode(" "));
-            span.appendChild(but);
+            span.appendChild(butPlots);
+            span.appendChild(document.createTextNode(" "));
+            span.appendChild(butColOrder);
 
             // add header to results
             var headerTable = IIDXHelper.buildResultsHeaderTable(headerHtml, ["Save table csv"], [tableResults.tableDownloadCsv.bind(tableResults)], span);
@@ -1784,14 +1856,33 @@
             var plotter = gPlotSpecsHandler == null ? null : gPlotSpecsHandler.getDefaultPlotter();
             if (plotter != null) {
                 plotter.addPlotToDiv(resultsDiv, tableResults);
+                butColOrder.disabled = true;
             } else {
                 tableResults.putTableResultsDatagridInDiv(resultsDiv, undefined, noSort);
+                butColOrder.disabled = false;
             }
 
             guiUnDisableAll();
             guiResultsNonEmpty();
             setStatus("");
          });
+    };
+
+    var saveColumnOrder = function(button) {
+        // make it a little clear that something happened
+        button.classList.add("btn-info");
+        setTimeout(function(){button.classList.remove("btn-info")}, 600);
+
+        var tables = document.getElementById("resultsParagraph").getElementsByTagName("table");
+        if (tables == null || tables.length < 2) {
+            throw new Error("Internal: no table in the results section");
+        }
+        var thList = tables[1].getElementsByTagName("thead")[0].getElementsByTagName("tr")[0].getElementsByTagName("th");
+        var colNames = [];
+        for (var th of thList) {
+            colNames.push('?'+th.innerHTML);
+        }
+        gNodeGroup.setColumnOrder(colNames);
     };
 
     // simplified status callback for quick-ish network operations
@@ -2003,10 +2094,6 @@
         );
     };
 
-   	var doDeleteFromNGStore = function() {
-        gStoreDialog.launchDeleteDialog();
-    };
-
   	var doStoreNodeGroup = function () {
 
         require(['sparqlgraph/js/sparqlgraphjson'], function(SparqlGraphJson) {
@@ -2020,7 +2107,7 @@
             }
 
             var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), true, gPlotSpecsHandler);
-            gStoreDialog.launchStoreDialog(sgJson, doneCallback);
+            gStoreDialog.launchStoreDialog(JSON.stringify(sgJson.toJson()), doneCallback);
 
         });
 
@@ -2066,8 +2153,8 @@
     	return document.getElementById("SGQueryNamespace").checked;
     };
 
-    // Set nodeGroupChangedFlag and update GUI for new nodegroup
-    // unchangeSNodeIDs : snodes who shouldn't be redrawn and potentially moved
+    // Tell GUI that nodegroup has changed, and display needs updating
+    // flag - there are unsaved changes
     var nodeGroupChanged = function(flag) {
         gNodeGroupChangedFlag = flag;
 
@@ -2097,7 +2184,7 @@
         var elem = document.getElementById("SGQueryLimit");
         elem.value = (limit < 1) ? "" : limit;
 
-        gRenderer.draw(gNodeGroup, gInvalidItems);
+        gRenderer.draw(gNodeGroup, gOInfo, gInvalidItems);
         if (flag) {
             buildQuery();
             gMappingTab.updateNodegroup(gNodeGroup, gConn);
@@ -2121,7 +2208,9 @@
             function(el, l) {
                 // get legal new value
                 var newLimit = parseInt(document.getElementById("SGQueryLimit").value.replace(/\D/g,''), 10);
+
                 gNodeGroup.setLimit(isNaN(newLimit) ? 0 : newLimit);
+                saveUndoState();
                 nodeGroupChanged(true);
             },
 
@@ -2200,7 +2289,7 @@
             default:
                 throw new Error("Internal error: Unknown query type.");
         }
-        gRenderer.draw(gNodeGroup, gInvalidItems);
+        gRenderer.draw(gNodeGroup, gOInfo, gInvalidItems);
     	document.getElementById('queryText').value = "";
         buildQuery();
     };
@@ -2608,6 +2697,7 @@
         gNodeGroupName = null;
         gNodeGroupChangedFlag = false;
         gPlotSpecsHandler = null;
+        saveUndoState();
         nodeGroupChanged(false);
     	clearQuery();
     	giuGraphEmpty();
@@ -2630,6 +2720,7 @@
     	clearTree();
     	gOInfo = new OntologyInfo();
         gExploreTab.setConn(gConn, gOInfo);
+        gReportTab.setConn(gConn);
     	setConn(null);
 	    gOInfoLoadTime = new Date();
     };
@@ -2642,9 +2733,6 @@
 		        if (event.currentTarget.id == "anchorTab1") {
 		        	tabSparqlGraphActivated();
 
-		        } else if (event.currentTarget.id == "anchorTabE") {
-		        	tabEditActivated();
-
 			    } else if (event.currentTarget.id == "anchorTab2") {
 		        	tabMappingActivated();
 
@@ -2653,6 +2741,9 @@
 
                 } else if (event.currentTarget.id == "anchorTabX") {
 		        	tabExploreActivated();
+
+                } else if (event.currentTarget.id == "anchorTabR") {
+		        	tabReportActivated();
 		        }
 		    }
 		});
@@ -2674,20 +2765,12 @@
         setTabButton("explore-tab-but", false);
  		setTabButton("mapping-tab-but", false);
 		setTabButton("upload-tab-but", false);
+        setTabButton("report-tab-but", false);
 
         gExploreTab.releaseFocus();
 	};
 
-    var tabExploreActivated = function() {
-		gCurrentTab = g.tab.explore;
 
-		setTabButton("query-tab-but", false);
-        setTabButton("explore-tab-but", true);
-		setTabButton("mapping-tab-but", false);
-		setTabButton("upload-tab-but", false);
-
-        gExploreTab.takeFocus();
-	};
 
     var tabMappingActivated = function() {
 		gCurrentTab = g.tab.mapping;
@@ -2696,6 +2779,7 @@
         setTabButton("explore-tab-but", false);
  		setTabButton("mapping-tab-but", true);
 		setTabButton("upload-tab-but", false);
+        setTabButton("report-tab-but", false);
 
         gExploreTab.releaseFocus();
 
@@ -2703,6 +2787,17 @@
 
         resizeWindow();
 	};
+    var tabExploreActivated = function() {
+        gCurrentTab = g.tab.explore;
+
+        setTabButton("query-tab-but", false);
+        setTabButton("explore-tab-but", true);
+        setTabButton("mapping-tab-but", false);
+        setTabButton("upload-tab-but", false);
+        setTabButton("report-tab-but", false);
+
+        gExploreTab.takeFocus();
+    };
 
 	var tabUploadActivated = function() {
 		 gCurrentTab = g.tab.upload;
@@ -2711,6 +2806,7 @@
         setTabButton("explore-tab-but", false);
   		setTabButton("mapping-tab-but", false);
 		setTabButton("upload-tab-but", true);
+        setTabButton("report-tab-but", false);
 
         gExploreTab.releaseFocus();
 
@@ -2718,6 +2814,62 @@
 
 	};
 
+    var tabReportActivated = function() {
+		 gCurrentTab = g.tab.report;
+
+		setTabButton("query-tab-but", false);
+        setTabButton("explore-tab-but", false);
+  		setTabButton("mapping-tab-but", false);
+		setTabButton("upload-tab-but", false);
+        setTabButton("report-tab-but", true);
+
+        gExploreTab.releaseFocus();
+
+	};
+
+
+    // Just changed (or maybe changed) the nodegroup.
+    // Save states
+    var saveUndoState = function() {
+        console.log("undo SAVE");
+        gUndoManager.saveState(gNodeGroup.toJson())
+        updateUndoButtons();
+    };
+
+    var resetUndo = function() {
+        gUndoManager.reset();
+        gUndoManager.saveState((new SemanticNodeGroup()).toJson());
+        updateUndoButtons();
+    };
+
+    var doUndo = function() {
+        var stateJson = gUndoManager.undo();
+        updateUndoButtons();
+        if (stateJson == undefined) return;
+
+        gNodeGroup = new SemanticNodeGroup();
+        if (stateJson) {
+            gNodeGroup.addJson(stateJson);
+        }
+        nodeGroupChanged(true);
+    };
+
+    var doRedo = function() {
+        var stateJson = gUndoManager.redo();
+        updateUndoButtons();
+        if (stateJson == undefined) return;
+
+        gNodeGroup = new SemanticNodeGroup();
+        if (stateJson) {
+            gNodeGroup.addJson(stateJson);
+        }
+        nodeGroupChanged(true);
+    };
+
+    var updateUndoButtons = function() {
+        document.getElementById("btnUndo").disabled = (gUndoManager.getUndoSize() < 1);
+        document.getElementById("btnRedo").disabled = (gUndoManager.getRedoSize() < 1);
+    }
     //
     // Build a callback which uses the status and results service to get to completion.
     //     callback parameter:  simpleResults with jobID

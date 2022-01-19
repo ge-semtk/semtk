@@ -19,6 +19,7 @@
 package com.ge.research.semtk.belmont;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import org.json.simple.JSONArray;
@@ -27,67 +28,79 @@ import org.json.simple.JSONObject;
 import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.sparqlX.XSDSupportedType;
 
+/**
+ * Property Item
+ * @author 200001934
+ *
+ */
 public class PropertyItem extends Returnable {
 	public static final int OPT_MINUS_NONE = 0;
 	public static final int OPT_MINUS_OPTIONAL = 1;
 	public static final int OPT_MINUS_MINUS = 2;
 	public static final int OPT_MINUS_EXIST = 3;
 	
-	private XSDSupportedType valueType = null;
-	private String valueTypeURI = null;  
-	private String uriRelationship = null; // obsolete, should always be this.valueType.getFullName()
+	private HashSet<XSDSupportedType> valueTypes = null;   // if range is a OntologyDatatype, could be multiple
+	                                                       // only the XSDSupportedTypes are in the PropertyItem
+	private String rangeURI = null;          
+	private String domainURI = null;       
 	
 	private int optMinus = OPT_MINUS_NONE;
 	private ArrayList<String> instanceValues = new ArrayList<String>();
 	
 	private Boolean isMarkedForDeletion = false;
 
-	
-	/**
-	 * Constructor
-	 * @param nome (e.g. pasteMaterial)
-	 * @param valueType (e.g. string)
-	 * @param valueTypeURI (e.g. http://www.w3.org/2001/XMLSchema#string)
-	 * @param uriRelationship (e.g. http://research.ge.com/print/testconfig#material)
-	 */
-	@Deprecated
-	public PropertyItem(String nomeDEPRECATED, XSDSupportedType valueType, String valueTypeURI, String uriRelationship){
-		this.valueType = valueType;
-		this.valueTypeURI = valueTypeURI;   
-		this.uriRelationship = uriRelationship;
-	}
-	@Deprecated
-	public PropertyItem(String nomeDEPRECATED, String valueTypeStr, String valueTypeURI, String uriRelationship) throws Exception {
-		this(nomeDEPRECATED, XSDSupportedType.getMatchingValue(valueTypeStr), valueTypeURI, uriRelationship);
-	}
-
 	public PropertyItem(XSDSupportedType valueType, String valueTypeURI, String uriRelationship){
-		this.valueType = valueType;
-		this.valueTypeURI = valueTypeURI;   
-		this.uriRelationship = uriRelationship;
+		this.valueTypes = new HashSet<XSDSupportedType>();
+		this.valueTypes.add(valueType);
+		this.rangeURI = valueTypeURI;   
+		this.domainURI = uriRelationship;
+	}
+	
+	public PropertyItem(HashSet<XSDSupportedType> valueTypes, String valueTypeURI, String uriRelationship){
+		this.valueTypes = valueTypes;
+		this.rangeURI = valueTypeURI;   
+		this.domainURI = uriRelationship;
 	}
 		
-	public PropertyItem(String valueTypeStr, String valueTypeURI, String uriRelationship) throws Exception {
-		this(XSDSupportedType.getMatchingValue(valueTypeStr), valueTypeURI, uriRelationship);
-	}
 	
 	public PropertyItem(JSONObject jObj) throws Exception {
 		// keeps track of the properties who are in the domain of a given node.
 		
 		this.fromReturnableJson(jObj);
 		
-		
-		String typeStr = (String) (jObj.get("ValueType"));
-		try {
-			XSDSupportedType typeVal =  XSDSupportedType.getMatchingValue(typeStr);
-			this.valueType = typeVal;
-		} catch (Exception e) {
-			// treat unknowns as a NODE_URI, outside of semTK "domain"
-			this.valueType = XSDSupportedType.NODE_URI;
+		this.valueTypes = new HashSet<XSDSupportedType>();
+		// old single ValueType
+		if (jObj.containsKey("ValueType")) {
+			String typeStr = (String) (jObj.get("ValueType"));
+			try {
+				XSDSupportedType typeVal =  XSDSupportedType.getMatchingValue(typeStr);
+				this.valueTypes.add(typeVal);
+			} catch (Exception e) {
+				// treat unknowns as a NODE_URI, outside of semTK "domain"
+				this.valueTypes.add(XSDSupportedType.NODE_URI);
+			}
+		// newer array valueTypes
+		} else {
+			JSONArray typeArr = (JSONArray) (jObj.get("valueTypes"));
+			for (Object o : typeArr) {
+				String typeStr = (String) o;
+				try {
+					XSDSupportedType typeVal =  XSDSupportedType.getMatchingValue(typeStr);
+					this.valueTypes.add(typeVal);
+				} catch (Exception e) {
+					// treat unknowns as a NODE_URI, outside of semTK "domain"
+					this.valueTypes.add(XSDSupportedType.NODE_URI);
+				}
+			}
 		}
 		
-		this.valueTypeURI = jObj.get("relationship").toString();  // note that label "relationship" in the JSON is misleading
-		this.uriRelationship = jObj.get("UriRelationship").toString();
+		if (jObj.containsKey("relationship")) {
+			this.rangeURI = jObj.get("relationship").toString();  // note that label "relationship" in the JSON is misleading
+			this.domainURI = jObj.get("UriRelationship").toString();
+		} else {
+			this.rangeURI = jObj.get("rangeURI").toString();  // note that label "relationship" in the JSON is misleading
+			this.domainURI = jObj.get("domainURI").toString();
+		}
 				
 		this.optMinus = OPT_MINUS_NONE;
 		if (jObj.containsKey("isOptional")) {
@@ -121,9 +134,13 @@ public class PropertyItem extends Returnable {
 
 		JSONObject ret = new JSONObject();
 		this.addReturnableJson(ret);
-		ret.put("ValueType", this.valueType.getSimpleName());
-		ret.put("relationship", this.valueTypeURI);
-		ret.put("UriRelationship", this.uriRelationship);
+		JSONArray valTypes = new JSONArray();
+		for (XSDSupportedType t : this.valueTypes) {
+			valTypes.add(t.getSimpleName());
+		}
+		ret.put("valueTypes", valTypes);
+		ret.put("rangeURI", this.rangeURI);
+		ret.put("domainURI", this.domainURI);
 		ret.put("optMinus", this.optMinus);
 		ret.put("isMarkedForDeletion", this.isMarkedForDeletion);
 		ret.put("instanceValues", iVals);
@@ -152,15 +169,15 @@ public class PropertyItem extends Returnable {
 	}
 	
 	public String getKeyName() {
-		return new OntologyName(uriRelationship).getLocalName();
+		return new OntologyName(domainURI).getLocalName();
 	}
 	
-	public String getUriRelationship() {
-		return this.uriRelationship;
+	public String getDomainURI() {
+		return this.domainURI;
 	}
 	
-	public void setUriRelationship(String uriRelationship) {
-		this.uriRelationship = uriRelationship;
+	public void setDomainURI(String uri) {
+		this.domainURI = uri;
 	}
 
 
@@ -196,31 +213,27 @@ public class PropertyItem extends Returnable {
 		return this.instanceValues;
 	}
 
-	public XSDSupportedType getValueType() {
-		return this.valueType;
+	// Returnable needs to be plural, and a bunch of strings?  should it be the URI?
+	public HashSet<XSDSupportedType> getValueTypes() {
+		return this.valueTypes;
 	}
 	
+	public String getRangeURI() {
+		return this.rangeURI;
+	}
+	
+	@Deprecated
 	public String getValueTypeURI() {
-		return this.valueTypeURI;
+		return this.getRangeURI();
 	}
 	
-	/**
-	 * Newer-fangled way to change the range
-	 * @param uri
-	 * @throws Exception
-	 */
-	public void setRange(String uri) throws Exception {
-		this.valueTypeURI = uri;
-		this.valueType =  XSDSupportedType.getMatchingValue(new OntologyName(uri).getLocalName());
-	}
-
 	public void addInstanceValue(String value) {
 		this.instanceValues.add(value);
 	}
 	
-	public void changeValueType(XSDSupportedType type) {
-		this.valueType = type;
-		this.valueTypeURI = type.getFullName();
+	public void setRange(String fullURI, HashSet<XSDSupportedType> types) {
+		this.valueTypes = types;
+		this.rangeURI = fullURI;
 	}
 	
 	public void setIsReturned(boolean b) throws Exception {
@@ -267,6 +280,48 @@ public class PropertyItem extends Returnable {
 		return this.isMarkedForDeletion;
 	}
 
+	public String buildRDF11ValueString(String val) {
+		return buildRDF11ValueString(val, null);
+	}
+	
+	public String buildRDF11ValueString(String val, String typePrefixOverride) {
+		if (this.valueTypes.size() == 1) {
+			for (XSDSupportedType t : this.valueTypes) {
+				// return first-and-only one
+				return t.buildRDF11ValueString(val, typePrefixOverride);
+			}
+		} else {
+			for (XSDSupportedType t : this.valueTypes) {
+				try {
+					// return first valid type
+					t.validate(val);
+					return t.buildRDF11ValueString(val, typePrefixOverride);
+				} catch (Exception e) {
+					// try next one
+				}
+			}
+		}
+		// if nothing was valid return a string
+		return XSDSupportedType.STRING.buildRDF11ValueString(val, typePrefixOverride);
+	}
+	
+	/**
+	 * For validating: are these the current valueTypes
+	 * @param types
+	 * @return boolean
+	 */
+	public boolean valueTypesEqual(HashSet<XSDSupportedType> types) {
+		if (types.size() != this.valueTypes.size()) {
+			return false;
+		}
+		for (XSDSupportedType t : types) {
+			if (! this.valueTypes.contains(t)) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
 	/**
 	 * Set this property with all the values from other except URIRelationship
 	 * @param other

@@ -83,7 +83,7 @@ public class NodeGroupCache {
 		
 		SparqlGraphJson sgJson = new SparqlGraphJson(ng, conn);
 		
-		store.insertNodeGroup(sgJson.toJson(), conn.toJson(), key, comments, "NodeGroupCache", true);
+		store.insertNodeGroup(sgJson.toJson(), conn.toJson(), key, comments, "NodeGroupCache");
 		
 		// store locally
 		this.cache.put(key, sgJson.getJson());

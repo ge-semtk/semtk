@@ -21,7 +21,8 @@ define([	// properly require.config'ed   bootstrap-modal
             'sparqlgraph/js/msiresultset',
             'sparqlgraph/js/msiclientutility',
 
-            'plotly/plotly-basic-2.0.0-rc.0.min'
+            //'plotly/plotly-basic-2.0.0-rc.0.min'
+            'plotly/plotly-2.4.2.min'
             //                       OR should we presume the internet is available?  and pull from there?
 			// shimmed
 		],
@@ -58,13 +59,13 @@ define([	// properly require.config'ed   bootstrap-modal
                 this.spec.spec = specJson;
             },
 
-            addPlotToDiv : function(div, tableRes) {
+            addPlotToDiv : function(div, tableRes, optImgElem) {
 
                 var utilityClient = new MsiClientUtility(g.service.utility.url);
-                utilityClient.execProcessPlotSpec(this.spec, tableRes.getTable(), this.processSpecSuccess.bind(this, div));
+                utilityClient.execProcessPlotSpec(this.spec, tableRes.getTable(), this.processSpecSuccess.bind(this, div, optImgElem));
             },
 
-            processSpecSuccess : function(div, msiRes) {
+            processSpecSuccess : function(div, optImgElem, msiRes) {
                 var data = msiRes.getSimpleResultField("plot").spec.data;
                 var layout = msiRes.getSimpleResultField("plot").spec.layout;
                 var config = msiRes.getSimpleResultField("plot").spec.config;
@@ -72,8 +73,21 @@ define([	// properly require.config'ed   bootstrap-modal
                 var plotDiv = document.createElement("div");
                 this.adjustLayoutDimensions(layout, plotDiv);
 
-                Plotly.newPlot( plotDiv, data, layout, config );
+                if (optImgElem) {
+                    // add live graph to div and static image inside the optImgElem
+                    // docs at https://plotly.com/javascript/static-image-export/
+                    Plotly.newPlot( plotDiv, data, layout, config )
+                        .then(function(gd) {
+                            Plotly.toImage(gd,{})    // second param is style
+                                .then(function(url) {
+                                    optImgElem.src = url;
+                                })
+                        });
+                } else {
+                    Plotly.newPlot( plotDiv, data, layout, config );
+                }
 
+                //Plotly.newPlot( plotDiv, [ {    x: [0,1,2,3,1,1,6],type: 'histogram',}]);
                 div.appendChild(plotDiv);
             },
 

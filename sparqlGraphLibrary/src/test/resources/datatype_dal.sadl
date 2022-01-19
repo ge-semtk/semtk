@@ -1,0 +1,11 @@
+uri "http://testy".
+
+
+DAL is a type of int [0,9].
+
+TestClass is a class,
+	described by peer with values of type TestClass,
+	described by dal with a single value of type DAL,
+	described by num with a single value of type int.
+
+

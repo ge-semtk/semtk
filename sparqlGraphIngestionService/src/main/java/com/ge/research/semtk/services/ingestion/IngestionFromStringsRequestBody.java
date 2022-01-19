@@ -20,12 +20,10 @@ package com.ge.research.semtk.services.ingestion;
 
 import javax.validation.constraints.NotNull;
 
-import com.ge.research.semtk.utility.LocalLogger;
-
 import io.swagger.annotations.ApiModelProperty;
 
 
-public class IngestionFromStringsRequestBody {
+public class IngestionFromStringsRequestBody extends FromStringsRequestBody {
 	@NotNull
 	@ApiModelProperty(
 			value = "template",
@@ -33,61 +31,12 @@ public class IngestionFromStringsRequestBody {
 			example = "{ nodegroup json with ingestion template }")
 	public String template;
 
-	@NotNull
-	@ApiModelProperty(
-			value = "data",
-			required = true,
-			example = "csv,file\n1,2\n")
-	public String data;
-
-	@ApiModelProperty(
-			value = "trackFlag",
-			required = false,
-			example = "true")
-	public Boolean trackFlag = false;
-
-	@ApiModelProperty(
-			value = "overrideBaseURI",
-			required = false,
-			example = "$TRACK_KEY  or  http://johns/data")
-	public String overrideBaseURI = null;
-
 	public String getTemplate() {
 		return template;
 	}
 	
 	public void setTemplate(String template) {
 		this.template = template;
-	}
-	
-	public String getData() {
-		try {	
-			return data;
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			LocalLogger.printStackTrace(e);
-			return "";
-		}
-	}
-	
-	public void setData(String data) {
-		this.data = data;
-	}
-	
-	public Boolean getTrackFlag() {
-		return trackFlag;
-	}
-
-	public void setTrackFlag(Boolean trackFlag) {
-		this.trackFlag = trackFlag;
-	}
-
-	public String getOverrideBaseURI() {
-		return overrideBaseURI;
-	}
-
-	public void setOverrideBaseURI(String overrideBaseURI) {
-		this.overrideBaseURI = overrideBaseURI;
 	}
 	
 }

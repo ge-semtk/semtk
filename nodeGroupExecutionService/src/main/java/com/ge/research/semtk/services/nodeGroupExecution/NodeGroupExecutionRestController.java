@@ -568,8 +568,9 @@ public class NodeGroupExecutionRestController {
 				targetId = ((FilterDispatchFromNodeGroupRequestBody)requestBody).getTargetObjectSparqlId();
 			}
 			
+			NodeGroup ng = sgJson.getNodeGroup();
 			// dispatch the job. 
-			ngExecutor.dispatchJob(qt, rt, connection, sgJson.getNodeGroup(), 
+			ngExecutor.dispatchJob(qt, rt, connection, ng, 
 					requestBody.getExternalDataConnectionConstraintsJson(), 
 					requestBody.getFlags(),
 					requestBody.getRuntimeConstraints(), 
@@ -580,7 +581,7 @@ public class NodeGroupExecutionRestController {
 			
 			retval.setSuccess(true);
 			retval.addJobId(id);
-			retval.addResultType(rt);
+			retval.addResultType(ng.getResultType());
 
 		}
 		catch(Exception e){

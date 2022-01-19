@@ -39,6 +39,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 
 import com.ge.research.semtk.springutilib.requests.IdRequest;
+import com.ge.research.semtk.springutilib.requests.StoredItemRequest;
+import com.ge.research.semtk.springutilib.requests.StoredItemTypeRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
@@ -50,10 +52,15 @@ import com.ge.research.semtk.demo.DemoSetupThread;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Utility;
+
+import io.swagger.annotations.ApiOperation;
+
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.nodegroupStore.NgStore;
+import com.ge.research.semtk.services.nodegroupStore.NgStore.StoredItemTypes;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 @RestController
@@ -96,19 +103,19 @@ public class NodeGroupStoreRestController {
 		auth_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);
 		
-		// upload model
+		// upload model in case it has changed
 		SparqlEndpointInterface modelSei = this.getStoreModelSei();
-		InputStream owlStream = NodeGroup.class.getResourceAsStream("/semantics/OwlModels/prefabNodeGroup.owl");
+		byte owl [] = Utility.getResourceAsBytes(NgStore.class, "/semantics/OwlModels/prefabNodeGroup.owl");
 		
 		try {
 			AuthorizationManager.setSemtkSuper();
-			OntologyInfo.uploadOwlModelIfNeeded(modelSei, owlStream);
+			modelSei.clearPrefix("http://research.ge.com/semtk/prefabNodeGroup");
+			modelSei.uploadOwl(owl);
 		} finally {
 			AuthorizationManager.clearSemtkSuper();
 		}
 		
 		setupDemo();
-		
 	}
 	
 	private void setupDemo() {
@@ -127,7 +134,7 @@ public class NodeGroupStoreRestController {
 	 * @return
 	 */
 	@CrossOrigin
-	@RequestMapping(value="/storeNodeGroup", method=RequestMethod.POST)
+	@RequestMapping(value={"/storeNodeGroup", "/storeItem"} , method=RequestMethod.POST)
 	public JSONObject storeNodeGroup(@RequestBody StoreNodeGroupRequest requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
@@ -141,21 +148,28 @@ public class NodeGroupStoreRestController {
 	
 				// check that the ID does not already exist. if it does, fail.
 				NgStore store = new NgStore(this.getStoreDataSei());
-				Table instanceTable = store.getNodegroupTable(requestBody.getName(), true);
+				Table instanceTable = store.getStoredItemTable(requestBody.getName(), requestBody.getItemType());
 				
 				if(instanceTable.getNumRows() > 0){
-					throw new Exception("Unable to store node group:  ID (" + requestBody.getName() + ") already exists");
+					throw new Exception("Unable to store item:  ID (" + requestBody.getName() + ") already exists");
 				}
 	
-				// get the nodeGroup and the connection info:
-				JSONObject sgJsonJson = requestBody.getJsonNodeGroup();			// changed to allow for more dynamic nodegroup actions. 
-				SparqlGraphJson sgJson = new SparqlGraphJson(sgJsonJson);
-				JSONObject connJson = sgJson.getSparqlConnJson();
-				if(connJson == null){
-					throw new Exception("storeNodeGroup :: sparqlgraph json serialization passed to store node group did not contain a valid connection block. it is possible that only the node group itself was passed. please check that complete input is sent.");
+				
+				if (requestBody.getItemType() == StoredItemTypes.PrefabNodeGroup) {
+					// insert nodegroup (in legacy fashion)
+					JSONObject sgJsonJson = requestBody.getJsonNodeGroup();			// changed to allow for more dynamic nodegroup actions. 
+					SparqlGraphJson sgJson = new SparqlGraphJson(sgJsonJson);
+					JSONObject connJson = sgJson.getSparqlConnJson();
+					if(connJson == null){
+						throw new Exception("storeNodeGroup :: sparqlgraph json serialization passed to store node group did not contain a valid connection block. it is possible that only the node group itself was passed. please check that complete input is sent.");
+					}
+		
+					store.insertNodeGroup(sgJsonJson, connJson, requestBody.getName(), requestBody.getComments(), requestBody.getCreator());
+				
+				} else {
+					// insert anything else
+					store.insertStringBlob(requestBody.getItem(), requestBody.getItemType(),  requestBody.getName(), requestBody.getComments(), requestBody.getCreator());
 				}
-	
-				store.insertNodeGroup(sgJsonJson, connJson, requestBody.getName(), requestBody.getComments(), requestBody.getCreator(), true);
 				
 				retval = new SimpleResultSet(true);
 	
@@ -172,8 +186,12 @@ public class NodeGroupStoreRestController {
 	    }
 	}
 
+	@ApiOperation(
+			value="Get nodegroup as table with only one cell.",
+			notes="Column name is NodeGroup."
+			)     
 	@CrossOrigin
-	@RequestMapping(value="/getNodeGroupById", method=RequestMethod.POST)
+	@RequestMapping(value={"/getNodeGroupById"}, method=RequestMethod.POST)
 	public JSONObject getNodeGroupById(@RequestBody @Valid IdRequest requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
@@ -182,8 +200,8 @@ public class NodeGroupStoreRestController {
 			TableResultSet retval = new TableResultSet();	
 			try{
 				NgStore store = new NgStore(this.getStoreDataSei());
-				Table ngTab = store.getNodegroupTable(requestBody.getId(), true);
-				
+				Table ngTab = store.getStoredItemTable(requestBody.getId(), StoredItemTypes.PrefabNodeGroup);
+
 				retval.setSuccess(true);
 				retval.addResults(ngTab);
 			}
@@ -192,13 +210,50 @@ public class NodeGroupStoreRestController {
 				retval.setSuccess(false);
 				retval.addRationaleMessage(SVC_ENDPOINT_NAME, e);
 			} 
-	
+
 			return retval.toJson();  // whatever we have... send it out. 
-		    
+
 		} finally {
-	    	HeadersManager.clearHeaders();
-	    }
+			HeadersManager.clearHeaders();
+		}
 	}
+
+
+	@ApiOperation(
+			value="Get stored item as table with only one cell.",
+			notes="Column name is item."
+			)
+	@CrossOrigin
+	@RequestMapping(value={"/getStoredItemById"}, method=RequestMethod.POST)
+	public JSONObject getNodeGroupById(@RequestBody @Valid StoredItemRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		try {
+			final String SVC_ENDPOINT_NAME = SERVICE_NAME + "/getStoredItemById";
+
+			TableResultSet retval = new TableResultSet();	
+			try{
+				NgStore store = new NgStore(this.getStoreDataSei());
+					Table ngTab = store.getStoredItemTable(requestBody.getId(), requestBody.getItemType());
+					// smooth out legacy code by reconciling column name to "item"
+					if (ngTab.hasColumn("NodeGroup"))
+						ngTab.renameColumn("NodeGroup", "item");
+					else
+						ngTab.renameColumn("stringChunk", "item");
+					retval.setSuccess(true);
+					retval.addResults(ngTab);
+				}
+				catch (Exception e) {
+					// something went wrong. report and exit. 
+					retval.setSuccess(false);
+					retval.addRationaleMessage(SVC_ENDPOINT_NAME, e);
+				} 
+		
+				return retval.toJson();  // whatever we have... send it out. 
+			    
+			} finally {
+		    	HeadersManager.clearHeaders();
+		    }
+		}
 
 	@CrossOrigin
 	@RequestMapping(value="/getNodeGroupList", method=RequestMethod.POST)
@@ -210,7 +265,7 @@ public class NodeGroupStoreRestController {
 	
 			try{
 				NgStore store = new NgStore(this.getStoreDataSei());
-				Table tab = store.getFullNodeGroupList(true);
+				Table tab = store.getFullStoredItemList(StoredItemTypes.PrefabNodeGroup);
 				retval.addResults(tab);
 				retval.setSuccess(true);
 			}
@@ -227,7 +282,38 @@ public class NodeGroupStoreRestController {
 	    	HeadersManager.clearHeaders();
 	    }
 	}
-
+	@ApiOperation(
+			value="Get a table of info about stored items of a given type.",
+			notes="More general version of /getNodeGroupMetadata."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getStoredItemsMetadata", method=RequestMethod.POST)
+	public JSONObject getStoredItemsMetadata(@RequestBody StoredItemTypeRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		try {
+			final String SVC_ENDPOINT_NAME = SERVICE_NAME + "/getStoredItemsMetadata";
+			TableResultSet retval = new TableResultSet();		
+			try{
+				NgStore store = new NgStore(this.getStoreDataSei());
+				Table tab = store.getStoredItemMetadata(requestBody.getItemType());
+				retval.addResults(tab);
+				retval.setSuccess(true);
+			}
+			catch(Exception e){
+				// something went wrong. report and exit. 
+				retval.setSuccess(false);
+				retval.addRationaleMessage(SVC_ENDPOINT_NAME, e);
+			} 
+			return retval.toJson();   
+		    
+		} finally {
+	    	HeadersManager.clearHeaders();
+	    }
+	}
+	@ApiOperation(
+			value="Get a table of info about stored nodegroups.",
+			notes="Legacy.  Use /getStoredItemsMetadata."
+			)
 	@CrossOrigin
 	@RequestMapping(value="/getNodeGroupMetadata", method=RequestMethod.POST)
 	public JSONObject getNodeGroupMetadata(@RequestHeader HttpHeaders headers) {
@@ -237,7 +323,7 @@ public class NodeGroupStoreRestController {
 			TableResultSet retval = new TableResultSet();		
 			try{
 				NgStore store = new NgStore(this.getStoreDataSei());
-				Table tab = store.getNodeGroupMetadata(true);
+				Table tab = store.getStoredItemMetadata(StoredItemTypes.PrefabNodeGroup);
 				retval.addResults(tab);
 				retval.setSuccess(true);
 			}
@@ -264,7 +350,7 @@ public class NodeGroupStoreRestController {
 			try{
 				// get the nodegroup
 				NgStore store = new NgStore(this.getStoreDataSei());
-				Table tbl = store.getNodegroupTable(requestBody.getId(), true);
+				Table tbl = store.getNodegroupTable(requestBody.getId());
 
 				if(tbl.getNumRows() > 0){
 					// we have a result. for now, let's assume that only the first result is valid.
@@ -309,30 +395,37 @@ public class NodeGroupStoreRestController {
 	/**
 	 * This method uses a static delete query. it would be better to use a local nodegroup and have belmont 
 	 * generate a deletion query itself. 
-	 * @param requestBody
+	 * @param requestBody - defaults to nodegroup
 	 * @return
-	 * @throws Exception 
+	 * @throws Exception on error or if item does not exist
 	 */
 	@CrossOrigin
-	@RequestMapping(value="/deleteStoredNodeGroup", method=RequestMethod.POST)
-	public JSONObject deleteStoredNodeGroup(@RequestBody @Valid IdRequest requestBody, @RequestHeader HttpHeaders headers) throws Exception {
+	@RequestMapping(value={"/deleteStoredNodeGroup", "/deleteStoredItem"}, method=RequestMethod.POST)
+	public JSONObject deleteStoredNodeGroup(@RequestBody @Valid StoredItemRequest requestBody, @RequestHeader HttpHeaders headers) throws Exception {
 		HeadersManager.setHeaders(headers);
 		try {
 			SimpleResultSet retval = null;
 	
-			// NOTE:
-			// this static delete works but will need to be updated should the metadata surrounding node groups be updated. 
-			// really, if the insertion nodegroup itself is edited, this should be looked at.
-			// ideally, the node groups would be able to write deletion queries, using filters and runtime constraints to
-			// determine what to remove. if we moved to that point, we could probably use the same NG for insertions and deletions.
-	
 			NgStore store = new NgStore(this.getStoreDataSei());
 
-	
+			
+			
 			try{
-				// attempt to delete the nodegroup, name and comments where there is a give ID.
-				store.deleteNodeGroup(requestBody.getId(), true);
-				retval = new SimpleResultSet(true);
+				// check that the ID does not already exist. if it does, fail.
+				Table instanceTable = store.getStoredItemTable(requestBody.getId(), requestBody.getItemType());
+				
+				if(instanceTable.getNumRows() < 1){
+					throw new Exception("No stored item exists with id: " + requestBody.getId() + " and type: " + requestBody.getItemType());
+				
+				} else if(instanceTable.getNumRows() > 1){
+					throw new Exception("Internal error: multiple stored items exists with id: " + requestBody.getId() + " and type: " + requestBody.getItemType());
+				
+				} else {
+				
+					// attempt to delete the nodegroup, name and comments where there is a give ID.
+					store.deleteStoredItem(requestBody.getId(), requestBody.getItemType());
+					retval = new SimpleResultSet(true);
+				}
 			}
 			catch(Exception e){
 

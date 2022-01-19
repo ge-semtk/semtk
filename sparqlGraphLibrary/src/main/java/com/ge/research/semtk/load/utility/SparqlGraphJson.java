@@ -18,12 +18,15 @@
 
 package com.ge.research.semtk.load.utility;
 
+import java.util.ArrayList;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.belmont.NodeGroupItemStr;
 import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
@@ -295,6 +298,12 @@ public class SparqlGraphJson {
 	public NodeGroup getNodeGroupInflateAndValidate(OntologyInfo oInfo) throws Exception {
 		NodeGroup ng = this.getNodeGroup(null);
 		ng.inflateAndValidate(oInfo);
+		return ng;
+	}
+	
+	public NodeGroup getNodeGroupInflateAndValidate(OntologyInfo oInfo, ArrayList<String> modelErrMsgs, ArrayList<NodeGroupItemStr> invalidItems, ArrayList<String> warnings) throws Exception {
+		NodeGroup ng = this.getNodeGroup(null);
+		ng.inflateAndValidate(oInfo, this.getImportSpec(), modelErrMsgs, invalidItems, warnings);
 		return ng;
 	}
 	

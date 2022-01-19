@@ -1,0 +1,60 @@
+.je-indented-panel {
+	background-color:  #f7f8fa; border: solid 1px #e1e2e5;
+	overflow: none;
+	color: black;
+	padding-left: 3em;
+	padding-right: 0.5em;
+	padding-top: 0.5em;
+	padding-bottom: 0.5em;
+	margin-left: 0;
+}
+.je-header label {
+	display: inline-block;
+}
+.form-control label {
+	margin-bottom: 2px;
+}
+.form-control input {
+	background-color: white;
+}
+.je-header label {
+	font-weight: bold;
+	font-size: 16px;
+	width: 20em;
+}
+.json-editor-btn-collapse {
+	background-color: #274396;
+	color: white;
+}
+.json-editor-btntype-editjson,
+.json-editor-btntype-properties {
+	background-color: #274396;
+	color: white;
+	border-radius: 20px;
+}
+
+.json-editor-btntype-add,
+.json-editor-btntype-move,
+.json-editor-btntype-delete,
+.json-editor-btntype-deletelast,
+.json-editor-btntype-deleteall,
+.json-editor-btntype-expand
+{
+	background-color: #f7f8fa;
+	border: 1px solid;
+	border-radius: 3px;
+	color: #274396;
+}
+.errmsg {
+	color: red;
+}
+.reports-invalid {
+	background-color: red;
+	color: white;
+	font-weight: bold;
+	font-size: 14;
+	padding: 1em;
+}
+.reports-valid {
+	font-size: 14;
+}

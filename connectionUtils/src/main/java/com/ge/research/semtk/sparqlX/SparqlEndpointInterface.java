@@ -218,14 +218,11 @@ public abstract class SparqlEndpointInterface {
 	
 	public void setServerAndPort(String serverAndPort) throws Exception {
 		String[] serverAndPortSplit = serverAndPort.split(":");  // protocol:server:port
-		if(serverAndPortSplit.length < 2){
-			throw new Exception("Error: poorly formatted serverAndPort (e.g. http://localhost:2420): " + serverAndPort);
-		}
-		this.server = serverAndPortSplit[0] + ":" + serverAndPortSplit[1]; // e.g. http://localhost
-		
 		if(serverAndPortSplit.length < 3){
-			throw new Exception("Error: no port provided for " + this.server);
+			throw new Exception("Error: expecting 'protocol://server:port', found: " + this.server);
 		}
+		
+		this.server = serverAndPortSplit[0] + ":" + serverAndPortSplit[1]; // e.g. http://localhost
 		
 		String[] portandendpoint = serverAndPortSplit[2].split("/");
 		this.port = portandendpoint[0];

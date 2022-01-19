@@ -399,6 +399,16 @@ define([	// properly require.config'ed
         return false;
     };
 
+    IIDXHelper.createElement = function (tag, innerHTML, className) {
+        var elem = document.createElement(tag);
+        if (innerHTML) {
+            elem.innerHTML = innerHTML;
+        }
+        if (className) {
+            elem.classList.add(className);
+        }
+        return elem;
+    };
     /* Creates a label element with the given text.  Optionally provide a tooltip. */
     IIDXHelper.createLabel = function (labelText, optTooltip) {
         var labelElem = document.createElement("label");
@@ -971,6 +981,52 @@ define([	// properly require.config'ed
         tr.appendChild(td);
         headerTable.appendChild(tr);
         return headerTable;
+    };
+
+    IIDXHelper.buildTableElem = function(headerJson, rows, optSortCol, optSortDesc) {
+        if (optSortCol) {
+            if (optSortDesc) {
+                rows.sort((a, b) => a[optSortCol] < b[optSortCol] ? 1 : -1)
+            } else {
+                rows.sort((a, b) => a[optSortCol] > b[optSortCol] ? 1 : -1)
+            }
+        }
+        var dom = document.createElement("table");
+
+        var tr = document.createElement("tr");
+        dom.appendChild(tr);
+
+        for (var h of headerJson) {
+            var th = document.createElement("th");
+            tr.appendChild(th);
+            th.innerHTML = IIDXHelper.htmlSafe(h.sTitle);
+        }
+
+        for (var row of rows) {
+            var tr = document.createElement("tr");
+            dom.appendChild(tr);
+
+            for (var cell of row) {
+                var td = document.createElement("td");
+                tr.appendChild(td);
+                td.innerHTML = IIDXHelper.htmlSafe(cell);
+            }
+        }
+
+        return dom;
+
+    };
+
+    IIDXHelper.truncateTableRows = function(t, size) {
+        var s = size + 1; // don't count the first (header row)
+        if (t.rows.length > s) {
+            var origSize = t.rows.length - 1;  // don't count header
+            while (t.rows.length > s) {
+          	     t.deleteRow(s);
+            }
+            var r = t.insertRow();
+            t.rows[s].innerHTML = "<td colspan='0'>...[" + origSize + " rows] truncated to " + size + "</td>";
+        }
     };
 
     IIDXHelper.buildDatagridInDiv = function (div, colsCallback, dataCallback, optFinishedCallback, optSortList) {
