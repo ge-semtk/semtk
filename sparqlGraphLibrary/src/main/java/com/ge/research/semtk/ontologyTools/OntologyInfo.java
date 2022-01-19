@@ -797,16 +797,20 @@ public class OntologyInfo {
 		if (this.containsDatatype(rangeUri)) {
 			// named datatype: get equivalent type
 			ret = this.getDatatype(rangeUri).getEquivalentXSDTypes();
+			LocalLogger.logToStdErr("119 OInfo getPropertyRangeXSDTypes() does understand datatype rangeUri: " + rangeUri );
+			LocalLogger.logToStdErr("119 Current Datatypes: " + this.datatypeHash.keySet().toString());
 		} else {
 			try {
 				// hope it is a regular owl type or something ending in #int, #date, etc.
 				ret.add(XSDSupportedType.getMatchingValue(new OntologyName(rangeUri).getLocalName()));
+				LocalLogger.logToStdErr("119 OInfo getPropertyRangeXSDTypes() does understand rangeUri: " + rangeUri );
+				LocalLogger.logToStdErr("119 Current Datatypes: " + this.datatypeHash.keySet().toString());
 			} catch (Exception e) {
 				
 				// leftovers are URI's.  This is slightly illogical.  Properties shouldn't point to objects.
 				ret.add(XSDSupportedType.NODE_URI);
-				LocalLogger.logToStdErr("OInfo getPropertyRangeXSDTypes() doesn't understand rangeUri: " + rangeUri );
-				LocalLogger.logToStdErr("Current Datatypes: " + this.datatypeHash.keySet().toString());
+				LocalLogger.logToStdErr("119 OInfo getPropertyRangeXSDTypes() does not understand rangeUri: " + rangeUri );
+				LocalLogger.logToStdErr("119 Current Datatypes: " + this.datatypeHash.keySet().toString());
 			}
 		}
 		return ret;
@@ -1163,6 +1167,9 @@ public class OntologyInfo {
 						"     ?restriction ?r_pred ?r_obj . \n" +
 						"   } \n" +
 						"} ";
+		
+		LocalLogger.logToStdErr("119 getDatatypesQuery() :\n" + retval);
+
 		return retval;
 	}
 	
@@ -1175,7 +1182,7 @@ public class OntologyInfo {
 	public void loadDatatypes(String dataTypeList[], String equivTypeList[]) throws Exception{
 		
 		for (int i=0; i < dataTypeList.length; i++) {
-
+			LocalLogger.logToStdErr("119 loadDatatypes() " + dataTypeList[i] + ", " + equivTypeList[i]);
 			if (this.containsClass(dataTypeList[i])) {
 				throw new Exception("Error loading ontology.  Datatype URI is already a class: " + dataTypeList[i]);
 			
