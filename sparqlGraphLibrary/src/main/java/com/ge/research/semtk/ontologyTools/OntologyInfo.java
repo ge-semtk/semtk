@@ -805,6 +805,8 @@ public class OntologyInfo {
 				
 				// leftovers are URI's.  This is slightly illogical.  Properties shouldn't point to objects.
 				ret.add(XSDSupportedType.NODE_URI);
+				LocalLogger.logToStdErr("OInfo getPropertyRangeXSDTypes() doesn't understand rangeUri: " + rangeUri );
+				LocalLogger.logToStdErr("Current Datatypes: " + this.datatypeHash.keySet().toString());
 			}
 		}
 		return ret;
