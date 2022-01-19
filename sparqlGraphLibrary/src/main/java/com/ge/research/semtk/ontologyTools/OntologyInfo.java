@@ -2335,6 +2335,7 @@ public class OntologyInfo {
 		this.loadTopLevelClasses(tab.getColumn("Class"));
 		
 		tab = endpoint.executeQueryToTable(OntologyInfo.getDatatypeQuery(endpoint.getGraph(), domain));
+		LocalLogger.logToStdErr("119: results\n" + tab.toCSVString());
 		this.loadDatatypes(tab.getColumn("dataType"), tab.getColumn("equivType"));
 		
 		tab = endpoint.executeQueryToTable(OntologyInfo.getLoadPropertiesQuery(endpoint.getGraph(), domain));

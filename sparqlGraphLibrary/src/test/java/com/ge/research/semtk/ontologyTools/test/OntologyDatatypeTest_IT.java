@@ -106,6 +106,8 @@ public class OntologyDatatypeTest_IT {
 		// datatypetest.SADL has examples of complex datatypes with restrictions etc. from SADL 3 documentation
 		// This test loads a variety of legal values
 		
+		LocalLogger.logToStdErr("119: ----------- START testLoadDataMultiTypesSuccess ---------------");
+		
 		// load model
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "datatypetest.owl");		
@@ -117,6 +119,7 @@ public class OntologyDatatypeTest_IT {
 		// check the round trip results
 		TestGraph.queryAndCheckResults(this, "datatype_exampleA.json", "datatype_exampleA_pass.csv");
 		
+		LocalLogger.logToStdErr("119: ----------- END testLoadDataMultiTypesSuccess ---------------");
 	}
 	
 }
