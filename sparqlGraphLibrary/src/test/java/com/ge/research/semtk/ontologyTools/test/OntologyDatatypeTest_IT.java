@@ -14,6 +14,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.XSDSupportedType;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
+import com.ge.research.semtk.utility.LocalLogger;
 
 
 public class OntologyDatatypeTest_IT {
@@ -27,10 +28,13 @@ public class OntologyDatatypeTest_IT {
 		ArrayList<String> errors = new ArrayList<String>();
 		ArrayList<String> warnings = new ArrayList<String>();
 		
+		LocalLogger.logToStdErr("119: ----------- START testLoadingAndValidatingDAL ---------------");
 		// load model
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "datatype_dal.owl");		
 		OntologyInfo oInfo = TestGraph.getOInfo();
+		assertTrue("http://testy#DAL is not found in oInfo.getDatatype", oInfo.getDatatype("http://testy#DAL") != null);
+		
 		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(getClass(), "datatype_dal_deflated.json");
 		assertEquals("Expected dal property to be deflated, but it showed up.", null, sgjson.getNodeGroupNoInflateNorValidate(oInfo).getNode(0).getPropertyByKeyname("dal"));
 		
@@ -68,6 +72,9 @@ public class OntologyDatatypeTest_IT {
 		String warn = warnings.get(0) + warnings.get(1);
 		assertTrue("Inflating datatype_dal_unknown.json missing warning with the word 'DAL'", warn.contains("DAL"));
 		assertTrue("Inflating datatype_dal_unknown.json missing warning with the word 'int'", warn.contains("int"));
+		
+		LocalLogger.logToStdErr("119: ----------- END testLoadingAndValidatingDAL ---------------");
+		
 	}
 	
 	@Test
