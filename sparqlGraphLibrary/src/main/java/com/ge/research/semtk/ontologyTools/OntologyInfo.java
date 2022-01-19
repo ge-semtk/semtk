@@ -1148,8 +1148,7 @@ public class OntologyInfo {
                 		"PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> \n" +
 						"PREFIX owl:<http://www.w3.org/2002/07/owl#> \n" +
 						"SELECT DISTINCT ?dataType ?equivType ?r_pred ?r_obj \n" +
-						"		FROM " + graphName + " \n" +
-						"WHERE { \n" +
+						"		FROM <" + graphName + "> WHERE { \n" +
 						"	?dataType rdf:type rdfs:Datatype . \n" +
 						genDomainFilterStatement("dataType", domain) + "\n" +
 						"   ?dataType owl:equivalentClass* ?e . \n" +
