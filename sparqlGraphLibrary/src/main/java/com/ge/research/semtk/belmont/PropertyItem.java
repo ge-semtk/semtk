@@ -27,6 +27,7 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.sparqlX.XSDSupportedType;
+import com.ge.research.semtk.utility.LocalLogger;
 
 /**
  * Property Item
@@ -78,6 +79,7 @@ public class PropertyItem extends Returnable {
 			} catch (Exception e) {
 				// treat unknowns as a NODE_URI, outside of semTK "domain"
 				this.valueTypes.add(XSDSupportedType.NODE_URI);
+				LocalLogger.logToStdErr("PropertyItem doesn't understand ValueType typeStr: " + typeStr);
 			}
 		// newer array valueTypes
 		} else {
@@ -90,6 +92,7 @@ public class PropertyItem extends Returnable {
 				} catch (Exception e) {
 					// treat unknowns as a NODE_URI, outside of semTK "domain"
 					this.valueTypes.add(XSDSupportedType.NODE_URI);
+					LocalLogger.logToStdErr("PropertyItem doesn't understand ValueTypes typeStr: " + typeStr);
 				}
 			}
 		}
