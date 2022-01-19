@@ -449,12 +449,27 @@ define([	// properly require.config'ed
                 right.align = "right";
                 tr.appendChild(right);
 
-                // right is now empty
+                // read schema from server src code dir and then launch the editor
+                $.ajax({
+                    url:'../json/report-schema.json',
+                    success: function(data) { this.launchEditor(data); }.bind(this)
+                });
+            },
 
+            launchEditor: function(schema) {
+                var ngStoreClient = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
+                ngStoreClient.getNodeGroupList(this.launchEditorStoreCallback.bind(this, schema));
+            },
+
+            launchEditorStoreCallback: function(schema, storeResponse) {
+                // HERE:  handle store storeRespone
+                //        search/replace in the schema    
+                //              under NodeGroup in schema:
+                //                	"enum": ["--invalid--", "dataVer query ng1", "ng2", "ng3"]
+                //        Is this really the correct place?  When do we update the schema after store is accessed
                 var options = {
-                    ajax: true,
                     display_required_only: true,
-                    schema : { $ref: "../json/report-schema.json" },
+                    schema : schema,
                     theme : "barebones",
                     iconlib: "fontawesome5"
                 };

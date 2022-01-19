@@ -1,5 +1,9 @@
 {
 	"definitions": {
+	 	"Nodegroup": {
+	 		"type": "string",
+	 		"minLength": 4
+	 	},
 		"Plot": {
 			"type": "object",
 			"required": [
@@ -9,8 +13,7 @@
 			"headerTemplate": "Plot: {{self.nodegroup}}",
 			"properties": {
 				"nodegroup": {
-					"type": "string",
-					"minLength": 4
+					"$ref": "#/definitions/Nodegroup"
 				},
 				"plotname": {
 					"type": "string",
@@ -26,8 +29,7 @@
 			"headerTemplate": "Table: {{self.nodegroup}}",
 			"properties": {
 				"nodegroup": {
-					"type": "string",
-					"minLength": 4
+					"$ref": "#/definitions/Nodegroup"
 				}
 			}
 		},
@@ -39,8 +41,7 @@
 			"headerTemplate": "Graph: {{self.nodegroup}}",
 			"properties": {
 				"nodegroup": {
-					"type": "string",
-					"minLength": 4
+					"$ref": "#/definitions/Nodegroup"
 				}
 			}
 		},
@@ -82,8 +83,7 @@
 			"headerTemplate": "Count: {{self.nodegroup}}",
 			"properties": {
 				"nodegroup": {
-					"type": "string",
-					"minLength": 4
+					"$ref": "#/definitions/Nodegroup"
 				},
 				"ranges": {
 					"type": "array",
@@ -102,8 +102,7 @@
 			"headerTemplate": "Test {{self.success_rows}} rows from: {{self.nodegroup}}",
 			"properties": {
 				"nodegroup": {
-					"type": "string",
-					"minLength": 4
+					"$ref": "#/definitions/Nodegroup"
 				},
 				"success_rows": {
 					"type": "integer"
