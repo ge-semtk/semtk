@@ -25,7 +25,7 @@ cd "${DIR}"
 
 # If SERVER_ADDRESS is not set, then set SERVER_ADDRESS to localhost (if running
 # in Docker) or the host's IP address before sourcing .env
-if [ -f /.dockerenv -o /run/.containerenv ]; then
+if [ -f /.dockerenv -o -f /run/.containerenv ]; then
     export SERVER_ADDRESS="${SERVER_ADDRESS:-localhost}"
 else
     export SERVER_ADDRESS="${SERVER_ADDRESS:-$(hostname -I | tr ' ' '\n' | head -1)}"
