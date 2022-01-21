@@ -509,7 +509,7 @@ define([	// properly require.config'ed
              */
             getUpdatedSchema: function(idList) {
 				var jsonStr = JSON.stringify(this.rawSchema);
-				jsonStr = jsonStr.replace("--invalid--", "--invalid--\",\"" + idList.join("\",\""));
+				jsonStr = jsonStr.replace("--invalid--", "--invalid--\",\"" + idList.sort().join("\",\""));
 				return JSON.parse(jsonStr);
 			},
             
