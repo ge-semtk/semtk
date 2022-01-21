@@ -63,6 +63,11 @@ public enum XSDSupportedType {
 	}
 	
 	public static XSDSupportedType getMatchingValue(String candidate) throws Exception {
+		// special case for new SADL implicit model
+		if (candidate.toLowerCase().equals("anyuri")) {
+			return NODE_URI;
+		}
+		
 		return XSDSupportedType.valueOf(candidate.toUpperCase());
 	}
 
