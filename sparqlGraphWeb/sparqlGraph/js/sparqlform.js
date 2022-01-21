@@ -483,7 +483,7 @@ doRetrieveFromNGStore = function() {
     if (gNodeGroup == null || gNodeGroup.getNodeCount() == 0
 			|| confirm("Clearing current form\nbefore loading a new one.\n\n")) {
 
-        gModalStoreDialog.launchRetrieveDialog(restoreQueryFromJsonStr);
+        gModalStoreDialog.launchRetrieveDialog(restoreQueryFromJsonStr, function(){});
     }
 };
 

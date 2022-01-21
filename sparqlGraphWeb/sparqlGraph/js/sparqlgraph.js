@@ -144,6 +144,7 @@
                                     g,
                                     user || "",
                                     function(u) {localStorage.setItem("SPARQLgraph_user", u);});
+                                    
 
 	        // load last connection
 			var conn = gLoadDialog.getLastConnectionInvisibly();
@@ -2085,12 +2086,13 @@
 
     };
 
+	// has evolved to either retrieve or delete items from store
    	var doRetrieveFromNGStore = function() {
         // check that nodegroup is saved
         // launch the retrieval dialog
         // callback to the dialog is doQueryLoadJsonStr
         checkAnythingUnsavedThen(
-            gStoreDialog.launchRetrieveDialog.bind(gStoreDialog, doQueryLoadJsonStr)
+            gStoreDialog.launchOpenStoreDialog.bind(gStoreDialog, doQueryLoadJsonStr, gReportTab.reloadNodegroupIDs.bind(gReportTab))
         );
     };
 
@@ -2104,6 +2106,7 @@
             var doneCallback = function () {
                 localStorage.setItem("SPARQLgraph_user", gStoreDialog.getUser());
                 nodeGroupChanged(false);
+                gReportTab.reloadNodegroupIDs();
             }
 
             var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), true, gPlotSpecsHandler);

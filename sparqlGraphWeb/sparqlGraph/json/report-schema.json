@@ -2,7 +2,7 @@
 	"definitions": {
 	 	"Nodegroup": {
 	 		"type": "string",
-	 		"minLength": 4
+	 		"enum": ["--invalid--"]
 	 	},
 		"Plot": {
 			"type": "object",

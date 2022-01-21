@@ -39,7 +39,7 @@ define([	// properly require.config'ed
             this.user = user;
             this.serviceUrl = serviceUrl;
             this.itemType = optItemType || MsiClientNodeGroupStore.TYPE_NODEGROUP;
-            this.callback = function () {};
+            this.userRetrieveJsonStrCallback = function () {};
             this.lastRetrievedId = null;
 		};
 
@@ -60,20 +60,24 @@ define([	// properly require.config'ed
                 IIDXHelper.hideDiv(this.div);
             },
 
-			loadCallback : function() {
+			loadButtonCallback : function() {
 				var idList = this.selTable.getSelectedValues("ID");
-				this.callback(idList);
+				var mq = new MsiClientNodeGroupStore(this.serviceUrl);
+                mq.getStoredItemByIdToStr(idList[0], this.itemType, this.userRetrieveJsonStrCallback);
+                this.lastRetrievedId = idList[0];
 			},
 
-			cancelCallback : function() {
+			cancelButtonCallback : function() {
 
             },
 
-            deleteCallback : function() {
+            deleteButtonCallback : function() {
+				// other URI controls (button disable, etc) assure list is length 1
                 var idList = this.selTable.getSelectedValues("ID");
-                this.deleteNodeGroupOK(idList);
+                
+                this.deleteNodeGroupList(idList);
+           
             },
-
 
             rowClickCallback : function(tr) {
                 var selIndices = this.selTable.getSelectedIndices();
@@ -98,7 +102,7 @@ define([	// properly require.config'ed
             /**
               * got nodegroup store contents.  Launch dialog.
              **/
-            launchNodeGroupDialogCallback : function (resultSet) {
+            gotMetadataLaunchDialog : function (resultSet) {
 				if (! resultSet.isSuccess()) {
 					ModalIidx.alert("Service failed", resultSet.getGeneralResultHtml());
 				} else {
@@ -127,7 +131,7 @@ define([	// properly require.config'ed
                     m.showChoices(  this.title,
                                     this.div,
                                     ["Cancel", "Delete", "Load"],
-                                    [this.cancelCallback.bind(this), this.deleteCallback.bind(this), this.loadCallback.bind(this)],
+                                    [this.cancelButtonCallback.bind(this), this.deleteButtonCallback.bind(this), this.loadButtonCallback.bind(this)],
                                     90,
                                     ["", "btn-danger", "btn-primary"],
                                     ["msdCancelBut", "msdDeleteBut", "msdLoadBut"]
@@ -138,26 +142,12 @@ define([	// properly require.config'ed
 				}
 			},
 
-            /**
-              *  Call nodegroup store to get all nodegroups
-              *  Then launch generic dialog with title and callback linked to "OK"
-              *  callback(id)
-              */
-            launchNodeGroupDialog : function (title, loadCallback) {
-                this.title = title;
-                this.callback = loadCallback;
-
-                var mq = new MsiClientNodeGroupStore(this.serviceUrl);
-    		    mq.getStoredItemsMetadata(this.itemType, this.launchNodeGroupDialogCallback.bind(this));
-            },
-
+            
             /**
               * load the id
               */
-            retrieveNodeGroupOK : function (retrieveCallback, idList) {
-                var mq = new MsiClientNodeGroupStore(this.serviceUrl);
-                mq.getStoredItemByIdToStr(idList[0], this.itemType, retrieveCallback);
-                this.lastRetrievedId = idList[0];
+            retrieveJsonStrToCaller : function (userRetrieveJsonStrCallback, idList) {
+               
             },
 
             getSuggestedId : function() {
@@ -173,7 +163,7 @@ define([	// properly require.config'ed
               * @param id is nodegroup just deleted
               * @param idList are additional nodegroups to delete
               */
-            deleteNodeGroupCallback : function (id, idList, resultSet) {
+            deleteNodeGroupListCallback : function (id, idList, resultSet) {
 
                 // if there is a failure...
                 // PEC TODO: search for "0 triples" is a temporary hack until we have a new results set type
@@ -188,35 +178,42 @@ define([	// properly require.config'ed
                         msg += "<p><p><b>Deletes were not attempted on remaining ids:<br></b>" + idList;
                     }
 					ModalIidx.alert("Service failed", msg);
+					this.storeChangedCallback();
 
 				} else {
                     // if there's more to do
                     if (idList.length > 0) {
-                        this.deleteNodeGroupOK(idList);
+						// recurse down the list
+                        this.deleteNodeGroupList(idList);
                     } else {
                         //ModalIidx.alert("Delete Nodegroup", resultSet.getSimpleResultsHtml());
                         ModalIidx.alert("Delete Nodegroup", "Successfully deleted.");
+                        this.storeChangedCallback();
                     }
 				}
 			},
-             /**
-              * delete the nodegroup
-              */
-            deleteNodeGroupOK : function (idList) {
+            
+            
+            deleteNodeGroupList : function (idList) {
                 var mq = new MsiClientNodeGroupStore(this.serviceUrl);
 
                 // delete idList[0] and queue up idList[1..end]
-                mq.deleteStoredItem(idList[0], this.itemType, this.deleteNodeGroupCallback.bind(this, idList[0], idList.slice(1)));
+                mq.deleteStoredItem(idList[0], this.itemType, this.deleteNodeGroupListCallback.bind(this, idList[0], idList.slice(1)));
             },
+               
 
             /**
               * External call to retrieve a nodegroup from the store
               */
-            launchRetrieveDialog : function (retrieveCallback) {
-                this.launchNodeGroupDialog("Nodegroup store",
-                                           this.retrieveNodeGroupOK.bind(this, retrieveCallback),
-                                           false // no multi
-                                          );
+            launchOpenStoreDialog : function (userRetrieveJsonStrCallback, storeChangedCallback) {
+                     
+                this.title = "Nodegroup store";
+                this.userRetrieveJsonStrCallback = userRetrieveJsonStrCallback;
+                this.storeChangedCallback = storeChangedCallback;
+
+                var mq = new MsiClientNodeGroupStore(this.serviceUrl);
+    		    mq.getStoredItemsMetadata(this.itemType, this.gotMetadataLaunchDialog.bind(this));
+  
             },
 
             /**

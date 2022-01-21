@@ -81,6 +81,8 @@ define([	// properly require.config'ed
 
             this.downloadReportButton = null;
             this.statusDiv = null;
+            
+            this.rawSchema = {};  // schema from disk with Nodgroup as string with enum: ["--invalid--"]
 
         };
 
@@ -262,7 +264,8 @@ define([	// properly require.config'ed
                 this.initReportDiv();
                 this.updateToolForm();
             },
-
+            
+            
             updateToolForm : function() {
                 var span = document.getElementById("reportConnSpan");
                 var connHTML = (this.conn != null && this.conn.getName() != null) ? ("<b>Conn: </b>" + this.conn.getName()) : "";
@@ -452,18 +455,68 @@ define([	// properly require.config'ed
                 // read schema from server src code dir and then launch the editor
                 $.ajax({
                     url:'../json/report-schema.json',
-                    success: function(data) { this.launchEditor(data); }.bind(this)
+                    success: function(data) { this.rawSchema = data;  this.launchEditor(); }.bind(this),
+                    error: function(err) {ModalIidx.alert("Error", "Retrieving schema failed: " + err.statusText + "<br><br>Report editor will not function properly.");}
                 });
             },
 
-            launchEditor: function(schema) {
+			/** Public call when nodegroupstore has changed
+			 *  Re-reads nodegroup ids and updates the schema with correct enumeration
+			 */
+            reloadNodegroupIDs: function() {
+				// remove old editor
+				for (var editElem of document.getElementsByClassName("je-object__container")) {
+					editElem.remove();
+				} 
+				// grab report json
+                var jsonStr = JSON.stringify(this.editor.getValue(), null, 4);
+                
+                // launch with new schema
+				this.launchEditor();
+				this.setReport(jsonStr);
+			},
+			
+			
+			/**
+			Call ngStore to get nodegroup ids, and kick off editor launching
+			 */
+            launchEditor: function(optReport) {
                 var ngStoreClient = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
-                ngStoreClient.getNodeGroupList(this.launchEditorStoreCallback.bind(this, schema));
+                ngStoreClient.getStoredItemsMetadata(MsiClientNodeGroupStore.TYPE_NODEGROUP, this.launchEditorGotMetaData.bind(this, optReport));
             },
+            
+            /**
+             * 	Handle response from ngStore.getMetadata,
+             *  Create new schema with enumerated nodegroup ids
+             *  Launch editor
+             */
+            launchEditorGotMetaData: function(optReport, ngMetaDataResponse) {
+               
+                var result = new MsiResultSet(ngMetaDataResponse.serviceURL, ngMetaDataResponse.xhr);
+                if (! result.isSuccess()) {
+					var message = "Can't access list of valid nodegroup IDs<br>" + result.getGeneralResultHtml();
+					ModalIidx.alert("Error", message);
+					this.launchEditorWithUpdatedSchema(this.rawSchema, optReport);
+				} else {
+					var newSchema = this.getUpdatedSchema(result.getStringResultsColumn("ID"));
+					this.launchEditorWithUpdatedSchema(newSchema, optReport);
+				}
+              	
+            },
+            
+            /**
+            	Replace nodegroup "--invalid--" with idList
+             */
+            getUpdatedSchema: function(idList) {
+				var jsonStr = JSON.stringify(this.rawSchema);
+				jsonStr = jsonStr.replace("--invalid--", "--invalid--\",\"" + idList.join("\",\""));
+				return JSON.parse(jsonStr);
+			},
+            
 
-            launchEditorStoreCallback: function(schema, storeResponse) {
+            launchEditorWithUpdatedSchema: function(schema, optReport) {
                 // HERE:  handle store storeRespone
-                //        search/replace in the schema    
+                //        search/replace in the schema
                 //              under NodeGroup in schema:
                 //                	"enum": ["--invalid--", "dataVer query ng1", "ng2", "ng3"]
                 //        Is this really the correct place?  When do we update the schema after store is accessed
@@ -583,7 +636,11 @@ define([	// properly require.config'ed
                     var indicator = document.getElementById('valid_indicator');
                     var json = this.editor.getValue();
 
-                    if(errors.length) {
+					if (JSON.stringify(json).indexOf("--invalid--") > -1) {
+						indicator.className = 'reports-invalid';
+                        indicator.textContent = 'Report contains invalid nodegroup ID';
+						
+					} else if(errors.length) {
                         // Not valid
                         if (Object.keys(json).length == 1 && json.title == "") {
                             indicator.className = 'reports-valid';
@@ -592,15 +649,37 @@ define([	// properly require.config'ed
                             indicator.className = 'reports-invalid';
                             indicator.textContent = 'Report JSON is invalid';
                         }
-                    }
-                    else {
+                        
+                    } else {
                         // Valid
                         indicator.className = 'reports-valid';
                         indicator.textContent = 'Report: ' + json.title;
                     }
+                    
+                    for (var editElem of document.getElementsByClassName("je-object__container")) {
+						this.updateInvalidHighlighting(editElem);
+					}  
+                    
                 }.bind(this));
             },
 
+			/**
+				Look for all SELECTs in the editor and toggle class "errmsg" based on value of "--invalid--"
+			 */
+			updateInvalidHighlighting(elem) {
+				if (elem.nodeName == "SELECT") {
+					if (elem.value == "--invalid--") {
+						elem.classList.add("errmsg");
+					} else {
+						elem.classList.remove("errmsg");
+					}
+				} else {
+					for (var e of elem.childNodes) {
+						this.updateInvalidHighlighting(e);
+					}
+				}
+			},
+			
             doSaveToStore : function() {
                 try {
                     var reportJson = this.editor.getValue();
@@ -630,7 +709,7 @@ define([	// properly require.config'ed
             },
 
             doOpenStoreOk : function() {
-                this.storeDialog.launchRetrieveDialog(this.setReport.bind(this));
+                this.storeDialog.launchOpenStoreDialog(this.setReport.bind(this), function(){});
             },
 
             doDownloadReport : function() {

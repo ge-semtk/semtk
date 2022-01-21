@@ -23,7 +23,7 @@ import javax.validation.constraints.Size;
 
 public class IdRequest {
 	
-	@NotNull(message="id can not be null") @Size(min=4, message="id must be at least 4 chars")
+	@NotNull(message="id can not be null") 
 	private String id;
 
 	public String getId() {
