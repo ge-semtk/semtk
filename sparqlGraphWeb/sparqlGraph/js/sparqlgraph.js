@@ -2193,6 +2193,13 @@
             gMappingTab.updateNodegroup(gNodeGroup, gConn);
             gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
         } else {
+			// if we're on a tab, update it because that's normally done during tab changes
+			if (gCurrentTab == g.tab.upload) {
+				gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
+			} else if (gCurrentTab == g.tab.mapping) {
+            	gMappingTab.updateNodegroup(gNodeGroup, gConn);
+			}
+			
             gMappingTab.setChangedFlag(false);
             queryTextChanged(false);
         }
