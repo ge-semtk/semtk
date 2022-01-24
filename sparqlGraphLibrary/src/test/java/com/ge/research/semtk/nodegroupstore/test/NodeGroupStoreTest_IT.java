@@ -103,22 +103,20 @@ public class NodeGroupStoreTest_IT {
 		// null id
 		try {
 			result = nodeGroupStoreClient.executeStoreNodeGroup(null, COMMENTS, CREATOR, NG_JSON);
-			fail("Expected exception did not occur");
+			// failure would be ok
+			assertFalse(result.getSuccess());
 		} catch (Exception e) {
+			// exception would be ok
 		}
-		// old 
-		// assertFalse(result.getSuccess());
-		// assertEquals(result.getRationaleAsString(""),"Invalid request to store node group: ID is not provided, or is empty");		
-
+		
 		// empty id
 		try {
 			result = nodeGroupStoreClient.executeStoreNodeGroup("  ", COMMENTS, CREATOR, NG_JSON);
-			fail("Expected exception did not occur");
+			// failure would be ok
+			assertFalse(result.getSuccess());
 		} catch (Exception e) {
+			// exception would be ok
 		}
-		// old 
-		// assertFalse(result.getSuccess());
-		//assertEquals(result.getRationaleAsString(""),"Invalid request to store node group: ID is not provided, or is empty");		
 	}
 	
 	
