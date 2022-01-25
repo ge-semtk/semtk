@@ -270,7 +270,7 @@ public class SparqlToXLibUtil {
 
 	public static String generateConstructConnected(SparqlConnection conn, OntologyInfo oInfo, String instance, XSDSupportedType instanceType) throws Exception {
 		
-		if (instanceType == XSDSupportedType.NODE_URI) {
+		if (instanceType.isURI()) {
 			String val = instanceType.buildRDF11ValueString(instance);
 			
 			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st. ?o a ?ot } \n" +

@@ -1116,6 +1116,7 @@ public class ImportSpecHandler {
 		// perform plain old validations
 		switch(expectedType) {
 		case NODE_URI:
+		case ANYURI:
 			try {
 			// check that this looks like a URI
 				new URI(input);
@@ -1475,7 +1476,7 @@ public class ImportSpecHandler {
 				Integer colIndex = items.get(0).getColumnIndex();
 				String sample = ngItemType.getSampleValue();
 				
-				if (ngItemType == XSDSupportedType.NODE_URI && mapping.getIsEnum()) {
+				if (ngItemType.isURI() && mapping.getIsEnum()) {
 					try {
 						// if it's an enum, try to get the local fragment of the first legal value
 						String uriName = this.ng.getNodeBySparqlID(mapping.getNodeSparqlID()).getFullUriName();

@@ -232,7 +232,7 @@ public class ValueConstraint {
 			} else if (t.regexIsAvailable()) {
 				// string
 				return String.format("FILTER(%s %s \"%s\"%s)", item.getSparqlID(), oper, v, t.getXsdSparqlTrailer());
-			} else if (t == XSDSupportedType.NODE_URI) {
+			} else if (t.isURI()) {
 				// URI
 				return String.format("FILTER(%s %s <%s>)", item.getSparqlID(), oper, v);
 			} 

@@ -46,7 +46,9 @@ public enum XSDSupportedType {
 	GYEARMONTH("gYearMonth", "GYEARMONTH") , 
 	GMONTH("gMonth", "10") , 
 	GMONTHDAY("gMonthDay", "28"), 
-	NODE_URI("node_uri", "http://uri#uri");
+	NODE_URI("node_uri", "http://uri#uri"),
+	URI("uri", "http://uri#uri"),
+	ANYURI("anyURI", "http://uri#uri");
 	
 	// note: "node_uri" was added for compatibility reasons to the way nodes in a nodegroup spec
 	// when their URI is able to be constrained at runtime.
@@ -63,11 +65,6 @@ public enum XSDSupportedType {
 	}
 	
 	public static XSDSupportedType getMatchingValue(String candidate) throws Exception {
-		// special case for new SADL implicit model
-		if (candidate.toLowerCase().equals("anyuri")) {
-			return NODE_URI;
-		}
-		
 		return XSDSupportedType.valueOf(candidate.toUpperCase());
 	}
 
@@ -88,7 +85,7 @@ public enum XSDSupportedType {
 			// dates get type suffix
 			return buildTypedValueString(val, typePrefixOverride);
 			
-		} else if (this == XSDSupportedType.NODE_URI) {
+		} else if (this.isURI()) {
 			// nodes get their brackets, etc.
 			return buildTypedValueString(val, typePrefixOverride);
 			
@@ -146,7 +143,7 @@ public enum XSDSupportedType {
 	
 	public String buildTypedValueString(String val, String typePrefixOverride) {
 		
-		if (this == XSDSupportedType.NODE_URI) {
+		if (this.isURI()) {
 			// check for angle brackets first
 			if( val.contains("#")){   // the uri given is prefixed.
 				if(val.startsWith("<") && val.endsWith(">")){
@@ -259,6 +256,12 @@ public enum XSDSupportedType {
 				this == LONG);
 	}
 	
+	public boolean isURI() {
+		return (this == URI || 
+				this == NODE_URI ||
+				this == ANYURI);
+	}
+	
 	public boolean rangeOperationsAvailable() {
 		return dateOperationAvailable() || numericOperationAvailable();
 	} 
@@ -272,7 +275,7 @@ public enum XSDSupportedType {
 	 * @param proposedValue
 	 * @throws Exception
 	 */
-	public void validate(String proposedValue) throws Exception{
+	public Object validate(String proposedValue) throws Exception{
 		
 		// datetime: 2014-05-23T10:20:13+05:30
 		// date    : 2014-05-23
@@ -283,20 +286,20 @@ public enum XSDSupportedType {
 			try{
 				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 				ret = formatter.parse(proposedValue);
-				return;
+				return ret;
 			}
 			catch(Exception e){
 				throw new Exception(proposedValue + " can't be converted to" + this.name() + ". Accepted format is yyyy-MM-dd." );
 			}
 		case STRING:
 			ret = proposedValue;
-			return;
+			return ret;
 		case BOOLEAN:
 			String cmp = proposedValue.toLowerCase().trim();
 			switch (cmp) {
 			case "true" :
 			case "false":
-				return;
+				return Boolean.valueOf(proposedValue);
 			default:
 				throw new Exception(proposedValue + " can't be converted to a boolean." );
 			}
@@ -323,13 +326,13 @@ public enum XSDSupportedType {
 					break;
 			} else {
 				ret = i;
-				return;
+				return i;
 			}
 		case DECIMAL:	
 		case LONG:
 			try {
 				ret = Long.parseLong(proposedValue);
-				return;
+				return ret;
 			}
 			catch(Exception e){
 			}
@@ -337,7 +340,7 @@ public enum XSDSupportedType {
 		case FLOAT:
 			try {
 				ret = Float.parseFloat(proposedValue);
-				return;
+				return ret;
 			}
 			catch(Exception e){
 			}
@@ -345,7 +348,7 @@ public enum XSDSupportedType {
 		case DOUBLE:
 			try {
 				ret = Double.parseDouble(proposedValue);
-				return;
+				return ret;
 			}
 			catch(Exception e){
 			}
@@ -354,7 +357,7 @@ public enum XSDSupportedType {
 			try{
 				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 				ret = formatter.parse(proposedValue);
-				return;
+				return ret;
 			}
 			catch(Exception e){
 				throw new Exception(proposedValue + " can't be converted to" + this.name() + ". Accepted format is yyyy-MM-dd'T'HH:mm:ss." );
@@ -363,17 +366,18 @@ public enum XSDSupportedType {
 			try{
 				SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
 				ret = formatter.parse(proposedValue);
-				return;
+				return ret;
 			}
 			catch(Exception e){
 				throw new Exception(proposedValue + " can't be converted to" + this.name() + ". Accepted format is HH:mm:ss." );
 			}
 		case NODE_URI:
+		case ANYURI:
 			if (SparqlToXUtils.isLegalURI(proposedValue)) {
 				ret = proposedValue;
-				return;
+				return ret;
 			}
-			// let these types slip through unchecked
+			// let these types slip through unchecked as strings
 		case DURATION:
 		case GYEARMONTH:
 		case GMONTH:
@@ -382,7 +386,7 @@ public enum XSDSupportedType {
 		case UNSIGNEDBYTE:
 		default:
 			ret = proposedValue;
-			return;
+			return ret;
 		}
 	
 		throw new Exception(proposedValue + " can't be converted to" + this.name());
