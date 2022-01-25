@@ -18,6 +18,7 @@ package com.ge.research.semtk.plotting;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.math.NumberUtils;
@@ -53,8 +54,9 @@ public class PlotlyPlotSpec extends PlotSpec {
 	private static final String JKEY_FILL_BY_VALUE = "fillByValue";
 	private static final String SEMTK_TRACE = "SEMTK_TRACE_";     
 
-	private static final String PREFIX = "SEMTK_TABLE";     // x: "SEMTK_TABLE.col[col_name]"
+	private static final String SEMTK_TABLE = "SEMTK_TABLE";     // x: "SEMTK_TABLE.col[col_name]"
 	private static final String CMD_COL = "col";
+	private static final String CMD_UNIQUE = "unique";
 			
 
 	public PlotlyPlotSpec(JSONObject plotSpecJson) throws Exception {
@@ -209,16 +211,16 @@ public class PlotlyPlotSpec extends PlotSpec {
 	private boolean applyTableToJsonStringField(JSONObject jObj, String key, Table table) throws Exception {
 		
 		String s = (String) jObj.get(key);	// e.g. SEMTK_TABLE.col[colA]
-		if (!s.startsWith(PREFIX + ".")) return false;
+		if (!s.startsWith(SEMTK_TABLE + ".")) return false;
 		
 		// TODO if already replaced this field, then return
 				
 		String[] sSplit = s.replaceAll("\\s","").split("[\\.\\[\\]]");  // e.g. split SEMTK_TABLE.col[colA] into ["SEMTK_TABLE", "col", "colA"]
-		if(sSplit[0].equals(PREFIX) && sSplit[1].equals(CMD_COL)){
+		if (sSplit[0].equals(SEMTK_TABLE) && sSplit[1].equals(CMD_COL)){
 			String colName = sSplit[2].trim();
 			int colIndex = table.getColumnIndex(colName);
 			if (colIndex == -1) {
-				throw new Exception("Plot spec contains column which does not exist in table: '" + colName + "'");
+				throw new Exception("Plot spec contains '" + colName +"' which does not exist in table, at: " + s);
 			}
 			
 			JSONArray jArr = new JSONArray();
@@ -239,8 +241,45 @@ public class PlotlyPlotSpec extends PlotSpec {
 			
 			jObj.put(key, jArr);
 			return true;
+			
+		} else if(sSplit[0].equals(SEMTK_TABLE) && sSplit[1].equals(CMD_UNIQUE)){
+			String[] colNames = sSplit[2].trim().split("[\\s,]");
+			XSDSupportedType xsdType = null;
+			
+			// get unique values from all specified columns
+			HashSet<String> valueSet = new HashSet<String>();
+			for (String colName : colNames) {
+				
+				// make sure column index is valid
+				int colIndex = table.getColumnIndex(colName);
+				if (colIndex == -1) {
+					throw new Exception("Plot spec contains '" + colName +"' which does not exist in table, at: " + s);
+				}
+				
+				// make sure column types are the same
+				if (xsdType == null) {
+					xsdType = table.getColumnXSDType(colName);
+				} else if (table.getColumnXSDType(colName) != xsdType) {
+					throw new Exception("Plot spec " + CMD_UNIQUE + " columns are not the same type, at: " + s);
+				}
+				
+				// store values as string
+				String [] colVals = table.getColumn(colIndex);
+				for (String v : colVals) {
+					valueSet.add(v);
+				}
+			}
+			
+			JSONArray jArr = new JSONArray();
+			
+			for (String v : valueSet) {
+				jArr.add(xsdType.validate(v));
+			}
+			
+			jObj.put(key, jArr);
+			return true;
 
-		}else{
+		} else{
 			throw new Exception("Unsupported data specification for plotting: " + s);
 		}
 		
