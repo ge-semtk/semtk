@@ -429,6 +429,28 @@ public enum XSDSupportedType {
 		ret.add(t);
 		return ret;
 	}
+	
+	public static boolean listContainsNumeric(HashSet<XSDSupportedType> typeList) {
+		for (XSDSupportedType t : typeList) {
+			if (t.numericOperationAvailable())
+				return true;
+		}
+		return false;
+	}
+	public static boolean listContainsUri(HashSet<XSDSupportedType> typeList) {
+		for (XSDSupportedType t : typeList) {
+			if (t.isURI())
+				return true;
+		}
+		return false;
+	}
+	public static boolean listContainsString(HashSet<XSDSupportedType> typeList) {
+		for (XSDSupportedType t : typeList) {
+			if (t == STRING)
+				return true;
+		}
+		return false;
+	}
 }
 
 

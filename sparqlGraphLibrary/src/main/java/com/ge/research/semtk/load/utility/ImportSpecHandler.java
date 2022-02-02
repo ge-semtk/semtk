@@ -41,8 +41,10 @@ import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.load.DataValidator;
 import com.ge.research.semtk.load.transform.Transform;
 import com.ge.research.semtk.load.transform.TransformInfo;
+import com.ge.research.semtk.ontologyTools.OntologyDatatype;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
+import com.ge.research.semtk.ontologyTools.OntologyRestriction;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
@@ -679,7 +681,17 @@ public class ImportSpecHandler {
 			// ---- property ----
 			if(builtString.length() > 0) {
 				propItem = node.getPropertyByURIRelation(mapping.getPropURI());
-				builtString = this.validateDataType(builtString, propItem.getValueTypes(), skipValidation);						
+				builtString = ImportSpecHandler.validateDataType(builtString, propItem.getValueTypes(), skipValidation);	
+				
+				// if datatype, check for restrictions
+				// (SADL seems to only support restrictions on named datatypes, 
+				//  so SemTK currently only supports restrictions on them)
+				if (!skipValidation) {
+					OntologyDatatype dt = this.oInfo.getDatatype(propItem.getRangeURI());
+					if (dt != null) {
+						dt.validateRestrictions(builtString);
+					}
+				}
 				propItem.addInstanceValue(builtString);
 			}
 			

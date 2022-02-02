@@ -1,3 +1,4 @@
+
 /**
  ** Copyright 2016-17 General Electric Company
  **
@@ -647,15 +648,27 @@ OntologyInfo.prototype = {
 		}
 	},
 
-    loadDatatypes : function(dataTypeList, equivTypeList) {
+    loadDatatypes : function(dataTypeList, equivTypeList, restrictPredList, restrictObjList) {
 		// load from rows of [class]
 		for (var i=0; i < dataTypeList.length; i++) {
-            if (this.containsDatatype(dataTypeList[i])) {
-                this.getDatatype(dataTypeList[i]).addEquivalentType(equivTypeList[i]);
+			var dt;
+			if (this.containsClass(dataTypeList[i])) {
+				throw new Error("Error loading ontology.  Datatype URI is already a class: " + dataTypeList[i]);
+            
+            } else if (this.containsDatatype(dataTypeList[i])) {
+                // already exists: add additional equivalent types
+                dt = this.getDatatype(dataTypeList[i]);
+				dt.addEquivalentType(equivTypeList[i]);
+				
             } else {
-    			var x = new OntologyDatatype(dataTypeList[i], equivTypeList[i]);
-    			this.addDatatype(x);
+				
+    			dt = new OntologyDatatype(dataTypeList[i], equivTypeList[i]);
+    			this.addDatatype(dt);
             }
+            
+            if (restrictPredList != null && restrictPredList[i] != "") {
+				dt.addRestriction(restrictPredList[i], restrictObjList[i]);
+			}
 		}
 	},
 
@@ -1039,11 +1052,11 @@ OntologyInfo.prototype = {
         }
 
         // datatypeList
-        for (var d in this.datatypeHash) {
-            for (var equivType of this.datatypeHash[d].getEquivalentTypes()) {
-            	var a = [this.prefixURI(d, prefixToIntHash), this.prefixURI(equivType, prefixToIntHash)];
-            	json.datatypeList.push(a);
-            }
+        for (var name in this.datatypeHash) {
+			var rows = this.generateDatatypeRows(this.datatypeHash[name]);
+			for (var r of rows) {
+				json.datatypeList.push(r);
+			}
         }
 
         for (var superProp in this.subPropHash) {
@@ -1114,7 +1127,51 @@ OntologyInfo.prototype = {
 
         return json;
     },
-
+    
+	generateDatatypeRows: function(dt) {
+		var ret = [];
+		
+		// add a row for each type, with empty restriction columns
+		for (var typeStr of dt.getEquivalentTypes()) {
+			var row = [];
+			row.push(dt.getNameStr(false));
+			row.push(typeStr);
+			ret.push(row);
+		}
+		
+		// add restrictions columns
+		var r = 0;
+		for (var restrict of dt.getRestrictions()) {
+			// grab the next available row 
+			// duplicating the last row if there aren't enough rows from xsdTypes to hold all restrictions
+			var row;
+			if (r >= ret.size()) {
+				row = [];
+				var last = ret[ret.length-1];
+				for (var i=0; i < 2; i++) {
+					row.push(last[i]);
+				}
+				ret.push(row);
+			} else {
+				row = ret[r];
+			}
+			
+			// add the restriction to the row
+			row.push(restrict.getPredicate());
+			row.push(restrict.getObject());
+			r++;
+		}
+		
+		// if fewer restrictions than types, round out all rows with ""
+		while (r < ret.length) {
+			ret[r].push("");
+			ret[r].push("");
+			r++;
+		}
+		
+		return ret;  
+	},
+	
     /*
      * adds json to OntologyInfo
      *
@@ -1143,9 +1200,21 @@ OntologyInfo.prototype = {
         }
 
         this.loadTopLevelClasses(topLevelClassList);
-        this.loadDatatypes(getColumn(json.datatypeList, 0),
-                           getColumn(json.datatypeList, 1)
-                       );
+        
+        if (json.hasOwnProperty("datatypeList") && json["datatypeList"].length > 0) {
+			if (json.datatypeList[0].length == 4) {
+				this.loadDatatypes(getColumn(json.datatypeList, 0),
+	                    	       getColumn(json.datatypeList, 1),
+	                    	       getColumn(json.datatypeList, 2),
+	                    	       getColumn(json.datatypeList, 3)
+	                     	  	);
+			} else {
+				// older version only had 2 columns
+	        	this.loadDatatypes(getColumn(json.datatypeList, 0),
+	                    	       getColumn(json.datatypeList, 1)
+	                     	  	);
+	        }
+	    }
         this.loadSuperSubClasses(getColumn(json.subClassSuperClassList, 0),
                                  getColumn(json.subClassSuperClassList, 1)
                              );
@@ -1762,14 +1831,14 @@ OntologyAnnotation.prototype = {
  */
 
  var OntologyRestriction = function(pred, obj) {
-     this.pred = pred;
-     this.obj = obj;
+     this.predicate = pred;
+     this.object = obj;
  };
 
  OntologyRestriction.prototype = {
 
      getUniqueKey : function () {
-         return pred + "," + obj;
+         return this.predicate + "," + this.object;
      },
  };
 
@@ -1822,7 +1891,7 @@ OntologyDatatype.prototype = {
      * Adds equivalentType.  No-op if type already exists
      */
     addEquivalentType : function(fullURI) {
-        if (!(fullURI in this.strTypes)) {
+        if (this.strTypes.indexOf(fullURI) == -1) {
             this.strTypes.push(fullURI);
             this.xsdTypes.push((new OntologyName(fullURI)).getLocalName());
         }
@@ -1835,10 +1904,16 @@ OntologyDatatype.prototype = {
             this.restrictions[key] = restriction;
         }
     },
+    
+    getRestrictions : function() {
+	 	var ret = [];
+	 	for (var key in this.restrictions) {
+			ret.push(this.restrictions[key]);
+		}
+		return ret;
+	}
 
-    generateJSONRows : function() {
-        // Here
-    }
+
 };
 
 /*

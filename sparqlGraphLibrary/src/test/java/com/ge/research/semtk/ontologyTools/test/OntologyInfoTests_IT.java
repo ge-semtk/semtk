@@ -135,7 +135,9 @@ public class OntologyInfoTests_IT {
 		// load owl from file to triplestore and into oInfo1, 
 		// generate owl, 
 		// load THAT through triplestore into oInfo2
-		// and compare results
+		// and compare results\
+		// NOTE:    this is used lightly if at all
+		// CAREFUL: only the features in annotationBattery.owl are tested
 		
 		// load test data
 		TestGraph.clearGraph();

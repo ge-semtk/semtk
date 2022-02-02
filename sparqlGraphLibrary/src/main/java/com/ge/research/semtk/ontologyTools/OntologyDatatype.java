@@ -47,11 +47,11 @@ public class OntologyDatatype extends AnnotatableElement{
 		this.addEquivalentType(equivalentType);
 	}
 	
-	public String getName() {
-		return this.name.getFullName();
+	public OntologyName getName() {
+		return this.name;
 	}
 	
-	public String getNameString(Boolean stripNamespace){
+	public String getNameStr(Boolean stripNamespace){
 		if(stripNamespace){
 			return this.name.getLocalName();
 		}
@@ -90,7 +90,50 @@ public class OntologyDatatype extends AnnotatableElement{
 		return this.xsdTypes;
 	}
 	
-	public JSONArray generateJSONRows() {
-		return null;  // PEC HERE
+	public HashSet<OntologyRestriction> getRestrictions() {
+		HashSet<OntologyRestriction> ret = new HashSet<OntologyRestriction>();
+		for (String key : this.restrictions.keySet()) {
+			ret.add(this.restrictions.get(key));
+		}
+		return ret;
 	}
+
+	/**
+	 * Throws exception if builtString fails any restrictions
+	 * @param builtString
+	 * @throws Exception
+	 */
+	public void validateRestrictions(String builtString) throws Exception {
+		Boolean passedOR = null;  // null:  no OR;  false: failed all;  true: passed one
+		String msgOR = null;
+		
+		// loop through restrictions
+		for (OntologyRestriction r : this.restrictions.values()) {
+			String msg = r.validate(builtString, this.xsdTypes);
+			
+			if (r.isOR()) {
+				// handle OR (enumerations) where it must pass one
+				if (msg == null) {
+					// OR success sets passedOR to true
+					passedOR = true;
+				} else if (passedOR == null) {
+					// OR failure only sets passedOR to false if not true
+					passedOR = false; 
+					msgOR = msg;
+				}
+			
+			} else if (msg != null) {
+				// handle regular AND restrictions
+				throw new Exception(this.name.getLocalName() + " " + msg);
+			}
+				
+		}
+		
+		// If there was at least one OR restriction and none passed
+		if (passedOR != null && passedOR != true) {
+			throw new Exception(this.name.getLocalName() + " " + msgOR);
+		}
+		
+	}
+	
 }

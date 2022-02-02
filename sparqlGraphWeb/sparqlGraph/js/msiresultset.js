@@ -578,6 +578,9 @@ define([	// properly require.config'ed   bootstrap-modal
                 return newRows;
             },
 
+			// update this with  https://github.com/mholt/PapaParse  : https://unpkg.com/papaparse@latest/papaparse.min.js
+			// https://stackoverflow.com/questions/14964035/how-to-export-javascript-array-info-to-csv-on-client-side
+			// https://en.wikipedia.org/wiki/Comma-separated_values#Example
 			tableGetCsv : function () {
 				var table = this.getTable();
 				// translate into a csv string
