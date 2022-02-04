@@ -190,11 +190,16 @@ define([	// properly require.config'ed   bootstrap-modal
 
                     statusBarCallback(optMsg || "", thisPercent);
 
-                    this.execWaitForPercentOrMsecInt(thisPercent + 1, 10000, this.execAsyncWaitUntilDoneCallback.bind( this,
-                                                                                jobSuccessCallback,
-                                                                                statusBarCallback,
-                                                                                checkForCancelCallback
-                                                                                ) );
+					// Use setTimeout() to try to keep the browser happy if this takes forever
+					var doNext = function() {
+           				 this.execWaitForPercentOrMsecInt(thisPercent + 1, 5000, this.execAsyncWaitUntilDoneCallback.bind( 
+																						this,
+				                                                                        jobSuccessCallback,
+				                                                                        statusBarCallback,
+				                                                                        checkForCancelCallback
+				                                                                        ));
+                    }.bind(this);
+                    setTimeout(doNext, 1);  
                 }
             },
 
