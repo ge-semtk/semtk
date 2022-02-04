@@ -27,6 +27,13 @@
     			<version>3.6.1</version>
 		</dependency>
 
+		<dependency>
+    			<groupId>org.apache.commons</groupId>
+    			<artifactId>commons-text</artifactId>
+    			<version>1.9</version>
+		</dependency>
+
+
 		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>commons-codec</groupId>

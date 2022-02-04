@@ -24,6 +24,11 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVParser;
+import org.apache.commons.csv.CSVPrinter;
+import org.apache.commons.csv.CSVRecord;
+import org.apache.commons.text.StringEscapeUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -80,6 +85,13 @@ public class TableResultsSerializer {
 		}
     }
 	
+	/**
+	 * Reads the stored JSON and translates it into a CSV file
+	 * @param aOutputStream
+	 * @param stopRowNumber
+	 * @throws UnsupportedOperationException
+	 * @throws IOException
+	 */
 	private void writeCSV( PrintWriter aOutputStream, Integer stopRowNumber ) throws UnsupportedOperationException, IOException{
 		
 		if(this.headerInfo == null){ throw new UnsupportedOperationException("cannot return info when metadata is empty or nonexistent"); }
@@ -113,13 +125,32 @@ public class TableResultsSerializer {
 		// fast foward
 		bfr = this.fastForwardResultsFile(bfr);
 		
-		
 		while(processedRows < stopRowNumber && !endOfInput){
 			// read the next row from the data set and write to the stream. 
 
 			String currRow = bfr.readLine();
-			// conversion should not be required in this case as it was read as written.
-			aOutputStream.write(currRow.substring(1, currRow.length() - 1));
+			
+			// stored json version has quotes around each field and \" for embedded quotes
+			// like this ["1", "ab", "I \"love\" cookies"]
+			// remove brackets from the json line
+			currRow = currRow.substring(1, currRow.length() - 1);
+			// change \" to "" so that CSVParser will work
+			currRow = currRow.replaceAll("\\\\\\\"",  "\"\"");
+			
+			CSVParser parser = CSVParser.parse(currRow, CSVFormat.EXCEL);
+			StringBuffer line = new StringBuffer();
+			CSVPrinter printer = new CSVPrinter(line, CSVFormat.EXCEL);
+			
+			// pull apart the string by CSV field using all the proper quoting and , rules
+			for (CSVRecord r : parser.getRecords()) {
+				for (int i=0; i < r.size(); i++) {
+					// unescape the JSON - e.g. changes \n to line return
+					// then re-assemble the line using the proper quoting and , rules
+					printer.print(StringEscapeUtils.unescapeJson(r.get(i)));
+				}
+			}
+			
+			aOutputStream.write(line.toString());
 			
 			// add the comma, if needed.
 			if(processedRows < stopRowNumber -1){  aOutputStream.write("\n"); }

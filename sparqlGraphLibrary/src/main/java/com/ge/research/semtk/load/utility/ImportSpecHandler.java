@@ -692,6 +692,7 @@ public class ImportSpecHandler {
 						dt.validateRestrictions(builtString);
 					}
 				}
+				
 				propItem.addInstanceValue(builtString);
 			}
 			
@@ -1103,7 +1104,7 @@ public class ImportSpecHandler {
 		// perform validations that change the input
 		switch (expectedType) {
 		case STRING:
-			return SparqlToXUtils.safeSparqlString(input);
+			return input;
 		case DATETIME:
 			try{				 
 				return Utility.getSPARQLDateTimeString(input);				 				 

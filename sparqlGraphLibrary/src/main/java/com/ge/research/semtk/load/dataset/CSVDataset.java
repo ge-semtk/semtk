@@ -32,6 +32,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.load.dataset.Dataset;
@@ -160,12 +161,17 @@ public class CSVDataset extends Dataset {
 		Set<String> parserHeaders = parser.getHeaderMap().keySet();
 	}
 	
+	/**
+	 * Get the parser that reads in ingestion csv's
+	 * @return
+	 * @throws Exception
+	 */
 	private CSVParser getParser() throws Exception{
 		// return (CSVFormat.EXCEL.withHeader().withIgnoreHeaderCase(true).parse(reader));
 		return (CSVFormat.EXCEL.withHeader()
 				.withIgnoreHeaderCase(true)
-				.withQuote('"')
-				.withEscape('\\')
+		//		.withQuote('"')       
+		//		.withEscape('\\')       // this changed \n to actual line returns and \t to actual tabs.  Not normal excel/CSV behavior.
 				.withIgnoreEmptyLines(true)
 				.withIgnoreSurroundingSpaces(true)
 				.parse(reader)); // changed toward handling quotes in stream. the were breaking
@@ -175,6 +181,7 @@ public class CSVDataset extends Dataset {
 	@Override
 	/**
 	 * Read the next set of rows from the CSV file
+	 * Typically used when ingesting a CSV
 	 */
 	public ArrayList<ArrayList<String>> getNextRecords(int numRecords) throws Exception {
 		if(headers == null){
@@ -195,7 +202,10 @@ public class CSVDataset extends Dataset {
 				for(int j = 0; j < headers.length; j++){
 					// add the next entry to the list. 
 					try{
-					currRow.add(record.get(headers[j]) );
+						
+						currRow.add(record.get(headers[j])
+								.replaceAll("\"\"", "\"")  // CSVParser is leaving "" for some reason.  unescapeCsv() didn't help.
+								);
 					}
 					catch( Exception eee){
 						LocalLogger.logToStdOut("exception getting data for header");

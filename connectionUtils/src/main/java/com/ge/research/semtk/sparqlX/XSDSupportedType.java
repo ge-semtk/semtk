@@ -91,7 +91,12 @@ public enum XSDSupportedType {
 			
 		} else {
 			// default is a plain quoted value
-			return "\"" + val + "\"";
+			String escaped = val.replaceAll("\\\\", "\\\\\\\\");
+			if (escaped.contains("\"") || escaped.contains("\n")) {
+				return "'''" + escaped + "'''";
+			} else {
+				return "\"" + escaped + "\"";
+			}
 		}
 				
 	}

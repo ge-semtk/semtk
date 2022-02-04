@@ -215,6 +215,12 @@ public class IntegrationTestUtility{
 	public static NodeGroupExecutionClient getNodeGroupExecutionRestClient() throws Exception{
 		return new NodeGroupExecutionClient(new NodeGroupExecutionClientConfig(get("protocol"), get("nodegroupexecution.server"), getInt("nodegroupexecution.port"), get("sparqlendpoint.username"), get("sparqlendpoint.password")));
 	}
+	/**
+	 * Get a NodeGroupStoreRestClient using the integration test properties.
+	 */
+	public static DispatchRestClient getDispatchRestClient() throws Exception{
+		return new DispatchRestClient(new DispatchClientConfig(get("protocol"), get("dispatchservice.server"), getInt("dispatchservice.port")));
+	}
 	
 	/**
 	 * Get a NodeGroupExecutor using the integration test properties.

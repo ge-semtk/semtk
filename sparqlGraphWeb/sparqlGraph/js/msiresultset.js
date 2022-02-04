@@ -19,13 +19,13 @@
 define([	// properly require.config'ed   bootstrap-modal
         	'sparqlgraph/js/iidxhelper',
             'sparqlgraph/js/visjshelper',
-
+			'papaparse',
             'visjs/vis.min'
 			// shimmed
 
 		],
 
-	function(IIDXHelper, VisJsHelper, vis) {
+	function(IIDXHelper, VisJsHelper, Papa, vis) {
 
 
 		var MsiResultSet = function (serviceURL, xhr) {
@@ -86,7 +86,7 @@ define([	// properly require.config'ed   bootstrap-modal
 
 				// may have rationale regardless of status
 				if (this.xhr.hasOwnProperty("rationale")) {
-					html += "<br><b>rationale: </b> " +  IIDXHelper.htmlSafe(this.xhr.rationale).replace(/[\n]/, "<br>");
+					html += "<br><b>rationale: </b> " +  IIDXHelper.htmlSafe(this.xhr.rationale);
 				}
 
 				return html;
@@ -507,7 +507,7 @@ define([	// properly require.config'ed   bootstrap-modal
 					if (this.anchorFlag || this.escapeHtmlFlag) {
 						for (var j=0; j < nonUriCols.length; j++) {
                             // all of this only applies to strings
-                            if (table.col_type[j].endsWith("string")) {
+                            if (table.col_type[j].endsWith("string") || table.col_type[j].endsWith("literal")) {
                                 if (this.escapeHtmlFlag) {
                                     row[nonUriCols[j]] = IIDXHelper.htmlSafe(row[nonUriCols[j]]);
                                 }
@@ -583,22 +583,8 @@ define([	// properly require.config'ed   bootstrap-modal
 			// https://en.wikipedia.org/wiki/Comma-separated_values#Example
 			tableGetCsv : function () {
 				var table = this.getTable();
-				// translate into a csv string
-				var csv = "";
-				csv +=  table.col_names.join() + "\n";
-				var rows = table.rows;
-				for (var i=0; i < rows.length; i++) {
-					var row = table.rows[i];
-					var formatted_row = [];
-					for (var j=0; j < row.length; j++) {
-						if (row[j].indexOf(",") > -1 || row[j].indexOf("\n") > -1 || row[j].indexOf("\r") > -1) {
-							formatted_row.push('"' + row[j] + '"');
-						} else {
-							formatted_row.push(row[j]);
-						}
-					}
-					csv +=  formatted_row.join() + "\n";
-				}
+				var rows = [table.col_names].concat(table.rows);
+				var csv = Papa.unparse(rows);
 				return csv;
 			},
 

@@ -654,10 +654,11 @@ define([	// properly require.config'ed
     };
 
     /**
-     * Change html tags to plain html text
+     * Change html tags to plain html text,
+     * and \n to html <br>
      */
     IIDXHelper.htmlSafe = function(str) {
-        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/%/g, "&percnt;");
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/%/g, "&percnt;").replace(/[\n]/, "<br>");
     },
 
     /**
