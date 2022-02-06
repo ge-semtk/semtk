@@ -8,19 +8,26 @@ TestClass is a class,
 	described by dal with a single value of type DAL,
 	described by num with a single value of type int.
 
-	
+// Adapted slightly from sadl.sourceforge.net
+// Quick Introduction to SADL3 -> What's New or different -> Grammar -> 2. User-defined datatypes	
 over12 is a type of int [12,]. // an int >= 12
 clothingsize is a type of {int or time or date}. // expanded to three types.  got rid of string because it catches everything
 enumeratedheight is a type of string {"short", "medium", "tall"}. // enumeration of 3 possible string values
+finger is a type of int {1,2,3,4,5}.
 SSN is a type of string "[0-9]{3}-[0-9]{2}-[0-9]{4}".
 year is a type of int [0,6]. // length 4 .
 Airport_Ident is a type of string length 1-4 .
+weight is a type of float [50,98.6).
 
 Examples is a class,
 	described by o12 with values of type over12,
 	described by cs with values of type clothingsize,
 	described by eh with values of type enumeratedheight,
+	described by f with values of type finger,
 	described by sn with values of type SSN,
 	described by y with values of type year,
-	described by ai with values of type Airport_Ident.
+	described by ai with values of type Airport_Ident,
+	described by w with values of type weight.
+	
+
 	

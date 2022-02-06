@@ -41,6 +41,22 @@
       </rdfs:Datatype>
     </owl:equivalentClass>
   </rdfs:Datatype>
+  <rdfs:Datatype rdf:ID="finger">
+    <owl:equivalentClass>
+      <rdfs:Datatype>
+        <owl:withRestrictions rdf:parseType="Collection">
+          <rdf:Description>
+            <xsd:enumeration>5</xsd:enumeration>
+            <xsd:enumeration>4</xsd:enumeration>
+            <xsd:enumeration>3</xsd:enumeration>
+            <xsd:enumeration>2</xsd:enumeration>
+            <xsd:enumeration>1</xsd:enumeration>
+          </rdf:Description>
+        </owl:withRestrictions>
+        <owl:onDatatype rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+      </rdfs:Datatype>
+    </owl:equivalentClass>
+  </rdfs:Datatype>
   <rdfs:Datatype rdf:ID="SSN">
     <owl:equivalentClass>
       <rdfs:Datatype>
@@ -67,6 +83,23 @@
           </rdf:Description>
         </owl:withRestrictions>
         <owl:onDatatype rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+      </rdfs:Datatype>
+    </owl:equivalentClass>
+  </rdfs:Datatype>
+  <rdfs:Datatype rdf:ID="weight">
+    <owl:equivalentClass>
+      <rdfs:Datatype>
+        <owl:withRestrictions rdf:parseType="Collection">
+          <rdf:Description>
+            <xsd:minInclusive rdf:datatype="http://www.w3.org/2001/XMLSchema#float"
+            >50</xsd:minInclusive>
+          </rdf:Description>
+          <rdf:Description>
+            <xsd:maxExclusive rdf:datatype="http://www.w3.org/2001/XMLSchema#float"
+            >98.6</xsd:maxExclusive>
+          </rdf:Description>
+        </owl:withRestrictions>
+        <owl:onDatatype rdf:resource="http://www.w3.org/2001/XMLSchema#float"/>
       </rdfs:Datatype>
     </owl:equivalentClass>
   </rdfs:Datatype>
@@ -168,8 +201,16 @@
     <rdfs:domain rdf:resource="#Examples"/>
     <rdfs:range rdf:resource="#clothingsize"/>
   </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:ID="w">
+    <rdfs:domain rdf:resource="#Examples"/>
+    <rdfs:range rdf:resource="#weight"/>
+  </owl:DatatypeProperty>
   <owl:DatatypeProperty rdf:ID="o12">
     <rdfs:domain rdf:resource="#Examples"/>
     <rdfs:range rdf:resource="#over12"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:ID="f">
+    <rdfs:domain rdf:resource="#Examples"/>
+    <rdfs:range rdf:resource="#finger"/>
   </owl:DatatypeProperty>
 </rdf:RDF>

@@ -112,10 +112,70 @@ public class OntologyDatatypeTest_IT {
 		
 		// load three rows of data
 		int rows = TestGraph.ingestFromResources(getClass(), "datatype_exampleA.json", "datatype_exampleA_pass.csv");
-		assertEquals("Ingestion produced wrong number of rows", 4, rows);
+		assertEquals("Ingestion produced wrong number of rows", 5, rows);
 		
 		// check the round trip results
 		TestGraph.queryAndCheckResults(this, "datatype_exampleA.json", "datatype_exampleA_pass.csv");
+		
+	}
+	
+	@Test
+	public void testLoadDataMultiTypesFails() throws Exception {
+		// datatypetest.SADL has examples of complex datatypes with restrictions etc. from SADL 3 documentation
+		// This test loads a variety of illegal values
+		
+		
+		// load model
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "datatypetest.owl");		
+		
+		final String header = "ai,cs,eh,f,o12,sn,w,y\n";
+		try {
+			TestGraph.ingestCsvString(getClass(), "datatype_exampleA.json", header + "aaaaa,,,,,,,");
+			fail("No datatype exception for string too long");
+		} catch (Exception e) {assertTrue("Error message doesn't mention restriction: " + e.getMessage(), e.getMessage().contains("restriction"));}
+		try {
+			TestGraph.ingestCsvString(getClass(), "datatype_exampleA.json", header + ",a string,,,,,,");
+			fail("No datatype exception for string ingested as {int, time, date}");
+		} catch (Exception e) {assertTrue("Error message doesn't mention 'a string': " + e.getMessage(), e.getMessage().contains("a string"));}
+		try {
+			TestGraph.ingestCsvString(getClass(), "datatype_exampleA.json", header + ",,incredibly tall,,,,,");
+			fail("No datatype exception for incorrect enumerated string");
+		} catch (Exception e) {assertTrue("Error message doesn't mention restriction: " + e.getMessage(), e.getMessage().contains("restriction"));}
+		try {
+			TestGraph.ingestCsvString(getClass(), "datatype_exampleA.json", header + ",,,6,,,,");
+			fail("No datatype exception for incorrect enumerated integer");
+		} catch (Exception e) {assertTrue("Error message doesn't mention restriction: " + e.getMessage(), e.getMessage().contains("restriction"));}
+		try {
+			TestGraph.ingestCsvString(getClass(), "datatype_exampleA.json", header + ",,,,11,,,");
+			fail("No datatype exception for int too high");
+		} catch (Exception e) {assertTrue("Error message doesn't mention restriction: " + e.getMessage(), e.getMessage().contains("restriction"));}
+		try {
+			TestGraph.ingestCsvString(getClass(), "datatype_exampleA.json", header + ",,,,,abd-de-fghi,,");
+			fail("No datatype exception for incorrect pattern match");
+		} catch (Exception e) {assertTrue("Error message doesn't mention restriction: " + e.getMessage(), e.getMessage().contains("restriction"));}
+		try {
+			TestGraph.ingestCsvString(getClass(), "datatype_exampleA.json", header + ",,,,,000-11-22220000,,");
+			fail("No datatype exception for incorrect pattern match");
+		} catch (Exception e) {assertTrue("Error message doesn't mention restriction: " + e.getMessage(), e.getMessage().contains("restriction"));}
+		try {
+			TestGraph.ingestCsvString(getClass(), "datatype_exampleA.json", header + ",,,,,,49.9,");
+			fail("No datatype exception for float too low inclusive");
+		} catch (Exception e) {assertTrue("Error message doesn't mention restriction: " + e.getMessage(), e.getMessage().contains("restriction"));}
+		try {
+			TestGraph.ingestCsvString(getClass(), "datatype_exampleA.json", header + ",,,,,,98.6,");
+			fail("No datatype exception for float too high exclusive");
+		} catch (Exception e) {assertTrue("Error message doesn't mention restriction: " + e.getMessage(), e.getMessage().contains("restriction"));}
+		try {
+			TestGraph.ingestCsvString(getClass(), "datatype_exampleA.json", header + ",,,,,,,-1");
+			fail("No datatype exception for int too low inclusive");
+		} catch (Exception e) {assertTrue("Error message doesn't mention restriction: " + e.getMessage(), e.getMessage().contains("restriction"));}
+		try {
+			TestGraph.ingestCsvString(getClass(), "datatype_exampleA.json", header + ",,,,,,,7");
+			fail("No datatype exception for into too high inclusive");
+		} catch (Exception e) {assertTrue("Error message doesn't mention restriction: " + e.getMessage(), e.getMessage().contains("restriction"));}
+		
+		
 		
 	}
 	

@@ -74,6 +74,20 @@
 						"valueTypes": [
 							"int"
 						],
+						"rangeURI": "http://datatypetest#finger",
+						"domainURI": "http://datatypetest#f",
+						"Constraints": "",
+						"SparqlID": "?f",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"valueTypes": [
+							"int"
+						],
 						"rangeURI": "http://datatypetest#over12",
 						"domainURI": "http://datatypetest#o12",
 						"Constraints": "",
@@ -92,6 +106,20 @@
 						"domainURI": "http://datatypetest#sn",
 						"Constraints": "",
 						"SparqlID": "?sn",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"valueTypes": [
+							"float"
+						],
+						"rangeURI": "http://datatypetest#weight",
+						"domainURI": "http://datatypetest#w",
+						"Constraints": "",
+						"SparqlID": "?w",
 						"isReturned": true,
 						"optMinus": 1,
 						"isRuntimeConstrained": false,
@@ -123,7 +151,11 @@
 				"deletionMode": "NO_DELETE"
 			}
 		],
-		"orderBy": [],
+		"orderBy": [
+			{
+				"sparqlID": "?ai"
+			}
+		],
 		"groupBy": [],
 		"unionHash": {},
 		"columnOrder": []
@@ -146,14 +178,22 @@
 			},
 			{
 				"colId": "col_3",
-				"colName": "o12"
+				"colName": "f"
 			},
 			{
 				"colId": "col_4",
-				"colName": "sn"
+				"colName": "o12"
 			},
 			{
 				"colId": "col_5",
+				"colName": "sn"
+			},
+			{
+				"colId": "col_6",
+				"colName": "w"
+			},
+			{
+				"colId": "col_7",
 				"colName": "y"
 			}
 		],
@@ -191,7 +231,7 @@
 						]
 					},
 					{
-						"URIRelation": "http://datatypetest#o12",
+						"URIRelation": "http://datatypetest#f",
 						"mapping": [
 							{
 								"colId": "col_3"
@@ -199,7 +239,7 @@
 						]
 					},
 					{
-						"URIRelation": "http://datatypetest#sn",
+						"URIRelation": "http://datatypetest#o12",
 						"mapping": [
 							{
 								"colId": "col_4"
@@ -207,10 +247,26 @@
 						]
 					},
 					{
-						"URIRelation": "http://datatypetest#y",
+						"URIRelation": "http://datatypetest#sn",
 						"mapping": [
 							{
 								"colId": "col_5"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://datatypetest#w",
+						"mapping": [
+							{
+								"colId": "col_6"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://datatypetest#y",
+						"mapping": [
+							{
+								"colId": "col_7"
 							}
 						]
 					}
