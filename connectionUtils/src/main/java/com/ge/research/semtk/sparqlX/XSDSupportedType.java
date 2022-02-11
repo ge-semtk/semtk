@@ -65,7 +65,8 @@ public enum XSDSupportedType {
 	}
 	
 	public static XSDSupportedType getMatchingValue(String candidate) throws Exception {
-		return XSDSupportedType.valueOf(candidate.toUpperCase());
+		String f[] = candidate.split("#");
+		return XSDSupportedType.valueOf(f[f.length-1].toUpperCase());
 	}
 
 	public String buildRDF11ValueString(String val) {

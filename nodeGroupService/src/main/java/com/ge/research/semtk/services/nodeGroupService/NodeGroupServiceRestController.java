@@ -62,6 +62,7 @@ import com.ge.research.semtk.load.utility.ImportSpecHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupService.SparqlIdReturnedTuple;
 import com.ge.research.semtk.nodeGroupService.SparqlIdTuple;
+import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
@@ -1129,6 +1130,7 @@ public class NodeGroupServiceRestController {
 					
 				} else if (itemStr.getType() == PropertyItem.class) {
 					Node node = itemStr.getSnode();
+					OntologyClass oClass = oInfo.getClass(node.getUri());
 					PropertyItem prop = itemStr.getpItem();
 					if (deleteFlag) {
 						nodegroup.deleteProperty(node, prop);
@@ -1142,14 +1144,15 @@ public class NodeGroupServiceRestController {
 						if (oProp != null) {
 							
 							// oinfo has a function to get the XSDTypesOfAProperty
-							nodegroup.changeItemRange(newProp, oProp.getRangeStr(), oInfo.getPropertyRangeXSDTypes(oProp.getRangeStr()));
+							OntologyRange oRange = oProp.getRange(oClass, oInfo);
+							nodegroup.changeItemRange(newProp, oRange.getSimpleUri(), oInfo.getPropertyRangeXSDTypes(oRange));
 						}
 					}
-					
 					
 				} else {
 					// nodeItem
 					Node node = itemStr.getSnode();
+					OntologyClass oClass = oInfo.getClass(node.getUri());
 					NodeItem nItem = itemStr.getnItem();
 					Node target = itemStr.getTarget();
 					
@@ -1163,7 +1166,7 @@ public class NodeGroupServiceRestController {
 						// If newURI is a valid property in ontology, make sure range is correct too
 						OntologyProperty oProp = oInfo.getProperty(newURI);
 						if (oProp != null) {
-							nodegroup.changeItemRange(newNodeItem, oProp.getRangeStr());
+							nodegroup.changeItemRange(newNodeItem, oProp.getRange(oClass, oInfo).getUriList());
 						}
 					}
 					
@@ -1175,11 +1178,9 @@ public class NodeGroupServiceRestController {
 					
 				} else if (itemStr.getType() == PropertyItem.class) {
 					nodegroup.changeItemRange(itemStr.getpItem(), newURI, oInfo.getPropertyRangeXSDTypes(newURI));
-					// no effect on importSpec
 				} else {
-					// nodeItem
-					nodegroup.changeItemRange(itemStr.getnItem(), newURI);
-					// no effect on importSpec
+					// nodeItem: parse newURI in case it is a { http://complex#complex or http://complex#range }
+					nodegroup.changeItemRange(itemStr.getnItem(), OntologyRange.parseDisplayString(newURI));
 				}
 			}
 			

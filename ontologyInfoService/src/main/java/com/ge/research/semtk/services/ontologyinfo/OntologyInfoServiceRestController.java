@@ -46,6 +46,7 @@ import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyInfoCache;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
+import com.ge.research.semtk.ontologyTools.OntologyRange;
 import com.ge.research.semtk.ontologyTools.PredicateStats;
 import com.ge.research.semtk.ontologyTools.PredicateStatsCache;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -208,7 +209,8 @@ public class OntologyInfoServiceRestController {
 					// This will/should eventually be supported by SemTK too
 					// so make Range an array to prevent future backwards-compatibility issues
 					JSONArray rangeArr = new JSONArray();
-					rangeArr.add(p.getRangeStr());
+					OntologyRange oRange = p.getRange(oClass, oInfo);
+					rangeArr.addAll(oRange.getUriList());
 					propJson.put("range", rangeArr);
 					
 					retArray.add(propJson);

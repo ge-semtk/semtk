@@ -50,16 +50,16 @@ public class PropertyItem extends Returnable {
 	
 	private Boolean isMarkedForDeletion = false;
 
-	public PropertyItem(XSDSupportedType valueType, String valueTypeURI, String uriRelationship){
+	public PropertyItem(XSDSupportedType valueType, String rangeUri, String uriRelationship){
 		this.valueTypes = new HashSet<XSDSupportedType>();
 		this.valueTypes.add(valueType);
-		this.rangeURI = valueTypeURI;   
+		this.rangeURI = rangeUri;   
 		this.domainURI = uriRelationship;
 	}
 	
-	public PropertyItem(HashSet<XSDSupportedType> valueTypes, String valueTypeURI, String uriRelationship){
+	public PropertyItem(HashSet<XSDSupportedType> valueTypes, String rangeUri, String uriRelationship){
 		this.valueTypes = valueTypes;
-		this.rangeURI = valueTypeURI;   
+		this.rangeURI = rangeUri;   
 		this.domainURI = uriRelationship;
 	}
 		

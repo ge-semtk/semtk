@@ -20,6 +20,7 @@ package com.ge.research.semtk.belmont.test;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -82,7 +83,7 @@ public class NodeGroupTest_IT {
 	 */
 	public void testValidateNodeGroupFail() throws Exception {
 		String jsonPath = "/sampleBattery.json";
-
+		TestGraph.clearGraph();
 		// model isn't loaded
 		NodeGroup nodegroup = TestGraph.getNodeGroupFromResource(this, jsonPath); 
 				
@@ -346,7 +347,9 @@ public class NodeGroupTest_IT {
 		Node cell1 = nodegroup.addClassFirstPath(cellNodeURI, oInfo);
 		Node cell2 = nodegroup.addClassFirstPath(cellNodeURI, oInfo);
 		NodeItem cellItem = batteryNode.getNodeItem(cellItemURI);
-		cellItem.changeUriValueType(badURI);
+		HashSet<String> badRange = new HashSet<String>();
+		badRange.add(badURI);
+		cellItem.setRangeUris(badRange);
 		
 		inflateAndValidate(nodegroup, 
 				null,
@@ -358,7 +361,7 @@ public class NodeGroupTest_IT {
 		// 5b. Delete the target connections and results should be the same
 		nodegroup.deleteNode(cell1, false);
 		nodegroup.deleteNode(cell2, false);
-		cellItem.changeUriValueType(badURI);
+		cellItem.setRangeUris(badRange);
 		
 		inflateAndValidate(nodegroup, 
 				null,
@@ -372,7 +375,7 @@ public class NodeGroupTest_IT {
 		batteryNode.setConnection(colorNode, cellItemURI);  // bad target
 		cell1 = nodegroup.addNode(cellNodeURI, oInfo);
 		batteryNode.setConnection(cell1, cellItemURI); // good target
-		cellItem.changeUriValueType(badURI);  // bad range too
+		cellItem.setRangeUris(badRange);
 		
 		inflateAndValidate(nodegroup, 
 				null,
@@ -574,7 +577,9 @@ public class NodeGroupTest_IT {
 				new String [] {});
 		
 		// fix
-		nodegroup.changeItemRange(colorItem, colorURI);
+		HashSet<String> badRange = new HashSet<String>();
+		badRange.add(colorURI);
+		nodegroup.changeItemRange(colorItem, badRange);
 		
 		// no validation errors remain
 		inflateAndValidate(nodegroup, 

@@ -30,6 +30,7 @@ public class ValidationAssistant {
 		
 		assert(itemStr.getType() == Node.class);
 		Node snode = itemStr.getSnode();
+		OntologyClass oClass = oInfo.getClass(snode.getUri());
 		
 		// get return array and score everything 0
 		ArrayList<String> ret = oInfo.getClassNames();
@@ -42,13 +43,16 @@ public class ValidationAssistant {
 		int localScore = 1000;
 		ArrayList<NodeItem> incoming = ng.getConnectingNodeItems(snode);
 		for (NodeItem nItem : incoming) {
-			String range = nItem.getUriValueType();
-			// add incoming node range
-			score.put(range, ++localScore);
-			// also add range's superclasses
-			
-			for (String rangeSuper : oInfo.getSuperclassNames(range)) {
-				score.put(rangeSuper, ++localScore);
+			for (String range : nItem.getRangeUris()) {
+				if (oInfo.classIsA(oClass, oInfo.getClass(range))) {
+					// add incoming node range
+					score.put(range, ++localScore);
+					// also add range's superclasses
+					
+					for (String rangeSuper : oInfo.getSuperclassNames(range)) {
+						score.put(rangeSuper, ++localScore);
+					}
+				}
 			}
 		}
 		

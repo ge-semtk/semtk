@@ -43,6 +43,7 @@ import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
+import com.ge.research.semtk.ontologyTools.OntologyRange;
 import com.ge.research.semtk.ontologyTools.PredicateStats;
 import com.ge.research.semtk.ontologyTools.Triple;
 import com.ge.research.semtk.ontologyTools.ValidationException;
@@ -313,8 +314,10 @@ public class NodeGroup {
 				        Node toNode = nodeHash.get(toNodeURI);  
 				        String toNodeClassURI = toNode.getFullUriName(); // e.g. http://research.ge.com/print/testconfig#ScreenPrinting		        	
 				        
+				        HashSet<String> range = new HashSet<String>();
+				        range.add(toNodeClassURI);
 			        	if(nodeItem == null){  // only create node item once
-					        nodeItem = new NodeItem(relationship, (new OntologyName(toNodeClassURI)).getLocalName(), toNodeClassURI); 
+					        nodeItem = new NodeItem(relationship, range);    // must be wrong but this is deprecated
 					        nodeItem.setConnected(true);
 				        	nodeItem.setConnectBy(relationshipLocal);
 					        nodeItem.setUriConnectBy(relationship);				        
@@ -3646,30 +3649,25 @@ public class NodeGroup {
 		String nome = oClass.getNameString(true);
 		String fullNome = oClass.getNameString(false);
 
-		ArrayList<OntologyProperty> props = oInfo.getInheritedProperties(oClass);
+		ArrayList<OntologyProperty> oProps = oInfo.getInheritedProperties(oClass);
 
 		// get a list of the properties not repesenting other nodes.
-		for (int i = 0; i < props.size(); i++) {
-			String propNameFull = props.get(i).getName().getFullName();
-			String propRangeNameLocal = props.get(i).getRange().getLocalName();
-			String propRangeNameFull = props.get(i).getRange().getFullName();
-
-	
-			if (oInfo.containsClass(propRangeNameFull)) {
-				// range is a class
-				NodeItem p = new NodeItem(propNameFull, propRangeNameLocal, propRangeNameFull);
+		for (OntologyProperty oProp : oProps) {
+			String propNameFull = oProp.getNameStr(false);
+			OntologyRange oRange = oProp.getRange(oClass, oInfo);
+			if (oRange.isComplex() || oInfo.containsClass(oRange.getSimpleUri())) {
+				// range is a class: create node item
+				NodeItem p = new NodeItem(propNameFull, oRange.getUriList());
 				belnodes.add(p);
 
-			}
-			
-			else if (oInfo.containsDatatype(propRangeNameFull)) {
+			} else if (oInfo.containsDatatype(oRange.getSimpleUri())) {
 				// range is a datatype
-				PropertyItem p = new PropertyItem(oInfo.getDatatype(propRangeNameFull).getEquivalentXSDTypes(), propRangeNameFull, propNameFull);
+				PropertyItem p = new PropertyItem(oInfo.getDatatype(oRange.getSimpleUri()).getEquivalentXSDTypes(), oRange.getSimpleUri(), propNameFull);
 				belprops.add(p);
 				
 			} else {
 				// range is a raw OWL data type
-				PropertyItem p = new PropertyItem(XSDSupportedType.getMatchingValue(propRangeNameLocal), propRangeNameFull, propNameFull);
+				PropertyItem p = new PropertyItem(XSDSupportedType.getMatchingValue(oRange.getSimpleUri()), oRange.getSimpleUri(), propNameFull);
 				belprops.add(p);
 			}
 		}
@@ -3803,16 +3801,6 @@ public class NodeGroup {
 		for (PropertyItem pItem : node.getPropertyItems()) {
 			this.setIsReturned(pItem, isRet);
 			pItem.setOptMinus(optMinus);
-		}
-	}
-	
-	public void addAllOutgoingNodes(Node node, boolean isRet, int optMinus) throws Exception {
-		for (NodeItem nItem : node.getNodeItemList()) {
-			
-			// Add object property node to nodegroup (optional) and importSpec
-			Node objNode = this.addNode(nItem.getUriValueType(), node, null, nItem.getUriConnectBy());
-			nItem.setOptionalMinus(objNode, optMinus);
-			this.setIsReturned(objNode, isRet);
 		}
 	}
 	
@@ -4378,9 +4366,10 @@ public class NodeGroup {
 		ArrayList<NodeItem> nodeItems = this.getConnectingNodeItems(node);
 		for (NodeItem ni : nodeItems) {
 			if (ni.getOptionalMinus(node) != NodeItem.OPTIONAL_REVERSE && ni.getOptionalMinus(node) != NodeItem.MINUS_REVERSE) {
-				String uriValueType = ni.getUriValueType();
-				if (!retval.contains(uriValueType)) {
-					retval.add(uriValueType);
+				for (String rangeUri : ni.getRangeUris()) {
+					if (!retval.contains(rangeUri)) {
+						retval.add(rangeUri);
+					}
 				}
 			}
 		}
@@ -5060,9 +5049,9 @@ public class NodeGroup {
 		pItem.setRange(newURI, types);
 	}
 	
-	public void changeItemRange(NodeItem nItem, String newURI) throws Exception {
+	public void changeItemRange(NodeItem nItem, HashSet<String> newURIs) throws Exception {
 		// very simple
-		nItem.setRange(newURI);
+		nItem.setRangeUris(newURIs);
 	}
 	
 	/**

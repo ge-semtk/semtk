@@ -20,6 +20,8 @@ import static org.junit.Assert.*;
 
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -310,9 +312,9 @@ public class OntologyInfoTests_IT {
 		
 		OntologyClass oClass = oInfo.getClass("http://semtk.junit/leafrange#LeafRange");
 		OntologyProperty prop = oClass.getProperties().get(0);
-		OntologyRange oRange = prop.getRange();
+		OntologyRange oRange = prop.getRange(oClass, oInfo);
 		
-		OntologyClass errClass = oInfo.getClass(oRange.getFullName());
+		OntologyClass errClass = oInfo.getClass(oRange.getSimpleUri());
 		assertTrue("Non-existent range class 'Imported' did not come back null", errClass == null);
 	}
 	
@@ -450,21 +452,27 @@ public class OntologyInfoTests_IT {
 		// Range should not be inferred, but it is.
 		// So *PropOnly and *DomainOnly should eventually be "Class" or something generic.
 		String propArr[] = new String[]   { "superProp", "subPropDomainRange", "subPropDomainOnly", "subPropRangeOnly", "subPropOnly", "superDataProp", "subDataPropDomainRange", "subDataPropDomainOnly", "subDataPropRangeOnly", "subDataPropOnly"};
-		String domainArr[] = new String[] { "ENTITY",    "SUBENTITY",          "SUBENTITY",         null,                null,         "ENTITY",        "SUBENTITY",              "SUBENTITY",             null,                   null};
+		String domainArr[] = new String[] { "ENTITY",    "SUBENTITY",          "SUBENTITY",         "ENTITY",            "ENTITY",         "ENTITY",        "SUBENTITY",              "SUBENTITY",          "ENTITY",                   "ENTITY"};
 		String rangeArr[] = new String[]  { "ENTITY",    "SUBENTITY",          "ENTITY",            "SUBENTITY",        "ENTITY",      "double",        "int",                    "double",                 "int",               "double"};
 		
 		for (int i=0; i < propArr.length; i++) {
 			String propName = "http://paul/subprop#" + propArr[i];
+			String domainName = "http://paul/subprop#" + domainArr[i];
 			OntologyProperty p = oInfo.getProperty(propName);
 			assertTrue("Can't find property: " + propName, p != null);
+			OntologyClass oDomain = oInfo.getClass(domainName);
+			String r = p.getRange(oDomain, oInfo).getSimpleUri();
+			assertTrue(propArr[i] + " expected range to end in #" + rangeArr[i] + " found " + r, r.endsWith("#"+rangeArr[i]));
 			
-			String r = p.getRangeStr(true);
-			assertTrue(propArr[i] + " expected range " + rangeArr[i] + " found " + r, r.equals(rangeArr[i]));
+			int expectDomainSize = 1;
 			
-			int expectDomainSize = (domainArr[i] == null) ? 0 : 1;
-			
+			// check oInfo.getPropertyDomain()
 			ArrayList<OntologyClass> domainList = oInfo.getPropertyDomain(p);
 			assertEquals("Size of domain of property " + propArr[i], expectDomainSize, domainList.size());
+			
+			// check the property's domains
+			Set<String> domainList1 = p.getRangeDomains();
+			assertEquals("Size of domain of property " + propArr[i], expectDomainSize, domainList1.size());
 			
 			if (expectDomainSize > 0) {
 				String d0 = domainList.get(0).getNameString(true);

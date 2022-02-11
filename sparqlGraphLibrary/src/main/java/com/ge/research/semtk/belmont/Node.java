@@ -273,15 +273,23 @@ public class Node extends Returnable {
 		for (OntologyProperty ontProp : ontProps) {
 			String ontPropURI = ontProp.getNameStr(false);			
 			String ontPropShortName = ontProp.getNameStr(true);
-
+			OntologyRange modelRange = ontProp.getRange(ontClass, oInfo);
+			
 			if (inputPItemHash.containsKey(ontPropURI)) {
 				// if input nodegroup contains this property
 				
 				PropertyItem propItem = inputPItemHash.get(ontPropURI);
-				HashSet<XSDSupportedType> ontPropValTypes = oInfo.getPropertyRangeXSDTypes(ontProp.getRangeStr());
+				HashSet<XSDSupportedType> ontPropValTypes = oInfo.getPropertyRangeXSDTypes(modelRange);
 				
-				if (! propItem.getRangeURI().equals(ontProp.getRangeStr())) {
-					String modelRangeStr = ontProp.getRangeStr();
+				if (modelRange.isComplex()) {
+					String msg = "Internal error: " + this.getBindingOrSparqlID() + " property " + ontPropShortName + " has a complex range in the model";
+					modelErrList.add(msg);
+					itemStrList.add(new NodeGroupItemStr(this, propItem));
+				
+				
+				} else if (! modelRange.containsUri(propItem.getRangeURI())) {
+					// modelRange is a single value and it doesn't match
+					String modelRangeStr = modelRange.getSimpleUri();
 					String propRangeStr = propItem.getRangeURI();
 					String abbrevURI[] = abbreviateURIs(propRangeStr, modelRangeStr);
 					
@@ -297,15 +305,10 @@ public class Node extends Returnable {
 						// fix range
 						if (! oInfo.containsClass(modelRangeStr)) {
 							// normal fix: property
-							String fullRangeUri = ontProp.getRangeStr(false);
-							propItem.setRange(fullRangeUri, oInfo.getPropertyRangeXSDTypes(fullRangeUri));
+							propItem.setRange(modelRangeStr, oInfo.getPropertyRangeXSDTypes(modelRangeStr));
 						} else {
 							// change to nodeItem
-							 NodeItem nodeItem = new NodeItem(   
-									 ontProp.getNameStr(false), 
-                                     ontProp.getRangeStr(true),
-                                     ontProp.getRangeStr(false)
-                                     );
+							 NodeItem nodeItem = new NodeItem(ontProp.getNameStr(false), modelRange.getUriList());
 							 inflatedNItems.add(nodeItem);
 							 propItem = null;
 						}
@@ -339,18 +342,12 @@ public class Node extends Returnable {
 		
 			} else if (inputNItemHash.containsKey(ontPropURI)) {
 				// nodeItem is used
-				
+			
 				NodeItem nodeItem = inputNItemHash.get(ontPropURI);
-				String nRangeStr = nodeItem.getUriValueType();
-				String nRangeAbbr = nodeItem.getValueType();
-			    OntologyClass nRangeClass = oInfo.getClass(nRangeStr);
-				String correctRangeStr = ontProp.getRangeStr();
-				String correctRangeAbbrev = ontProp.getRangeStr(true);
-				OntologyClass correctRangeClass = oInfo.getClass(correctRangeStr);
+				HashSet<String> itemRangeUris = nodeItem.getRangeUris();
+				HashSet<String> modelRangeUris = modelRange.getUriList();
 				
-				// is range incorrect
-				// PEC HERE: this isn't right.  They need to be equal.
-				boolean rangeErrFlag = ! nRangeStr.equals(correctRangeStr);
+				boolean rangeErrFlag = ! itemRangeUris.equals(modelRangeUris);
 				
 				// 6. check for targets with classes that aren't a type of the CORRECT range
 				ArrayList<Node> targetErrList = new ArrayList<Node>();
@@ -359,7 +356,7 @@ public class Node extends Returnable {
 					for (Node target : nodeItem.getNodeList()) {
 						OntologyClass targetClass = oInfo.getClass(target.getUri());
 						
-						if (!oInfo.classIsA(targetClass, correctRangeClass)) {
+						if (!oInfo.classIsInRange(targetClass, modelRange)) {
 							targetErrList.add(target);
 						}
 					}
@@ -367,29 +364,28 @@ public class Node extends Returnable {
 				
 				// range of nodeItem is wrong
 				if (rangeErrFlag) {
-					String abbrevURI[] = abbreviateURIs(nRangeStr, correctRangeStr);
 
 					if (targetErrList.size() == 0) {
-						// 5b 5c  Fix nodeitem range
-						warningList.add( this.getBindingOrSparqlID() + " edge " + ontPropShortName + "'s range of " + abbrevURI[0] + " changed to: " + abbrevURI[1]);
-						if (oInfo.containsClass(correctRangeStr)) {
-							nodeItem.changeUriValueType(correctRangeStr);
-						} else {
-							
+						// 5b 5c  Fix nodeitem range when there are no connections
+						warningList.add( this.getBindingOrSparqlID() + " edge " + ontPropShortName + "'s range of " + OntologyRange.getDisplayString(itemRangeUris, true) + " changed to: " + modelRange.getDisplayString(true));
+						
+						if (!modelRange.isComplex() && !oInfo.containsClass(modelRange.getSimpleUri())) {
 							// "emergency" switch to a propItem
 							PropertyItem propItem = new PropertyItem(	
-									oInfo.getPropertyRangeXSDTypes(ontProp.getRangeStr()), 
-									ontProp.getRangeStr(false),
+									oInfo.getPropertyRangeXSDTypes(modelRange), 
+									modelRange.getSimpleUri(),
 									ontProp.getNameStr(false));
 							
 							
 							inflatedPItems.add(propItem);
 							nodeItem = null;
+						} else {
+							nodeItem.setRangeUris(modelRangeUris);
 						}
 					} else {
 						
 						// 5a else bad connections
-						modelErrList.add( this.getBindingOrSparqlID() + " edge " + ontPropShortName + "'s range of " + abbrevURI[0] + " doesn't match to model: " + abbrevURI[1]);
+						modelErrList.add( this.getBindingOrSparqlID() + " edge " + ontPropShortName + "'s range of " + OntologyRange.getDisplayString(itemRangeUris, true) + " doesn't match to model: " + modelRange.getDisplayString(true));
 
 						// all targets are bad items, so is generic "null target"
 						itemStrList.add(new NodeGroupItemStr(this, nodeItem, null));
@@ -399,18 +395,9 @@ public class Node extends Returnable {
 					}
 					
 				} else {
-					// range is ok
-					
-					// somewhat randomly, check for keyname errors
-					if (!nRangeAbbr.equals(new OntologyName(nRangeStr).getLocalName())) {
-						warningList.add(this.getBindingOrSparqlID() + " node property property " + ontPropShortName + "'s abbrev " + nRangeAbbr + " corrected to match model: " + ontProp.getRangeStr(true));
-						nodeItem.setValueType(ontProp.getRangeStr(true));
-					}
-				
-				
-					// report any bad connections 
+					// range is ok.  report any bad connections 
 					for (Node target : targetErrList) {
-						modelErrList.add( this.getBindingOrSparqlID() + " edge " + ontPropShortName + "'s range of " + correctRangeAbbrev + " does not allow connection to " + target.getBindingOrSparqlID());
+						modelErrList.add( this.getBindingOrSparqlID() + " edge " + ontPropShortName + "'s range of " + modelRange.getDisplayString(true) + " does not allow connection to " + target.getBindingOrSparqlID());
 						itemStrList.add(new NodeGroupItemStr(this, nodeItem, target));
 					}
 					
@@ -422,11 +409,12 @@ public class Node extends Returnable {
 				}
 				inputNItemHash.remove(ontPropURI);
 			
-			} else if (!oInfo.containsClass(ontProp.getRangeStr()) && !ontProp.getRange().isDefaultClass()) {
-				// Range class is not found: property deflated out of the nodegroup: inflate
+			} else if (!modelRange.isComplex() && !oInfo.containsClass(modelRange.getSimpleUri()) && !modelRange.containsDefaultClass()) {
+				// single range not in oInfo nor the default class means:
+				// property deflated out of the nodegroup: inflate
 				PropertyItem propItem = new PropertyItem(	
-						oInfo.getPropertyRangeXSDTypes(ontProp.getRangeStr()), 
-						ontProp.getRangeStr(false),
+						oInfo.getPropertyRangeXSDTypes(modelRange), 
+						modelRange.getSimpleUri(),
 						ontProp.getNameStr(false));
 				
 				
@@ -434,10 +422,7 @@ public class Node extends Returnable {
 			
 			} else {
                 // nodeitem deflated out of nodegroup: inflate
-                NodeItem nodeItem = new NodeItem(   ontProp.getNameStr(false), 
-                                                    ontProp.getRangeStr(true),
-                                                    ontProp.getRangeStr(false)
-                                                    );
+                NodeItem nodeItem = new NodeItem(ontProp.getNameStr(false), modelRange.getUriList());
                 inflatedNItems.add(nodeItem);
             }
 		}
@@ -531,10 +516,10 @@ public class Node extends Returnable {
 			}
 			
 			// range
-			OntologyRange oRange = oPropHash.get(myPropItem.getDomainURI()).getRange();
-			if (! oRange.getFullName().equals(myPropItem.getValueTypeURI())) {
+			OntologyRange oRange = oPropHash.get(myPropItem.getDomainURI()).getRange(oClass, oInfo);
+			if (!oRange.equalsUri(myPropItem.getRangeURI())) {
 				throw new ValidationException(String.format("Node %s, property %s has type %s which doesn't match %s in model", 
-									this.getSparqlID(), myPropItem.getDomainURI(), myPropItem.getValueTypeURI(), oRange.getFullName()));
+									this.getSparqlID(), myPropItem.getDomainURI(), myPropItem.getRangeURI(), oRange.getDisplayString(true)));
 			}
 		}
 		
@@ -548,22 +533,20 @@ public class Node extends Returnable {
 				}
 				
 				// range
-				// Raghava's bug is right here
 				OntologyProperty oProp = oPropHash.get(myNodeItem.getUriConnectBy());
-				OntologyRange oRange = oProp.getRange();
-				if (! myNodeItem.getUriValueType().equals(oRange.getFullName())) {
+				OntologyRange oRange = oProp.getRange(oClass, oInfo);
+				if (! myNodeItem.getRangeUris().equals(oRange.getUriList())) {
 					ArrayList<OntologyProperty> d = oInfo.getInheritedProperties(oClass);
-					throw new ValidationException(String.format("Node %s contains node connection %s with type %s which doesn't match %s in model", 
-										this.getSparqlID(), myNodeItem.getUriConnectBy(), myNodeItem.getUriValueType(), oRange.getFullName()));
+					throw new ValidationException(String.format("Node %s contains node connection %s with range %s which doesn't match %s in model", 
+										this.getSparqlID(), myNodeItem.getUriConnectBy(), OntologyRange.getDisplayString(myNodeItem.getRangeUris(), true), oRange.getDisplayString(true)));
 				}
 				
 				// connected node types
 				for (Node n : myNodeItem.getNodeList()) {
-					OntologyClass rangeClass = oInfo.getClass(oRange.getFullName());
-					OntologyClass myNodeClass = oInfo.getClass(n.getFullUriName());
-					if (!oInfo.classIsA(myNodeClass, rangeClass)) {
-						throw new ValidationException(String.format("Node %s, node connection %s connects to node %s with type %s which isn't a type of %s in model", 
-								this.getSparqlID(), myNodeItem.getUriConnectBy(), n.getSparqlID(), n.getFullUriName(), oRange.getFullName()));
+					OntologyClass nodeClass = oInfo.getClass(n.getFullUriName());
+					if (!oInfo.classIsInRange(nodeClass, oRange)) {
+						throw new ValidationException(String.format("Node %s, node connection %s connects to node %s with type %s which isn't in range %s in model", 
+								this.getSparqlID(), myNodeItem.getUriConnectBy(), n.getSparqlID(), n.getFullUriName(), oRange.getDisplayString(true)));
 					}
 				}
 			}

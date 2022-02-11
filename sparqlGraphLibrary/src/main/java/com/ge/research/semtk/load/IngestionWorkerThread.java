@@ -76,7 +76,7 @@ public class IngestionWorkerThread extends Thread {
 	 * It is more efficient to use this value when sizing future threads.
 	 */
 	public void run(){
-		final boolean DEBUG_QUERIES = true;
+		final boolean DEBUG_QUERIES = false;
 		ThreadAuthenticator.authenticateThisThread(this.headerTable);
 		long start;
 		long convertTime=0;

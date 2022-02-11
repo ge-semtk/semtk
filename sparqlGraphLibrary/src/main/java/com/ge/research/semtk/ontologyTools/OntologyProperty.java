@@ -18,6 +18,10 @@
 
 package com.ge.research.semtk.ontologyTools;
 
+import java.util.HashSet;
+import java.util.Hashtable;
+import java.util.Set;
+
 import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.ontologyTools.OntologyRange;
 
@@ -29,25 +33,79 @@ import com.ge.research.semtk.ontologyTools.OntologyRange;
 public class OntologyProperty extends AnnotatableElement{
 
 	private OntologyName  name = null;
-	private OntologyRange range = null;
-	// if we wanted, for sparql gen without an oInfo, we could store to json for nodegroup:
-	// private boolean hasSubProps
+	private Hashtable<String, OntologyRange> rangeHash = new Hashtable<String,OntologyRange>();
+	
 
-	public OntologyProperty(String name, String range){
+	public OntologyProperty(String name, String domain, String range){
 		this.name  = new OntologyName(name);
-		this.range = new OntologyRange(range);
+		this.rangeHash.put(domain, new OntologyRange(range));
 	}
 	
-	public OntologyName getName(){
+	public OntologyName getName() {
 		return this.name;
 	}
 	
-	public OntologyRange getRange(){
-		return this.range;
+	// copy another property except for the name
+	public OntologyProperty(String name, OntologyProperty toCopy) {
+		this.name  = new OntologyName(name);
+		for (String key : toCopy.rangeHash.keySet()) {
+			this.rangeHash.put(key, toCopy.rangeHash.get(key).deepCopy());
+		}
+	}
+	/**
+	 * Get range of property given the domain.
+	 * @param domain 
+	 * @param oInfo
+	 * @return
+	 * @throws Exception - doesn't exist
+	 */
+	public OntologyRange getRange(OntologyClass domain, OntologyInfo oInfo) throws Exception {
+		
+		OntologyRange ret = this.rangeHash.get(domain.getNameString(false));
+		if (ret != null) {
+			return ret;
+		} else if (domain != null) {
+			// try parents breadth-first
+			for (String c : oInfo.getClassAncestorNames(domain)) {
+				ret = this.rangeHash.get(c);
+				if (ret != null) {
+					return ret;
+				}
+			}
+		} 
+		
+		throw new Exception("Can not find range of property: " + this.getNameStr(false) + " for domain: " + domain.getNameString(false));
 	}
 	
-	public void setRange(OntologyRange range) {
-		this.range = range;
+	public Set<String> getRangeDomains() {
+		return this.rangeHash.keySet();
+	}
+	public void setRange(OntologyClass domain, OntologyRange range) {
+		this.rangeHash.put(domain.getNameString(false), range);
+	}
+	public void removeRange(OntologyClass domain) {
+		this.rangeHash.remove(domain.getNameString(false));
+	}
+	public void removeRange(String domain) {
+		this.rangeHash.remove(domain);
+	}
+	public void removeFromRange(String domain, String uri) {
+		OntologyRange oRange = this.rangeHash.get(domain);
+		oRange.removeUri(uri);
+	}
+	
+	/**
+	 * Add a Uri to a Range at the given domain.
+	 * @param domain
+	 * @param rangeUri
+	 */
+	public void addRange(OntologyClass domain, String rangeUri) {
+		String domainUri = domain.getNameString(false);
+		if (this.rangeHash.containsKey(domainUri)) {
+			this.rangeHash.get(domainUri).addRange(rangeUri);
+		} else {
+			this.rangeHash.put(domainUri, new OntologyRange(rangeUri));
+		}
 	}
 	
 	public String getNameStr() {
@@ -62,21 +120,6 @@ public class OntologyProperty extends AnnotatableElement{
 		}
 	}
 	
-	public String getRangeStr() {
-		return this.getRangeStr(false);
-	}
-	public String getRangeStr(Boolean stripNamespace){
-		if(stripNamespace){
-			return this.range.getLocalName();
-		}
-		else{	// don't strip the namespace
-			return this.range.getFullName();
-		}
-	}
 	
-	public Boolean powerMatch(String pattern){
-		String pat = pattern.toLowerCase();
-		Boolean retval = this.getNameStr(true).toLowerCase().contains(pat) || this.getRangeStr(true).toLowerCase().contains(pat);
-		return retval;
-	}
+	
 }

@@ -59,7 +59,7 @@ public class SparqlGraphJsonTest_IT {
 		// ?Cell_1->color was missing from input but re-inflated properly
 		assertTrue(nodegroupDeflated.getNodeBySparqlID("?Cell_1").getNodeItemList().size() == 0);
 		assertTrue(nodegroupInflated.getNodeBySparqlID("?Cell_1").getNodeItemList().get(0).getKeyName().equals("color"));
-		assertTrue(nodegroupInflated.getNodeBySparqlID("?Cell_1").getNodeItemList().get(0).getValueType().equals("Color"));
+		assertTrue(nodegroupInflated.getNodeBySparqlID("?Cell_1").getNodeItemList().get(0).getRangeUris().contains("http://kdl.ge.com/batterydemo#Color"));
 		
 		// sampleBatteryTestDeflate.json is verified correctly deflated
 		// so deflate the re-inflation and check

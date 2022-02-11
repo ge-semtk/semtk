@@ -66,7 +66,7 @@ public class LoadNodeGroupFromConstructQueryResultsTest {
 		
 		assertEquals(cellNode.getNodeItemList().size(),1);
 		assertEquals(cellNode.getNodeItemList().get(0).getUriConnectBy(),"http://research.ge.com/soft/testconfig#TShirtPrinting");
-		assertEquals(cellNode.getNodeItemList().get(0).getUriValueType(),"http://research.ge.com/soft/testconfig#TShirtPrinting");
+		//assertEquals(cellNode.getNodeItemList().get(0).getUriValueType(),"http://research.ge.com/soft/testconfig#TShirtPrinting");
 		assertEquals(cellNode.getNodeItemList().get(0).getNodeList().size(),2);
 		assertEquals(cellNode.getNodeItemList().get(0).getNodeList().get(0).getInstanceValue(),"http://research.ge.com/soft/data#SoftShue_EEEE298_Freedom_2015-06-12");
 		assertEquals(cellNode.getNodeItemList().get(0).getNodeList().get(1).getInstanceValue(),"http://research.ge.com/soft/data#SoftShue_EEEE222");

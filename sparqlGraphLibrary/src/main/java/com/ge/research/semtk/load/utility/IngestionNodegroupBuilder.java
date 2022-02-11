@@ -21,6 +21,7 @@ import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.NodeItem;
 import com.ge.research.semtk.belmont.PropertyItem;
+import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
@@ -128,47 +129,49 @@ public class IngestionNodegroupBuilder {
 		// connect a node for each object property
 		for (NodeItem nItem : node.getNodeItemList()) {
 			
-			// Add object property node to nodegroup (optional) and importSpec
-			Node objNode = nodegroup.addNode(nItem.getUriValueType(), node, null, nItem.getUriConnectBy());
-			nItem.setOptionalMinus(objNode, NodeItem.OPTIONAL_TRUE);
-			
-			if (oInfo.hasSubclass(className)) {
-				// If node has subclasses then NO_CREATE ("error if missing")
-				// This will create the need for ingestion order to matter:  linked items must be ingested first.
-				ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_NO_CREATE);
-			} else {
-				// If node has NO subclasses then we may create it.
-				ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_CREATE);
-			}
-			
-			// give it a name, e.g.: verifies_ENTITY
-			String objNodeName = nItem.getKeyName() + "_" + new OntologyName(nItem.getUriValueType()).getLocalName();
-			nodegroup.setBinding(objNode, objNodeName);
-			
-			// set data property matching ID_REGEX returned
-			for (PropertyItem pItem : objNode.getPropertyItems()) {
-				if (this.idRegex != null &&  Pattern.compile(this.idRegex).matcher(pItem.getKeyName()).find()) {
-					// set the lookup ID to be returned
-					// but not optional (link to node is optional instead)
-					nodegroup.setIsReturned(pItem, true);
-					
-					// give it a meaningful name
-					String propId = nodegroup.changeSparqlID(pItem, nItem.getKeyName() + "_" + pItem.getKeyName());
-					
-					
-					
-					// add to importspec, using it to look up parent node
-					ispecBuilder.addProp(objNode.getSparqlID(), pItem.getDomainURI());
-					ispecBuilder.addURILookup(objNode.getSparqlID(), pItem.getDomainURI(), objNode.getSparqlID());
-					
-					// add the column and mapping to the importspec
-					String colName = buildColName(propId);
-					ispecBuilder.addColumn(colName);
-					ispecBuilder.addMapping(objNode.getSparqlID(), pItem.getDomainURI(), ispecBuilder.buildMappingWithCol(colName, new String [] {transformId}));
-					
-					// add to csvTemplate
-					csvTemplate.append(colName + ",");
-					break;
+			for (String rangeUri : nItem.getRangeUris()) {
+				// Add object property node to nodegroup (optional) and importSpec
+				Node objNode = nodegroup.addNode(rangeUri, node, null, nItem.getUriConnectBy());
+				nItem.setOptionalMinus(objNode, NodeItem.OPTIONAL_TRUE);
+				
+				if (oInfo.hasSubclass(className)) {
+					// If node has subclasses then NO_CREATE ("error if missing")
+					// This will create the need for ingestion order to matter:  linked items must be ingested first.
+					ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_NO_CREATE);
+				} else {
+					// If node has NO subclasses then we may create it.
+					ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_CREATE);
+				}
+				
+				// give it a name, e.g.: verifies_ENTITY
+				String objNodeName = nItem.getKeyName() + "_" + new OntologyName(rangeUri).getLocalName();
+				nodegroup.setBinding(objNode, objNodeName);
+				
+				// set data property matching ID_REGEX returned
+				for (PropertyItem pItem : objNode.getPropertyItems()) {
+					if (this.idRegex != null &&  Pattern.compile(this.idRegex).matcher(pItem.getKeyName()).find()) {
+						// set the lookup ID to be returned
+						// but not optional (link to node is optional instead)
+						nodegroup.setIsReturned(pItem, true);
+						
+						// give it a meaningful name
+						String propId = nodegroup.changeSparqlID(pItem, nItem.getKeyName() + "_" + pItem.getKeyName());
+						
+						
+						
+						// add to importspec, using it to look up parent node
+						ispecBuilder.addProp(objNode.getSparqlID(), pItem.getDomainURI());
+						ispecBuilder.addURILookup(objNode.getSparqlID(), pItem.getDomainURI(), objNode.getSparqlID());
+						
+						// add the column and mapping to the importspec
+						String colName = buildColName(propId);
+						ispecBuilder.addColumn(colName);
+						ispecBuilder.addMapping(objNode.getSparqlID(), pItem.getDomainURI(), ispecBuilder.buildMappingWithCol(colName, new String [] {transformId}));
+						
+						// add to csvTemplate
+						csvTemplate.append(colName + ",");
+						break;
+					}
 				}
 			}
 		}

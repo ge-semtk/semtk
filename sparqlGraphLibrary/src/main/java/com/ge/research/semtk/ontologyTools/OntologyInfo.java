@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 import org.apache.commons.io.IOUtils;
 import org.json.simple.JSONArray;
@@ -97,13 +98,10 @@ public class OntologyInfo {
 	private static int restCount = 0;               // a list counter
 	
 	// version 4 adds datatypeList
-	private final static long JSON_VERSION = 4;
+	private final static long JSON_VERSION = 5;
 	
 	private ArrayList<String> loadWarnings = new ArrayList<String>();
 	private ArrayList<String> importedGraphs = new ArrayList<String>();
-	
-	// props found with no Domain.
-	private HashMap<String, OntologyProperty> orphanProps = new HashMap<String, OntologyProperty>();
 	
 	private int pathFindingMaxLengthRange = 5;
 	private int pathFindingMaxTimeMsec = 10000;
@@ -111,7 +109,9 @@ public class OntologyInfo {
 	private int pathFindingMaxPathCount = 100;
 	
 	final boolean CONSOLE_LOG = false;
-
+	final String ORPHAN_STR = "%orphan%";
+	final OntologyClass ORPHAN_CLASS = new OntologyClass(ORPHAN_STR, true);
+	
 	/**
 	 * Default constructor
 	 */
@@ -239,7 +239,6 @@ public class OntologyInfo {
 	}
 	
 	/**
-	 * TODO datatype restrictions are read in but not stored in the json.
 	 * @param oDatatype
 	 * @throws Exception
 	 */
@@ -587,12 +586,22 @@ public class OntologyInfo {
 	}
 	
 	
-	public boolean isDataProperty(OntologyProperty oProp) {
-		return ! this.isObjectProperty(oProp);
+	public boolean isDataProperty(OntologyProperty oProp, OntologyClass oDomain) throws Exception {
+		return ! this.isObjectProperty(oProp, oDomain);
 	}
 	
-	public boolean isObjectProperty(OntologyProperty oProp) {
-		return this.classHash.keySet().contains(oProp.getRange().getFullName());
+	public boolean isObjectProperty(OntologyProperty oProp, OntologyClass oDomain) throws Exception {
+		OntologyRange oRange = oProp.getRange(oDomain, this);
+		if (oRange.isComplex()) {
+			for (String uri : oRange.getUriList()) {
+				// check first one, presuming mixture is illegal as it seems to be in SADL
+				return this.classHash.keySet().contains(uri);
+			}
+		} else {
+			// return false for Datatype or owl:data
+			return this.classHash.keySet().contains(oRange.getSimpleUri());
+		}
+		return false;
 	}
 	
 	public void addPathCount(OntologyPath path, int count) {
@@ -611,7 +620,7 @@ public class OntologyInfo {
 	 * @throws ClassException
 	 * @throws PathException
 	 */
-	public ArrayList<OntologyPath> getConnList(String classNameStr, PredicateStats predStats) throws ClassException, PathException {
+	public ArrayList<OntologyPath> getConnList(String classNameStr, PredicateStats predStats) throws Exception, ClassException, PathException {
 		// return or calculate all legal one-hop path connections to and from a class
 		
 		// if we haven't hashed the answer in connHash yet
@@ -623,41 +632,42 @@ public class OntologyInfo {
 				throw new ClassException("Internal error in OntologyInfo.getConnList(): class name is not in the ontology: " + classNameStr);
 			}
 			
-			OntologyClass classVal = this.classHash.get(classNameStr);
+			OntologyClass oClass = this.classHash.get(classNameStr);
 			HashMap <String, Integer> foundHash = new HashMap <String, Integer>();     // hash of path.asString()     PEC TODO FAILS when Man-hasSon->Man hashes same as Man<-hasSon-Man
 			String hashStr = "";
 			
 			//--- calculate HasA:   exact range classes for all inherited properties
-			ArrayList <OntologyProperty> props = this.getInheritedProperties(classVal);
+			ArrayList <OntologyProperty> props = this.getInheritedProperties(oClass);
 			for (int i=0; i < props.size(); i++) {
 				OntologyProperty prop = props.get(i);
-				String rangeClassName = prop.getRangeStr();
-				
-				// if the range class in this domain
-				if (this.containsClass(rangeClassName)) {
-					// if no pred stats or pred stats show this triple exists
-					if (predStats == null || predStats.getExact(classNameStr,  prop.getNameStr(), rangeClassName) > 0) {
-						// Exact match:  class -> hasA -> rangeClassName
-						path = new OntologyPath(classNameStr);
-						path.addTriple(classNameStr, prop.getNameStr(), rangeClassName);
-						hashStr = path.asString();
-						if (! foundHash.containsKey(hashStr)) {
-								ret.add(path);
-								foundHash.put(hashStr, 1);
+				for (String rangeClassName : prop.getRange(oClass, this).getUriList()) {
+					
+					// if the range class in this domain
+					if (this.containsClass(rangeClassName)) {
+						// if no pred stats or pred stats show this triple exists
+						if (predStats == null || predStats.getExact(classNameStr,  prop.getNameStr(), rangeClassName) > 0) {
+							// Exact match:  class -> hasA -> rangeClassName
+							path = new OntologyPath(classNameStr);
+							path.addTriple(classNameStr, prop.getNameStr(), rangeClassName);
+							hashStr = path.asString();
+							if (! foundHash.containsKey(hashStr)) {
+									ret.add(path);
+									foundHash.put(hashStr, 1);
+							}
 						}
-					}
-				
-					// Sub-classes:  class -> hasA -> subclass(rangeClassName)
-					for (String rangeSubName : this.getSubclassNames(rangeClassName)) {
-						if (this.containsClass(rangeSubName)) {
-							// if no pred stats or pred stats show this triple exists
-							if (predStats == null || predStats.getExact(classNameStr,  prop.getNameStr(), rangeSubName) > 0) {
-								path = new OntologyPath(classNameStr);
-								path.addTriple(classNameStr, prop.getNameStr(), rangeSubName);
-								hashStr = path.asString();
-								if (! foundHash.containsKey(hashStr)) {
-										ret.add(path);
-										foundHash.put(hashStr, 1);
+					
+						// Sub-classes:  class -> hasA -> subclass(rangeClassName)
+						for (String rangeSubName : this.getSubclassNames(rangeClassName)) {
+							if (this.containsClass(rangeSubName)) {
+								// if no pred stats or pred stats show this triple exists
+								if (predStats == null || predStats.getExact(classNameStr,  prop.getNameStr(), rangeSubName) > 0) {
+									path = new OntologyPath(classNameStr);
+									path.addTriple(classNameStr, prop.getNameStr(), rangeSubName);
+									hashStr = path.asString();
+									if (! foundHash.containsKey(hashStr)) {
+											ret.add(path);
+											foundHash.put(hashStr, 1);
+									}
 								}
 							}
 						}
@@ -672,6 +682,7 @@ public class OntologyInfo {
 			
 			// loop through every single class in oInfo
 			for (String cname : this.classHash.keySet() ) {
+				OntologyClass everyClass = this.getClass(cname);
 				
 				// loop through every property
 				// Issue 50 : fixed this to get inherited properties
@@ -680,33 +691,34 @@ public class OntologyInfo {
 				
 				for (int i=0; i < cprops.size(); i++) {
 					OntologyProperty prop = cprops.get(i);
-					String rangeClassStr = prop.getRangeStr();
+					for (String rangeClassStr : prop.getRange(everyClass, this).getUriList()) {
 					
-					// HadBy:  cName -> hasA -> class
-					if (rangeClassStr.equals(classNameStr)) {
-						// if no pred stats or pred stats show this triple exists
-						if (predStats == null || predStats.getExact(cname,  prop.getNameStr(), classNameStr) > 0) {
-							path = new OntologyPath(classNameStr);
-							path.addTriple(cname, prop.getNameStr(), classNameStr);
-							hashStr = path.asString();
-							if (! foundHash.containsKey(hashStr)) {
-								ret.add(path);
-								foundHash.put(hashStr, 1);
-							}
-						}
-					}
-					
-					// IsA + HadBy:   cName -> hasA -> superClass(class)
-					for (String supStr : supList) {
-						if (rangeClassStr.equals(supStr)) {
+						// HadBy:  cName -> hasA -> class
+						if (rangeClassStr.equals(classNameStr)) {
 							// if no pred stats or pred stats show this triple exists
-							if (predStats == null || predStats.getExact(cname, prop.getNameStr(), classNameStr) > 0) {
+							if (predStats == null || predStats.getExact(cname,  prop.getNameStr(), classNameStr) > 0) {
 								path = new OntologyPath(classNameStr);
 								path.addTriple(cname, prop.getNameStr(), classNameStr);
 								hashStr = path.asString();
 								if (! foundHash.containsKey(hashStr)) {
 									ret.add(path);
 									foundHash.put(hashStr, 1);
+								}
+							}
+						}
+						
+						// IsA + HadBy:   cName -> hasA -> superClass(class)
+						for (String supStr : supList) {
+							if (rangeClassStr.equals(supStr)) {
+								// if no pred stats or pred stats show this triple exists
+								if (predStats == null || predStats.getExact(cname, prop.getNameStr(), classNameStr) > 0) {
+									path = new OntologyPath(classNameStr);
+									path.addTriple(cname, prop.getNameStr(), classNameStr);
+									hashStr = path.asString();
+									if (! foundHash.containsKey(hashStr)) {
+										ret.add(path);
+										foundHash.put(hashStr, 1);
+									}
 								}
 							}
 						}
@@ -718,41 +730,7 @@ public class OntologyInfo {
 		
 		return this.connHash.get(classNameStr);
 	}
-	/**
-	 * Return a list of all the classes that are not in the range of some property.
-	 * these would always appear on the left side of a tuple (S, P, O) (except where another class is
-	 * listed as being a subtype of this class)
-	 **/
-	public ArrayList<String> getDomainRangeRoots() {
-		// get the full names of all classes not in the range of other classes
-		ArrayList<String> retval = new ArrayList<String>();
-		// add all of the class names to the return list so we start with all of them
-		for(String nm : this.classHash.keySet()){ 
-			retval.add(nm);
-		}
-	
-		// loop through all the classes
-		for(String currKey : this.classHash.keySet()){
-			OntologyClass oClass = this.classHash.get(currKey);
-			ArrayList<OntologyProperty> props = oClass.getProperties();
-			// loop through the exact properties. (inherited ones will appear eventually)
-			for(OntologyProperty currProp : props){
-				// the property seems to have only a single range at current. this is represented here as well
-				ArrayList<String> rangeClasses = new ArrayList<String>();
-				rangeClasses.add(currProp.getRangeStr());
-				for(String sClassName : this.getSubclassNames(currProp.getRangeStr())){
-					rangeClasses.add(sClassName); // add the names.
-				}
-				
-				// remove the range and its subclasses from the return list
-				for(String rClass : rangeClasses){
-					retval.remove(rClass);	// pull this from the return list. 
-				}
-			}
-		}
-		// return the domain roots
-		return retval;
-	}
+
 	/**
 	 * returns the count of known classes.
 	 **/
@@ -782,6 +760,21 @@ public class OntologyInfo {
 		OntologyDatatype retval = null;
 		if (this.datatypeHash.containsKey(fullUriName)) { retval = this.datatypeHash.get(fullUriName); }
 		return retval;
+	}
+	
+	/**
+	 * Given an OntologyRange with potentially complex value (multiple classes including owl datatypes)
+	 * return a list of PropertyXSDTypes
+	 * @param range
+	 * @return
+	 * @throws Exception if any value in the range is not mappable to an XSDType
+	 */
+	public HashSet<XSDSupportedType> getPropertyRangeXSDTypes(OntologyRange range) throws Exception {
+		HashSet<XSDSupportedType> ret = new HashSet<XSDSupportedType>();
+		for (String r : range.getUriList()) {
+			ret.addAll(this.getPropertyRangeXSDTypes(r));
+		}
+		return ret;
 	}
 	
 	/**
@@ -849,18 +842,6 @@ public class OntologyInfo {
 		return retval;
 	}
 	
-	public ArrayList<String> getRangeNames() {
-		ArrayList<String> ret = new ArrayList<String>();
-		
-		for (String k : this.propertyHash.keySet()) {
-			OntologyProperty oProp = this.propertyHash.get(k);
-			String range = oProp.getRangeStr();
-			if (!ret.contains(range)) {
-				ret.add(range);
-			}
-		}
-		return ret;
-	}
 	
 	/**
 	 * for a given class, return all of the known parent classes
@@ -874,6 +855,33 @@ public class OntologyInfo {
 		}
 		// return the group.
 		return retval;
+	}
+	
+	/**
+	 * Get breadth-first list of all parent generations
+	 * @param c
+	 * @return
+	 */
+	public ArrayList<String> getClassAncestorNames(OntologyClass c) {
+		ArrayList<String> ret = new ArrayList<String>();
+		int first = 0;
+		ret.addAll(c.getParentNameStrings(false));
+		int last = ret.size();
+		
+		while (last > first) {
+			
+			for (int i = first; i < last; i++) {
+				ArrayList<String> parents = this.getClass(ret.get(i)).getParentNameStrings(false);
+				for (String p : parents) {
+					if (! ret.contains(p)) {
+						ret.add(p);
+					}
+				}
+			}
+			first = last + 1;
+			last = ret.size();
+		}
+		return ret;
 	}
 	
 	/**
@@ -1116,7 +1124,7 @@ public class OntologyInfo {
 		// returns a very basic query 
 		// domain : something like "caterham.ge.com"
 		
-		// TODO: inherited logic from the js rendition of this method. fix this method as that one evolves. 
+		// inherited logic from the js rendition of this method. fix this method as that one evolves. 
 		String retval = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
 				       	"PREFIX owl: <http://www.w3.org/2002/07/owl#> " +
 				       	"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " + 
@@ -1174,7 +1182,6 @@ public class OntologyInfo {
 	}
 	
 	/**
-	 * TODO: this doesn't do anything with the restriction columns from the DatatypeQuery
 	 * @param dataTypeList - the datatype uri
 	 * @param equivTypeList - the equivalent datatype (e.g. XMLSchema:int)
 	 * @param restrictPredList - list of restrictions predicates. each can be "". Array can be null.
@@ -1255,25 +1262,65 @@ public class OntologyInfo {
 			// find existing subProp: has domain so loadProperties got it
 			OntologyProperty oSubProp = this.propertyHash.get(subPropNames[i]);
 			
-			// if we found a new orphan: has neither domain nor range so loadProperties didn't find it
+			OntologyProperty oSuperProp = this.propertyHash.get(superPropNames[i]);
 			if (oSubProp == null) {
-				oSubProp = new OntologyProperty(subPropNames[i], "");
+				// found a new sub property, copy it's parent completely
+				// since it was never given a domain or range of its own during loadProperties()
+				oSubProp = new OntologyProperty(subPropNames[i], oSuperProp);
 				this.propertyHash.put(subPropNames[i], oSubProp);
-				this.orphanProps.put(subPropNames[i], oSubProp);
+				for (String domain : oSubProp.getRangeDomains()) {
+					this.getClass(domain).addProperty(oSubProp);
+				}
+				
+			} else {
+				// found an existing property, fill in attributes from parent
+				HashSet<String> toRemove = new HashSet<String>();
+				ArrayList<OntologyClass> toSetRangeClass = new ArrayList<OntologyClass>();
+				ArrayList<OntologyRange> toSetRangeRange = new ArrayList<OntologyRange>();
+				for (String subDomain : oSubProp.getRangeDomains()) {
+					 
+					if (subDomain.equals(ORPHAN_STR)) {
+						// domain is orphan, apply the range to all the parent domains
+						
+						// get the supProp range and also delete it
+						OntologyRange oRange = oSubProp.getRange(ORPHAN_CLASS, this);
+						
+						toRemove.add(ORPHAN_STR);
+						
+						// set the supProp range for all the parent prop domains
+						Set<String> superDomains = oSuperProp.getRangeDomains();
+						for (String superDomain : superDomains) {
+							toSetRangeClass.add(this.getClass(superDomain));
+							toSetRangeRange.add(oRange.deepCopy());
+						}
+					} else {
+						
+						// range is orphan or CLASS: change to range of given domain in the superProp
+						OntologyClass subDomainClass = this.getClass(subDomain);
+						HashSet<String> subRangeUris = oSubProp.getRange(subDomainClass, this).getUriList();
+						for (String subRangeUri : subRangeUris) {
+							if (subRangeUri.equals(ORPHAN_STR) || subRangeUri.equals(OntologyRange.CLASS)) {
+								// found one: remove it
+								oSubProp.removeFromRange(subDomain, subRangeUri);
+								
+								// now add all the superProp range URIS for this domain to the subProp
+								HashSet<String> superRangeUris = oSuperProp.getRange(this.getClass(subDomain), this).getUriList();
+								for (String superRangeUri : superRangeUris) {
+									oSubProp.addRange(subDomainClass, superRangeUri);
+								}
+							}
+						}
+					}
+				}
+				// prevent concurrent operations problem by doing this last
+				for (String k : toRemove) {
+					oSubProp.removeRange(k);
+				}
+				for (int j=0; j < toSetRangeClass.size(); j++) {
+					oSubProp.setRange(toSetRangeClass.get(j), toSetRangeRange.get(j));
+					toSetRangeClass.get(j).addProperty(oSubProp);
+				}
 			}
-			
-			// If range is "Class", inherit from super property
-			// TODO: this is a "bug" or unclear area for SemTK.
-			// we are inferring the Range if it isn't specified
-			// because otherwise we'll have #Class as a new classURI in oInfo
-			// and path-finding issues, etc.
-			// We'll come back to this later.
-			// Jira:  PESQS-724
-			if (oSubProp.getRange().isDefaultClass()) {
-				OntologyProperty oSuperProp = this.propertyHash.get(superPropNames[i]);
-				oSubProp.setRange(oSuperProp.getRange().deepCopy());
-			}
-			
 		}
 	}
 	
@@ -1502,7 +1549,15 @@ public class OntologyInfo {
 					        "?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain) + ". \n" +
 							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. \n" +
 					        "?x owl:allValuesFrom ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
-						"} \n }";
+					     // complex ranges are unions   -PEC feb22
+					     "} UNION { \n" +
+					        "?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain) + ". \n" +
+							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. \n" +
+					        "?x owl:allValuesFrom ?u . \n" +
+							"?u owl:unionOf ?z . \n" +
+					        buildListMemberSPARQL("?z", "?Range", genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " .\n" + 
+						"} " + 
+			"\n }";
 		return retval;
 	}
 	
@@ -1524,86 +1579,47 @@ public class OntologyInfo {
 		
 		// loop through and make the property, pull class...
 		for(int i = 0; i < classList.length; i += 1){
-			//////////////// new bug 5/2021 needs looking at properties query ////////////////////
-			// skip rows with empty range if there's another identical one with range
-			// seems to be caused by sadl "with values of type { A or B } "
-			boolean skipRow = false;
-			if (rangeList[i].isEmpty()) {
-				for (int j=0; j < classList.length; j++) {
-					if (classList[j].equals(classList[i]) && propertyList[j].equals(propertyList[i]) && !rangeList[j].isEmpty()) {
-						skipRow = true;
-						break;
+			
+			// Skip rows with no class  IFF the same property appears somewhere else with a class and same range
+			// (aka forgive the loadPropertiesQuery)
+			boolean skip = false;
+			if (classList[i].isEmpty()) {
+				for (int j=0; j < propertyList.length; j++) {
+					if (i != j && propertyList[i].equals(propertyList[j]) && rangeList[i].equals(rangeList[j])) {
+						skip = true;
 					}
 				}
 			}
-			if (skipRow) {
-				continue;
-			}
+			if (skip) continue;
 			
-			////////////////////////////////////
 			
-			OntologyProperty prop = null;
+			OntologyProperty oProp = null;
+			OntologyClass oClass = this.getClass(classList[i]);
 			
-			// get prop from propertyHash, or create it
+			// if domain or range are empty, use OrphanClass
+			// this will be resolved in loadSuperSubProperties
+			if (oClass == null) oClass = ORPHAN_CLASS;
+			String rangeStr = rangeList[i].isEmpty() ? ORPHAN_STR : rangeList[i];
+			String domainStr = classList[i].isEmpty() ? ORPHAN_STR : classList[i];
+			
 			if (this.propertyHash.containsKey(propertyList[i])) {
-				prop = this.propertyHash.get(propertyList[i]);
-				
-				// if property exists, and range is different 
-				// (ignore this if prop RANGE is already defaultClass or new range is empty)
-				if (! prop.getRangeStr().equals(rangeList[i]) && !prop.getRange().isDefaultClass() && !rangeList[i].isEmpty()) {
-					String superClass = this.findLowestCommonSuperclass(prop.getRangeStr(), rangeList[i]);
-					
-					if (superClass != null) {
-						// Set range to common superclass of different range classes
-						// ignore subclass restrictions on ranges for now, until complex ranges are implemented
-						// Paul Aug 2020
-						
-						if (DEBUG_RANGE) {
-							LocalLogger.logToStdOut(classList[i] + "->" + propertyList[i] + ": prev: " + prop.getRangeStr() + " curr: " + rangeList[i] + " new super" + superClass);
-						}
-						
-						// make the change
-						prop.setRange(new OntologyRange(superClass));
-						
-					} else {
-						// throw error
-						throw new Exception(String.format("SemTk doesn't handle complex ranges.\nClass %s property domain %s\nrange 1: %s\nrange 2: %s",
-										  classList[i], 
-										  propertyList[i], 
-										  this.propertyHash.get(propertyList[i]).getRangeStr(),
-										  rangeList[i]));
-					}
-				}
+				// get prop from propertyHash
+				oProp = this.propertyHash.get(propertyList[i]);
+				oProp.addRange(oClass, rangeStr);
 			} else {
-				// if property doesn't exist, create it
-				prop = new OntologyProperty(propertyList[i], rangeList[i]);
-				this.propertyHash.put(propertyList[i], prop);
+				// property doesn't exist: create it
+				oProp = new OntologyProperty(propertyList[i], domainStr, rangeStr);
+				this.propertyHash.put(propertyList[i], oProp);
 			}
 
-			if (classList[i].trim().isEmpty()) {
-				// Property has no domain/class. 
-				this.orphanProps.put(propertyList[i], prop);
-				
-			} else {
+			if (!domainStr.equals(ORPHAN_STR)) {
 				// Add property to the class
 				OntologyClass c = this.classHash.get(classList[i]);
 				if(c == null){
 					throw new Exception("Cannot find class " + classList[i] + " in the ontology");
 				}			
-				c.addProperty(prop);
+				c.addProperty(oProp);
 			}			
-		}
-		
-		// clean up orphans.  Owl may  it once with no domain, and another time with.
-		Set<String> toDel = new HashSet<String>();
-		for (String orphan : this.orphanProps.keySet()) {
-			if (this.getPropertyDomain(this.orphanProps.get(orphan)).size() > 0) {
-				toDel.add(orphan);
-			}
-		}
-		
-		for (String k : toDel) {
-			this.orphanProps.remove(k);
 		}
 	}
 	
@@ -1625,8 +1641,17 @@ public class OntologyInfo {
 		}
 		
 		// check for orphaned properties not resolved by subProp query
-		for (String orphan : this.orphanProps.keySet()) {
-			this.loadWarnings.add("Property has no domain: " + orphan);
+		for (OntologyProperty oProp : this.propertyHash.values()) {
+			Set<String> domains = oProp.getRangeDomains();
+			if (domains.contains(ORPHAN_STR)) {
+				this.loadWarnings.add("Property has no domain: " + oProp.getNameStr(false));
+			} else {
+				for (String domain : domains) {
+					if (oProp.getRange(this.getClass(domain), this).getUriList().contains(ORPHAN_STR)) {
+						this.loadWarnings.add("Property has no range for domain " + domain + ": " + oProp.getNameStr(false));
+					}
+				}
+			}
 		}
 		
 		// Note: Range names don't necessarily need to be valid.  As long as they aren't used.
@@ -1717,7 +1742,7 @@ public class OntologyInfo {
 			// promote object of last triple
 			OntologyClass oSubject = this.getClass(lastTriple.getSubject());
 			OntologyProperty oPred = this.getInheritedPropertyByUri(oSubject, lastTriple.getPredicate());
-			if (this.classIsInRange(oParent, oPred.getRange())) {
+			if (this.classIsInRange(oParent, oPred.getRange(oSubject, this))) {
 				// parent is in range of property
 				lastTriple.setObject(parentName);
 				path.setEndClassName(parentName);
@@ -1734,7 +1759,7 @@ public class OntologyInfo {
 	 * @param parentName
 	 * @return boolean - true if successful
 	 */
-	private boolean promoteStartClass(OntologyPath path, OntologyClass oParent) {
+	private boolean promoteStartClass(OntologyPath path, OntologyClass oParent) throws Exception {
 		Triple firstTriple = path.getTriple(0);
 		String parentName = oParent.getName();
 		
@@ -1753,7 +1778,7 @@ public class OntologyInfo {
 			// promote object of first triple
 			OntologyClass oSubject = this.getClass(firstTriple.getSubject());
 			OntologyProperty oPred = this.getInheritedPropertyByUri(oSubject, firstTriple.getPredicate());
-			if (this.classIsInRange(oParent, oPred.getRange())) {
+			if (this.classIsInRange(oParent, oPred.getRange(oSubject, this))) {
 				// parent is in range of property
 				firstTriple.setObject(parentName);
 				path.setStartClassName(parentName);
@@ -2052,7 +2077,6 @@ public class OntologyInfo {
 	/** 
 	 * Does a path have any instance data in conn.
 	 * Runs directly without any other services.
-	 * TODO potential time-out issue?
 	 * @param ng - potentially linked to end of path.  
 	 * @param anchorNode
 	 * @param oInfo
@@ -2077,7 +2101,6 @@ public class OntologyInfo {
 	/** 
 	 * Does a ng with new path have any instance data in conn.
 	 * Runs directly without any other services.
-	 * TODO potential time-out issue?
 	 * @param ng - potentially linked to end of path.  
 	 * @param anchorNode
 	 * @param oInfo
@@ -2266,10 +2289,14 @@ public class OntologyInfo {
 	 * @return
 	 */
 	public Boolean classIsInRange(OntologyClass classToCheck, OntologyRange range){
-		Boolean retval = false;
-		retval = this.classIsA(classToCheck, this.classHash.get(range.getFullName()));
+
+		for (String rangeUri : range.getUriList()) {
+			if (this.classIsA(classToCheck, this.classHash.get(rangeUri))) {
+				return true;
+			}
+		}
 		
-		return retval;
+		return false;
 	}
 	
 	/**
@@ -2403,7 +2430,7 @@ public class OntologyInfo {
      * Build a json that mimics the returns from the load queries
      */
     @SuppressWarnings("unchecked")
-	public JSONObject toJson () { 
+	public JSONObject toJson () throws Exception { 
     	JSONObject json = new JSONObject();
     	
     	JSONArray topLevelClassList =  new JSONArray();
@@ -2456,18 +2483,21 @@ public class OntologyInfo {
         }
         
         // classPropertyRangeList
-        for (String c : this.classHash.keySet()) {
-        	
-            ArrayList<OntologyProperty> propList = this.classHash.get(c).getProperties();
-            for (int i=0; i < propList.size(); i++) {
-                OntologyProperty oProp = propList.get(i);
-                JSONArray a = new JSONArray();
-            	a.add(Utility.prefixURI(c, prefixToIntHash));
-            	a.add(Utility.prefixURI(oProp.getNameStr(), prefixToIntHash));
-            	a.add(Utility.prefixURI(oProp.getRangeStr(), prefixToIntHash));
-                classPropertyRangeList.add(a);
-            }
+        for (OntologyProperty oProp : this.propertyHash.values()) {
+        	String propName = oProp.getNameStr();
+        	for (String domain : oProp.getRangeDomains()) {
+        		OntologyClass oClass = this.getClass(domain);
+        		for (String rangeUri : oProp.getRange(oClass, this).getUriList()) {
+        			
+        			JSONArray a = new JSONArray();
+                	a.add(Utility.prefixURI(domain, prefixToIntHash));
+                	a.add(Utility.prefixURI(propName, prefixToIntHash));
+                	a.add(Utility.prefixURI(rangeUri, prefixToIntHash));
+                    classPropertyRangeList.add(a);
+        		}
+        	}
         }
+
         
         // classEnumValList
         for (String c : this.enumerationHash.keySet()) {
@@ -2698,11 +2728,11 @@ public class OntologyInfo {
     }
     
     /**
-     * PEC TODO add Datatype hash.
+     * PEC TODO add Datatype hash, range restrictions, complex ranges
      * @param base
      * @return
      */
-    public String generateRdfOWL(String base) {
+    public String generateRdfOWL(String base) throws Exception {
     	StringBuilder owl = new StringBuilder();
     	
     	owl.append(String.format(
@@ -2714,9 +2744,13 @@ public class OntologyInfo {
     			"	xml:base=\"%s\">\n" + 
     			"	<owl:Ontology rdf:about=\"%s\">\n" + 
     			"		<rdfs:comment xml:lang=\"en\">Created by com.ge.research.semtk.ontologyTools.OntologyInfo</rdfs:comment>\n" + 
+    			"		<rdfs:comment xml:lang=\"en\">DANGER: Incomplete implementation</rdfs:comment>\n" + 
+
     			"	</owl:Ontology>\n",
     			base, base, base)
     		);
+    	
+    	
     	
     			
     	// Classes
@@ -2760,8 +2794,14 @@ public class OntologyInfo {
     	for (String p : this.propertyHash.keySet()) {
     		OntologyProperty oProp = this.propertyHash.get(p);
 
-    		// PEC TODO: this can't be the correct way to determin DatatypeProperty vs ObjectProperty
-    		if (oProp.getRangeStr().contains("XMLSchema#")) {
+    		// PEC TODO: range restrictions are not implemented here.  Get first Domain.
+    		//           complex ranges are not implemented here.  Get first range.
+    		ArrayList<String> domainList = new ArrayList<String>();
+    		domainList.addAll(oProp.getRangeDomains());
+    		OntologyRange oRange = oProp.getRange(this.getClass(domainList.get(0)), this);
+    		boolean isProp = !oRange.isComplex() && this.getClass(oRange.getSimpleUri()) == null;
+    		
+    		if (isProp) {
     			owl.append(String.format("\t<owl:DatatypeProperty rdf:about=\"%s\">\n", oProp.getNameStr()));
     		} else {
     			owl.append(String.format("\t<owl:ObjectProperty rdf:about=\"%s\">\n", oProp.getNameStr()));
@@ -2773,12 +2813,12 @@ public class OntologyInfo {
     			}
     		}
     		
-    		owl.append(String.format("\t\t<rdfs:range rdf:resource=\"%s\"/>\n", oProp.getRangeStr()));
+    		owl.append(String.format("\t\t<rdfs:range rdf:resource=\"%s\"/>\n", oRange.getSimpleUri()));
     		
     		// annotations
     		owl.append(oProp.generateAnnotationRdf("\t\t"));
     		
-    		if (oProp.getRangeStr().contains("XMLSchema#")) {
+    		if (isProp) {
     			owl.append("\t</owl:DatatypeProperty>\n\n");
     		} else {
     			owl.append("\t</owl:ObjectProperty>\n\n");
@@ -2794,7 +2834,16 @@ public class OntologyInfo {
     	return "\n\n<!-- " + comment + " -->\n\n";
     }
     
-    public String generateSADL(String base) {
+    /**
+     * TODO:
+     *   Range restrictions
+     *   Fix complex ranges
+     *   Cardinality restrictions
+     * @param base
+     * @return
+     * @throws Exception
+     */
+    public String generateSADL(String base) throws Exception {
     	String [] baseTokens = base.split("/");
     	String alias = baseTokens[baseTokens.length - 1];
     	StringBuilder sadl = new StringBuilder();
@@ -2823,7 +2872,7 @@ public class OntologyInfo {
 			// properties
 			for (OntologyProperty oProp : oProps) {
 				
-				String t = oProp.getRangeStr(true);
+				String t = oProp.getRange(oClass, this).getDisplayString(true);
 				sadl.append(String.format("\t%s is described by %s %s with values of type %s.\n", oClass.getNameString(true), oProp.getNameStr(true), oProp.generateAnnotationsSADL(), t));
 			}
 			

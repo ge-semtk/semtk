@@ -19,3 +19,21 @@ subDataPropDomainOnly (note "has no range") is a type of superDataProp, describe
 subDataPropRangeOnly (note "has no domain") is a type of superDataProp with values of type int.
 subDataPropOnly (note "naked subprop") is a type of superDataProp.
 
+-----------------
+add property to class if domain was ORPHAN
+
+trying to figure out ontologyInfo.java 1276
+superProp
+  prop1
+  prop3 { a, b} 
+  prop5 { c, b}
+ 
+  
+
+subProp
+  orphan{ a, b}
+  prop2 {c}
+  prop4 {c} 
+  prop5 {c}
+  prop6 {c}
+  

@@ -25,28 +25,28 @@ public class DataDictionaryGenerator {
 		Collections.sort(classNames);
 		for(String className : classNames){
 
-			OntologyClass classs = oInfo.getClass(className);
+			OntologyClass oClass = oInfo.getClass(className);
 
 			// add a row for the class 
 			ArrayList<String> row = new ArrayList<String>();
-			row.add(classs.getNameString(stripNamespace));
+			row.add(oClass.getNameString(stripNamespace));
 			row.add("");
 			row.add(oInfo.classIsEnumeration(className) ? "enumeration: " + oInfo.getEnumerationStrings(className) : "");
-			row.add(classs.getAnnotationLabelsString());
-			row.add(classs.getAnnotationCommentsString());
+			row.add(oClass.getAnnotationLabelsString());
+			row.add(oClass.getAnnotationCommentsString());
 			table.addRow(row);
 			
 			// add a row for each property (inherited or otherwise) of the class
-			for(OntologyProperty p : oInfo.getInheritedProperties(classs)){		
+			for(OntologyProperty p : oInfo.getInheritedProperties(oClass)){		
 
 				// flag if a property is shared by multiple domains
 				// (shared properties should not use different labels/comments in different domains, because OWL does not differentiate)
 				String sharedPropertyWarning = oInfo.getPropertyDomain(p).size() <= 1 ? "" : " (SHARED PROPERTY)"; 
 						
 				row = new ArrayList<String>();
-				row.add(classs.getNameString(stripNamespace));
+				row.add(oClass.getNameString(stripNamespace));
 				row.add(p.getNameStr(stripNamespace) + sharedPropertyWarning);
-				row.add(p.getRangeStr(stripNamespace));
+				row.add(p.getRange(oClass, oInfo).getDisplayString(stripNamespace));
 				row.add(p.getAnnotationLabelsString() + (p.getAnnotationLabelsString().isEmpty() ? "" : sharedPropertyWarning));
 				row.add(p.getAnnotationCommentsString() + (p.getAnnotationCommentsString().isEmpty() ? "" : sharedPropertyWarning));
 				table.addRow(row);

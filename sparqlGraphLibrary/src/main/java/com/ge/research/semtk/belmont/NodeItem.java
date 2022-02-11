@@ -19,6 +19,7 @@
 package com.ge.research.semtk.belmont;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 
 import org.json.simple.JSONArray;
@@ -43,8 +44,7 @@ public class NodeItem {
 	private ArrayList<Boolean> deletionFlags = new ArrayList<Boolean>();
 	private ArrayList<String> qualifiers = new ArrayList<String>();
 
-	private String valueType = "";
-	private String valueTypeURI = "";
+	private HashSet<String> rangeUris;
 	private String connectedBy = "";
 	private String uriConnectBy = "";
 	private Boolean connected = false;
@@ -55,16 +55,25 @@ public class NodeItem {
 	 * @param valueType (e.g. ScreenPrinting)
 	 * @param UriValueType (e.g. http://research.ge.com/print/testconfig#ScreenPrinting)
 	 */
-	public NodeItem(String uri, String valueType, String UriValueType) {
+	public NodeItem(String uri, HashSet<String> range) {
 		this.uriConnectBy = uri;
-		this.valueType = valueType;
-		this.valueTypeURI = UriValueType;
+		this.rangeUris = new HashSet<String>();
+		this.rangeUris.addAll(range);
 	}
 	
 	public NodeItem(JSONObject next, NodeGroup ng) throws Exception{
 		// get basic values:
-		this.valueTypeURI = next.get("UriValueType").toString();
-		this.valueType = next.get("ValueType").toString();
+		this.rangeUris = new HashSet<String>();
+		
+		if (next.containsKey("UriValueType")) {
+			// older version
+			this.rangeUris.add(next.get("UriValueType").toString());
+		} else {
+			for (Object o : (JSONArray) next.get("range")) {
+				this.rangeUris.add((String) o);
+			}
+		}
+		
 		this.connectedBy = next.get("ConnectBy").toString();
 		this.uriConnectBy = next.get("UriConnectBy").toString();
 		this.connected = (Boolean)next.get("Connected");
@@ -76,11 +85,8 @@ public class NodeItem {
 			String currId = nIt.next();
 			Node curr = ng.getNodeBySparqlID(currId);
 			if(curr == null){ 
-				// panic
-				//throw new Exception("could not find the node referenced by sparql ID : " + currId);
-
 				// do not panic. add it. 
-				curr = new Node(currId, null, null, this.valueTypeURI, ng);
+				curr = new Node(currId, null, null, "update-me", ng);
 				curr.setSparqlID(currId);
 				ng.addOrphanedNode(curr);
 			}
@@ -182,8 +188,9 @@ public class NodeItem {
 		ret.put("OptionalMinus", optionalMinus);
 		ret.put("Qualifiers", qualifiers);
 		ret.put("DeletionMarkers", this.deletionFlags);
-		ret.put("ValueType", this.valueType);
-		ret.put("UriValueType", this.valueTypeURI);
+		JSONArray r = new JSONArray();
+		r.addAll(this.rangeUris);
+		ret.put("range", r);
 		ret.put("ConnectBy", this.connectedBy);
 		ret.put("Connected", this.connected);
 		ret.put("UriConnectBy", this.uriConnectBy);
@@ -263,30 +270,13 @@ public class NodeItem {
 		return this.nodes;
 	}
 
-	public String getUriValueType() {
-		return this.valueTypeURI;
-	}
-	public String getValueType() {
-		return this.valueType;
+	public HashSet<String> getRangeUris() {
+		return this.rangeUris;
 	}
 	
-	public void setUriValueType(String uri) {
-		this.valueTypeURI = uri;
-	}
-	public void setValueType(String name) {
-		this.valueType = name;
-	}
-	
-	public void changeUriValueType(String rangeURI) {
-		OntologyName name = new OntologyName(rangeURI);
-		this.valueTypeURI = name.getFullName();
-		this.valueType = name.getLocalName();
-	}
-	
-	// alternate name
-	public void setRange(String newURI) {
-		this.changeUriValueType(newURI);
-		
+	public void setRangeUris(HashSet<String> rangeSet) {
+		this.rangeUris = new HashSet<String>();
+		this.rangeUris.addAll(rangeSet);
 	}
 	
 	public String getUriConnectBy() {
@@ -441,8 +431,7 @@ public class NodeItem {
 			nItem.connected = nItem.nodes.size() > 0;
 		}
 
-		this.valueType = nItem.valueType;
-		this.valueTypeURI = nItem.valueTypeURI;
+		this.setRangeUris(nItem.getRangeUris());
 		//connectedBy
 		//uriConnectBy 
 		this.connected = this.nodes.size() > 0;

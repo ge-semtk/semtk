@@ -19,59 +19,116 @@
 package com.ge.research.semtk.ontologyTools;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
 
 public class OntologyRange {
 	public static final String CLASS = "http://www.w3.org/2002/07/owl#Class";
-	private String name = "";
+	private HashSet<String> uris = new HashSet<String>();
 	
 	public OntologyRange(String fullName) {
-		this.name = (fullName == null || fullName.isEmpty()) ? CLASS : fullName;
+		this.uris.add((fullName == null || fullName.isEmpty()) ? CLASS : fullName);
 	}
 	
 	public OntologyRange deepCopy() {
-		return new OntologyRange(this.name);
+		OntologyRange copy = null;
+		for (String name : this.uris) {
+			if (copy == null) {
+				copy = new OntologyRange(name);
+			} else {
+				copy.addRange(name);
+			}
+		}
+		return copy;
 	}
 	
-	public boolean isDefaultClass() {
-		return name.equals(CLASS);
+	public void addRange(String name) {
+		this.uris.add(name);
 	}
 	
-	public String getLocalName(){
-		String[] retval = this.name.split("#");
+	public boolean containsDefaultClass() {
+		return this.uris.contains(CLASS);
+	}
+	
+	/**
+	 * Does this range have multiple values
+	 * @return
+	 */
+	public boolean isComplex() {
+		return this.uris.size() > 1;
+	}
+	
+	public HashSet<String> getUriList() {
+		return this.uris;
+	}
 
-		if(retval.length > 1){
-			return retval[1];
-		}
-		else{
-			return retval[0];
+	public boolean containsUri(String rangeURI) {
+		return this.uris.contains(rangeURI);
+	}
+	
+	public void removeUri(String rangeURI) {
+		if (this.containsUri(rangeURI)) {
+			this.uris.remove(rangeURI);
 		}
 	}
 	
-	// Hoping to allow complex ranges soon, so start using getClassNameList() instead
-	@Deprecated
-	public String getFullName(){
-		return this.name;
+	public boolean equalsUri(String rangeURI) {
+		return this.uris.size() == 1 && this.uris.contains(rangeURI);
+	}
+	/**
+	 * Get name of the single simple range
+	 * @return
+	 * @throws Exception if this.isComplex()
+	 */
+	public String getSimpleUri() throws Exception {
+		if (this.uris.size() > 1) {
+			throw new Exception("Internal error: can not get simple name of a complex range");
+		}
+		for (String ret : this.uris) {
+			return ret;
+		}
+		return "";
+	}
+
+	public String getDisplayString(boolean abbreviate) {
+		return OntologyRange.getDisplayString(this.uris, abbreviate);
 	}
 	
-	public ArrayList<String> getClassNameList() {
-		ArrayList<String> ret = new ArrayList<String>();
-		ret.add(this.name);
+	public static String getDisplayString(Collection<String> uris, boolean abbreviate) {
+		if (abbreviate) {
+			HashSet<String> modified = new HashSet<String>();
+			for (String uri : uris) {
+				modified.add(new OntologyName(uri).getLocalName());
+			}
+			if (modified.size() == 1) {
+				return String.join("", modified);
+			} else {
+				return "{" + String.join(" or ", modified) + "}";
+			}
+		} else {
+			if (uris.size() == 1) {
+				return String.join("", uris);
+			} else {
+				return "{" + String.join(" or ", uris) + "}";
+			}
+		}
+	}
+	
+	/**
+	 * Reverse engineer a display string to a HashSet of uris
+	 * @param str
+	 * @return
+	 */
+	public static HashSet<String> parseDisplayString(String str) {
+		HashSet<String> ret = new HashSet<String>();
+		if (! str.contains("{")) {
+			ret.add(str);
+		} else {
+			String str1 = str.replaceAll("[{}]", "").trim();
+			for (String uri : str1.split(" or ")) {
+				ret.add(uri);
+			}
+		}
 		return ret;
-	}
-
-	public String getNamespace(){
-		String[] retval = this.name.split("#");
-
-		if(retval.length > 1){
-			return retval[0];
-		}
-		else{
-			return ""; // there was no namespace. 
-		}
-	}
-
-	public Boolean isInDomain(String domain){
-		int i = this.name.indexOf(domain);
-		return(i == 0);
 	}
 }

@@ -52,6 +52,10 @@ public class OntologyClass extends AnnotatableElement {
 	public OntologyClass(String name) throws Exception {
 		this(name, null);
 	}
+	
+	public OntologyClass(String name, boolean noChecks) {
+		this.name = new OntologyName(name);
+	}
 
 	public String getName() {
 		return this.name.getFullName();
@@ -119,15 +123,4 @@ public class OntologyClass extends AnnotatableElement {
 		return retval;
 	}
 	
-	public ArrayList<OntologyProperty> powerMatchProperties(String pattern){
-		ArrayList<OntologyProperty> retval = new ArrayList<OntologyProperty>();
-		String pat = pattern.toLowerCase();
-		
-		for(OntologyProperty op : this.properties){
-			if(op.getNameStr(true).toLowerCase().contains(pat) || op.getRangeStr(true).toLowerCase().contains(pat)){
-				retval.add(op);
-			}
-		}
-		return retval;
-	}
 }
