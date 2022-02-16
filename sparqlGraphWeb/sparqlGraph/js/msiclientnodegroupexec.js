@@ -313,9 +313,9 @@ define([	// properly require.config'ed   bootstrap-modal
                                          conn, predicateList, limitOverride, offsetOverride, countOnly, jobIdCallback, failureCallback);
             },
 
-            execAsyncDispatchRawSparql : function(sparql, conn, jobIdCallback, failureCallback) {
+            execAsyncDispatchRawSparql : function(sparql, conn, jobIdCallback, failureCallback, optResultType) {
                 this.runAsyncSparql("dispatchRawSparql",
-                                        sparql, conn, jobIdCallback, failureCallback);
+                                        sparql, conn, jobIdCallback, failureCallback, optResultType);
             },
 
             execAsyncDispatchSelectById : function(nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
@@ -374,12 +374,16 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.runAsync(endpoint, data, jobIdCallback, failureCallback);
             },
 
-            runAsyncSparql : function (endpoint, sparql, conn, jobIdCallback, failureCallback) {
+            runAsyncSparql : function (endpoint, sparql, conn, jobIdCallback, failureCallback, optResultType) {
 
-				var data = JSON.stringify ({
+				var rawData = {
                     "sparql":           sparql,
-                    "sparqlConnection": JSON.stringify(conn.toJson()),
-                });
+                    "sparqlConnection": JSON.stringify(conn.toJson())
+                };
+                if (optResultType) {
+					rawData["resultType"] = optResultType;
+				}
+                var data = JSON.stringify(rawData);
 
 				this.runAsync(endpoint, data, jobIdCallback, failureCallback);
 			},

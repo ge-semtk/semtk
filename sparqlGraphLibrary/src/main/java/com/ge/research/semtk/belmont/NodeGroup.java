@@ -81,7 +81,8 @@ public class NodeGroup {
 	// version 15: node.isConstructed  ng.queryType ng.returnType
 	// version 16: columnOrder
 	// version 17: property item valueTypes, domainURI, rangeURI
-	private static final int VERSION = 17;
+	// version 18: complex ranges
+	private static final int VERSION = 18;
 	
 	// actually used to keep track of our nodes and the nomenclature in use. 
 	private ArrayList<Node> nodes = new ArrayList<Node>();
@@ -4360,21 +4361,21 @@ public class NodeGroup {
 	}
 	
 	private ArrayList<String> getConnectedRange(Node node) throws Exception  {
-		ArrayList<String> retval = new ArrayList<String>();
+		ArrayList<String> ret = new ArrayList<String>();
 		
 		
 		ArrayList<NodeItem> nodeItems = this.getConnectingNodeItems(node);
 		for (NodeItem ni : nodeItems) {
 			if (ni.getOptionalMinus(node) != NodeItem.OPTIONAL_REVERSE && ni.getOptionalMinus(node) != NodeItem.MINUS_REVERSE) {
 				for (String rangeUri : ni.getRangeUris()) {
-					if (!retval.contains(rangeUri)) {
-						retval.add(rangeUri);
+					if (!ret.contains(rangeUri)) {
+						ret.add(rangeUri);
 					}
 				}
 			}
 		}
 		
-		return retval;
+		return ret;
 	}
 	
 

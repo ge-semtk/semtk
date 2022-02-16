@@ -22,10 +22,12 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 
 public class DispatchRawSparqlRequestBody {
 	private String sparqlConnection;
 	private String sparql;
+	private SparqlResultTypes resultType = SparqlResultTypes.TABLE;
 	
 	public SparqlConnection getSparqlConnection() throws Exception {
 		return new SparqlConnection(sparqlConnection);
@@ -40,6 +42,10 @@ public class DispatchRawSparqlRequestBody {
 
 	public void setSparql(String sparql) {
 		this.sparql = sparql;
+	}
+	
+	public SparqlResultTypes getResultType() {
+		return this.resultType;
 	}
 
 	

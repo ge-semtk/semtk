@@ -22,11 +22,13 @@ import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 
 public class SparqlRequestBody{
 
 	private String sparqlConnectionJson;
 	private String rawSparqlQuery;
+	private SparqlResultTypes resultType = SparqlResultTypes.TABLE;
 	
 	public String getRawSparqlQuery() {
 		return rawSparqlQuery;
@@ -39,6 +41,12 @@ public class SparqlRequestBody{
 	}
 	public void setSparqlConnectionJson(String sparqlConnectionJson) {
 		this.sparqlConnectionJson = sparqlConnectionJson;
+	}
+	public void setResultType(SparqlResultTypes rt) {
+		this.resultType = rt;
+	}
+	public SparqlResultTypes getResultType() {
+		return this.resultType;
 	}
 
 	

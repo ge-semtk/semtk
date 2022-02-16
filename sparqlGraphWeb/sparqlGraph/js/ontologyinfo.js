@@ -26,6 +26,327 @@
  */
 
 
+
+/*
+ * OntologyAnnotation
+ * In Java, this is a superclass of OntologyClass and OntologyProperty
+ * but in js it a property
+ */
+var OntologyAnnotation = function() {
+    this.comments = [];
+    this.labels = [];
+};
+
+OntologyAnnotation.prototype = {
+    /**
+	 * Add comment, silently ignoring duplicates, nulls, isEmpty
+	 * @param comment - may be undefined, null, empty
+	 */
+	addAnnotationComment : function(comment) {
+        if (comment) {
+            var trimmed = comment.trim();
+            if (trimmed.length) {
+                this.comments.push(trimmed);
+            }
+        }
+	},
+
+    clearAnnotationComments : function() {
+        this.comments = [];
+    },
+
+	/**
+	 * Add label, silently ignoring duplicates, nulls, isEmpty
+	 * @param label
+	 */
+	addAnnotationLabel : function(label) {
+		if (label) {
+            var trimmed = label.trim();
+            if (trimmed.length) {
+                this.labels.push(trimmed);
+            }
+        }
+	},
+
+    clearAnnotationLabels : function() {
+        this.labels = [];
+    },
+
+	getAnnotationComments : function() {
+		return this.comments;
+	},
+
+	getAnnotationLabels : function() {
+		return this.labels;
+	},
+
+	/**
+	 * Return ; separated list of comments, or ""
+	 * @return
+	 */
+	getAnnotationCommentsString : function() {
+		return this.comments.join(" ; ");
+	},
+
+	/**
+	 * Return ; separated list of comments, or ""
+	 * @return
+	 */
+	getAnnotationLabelsString : function() {
+		return this.labels.join(" ; ");
+	},
+
+	/**
+     * Generate <rdfs:label> and <rdfs:comment> lines for an element
+     * @param elem
+     * @return
+     */
+    generateAnnotationRdf : function(tab) {
+    	var ret = "";
+
+    	for (var i=0; i < this.comments.length; i++) {
+            ret += tab + "<rdfs:comment>" + this.comments[i] + "</rdfs:comment>\n";
+    	}
+
+    	for (var i=0; i < this.labels.length; i++) {
+            ret += tab + "<rdfs:label>" + this.labels[i] + "</rdfs:label>\n";
+    	}
+
+    	return ret;
+    },
+
+    generateAnnotationsSADL : function() {
+    	var ret = "";
+
+    	for (var i=0; i < this.comments.length; i++) {
+            ret += '(note "' + this.comments[i] + '\")';
+    	}
+
+    	for (var i=0; i < this.labels.length; i++) {
+            ret += '(alias "' + this.labels[i] + '\")';
+    	}
+
+    	return ret;
+    },
+};
+/*
+ * OntologyName
+ */
+var OntologyName = function(fullname) {
+    this.name = fullname;
+
+};
+OntologyName.prototype = {
+
+	getLocalName : function() {
+		return this.name.split('#')[1];
+	},
+	getNamespace : function() {
+		return this.name.split('#')[0];
+	},
+	getFullName : function() {
+		return this.name;
+	},
+	equals : function(other) {
+		return (this.name == other.name);
+	},
+	isInDomain : function(domain) {
+		// does my name start with this domain
+		//i = this.name.indexOf(domain);
+		//return (i == 0);
+
+		var m = this.name.match("^"+domain);
+		return (m != null);
+	},
+};
+/*
+ * OntologyClass
+ */
+var OntologyClass = function(name, parentName) {
+    // parentName can be ""
+    this.name = new OntologyName(name);
+    this.parentNames = [];
+    this.properties = [];
+    this.annotation = new OntologyAnnotation();
+
+    if (parentName) {
+        this.parentNames.push(new OntologyName(parentName));
+    }
+};
+
+OntologyClass.prototype = {
+    // In java, sub-classing takes care of this
+    addAnnotationComment :        function(c) { return this.annotation.addAnnotationComment(c); },
+    clearAnnotationComments:      function()  { return this.annotation.clearAnnotationComments(); },
+    addAnnotationLabel :          function(l) { return this.annotation.addAnnotationLabel(l); },
+    clearAnnotationLabels:        function()  { return this.annotation.clearAnnotationLabels(); },
+    getAnnotationComments :       function()  { return this.annotation.getAnnotationComments(); },
+    getAnnotationLabels :         function()  { return this.annotation.getAnnotationLabels(); },
+    getAnnotationCommentsString : function()  { return this.annotation.getAnnotationCommentsString(); },
+    getAnnotationLabelsString :   function()  { return this.annotation.getAnnotationLabelsString(); },
+    generateAnnotationRdf :       function(d) { return this.annotation.generateAnnotationRdf(d); },
+    generateAnnotationsSADL :     function()  { return this.annotation.generateAnnotationsSADL(); },
+
+    setName : function (nameStr) {
+        this.name = new OntologyName(nameStr);
+    },
+
+    getName : function () {
+        return this.name;
+    },
+
+	getNameStr : function(stripNsFlag) {
+		if (stripNsFlag)
+			return this.name.getLocalName();
+		else
+			return this.name.getFullName();
+	},
+
+    getLocalName : function() {
+		return this.name.getLocalName();
+	},
+
+    getNamespaceStr : function() {
+		return this.name.getNamespace();
+	},
+
+	getParentNameStrings : function(stripNsFlag) {
+        var ret = [];
+        for (var i=0; i < this.parentNames.length; i++) {
+            if (stripNsFlag) {
+                ret.push( this.parentNames[i].getLocalName() );
+            } else {
+                ret.push( this.parentNames[i].getFullName() );
+            }
+        }
+		return ret;
+	},
+
+	getProperties : function() {
+		return this.properties;
+	},
+
+	getProperty : function(propName) {
+		for (var i=0; i < this.properties.length; i++) {
+			if (this.properties[i].getNameStr() == propName) {
+				return this.properties[i];
+			}
+		}
+		return ;
+	},
+
+	getPropertyByKeyname : function(keyName) {
+		// find first matching property
+		for (var i=0; i < this.properties.length; i++) {
+			if (this.properties[i].getNameStr().endsWith('#' + keyName)) {
+				return this.properties[i];
+			}
+		}
+		return null;
+	},
+
+    addParentName : function(name) {
+        this.parentNames.push(new OntologyName(name));
+    },
+
+	addProperty : function(ontProperty) {
+        // insert property alphabetically
+        var name = ontProperty.getNameStr(true);
+        for (var i=0; i < this.properties.length; i++) {
+            if (this.properties[i].getNameStr(true) > name) {
+                this.properties.splice(i,0,ontProperty);
+                return;
+            }
+        }
+        // else put it on the end
+        this.properties.push(ontProperty);
+	},
+
+	equals : function(other) {
+		return this.name.equals(other.name);
+	},
+
+	powerMatch : function(pattern) {
+		// match against class name
+		// Case-insensitive
+		var pat = pattern.toLowerCase();
+
+		return (this.getNameStr(true).toLowerCase().indexOf(pat) > -1);
+	},
+
+	powerMatchProps : function(pattern) {
+		// match against name and all of the property names and ranges
+		// Case-insensitive
+		var pat = pattern.toLowerCase();
+
+		var ret = [];
+		var prop = this.getProperties();
+		for (var i=0; i < prop.length; i++) {
+			if (prop[i].getPowerMatchString().toLowerCase().indexOf(pat) > -1) {
+				ret.push(prop[i]);
+			}
+		}
+
+		return ret;
+	},
+
+    renameParent : function(oldURI, newURI) {
+        for (var i=0; i < this.parentNames.length; i++) {
+            var oName = this.parentNames[i];
+            if (oName.getFullName() == oldURI) {
+                this.parentNames[i] = new OntologyName(newURI);
+            }
+        }
+    },
+
+    /* =========== Edit functions =============== */
+
+    //
+    // delete parent or property if it belongs to namespace
+    //
+    deleteNamespace : function (namespace) {
+
+        // parentNames
+        for (var i=this.parentNames.length-1; i >= 0; i--) {
+            if (this.parentNames[i].getNamespace() == namespace) {
+                this.parentNames.slice(i,1);
+            }
+        }
+
+        // properties
+        for (var i=this.properties.length-1; i >= 0; i--) {
+            if (this.properties[i].getNamespace() == namespace) {
+                this.properties.slice(i,1);
+            }
+        }
+    },
+
+    renameNamespace : function (oldName, newName) {
+
+        // usage:  uri = updateURI(uri)
+        var updateURI = function(oName, nName, uri) {
+           return nName + uri.slice(oName.length);
+        }.bind(this, oldName, newName);
+
+        if (this.name.getNamespace() == oldName) {
+            this.name = new OntologyName(updateURI(this.name.getFullName()));
+        }
+
+         // parentNames
+        for (var i=this.parentNames.length-1; i >= 0; i--) {
+            if (this.parentNames[i].getNamespace() == oldName) {
+                this.parentNames[i] = new OntologyName(updateURI(this.parentNames[i].getFullName()));
+            }
+        }
+
+        // properties
+        for (var i=this.properties.length-1; i >= 0; i--) {
+            if (this.properties[i].getNamespace() == oldName) {
+                this.properties[i].setName(updateURI(this.properties[i].getName()));
+            }
+        }
+    },
+};
 /*
  * OntologyInfo
  */
@@ -58,9 +379,11 @@ var OntologyInfo = function(optJson) {
         this.addJson(optJson);
     }
 };
-
 // version 4 adds datatypeList
-OntologyInfo.JSON_VERSION = 4;
+OntologyInfo.JSON_VERSION = 5;
+
+OntologyInfo.ORPHAN_STR = "%orphan%";
+OntologyInfo.ORPHAN_CLASS = new OntologyClass(OntologyInfo.ORPHAN_STR);
 
 OntologyInfo.localizeNamespace = function(fullNamespace) {
    return fullNamespace.substring(fullNamespace.lastIndexOf('/')+1);
@@ -93,9 +416,16 @@ OntologyInfo.prototype = {
         uriList = uriList.concat(Object.keys(this.classHash));
         uriList = uriList.concat(Object.keys(this.propertyHash));
         uriList = uriList.concat(Object.keys(this.enumHash));
+        
+        // get every range URI
         for (var p in this.propertyHash) {
-            uriList.push(this.propertyHash[p].getRangeStr());
+			for (var uri of p.getAllRangeUris()) {
+				uriList = uriList.concat(this.propertyHash[p].getRange(uri, this).getUriList());
+			}
         }
+        
+        // uniquify
+        uriList = Array.from(new Set(uriList));
 
         for (var i=0; i < uriList.length; i++) {
             var tok = uriList[i].split("#");
@@ -152,7 +482,7 @@ OntologyInfo.prototype = {
 		this.classHash[classNameStr] = ontClass;
 
 		// store subClasses
-		var supClassNames = ontClass.getParentNameStrs();
+		var supClassNames = ontClass.getParentNameStrings();
         for (var i=0; i < supClassNames.length; i++) {
 
             if (!(supClassNames[i] in this.subclassHash)) {
@@ -191,7 +521,7 @@ OntologyInfo.prototype = {
 			for (var i=0; i < props.length; i++) {
 				var prop = props[i];
 				// find range and all subclasses
-				var rangeClasses = [prop.getRangeStr()];
+				var rangeClasses = [prop.getAllRangeUris()];
 				rangeClasses = rangeClasses.concat(this.getSubclassNames(rangeClasses[0]));
 
 				// remove range and its subclasses from ret
@@ -230,7 +560,7 @@ OntologyInfo.prototype = {
         if (this.containsDatatype(rangeURI)) {
             return this.getDatatype(rangeURI).getEquivalentXSDTypes();
         } else {
-            if ("#" in rangeURI && "w3") {
+            if (rangeURI.indexOf("#") > -1) {
                 return [(new OntologyName(rangeURI)).getLocalName()];
             } else {
                 return ["uri"];
@@ -261,10 +591,32 @@ OntologyInfo.prototype = {
     //
 	getClassParents : function (ontClass) {
         var ret = [];
-		var names = ontClass.getParentNameStrs();
+		var names = ontClass.getParentNameStrings();
         for (var i=0; i < names.length; i++) {
             ret.push(this.getClass(names[i]));
         }
+		return ret;
+	},
+	
+	getClassAncestorNames : function(oClass) {
+		var ret = []
+		var first = 0;
+		ret = oClass.getParentNameStrings(false);
+		var len = ret.length;
+		
+		while (len > first) {
+			
+			for (var i = first; i < len; i++) {
+				var parents = this.getClass(ret[i]).getParentNameStrings(false);
+				for (var p of parents) {
+					if (ret.indexOf(p) == -1) {
+						ret.push(p);
+					}
+				}
+			}
+			first = len;
+			len = ret.length;
+		}
 		return ret;
 	},
 
@@ -291,7 +643,7 @@ OntologyInfo.prototype = {
 		var superclasses = [];
 
         // find each parent
-        var parentNames = this.classHash[subclassName].getParentNameStrs(false);
+        var parentNames = this.classHash[subclassName].getParentNameStrings(false);
         for (var i=0; i < parentNames.length; i++) {
             var currParentName = parentNames[i];
             ret.push(currParentName);
@@ -376,6 +728,7 @@ OntologyInfo.prototype = {
                );
     },
 
+	// Deprecated:  only used by sparqlform.js - which should also be deprecated
 	getConnList : function(classNameStr) {
 		// return or calculate all legal one-hop path connections to and from a class
 
@@ -387,6 +740,7 @@ OntologyInfo.prototype = {
 				alert("Internal error in OntologyInfo.getConnList(): class name is not in the ontology: " + classNameStr);
 			}
 			var classVal = this.classHash[classNameStr];
+			var oClass = this.classHash.get(classNameStr);
 			var foundHash = {};     // hash of path.asString()     PEC TODO FAILS when Man-hasSon->Man hashes same as Man<-hasSon-Man
 			var hashStr = '';
 
@@ -395,35 +749,38 @@ OntologyInfo.prototype = {
 			var props = this.getInheritedProperties(classVal);
 			for (var i=0; i < props.length; i++) {
 				var prop = props[i];
-				var rangeClassName = prop.getRangeStr();
-
-				// if the range class in this domain
-				if (this.containsClass(rangeClassName)) {
-
-					// Exact match:  class -> hasA -> rangeClassName
-					path = new OntologyPath(classNameStr);
-					path.addTriple(classNameStr, prop.getNameStr(), rangeClassName);
-					hashStr = path.asString();
-					if (! (hashStr in foundHash)) {
-						ret.push(path);
-						foundHash[hashStr] = 1;
-					}
-
-					// Sub-classes:  class -> hasA -> subclass(rangeClassName)
-					var rangeSubNames = this.getSubclassNames(rangeClassName);
-					for (var j=0; j < rangeSubNames.length; j++) {
-						if (this.containsClass(rangeSubNames[j])) {
-							path = new OntologyPath(classNameStr);
-							path.addTriple(classNameStr, prop.getNameStr(), rangeSubNames[j]);
-							hashStr = path.asString();
-							if (! (hashStr in foundHash)) {
-								ret.push(path);
-								foundHash[hashStr] = 1;
+				
+				for (var rangeClassName of prop.getAllRangeUris()) {
+	
+					// if the range class in this domain
+					if (this.containsClass(rangeClassName)) {
+	
+						// Exact match:  class -> hasA -> rangeClassName
+						path = new OntologyPath(classNameStr);
+						path.addTriple(classNameStr, prop.getNameStr(), rangeClassName);
+						hashStr = path.asString();
+						if (! (hashStr in foundHash)) {
+							ret.push(path);
+							foundHash[hashStr] = 1;
+						}
+	
+						// Sub-classes:  class -> hasA -> subclass(rangeClassName)
+						var rangeSubNames = this.getSubclassNames(rangeClassName);
+						for (var j=0; j < rangeSubNames.length; j++) {
+							if (this.containsClass(rangeSubNames[j])) {
+								path = new OntologyPath(classNameStr);
+								path.addTriple(classNameStr, prop.getNameStr(), rangeSubNames[j]);
+								hashStr = path.asString();
+								if (! (hashStr in foundHash)) {
+									ret.push(path);
+									foundHash[hashStr] = 1;
+								}
 							}
 						}
 					}
 				}
 			}
+		
 
 			//--- calculate HadBy: class which HasA classNameStr
 
@@ -432,7 +789,7 @@ OntologyInfo.prototype = {
 
 			// loop through every single class in oInfo
 			for (var cname in this.classHash) {
-
+				var everyClass = this.getClass(cname);
 				// loop through every property
 				// Issue 50 : fixed this to get inherited properties
 				// var cprops = this.classHash[cname].getProperties();
@@ -440,28 +797,30 @@ OntologyInfo.prototype = {
 
 				for (var i=0; i < cprops.length; i++) {
 					var prop = cprops[i];
-					var rangeClassStr = prop.getRangeStr();
+					for (var rangeClassName of prop.getRange(everyClass, this.getUriList())) {
+ 
 
-					// HadBy:  cName -> hasA -> class
-					if (rangeClassStr == classNameStr) {
-						path = new OntologyPath(classNameStr);
-						path.addTriple(cname, prop.getNameStr(), classNameStr);
-						hashStr = path.asString();
-						if (! (hashStr in foundHash)) {
-							ret.push(path);
-							foundHash[hashStr] = 1;
-						}
-					}
-
-					// IsA + HadBy:   cName -> hasA -> superClass(class)
-					for (var j = 0; j < supList.length; j++) {
-						if (rangeClassStr == supList[j]) {
+						// HadBy:  cName -> hasA -> class
+						if (rangeClassStr == classNameStr) {
 							path = new OntologyPath(classNameStr);
 							path.addTriple(cname, prop.getNameStr(), classNameStr);
 							hashStr = path.asString();
 							if (! (hashStr in foundHash)) {
 								ret.push(path);
 								foundHash[hashStr] = 1;
+							}
+						}
+	
+						// IsA + HadBy:   cName -> hasA -> superClass(class)
+						for (var j = 0; j < supList.length; j++) {
+							if (rangeClassStr == supList[j]) {
+								path = new OntologyPath(classNameStr);
+								path.addTriple(cname, prop.getNameStr(), classNameStr);
+								hashStr = path.asString();
+								if (! (hashStr in foundHash)) {
+									ret.push(path);
+									foundHash[hashStr] = 1;
+								}
 							}
 						}
 					}
@@ -550,7 +909,7 @@ OntologyInfo.prototype = {
 			// loop through properties
 			for (var j=0; j < props.length; j++) {
 				// push class if it isn't already on the list
-				var key = props[j].getNameStr() + ":" + props[j].getRangeStr();
+				var key = props[j].getNameStr() + ":" + props[j].getDisplayString(false);
 				if (!(key in dup)) {
 					ret.push(props[j]);
 					dup[key] = 1;
@@ -609,13 +968,76 @@ OntologyInfo.prototype = {
 
     loadSuperSubProperties : function(subPropNames, superPropNames) {
         for (var i = 0; i < subPropNames.length; i++) {
-            var superName = superPropNames[i];
-            var subName = subPropNames[i];
-            if (! (superName in this.subPropHash)) {
-                this.subPropHash[superName] = [subName];
-            } else {
-                this.subPropHash[superName].push(subName);
-            }
+            // make sure subpropHash entry exists
+			if (this.subPropHash[superPropNames[i]] == undefined) {
+				this.subPropHash[superPropNames[i]] = [];
+			}
+			
+			// add to subpropHash
+			var subList = this.subPropHash[superPropNames[i]];
+			if (subList.indexOf(subPropNames[i]) == -1) {
+				subList.push(subPropNames[i]);
+			}
+            
+            // find existing subProp: has domain so loadProperties got it
+			var oSubProp = this.propertyHash[subPropNames[i]];
+			var oSuperProp = this.propertyHash[superPropNames[i]];
+			
+			if (! oSubProp ) {
+				// found a new sub property, copy it's parent completely
+				// since it was never given a domain or range of its own during loadProperties()
+				oSubProp = new OntologyProperty(subPropNames[i], oSuperProp);
+				this.propertyHas[subPropNames[i]] = oSubProp;
+				for (var domain of oSubProp.getRangeDomains()) {
+					this.getClass(domain).addProperty(oSubProp);
+				}
+			} else {
+				// found an existing property, fill in attributes from parent
+				var toRemove = {};
+				var toSetRangeClass = [];
+				var toSetRangeRange = [];
+				for (var subDomain of oSubProp.getRangeDomains()) {
+            		if (subDomain == OntologyInfo.ORPHAN_STR) {
+						// domain is orphan, apply the range to all the parent domains
+						
+						// get the supProp range and also delete it
+						var oRange = oSubProp.getRange(OntologyInfo.ORPHAN_CLASS, this);
+						
+						toRemove[OntologyInfo.ORPHAN_STR] = 1;
+						
+						// set the supProp range for all the parent prop domains
+						var superDomains = oSuperProp.getRangeDomains();
+						for (var superDomain of superDomains) {
+							toSetRangeClass.push(this.getClass(superDomain));
+							toSetRangeRange.push(oRange.deepCopy());
+						}
+					} else {
+                		// range is orphan or CLASS: change to range of given domain in the superProp
+						var subDomainClass = this.getClass(subDomain);
+						var subRangeUris = oSubProp.getRange(subDomainClass, this).getUriList();
+						for (var subRangeUri of subRangeUris) {
+							if (subRangeUri == OntologyInfo.ORPHAN_STR || subRangeUri == CLASS) {
+								// found one: remove it
+								oSubProp.removeFromRange(subDomain, subRangeUri);
+								
+								// now add all the superProp range URIS for this domain to the subProp
+								var superRangeUris = oSuperProp.getRange(this.getClass(subDomain), this).getUriList();
+								for (var superRangeUri of superRangeUris) {
+									oSubProp.addRange(subDomainClass, superRangeUri);
+								}
+							}
+						}
+					}
+				}
+            	// prevent concurrent operations problem by doing this last
+				for (var k in toRemove) {
+					oSubProp.removeRange(k);
+				}
+				for (var j=0; j < toSetRangeClass.length; j++) {
+					oSubProp.setRange(toSetRangeClass[j], toSetRangeRange[j]);
+					toSetRangeClass[j].addProperty(oSubProp);
+				}
+			}
         }
 	},
 
@@ -760,30 +1182,49 @@ OntologyInfo.prototype = {
 		}';
 	},
 
-	loadProperties : function(classList, propList, rangeList) {
+	loadProperties : function(classList, propertyList, rangeList) {
 		// load from rows of [class, property, range]
 		for (var i=0; i < classList.length; i++) {
-            var prop = null;
-
-            // does property already exist
-			if (propList[i] in this.propertyHash) {
-				prop = this.propertyHash[propList[i]];
-
-				// if property exists, make sure range is the same
-				if (prop.getRangeStr() != rangeList[i]) {
-					throw new Error("SemTk doesn't handle complex ranges.\nClass" + classList[i] +
-                                    "property domain " + propList[i] +
-                                    "\nrange 1: " + prop.getRangeStr() +
-                                    "\nrange 2: " + rangeList[i]
-								    );
+			
+			// Skip rows with no class  IFF the same property appears somewhere else with a class and same range
+			// (aka forgive the loadPropertiesQuery)
+			var skip = false;
+			if (classList[i] ==  "") {
+				for (var j=0; j < propertyList.length; j++) {
+					if (i != j && propertyList[i] == propertyList[j] && rangeList[i] == rangeList[j]) {
+						skip = true;
+					}
 				}
-			} else {
-				// if property doesn't exist, create it
-				prop = new OntologyProperty(propList[i], rangeList[i]);
 			}
-			var c = this.classHash[classList[i]];
-			c.addProperty(prop);
-			this.propertyHash[propList[i]] = prop;
+			if (skip) continue;
+			
+			var oProp = null;
+			var oClass = this.getClass(classList[i]);
+			
+			// if domain or range are empty, use OrphanClass
+			// this will be resolved in loadSuperSubProperties
+			if (oClass == null) oClass = OntologyInfo.ORPHAN_CLASS;
+			var rangeStr = rangeList[i] == "" ? OntologyInfo.ORPHAN_STR : rangeList[i];
+			var domainStr = classList[i] == "" ? OntologyInfo.ORPHAN_STR : classList[i];
+			
+			if (Object.keys(this.propertyHash).indexOf(propertyList[i]) > -1) {
+				// get prop from propertyHash
+				oProp = this.propertyHash[propertyList[i]];
+				oProp.addRange(oClass, rangeStr);
+			} else {
+				// property doesn't exist: create it
+				oProp = new OntologyProperty(propertyList[i], domainStr, rangeStr);
+				this.propertyHash[propertyList[i]] = oProp;
+			}
+
+			if (domainStr != OntologyInfo.ORPHAN_STR) {
+				// Add property to the class
+				var c = this.classHash[classList[i]];
+				if (c == null){
+					throw new Error("Cannot find class " + classList[i] + " in the ontology");
+				}			
+				c.addProperty(oProp);
+			}			
 		}
 	},
 
@@ -908,7 +1349,7 @@ OntologyInfo.prototype = {
 	},
 
     // findAllPaths : function
-    // is moved to the service layer via MsiClientNodeGroupService
+    // has been moved to the service layer via MsiClientNodeGroupService
 
 	classIsA : function (class1, class2) {
 
@@ -932,29 +1373,6 @@ OntologyInfo.prototype = {
 		// at the moment a range is just a single class.
 		return this.classIsA(class1, this.getClass(range1.getFullName()));
 
-	},
-
-	addPathWarning : function (txt) {
-		// add a path warning if it is new
-		if (this.pathWarnings.indexOf(txt) < 0) {
-			this.pathWarnings.push(txt);
-		}
-	},
-
-	hasPathWarnings : function () {
-		return (this.pathWarnings.length > 0);
-	},
-
-	getPathWarnings : function () {
-		ret = "";
-		for (var i=0; i < this.pathWarnings.length; i++) {
-			ret += this.pathWarnings[i] + "\n";
-		}
-		return ret;
-	},
-
-	clearPathWarnings : function() {
-		this.pathWarnings = [];
 	},
 
 	loadAsync : function(conn, statusCallback, successCallback, failureCallback) {
@@ -1039,7 +1457,7 @@ OntologyInfo.prototype = {
 
         // topLevelClassList and subClassSuperClassList
         for (var c in this.classHash) {
-            var parents = this.classHash[c].getParentNameStrs();
+            var parents = this.classHash[c].getParentNameStrings();
             var name = this.classHash[c].getNameStr();
             if (parents.length == 0) {
                 json.topLevelClassList.push(this.prefixURI(name, prefixToIntHash));
@@ -1066,14 +1484,17 @@ OntologyInfo.prototype = {
         }
 
         // classPropertyRangeList
-        for (var c in this.classHash) {
-            var propList = this.classHash[c].getProperties();
-            for (var i=0; i < propList.length; i++) {
-                var oProp = propList[i];
-                json.classPropertyRangeList.push([this.prefixURI(c, prefixToIntHash),
-                                                  this.prefixURI(oProp.getNameStr(), prefixToIntHash),
-                                                  this.prefixURI(oProp.getRangeStr(), prefixToIntHash) ]);
-            }
+        for (var oProp of Object.values(this.propertyHash)) {
+			var propName = oProp.getNameStr();
+			for (var domain of oProp.getRangeDomains()) {
+				var oClass = this.getClass(domain);
+				for (var rangeUri of oProp.getRange(oClass, this).getUriList()) {
+					 json.classPropertyRangeList.push(
+						[this.prefixURI(domain, prefixToIntHash),
+                         this.prefixURI(propName, prefixToIntHash),
+                         this.prefixURI(rangeUri, prefixToIntHash) ]);
+				}
+			}
         }
 
         // classEnumValList
@@ -1722,108 +2143,7 @@ OntologyPath.prototype = {
 
 };
 
-/*
- * OntologyAnnotation
- * In Java, this is a superclass of OntologyClass and OntologyProperty
- * but in js it a property
- */
-var OntologyAnnotation = function() {
-    this.comments = [];
-    this.labels = [];
-};
 
-OntologyAnnotation.prototype = {
-    /**
-	 * Add comment, silently ignoring duplicates, nulls, isEmpty
-	 * @param comment - may be undefined, null, empty
-	 */
-	addAnnotationComment : function(comment) {
-        if (comment) {
-            var trimmed = comment.trim();
-            if (trimmed.length) {
-                this.comments.push(trimmed);
-            }
-        }
-	},
-
-    clearAnnotationComments : function() {
-        this.comments = [];
-    },
-
-	/**
-	 * Add label, silently ignoring duplicates, nulls, isEmpty
-	 * @param label
-	 */
-	addAnnotationLabel : function(label) {
-		if (label) {
-            var trimmed = label.trim();
-            if (trimmed.length) {
-                this.labels.push(trimmed);
-            }
-        }
-	},
-
-    clearAnnotationLabels : function() {
-        this.labels = [];
-    },
-
-	getAnnotationComments : function() {
-		return this.comments;
-	},
-
-	getAnnotationLabels : function() {
-		return this.labels;
-	},
-
-	/**
-	 * Return ; separated list of comments, or ""
-	 * @return
-	 */
-	getAnnotationCommentsString : function() {
-		return this.comments.join(" ; ");
-	},
-
-	/**
-	 * Return ; separated list of comments, or ""
-	 * @return
-	 */
-	getAnnotationLabelsString : function() {
-		return this.labels.join(" ; ");
-	},
-
-	/**
-     * Generate <rdfs:label> and <rdfs:comment> lines for an element
-     * @param elem
-     * @return
-     */
-    generateAnnotationRdf : function(tab) {
-    	var ret = "";
-
-    	for (var i=0; i < this.comments.length; i++) {
-            ret += tab + "<rdfs:comment>" + this.comments[i] + "</rdfs:comment>\n";
-    	}
-
-    	for (var i=0; i < this.labels.length; i++) {
-            ret += tab + "<rdfs:label>" + this.labels[i] + "</rdfs:label>\n";
-    	}
-
-    	return ret;
-    },
-
-    generateAnnotationsSADL : function() {
-    	var ret = "";
-
-    	for (var i=0; i < this.comments.length; i++) {
-            ret += '(note "' + this.comments[i] + '\")';
-    	}
-
-    	for (var i=0; i < this.labels.length; i++) {
-            ret += '(alias "' + this.labels[i] + '\")';
-    	}
-
-    	return ret;
-    },
-};
 
 /*
  * OntologyRestriction
@@ -1916,203 +2236,21 @@ OntologyDatatype.prototype = {
 
 };
 
-/*
- * OntologyClass
- */
-var OntologyClass = function(name, parentName) {
-    // parentName can be ""
-    this.name = new OntologyName(name);
-    this.parentNames = [];
-    this.properties = [];
-    this.annotation = new OntologyAnnotation();
-
-    if (parentName) {
-        this.parentNames.push(new OntologyName(parentName));
-    }
-};
-
-OntologyClass.prototype = {
-    // In java, sub-classing takes care of this
-    addAnnotationComment :        function(c) { return this.annotation.addAnnotationComment(c); },
-    clearAnnotationComments:      function()  { return this.annotation.clearAnnotationComments(); },
-    addAnnotationLabel :          function(l) { return this.annotation.addAnnotationLabel(l); },
-    clearAnnotationLabels:        function()  { return this.annotation.clearAnnotationLabels(); },
-    getAnnotationComments :       function()  { return this.annotation.getAnnotationComments(); },
-    getAnnotationLabels :         function()  { return this.annotation.getAnnotationLabels(); },
-    getAnnotationCommentsString : function()  { return this.annotation.getAnnotationCommentsString(); },
-    getAnnotationLabelsString :   function()  { return this.annotation.getAnnotationLabelsString(); },
-    generateAnnotationRdf :       function(d) { return this.annotation.generateAnnotationRdf(d); },
-    generateAnnotationsSADL :     function()  { return this.annotation.generateAnnotationsSADL(); },
-
-    setName : function (nameStr) {
-        this.name = new OntologyName(nameStr);
-    },
-
-    getName : function () {
-        return this.name;
-    },
-
-	getNameStr : function(stripNsFlag) {
-		if (stripNsFlag)
-			return this.name.getLocalName();
-		else
-			return this.name.getFullName();
-	},
-
-    getLocalName : function() {
-		return this.name.getLocalName();
-	},
-
-    getNamespaceStr : function() {
-		return this.name.getNamespace();
-	},
-
-	getParentNameStrs : function(stripNsFlag) {
-        var ret = [];
-        for (var i=0; i < this.parentNames.length; i++) {
-            if (stripNsFlag) {
-                ret.push( this.parentNames[i].getLocalName() );
-            } else {
-                ret.push( this.parentNames[i].getFullName() );
-            }
-        }
-		return ret;
-	},
-
-	getProperties : function() {
-		return this.properties;
-	},
-
-	getProperty : function(propName) {
-		for (var i=0; i < this.properties.length; i++) {
-			if (this.properties[i].getNameStr() == propName) {
-				return this.properties[i];
-			}
-		}
-		return ;
-	},
-
-	getPropertyByKeyname : function(keyName) {
-		// find first matching property
-		for (var i=0; i < this.properties.length; i++) {
-			if (this.properties[i].getNameStr().endsWith('#' + keyName)) {
-				return this.properties[i];
-			}
-		}
-		return null;
-	},
-
-    addParentName : function(name) {
-        this.parentNames.push(new OntologyName(name));
-    },
-
-	addProperty : function(ontProperty) {
-        // insert property alphabetically
-        var name = ontProperty.getNameStr(true);
-        for (var i=0; i < this.properties.length; i++) {
-            if (this.properties[i].getNameStr(true) > name) {
-                this.properties.splice(i,0,ontProperty);
-                return;
-            }
-        }
-        // else put it on the end
-        this.properties.push(ontProperty);
-	},
-
-	equals : function(other) {
-		return this.name.equals(other.name);
-	},
-
-	powerMatch : function(pattern) {
-		// match against class name
-		// Case-insensitive
-		var pat = pattern.toLowerCase();
-
-		return (this.getNameStr(true).toLowerCase().indexOf(pat) > -1);
-	},
-
-	powerMatchProps : function(pattern) {
-		// match against name and all of the property names and ranges
-		// Case-insensitive
-		var pat = pattern.toLowerCase();
-
-		var ret = [];
-		var prop = this.getProperties();
-		for (var i=0; i < prop.length; i++) {
-			if (prop[i].getNameStr().toLowerCase().indexOf(pat) > -1 ||
-				prop[i].getRangeStr().toLowerCase().indexOf(pat) > -1) {
-				ret.push(prop[i]);
-			}
-		}
-
-		return ret;
-	},
-
-    renameParent : function(oldURI, newURI) {
-        for (var i=0; i < this.parentNames.length; i++) {
-            var oName = this.parentNames[i];
-            if (oName.getFullName() == oldURI) {
-                this.parentNames[i] = new OntologyName(newURI);
-            }
-        }
-    },
-
-    /* =========== Edit functions =============== */
-
-    //
-    // delete parent or property if it belongs to namespace
-    //
-    deleteNamespace : function (namespace) {
-
-        // parentNames
-        for (var i=this.parentNames.length-1; i >= 0; i--) {
-            if (this.parentNames[i].getNamespace() == namespace) {
-                this.parentNames.slice(i,1);
-            }
-        }
-
-        // properties
-        for (var i=this.properties.length-1; i >= 0; i--) {
-            if (this.properties[i].getNamespace() == namespace) {
-                this.properties.slice(i,1);
-            }
-        }
-    },
-
-    renameNamespace : function (oldName, newName) {
-
-        // usage:  uri = updateURI(uri)
-        var updateURI = function(oName, nName, uri) {
-           return nName + uri.slice(oName.length);
-        }.bind(this, oldName, newName);
-
-        if (this.name.getNamespace() == oldName) {
-            this.name = new OntologyName(updateURI(this.name.getFullName()));
-        }
-
-         // parentNames
-        for (var i=this.parentNames.length-1; i >= 0; i--) {
-            if (this.parentNames[i].getNamespace() == oldName) {
-                this.parentNames[i] = new OntologyName(updateURI(this.parentNames[i].getFullName()));
-            }
-        }
-
-        // properties
-        for (var i=this.properties.length-1; i >= 0; i--) {
-            if (this.properties[i].getNamespace() == oldName) {
-                this.properties[i].setName(updateURI(this.properties[i].getName()));
-            }
-        }
-    },
-};
 
 /*
  * OntologyProperty
  */
-var OntologyProperty = function(name, range) {
-    this.name = new OntologyName(name);
-    this.range = new OntologyRange(range);
-    this.annotation = new OntologyAnnotation();
+var OntologyProperty = function(name, domainStr, rangeStr, optToCopy) {
+	this.name = new OntologyName(name);
+	if (optToCopy) {
+		for (var key in optToCopy.rangeHash ) {
+			this.rangeHash[key] = optToCopy.rangeHash[key].deepCopy();
+		}
+	} else {
+	    this.rangeHash = {};
+	    this.rangeHash[domainStr] = new OntologyRange(rangeStr);
+	    this.annotation = new OntologyAnnotation();
+	}
 };
 
 OntologyProperty.prototype = {
@@ -2135,16 +2273,59 @@ OntologyProperty.prototype = {
     setName : function(n) {
         this.name = n;
     },
-
-	getRange : function() {
-		return this.range;
+	
+	getRange : function(domain, oInfo) {
+		var ret = this.rangeHash[domain.getNameStr(false)];
+		if (ret != null) {
+			return ret;
+		} else if (domain != null) {
+			// try parents breadth-first
+			for (var c of oInfo.getClassAncestorNames(domain)) {
+				ret = this.rangeHash[c];
+				if (ret != null) {
+					return ret;
+				}
+			}
+		} 
+		
+		throw new Error("Can not find range of property: " + this.getNameStr(false) + " for domain: " + domain.getNameStr(false));
+	},
+	
+	getRangeDomains : function() {
+		return Object.keys(this.rangeHash);
+	},
+	
+	setRange : function(domain, range) {
+		this.rangeHash[domain.getNameStr(false)] = range;
+	},
+	
+	removeRange : function(domain) {
+		if (typeof domain == 'string') {
+			delete this.rangeHash[domain];
+		} else {
+			delete this.rangeHash[domain.getNameStr(false)];
+		}
+	},
+	
+	removeFromRange : function(domainStr, uri) {
+		var oRange = this.rangeHash[domainStr];
+		oRange.removeUri(uri);
+	},
+	
+	addRange : function(domain, rangeUri) {
+		var domainUri = domain.getNameStr(false);
+		if (Object.keys(this.rangeHash).indexOf(domainUri) > -1) {
+			this.rangeHash[domainUri].addRange(rangeUri);
+		} else {
+			this.rangeHash[domainUri] = new OntologyRange(rangeUri);
+		}
 	},
 
     getLocalName : function() {
 		return this.name.getLocalName();
 	},
 	getNamespace : function() {
-		return this.name.getNamespace();
+		return this.name.getNamespace();this.getNameStr(true).toLowerCase().indexOf(pat) > -1
 	},
 
 	getNameStr : function(stripNsFlag) {
@@ -2153,82 +2334,140 @@ OntologyProperty.prototype = {
 		else
 			return this.name.getFullName();
 	},
-
-	getRangeStr : function(stripNsFlag) {
-		if (stripNsFlag)
-			return this.range.getLocalName();
-		else
-			return this.range.getFullName();
+	
+	getAllRangeUris : function() {
+		ret = [];
+		for (var domainStr in this.rangeHash) {
+			ret = ret.concat(this.rangeHash[comainStr].getUriList());
+		}
+		// uniquify
+		return Array.from(new Set(ret));
 	},
 
+	// get name and all ranges joined by " "
+	getPowerMatchString : function() {
+		var retList = [this.getNameStr(true)];
+		retList = retList.concat(this.getAllRangeUris());
+		
+		return retList.join(" ");
+	},
+	
 	powerMatch : function(pattern) {
 		// match against the property names and ranges
 		// Case-insensitive
 		var pat = pattern.toLowerCase();
 
-		return (this.getNameStr(true).toLowerCase().indexOf(pat) > -1 ||
-				this.getRangeStr(true).toLowerCase().indexOf(pat) > -1);
+		var rangeUris = [];
+		for (var d of Object.keys(this.rangeHash)) {
+			rangeUris = rangeUris.concat(this.rangeHash[d].getUriList());
+		}
+		var rangeUriString = rangeUris.join(",");
+		
+		return this.getPowerMatchString().toLowerCase().indexOf(pat) > -1 ;
 	}
-};
-
-/*
- * OntologyName
- */
-var OntologyName = function(fullname) {
-    this.name = fullname;
-
-};
-OntologyName.prototype = {
-
-	getLocalName : function() {
-		return this.name.split('#')[1];
-	},
-	getNamespace : function() {
-		return this.name.split('#')[0];
-	},
-	getFullName : function() {
-		return this.name;
-	},
-	equals : function(other) {
-		return (this.name == other.name);
-	},
-	isInDomain : function(domain) {
-		// does my name start with this domain
-		//i = this.name.indexOf(domain);
-		//return (i == 0);
-
-		var m = this.name.match("^"+domain);
-		return (m != null);
-	},
 };
 
 /*
  * OntologyRange
  */
+var CLASS = "http://www.w3.org/2002/07/owl#Class";
 var OntologyRange = function(fullname) {
-    this.name = fullname;
-
+	var className = (fullname == null || fullname.trim() == "" ? CLASS : fullname);
+	
+	// uris is a hash with values of 1 to efficiently avoid duplicates.
+	// add:  this.uri[className] = 1
+	// check: this.uri[className] != undefined
+	this.uris = {};
+    this.uris[className] = 1;
 };
+
+OntologyRange.parseDisplayString = function(str) {
+	ret = [];
+	if (str.indexOf("{") == -1) {
+		ret.push(str);
+	} else {
+		var str1 = str.replaceAll("{", "").replaceAll("}", "").trim();
+		for (var uri of str1.split(" or ")) {
+			ret.add(uri);
+		}
+	}
+	return ret;
+};
+
 OntologyRange.prototype = {
-
-    getName : function() {
-        return new OntologyName(this.name);
-    },
-	getLocalName : function() {
-		return this.name.split('#')[1];
+	
+	deepCopy : function () {
+		var copy = null;
+		for (var name in this.uris) {
+			if (copy == null) {
+				copy = new OntologyRange(name);
+			} else {
+				copy.addRange(name);
+			}
+		}
+		return copy;
 	},
-	getNamespace : function() {
-		return this.name.split('#')[0];
+	
+	addRange : function(name) {
+		this.uris[name] = 1;
 	},
-	getFullName : function() {
-		return this.name;
+	
+	containsDefaultClass : function() {
+		return this.uris[CLASS] != undefined;
 	},
-	isInDomain : function(domain) {
-		// does my name start with this domain
-		//i = this.name.indexOf(domain);
-		//return (i == 0);
-		var m = this.name.match("^"+domain);
-		return (m != null);
+	
+	isComplex : function() {
+		return Object.keys(this.uris).length > 1;
+	},
+	
+	getUriList : function() {
+		return Object.keys(this.uris);
+	},
+	
+	containsUri : function(rangeURI) {
+		return this.uris[rangeURI] != undefined;
+	},
+	
+	removeUri : function(rangeURI) {
+		delete this.uris[rangeURI];
+	},
+	
+	equalsUri : function(rangeURI) {
+		return !this.isComplex() && this[rangeURI] != undefined;
+	},
+	
+	getSimpleUri : function() {
+		if (this.isComplex()) {
+			throw new Error("Internal error: can not get simple name of a complex range");
+		}
+		for (var ret in this.uris) {
+			return ret;
+		}
+		return "";
+	},
+	
+	getDisplayString : function(abbreviate) {
+		return OntologyRange.getDisplayString(Object.keys(this.uris), abbreviate);
 	},
 
 };
+
+OntologyRange.getDisplayString = function(uris, abbreviate) {
+		if (abbreviate) {
+			var modified = [];
+			for (var uri of uris) {
+				modified.push(new OntologyName(uri).getLocalName());
+			}
+			if (modified.length == 1) {
+				return modified.join("");
+			} else {
+				return "{" + modified.join(" or ") + "}";
+			}
+		} else {
+			if (uris.length == 1) {
+				return uris.join("");
+			} else {
+				return "{" + uris.join(" or ") + "}";
+			}
+		}
+	}

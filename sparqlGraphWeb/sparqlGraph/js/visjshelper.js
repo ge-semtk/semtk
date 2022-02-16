@@ -176,6 +176,8 @@ define([	// properly require.config'ed
                 var objects;
                 if (Array.isArray(j[key])) {
                     objects = j[key];
+                } else if (j[key].hasOwnProperty("@list") ) {
+                    objects = j[key]["@list"];
                 } else {
                     objects = [ j[key] ];
                 }

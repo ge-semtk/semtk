@@ -316,14 +316,18 @@ public class DispatchRestClient extends RestClient{
 		return retval;
 	}
 	
-	
 	public SimpleResultSet executeRawSparqlQuery(SparqlConnection sc, String rawSparqlQuery) throws Exception{
+		return this.executeRawSparqlQuery(sc, rawSparqlQuery, SparqlResultTypes.TABLE);
+	}
+
+	public SimpleResultSet executeRawSparqlQuery(SparqlConnection sc, String rawSparqlQuery, SparqlResultTypes rt) throws Exception{
 		SimpleResultSet retval = null;
 		
 		// setup the arguments we intend to send.
 		conf.setServiceEndpoint("dispatcher/asynchronousDirectQuery");
 		this.parametersJSON.put("sparqlConnectionJson", sc.toJson().toJSONString());
 		this.parametersJSON.put("rawSparqlQuery", rawSparqlQuery );
+		this.parametersJSON.put("resultType", rt.toString());
 	
 		
 		LocalLogger.logToStdErr("-- the outgoing connection json was: ---");
@@ -339,6 +343,7 @@ public class DispatchRestClient extends RestClient{
 			conf.setServiceEndpoint(null);
 			this.parametersJSON.remove("sparqlConnectionJson");
 			this.parametersJSON.remove("rawSparqlQuery");
+			this.parametersJSON.remove("resultType");
 		}
 		
 		return retval;

@@ -505,12 +505,11 @@
                 if (gInvalidItems.indexOf(itemStr) > -1) {
                     // this property item is invalid
 
-
                     var oClass = gOInfo.getClass(gNodeGroup.getPropertyItemParentSNode(propItem).getURI());
                     if (oClass.getProperty(propItem.getURI()) != null) {
                         // Domain is already correct.   Range is wrong.
                         // There must be constraints or else this wouldn't have been flagged as an error.
-                        var oRangeStr = oClass.getProperty(propItem.getURI()).getRange().getFullName();
+                        var oRangeStr = oClass.getProperty(propItem.getURI()).getRange(oClass, gOInfo).getSimpleURI();
                         var pRangeStr = propItem.getRangeURI();
                         var hasConstraints = (propItem.getConstraints().length > 0);
                         var hasMapping = gMappingTab.getImportSpec().hasMapping(snodeID, propItem.getURI());
@@ -566,10 +565,12 @@
                 require(['sparqlgraph/js/modaliidx',
                          'sparqlgraph/js/msiclientnodegroupservice'],
                          function (ModalIidx, MsiClientNodeGroupService) {
-                    var correctRange = oProp.getRangeStr();
+					var oRange = oProp.getRange(oClass, gOInfo);
+                    var correctRange = oRange.getDisplayString(false);
+                    var correctRangeAbbrev = oRange.getDisplayString(true);
                     var propName = oProp.getLocalName();
                     ModalIidx.okCancel("Correct range",
-                                        "Correct " + propName + " range to " + correctRange,
+                                        "Correct " + propName + " range to " + correctRangeAbbrev,
                                         changeItemURI.bind(this, nItem, null, correctRange, "range"));
                 });
             } else {
@@ -598,14 +599,26 @@
 
     var launchLinkBuilder2 = function(snode, nItem) {
 		// callback when user clicks on a nodeItem
-    	var rangeStr = nItem.getRangeURI();
-
-    	// find nodes that might connect
-    	var targetSNodes = gNodeGroup.getNodesBySuperclassURI(rangeStr, gOInfo);
+    	var rangeUriList = nItem.getRangeUris();
+    	var targetSNodes = [];
+    	var unlinkedTargetNames = [];
+    	
+		for (var rangeURI of rangeUriList) {
+			// find nodes that might connect
+			targetSNodes = targetSNodes.concat(gNodeGroup.getNodesBySuperclassURI(rangeURI, gOInfo));
+			// suggest new node
+			unlinkedTargetNames.push("New " + rangeStr);
+			for (var subURI of gOInfo.getSubclassNames(rangeStr)) {
+				unlinkedTargetNames.push("New " + subURI);
+			}
+		}
+		
+		// uniquify
+		targetSNodes = Array.from(new Set(targetSNodes));
+		unlinkedTargetNames = Array.from(new SetZ(unlinkedTargetNames));
+    	
     	// disqualify nodes already linked
     	var unlinkedTargetSNodes = [null];
-    	var unlinkedTargetNames = ["New " + rangeStr + ""];
-
         var mySubgraph = gNodeGroup.getSubGraph(snode, []);
 
     	for (var i=0; i < targetSNodes.length; i++) {
@@ -1716,9 +1729,16 @@
                                                                                       this.checkForCancel.bind(this),
                                                                                       g.service.status.url,
                                                                                       g.service.results.url);
+                        var jsonLdCallback = MsiClientNodeGroupExec.buildJsonLdCallback(queryJsonLdCallback,
+                                                                            asyncFailureCallback,
+                                                                            setStatusProgressBar.bind(this, "Running Query"),
+                                                                            this.checkForCancel.bind(this),
+                                                                            g.service.status.url,
+                                                                            g.service.results.url);
             guiDisableAll();
             setStatusProgressBar("Running Query", 1);
             var sparql = document.getElementById('queryText').value;
+            var sel = document.getElementById("SGQueryType");
 
             if (sparql.toLowerCase().indexOf("delete") > -1) {
                 var okCallback = client.execAsyncDispatchRawSparql.bind(client, sparql, gConn, csvJsonCallback, asyncFailureCallback);
@@ -1729,8 +1749,14 @@
                 };
 
                 ModalIidx.okCancel("Delete query", "Query may write / delete triples.<br>Confirm you want to run this query.", okCallback, "Run Query", cancelCallback);
+            
+            } else if (sel.options[sel.selectedIndex].value == SemanticNodeGroup.QT_CONSTRUCT ){
+	 			// query type menu is set to CONSTRUCT
+	 			// another way:  sparql.toLowerCase().indexOf("construct") > -1
+                client.execAsyncDispatchRawSparql(sparql, gConn, jsonLdCallback, asyncFailureCallback, "GRAPH_JSONLD");
+            
             } else {
-                client.execAsyncDispatchRawSparql(sparql, gConn, csvJsonCallback, asyncFailureCallback);
+                client.execAsyncDispatchRawSparql(sparql, gConn, csvJsonCallback, asyncFailureCallback, "TABLE");
             }
 
     	});

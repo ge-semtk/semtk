@@ -181,6 +181,10 @@ define([	// properly require.config'ed   bootstrap-modal
                             delete jObj[rdfType];
                         }
                     }
+                    // also push @type onto typeIds
+                    if (jObj.hasOwnProperty("@type")) {
+						typeIds.push(jObj["@type"]);
+					}
                 }
 
                 // find indices of items with @id that is a type we just removed

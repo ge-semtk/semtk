@@ -78,7 +78,7 @@ define([	// properly require.config'ed
                     var domainList = [];
                     for (var op of oPropList) {
                         // separate propItems from nodeItems
-                        if (! this.oInfo.containsClass(op.getRangeStr())) {
+                        if (! this.oInfo.containsClass(op.getRangeURI())) {
                             domainList.push(op.getNameStr());
                         }
                     }
@@ -89,20 +89,23 @@ define([	// properly require.config'ed
                     var snode = this.nodegroup.getNodeItemParentSNode(this.item);
                     var oPropList = this.oInfo.getInheritedProperties(new OntologyClass(snode.getURI()));
                     var domainList = [];
-
+					var oClass = this.oInfo.getClass(snode.getURI);
+					
                     for (var op of oPropList) {
-                        // separate propItems from nodeItems
-                        var rangeStr = op.getRangeStr();
-                        if (this.oInfo.containsClass(rangeStr)) {
-                            var rangeClass = new OntologyClass(rangeStr);
-                            var invalidLinks = 0;
-                            for (var target of this.item.getSNodes()) {
-                                var targetClass = new OntologyClass(target.getURI());
-                                if (!this.oInfo.classIsA(targetClass, rangeClass)) {
-                                    invalidLinks = 1;
-                                    break;
-                                }
-                            }
+                        // separate out only nodeItems
+                        var oRange = op.getRange(oClass, this.oInfo);
+                        if (oRange.isComplex() || this.oInfo.containsClass(oRange.getSimpleUri())) {
+							for (var rangeUri of op.getAllRangeUris()) {
+	                            var rangeClass = new OntologyClass(rangeUri);
+	                            var invalidLinks = 0;
+	                            for (var target of this.item.getSNodes()) {
+	                                var targetClass = new OntologyClass(target.getURI());
+	                                if (!this.oInfo.classIsA(targetClass, rangeClass)) {
+	                                    invalidLinks = 1;
+	                                    break;
+	                                }
+	                            }
+	                        }
                             // if link to target node valid, put it at the top of the list, else on bottom
                             if (invalidLinks == 0) {
                                 domainList.unshift(op.getNameStr());
@@ -185,8 +188,7 @@ define([	// properly require.config'ed
                     var currRange = this.item.getRangeURI();
                     var oClass = this.oInfo.getClass(this.nodegroup.getPropertyItemParentSNode(this.item).getURI());
                     var oProp = oClass.getProperty(this.getSelectedDomain());
-                    var oRange = (oProp != null) ? oProp.getRange() : null;
-                    var rangeUri = (oRange != null) ? oRange.getFullName() : null;
+                    var rangeUri = (oProp != null) ? oProp.getRange(oClass, this.oInfo()).getSimpleUri() : null;
                     if (rangeUri != currRange) {
                         if (oRange != null) {
                             this.setStatus("Property has constraints.  Make sure they are compatible with change to " + oRange.getLocalName());

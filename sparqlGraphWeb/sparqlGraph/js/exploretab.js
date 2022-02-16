@@ -699,7 +699,7 @@ define([	// properly require.config'ed
                     }
 
                     // subclassof
-                    for (var parentName of this.oInfo.getClass(className).getParentNameStrs()) {
+                    for (var parentName of this.oInfo.getClass(className).getParentNameStrings()) {
                         edgeData.push({from: className, to: parentName, label: 'subClassOf', arrows: 'to', color: blackObj, dashes: true});
                     }
                 }

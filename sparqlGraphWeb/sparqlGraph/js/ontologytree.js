@@ -305,7 +305,15 @@ OntologyTree.prototype = {
             if (newNode == null) {
     	        // add the node
             	var title = classNameLocal;
-            	if (this.classIsSpecial(className)) {
+            	var uris = OntologyRange.parseDisplayString(className);
+            	var specialFlag = false;
+            	for (var u of uris) {
+					if (this.classIsSpecial(u)) {
+						specialFlag = true;
+						break;
+					}
+				}
+            	if (specialFlag) {
             		title = this.HTMLOpenHighlight + title + this.specialClassHTML1;
             	}
 
@@ -384,14 +392,15 @@ OntologyTree.prototype = {
         for (var p of propList) {
             
             var subProps = this.oInfo.getSubProperties(p);
-            for (var s of subProps) {
-                var i = topLevelProps.indexOf(s);
+            for (var sub of subProps) {
+                var i = topLevelProps.indexOf(sub);
+                
                 if (i > -1) {
-                    // found that s is a subprop of p
+                    // found that sub is a subprop of p
                     // remove s from topLevelProps
                     // add s to otherLevelProps
                     topLevelProps.splice(i, 1);
-                    otherLevelProps.push(s);
+                    otherLevelProps.push(sub);
                 }
             }
         }
@@ -441,14 +450,16 @@ OntologyTree.prototype = {
     addPropToNode : function(node, ontProp, ontClass) {
         // format local properties different than inherited
         var inheritedFlag = (ontClass.getProperties().indexOf(ontProp) == -1)
+       
+        var oRange = ontProp.getRange(ontClass, this.oInfo);
         if (inheritedFlag) {
-            title = ontProp.getNameStr(true) + ": " + ontProp.getRangeStr(true);
+            title = ontProp.getNameStr(true) + ": " + oRange.getDisplayString(true);
         } else {
-            title = "<i>" + ontProp.getNameStr(true) + ": " + ontProp.getRangeStr(true) + "</i>";
+            title = "<i>" + ontProp.getNameStr(true) + ": " + oRange.getDisplayString(true) + "</i>";
         }
 
         // highlight if range is a special class
-        if (this.classIsSpecial(ontProp.getRangeStr())) {
+        if (this.classIsSpecial(oRange.getDisplayString(false))) {
             title = this.HTMLOpenHighlight + title + this.specialClassHTML1;
         }
 

@@ -15,9 +15,7 @@
  ** limitations under the License.
  */
 
-
 package com.ge.research.semtk.ontologyTools;
-
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -51,14 +49,14 @@ import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 /**
- * OntologyInfo is a class that contains the bulk of the understanding of the actual model.
- * it represents all the classes, relationships between them (subclass relations) and related
- * properties. 
- * it provides functionality for determining pathing between two arbitrary classes, enumeration
- * values, and types for properties.
+ * OntologyInfo is a class that contains the bulk of the understanding of the
+ * actual model. it represents all the classes, relationships between them
+ * (subclass relations) and related properties. it provides functionality for
+ * determining pathing between two arbitrary classes, enumeration values, and
+ * types for properties.
  * 
- * "Class" will be something of type class
- * "Datatype" will be something of type datatype (even though it apparently has an equivalentClass)
+ * "Class" will be something of type class "Datatype" will be something of type
+ * datatype (even though it apparently has an equivalentClass)
  **/
 public class OntologyInfo {
 
@@ -68,54 +66,59 @@ public class OntologyInfo {
 	// indexed list of all of the properties in the ontology of interest
 	private HashMap<String, OntologyProperty> propertyHash = new HashMap<String, OntologyProperty>();
 	private HashMap<String, OntologyDatatype> datatypeHash = new HashMap<String, OntologyDatatype>();
-	
-	// for each class, list its subclasses. the superclasses are stored in the class object itself. 
+
+	// for each class, list its subclasses. the superclasses are stored in the class
+	// object itself.
 	private HashMap<String, HashSet<OntologyClass>> subclassHash = new HashMap<String, HashSet<OntologyClass>>();
-	
+
 	private HashMap<String, HashSet<String>> subclassNamesSpeedup = new HashMap<String, HashSet<String>>();
 	private HashMap<String, HashSet<String>> superclassNamesSpeedup = new HashMap<String, HashSet<String>>();
-	
+
 	// for each property with subprops, list the sub prop names
-	// with just names there are no worries about order of loading or whether props are even used
+	// with just names there are no worries about order of loading or whether props
+	// are even used
 	private HashMap<String, HashSet<String>> subPropHash = new HashMap<String, HashSet<String>>();
 	// somehow unneeded:
-	// private HashMap<String, HashSet<String>> subPropNamesSpeedup = new HashMap<String, HashSet<String>>();
+	// private HashMap<String, HashSet<String>> subPropNamesSpeedup = new
+	// HashMap<String, HashSet<String>>();
 	private HashMap<String, HashSet<String>> superPropNamesSpeedup = new HashMap<String, HashSet<String>>();
-	
-	
-	// a list of all the enumerations available for a given class. these are handled as full uris for convenience sake. 
-	private HashMap<String, ArrayList<String>> enumerationHash = new HashMap<String, ArrayList<String>>();
-	
-	// --- not stored in json ---
-	// pathCountHash(path.toJson().toJSONString()) = count in a some graph somewhere known by caller.
-	private HashMap<String, Integer> pathCountHash = new HashMap<String, Integer>();
-	
-	// --- temporary hashes during path-finding ---
-	// for each class, the collection of valid, single-hop paths to and from other classes. 
-	private HashMap<String, ArrayList<OntologyPath>> connHash = new HashMap<String, ArrayList<OntologyPath>>();
-	private ArrayList<String> pathWarnings = new ArrayList<String>();  // problems incurred searching for a path.	
 
-	private static int restCount = 0;               // a list counter
-	
+	// a list of all the enumerations available for a given class. these are handled
+	// as full uris for convenience sake.
+	private HashMap<String, ArrayList<String>> enumerationHash = new HashMap<String, ArrayList<String>>();
+
+	// --- not stored in json ---
+	// pathCountHash(path.toJson().toJSONString()) = count in a some graph somewhere
+	// known by caller.
+	private HashMap<String, Integer> pathCountHash = new HashMap<String, Integer>();
+
+	// --- temporary hashes during path-finding ---
+	// for each class, the collection of valid, single-hop paths to and from other
+	// classes.
+	private HashMap<String, ArrayList<OntologyPath>> connHash = new HashMap<String, ArrayList<OntologyPath>>();
+	private ArrayList<String> pathWarnings = new ArrayList<String>(); // problems incurred searching for a path.
+
+	private static int restCount = 0; // a list counter
+
 	// version 4 adds datatypeList
 	private final static long JSON_VERSION = 5;
-	
+
 	private ArrayList<String> loadWarnings = new ArrayList<String>();
 	private ArrayList<String> importedGraphs = new ArrayList<String>();
-	
+
 	private int pathFindingMaxLengthRange = 5;
 	private int pathFindingMaxTimeMsec = 10000;
 	private int pathFindingMaxPathLength = 10;
 	private int pathFindingMaxPathCount = 100;
-	
+
 	final boolean CONSOLE_LOG = false;
 	final String ORPHAN_STR = "%orphan%";
 	final OntologyClass ORPHAN_CLASS = new OntologyClass(ORPHAN_STR, true);
-	
+
 	/**
 	 * Default constructor
 	 */
-	public OntologyInfo(){
+	public OntologyInfo() {
 	}
 
 	/**
@@ -124,25 +127,25 @@ public class OntologyInfo {
 	public OntologyInfo(SparqlConnection conn) throws Exception {
 		this.loadSparqlConnection(conn);
 	}
-	
+
 	/**
-	 * Load via the SparqlQueryClient 
-	 * Deprecated because of performance.  Not clear what the QueryClient adds except overhead.
+	 * Load via the SparqlQueryClient Deprecated because of performance. Not clear
+	 * what the QueryClient adds except overhead.
+	 * 
 	 * @param clientConfig - query client config
 	 * @param conn
 	 * @throws Exception
 	 */
 	@Deprecated
-	public OntologyInfo(SparqlQueryClientConfig clientConfig, SparqlConnection conn) throws Exception{
+	public OntologyInfo(SparqlQueryClientConfig clientConfig, SparqlConnection conn) throws Exception {
 		this.loadSparqlConnection(clientConfig, conn);
-	
+
 	}
-	
+
 	public OntologyInfo(JSONObject json) throws Exception {
 		this.addJson(json);
 	}
-	
-	
+
 	public void setPathFindingMaxLengthRange(int pathFindingMaxLengthRange) {
 		this.pathFindingMaxLengthRange = pathFindingMaxLengthRange;
 	}
@@ -166,120 +169,126 @@ public class OntologyInfo {
 	public ArrayList<String> getImportedGraphs() {
 		return importedGraphs;
 	}
-	
+
 	/**
 	 * Load directly from model sparql endpoint interfaces
+	 * 
 	 * @param conn
 	 * @throws Exception
 	 */
 	public void loadSparqlConnection(SparqlConnection conn) throws Exception {
-    	
+
 		ArrayList<SparqlEndpointInterface> modelInterfaces = conn.getModelInterfaces();
-		
+
 		for (int i = 0; i < modelInterfaces.size(); i++) {
-    		this.load(modelInterfaces.get(i), conn.getDomain(), conn.isOwlImportsEnabled());
-    	}
-    }
-	
+			this.load(modelInterfaces.get(i), conn.getDomain(), conn.isOwlImportsEnabled());
+		}
+	}
+
 	public boolean hasSubProperties(OntologyProperty oProp) {
 		return this.subPropHash.containsKey(oProp.getNameStr());
 	}
-	
+
 	public boolean hasSubProperties(String propName) {
 		return this.subPropHash.containsKey(propName);
 	}
 
 	/**
 	 * Load from model sparql endpoint interfaces using a SparqlQueryClient
-	 * Deprecated because of performance.  Not clear what the QueryClient adds except overhead.
+	 * Deprecated because of performance. Not clear what the QueryClient adds except
+	 * overhead.
+	 * 
 	 * @param clientConfig
 	 * @param conn
 	 * @throws Exception
 	 */
 	@Deprecated
 	public void loadSparqlConnection(SparqlQueryClientConfig clientConfig, SparqlConnection conn) throws Exception {
-    	
+
 		ArrayList<SparqlEndpointInterface> modelInterfaces = conn.getModelInterfaces();
 		ArrayList<SparqlQueryClientConfig> configs = clientConfig.getArrayForEndpoints(modelInterfaces);
-		
+
 		for (int i = 0; i < configs.size(); i++) {
-			
-			// check if this is an authorized connection or not. this can be done by looking at the config files.
+
+			// check if this is an authorized connection or not. this can be done by looking
+			// at the config files.
 			SparqlQueryClientConfig curr = configs.get(i);
-			
-			if(curr instanceof SparqlQueryAuthClientConfig){ 
-				this.load(new SparqlQueryClient( (SparqlQueryAuthClientConfig)curr ), conn.getDomain()); 
+
+			if (curr instanceof SparqlQueryAuthClientConfig) {
+				this.load(new SparqlQueryClient((SparqlQueryAuthClientConfig) curr), conn.getDomain());
+			} else {
+				this.load(new SparqlQueryClient(curr), conn.getDomain(), conn.isOwlImportsEnabled());
 			}
-			else{ 
-				this.load(new SparqlQueryClient(curr), conn.getDomain(), conn.isOwlImportsEnabled()); 
-			}
-    	}
-    }
-	
+		}
+	}
+
 	/**
 	
 	 **/
-	
+
 	/**
-	 * add a new class to the ontology info object. this includes information on super/sub classes
-	 * being added to a hash of the known entities. 
+	 * add a new class to the ontology info object. this includes information on
+	 * super/sub classes being added to a hash of the known entities.
+	 * 
 	 * @param oClass
 	 * @throws Exception - if class already exists
 	 */
 	public void addClass(OntologyClass oClass) throws Exception {
-		String classnameStr = oClass.getNameString(false);	// get the full name of the class and do not strip URI info.
-		this.connHash.clear(); 
-		
+		String classnameStr = oClass.getNameString(false); // get the full name of the class and do not strip URI info.
+		this.connHash.clear();
+
 		if (this.classHash.containsKey(classnameStr)) {
 			throw new Exception("Internal error: class already exists in ontology.  Cannot re-add it: " + classnameStr);
 		}
 		this.classHash.put(classnameStr, oClass);
 		this.updateSuperSubClassHash(oClass);
-		
+
 	}
-	
+
 	/**
 	 * @param oDatatype
 	 * @throws Exception
 	 */
 	public void addDatatype(OntologyDatatype oDatatype) throws Exception {
-		String nameStr = oDatatype.getNameStr(false);	// get the full name of the class and do not strip URI info.
-		
+		String nameStr = oDatatype.getNameStr(false); // get the full name of the class and do not strip URI info.
+
 		if (this.datatypeHash.containsKey(nameStr)) {
 			throw new Exception("Internal error: datatype already exists in ontology.  Cannot re-add it: " + nameStr);
 		}
 		this.datatypeHash.put(nameStr, oDatatype);
-		
+
 	}
-	
+
 	/**
 	 * Needs to be called any time new superclasses are added.
+	 * 
 	 * @param oClass
 	 */
 	private void updateSuperSubClassHash(OntologyClass oClass) {
 		// store info on the related subclasses
-		ArrayList<String> superClassNames = oClass.getParentNameStrings(false); // get the parents. there may be more than one. 
+		ArrayList<String> superClassNames = oClass.getParentNameStrings(false); // get the parents. there may be more
+																				// than one.
 		// spin through the list and find the ones that need to be added.
-		for(String scn : superClassNames){
-			if(!(this.subclassHash.containsKey(scn))){
+		for (String scn : superClassNames) {
+			if (!(this.subclassHash.containsKey(scn))) {
 				// the superclass was not previously added.
 				HashSet<OntologyClass> scList = new HashSet<OntologyClass>();
 				scList.add(oClass);
 				this.subclassHash.put(scn, scList);
-			}
-			else{
+			} else {
 				// add this value
 				this.subclassHash.get(scn).add(oClass);
 			}
 		}
 	}
-	
+
 	public boolean hasSubclass(String className) {
 		return this.subclassHash.get(className) != null;
 	}
-	
+
 	/**
-	 * Public version:  all descendant classes
+	 * Public version: all descendant classes
+	 * 
 	 * @param superClassName
 	 * @return
 	 */
@@ -289,17 +298,16 @@ public class OntologyInfo {
 		return this.getSubclassNames(superClassName, stopList);
 
 	}
-	
+
 	/**
-	 * Private Recursive descendant classes.
-	 * return a list of subclass names for a given class.
-	 * if there are no known subclasses, an empty list is returned.
+	 * Private Recursive descendant classes. return a list of subclass names for a
+	 * given class. if there are no known subclasses, an empty list is returned.
 	 **/
-	private HashSet<String> getSubclassNames(String superClassName, HashSet<String> stopList){
+	private HashSet<String> getSubclassNames(String superClassName, HashSet<String> stopList) {
 		// check the speedup hash
-		
+
 		HashSet<String> speedup = this.subclassNamesSpeedup.get(superClassName);
-		
+
 		if (speedup != null) {
 			// return a copy
 			HashSet<String> ret = new HashSet<String>();
@@ -307,17 +315,17 @@ public class OntologyInfo {
 			return ret;
 		}
 		HashSet<String> ret = new HashSet<String>();
-		
+
 		// get list of direct subclasses
 		HashSet<OntologyClass> subclasses = this.subclassHash.get(superClassName);
-	
+
 		if (subclasses != null) {
-			for(OntologyClass currSubclass : subclasses){
+			for (OntologyClass currSubclass : subclasses) {
 				String subclassStr = currSubclass.getNameString(false);
 				if (!stopList.contains(subclassStr)) {
 					stopList.add(subclassStr);
 					ret.add(subclassStr);
-					
+
 					HashSet<String> subList = this.getSubclassNames(subclassStr, stopList);
 					stopList.addAll(subList);
 					ret.addAll(subList);
@@ -328,12 +336,13 @@ public class OntologyInfo {
 		HashSet<String> save = new HashSet<String>();
 		save.addAll(ret);
 		this.subclassNamesSpeedup.put(superClassName, save);
-		
+
 		return new HashSet<String>(ret);
 	}
 
 	/**
 	 * Is sub a descendant of maybeSuper
+	 * 
 	 * @param sub
 	 * @param maybeSuper
 	 * @return
@@ -341,9 +350,10 @@ public class OntologyInfo {
 	public boolean isSubclassOf(String sub, String maybeSuper) {
 		return this.getSubclassNames(maybeSuper).contains(sub);
 	}
-	
-	/** 
+
+	/**
 	 * Is sub a descendedt prop of maybeSuper
+	 * 
 	 * @param sub
 	 * @param maybeSuper
 	 * @return
@@ -351,16 +361,18 @@ public class OntologyInfo {
 	public boolean isSubPropOf(String sub, String maybeSuper) {
 		return this.getSuperPropNames(sub).contains(maybeSuper);
 	}
-	
+
 	/**
-	 * Get sub properties given valid for all super and sub properties of the domain class URI.
+	 * Get sub properties given valid for all super and sub properties of the domain
+	 * class URI.
+	 * 
 	 * @param superPropertyName
 	 * @param domainClassURI
 	 * @return
 	 */
 	public HashSet<String> inferSubPropertyNames(String superPropertyName, String domainClassURI) {
 		HashSet<String> ret = new HashSet<String>();
-		
+
 		// get list of domainURI class and all it's super classes
 		ArrayList<OntologyClass> domainClasses = new ArrayList<OntologyClass>();
 		domainClasses.add(this.classHash.get(domainClassURI));
@@ -370,21 +382,23 @@ public class OntologyInfo {
 		for (String domainSubName : this.getSubclassNames(domainClassURI)) {
 			domainClasses.add(this.classHash.get(domainSubName));
 		}
-		
+
 		this.addSubPropNames(superPropertyName, domainClasses, ret);
 		return ret;
 	}
+
 	/**
-	 * return a list of subclass names for a given class.
-	 * if there are no known subclasses, an empty list is returned.
+	 * return a list of subclass names for a given class. if there are no known
+	 * subclasses, an empty list is returned.
 	 **/
-	private void addSubPropNames(String superPropertyName, ArrayList<OntologyClass> domainClasses, HashSet<String> set){
-		
+	private void addSubPropNames(String superPropertyName, ArrayList<OntologyClass> domainClasses,
+			HashSet<String> set) {
+
 		// get list of candidate sub properties
 		HashSet<String> subpropNames = this.subPropHash.get(superPropertyName);
 		if (subpropNames != null) {
 			for (String subName : subpropNames) {
-				
+
 				// if sub-property has domain in domainClasses, add it and it's sub props too
 				for (OntologyClass domain : domainClasses) {
 					if (domain.getProperty(subName) != null) {
@@ -396,10 +410,11 @@ public class OntologyInfo {
 			}
 		}
 	}
-	
+
 	/**
-	 * Find superclass that is the least number of hops combined upward from the two classes.
-	 * Ties are broken randomly.
+	 * Find superclass that is the least number of hops combined upward from the two
+	 * classes. Ties are broken randomly.
+	 * 
 	 * @param subClassName1
 	 * @param subClassName2
 	 * @return class name or null
@@ -411,15 +426,15 @@ public class OntologyInfo {
 		boolean newHops2;
 		hops1.put(subClassName1, 0);
 		hops2.put(subClassName2, 0);
-		
+
 		if (subClassName1.equals(subClassName2)) {
 			return subClassName1;
 		}
-		Integer hops = 	1;
+		Integer hops = 1;
 		while (true) {
 			newHops1 = false;
 			newHops2 = false;
-			
+
 			// get classes previous iteration (i.e. hops-1)
 			HashSet<String> lastRound1 = new HashSet<String>();
 			for (String c : hops1.keySet()) {
@@ -457,7 +472,7 @@ public class OntologyInfo {
 				for (String c : hops1.keySet()) {
 					if (hops2.containsKey(c)) {
 						Integer combinedHops = hops1.get(c) + hops2.get(c);
-						if (! match.containsKey(c) || match.get(c) > combinedHops) {
+						if (!match.containsKey(c) || match.get(c) > combinedHops) {
 							// add to match if new or shorter hops
 							match.put(c, combinedHops);
 						}
@@ -467,7 +482,7 @@ public class OntologyInfo {
 				for (String c : hops2.keySet()) {
 					if (hops1.containsKey(c)) {
 						Integer combinedHops = hops1.get(c) + hops2.get(c);
-						if (! match.containsKey(c) || match.get(c) > combinedHops) {
+						if (!match.containsKey(c) || match.get(c) > combinedHops) {
 							// add to match if new or shorter hops
 							match.put(c, combinedHops);
 						}
@@ -489,9 +504,10 @@ public class OntologyInfo {
 			hops += 1;
 		}
 	}
-	
+
 	/**
 	 * Recursively get super properties
+	 * 
 	 * @param subPropName
 	 * @return
 	 */
@@ -500,16 +516,16 @@ public class OntologyInfo {
 		stopList.add(subPropName);
 		return this.getSuperPropNames(subPropName, stopList);
 	}
-	
+
 	public HashSet<String> getSuperPropNames(String subPropName, HashSet<String> stopList) {
 		// check the speedup hash
 		HashSet<String> speedup = this.superPropNamesSpeedup.get(subPropName);
-		
+
 		if (speedup != null) {
 			return new HashSet<String>(speedup);
 		}
 		HashSet<String> ret = new HashSet<String>();
-		
+
 		// get list of direct super properties
 		HashSet<String> superPropertyNames = new HashSet<String>();
 		for (String prop : this.subPropHash.keySet()) {
@@ -517,18 +533,18 @@ public class OntologyInfo {
 				superPropertyNames.add(prop);
 			}
 		}
-		
+
 		for (String superStr : superPropertyNames) {
 			if (!stopList.contains(superStr)) {
 				stopList.add(superStr);
 				ret.add(superStr);
-				
+
 				HashSet<String> subList = this.getSubclassNames(superStr, stopList);
 				stopList.addAll(subList);
 				ret.addAll(subList);
 			}
 		}
-		
+
 		this.superPropNamesSpeedup.put(subPropName, ret);
 		return new HashSet<String>(ret);
 	}
@@ -539,57 +555,58 @@ public class OntologyInfo {
 		ret.addAll(oSubclass.getParentNameStrings(false));
 		return ret;
 	}
-	
+
 	public HashSet<String> getSuperclassNames(String subClassName) {
 		HashSet<String> stopList = new HashSet<String>();
 		stopList.add(subClassName);
 		return this.getSuperClassNames(subClassName, stopList);
 	}
+
 	/**
-	 * return a list of the all (recursive) superclasses for a given class.
-	 * if there are no known super classes, an empty list is returned.
+	 * return a list of the all (recursive) superclasses for a given class. if there
+	 * are no known super classes, an empty list is returned.
 	 **/
-	private HashSet<String> getSuperClassNames(String subclassName, HashSet<String> stopList){
+	private HashSet<String> getSuperClassNames(String subclassName, HashSet<String> stopList) {
 		// check the speedup hash
 		HashSet<String> speedup = this.superclassNamesSpeedup.get(subclassName);
 		if (speedup != null) {
 			return new HashSet<String>(speedup);
 		}
 		HashSet<String> ret = new HashSet<String>();
-		
+
 		// get list of direct superclasses
 		OntologyClass oSubclass = this.classHash.get(subclassName);
 		if (oSubclass != null) {
 			for (String superclassStr : oSubclass.getParentNameStrings(false)) {
-				
+
 				if (!stopList.contains(superclassStr)) {
 					stopList.add(superclassStr);
 					ret.add(superclassStr);
-					
+
 					HashSet<String> superList = this.getSuperClassNames(superclassStr, stopList);
 					stopList.addAll(superList);
 					ret.addAll(superList);
-				};
+				}
+				;
 			}
 		}
-		
+
 		this.superclassNamesSpeedup.put(subclassName, ret);
 		return new HashSet<String>(ret);
 	}
-	
+
 	public ArrayList<String> getPathWarnings() {
 		return pathWarnings;
 	}
-	
+
 	public ArrayList<String> getPropNames() {
 		return new ArrayList<String>(this.propertyHash.keySet());
 	}
-	
-	
+
 	public boolean isDataProperty(OntologyProperty oProp, OntologyClass oDomain) throws Exception {
-		return ! this.isObjectProperty(oProp, oDomain);
+		return !this.isObjectProperty(oProp, oDomain);
 	}
-	
+
 	public boolean isObjectProperty(OntologyProperty oProp, OntologyClass oDomain) throws Exception {
 		OntologyRange oRange = oProp.getRange(oDomain, this);
 		if (oRange.isComplex()) {
@@ -603,70 +620,76 @@ public class OntologyInfo {
 		}
 		return false;
 	}
-	
+
 	public void addPathCount(OntologyPath path, int count) {
 		String key = path.toJson().toJSONString();
 		this.pathCountHash.put(key, count);
 	}
-	
+
 	/**
-	 * Get all one-hop paths two and from a class (includes incoming and outgoing class' subclasses)
-	 *         classFrom -has-> classNameStr
-	 *      subClassFrom -has-> classNameStr
-	 *                          classNameStr -has->    classTo
-	 *                          classNameStr -has-> subClassTo
+	 * Get all one-hop paths two and from a class (includes incoming and outgoing
+	 * class' subclasses) classFrom -has-> classNameStr subClassFrom -has->
+	 * classNameStr classNameStr -has-> classTo classNameStr -has-> subClassTo
+	 * 
 	 * @param classNameStr
 	 * @return
 	 * @throws ClassException
 	 * @throws PathException
 	 */
-	public ArrayList<OntologyPath> getConnList(String classNameStr, PredicateStats predStats) throws Exception, ClassException, PathException {
+	public ArrayList<OntologyPath> getConnList(String classNameStr, PredicateStats predStats)
+			throws Exception, ClassException, PathException {
 		// return or calculate all legal one-hop path connections to and from a class
-		
+
 		// if we haven't hashed the answer in connHash yet
-		if (! this.connHash.containsKey(classNameStr)) {
-			
+		if (!this.connHash.containsKey(classNameStr)) {
+
 			ArrayList<OntologyPath> ret = new ArrayList<OntologyPath>();
 			OntologyPath path;
-			if (! this.classHash.containsKey(classNameStr)) {
-				throw new ClassException("Internal error in OntologyInfo.getConnList(): class name is not in the ontology: " + classNameStr);
+			if (!this.classHash.containsKey(classNameStr)) {
+				throw new ClassException(
+						"Internal error in OntologyInfo.getConnList(): class name is not in the ontology: "
+								+ classNameStr);
 			}
-			
+
 			OntologyClass oClass = this.classHash.get(classNameStr);
-			HashMap <String, Integer> foundHash = new HashMap <String, Integer>();     // hash of path.asString()     PEC TODO FAILS when Man-hasSon->Man hashes same as Man<-hasSon-Man
+			HashMap<String, Integer> foundHash = new HashMap<String, Integer>(); // hash of path.asString() PEC TODO
+																					// FAILS when Man-hasSon->Man hashes
+																					// same as Man<-hasSon-Man
 			String hashStr = "";
-			
-			//--- calculate HasA:   exact range classes for all inherited properties
-			ArrayList <OntologyProperty> props = this.getInheritedProperties(oClass);
-			for (int i=0; i < props.size(); i++) {
+
+			// --- calculate HasA: exact range classes for all inherited properties
+			ArrayList<OntologyProperty> props = this.getInheritedProperties(oClass);
+			for (int i = 0; i < props.size(); i++) {
 				OntologyProperty prop = props.get(i);
-				for (String rangeClassName : prop.getRange(oClass, this).getUriList()) {
-					
+				for (String rangeClassName : prop.getAllRangeUris()) {
+
 					// if the range class in this domain
 					if (this.containsClass(rangeClassName)) {
 						// if no pred stats or pred stats show this triple exists
-						if (predStats == null || predStats.getExact(classNameStr,  prop.getNameStr(), rangeClassName) > 0) {
-							// Exact match:  class -> hasA -> rangeClassName
+						if (predStats == null
+								|| predStats.getExact(classNameStr, prop.getNameStr(), rangeClassName) > 0) {
+							// Exact match: class -> hasA -> rangeClassName
 							path = new OntologyPath(classNameStr);
 							path.addTriple(classNameStr, prop.getNameStr(), rangeClassName);
 							hashStr = path.asString();
-							if (! foundHash.containsKey(hashStr)) {
-									ret.add(path);
-									foundHash.put(hashStr, 1);
+							if (!foundHash.containsKey(hashStr)) {
+								ret.add(path);
+								foundHash.put(hashStr, 1);
 							}
 						}
-					
-						// Sub-classes:  class -> hasA -> subclass(rangeClassName)
+
+						// Sub-classes: class -> hasA -> subclass(rangeClassName)
 						for (String rangeSubName : this.getSubclassNames(rangeClassName)) {
 							if (this.containsClass(rangeSubName)) {
 								// if no pred stats or pred stats show this triple exists
-								if (predStats == null || predStats.getExact(classNameStr,  prop.getNameStr(), rangeSubName) > 0) {
+								if (predStats == null
+										|| predStats.getExact(classNameStr, prop.getNameStr(), rangeSubName) > 0) {
 									path = new OntologyPath(classNameStr);
 									path.addTriple(classNameStr, prop.getNameStr(), rangeSubName);
 									hashStr = path.asString();
-									if (! foundHash.containsKey(hashStr)) {
-											ret.add(path);
-											foundHash.put(hashStr, 1);
+									if (!foundHash.containsKey(hashStr)) {
+										ret.add(path);
+										foundHash.put(hashStr, 1);
 									}
 								}
 							}
@@ -674,48 +697,49 @@ public class OntologyInfo {
 					}
 				}
 			}
-			
-			//--- calculate HadBy: class which HasA classNameStr
-			
+
+			// --- calculate HadBy: class which HasA classNameStr
+
 			// store all superclasses of target class
 			HashSet<String> supList = this.getSuperclassNames(classNameStr);
-			
+
 			// loop through every single class in oInfo
-			for (String cname : this.classHash.keySet() ) {
+			for (String cname : this.classHash.keySet()) {
 				OntologyClass everyClass = this.getClass(cname);
-				
+
 				// loop through every property
 				// Issue 50 : fixed this to get inherited properties
 				// var cprops = this.classHash[cname].getProperties();
 				ArrayList<OntologyProperty> cprops = this.getInheritedProperties(this.classHash.get(cname));
-				
-				for (int i=0; i < cprops.size(); i++) {
+
+				for (int i = 0; i < cprops.size(); i++) {
 					OntologyProperty prop = cprops.get(i);
 					for (String rangeClassStr : prop.getRange(everyClass, this).getUriList()) {
-					
-						// HadBy:  cName -> hasA -> class
+
+						// HadBy: cName -> hasA -> class
 						if (rangeClassStr.equals(classNameStr)) {
 							// if no pred stats or pred stats show this triple exists
-							if (predStats == null || predStats.getExact(cname,  prop.getNameStr(), classNameStr) > 0) {
+							if (predStats == null || predStats.getExact(cname, prop.getNameStr(), classNameStr) > 0) {
 								path = new OntologyPath(classNameStr);
 								path.addTriple(cname, prop.getNameStr(), classNameStr);
 								hashStr = path.asString();
-								if (! foundHash.containsKey(hashStr)) {
+								if (!foundHash.containsKey(hashStr)) {
 									ret.add(path);
 									foundHash.put(hashStr, 1);
 								}
 							}
 						}
-						
-						// IsA + HadBy:   cName -> hasA -> superClass(class)
+
+						// IsA + HadBy: cName -> hasA -> superClass(class)
 						for (String supStr : supList) {
 							if (rangeClassStr.equals(supStr)) {
 								// if no pred stats or pred stats show this triple exists
-								if (predStats == null || predStats.getExact(cname, prop.getNameStr(), classNameStr) > 0) {
+								if (predStats == null
+										|| predStats.getExact(cname, prop.getNameStr(), classNameStr) > 0) {
 									path = new OntologyPath(classNameStr);
 									path.addTriple(cname, prop.getNameStr(), classNameStr);
 									hashStr = path.asString();
-									if (! foundHash.containsKey(hashStr)) {
+									if (!foundHash.containsKey(hashStr)) {
 										ret.add(path);
 										foundHash.put(hashStr, 1);
 									}
@@ -727,44 +751,49 @@ public class OntologyInfo {
 			}
 			this.connHash.put(classNameStr, ret);
 		}
-		
+
 		return this.connHash.get(classNameStr);
 	}
 
 	/**
 	 * returns the count of known classes.
 	 **/
-	public int getNumberOfClasses(){
+	public int getNumberOfClasses() {
 		// how many classes do we know of at all?
 		return this.classHash.size();
 	}
-	
+
 	/**
-	 * Returns an instance of OntologyClass for a given URI. 
-	 * if the OntologyInfo object has no entry for the URI, null is returned.
+	 * Returns an instance of OntologyClass for a given URI. if the OntologyInfo
+	 * object has no entry for the URI, null is returned.
 	 **/
-	public OntologyClass getClass(String fullUriName){
+	public OntologyClass getClass(String fullUriName) {
 		// get the requested class
 		OntologyClass retval = null;
-		if(this.classHash.containsKey(fullUriName)){ retval = this.classHash.get(fullUriName); }
+		if (this.classHash.containsKey(fullUriName)) {
+			retval = this.classHash.get(fullUriName);
+		}
 		return retval;
 	}
-	
+
 	/**
-	 * Returns an instance of OntologyDatatype for a given URI. 
-	 * if the OntologyInfo object has no entry for the URI, null is returned.
+	 * Returns an instance of OntologyDatatype for a given URI. if the OntologyInfo
+	 * object has no entry for the URI, null is returned.
 	 * 
 	 **/
-	public OntologyDatatype getDatatype(String fullUriName){
+	public OntologyDatatype getDatatype(String fullUriName) {
 		// get the requested class
 		OntologyDatatype retval = null;
-		if (this.datatypeHash.containsKey(fullUriName)) { retval = this.datatypeHash.get(fullUriName); }
+		if (this.datatypeHash.containsKey(fullUriName)) {
+			retval = this.datatypeHash.get(fullUriName);
+		}
 		return retval;
 	}
-	
+
 	/**
-	 * Given an OntologyRange with potentially complex value (multiple classes including owl datatypes)
-	 * return a list of PropertyXSDTypes
+	 * Given an OntologyRange with potentially complex value (multiple classes
+	 * including owl datatypes) return a list of PropertyXSDTypes
+	 * 
 	 * @param range
 	 * @return
 	 * @throws Exception if any value in the range is not mappable to an XSDType
@@ -776,9 +805,10 @@ public class OntologyInfo {
 		}
 		return ret;
 	}
-	
+
 	/**
 	 * Given the range of a property, get the XSDSupported type.
+	 * 
 	 * @param rangeUri
 	 * @return
 	 * @throws Exception
@@ -788,26 +818,28 @@ public class OntologyInfo {
 		if (this.containsDatatype(rangeUri)) {
 			// named datatype: get equivalent type
 			ret = this.getDatatype(rangeUri).getEquivalentXSDTypes();
-			
+
 		} else {
 			try {
 				// hope it is a regular owl type or something ending in #int, #date, etc.
 				ret.add(XSDSupportedType.getMatchingValue(new OntologyName(rangeUri).getLocalName()));
-				
+
 			} catch (Exception e) {
-				
-				// leftovers are URI's.  This is slightly illogical.  Properties shouldn't point to objects.
+
+				// leftovers are URI's. This is slightly illogical. Properties shouldn't point
+				// to objects.
 				ret.add(XSDSupportedType.NODE_URI);
-				LocalLogger.logToStdErr("OInfo getPropertyRangeXSDTypes() does not understand rangeUri: " + rangeUri );
+				LocalLogger.logToStdErr("OInfo getPropertyRangeXSDTypes() does not understand rangeUri: " + rangeUri);
 				LocalLogger.logToStdErr("Current Datatypes: " + this.datatypeHash.keySet().toString());
 			}
 		}
 		return ret;
 	}
-	
+
 	/**
-	 * Does oInfo contain any classes starting with this owl file's base
-	 * In English: was any version of this owl file loaded into this graph
+	 * Does oInfo contain any classes starting with this owl file's base In English:
+	 * was any version of this owl file loaded into this graph
+	 * 
 	 * @param owlStream
 	 * @return
 	 * @throws Exception
@@ -816,10 +848,11 @@ public class OntologyInfo {
 		String base = Utility.getXmlBaseFromOwlRdf(owlStream);
 		return this.containsClassWithBase(base);
 	}
-	
+
 	/**
-	 * Does oInfo contain any classes starting with base.
-	 * In English: was any version of this owl file loaded into this graph
+	 * Does oInfo contain any classes starting with base. In English: was any
+	 * version of this owl file loaded into this graph
+	 * 
 	 * @param base
 	 * @return
 	 */
@@ -831,179 +864,182 @@ public class OntologyInfo {
 		}
 		return false;
 	}
-	
+
 	/**
 	 * return all the known class names
 	 **/
-	public ArrayList<String> getClassNames(){
+	public ArrayList<String> getClassNames() {
 		// return the names of all classes we know of
 		ArrayList<String> retval = new ArrayList<String>();
 		retval.addAll(this.classHash.keySet());
 		return retval;
 	}
-	
-	
+
 	/**
 	 * for a given class, return all of the known parent classes
 	 **/
-	public ArrayList<OntologyClass> getClassParents(OntologyClass currentClass){
+	public ArrayList<OntologyClass> getClassParents(OntologyClass currentClass) {
 		ArrayList<OntologyClass> retval = new ArrayList<OntologyClass>();
-		
+
 		// add each parent in turn
-		for(String parentNameString : currentClass.getParentNameStrings(false)){
+		for (String parentNameString : currentClass.getParentNameStrings(false)) {
 			retval.add(this.getClass(parentNameString));
 		}
 		// return the group.
 		return retval;
 	}
-	
+
 	/**
 	 * Get breadth-first list of all parent generations
-	 * @param c
+	 * 
+	 * @param oClass
 	 * @return
 	 */
-	public ArrayList<String> getClassAncestorNames(OntologyClass c) {
+	public ArrayList<String> getClassAncestorNames(OntologyClass oClass) {
 		ArrayList<String> ret = new ArrayList<String>();
 		int first = 0;
-		ret.addAll(c.getParentNameStrings(false));
-		int last = ret.size();
-		
-		while (last > first) {
-			
-			for (int i = first; i < last; i++) {
+		ret.addAll(oClass.getParentNameStrings(false));
+		int len = ret.size();
+
+		while (len > first) {
+
+			for (int i = first; i < len; i++) {
 				ArrayList<String> parents = this.getClass(ret.get(i)).getParentNameStrings(false);
 				for (String p : parents) {
-					if (! ret.contains(p)) {
+					if (!ret.contains(p)) {
 						ret.add(p);
 					}
 				}
 			}
-			first = last + 1;
-			last = ret.size();
+			first = len;
+			len = ret.size();
 		}
 		return ret;
 	}
-	
+
 	/**
 	 * return all of the known property names.
 	 **/
-	public ArrayList<String> getPropertyNames(){
+	public ArrayList<String> getPropertyNames() {
 		ArrayList<String> retval = new ArrayList<String>();
 		retval.addAll(this.propertyHash.keySet());
 		return retval;
 	}
-	
+
 	/**
 	 * Get all pairs of DomainURI, PropURI
+	 * 
 	 * @return
 	 */
 	public ArrayList<String[]> getPropertyPairs() {
 		ArrayList<String[]> ret = new ArrayList<String[]>();
-		
+
 		for (String cName : this.getClassNames()) {
 			OntologyClass oClass = this.getClass(cName);
 			for (OntologyProperty oProp : this.getInheritedProperties(oClass)) {
-				ret.add(new String[] {cName, oProp.getNameStr()});
+				ret.add(new String[] { cName, oProp.getNameStr() });
 			}
 		}
 		return ret;
 	}
-	
+
 	/**
-	 * returns true/false value of whether a class is known to the OntologyInfo object
+	 * returns true/false value of whether a class is known to the OntologyInfo
+	 * object
 	 **/
-	public Boolean containsClass(String classNameString){
+	public Boolean containsClass(String classNameString) {
 		return this.classHash.containsKey(classNameString);
 	}
-	
-	public Boolean containsDatatype(String nameString){
+
+	public Boolean containsDatatype(String nameString) {
 		return this.datatypeHash.containsKey(nameString);
 	}
-	
+
 	/**
-	 * returns true/false value of whether a property is known to the OntologyInfo object
+	 * returns true/false value of whether a property is known to the OntologyInfo
+	 * object
 	 **/
-	public Boolean containsProperty(String propertyUri){
+	public Boolean containsProperty(String propertyUri) {
 		return this.propertyHash.containsKey(propertyUri);
 	}
-	
+
 	public OntologyProperty getProperty(String propertyUri) {
 		return this.propertyHash.get(propertyUri);
 	}
-	
+
 	/**
 	 * returns the count of enumerated types known to the OntologyInfo object
 	 **/
-	public int getNumberOfEnum(){
+	public int getNumberOfEnum() {
 		return this.enumerationHash.size();
 	}
-	
+
 	/**
 	 * return count of properties known to the OntologyInfo object.
 	 **/
-	public int getNumberOfProperties(){
+	public int getNumberOfProperties() {
 		return this.propertyHash.size();
 	}
-	
+
 	/**
 	 * for a given class, return all of its properties and properties it inherits.
 	 **/
-	public ArrayList<OntologyProperty> getInheritedProperties(OntologyClass oClass){
+	public ArrayList<OntologyProperty> getInheritedProperties(OntologyClass oClass) {
 		ArrayList<OntologyProperty> retval = new ArrayList<OntologyProperty>();
 		if (!this.classHash.containsKey(oClass.getNameString(false))) {
 			return retval;
 		}
-		
+
 		HashMap<String, OntologyProperty> tempRetval = new HashMap<String, OntologyProperty>();
-		
+
 		// get the full list...
-		// walk up the parent chain and then add all the properties we need. 
+		// walk up the parent chain and then add all the properties we need.
 		HashSet<String> fullParentList = this.getSuperclassNames(oClass.getNameString(false));
 		fullParentList.add(oClass.getNameString(false));
-		
+
 		// go through the superclass list and gather all of the properties.
-		for(String scn : fullParentList){
+		for (String scn : fullParentList) {
 			// add each property from the super class
-			for(OntologyProperty currProp : this.classHash.get(scn).getProperties()){
+			for (OntologyProperty currProp : this.classHash.get(scn).getProperties()) {
 				tempRetval.put(currProp.getNameStr(), currProp);
 			}
 		}
-		
+
 		// assemble into a single list (without repeated values) and ship it out.
 		Object[] keys = tempRetval.keySet().toArray();
 		Arrays.sort(keys);
-		
-		for(Object propKey : keys){
-			retval.add(tempRetval.get((String)propKey));
+
+		for (Object propKey : keys) {
+			retval.add(tempRetval.get((String) propKey));
 		}
 		return retval;
 	}
-	
+
 	/**
 	 * for a given class, return all of the properties of itself and its decendants.
 	 **/
-	public ArrayList<OntologyProperty> getDescendantProperties(OntologyClass oClass){
-		ArrayList<OntologyProperty> retval = new ArrayList<OntologyProperty>();
+	public ArrayList<OntologyProperty> getDescendantProperties(OntologyClass oClass) {
+		ArrayList<OntologyProperty> ret = new ArrayList<OntologyProperty>();
 		HashMap<String, OntologyProperty> tempRetval = new HashMap<String, OntologyProperty>();
 		// get the full list...
-		// walk up the parent chain and then add all the properties we need. 
-		HashSet<String> fullChildList = this.getSubclassNames(oClass.getNameString(false));
-		
+		// walk up the parent chain and then add all the properties we need.
+		HashSet<String> subclassNames = this.getSubclassNames(oClass.getNameString(false));
+
 		// go through the superclass list and gather all of the properties.
-		for(String scn : fullChildList){
+		for (String scn : subclassNames) {
 			// add each property from the super class
-			for(OntologyProperty currProp : this.classHash.get(scn).getProperties()){
+			for (OntologyProperty currProp : this.classHash.get(scn).getProperties()) {
 				tempRetval.put(currProp.getNameStr(), currProp);
 			}
 		}
-				
+
 		// assemble into a single list (without repeated values) and ship it out.
-		for(String propKey : tempRetval.keySet()){
-			retval.add(tempRetval.get(propKey));
+		for (String propKey : tempRetval.keySet()) {
+			ret.add(tempRetval.get(propKey));
 		}
-		return retval;
+		return ret;
 	}
-	
+
 	public OntologyProperty getInheritedPropertyByKeyname(OntologyClass ontClass, String propName) {
 		ArrayList<OntologyProperty> props = this.getInheritedProperties(ontClass);
 		for (OntologyProperty i : props) {
@@ -1013,7 +1049,7 @@ public class OntologyInfo {
 		}
 		return null;
 	}
-	
+
 	public OntologyProperty getInheritedPropertyByUri(OntologyClass ontClass, String propUri) {
 		ArrayList<OntologyProperty> props = this.getInheritedProperties(ontClass);
 		for (OntologyProperty i : props) {
@@ -1023,93 +1059,88 @@ public class OntologyInfo {
 		}
 		return null;
 	}
-	
 
 	/**
-	 * returns the sparql for getting the sub and super-class relationships for known classes.
+	 * returns the sparql for getting the sub and super-class relationships for
+	 * known classes.
 	 **/
-	private static String getOwlImportsQuery(String graphName){
-		
-		
-		String retval = "select distinct ?importee from <" + graphName + "> where { " +
-						"<" + graphName + "> <http://www.w3.org/2002/07/owl#imports> ?importee. }";
-		
+	private static String getOwlImportsQuery(String graphName) {
+
+		String retval = "select distinct ?importee from <" + graphName + "> where { " + "<" + graphName
+				+ "> <http://www.w3.org/2002/07/owl#imports> ?importee. }";
+
 		return retval;
 	}
-	
+
 	/**
-	 * Load owl imports if they aren't already loaded
-	 * and add loadWarning if the graph is empty
+	 * Load owl imports if they aren't already loaded and add loadWarning if the
+	 * graph is empty
+	 * 
 	 * @param sei
 	 * @param imports
 	 * @throws Exception
 	 */
-	private void loadOwlImports(SparqlEndpointInterface sei, String [] imports) throws Exception {
+	private void loadOwlImports(SparqlEndpointInterface sei, String[] imports) throws Exception {
 		// for each import
 		if (imports != null) {
-			for (int i=0; i < imports.length; i++) {
-				
-				if (! this.importedGraphs.contains(imports[i])) {
+			for (int i = 0; i < imports.length; i++) {
+
+				if (!this.importedGraphs.contains(imports[i])) {
 					// create an sei
-					SparqlEndpointInterface importSei = SparqlEndpointInterface.getInstance(
-															sei.getServerType(),
-															sei.getServerAndPort(),
-															imports[i],
-															sei.getUserName(),
-															sei.getPassword()
-															);
-					
+					SparqlEndpointInterface importSei = SparqlEndpointInterface.getInstance(sei.getServerType(),
+							sei.getServerAndPort(), imports[i], sei.getUserName(), sei.getPassword());
+
 					// save state
 					int numClasses = this.getNumberOfClasses();
 					int numEnums = this.getNumberOfEnum();
 					int numProperties = this.getNumberOfProperties();
-					
+
 					// load
 					this.load(importSei, true);
 					this.importedGraphs.add(imports[i]);
-					
+
 					// check for changes
-					if (numClasses == this.getNumberOfClasses() &&
-					    numEnums == this.getNumberOfEnum() &&
-					    numProperties == this.getNumberOfProperties()) {
+					if (numClasses == this.getNumberOfClasses() && numEnums == this.getNumberOfEnum()
+							&& numProperties == this.getNumberOfProperties()) {
 						this.loadWarnings.add(imports[i] + " - nothing to import");
 					}
 				}
 			}
 		}
 	}
-	
+
 	/**
-	 * Load owl imports if they aren't already loaded
-	 * and add loadWarning if the graph is empty
+	 * Load owl imports if they aren't already loaded and add loadWarning if the
+	 * graph is empty
+	 * 
 	 * @param client
 	 * @param imports
 	 * @throws Exception
 	 */
-	private void loadOwlImports(SparqlQueryClient client, String [] imports) throws Exception {
+	private void loadOwlImports(SparqlQueryClient client, String[] imports) throws Exception {
 		if (imports != null) {
 			// for each import
-			for (int i=0; i < imports.length; i++) {
-				
-				if (! this.importedGraphs.contains(imports[i])) {
+			for (int i = 0; i < imports.length; i++) {
+
+				if (!this.importedGraphs.contains(imports[i])) {
 					// create a client
-					SparqlQueryAuthClientConfig importClientConfig = new SparqlQueryAuthClientConfig(client.getConfig());
+					SparqlQueryAuthClientConfig importClientConfig = new SparqlQueryAuthClientConfig(
+							client.getConfig());
 					importClientConfig.setGraph(imports[i]);
 					SparqlQueryClient importClient = new SparqlQueryClient(importClientConfig);
-					
+
 					// save current state
 					int numClasses = this.getNumberOfClasses();
 					int numEnums = this.getNumberOfEnum();
 					int numProperties = this.getNumberOfProperties();
-					
+
 					// load
 					this.load(importClient, imports[i]);
 					this.importedGraphs.add(imports[i]);
-					
+
 					// check for changes
-					if (numClasses == this.getNumberOfClasses() &&
-					    numEnums == this.getNumberOfEnum() &&
-					    numProperties == this.getNumberOfProperties()) {
+					if (numClasses == this.getNumberOfClasses() && numEnums == this.getNumberOfEnum()
+							&& numProperties == this.getNumberOfProperties()) {
 						this.loadWarnings.add("Import graph has no ontology data or doesn't exist: " + imports[i]);
 					}
 				}
@@ -1118,150 +1149,136 @@ public class OntologyInfo {
 	}
 
 	/**
-	 * returns the sparql for getting the sub and super-class relationships for known classes.
+	 * returns the sparql for getting the sub and super-class relationships for
+	 * known classes.
 	 **/
-	private static String getSuperSubClassQuery(String graphName, String domain){
-		// returns a very basic query 
+	private static String getSuperSubClassQuery(String graphName, String domain) {
+		// returns a very basic query
 		// domain : something like "caterham.ge.com"
-		
-		// inherited logic from the js rendition of this method. fix this method as that one evolves. 
-		String retval = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
-				       	"PREFIX owl: <http://www.w3.org/2002/07/owl#> " +
-				       	"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " + 
-				       	"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
-				       	"select distinct ?x ?y from <" + graphName + "> where { " +
-				       	"?x rdfs:subClassOf ?y " +
-				       	genDomainFilterStatement("x", domain) +
-				       	genDomainFilterStatement("y", domain) + 
-				        " filter (?x != ?y). } order by ?x";
-		
+
+		// inherited logic from the js rendition of this method. fix this method as that
+		// one evolves.
+		String retval = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+				+ "PREFIX owl: <http://www.w3.org/2002/07/owl#> " + "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> "
+				+ "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " + "select distinct ?x ?y from <" + graphName
+				+ "> where { " + "?x rdfs:subClassOf ?y " + genDomainFilterStatement("x", domain)
+				+ genDomainFilterStatement("y", domain) + " filter (?x != ?y). } order by ?x";
+
 		return retval;
 	}
-	
+
 	/**
-	 * Query will return ?dataType ?equivType ?r_pred ?r_obj  where
-	 * 	?dataType is a datatype URI 
-     * 	?equivType is the equivalent data type
-	 *  ?r_pred is a restriction
-	 *  ?r_obj is the restriction obj
-	 * Returns could have multiple ?equivType, ?r_pred, ?r_obj for each datatype
+	 * Query will return ?dataType ?equivType ?r_pred ?r_obj where ?dataType is a
+	 * datatype URI ?equivType is the equivalent data type ?r_pred is a restriction
+	 * ?r_obj is the restriction obj Returns could have multiple ?equivType,
+	 * ?r_pred, ?r_obj for each datatype
+	 * 
 	 * @param graphName
 	 * @param domain
 	 * @return
 	 */
-	private static String getDatatypeQuery(String graphName, String domain){
+	private static String getDatatypeQuery(String graphName, String domain) {
 
-		
-		String retval = "PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
-                		"PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> \n" +
-						"PREFIX owl:<http://www.w3.org/2002/07/owl#> \n" +
-						"SELECT DISTINCT ?dataType ?equivType ?r_pred ?r_obj \n" +
-						"		FROM <" + graphName + "> WHERE { \n" +
-						"	?dataType rdf:type rdfs:Datatype . \n" +
-						genDomainFilterStatement("dataType", domain) + "\n" +
-						"   ?dataType owl:equivalentClass* ?e . \n" +
-						// SADL makes datatypes either owl:onDatatype or a union of objects w/o the onDatatype predicate
-						"   { \n " +
-						"       ?e owl:onDatatype ?equivType \n " +
-						"   } UNION { \n " +
-						"       ?e owl:unionOf ?u . \n" +
-						"	    ?u rdf:rest* ?r . \n" +
-						"	    ?r rdf:first ?equivType . \n" +
-						"	} \n" +
-						// datatype restrictions
-						"   optional {  \n" +
-						"     ?e owl:withRestrictions ?rlist . \n" +
-						"     ?rlist rdf:rest* ?r2 . \n" +
-						"     ?r2 rdf:first ?restriction . \n" +
-						"     ?restriction ?r_pred ?r_obj . \n" +
-						"   } \n" +
-						"} ";
-		
+		String retval = "PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n"
+				+ "PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> \n"
+				+ "PREFIX owl:<http://www.w3.org/2002/07/owl#> \n"
+				+ "SELECT DISTINCT ?dataType ?equivType ?r_pred ?r_obj \n" + "		FROM <" + graphName + "> WHERE { \n"
+				+ "	?dataType rdf:type rdfs:Datatype . \n" + genDomainFilterStatement("dataType", domain) + "\n"
+				+ "   ?dataType owl:equivalentClass* ?e . \n" +
+				// SADL makes datatypes either owl:onDatatype or a union of objects w/o the
+				// onDatatype predicate
+				"   { \n " + "       ?e owl:onDatatype ?equivType \n " + "   } UNION { \n "
+				+ "       ?e owl:unionOf ?u . \n" + "	    ?u rdf:rest* ?r . \n"
+				+ "	    ?r rdf:first ?equivType . \n" + "	} \n" +
+				// datatype restrictions
+				"   optional {  \n" + "     ?e owl:withRestrictions ?rlist . \n" + "     ?rlist rdf:rest* ?r2 . \n"
+				+ "     ?r2 rdf:first ?restriction . \n" + "     ?restriction ?r_pred ?r_obj . \n" + "   } \n" + "} ";
 
 		return retval;
 	}
-	
+
 	/**
-	 * @param dataTypeList - the datatype uri
-	 * @param equivTypeList - the equivalent datatype (e.g. XMLSchema:int)
-	 * @param restrictPredList - list of restrictions predicates. each can be "". Array can be null.
-	 * @param restrictObjList - list of restrictions objects. each can be "". Array can be null.
+	 * @param dataTypeList     - the datatype uri
+	 * @param equivTypeList    - the equivalent datatype (e.g. XMLSchema:int)
+	 * @param restrictPredList - list of restrictions predicates. each can be "".
+	 *                         Array can be null.
+	 * @param restrictObjList  - list of restrictions objects. each can be "". Array
+	 *                         can be null.
 	 * @throws Exception
 	 */
-	public void loadDatatypes(String dataTypeList[], String equivTypeList[], String restrictPredList[], String restrictObjList[]) throws Exception{
-		
-		for (int i=0; i < dataTypeList.length; i++) {
+	public void loadDatatypes(String dataTypeList[], String equivTypeList[], String restrictPredList[],
+			String restrictObjList[]) throws Exception {
+
+		for (int i = 0; i < dataTypeList.length; i++) {
 			OntologyDatatype dt = null;
 			if (this.containsClass(dataTypeList[i])) {
 				// datatype name is already a class
 				throw new Exception("Error loading ontology.  Datatype URI is already a class: " + dataTypeList[i]);
-			
+
 			} else if (this.containsDatatype(dataTypeList[i])) {
 				// already exists: add additional equivalent types
 				dt = this.getDatatype(dataTypeList[i]);
 				dt.addEquivalentType(equivTypeList[i]);
-				
+
 			} else {
 				// new datatype
 				dt = new OntologyDatatype(dataTypeList[i], equivTypeList[i]);
-				
+
 				this.addDatatype(dt);
 			}
-			
+
 			if (restrictPredList != null && !restrictPredList[i].isEmpty()) {
 				dt.addRestriction(restrictPredList[i], restrictObjList[i]);
 			}
 		}
-		
+
 	}
 
 	private static String genDomainFilterStatement(String varName, String domain) {
 		return SparqlToXLibUtil.genDomainFilterStatement(varName, domain, "");
 	}
-	
+
 	private static String genDomainFilterStatement(String varName, String domain, String clause) {
 		return SparqlToXLibUtil.genDomainFilterStatement(varName, domain, clause);
 	}
-	
+
 	/**
-	 * returns the sparql for getting the sub and super-property relationships for known classes.
+	 * returns the sparql for getting the sub and super-property relationships for
+	 * known classes.
 	 **/
-	private static String getSuperSubPropertyQuery(String graphName, String domain){
-		
-		String retval = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
-				       	"PREFIX owl: <http://www.w3.org/2002/07/owl#> " +
-				       	"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " + 
-				       	"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
-				       	"select distinct ?subProp ?superProp from <" + graphName + "> where { " +
-				       	"?subProp rdfs:subPropertyOf ?superProp " +
-				       	genDomainFilterStatement("subProp", domain) +
-				       	genDomainFilterStatement("superProp", domain) + 
-				        " filter (?subProp != ?superProp). } order by ?subProp";
-		
+	private static String getSuperSubPropertyQuery(String graphName, String domain) {
+
+		String retval = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+				+ "PREFIX owl: <http://www.w3.org/2002/07/owl#> " + "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> "
+				+ "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " + "select distinct ?subProp ?superProp from <"
+				+ graphName + "> where { " + "?subProp rdfs:subPropertyOf ?superProp "
+				+ genDomainFilterStatement("subProp", domain) + genDomainFilterStatement("superProp", domain)
+				+ " filter (?subProp != ?superProp). } order by ?subProp";
+
 		return retval;
 	}
-	
+
 	/**
-	 * process the results of the query to get all of the sub- and super-props query and loads
-	 * them into the OntologyInfo object.
+	 * process the results of the query to get all of the sub- and super-props query
+	 * and loads them into the OntologyInfo object.
 	 **/
-	public void loadSuperSubProperties(String subPropNames[], String superPropNames[]) throws Exception{
-				
-		for (int i=0; i < subPropNames.length; i++) {
+	public void loadSuperSubProperties(String subPropNames[], String superPropNames[]) throws Exception {
+
+		for (int i = 0; i < subPropNames.length; i++) {
 			// make sure subpropHash entry exists
-			if (! this.subPropHash.containsKey(superPropNames[i])) {
+			if (!this.subPropHash.containsKey(superPropNames[i])) {
 				this.subPropHash.put(superPropNames[i], new HashSet<String>());
 			}
-			
+
 			// add to subpropHash
 			HashSet<String> subList = this.subPropHash.get(superPropNames[i]);
-			if (! subList.contains(subPropNames[i])) {
+			if (!subList.contains(subPropNames[i])) {
 				subList.add(subPropNames[i]);
 			}
-			
+
 			// find existing subProp: has domain so loadProperties got it
 			OntologyProperty oSubProp = this.propertyHash.get(subPropNames[i]);
-			
+
 			OntologyProperty oSuperProp = this.propertyHash.get(superPropNames[i]);
 			if (oSubProp == null) {
 				// found a new sub property, copy it's parent completely
@@ -1271,22 +1288,22 @@ public class OntologyInfo {
 				for (String domain : oSubProp.getRangeDomains()) {
 					this.getClass(domain).addProperty(oSubProp);
 				}
-				
+
 			} else {
 				// found an existing property, fill in attributes from parent
 				HashSet<String> toRemove = new HashSet<String>();
 				ArrayList<OntologyClass> toSetRangeClass = new ArrayList<OntologyClass>();
 				ArrayList<OntologyRange> toSetRangeRange = new ArrayList<OntologyRange>();
 				for (String subDomain : oSubProp.getRangeDomains()) {
-					 
+
 					if (subDomain.equals(ORPHAN_STR)) {
 						// domain is orphan, apply the range to all the parent domains
-						
+
 						// get the supProp range and also delete it
 						OntologyRange oRange = oSubProp.getRange(ORPHAN_CLASS, this);
-						
+
 						toRemove.add(ORPHAN_STR);
-						
+
 						// set the supProp range for all the parent prop domains
 						Set<String> superDomains = oSuperProp.getRangeDomains();
 						for (String superDomain : superDomains) {
@@ -1294,7 +1311,7 @@ public class OntologyInfo {
 							toSetRangeRange.add(oRange.deepCopy());
 						}
 					} else {
-						
+
 						// range is orphan or CLASS: change to range of given domain in the superProp
 						OntologyClass subDomainClass = this.getClass(subDomain);
 						HashSet<String> subRangeUris = oSubProp.getRange(subDomainClass, this).getUriList();
@@ -1302,9 +1319,10 @@ public class OntologyInfo {
 							if (subRangeUri.equals(ORPHAN_STR) || subRangeUri.equals(OntologyRange.CLASS)) {
 								// found one: remove it
 								oSubProp.removeFromRange(subDomain, subRangeUri);
-								
+
 								// now add all the superProp range URIS for this domain to the subProp
-								HashSet<String> superRangeUris = oSuperProp.getRange(this.getClass(subDomain), this).getUriList();
+								HashSet<String> superRangeUris = oSuperProp.getRange(this.getClass(subDomain), this)
+										.getUriList();
 								for (String superRangeUri : superRangeUris) {
 									oSubProp.addRange(subDomainClass, superRangeUri);
 								}
@@ -1316,292 +1334,299 @@ public class OntologyInfo {
 				for (String k : toRemove) {
 					oSubProp.removeRange(k);
 				}
-				for (int j=0; j < toSetRangeClass.size(); j++) {
+				for (int j = 0; j < toSetRangeClass.size(); j++) {
 					oSubProp.setRange(toSetRangeClass.get(j), toSetRangeRange.get(j));
 					toSetRangeClass.get(j).addProperty(oSubProp);
 				}
 			}
 		}
 	}
-	
 
-	
-	public void loadSuperSubClasses(String subList[], String superList[]) throws Exception{
-				
-		for (int i=0; i < subList.length; i++) {
-			
+	public void loadSuperSubClasses(String subList[], String superList[]) throws Exception {
+
+		for (int i = 0; i < subList.length; i++) {
+
 			// check for the existence of the current class.
 			// (loading multiple graphs or a class with multiple superclasses)
-			if(!this.containsClass(subList[i])){
+			if (!this.containsClass(subList[i])) {
 				OntologyClass c = new OntologyClass(subList[i], null);
 				this.addClass(c);
 			}
-			
+
 			// get the current class and add the parent.
 			OntologyClass c = this.getClass(subList[i]);
 			c.addParentName(superList[i]);
 			this.updateSuperSubClassHash(c);
 		}
-		
+
 	}
+
 	/**
-	 * returns the sparql query used to get all top-level classes of interest. these classes do not
-	 * have meaningful super-classes.
+	 * returns the sparql query used to get all top-level classes of interest. these
+	 * classes do not have meaningful super-classes.
 	 **/
-	private static String getTopLevelClassQuery(String graphName, String domain){
+	private static String getTopLevelClassQuery(String graphName, String domain) {
 		// domain : something like "caterham.ge.com"
-		String retval = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
-		       			"PREFIX owl: <http://www.w3.org/2002/07/owl#> " +
-		       			"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " + 
-		       			"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
-		       			"select distinct ?Class from <" + graphName + "> { " +
-		       			"?Class rdf:type owl:Class " + genDomainFilterStatement("Class", domain) + ". " +
-		       			"MINUS " +
-		       			"{?Class rdfs:subClassOf ?Sup " +
-		       			genDomainFilterStatement("Sup", domain) +
-		       			"   filter (?Class != ?Sup).} }";
-		
-		return retval; 
+		String retval = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+				+ "PREFIX owl: <http://www.w3.org/2002/07/owl#> " + "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> "
+				+ "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " + "select distinct ?Class from <" + graphName
+				+ "> { " + "?Class rdf:type owl:Class " + genDomainFilterStatement("Class", domain) + ". " + "MINUS "
+				+ "{?Class rdfs:subClassOf ?Sup " + genDomainFilterStatement("Sup", domain)
+				+ "   filter (?Class != ?Sup).} }";
+
+		return retval;
 	}
-	
+
 	/**
-	 * processes the results of the top-level class query. the results of this query are loaded into 
-	 * the OntologyInfo object.
+	 * processes the results of the top-level class query. the results of this query
+	 * are loaded into the OntologyInfo object.
 	 **/
-	public void loadTopLevelClasses(String xList[]) throws Exception{
-		
-		for (int i=0; i < xList.length; i++) {
+	public void loadTopLevelClasses(String xList[]) throws Exception {
+
+		for (int i = 0; i < xList.length; i++) {
 			if (!this.containsClass(xList[i])) {
 				OntologyClass c = new OntologyClass(xList[i], null);
 				this.addClass(c);
 			}
 		}
-		
+
 	}
-	
+
 	/**
-	 * returns the sparql query to get all of the enumerated values found in the model.
+	 * returns the sparql query to get all of the enumerated values found in the
+	 * model.
 	 **/
-	private static String getEnumQuery(String graphName, String domain){
-		String retval = "select ?Class ?EnumVal from <" + graphName + "> where { " +
-				"  ?Class <http://www.w3.org/2002/07/owl#equivalentClass> ?ec " + genDomainFilterStatement("Class", domain) +". " + 
-				"  ?ec <http://www.w3.org/2002/07/owl#oneOf> ?c . " +
-				"  ?c <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>*/<http://www.w3.org/1999/02/22-rdf-syntax-ns#first> ?EnumVal. " +
-				"}";
-		
+	private static String getEnumQuery(String graphName, String domain) {
+		String retval = "select ?Class ?EnumVal from <" + graphName + "> where { "
+				+ "  ?Class <http://www.w3.org/2002/07/owl#equivalentClass> ?ec "
+				+ genDomainFilterStatement("Class", domain) + ". " + "  ?ec <http://www.w3.org/2002/07/owl#oneOf> ?c . "
+				+ "  ?c <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>*/<http://www.w3.org/1999/02/22-rdf-syntax-ns#first> ?EnumVal. "
+				+ "}";
+
 		return retval;
 	}
-	
+
 	/**
-	 * processes the results of the enumeration query and loads the results into the enumeration hashmap
-	 * in the OntologyInfo object. 
+	 * processes the results of the enumeration query and loads the results into the
+	 * enumeration hashmap in the OntologyInfo object.
 	 */
-	public void loadEnums(String classList[], String enumValList[] ) throws Exception{
-		
-		for(int i = 0; i < classList.length; i += 1){
+	public void loadEnums(String classList[], String enumValList[]) throws Exception {
+
+		for (int i = 0; i < classList.length; i += 1) {
 			String className = classList[i];
-			String enumVal  = enumValList[i];
-			
-			if(this.enumerationHash.containsKey(className)){
+			String enumVal = enumValList[i];
+
+			if (this.enumerationHash.containsKey(className)) {
 				this.enumerationHash.get(className).add(enumVal);
-			}
-			else{
+			} else {
 				ArrayList<String> enumList = new ArrayList<String>();
 				enumList.add(enumVal);
 				this.enumerationHash.put(className, enumList);
 			}
 		}
-		
-		
+
 	}
-	
+
 	private static String getAnnotationLabelsQuery(String graphName, String domain) {
-		// This query will be sub-optimal if there are multiple labels and comments for many elements
+		// This query will be sub-optimal if there are multiple labels and comments for
+		// many elements
 		// because every combination will be returned
 		//
 		// But in the ususal case where each element has zero or 1 labels and comments
-		// It is more efficient to get them in a single query with each element URI only transmitted once.
-		String retval = "prefix owl:<http://www.w3.org/2002/07/owl#>\n" + 
-				"prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" + 
-				"\n" + 
-				"select distinct ?Elem ?Label from <" + graphName + "> where {\n" + 
-				" ?Elem a ?p " + genDomainFilterStatement("Elem", domain) + ".\r\n" + 
-				" VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}.\n" + 
-				"    optional { ?Elem rdfs:label ?Label. }\n" + 
-				"}";
+		// It is more efficient to get them in a single query with each element URI only
+		// transmitted once.
+		String retval = "prefix owl:<http://www.w3.org/2002/07/owl#>\n"
+				+ "prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" + "\n" + "select distinct ?Elem ?Label from <"
+				+ graphName + "> where {\n" + " ?Elem a ?p " + genDomainFilterStatement("Elem", domain) + ".\r\n"
+				+ " VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}.\n"
+				+ "    optional { ?Elem rdfs:label ?Label. }\n" + "}";
 		return retval;
 	}
-	
+
 	public void loadAnnotationLabels(String elemList[], String labelList[]) throws Exception {
-		for (int i=0; i < elemList.length; i++) {
-			
+		for (int i = 0; i < elemList.length; i++) {
+
 			// find the element: class or property
 			AnnotatableElement e = this.classHash.get(elemList[i]);
 			if (e == null) {
 				e = this.propertyHash.get(elemList[i]);
-			} 
+			}
 			// if found (e.g. it isn't a property annotation)
-			if (e != null)  {
+			if (e != null) {
 				// add the annotations (empties and duplicates are handled downstream)
 				e.addAnnotationLabel(labelList[i]);
 			}
 		}
 	}
+
 	private static String getAnnotationCommentsQuery(String graphName, String domain) {
-		// This query will be sub-optimal if there are multiple labels and comments for many elements
+		// This query will be sub-optimal if there are multiple labels and comments for
+		// many elements
 		// because every combination will be returned
 		//
 		// But in the ususal case where each element has zero or 1 labels and comments
-		// It is more efficient to get them in a single query with each element URI only transmitted once.
-		String retval = "prefix owl:<http://www.w3.org/2002/07/owl#>\n" + 
-				"prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" + 
-				"\n" + 
-				"select distinct ?Elem ?Comment from <" + graphName + "> where { \n" + 
-				" ?Elem a ?p " + genDomainFilterStatement("Elem", domain) + ". \n" + 
-				" VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}. \n" + 
-				"    optional { ?Elem rdfs:comment ?Comment. }\n" +
-				"}";
+		// It is more efficient to get them in a single query with each element URI only
+		// transmitted once.
+		String retval = "prefix owl:<http://www.w3.org/2002/07/owl#>\n"
+				+ "prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" + "\n"
+				+ "select distinct ?Elem ?Comment from <" + graphName + "> where { \n" + " ?Elem a ?p "
+				+ genDomainFilterStatement("Elem", domain) + ". \n"
+				+ " VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}. \n"
+				+ "    optional { ?Elem rdfs:comment ?Comment. }\n" + "}";
 		return retval;
 	}
-	
+
 	public void loadAnnotationComments(String elemList[], String commentList[]) throws Exception {
-		for (int i=0; i < elemList.length; i++) {
-			
+		for (int i = 0; i < elemList.length; i++) {
+
 			// find the element: class or property
 			AnnotatableElement e = this.classHash.get(elemList[i]);
 			if (e == null) {
 				e = this.propertyHash.get(elemList[i]);
-			} 
+			}
 			// if found (e.g. it isn't a property comment)
-			if (e != null)  {
+			if (e != null) {
 				// add the annotations (empties and duplicates are handled downstream)
 				e.addAnnotationComment(commentList[i]);
 			}
 		}
 	}
-	
+
 	/**
 	 * returns the sparql query used to get anything with a domain or a range.
 	 * 
-	 * Queries for ?Property rdfs:domain ?Class
-	 * 		or the equivalent using lists and/or restrictions.
-	 *		IGNORES:   owl:ObjectProperty  and  owl:DatatypeProperty
-	 *      USES:      rdfs:domain
+	 * Queries for ?Property rdfs:domain ?Class or the equivalent using lists and/or
+	 * restrictions. IGNORES: owl:ObjectProperty and owl:DatatypeProperty USES:
+	 * rdfs:domain
 	 *
-	 * nb:
-	 *		- Range or domain may be empty
-	 *     
-	 * TODO:  extend the OPTIONAL to other clauses in the UNION
+	 * nb: - Range or domain may be empty
+	 * 
+	 * TODO: extend the OPTIONAL to other clauses in the UNION
 	 */
-	private static String getLoadPropertiesQuery(String graphName, String domain){
-		
-		String retval = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
-						"PREFIX owl: <http://www.w3.org/2002/07/owl#> " +
-						"PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> " +
-						"PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " +
-						"PREFIX  list: <http://jena.hpl.hp.com/ARQ/list#> " +
-						"select distinct ?Class ?Property ?Range from <" + graphName + "> where { " + 
-						"{" +
-							"?Property rdfs:range ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
-							"OPTIONAL { ?Property rdfs:domain ?Class " + genDomainFilterStatement("Class", domain) + ". }\n" + 
-						"} UNION { \n" +
-							"?Property rdfs:domain ?Class " + genDomainFilterStatement("Class", domain) + ". \n" + 
-							"OPTIONAL { ?Property rdfs:range ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + "} \n" +
-						"} UNION { \n" +
-							"?Property rdfs:domain ?x. \n" +
-							"?x owl:unionOf ?y. \n" +
-							buildListMemberSPARQL("?y", "?Class", "filter regex(str(?Class),'^" + domain + "') \n") +
-							//"?y list:member ?Class filter regex(str(?Class),'^" + domain + "'). " +
-							"?Property rdfs:range ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
-						"} UNION { \n" +
-							"?Property rdfs:domain ?Class " + genDomainFilterStatement("Class", domain) + ". \n" +
-							"?Property rdfs:range ?x.  \n" +
-							"?x owl:unionOf ?y. \n" +
-					        buildListMemberSPARQL("?y", "?Range", genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " \n"  + 
-						"} UNION { \n" +
-							"?Property rdfs:domain ?x. \n" +
-							"?x owl:unionOf ?y. \n" +
-							buildListMemberSPARQL("?y", "?Class", genDomainFilterStatement("Class", domain)) + " .\n" +
-							"?Property rdfs:range ?x1. \n" +
-							"?x1 owl:unionOf ?y1. \n" +
-					        buildListMemberSPARQL("?y1", "?Range", genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + 
-						"} UNION { \n" +
-							"?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain) + ". \n" +
-							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. \n" +
-							"?x owl:onClass ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
-						"} UNION { \n" +
-							"?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain) + ". \n" +
-							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. ?x owl:onClass ?y. \n" +
-							"?y owl:unionOf ?z. \n" +
-					        buildListMemberSPARQL("?z", "?Range", genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " .\n" + 
-				        "} UNION { \n" +
-							"?x1 owl:unionOf ?x2. \n" + 
-					        buildListMemberSPARQL("?x2", "?Class", genDomainFilterStatement("Class", domain) ) + " .\n" +
-					        "?x1 rdfs:subClassOf ?x . \n" +
-							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. ?x owl:onClass ?y. \n" +
-					        "?y owl:unionOf ?z. \n" +
-					        buildListMemberSPARQL("?z", "?Range", genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " .\n" + 
-						"} UNION { \n" +
-					        "?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain) + ". \n" +
-							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. \n" +
-					        "?x owl:someValuesFrom ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
-						"} UNION { \n" +
-					        "?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain) + ". \n" +
-							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. \n" +
-					        "?x owl:allValuesFrom ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" +
-					     // complex ranges are unions   -PEC feb22
-					     "} UNION { \n" +
-					        "?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain) + ". \n" +
-							"?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. \n" +
-					        "?x owl:allValuesFrom ?u . \n" +
-							"?u owl:unionOf ?z . \n" +
-					        buildListMemberSPARQL("?z", "?Range", genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " .\n" + 
-						"} " + 
-			"\n }";
+	private static String getLoadPropertiesQuery(String graphName, String domain) {
+
+		String retval = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
+				+ "PREFIX owl: <http://www.w3.org/2002/07/owl#> " + "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> "
+				+ "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
+				+ "PREFIX  list: <http://jena.hpl.hp.com/ARQ/list#> " + "select distinct ?Class ?Property ?Range from <"
+				+ graphName + "> where { " + "{" + "?Property rdfs:range ?Range "
+				+ genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n"
+				+ "OPTIONAL { ?Property rdfs:domain ?Class " + genDomainFilterStatement("Class", domain) + ". }\n"
+				
+				+ "} UNION { \n" + "?Property rdfs:domain ?Class " + genDomainFilterStatement("Class", domain) + ". \n"
+				+ "OPTIONAL { ?Property rdfs:range ?Range "
+				+ genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + "} \n" 
+				
+				+ "} UNION { \n"
+				+ "?Property rdfs:domain ?x. \n" + "?x owl:unionOf ?y. \n"
+				+ buildListMemberSPARQL("?y", "?Class", "filter regex(str(?Class),'^" + domain + "') \n") +
+				// "?y list:member ?Class filter regex(str(?Class),'^" + domain + "'). " +
+				"?Property rdfs:range ?Range "
+				+ genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" 
+				
+				+ "} UNION { \n"
+				+ "?Property rdfs:domain ?Class " + genDomainFilterStatement("Class", domain) + ". \n"
+				+ "?Property rdfs:range ?x.  \n" + "?x owl:unionOf ?y. \n"
+				+ buildListMemberSPARQL("?y", "?Range",
+						genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " \n" 
+				
+				+ "} UNION { \n" + "?Property rdfs:domain ?x. \n" + "?x owl:unionOf ?y. \n"
+				+ buildListMemberSPARQL("?y", "?Class", genDomainFilterStatement("Class", domain)) + " .\n"
+				+ "?Property rdfs:range ?x1. \n" + "?x1 owl:unionOf ?y1. \n"
+				+ buildListMemberSPARQL("?y1", "?Range",
+						genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')"))
+				
+				+ "} UNION { \n" + "?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain) + ". \n"
+				+ "?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. \n" + "?x owl:onClass ?Range "
+				+ genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" 
+				
+				+ "} UNION { \n"
+				+ "?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain) + ". \n"
+				+ "?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. ?x owl:onClass ?y. \n"
+				+ "?y owl:unionOf ?z. \n"
+				+ buildListMemberSPARQL("?z", "?Range",
+						genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " .\n" 
+				
+				+ "} UNION { \n" + "?x1 owl:unionOf ?x2. \n"
+				+ buildListMemberSPARQL("?x2", "?Class", genDomainFilterStatement("Class", domain)) + " .\n"
+				+ "?x1 rdfs:subClassOf ?x . \n"
+				+ "?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. ?x owl:onClass ?y. \n"
+				+ "?y owl:unionOf ?z. \n"
+				+ buildListMemberSPARQL("?z", "?Range",
+						genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " .\n" 
+				
+				+ "} UNION { \n" + "?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain)
+				+ ". \n" + "?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. \n"
+				+ "?x owl:someValuesFrom ?Range "
+				+ genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" 
+				
+				+ "} UNION { \n" 
+				+ "?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain) + ". \n" 
+				+ "?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. \n" 
+				+ "?x owl:someValuesFrom ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" 
+				
+				+ "} UNION { \n" 
+				+ "?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain) + ". \n" 
+				+ "?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. \n" 
+				+ "?x owl:allValuesFrom ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" 
+				
+				// add for sadlImplicitModels
+				// catches some other things
+//				+ "} UNION { \n" 
+//				+ "?Class rdfs:range ?x1 " + genDomainFilterStatement("Class", domain) + ". \n" 
+//				+ "?x1 rdfs:subClassOf ?x . \n"
+//				+ "?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. \n" 
+//				+ "?x owl:allValuesFrom ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" 
+				+ "} "
+
+				+ "\n }";
 		return retval;
 	}
-	
+
 	// Ravi's revised simpler solution 12/05/2016
 	private static String buildListMemberSPARQL(String varName, String classVar, String filter) {
 		restCount += 1;
-		return String.format("{ %s rdf:rest* ?Rest%d. ?Rest%d rdf:first %s %s. }",
-				varName, restCount, restCount, classVar, filter );
+		return String.format("{ %s rdf:rest* ?Rest%d. ?Rest%d rdf:first %s %s. }", varName, restCount, restCount,
+				classVar, filter);
 	}
+
 	/**
-	 * process the results of the properties sparql query and loads them into the properties hashmap
-	 * in the OntologyInfo object.
+	 * process the results of the properties sparql query and loads them into the
+	 * properties hashmap in the OntologyInfo object.
 	 * 
 	 * Properties (data or object) are attached to cl
 	 */
-	public void loadProperties(String classList[], String propertyList[], String rangeList[]) throws Exception{
-		 
-		final boolean DEBUG_RANGE = false;   // print message when range is changed to superclass of two different ranges
-		
+	public void loadProperties(String classList[], String propertyList[], String rangeList[]) throws Exception {
+
+		final boolean DEBUG_RANGE = false; // print message when range is changed to superclass of two different ranges
+
 		// loop through and make the property, pull class...
-		for(int i = 0; i < classList.length; i += 1){
-			
-			// Skip rows with no class  IFF the same property appears somewhere else with a class and same range
+		for (int i = 0; i < classList.length; i += 1) {
+
+			// Skip rows with no class IFF the same property appears somewhere else with a
+			// class and same range
 			// (aka forgive the loadPropertiesQuery)
 			boolean skip = false;
 			if (classList[i].isEmpty()) {
-				for (int j=0; j < propertyList.length; j++) {
+				for (int j = 0; j < propertyList.length; j++) {
 					if (i != j && propertyList[i].equals(propertyList[j]) && rangeList[i].equals(rangeList[j])) {
 						skip = true;
 					}
 				}
 			}
-			if (skip) continue;
-			
-			
+			if (skip)
+				continue;
+
 			OntologyProperty oProp = null;
 			OntologyClass oClass = this.getClass(classList[i]);
-			
+
 			// if domain or range are empty, use OrphanClass
 			// this will be resolved in loadSuperSubProperties
-			if (oClass == null) oClass = ORPHAN_CLASS;
+			if (oClass == null)
+				oClass = ORPHAN_CLASS;
 			String rangeStr = rangeList[i].isEmpty() ? ORPHAN_STR : rangeList[i];
 			String domainStr = classList[i].isEmpty() ? ORPHAN_STR : classList[i];
-			
+
 			if (this.propertyHash.containsKey(propertyList[i])) {
 				// get prop from propertyHash
 				oProp = this.propertyHash.get(propertyList[i]);
@@ -1615,31 +1640,32 @@ public class OntologyInfo {
 			if (!domainStr.equals(ORPHAN_STR)) {
 				// Add property to the class
 				OntologyClass c = this.classHash.get(classList[i]);
-				if(c == null){
+				if (c == null) {
 					throw new Exception("Cannot find class " + classList[i] + " in the ontology");
-				}			
+				}
 				c.addProperty(oProp);
-			}			
+			}
 		}
 	}
-	
 
 	/**
 	 * Check validity of the OntologyInfo
+	 * 
 	 * @throws Exception
 	 */
 	public void validate() throws Exception {
-		
+
 		// Superclass names must be valid
 		for (String className : this.classHash.keySet()) {
 			OntologyClass c = this.classHash.get(className);
 			for (String superClassName : c.getParentNameStrings(false)) {
-				if (! this.classHash.containsKey(superClassName)) {
-					throw new Exception("Can't find class" + superClassName + " (superclass of " + className + ") in the ontology");
+				if (!this.classHash.containsKey(superClassName)) {
+					throw new Exception(
+							"Can't find class" + superClassName + " (superclass of " + className + ") in the ontology");
 				}
 			}
 		}
-		
+
 		// check for orphaned properties not resolved by subProp query
 		for (OntologyProperty oProp : this.propertyHash.values()) {
 			Set<String> domains = oProp.getRangeDomains();
@@ -1648,65 +1674,77 @@ public class OntologyInfo {
 			} else {
 				for (String domain : domains) {
 					if (oProp.getRange(this.getClass(domain), this).getUriList().contains(ORPHAN_STR)) {
-						this.loadWarnings.add("Property has no range for domain " + domain + ": " + oProp.getNameStr(false));
+						this.loadWarnings
+								.add("Property has no range for domain " + domain + ": " + oProp.getNameStr(false));
 					}
 				}
 			}
 		}
-		
-		// Note: Range names don't necessarily need to be valid.  As long as they aren't used.
+
+		// Note: Range names don't necessarily need to be valid. As long as they aren't
+		// used.
 	}
-	
+
 	/**
-	 * Returns true/false to indicate whether the given class is a known enumeration.
+	 * Returns true/false to indicate whether the given class is a known
+	 * enumeration.
+	 * 
 	 * @param classURI
 	 * @return
 	 */
-	public Boolean classIsEnumeration(String classURI){
+	public Boolean classIsEnumeration(String classURI) {
 		Boolean retval = false;
-		if(this.enumerationHash.containsKey(classURI)){ retval = true; }
+		if (this.enumerationHash.containsKey(classURI)) {
+			retval = true;
+		}
 		return retval;
 	}
-	
-	
+
 	/**
-	 * Returns enumeration strings for the given class, if it is an enumeration.  Else returns null.
+	 * Returns enumeration strings for the given class, if it is an enumeration.
+	 * Else returns null.
+	 * 
 	 * @param classURI
 	 * @return
 	 */
-	public ArrayList<String> getEnumerationStrings(String classURI){
-		if(!classIsEnumeration(classURI).booleanValue()){
+	public ArrayList<String> getEnumerationStrings(String classURI) {
+		if (!classIsEnumeration(classURI).booleanValue()) {
 			return null;
 		}
 		return this.enumerationHash.get(classURI);
 	}
-	
+
 	/**
-	 * given the URI of a class one belives the Enumeration string is an instance of, the fully-qualified 
-	 * name is returned. if there is no match, null is returned.
+	 * given the URI of a class one belives the Enumeration string is an instance
+	 * of, the fully-qualified name is returned. if there is no match, null is
+	 * returned.
+	 * 
 	 * @param classURI
 	 * @param enumerationString
 	 * @return
 	 */
-	public String getMatchingEnumeration(String classURI, String enumerationString){
-		// return full URI of the enumeration string matching an enumerated value for classURI
-		// returns Null if classURI is not enumerated or if none of its enumeration values end in enumeration string
-		
-		// this handles both the case where the user gives just a fragment as well as the fully qualified URI value.
+	public String getMatchingEnumeration(String classURI, String enumerationString) {
+		// return full URI of the enumeration string matching an enumerated value for
+		// classURI
+		// returns Null if classURI is not enumerated or if none of its enumeration
+		// values end in enumeration string
+
+		// this handles both the case where the user gives just a fragment as well as
+		// the fully qualified URI value.
 		String retval = null;
-		
-		if(this.enumerationHash.containsKey(classURI)){
+
+		if (this.enumerationHash.containsKey(classURI)) {
 			ArrayList<String> candidates = this.enumerationHash.get(classURI);
-			for(String candidate : candidates){
+			for (String candidate : candidates) {
 				// fragment passed
-				if(!enumerationString.contains("#") && candidate.endsWith("#" + enumerationString )){
-					// found the one we want. 
+				if (!enumerationString.contains("#") && candidate.endsWith("#" + enumerationString)) {
+					// found the one we want.
 					retval = candidate;
 					break;
 				}
 				// fully qualified URI passed.
-				else if(enumerationString.contains("#") && candidate.equals(enumerationString )){
-					// found the one we want. 
+				else if (enumerationString.contains("#") && candidate.equals(enumerationString)) {
+					// found the one we want.
 					retval = candidate;
 					break;
 				}
@@ -1715,18 +1753,19 @@ public class OntologyInfo {
 		// return an answer
 		return retval;
 	}
-	
+
 	/**
-	 * Promote endClass of a Path to the named parent class name  IF ONTOLOGY ALLOWS.
+	 * Promote endClass of a Path to the named parent class name IF ONTOLOGY ALLOWS.
+	 * 
 	 * @param path
 	 * @param parentName
 	 * @return boolean - true if successful
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 	private boolean promoteEndClass(OntologyPath path, OntologyClass oParent) throws Exception {
-		Triple lastTriple = path.getTriple(path.getLength()-1);
+		Triple lastTriple = path.getTriple(path.getLength() - 1);
 		String parentName = oParent.getName();
-		
+
 		if (path.getEndClassName().equals(lastTriple.getSubject())) {
 			// promote subject of last triple
 			if (this.getInheritedPropertyByUri(oParent, lastTriple.getPredicate()) != null) {
@@ -1737,7 +1776,7 @@ public class OntologyInfo {
 			} else {
 				return false;
 			}
-			
+
 		} else {
 			// promote object of last triple
 			OntologyClass oSubject = this.getClass(lastTriple.getSubject());
@@ -1752,9 +1791,11 @@ public class OntologyInfo {
 			}
 		}
 	}
-	
+
 	/**
-	 * Promote startClass of a Path to the named parent class name  IF ONTOLOGY ALLOWS.
+	 * Promote startClass of a Path to the named parent class name IF ONTOLOGY
+	 * ALLOWS.
+	 * 
 	 * @param path
 	 * @param parentName
 	 * @return boolean - true if successful
@@ -1762,7 +1803,7 @@ public class OntologyInfo {
 	private boolean promoteStartClass(OntologyPath path, OntologyClass oParent) throws Exception {
 		Triple firstTriple = path.getTriple(0);
 		String parentName = oParent.getName();
-		
+
 		if (path.getStartClassName().equals(firstTriple.getSubject())) {
 			// promote subject of last triple
 			if (this.getInheritedPropertyByUri(oParent, firstTriple.getPredicate()) != null) {
@@ -1773,7 +1814,7 @@ public class OntologyInfo {
 			} else {
 				return false;
 			}
-			
+
 		} else {
 			// promote object of first triple
 			OntologyClass oSubject = this.getClass(firstTriple.getSubject());
@@ -1788,80 +1829,95 @@ public class OntologyInfo {
 			}
 		}
 	}
+
 	public ArrayList<OntologyPath> findAllPaths(String fromClassName, String targetClassName) throws Exception {
 		HashSet<String> targetClassNames = new HashSet<String>();
 		targetClassNames.add(targetClassName);
 		return this.findAllPaths(fromClassName, targetClassNames);
 	}
-	
-	public ArrayList<OntologyPath> findAllPaths(String fromClassName, HashSet<String> targetClassNames) throws Exception {
+
+	public ArrayList<OntologyPath> findAllPaths(String fromClassName, HashSet<String> targetClassNames)
+			throws Exception {
 		return this.findAllPaths(fromClassName, targetClassNames, null, null, null);
 	}
-	
-	public ArrayList<OntologyPath> findAllPaths(String fromClassName, String targetClassName, PredicateStats predStats) throws Exception {
+
+	public ArrayList<OntologyPath> findAllPaths(String fromClassName, String targetClassName, PredicateStats predStats)
+			throws Exception {
 		HashSet<String> targetClassNames = new HashSet<String>();
 		targetClassNames.add(targetClassName);
 		return this.findAllPaths(fromClassName, targetClassNames, predStats);
 	}
-	
-	public ArrayList<OntologyPath> findAllPaths(String fromClassName, HashSet<String> targetClassNames, PredicateStats predStats) throws Exception {
+
+	public ArrayList<OntologyPath> findAllPaths(String fromClassName, HashSet<String> targetClassNames,
+			PredicateStats predStats) throws Exception {
 		return this.findAllPaths(fromClassName, targetClassNames, predStats, null, null);
 	}
 
-	
 	/*
-	 * This is a wrapper around findExactPaths such that fromClassName and targetClassNames
-	 * can be superclasses of the exact paths found.
-	 * If ontology allows, those paths are found, and
-	 * the start and/or end classes are promoted to the superclasses passed in.
-	 * The resulting paths are "exact" except the ends match the parameters.
+	 * This is a wrapper around findExactPaths such that fromClassName and
+	 * targetClassNames can be superclasses of the exact paths found. If ontology
+	 * allows, those paths are found, and the start and/or end classes are promoted
+	 * to the superclasses passed in. The resulting paths are "exact" except the
+	 * ends match the parameters.
 	 * 
-	 * "Exact" is only meaningful when using PredicateStats and/or a nodegroup to 
-	 * find paths that have instance data. 
+	 * "Exact" is only meaningful when using PredicateStats and/or a nodegroup to
+	 * find paths that have instance data.
 	 * 
 	 * @param fromClassName
+	 * 
 	 * @param targetClassNames
+	 * 
 	 * @param domain
-	 * @param predStats - optional : prune paths by existing predicates and/or existing ng data
-	 * @param ng - optional : in addition to predStats, prune paths by existing ng data
+	 * 
+	 * @param predStats - optional : prune paths by existing predicates and/or
+	 * existing ng data
+	 * 
+	 * @param ng - optional : in addition to predStats, prune paths by existing ng
+	 * data
+	 * 
 	 * @param conn - conn to use with ng when checking instance data
+	 * 
 	 * @return
-	 * @throws Exception 
+	 * 
+	 * @throws Exception
 	 */
-	public ArrayList<OntologyPath> findAllPaths(String fromClassName, HashSet<String> targetClassNames, PredicateStats predStats, NodeGroup ng, SparqlConnection conn) throws Exception {
+	public ArrayList<OntologyPath> findAllPaths(String fromClassName, HashSet<String> targetClassNames,
+			PredicateStats predStats, NodeGroup ng, SparqlConnection conn) throws Exception {
 		if (predStats == null) {
 			return this.findExactPaths(fromClassName, targetClassNames);
 		} else {
-			
+
 			// with predStats, findExactPaths will only find exact matches.
-			// So fromClassNames and TargetsWithSubClasses are built containing all subclasses.
-			
+			// So fromClassNames and TargetsWithSubClasses are built containing all
+			// subclasses.
+
 			// add subclasses to fromClassName
 			HashSet<String> fromClassNames = new HashSet<String>();
 			fromClassNames.add(fromClassName);
-			
+
 			for (String subClass : this.getSubclassNames(fromClassName)) {
 				fromClassNames.add(subClass);
 			}
-			
+
 			// add subclasses to targetClassNames
 			HashSet<String> targetsWithSubclasses = new HashSet<String>();
 			targetsWithSubclasses.addAll(targetClassNames);
-			
+
 			for (String targetClass : targetClassNames) {
 				for (String subClass : this.getSubclassNames(targetClass)) {
 					targetsWithSubclasses.add(subClass);
 				}
 			}
-		
+
 			// find exact paths
-			ArrayList<OntologyPath> paths =  this.findExactPaths(fromClassNames, targetsWithSubclasses, predStats, ng, conn);
-		
+			ArrayList<OntologyPath> paths = this.findExactPaths(fromClassNames, targetsWithSubclasses, predStats, ng,
+					conn);
+
 			// Pull out all the paths that starts or ends on a subclass
 			ArrayList<OntologyPath> subclassPaths = new ArrayList<OntologyPath>();
 			for (OntologyPath p : paths) {
 				// if end class is not in the target list or start class is not fromClass
-				if (! targetClassNames.contains(p.getEndClassName()) || !p.getStartClassName().equals(fromClassName) ) {
+				if (!targetClassNames.contains(p.getEndClassName()) || !p.getStartClassName().equals(fromClassName)) {
 					subclassPaths.add(p);
 				}
 			}
@@ -1869,23 +1925,24 @@ public class OntologyInfo {
 			for (OntologyPath p : subclassPaths) {
 				paths.remove(p);
 			}
-			
+
 			// build hash of returns so far
 			HashSet<String> pathsHash = new HashSet<String>();
 			for (OntologyPath p : paths) {
 				pathsHash.add(p.asString());
-			}			
-						
+			}
+
 			// try to promote each removed path to a correct endClass and re-add to results
 			for (OntologyPath p : subclassPaths) {
-				if (! targetClassNames.contains(p.getEndClassName())) {
+				if (!targetClassNames.contains(p.getEndClassName())) {
 					// find a parent that is in targetClassNames
 					for (String superClassName : this.getSuperclassNames(p.getEndClassName())) {
 						if (targetClassNames.contains(superClassName)) {
 							// if end class promotion succeeds
 							if (this.promoteEndClass(p, this.getClass(superClassName))) {
 								// if start class is ok OR start class promotion succeeds
-								if (p.getStartClassName().equals(fromClassName) || this.promoteStartClass(p, this.getClass(fromClassName))) {
+								if (p.getStartClassName().equals(fromClassName)
+										|| this.promoteStartClass(p, this.getClass(fromClassName))) {
 									String hash = p.asString();
 									// if result isn't already being returned
 									if (!pathsHash.contains(hash)) {
@@ -1896,8 +1953,8 @@ public class OntologyInfo {
 							}
 						}
 					}
-				} else { 
-					// was removed only due to  startClass != fromClassName
+				} else {
+					// was removed only due to startClass != fromClassName
 					if (this.promoteStartClass(p, this.getClass(fromClassName))) {
 						String hash = p.asString();
 						// if result isn't already being returned
@@ -1911,38 +1968,43 @@ public class OntologyInfo {
 			return paths;
 		}
 	}
-	
+
 	/**
 	 * Convenience: single fromClassName
+	 * 
 	 * @param fromClassName
 	 * @param targetClassNames
 	 * @return
-	 * @throws Exception 
+	 * @throws Exception
 	 */
-	public ArrayList<OntologyPath> findExactPaths(String fromClassName, HashSet<String> targetClassNames) throws Exception {
+	public ArrayList<OntologyPath> findExactPaths(String fromClassName, HashSet<String> targetClassNames)
+			throws Exception {
 		HashSet<String> fromClassNames = new HashSet<String>();
 		fromClassNames.add(fromClassName);
 		return this.findExactPaths(fromClassNames, targetClassNames, null, null, null);
 	}
-	
+
 	/**
-	 * Find all paths from fromClassName to one of targetClassNames.
-	 * Must be an exact match end-to-end, 
-	 * (which only matters when there are predicateStats or instance data being checked)
+	 * Find all paths from fromClassName to one of targetClassNames. Must be an
+	 * exact match end-to-end, (which only matters when there are predicateStats or
+	 * instance data being checked)
+	 * 
 	 * @param fromClassNames
 	 * @param targetClassNames
 	 * @return
-	 * @throws Exception 
+	 * @throws Exception
 	 */
-	private ArrayList<OntologyPath> findExactPaths(HashSet<String> fromClassNames, HashSet<String> targetClassNames, PredicateStats predStats, NodeGroup ng, SparqlConnection conn) throws Exception {
-		//   
-		//   A form of A* path finding algorithm
-		//   See getConnList() for the types of connections that are allowed
-		//   Returns a list shortest to longest:  [path0, path1, path2...]
-		//        pathX.getStartClassName() == fromClassName
-		//        pathX.getEndClassName() == member of targetClassNames
-		//        pathX.asList() returns list of triple lists [[className0, att, className1], [className1, attName, className2]...]
-			
+	private ArrayList<OntologyPath> findExactPaths(HashSet<String> fromClassNames, HashSet<String> targetClassNames,
+			PredicateStats predStats, NodeGroup ng, SparqlConnection conn) throws Exception {
+		//
+		// A form of A* path finding algorithm
+		// See getConnList() for the types of connections that are allowed
+		// Returns a list shortest to longest: [path0, path1, path2...]
+		// pathX.getStartClassName() == fromClassName
+		// pathX.getEndClassName() == member of targetClassNames
+		// pathX.asList() returns list of triple lists [[className0, att, className1],
+		// [className1, attName, className2]...]
+
 		long t0 = System.currentTimeMillis();
 		this.pathWarnings = new ArrayList<String>();
 		ArrayList<OntologyPath> waitingList = new ArrayList<OntologyPath>();
@@ -1951,54 +2013,57 @@ public class OntologyInfo {
 		}
 		ArrayList<OntologyPath> ret = new ArrayList<OntologyPath>();
 		long numFound = 0;
-		HashMap<String, Integer> targetHash = new HashMap<String,Integer>(); // hash of all possible ending classes:  targetHash[className] = 1
-		
-		/* ISSUE 50:  but perhaps these should be handled by a caller, not by this method
-		 * Pathfinding should also find paths
- 		 *   A) from the new class to a superclass of an existing class
-         *   B) from an existing class to a superclass of the new class.
+		HashMap<String, Integer> targetHash = new HashMap<String, Integer>(); // hash of all possible ending classes:
+																				// targetHash[className] = 1
+
+		/*
+		 * ISSUE 50: but perhaps these should be handled by a caller, not by this method
+		 * Pathfinding should also find paths A) from the new class to a superclass of
+		 * an existing class B) from an existing class to a superclass of the new class.
 		 */
-		
+
 		// return if there is no endpoint
-		if (targetClassNames.isEmpty()) { return ret; }
-		
+		if (targetClassNames.isEmpty()) {
+			return ret;
+		}
+
 		// set up targetHash[targetClass] = 1
 		for (String targetName : targetClassNames) {
 			targetHash.put(targetName, 1);
 		}
-		
-		// STOP CRITERIA A: search as long as there is a waiting list 
-		while (! waitingList.isEmpty()) {
+
+		// STOP CRITERIA A: search as long as there is a waiting list
+		while (!waitingList.isEmpty()) {
 			// pull one off waiting list
 			OntologyPath item = waitingList.remove(0);
 			String waitClass = item.getEndClassName();
 			OntologyPath waitPath = item;
-			
-			// STOP CRITERIA B:  Also stop searching if:
-			//    this final path (with 1 added connection) will be longer than the first (shortest) already found path
-			if (!ret.isEmpty() && 
-				(waitPath.getLength() + 1  > ret.get(0).getLength() + pathFindingMaxLengthRange)) {
+
+			// STOP CRITERIA B: Also stop searching if:
+			// this final path (with 1 added connection) will be longer than the first
+			// (shortest) already found path
+			if (!ret.isEmpty() && (waitPath.getLength() + 1 > ret.get(0).getLength() + pathFindingMaxLengthRange)) {
 				this.pathWarnings.add(String.format("Found paths up to length %d.", waitPath.getLength()));
 				break;
-			} 
-			
+			}
+
 			// STOP CRITERIA C: stop if path is too long
 			if (waitPath.getLength() > pathFindingMaxPathLength) {
 				this.pathWarnings.add(String.format("Found paths up to length %d.", pathFindingMaxPathLength));
 				break;
 			}
-			
+
 			// STOP CRITERIA D: too much time spent searching
 			// Budget half the time for sorting the results
 			if (System.currentTimeMillis() - t0 > pathFindingMaxTimeMsec / 2) {
 				this.pathWarnings.add("Path-finding timing out. ");
 				break;
 			}
-			
+
 			// STOP CRITERIA E: found too many
 			if (numFound > pathFindingMaxPathCount) {
 				while (ret.size() > pathFindingMaxPathCount) {
-					ret.remove(ret.size() -1);
+					ret.remove(ret.size() - 1);
 				}
 				if (predStats == null) {
 					this.pathWarnings.add(String.format("Found first %d paths.", pathFindingMaxPathCount));
@@ -2007,29 +2072,30 @@ public class OntologyInfo {
 				}
 				break;
 			}
-			
+
 			// get all one hop connections and loop through them
 			for (OntologyPath oConn : this.getConnList(waitClass, predStats)) {
-				//  each connection is a path with only one node (the 0th)
-				//  grab the name of the newly found class
+				// each connection is a path with only one node (the 0th)
+				// grab the name of the newly found class
 				String newClass = "";
 				OntologyPath newPath = null;
 				boolean loopFlag = false;
-				
+
 				// if the newfound class is pointed to by an attribute of one on the wait list
 				if (oConn.getStartClassName().equals(waitClass)) {
 					newClass = oConn.getEndClassName();
-					
+
 				} else {
 					newClass = oConn.getStartClassName();
 				}
-				
+
 				// check for loops in the path before adding the class
-				// PEC 11/2019: there are some good paths that might have "loops" so this will have to be re-thought
+				// PEC 11/2019: there are some good paths that might have "loops" so this will
+				// have to be re-thought
 				if (waitPath.containsSubPath(oConn)) {
 					loopFlag = true;
-				} 
-								
+				}
+
 				// build the new path
 				Triple t = oConn.getTriple(0);
 				newPath = waitPath.deepCopy();
@@ -2044,15 +2110,19 @@ public class OntologyInfo {
 						if (ng == null || this.pathToNgHasInstance(ng, newPath, conn)) {
 							ret.add(newPath);
 							numFound++;
-							if (CONSOLE_LOG) { LocalLogger.logToStdOut(">>>found path " + newPath.debugString()); }
+							if (CONSOLE_LOG) {
+								LocalLogger.logToStdOut(">>>found path " + newPath.debugString());
+							}
 						}
 
-					// if path doens't lead to target
-					}  else if (loopFlag == false){
+						// if path doens't lead to target
+					} else if (loopFlag == false) {
 						// if in full instance mode, path must have data
 						if (ng == null || this.pathHasInstance(newPath, conn)) {
 							waitingList.add(newPath);
-							if (CONSOLE_LOG) { LocalLogger.logToStdOut("searching " + newPath.debugString()); }
+							if (CONSOLE_LOG) {
+								LocalLogger.logToStdOut("searching " + newPath.debugString());
+							}
 						}
 					}
 				}
@@ -2060,24 +2130,25 @@ public class OntologyInfo {
 			}
 		}
 		this.sortPaths(ret);
-		
+
 		if (CONSOLE_LOG) {
 			LocalLogger.logToStdOut("These are the paths I found:");
-			for (int i=0; i < ret.size(); i++) {
+			for (int i = 0; i < ret.size(); i++) {
 				LocalLogger.logToStdOut(ret.get(i).debugString());
 			}
-			
+
 			long t1 = System.currentTimeMillis();
-			LocalLogger.logToStdOut("findAllPaths time is: " + (t1-t0) + " msec");
+			LocalLogger.logToStdOut("findAllPaths time is: " + (t1 - t0) + " msec");
 		}
-		
-		return ret;	
+
+		return ret;
 	}
-	
-	/** 
-	 * Does a path have any instance data in conn.
-	 * Runs directly without any other services.
-	 * @param ng - potentially linked to end of path.  
+
+	/**
+	 * Does a path have any instance data in conn. Runs directly without any other
+	 * services.
+	 * 
+	 * @param ng         - potentially linked to end of path.
 	 * @param anchorNode
 	 * @param oInfo
 	 * @param path
@@ -2095,13 +2166,14 @@ public class OntologyInfo {
 		Node anchor = pathNg.addNode(path.getEndClassName(), this);
 		Node nodeAdded = pathNg.addPath(path, anchor, this);
 		return this.ngHasInstance(pathNg, nodeAdded, conn);
-		
+
 	}
-	
-	/** 
-	 * Does a ng with new path have any instance data in conn.
-	 * Runs directly without any other services.
-	 * @param ng - potentially linked to end of path.  
+
+	/**
+	 * Does a ng with new path have any instance data in conn. Runs directly without
+	 * any other services.
+	 * 
+	 * @param ng         - potentially linked to end of path.
 	 * @param anchorNode
 	 * @param oInfo
 	 * @param path
@@ -2110,11 +2182,12 @@ public class OntologyInfo {
 	 * @throws Exception
 	 */
 	private boolean pathToNgHasInstance(NodeGroup ng, OntologyPath path, SparqlConnection conn) throws Exception {
-		
-		if (CONSOLE_LOG) { LocalLogger.logToStdOut(path.asString()); }
+
+		if (CONSOLE_LOG) {
+			LocalLogger.logToStdOut(path.asString());
+		}
 		ArrayList<Node> anchorList = ng.getNodesBySubclassURI(path.getEndClassName(), this);
-		
-		
+
 		// path connects, check as connected to ng at each possible point
 		for (Node anchorNode : anchorList) {
 			LocalLogger.logToStdOut("==> " + anchorNode.getSparqlID());
@@ -2129,12 +2202,13 @@ public class OntologyInfo {
 			}
 		}
 		return false;
-		
+
 	}
-	
+
 	/**
 	 * Does ng have instance data
-	 * @param ngTemp - will be modified, so it should be disposable
+	 * 
+	 * @param ngTemp    - will be modified, so it should be disposable
 	 * @param nodeAdded
 	 * @param conn
 	 * @return
@@ -2150,87 +2224,90 @@ public class OntologyInfo {
 		long count = 0;
 
 		SparqlEndpointInterface sei = conn.getDefaultQueryInterface();
-		
+
 		// set a query timeout
-		
-				
+
 		String sparql = ngTemp.generateSparql(AutoGeneratedQueryTypes.COUNT, null, null, null);
-			
+
 		int savedTimeout = sei.getTimeout();
-		
+
 		try {
 			int newTimeout = this.pathFindingMaxTimeMsec / 2000;
 			sei.setTimeout(newTimeout);
-			if (CONSOLE_LOG) { LocalLogger.logToStdOut("timeout: " + String.valueOf(newTimeout) + "\nsparql:\n" + sparql); }
+			if (CONSOLE_LOG) {
+				LocalLogger.logToStdOut("timeout: " + String.valueOf(newTimeout) + "\nsparql:\n" + sparql);
+			}
 			Table tab = sei.executeQueryToTable(sparql);
 			count = tab.getCellAsInt(0, 0);
-			
+
 		} catch (QueryTimeoutException qte) {
 			// timeout: ignore
 			count = 0;
 		} finally {
 			sei.setTimeout(savedTimeout);
 		}
-		
 
-		if (CONSOLE_LOG) { LocalLogger.logToStdOut("count: " + String.valueOf(count)); }
+		if (CONSOLE_LOG) {
+			LocalLogger.logToStdOut("count: " + String.valueOf(count));
+		}
 
 		return count > 0;
 	}
-	
+
 	/**
-	 * Presuming the findAllPaths algorithm already sorts shortest to longest
-	 * and puts adjacent subclasses,subproperties in adjacent positions...
-	 * Do the remaining sort of putting the subclasses/subproperties first.
-	 * In other words, each grouping is sorted most-specific first.
+	 * Presuming the findAllPaths algorithm already sorts shortest to longest and
+	 * puts adjacent subclasses,subproperties in adjacent positions... Do the
+	 * remaining sort of putting the subclasses/subproperties first. In other words,
+	 * each grouping is sorted most-specific first.
 	 * 
 	 * @param list
 	 */
 	private void sortPaths(ArrayList<OntologyPath> list) {
 		boolean swap;
 		// for each element in list
-		for (int i=1; i < list.size(); i++) {
+		for (int i = 1; i < list.size(); i++) {
 			int insertAt = i;
 			// look at the previous elements
-			for (int j=i-1; j >= 0; j--) {
+			for (int j = i - 1; j >= 0; j--) {
 				// if list item is path with same length
 				if (list.get(j).getLength() == list.get(i).getLength()) {
 					swap = true;
 					int score = 0;
-					// scoring system: equal is 0, subclass is a +, superclass is a -, none is automatic -100 fail
-					for (int k=0; k < list.get(i).getLength() && swap==true; k++) {
+					// scoring system: equal is 0, subclass is a +, superclass is a -, none is
+					// automatic -100 fail
+					for (int k = 0; k < list.get(i).getLength() && swap == true; k++) {
 						Triple triple_ik = list.get(i).getTriple(k);
 						String subi = triple_ik.getSubject();
 						String predi = triple_ik.getPredicate();
 						String obji = triple_ik.getObject();
-						
+
 						Triple triple_jk = list.get(j).getTriple(k);
 						String subj = triple_jk.getSubject();
 						String predj = triple_jk.getPredicate();
 						String objj = triple_jk.getObject();
-						
+
 						if (subj.equals(subi)) {
-							//zero
-						} else if ( this.isSubclassOf(subi, subj)) {
+							// zero
+						} else if (this.isSubclassOf(subi, subj)) {
 							score += 1;
-						} else if ( this.isSubclassOf(subj, subi)) {
+						} else if (this.isSubclassOf(subj, subi)) {
 							score -= 1;
 						} else {
 							score = -100;
 							break;
 						}
 						if (predj.equals(predi)) {
-							//zero
+							// zero
 						} else if (this.isSubPropOf(predi, predj)) {
 							score += 1;
-						} else if ( this.isSubPropOf(predj, predi)) {
+						} else if (this.isSubPropOf(predj, predi)) {
 							score -= 1;
 						} else {
 							score = -100;
 							break;
 						}
 						if (objj.equals(obji)) {
-							//zero
+							// zero
 						} else if (this.isSubclassOf(obji, objj)) {
 							score += 1;
 						} else if (this.isSubclassOf(objj, obji)) {
@@ -2240,15 +2317,16 @@ public class OntologyInfo {
 							break;
 						}
 					}
-					
-					// if there are more subclasses then superclasses in the path, move the item ahead
+
+					// if there are more subclasses then superclasses in the path, move the item
+					// ahead
 					if (score > 0) {
 						insertAt = j;
-					} 
+					}
 				} else {
 					break;
 				}
-				
+
 			}
 			// if any previous items are moveable, do it
 			if (insertAt < i) {
@@ -2258,55 +2336,64 @@ public class OntologyInfo {
 			}
 		}
 	}
+
 	/**
-	 * returns true/false indicating whether the classCompared is a subclass of the classComparedTo
+	 * returns true/false indicating whether the classCompared is a subclass of the
+	 * classComparedTo
+	 * 
 	 * @param classCompared
 	 * @param classComparedTo
 	 * @return
 	 */
-	public Boolean classIsA(OntologyClass classCompared, OntologyClass classComparedTo){
-		
-		if(classCompared == null || classComparedTo == null) { return false; }
+	public Boolean classIsA(OntologyClass classCompared, OntologyClass classComparedTo) {
 
-		if (classCompared.equals(classComparedTo)) { return true; }
-		
+		if (classCompared == null || classComparedTo == null) {
+			return false;
+		}
+
+		if (classCompared.equals(classComparedTo)) {
+			return true;
+		}
+
 		ArrayList<OntologyClass> allParents = this.getClassParents(classCompared);
-		
+
 		// recursively classCompared parents
-		for (OntologyClass parent : allParents){
-			if (this.classIsA(parent, classComparedTo) ) {
+		for (OntologyClass parent : allParents) {
+			if (this.classIsA(parent, classComparedTo)) {
 				return true;
 			}
-		}			
-		
+		}
+
 		return false;
 	}
-	
+
 	/**
 	 * checks if the classToCheck is in the given range
+	 * 
 	 * @param classToCheck
 	 * @param range
 	 * @return
 	 */
-	public Boolean classIsInRange(OntologyClass classToCheck, OntologyRange range){
+	public Boolean classIsInRange(OntologyClass classToCheck, OntologyRange range) {
 
 		for (String rangeUri : range.getUriList()) {
 			if (this.classIsA(classToCheck, this.classHash.get(rangeUri))) {
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
-	
+
 	/**
 	 * Return all OntologyClasses with prop
+	 * 
 	 * @param prop
 	 * @return
 	 */
 	public ArrayList<OntologyClass> getPropertyDomain(OntologyProperty prop) {
 		ArrayList<OntologyClass> ret = new ArrayList<OntologyClass>();
-		
+
 		for (String key : this.classHash.keySet()) {
 			OntologyClass oClass = this.classHash.get(key);
 			ArrayList<OntologyProperty> oProps = oClass.getProperties();
@@ -2316,9 +2403,10 @@ public class OntologyInfo {
 		}
 		return ret;
 	}
-	
+
 	/**
 	 * loads all of the data for the ontology into the OntologyInfo object
+	 * 
 	 * @param endpoint
 	 * @param domain
 	 * @throws Exception
@@ -2327,9 +2415,10 @@ public class OntologyInfo {
 	public void load(SparqlEndpointInterface endpoint, String domain) throws Exception {
 		this.load(endpoint, domain, false);
 	}
-	
+
 	/**
 	 * Preferred method of loading an oInfo
+	 * 
 	 * @param endpoint
 	 * @param owlImportFlag
 	 * @throws Exception
@@ -2337,11 +2426,12 @@ public class OntologyInfo {
 	public void load(SparqlEndpointInterface endpoint, boolean owlImportFlag) throws Exception {
 		this.load(endpoint, "", owlImportFlag);
 	}
-	
+
 	/**
 	 * Not-quite-deprecated but not recommended function signature
+	 * 
 	 * @param endpoint
-	 * @param domain - only remains for backwards compatibility
+	 * @param domain        - only remains for backwards compatibility
 	 * @param owlImportFlag
 	 * @throws Exception
 	 */
@@ -2352,37 +2442,39 @@ public class OntologyInfo {
 			tab = endpoint.executeQueryToTable(OntologyInfo.getOwlImportsQuery(endpoint.getGraph()));
 			this.loadOwlImports(endpoint, tab.getColumn("importee"));
 		}
-		
+
 		// execute each sub-query in order
 		tab = endpoint.executeQueryToTable(OntologyInfo.getSuperSubClassQuery(endpoint.getGraph(), domain));
 		this.loadSuperSubClasses(tab.getColumn("x"), tab.getColumn("y"));
-		
+
 		tab = endpoint.executeQueryToTable(OntologyInfo.getTopLevelClassQuery(endpoint.getGraph(), domain));
 		this.loadTopLevelClasses(tab.getColumn("Class"));
-		
+
 		tab = endpoint.executeQueryToTable(OntologyInfo.getDatatypeQuery(endpoint.getGraph(), domain));
-		this.loadDatatypes(tab.getColumn("dataType"), tab.getColumn("equivType"), tab.getColumn("?r_pred"), tab.getColumn("?r_obj"));
-		
+		this.loadDatatypes(tab.getColumn("dataType"), tab.getColumn("equivType"), tab.getColumn("?r_pred"),
+				tab.getColumn("?r_obj"));
+
 		tab = endpoint.executeQueryToTable(OntologyInfo.getLoadPropertiesQuery(endpoint.getGraph(), domain));
-		this.loadProperties(tab.getColumn("Class"),tab.getColumn("Property"),tab.getColumn("Range"));
-		
+		this.loadProperties(tab.getColumn("Class"), tab.getColumn("Property"), tab.getColumn("Range"));
+
 		tab = endpoint.executeQueryToTable(OntologyInfo.getSuperSubPropertyQuery(endpoint.getGraph(), domain));
 		this.loadSuperSubProperties(tab.getColumn("subProp"), tab.getColumn("superProp"));
-		
+
 		tab = endpoint.executeQueryToTable(OntologyInfo.getEnumQuery(endpoint.getGraph(), domain));
-		this.loadEnums(tab.getColumn("Class"),tab.getColumn("EnumVal"));
-		
+		this.loadEnums(tab.getColumn("Class"), tab.getColumn("EnumVal"));
+
 		tab = endpoint.executeQueryToTable(OntologyInfo.getAnnotationLabelsQuery(endpoint.getGraph(), domain));
 		this.loadAnnotationLabels(tab.getColumn("Elem"), tab.getColumn("Label"));
-		
+
 		tab = endpoint.executeQueryToTable(OntologyInfo.getAnnotationCommentsQuery(endpoint.getGraph(), domain));
 		this.loadAnnotationComments(tab.getColumn("Elem"), tab.getColumn("Comment"));
-		
+
 		this.validate();
 	}
-	
+
 	/**
 	 * loads all of the data for the ontology into the OntologyInfo object
+	 * 
 	 * @param threadUnsafeEndpoint
 	 * @param domain
 	 * @throws Exception
@@ -2390,205 +2482,216 @@ public class OntologyInfo {
 	public void load(SparqlQueryClient client, String domain) throws Exception {
 		this.load(client, domain, false);
 	}
-		
+
 	public void load(SparqlQueryClient client, String domain, boolean owlImportFlag) throws Exception {
 		TableResultSet tableRes;
 		String graphName = client.getConfig().getGraph();
-		
+
 		if (owlImportFlag) {
-			tableRes = (TableResultSet) client.execute(OntologyInfo.getOwlImportsQuery(graphName), SparqlResultTypes.TABLE);
+			tableRes = (TableResultSet) client.execute(OntologyInfo.getOwlImportsQuery(graphName),
+					SparqlResultTypes.TABLE);
 			this.loadOwlImports(client, tableRes.getTable().getColumn("importee"));
 		}
-		
+
 		// execute each sub-query in order
-		
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubClassQuery(graphName, domain), SparqlResultTypes.TABLE);
+
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubClassQuery(graphName, domain),
+				SparqlResultTypes.TABLE);
 		this.loadSuperSubClasses(tableRes.getTable().getColumn("x"), tableRes.getTable().getColumn("y"));
-		
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getTopLevelClassQuery(graphName, domain), SparqlResultTypes.TABLE);
+
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getTopLevelClassQuery(graphName, domain),
+				SparqlResultTypes.TABLE);
 		this.loadTopLevelClasses(tableRes.getTable().getColumn("Class"));
-		
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getLoadPropertiesQuery(graphName, domain), SparqlResultTypes.TABLE);
-		this.loadProperties(tableRes.getTable().getColumn("Class"), tableRes.getTable().getColumn("Property"), tableRes.getTable().getColumn("Range"));
-		
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubPropertyQuery(graphName, domain), SparqlResultTypes.TABLE);
-		this.loadSuperSubProperties(tableRes.getTable().getColumn("subProp"), tableRes.getTable().getColumn("superProp"));
-		
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getEnumQuery(graphName, domain), SparqlResultTypes.TABLE);
+
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getLoadPropertiesQuery(graphName, domain),
+				SparqlResultTypes.TABLE);
+		this.loadProperties(tableRes.getTable().getColumn("Class"), tableRes.getTable().getColumn("Property"),
+				tableRes.getTable().getColumn("Range"));
+
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubPropertyQuery(graphName, domain),
+				SparqlResultTypes.TABLE);
+		this.loadSuperSubProperties(tableRes.getTable().getColumn("subProp"),
+				tableRes.getTable().getColumn("superProp"));
+
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getEnumQuery(graphName, domain),
+				SparqlResultTypes.TABLE);
 		this.loadEnums(tableRes.getTable().getColumn("Class"), tableRes.getTable().getColumn("EnumVal"));
-		
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationLabelsQuery(graphName, domain), SparqlResultTypes.TABLE);
+
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationLabelsQuery(graphName, domain),
+				SparqlResultTypes.TABLE);
 		this.loadAnnotationLabels(tableRes.getTable().getColumn("Elem"), tableRes.getTable().getColumn("Label"));
-		
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationCommentsQuery(graphName, domain), SparqlResultTypes.TABLE);
+
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationCommentsQuery(graphName, domain),
+				SparqlResultTypes.TABLE);
 		this.loadAnnotationComments(tableRes.getTable().getColumn("Elem"), tableRes.getTable().getColumn("Comment"));
-		
+
 		this.validate();
 	}
-		
+
 	/*
-     * Build a json that mimics the returns from the load queries
-     */
-    @SuppressWarnings("unchecked")
-	public JSONObject toJson () throws Exception { 
-    	JSONObject json = new JSONObject();
-    	
-    	JSONArray topLevelClassList =  new JSONArray();
-    	JSONArray datatypeList =  new JSONArray();
-    	JSONArray subClassSuperClassList =  new JSONArray();
-    	JSONArray subSuperPropList = new JSONArray();
-    	JSONArray classPropertyRangeList =  new JSONArray();
-    	JSONArray classEnumValList =  new JSONArray();
-    	JSONArray annotationLabelList = new JSONArray();
-    	JSONArray annotationCommentList = new JSONArray();
-    	JSONObject prefixes =  new JSONObject();
-    	JSONArray importedGraphsList = new JSONArray();
-    	JSONArray loadWarningsList = new JSONArray();
-        
-        HashMap<String,String> prefixToIntHash = new HashMap<String, String>();
+	 * Build a json that mimics the returns from the load queries
+	 */
+	@SuppressWarnings("unchecked")
+	public JSONObject toJson() throws Exception {
+		JSONObject json = new JSONObject();
 
-        // topLevelClassList and subClassSuperClassList
-        for (String c : this.classHash.keySet()) {
-            ArrayList<String> parents = this.classHash.get(c).getParentNameStrings(false);   // PEC TODO add support for multiple parents
-            String name = this.classHash.get(c).getNameString(false);
-            if (parents.size() == 0) {
-            	topLevelClassList.add(Utility.prefixURI(name, prefixToIntHash));
-            } else {
-            	for (int i=0; i < parents.size(); i++) {
-	            	JSONArray a = new JSONArray();
-	            	a.add(Utility.prefixURI(name, prefixToIntHash));
-	            	a.add(Utility.prefixURI(parents.get(i), prefixToIntHash));
-	            	subClassSuperClassList.add(a);
-            	}
-            }
-        }
-        
-        // datatypeList
-        for (String name : this.datatypeHash.keySet()) {
-        	// datatype rows are complicated, so work is done by OntologyDatatype
-        	JSONArray rows = (JSONArray) this.generateDatatypeRows(this.datatypeHash.get(name));
-        	for (Object o : rows) {
-        		datatypeList.add(o);
-        	}
-        }
-        
-        // super / sub classes
-        for (String superName : this.subPropHash.keySet()) {
-        	for (String subName : this.subPropHash.get(superName)) {
-        		JSONArray a = new JSONArray();
-        		a.add(Utility.prefixURI(subName, prefixToIntHash));
-        		a.add(Utility.prefixURI(superName, prefixToIntHash));
-        		subSuperPropList.add(a);
-        	}
-        }
-        
-        // classPropertyRangeList
-        for (OntologyProperty oProp : this.propertyHash.values()) {
-        	String propName = oProp.getNameStr();
-        	for (String domain : oProp.getRangeDomains()) {
-        		OntologyClass oClass = this.getClass(domain);
-        		for (String rangeUri : oProp.getRange(oClass, this).getUriList()) {
-        			
-        			JSONArray a = new JSONArray();
-                	a.add(Utility.prefixURI(domain, prefixToIntHash));
-                	a.add(Utility.prefixURI(propName, prefixToIntHash));
-                	a.add(Utility.prefixURI(rangeUri, prefixToIntHash));
-                    classPropertyRangeList.add(a);
-        		}
-        	}
-        }
+		JSONArray topLevelClassList = new JSONArray();
+		JSONArray datatypeList = new JSONArray();
+		JSONArray subClassSuperClassList = new JSONArray();
+		JSONArray subSuperPropList = new JSONArray();
+		JSONArray classPropertyRangeList = new JSONArray();
+		JSONArray classEnumValList = new JSONArray();
+		JSONArray annotationLabelList = new JSONArray();
+		JSONArray annotationCommentList = new JSONArray();
+		JSONObject prefixes = new JSONObject();
+		JSONArray importedGraphsList = new JSONArray();
+		JSONArray loadWarningsList = new JSONArray();
 
-        
-        // classEnumValList
-        for (String c : this.enumerationHash.keySet()) {
-            ArrayList<String> valList = this.enumerationHash.get(c);
-            for (int i=0; i < valList.size(); i++) {
-                String v = valList.get(i);
-                JSONArray a = new JSONArray();
-                a.add(Utility.prefixURI(c, prefixToIntHash));
-                a.add(Utility.prefixURI(v, prefixToIntHash));
-                classEnumValList.add(a);
-            }
-        }
+		HashMap<String, String> prefixToIntHash = new HashMap<String, String>();
 
-        // annotation Lists: classes
-        for (String c : this.classHash.keySet()) {
-        	ArrayList<String> commentList = this.classHash.get(c).getAnnotationComments();
-        	for (int i=0; i < commentList.size(); i++) {
-        		 JSONArray a = new JSONArray();
-                 a.add(Utility.prefixURI(c, prefixToIntHash));
-                 a.add(commentList.get(i));
-                 annotationCommentList.add(a);
-        	}
-        	
-        	ArrayList<String> labelList = this.classHash.get(c).getAnnotationLabels();
-        	for (int i=0; i < labelList.size(); i++) {
-        		JSONArray a = new JSONArray();
-                a.add(Utility.prefixURI(c, prefixToIntHash));
-                a.add(labelList.get(i));
-                annotationLabelList.add(a);
-        	}
-        }
-        
-        // annotation Lists: properties
-        for (String p : this.propertyHash.keySet()) {
-        	ArrayList<String> commentList = this.propertyHash.get(p).getAnnotationComments();
-        	for (int i=0; i < commentList.size(); i++) {
-        		 JSONArray a = new JSONArray();
-                 a.add(Utility.prefixURI(p, prefixToIntHash));
-                 a.add(commentList.get(i));
-                 annotationCommentList.add(a);
-        	}
-        	
-        	ArrayList<String> labelList = this.propertyHash.get(p).getAnnotationLabels();
-        	for (int i=0; i < labelList.size(); i++) {
-        		JSONArray a = new JSONArray();
-                a.add(Utility.prefixURI(p, prefixToIntHash));
-                a.add(labelList.get(i));
-                annotationLabelList.add(a);
-        	}
-        }
-        
-        
-        // prefixes: reverse the hash so its intToPrefix
-        for (String p : prefixToIntHash.keySet()) {
-            prefixes.put(prefixToIntHash.get(p), p);
-        }
-        
-        for (String s : this.importedGraphs) {
-        	importedGraphsList.add(s);
-        }
-        
-        for (String s : this.loadWarnings) {
-        	loadWarningsList.add(s);
-        }
-        
-        json.put("version", OntologyInfo.JSON_VERSION);
-        json.put("topLevelClassList", topLevelClassList);
-        json.put("datatypeList", datatypeList);
-    	json.put("subClassSuperClassList", subClassSuperClassList);
-    	json.put("classPropertyRangeList",classPropertyRangeList);
-    	json.put("subSuperPropList", subSuperPropList);
-    	json.put("classEnumValList", classEnumValList);
-    	json.put("annotationLabelList", annotationLabelList);
-    	json.put("annotationCommentList", annotationCommentList);
-    	json.put("prefixes", prefixes);
-    	json.put("importedGraphsList", importedGraphsList);
-    	json.put("loadWarningsList", loadWarningsList);
-    	
-        return json;
-    }
-    
-    /**
-     * Build JSON rows for an OntologyDatatype
-     * More compact than what comes back from SPARQL because no combinatorial explosion between types and restrictions.
-     * @param dt
-     * @return
-     * @throws Exception
-     */
-    public JSONArray generateDatatypeRows(OntologyDatatype dt) {
+		// topLevelClassList and subClassSuperClassList
+		for (String c : this.classHash.keySet()) {
+			ArrayList<String> parents = this.classHash.get(c).getParentNameStrings(false); // PEC TODO add support for
+																							// multiple parents
+			String name = this.classHash.get(c).getNameString(false);
+			if (parents.size() == 0) {
+				topLevelClassList.add(Utility.prefixURI(name, prefixToIntHash));
+			} else {
+				for (int i = 0; i < parents.size(); i++) {
+					JSONArray a = new JSONArray();
+					a.add(Utility.prefixURI(name, prefixToIntHash));
+					a.add(Utility.prefixURI(parents.get(i), prefixToIntHash));
+					subClassSuperClassList.add(a);
+				}
+			}
+		}
+
+		// datatypeList
+		for (String name : this.datatypeHash.keySet()) {
+			// datatype rows are complicated, so work is done by OntologyDatatype
+			JSONArray rows = (JSONArray) this.generateDatatypeRows(this.datatypeHash.get(name));
+			for (Object o : rows) {
+				datatypeList.add(o);
+			}
+		}
+
+		// super / sub classes
+		for (String superName : this.subPropHash.keySet()) {
+			for (String subName : this.subPropHash.get(superName)) {
+				JSONArray a = new JSONArray();
+				a.add(Utility.prefixURI(subName, prefixToIntHash));
+				a.add(Utility.prefixURI(superName, prefixToIntHash));
+				subSuperPropList.add(a);
+			}
+		}
+
+		// classPropertyRangeList
+		for (OntologyProperty oProp : this.propertyHash.values()) {
+			String propName = oProp.getNameStr();
+			for (String domain : oProp.getRangeDomains()) {
+				OntologyClass oClass = this.getClass(domain);
+				for (String rangeUri : oProp.getRange(oClass, this).getUriList()) {
+
+					JSONArray a = new JSONArray();
+					a.add(Utility.prefixURI(domain, prefixToIntHash));
+					a.add(Utility.prefixURI(propName, prefixToIntHash));
+					a.add(Utility.prefixURI(rangeUri, prefixToIntHash));
+					classPropertyRangeList.add(a);
+				}
+			}
+		}
+
+		// classEnumValList
+		for (String c : this.enumerationHash.keySet()) {
+			ArrayList<String> valList = this.enumerationHash.get(c);
+			for (int i = 0; i < valList.size(); i++) {
+				String v = valList.get(i);
+				JSONArray a = new JSONArray();
+				a.add(Utility.prefixURI(c, prefixToIntHash));
+				a.add(Utility.prefixURI(v, prefixToIntHash));
+				classEnumValList.add(a);
+			}
+		}
+
+		// annotation Lists: classes
+		for (String c : this.classHash.keySet()) {
+			ArrayList<String> commentList = this.classHash.get(c).getAnnotationComments();
+			for (int i = 0; i < commentList.size(); i++) {
+				JSONArray a = new JSONArray();
+				a.add(Utility.prefixURI(c, prefixToIntHash));
+				a.add(commentList.get(i));
+				annotationCommentList.add(a);
+			}
+
+			ArrayList<String> labelList = this.classHash.get(c).getAnnotationLabels();
+			for (int i = 0; i < labelList.size(); i++) {
+				JSONArray a = new JSONArray();
+				a.add(Utility.prefixURI(c, prefixToIntHash));
+				a.add(labelList.get(i));
+				annotationLabelList.add(a);
+			}
+		}
+
+		// annotation Lists: properties
+		for (String p : this.propertyHash.keySet()) {
+			ArrayList<String> commentList = this.propertyHash.get(p).getAnnotationComments();
+			for (int i = 0; i < commentList.size(); i++) {
+				JSONArray a = new JSONArray();
+				a.add(Utility.prefixURI(p, prefixToIntHash));
+				a.add(commentList.get(i));
+				annotationCommentList.add(a);
+			}
+
+			ArrayList<String> labelList = this.propertyHash.get(p).getAnnotationLabels();
+			for (int i = 0; i < labelList.size(); i++) {
+				JSONArray a = new JSONArray();
+				a.add(Utility.prefixURI(p, prefixToIntHash));
+				a.add(labelList.get(i));
+				annotationLabelList.add(a);
+			}
+		}
+
+		// prefixes: reverse the hash so its intToPrefix
+		for (String p : prefixToIntHash.keySet()) {
+			prefixes.put(prefixToIntHash.get(p), p);
+		}
+
+		for (String s : this.importedGraphs) {
+			importedGraphsList.add(s);
+		}
+
+		for (String s : this.loadWarnings) {
+			loadWarningsList.add(s);
+		}
+
+		json.put("version", OntologyInfo.JSON_VERSION);
+		json.put("topLevelClassList", topLevelClassList);
+		json.put("datatypeList", datatypeList);
+		json.put("subClassSuperClassList", subClassSuperClassList);
+		json.put("classPropertyRangeList", classPropertyRangeList);
+		json.put("subSuperPropList", subSuperPropList);
+		json.put("classEnumValList", classEnumValList);
+		json.put("annotationLabelList", annotationLabelList);
+		json.put("annotationCommentList", annotationCommentList);
+		json.put("prefixes", prefixes);
+		json.put("importedGraphsList", importedGraphsList);
+		json.put("loadWarningsList", loadWarningsList);
+
+		return json;
+	}
+
+	/**
+	 * Build JSON rows for an OntologyDatatype More compact than what comes back
+	 * from SPARQL because no combinatorial explosion between types and
+	 * restrictions.
+	 * 
+	 * @param dt
+	 * @return
+	 * @throws Exception
+	 */
+	public JSONArray generateDatatypeRows(OntologyDatatype dt) {
 		JSONArray ret = new JSONArray();
-		
+
 		// add a row for each type, with empty restriction columns
 		for (String typeStr : dt.getEquivalentTypes()) {
 			JSONArray row = new JSONArray();
@@ -2596,290 +2699,273 @@ public class OntologyInfo {
 			row.add(typeStr);
 			ret.add(row);
 		}
-		
+
 		// add restrictions columns
 		int r = 0;
 		for (OntologyRestriction restrict : dt.getRestrictions()) {
-			// grab the next available row 
-			// duplicating the last row if there aren't enough rows from xsdTypes to hold all restrictions
+			// grab the next available row
+			// duplicating the last row if there aren't enough rows from xsdTypes to hold
+			// all restrictions
 			JSONArray row;
 			if (r >= ret.size()) {
 				row = new JSONArray();
-				JSONArray last = (JSONArray) ret.get(ret.size()-1);
-				for (int i=0; i < 2; i++) {
+				JSONArray last = (JSONArray) ret.get(ret.size() - 1);
+				for (int i = 0; i < 2; i++) {
 					row.add(last.get(i));
 				}
 				ret.add(row);
 			} else {
 				row = (JSONArray) ret.get(r);
 			}
-			
+
 			// add the restriction to the row
 			row.add(restrict.getPredicate());
 			row.add(restrict.getObject());
 			r++;
 		}
-		
+
 		// if fewer restrictions than types, round out all rows with ""
 		while (r < ret.size()) {
 			((JSONArray) ret.get(r)).add("");
 			((JSONArray) ret.get(r)).add("");
 			r++;
 		}
-		
-		return ret;  
+
+		return ret;
 	}
-    
-    public void addJson(JSONObject json) throws Exception {
-        
-    	long version = 0;
-    	if (json.containsKey("version")) {
-    		version = (long)json.get("version");
-    	}
-    	if (version > OntologyInfo.JSON_VERSION) {
-    		throw new Exception(String.format("Can't decode OntologyInfo JSON with newer version > %d: found %d", OntologyInfo.JSON_VERSION, version));
-    	}
-    	// unlike javascript: need to unpack intToPrefixHash
-    	HashMap<String,String> intToPrefixHash = new HashMap<String,String>();
-    	JSONObject prefixes = (JSONObject) (json.get("prefixes"));
-    	
-    	for (Object key : prefixes.keySet()) {
-    		intToPrefixHash.put((String)key, (String) prefixes.get(key));
-    	}
-    	
-        // unhash topLevelClasses
-    	JSONArray jTopLevArr = (JSONArray) json.get("topLevelClassList");
-        String [] topLevelClassList = new String[jTopLevArr.size()];
-        for (int i=0; i < jTopLevArr.size(); i++) {
-            topLevelClassList[i] = Utility.unPrefixURI((String) jTopLevArr.get(i), intToPrefixHash);
-        }
-        
-        this.loadTopLevelClasses(topLevelClassList);
-        
-        // datatypeList is only version17 or later
-        JSONArray datatypeList = (JSONArray)json.get("datatypeList");
-        if (datatypeList != null && datatypeList.size() > 0) {
-        	if (((JSONArray)datatypeList.get(0)).size() == 4) {
-		        this.loadDatatypes(	Utility.unPrefixJsonTableColumn((JSONArray)json.get("datatypeList"), 0, intToPrefixHash),
-									Utility.unPrefixJsonTableColumn((JSONArray)json.get("datatypeList"), 1, intToPrefixHash),
-									Utility.unPrefixJsonTableColumn((JSONArray)json.get("datatypeList"), 2, intToPrefixHash),
-									Utility.unPrefixJsonTableColumn((JSONArray)json.get("datatypeList"), 3, intToPrefixHash)
-		        					);
-        	} else {
-        		// older version only had 2 columns
-        		this.loadDatatypes(	Utility.unPrefixJsonTableColumn((JSONArray)json.get("datatypeList"), 0, intToPrefixHash),
-									Utility.unPrefixJsonTableColumn((JSONArray)json.get("datatypeList"), 1, intToPrefixHash),
-									null,
-									null
-			    					);
-        	}
-        }
-        
-        this.loadSuperSubClasses(Utility.unPrefixJsonTableColumn((JSONArray)json.get("subClassSuperClassList"), 0, intToPrefixHash),
-        						 Utility.unPrefixJsonTableColumn((JSONArray)json.get("subClassSuperClassList"), 1, intToPrefixHash)     
-                                );
-        
-        this.loadProperties(Utility.unPrefixJsonTableColumn((JSONArray)json.get("classPropertyRangeList"), 0, intToPrefixHash),
-        					Utility.unPrefixJsonTableColumn((JSONArray)json.get("classPropertyRangeList"), 1, intToPrefixHash),
-        					Utility.unPrefixJsonTableColumn((JSONArray)json.get("classPropertyRangeList"), 2, intToPrefixHash)
-                            );
-        
-        // backward-compatible old version won't have this
-        JSONArray superSubPropList = (JSONArray)json.get("subSuperPropList");
-        if (superSubPropList != null) {
-	        this.loadSuperSubProperties(Utility.unPrefixJsonTableColumn(superSubPropList, 0, intToPrefixHash),
-						        		Utility.unPrefixJsonTableColumn(superSubPropList, 1, intToPrefixHash)     
-						        		);
-        }
 
-        this.loadEnums(	Utility.unPrefixJsonTableColumn((JSONArray)json.get("classEnumValList"), 0, intToPrefixHash),
-        				Utility.unPrefixJsonTableColumn((JSONArray)json.get("classEnumValList"), 1, intToPrefixHash)
-                      );
-        
-        // annotationList is optional for backwards compatibility
-        JSONArray annotationLabelList = (JSONArray)json.get("annotationLabelList");
-        if (annotationLabelList != null) {
-	        this.loadAnnotationLabels(	Utility.unPrefixJsonTableColumn(annotationLabelList, 0, intToPrefixHash),
-	        					 		Utility.getJsonTableColumn(     annotationLabelList, 1)
-	                            	 );
-        }
-        // optional for backwards compatibility
-        JSONArray annotationCommentList = (JSONArray)json.get("annotationCommentList");
-        if (annotationCommentList != null) {
-	        this.loadAnnotationComments(Utility.unPrefixJsonTableColumn(annotationCommentList, 0, intToPrefixHash),
-	        					 		Utility.getJsonTableColumn(     annotationCommentList, 1)
-	                            	   );
-        }
-        // optional for backwards compatibility
-        JSONArray importedGraphsList = (JSONArray)json.get("importedGraphsList");
-        if (importedGraphsList != null) {
-	        for (Object obj : importedGraphsList) {
-		        this.importedGraphs.add((String) obj);
-	        }
-        }
-     
-        // optional for backwards compatibility
-        JSONArray loadWarningsList = (JSONArray)json.get("loadWarningsList");
-        if (loadWarningsList != null) {
-	        for (Object obj : loadWarningsList) {
-		        this.loadWarnings.add((String) obj);
-	        }
-        }
-    }
-    
-    /**
-     * PEC TODO add Datatype hash, range restrictions, complex ranges
-     * @param base
-     * @return
-     */
-    public String generateRdfOWL(String base) throws Exception {
-    	StringBuilder owl = new StringBuilder();
-    	
-    	owl.append(String.format(
-    			"<rdf:RDF\n" + 
-    			"	xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n" + 
-    			"	xmlns:owl=\"http://www.w3.org/2002/07/owl#\"\n" + 
-    			"	xmlns:rdfs=\"http://www.w3.org/2000/01/rdf-schema#\"\n" + 
-    			"	xmlns=\"%s#\"\n" + 
-    			"	xml:base=\"%s\">\n" + 
-    			"	<owl:Ontology rdf:about=\"%s\">\n" + 
-    			"		<rdfs:comment xml:lang=\"en\">Created by com.ge.research.semtk.ontologyTools.OntologyInfo</rdfs:comment>\n" + 
-    			"		<rdfs:comment xml:lang=\"en\">DANGER: Incomplete implementation</rdfs:comment>\n" + 
+	public void addJson(JSONObject json) throws Exception {
 
-    			"	</owl:Ontology>\n",
-    			base, base, base)
-    		);
-    	
-    	
-    	
-    			
-    	// Classes
-    	owl.append(this.generateXMLComment("****** Classes ******"));
+		long version = 0;
+		if (json.containsKey("version")) {
+			version = (long) json.get("version");
+		}
+		if (version > OntologyInfo.JSON_VERSION) {
+			throw new Exception(String.format("Can't decode OntologyInfo JSON with newer version > %d: found %d",
+					OntologyInfo.JSON_VERSION, version));
+		}
+		// unlike javascript: need to unpack intToPrefixHash
+		HashMap<String, String> intToPrefixHash = new HashMap<String, String>();
+		JSONObject prefixes = (JSONObject) (json.get("prefixes"));
 
-    	for (String c : this.classHash.keySet()) {
-    		owl.append(String.format("\t<owl:Class rdf:about=\"%s\">\n", c));
-    		
-    		// superclasses
-    		for (String superStr : this.getSuperclassNames(c)) {
-    			owl.append(String.format("\t\t<rdfs:subClassOf rdf:resource=\"%s\"/>\n", superStr));
-    		}
-    		
-    		// enums
-    		if (this.enumerationHash.containsKey(c)) {
-    			owl.append(
-    					"\t\t<owl:equivalentClass>\n" +
-    					"\t\t\t<owl:Class>\n" +
-    					"\t\t\t\t<owl:oneOf rdf:parseType=\"Collection\">\n");
-    			
-    			ArrayList<String> enums = this.enumerationHash.get(c);
-    			for (int i=0; i < enums.size(); i++) {
-    				owl.append(String.format(
-    						"\t\t\t\t\t<rdf:Description rdf:about=\"%s\"/>\n",
-    						enums.get(i)));
-    			}
-    			owl.append(
-    					"\t\t\t\t</owl:oneOf>\r\n" + 
-    					"\t\t\t</owl:Class>\r\n" + 
-    					"\t\t</owl:equivalentClass>\n");
-    		}
-    		
-    		// annotations
-    		owl.append(this.classHash.get(c).generateAnnotationRdf("\t\t"));
-    		
-    		owl.append("\t</owl:Class>\n\n");
-    	}
-    	
-    	// Properties
-    	owl.append(this.generateXMLComment("****** Properties ******"));
-    	for (String p : this.propertyHash.keySet()) {
-    		OntologyProperty oProp = this.propertyHash.get(p);
+		for (Object key : prefixes.keySet()) {
+			intToPrefixHash.put((String) key, (String) prefixes.get(key));
+		}
 
-    		// PEC TODO: range restrictions are not implemented here.  Get first Domain.
-    		//           complex ranges are not implemented here.  Get first range.
-    		ArrayList<String> domainList = new ArrayList<String>();
-    		domainList.addAll(oProp.getRangeDomains());
-    		OntologyRange oRange = oProp.getRange(this.getClass(domainList.get(0)), this);
-    		boolean isProp = !oRange.isComplex() && this.getClass(oRange.getSimpleUri()) == null;
-    		
-    		if (isProp) {
-    			owl.append(String.format("\t<owl:DatatypeProperty rdf:about=\"%s\">\n", oProp.getNameStr()));
-    		} else {
-    			owl.append(String.format("\t<owl:ObjectProperty rdf:about=\"%s\">\n", oProp.getNameStr()));
-    		}
-    		
-    		for (String c : this.classHash.keySet()) {
-    			if (this.classHash.get(c).getProperty(p) != null) {
-    				owl.append(String.format("\t\t<rdfs:domain rdf:resource=\"%s\"/>\n", c));
-    			}
-    		}
-    		
-    		owl.append(String.format("\t\t<rdfs:range rdf:resource=\"%s\"/>\n", oRange.getSimpleUri()));
-    		
-    		// annotations
-    		owl.append(oProp.generateAnnotationRdf("\t\t"));
-    		
-    		if (isProp) {
-    			owl.append("\t</owl:DatatypeProperty>\n\n");
-    		} else {
-    			owl.append("\t</owl:ObjectProperty>\n\n");
-    		}
-    	}
-    	
-    	owl.append("</rdf:RDF>");
-    	
-    	return owl.toString();
-    }
-    
-    private String generateXMLComment(String comment) {
-    	return "\n\n<!-- " + comment + " -->\n\n";
-    }
-    
-    /**
-     * TODO:
-     *   Range restrictions
-     *   Fix complex ranges
-     *   Cardinality restrictions
-     * @param base
-     * @return
-     * @throws Exception
-     */
-    public String generateSADL(String base) throws Exception {
-    	String [] baseTokens = base.split("/");
-    	String alias = baseTokens[baseTokens.length - 1];
-    	StringBuilder sadl = new StringBuilder();
-    	
+		// unhash topLevelClasses
+		JSONArray jTopLevArr = (JSONArray) json.get("topLevelClassList");
+		String[] topLevelClassList = new String[jTopLevArr.size()];
+		for (int i = 0; i < jTopLevArr.size(); i++) {
+			topLevelClassList[i] = Utility.unPrefixURI((String) jTopLevArr.get(i), intToPrefixHash);
+		}
+
+		this.loadTopLevelClasses(topLevelClassList);
+
+		// datatypeList is only version17 or later
+		JSONArray datatypeList = (JSONArray) json.get("datatypeList");
+		if (datatypeList != null && datatypeList.size() > 0) {
+			if (((JSONArray) datatypeList.get(0)).size() == 4) {
+				this.loadDatatypes(
+						Utility.unPrefixJsonTableColumn((JSONArray) json.get("datatypeList"), 0, intToPrefixHash),
+						Utility.unPrefixJsonTableColumn((JSONArray) json.get("datatypeList"), 1, intToPrefixHash),
+						Utility.unPrefixJsonTableColumn((JSONArray) json.get("datatypeList"), 2, intToPrefixHash),
+						Utility.unPrefixJsonTableColumn((JSONArray) json.get("datatypeList"), 3, intToPrefixHash));
+			} else {
+				// older version only had 2 columns
+				this.loadDatatypes(
+						Utility.unPrefixJsonTableColumn((JSONArray) json.get("datatypeList"), 0, intToPrefixHash),
+						Utility.unPrefixJsonTableColumn((JSONArray) json.get("datatypeList"), 1, intToPrefixHash), null,
+						null);
+			}
+		}
+
+		this.loadSuperSubClasses(
+				Utility.unPrefixJsonTableColumn((JSONArray) json.get("subClassSuperClassList"), 0, intToPrefixHash),
+				Utility.unPrefixJsonTableColumn((JSONArray) json.get("subClassSuperClassList"), 1, intToPrefixHash));
+
+		this.loadProperties(
+				Utility.unPrefixJsonTableColumn((JSONArray) json.get("classPropertyRangeList"), 0, intToPrefixHash),
+				Utility.unPrefixJsonTableColumn((JSONArray) json.get("classPropertyRangeList"), 1, intToPrefixHash),
+				Utility.unPrefixJsonTableColumn((JSONArray) json.get("classPropertyRangeList"), 2, intToPrefixHash));
+
+		// backward-compatible old version won't have this
+		JSONArray superSubPropList = (JSONArray) json.get("subSuperPropList");
+		if (superSubPropList != null) {
+			this.loadSuperSubProperties(Utility.unPrefixJsonTableColumn(superSubPropList, 0, intToPrefixHash),
+					Utility.unPrefixJsonTableColumn(superSubPropList, 1, intToPrefixHash));
+		}
+
+		this.loadEnums(Utility.unPrefixJsonTableColumn((JSONArray) json.get("classEnumValList"), 0, intToPrefixHash),
+				Utility.unPrefixJsonTableColumn((JSONArray) json.get("classEnumValList"), 1, intToPrefixHash));
+
+		// annotationList is optional for backwards compatibility
+		JSONArray annotationLabelList = (JSONArray) json.get("annotationLabelList");
+		if (annotationLabelList != null) {
+			this.loadAnnotationLabels(Utility.unPrefixJsonTableColumn(annotationLabelList, 0, intToPrefixHash),
+					Utility.getJsonTableColumn(annotationLabelList, 1));
+		}
+		// optional for backwards compatibility
+		JSONArray annotationCommentList = (JSONArray) json.get("annotationCommentList");
+		if (annotationCommentList != null) {
+			this.loadAnnotationComments(Utility.unPrefixJsonTableColumn(annotationCommentList, 0, intToPrefixHash),
+					Utility.getJsonTableColumn(annotationCommentList, 1));
+		}
+		// optional for backwards compatibility
+		JSONArray importedGraphsList = (JSONArray) json.get("importedGraphsList");
+		if (importedGraphsList != null) {
+			for (Object obj : importedGraphsList) {
+				this.importedGraphs.add((String) obj);
+			}
+		}
+
+		// optional for backwards compatibility
+		JSONArray loadWarningsList = (JSONArray) json.get("loadWarningsList");
+		if (loadWarningsList != null) {
+			for (Object obj : loadWarningsList) {
+				this.loadWarnings.add((String) obj);
+			}
+		}
+	}
+
+	/**
+	 * PEC TODO add Datatype hash, range restrictions, complex ranges
+	 * 
+	 * @param base
+	 * @return
+	 */
+	public String generateRdfOWL(String base) throws Exception {
+		StringBuilder owl = new StringBuilder();
+
+		owl.append(String.format("<rdf:RDF\n" + "	xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"\n"
+				+ "	xmlns:owl=\"http://www.w3.org/2002/07/owl#\"\n"
+				+ "	xmlns:rdfs=\"http://www.w3.org/2000/01/rdf-schema#\"\n" + "	xmlns=\"%s#\"\n"
+				+ "	xml:base=\"%s\">\n" + "	<owl:Ontology rdf:about=\"%s\">\n"
+				+ "		<rdfs:comment xml:lang=\"en\">Created by com.ge.research.semtk.ontologyTools.OntologyInfo</rdfs:comment>\n"
+				+ "		<rdfs:comment xml:lang=\"en\">DANGER: Incomplete implementation</rdfs:comment>\n" +
+
+				"	</owl:Ontology>\n", base, base, base));
+
+		// Classes
+		owl.append(this.generateXMLComment("****** Classes ******"));
+
+		for (String c : this.classHash.keySet()) {
+			owl.append(String.format("\t<owl:Class rdf:about=\"%s\">\n", c));
+
+			// superclasses
+			for (String superStr : this.getSuperclassNames(c)) {
+				owl.append(String.format("\t\t<rdfs:subClassOf rdf:resource=\"%s\"/>\n", superStr));
+			}
+
+			// enums
+			if (this.enumerationHash.containsKey(c)) {
+				owl.append("\t\t<owl:equivalentClass>\n" + "\t\t\t<owl:Class>\n"
+						+ "\t\t\t\t<owl:oneOf rdf:parseType=\"Collection\">\n");
+
+				ArrayList<String> enums = this.enumerationHash.get(c);
+				for (int i = 0; i < enums.size(); i++) {
+					owl.append(String.format("\t\t\t\t\t<rdf:Description rdf:about=\"%s\"/>\n", enums.get(i)));
+				}
+				owl.append("\t\t\t\t</owl:oneOf>\r\n" + "\t\t\t</owl:Class>\r\n" + "\t\t</owl:equivalentClass>\n");
+			}
+
+			// annotations
+			owl.append(this.classHash.get(c).generateAnnotationRdf("\t\t"));
+
+			owl.append("\t</owl:Class>\n\n");
+		}
+
+		// Properties
+		owl.append(this.generateXMLComment("****** Properties ******"));
+		for (String p : this.propertyHash.keySet()) {
+			OntologyProperty oProp = this.propertyHash.get(p);
+
+			// PEC TODO: range restrictions are not implemented here. Get first Domain.
+			// complex ranges are not implemented here. Get first range.
+			ArrayList<String> domainList = new ArrayList<String>();
+			domainList.addAll(oProp.getRangeDomains());
+			OntologyRange oRange = oProp.getRange(this.getClass(domainList.get(0)), this);
+			boolean isProp = !oRange.isComplex() && this.getClass(oRange.getSimpleUri()) == null;
+
+			if (isProp) {
+				owl.append(String.format("\t<owl:DatatypeProperty rdf:about=\"%s\">\n", oProp.getNameStr()));
+			} else {
+				owl.append(String.format("\t<owl:ObjectProperty rdf:about=\"%s\">\n", oProp.getNameStr()));
+			}
+
+			for (String c : this.classHash.keySet()) {
+				if (this.classHash.get(c).getProperty(p) != null) {
+					owl.append(String.format("\t\t<rdfs:domain rdf:resource=\"%s\"/>\n", c));
+				}
+			}
+
+			owl.append(String.format("\t\t<rdfs:range rdf:resource=\"%s\"/>\n", oRange.getSimpleUri()));
+
+			// annotations
+			owl.append(oProp.generateAnnotationRdf("\t\t"));
+
+			if (isProp) {
+				owl.append("\t</owl:DatatypeProperty>\n\n");
+			} else {
+				owl.append("\t</owl:ObjectProperty>\n\n");
+			}
+		}
+
+		owl.append("</rdf:RDF>");
+
+		return owl.toString();
+	}
+
+	private String generateXMLComment(String comment) {
+		return "\n\n<!-- " + comment + " -->\n\n";
+	}
+
+	/**
+	 * TODO: Range restrictions Fix complex ranges Cardinality restrictions
+	 * 
+	 * @param base
+	 * @return
+	 * @throws Exception
+	 */
+	public String generateSADL(String base) throws Exception {
+		String[] baseTokens = base.split("/");
+		String alias = baseTokens[baseTokens.length - 1];
+		StringBuilder sadl = new StringBuilder();
+
 		sadl.append(String.format("uri \"%s\" alias %s.\n\n", base, alias));
-		
+
 		for (String c : this.classHash.keySet()) {
 			OntologyClass oClass = this.classHash.get(c);
 			ArrayList<OntologyClass> superClasses = this.getClassParents(oClass);
 			ArrayList<String> enumVals = this.enumerationHash.get(c);
 			ArrayList<OntologyProperty> oProps = oClass.getProperties();
-			
+
 			// type
 			if (superClasses.size() == 0) {
-				sadl.append(String.format("\n%s %s is a class.\n", oClass.getNameString(true), oClass.generateAnnotationsSADL()));
+				sadl.append(String.format("\n%s %s is a class.\n", oClass.getNameString(true),
+						oClass.generateAnnotationsSADL()));
 			} else {
-				
-				for (int i=0; i < superClasses.size(); i++) {
+
+				for (int i = 0; i < superClasses.size(); i++) {
 					OntologyClass parent = superClasses.get(i);
 					// parent name is full if it isn't in oInfo, abbreviated if it is
 					String parentName = parent.getNameString(this.containsClass(parent.getNameString(false)));
-					sadl.append(String.format("\n%s %s is a type of %s.\n", oClass.getNameString(true), oClass.generateAnnotationsSADL(), parentName));
+					sadl.append(String.format("\n%s %s is a type of %s.\n", oClass.getNameString(true),
+							oClass.generateAnnotationsSADL(), parentName));
 				}
 			}
-			
+
 			// properties
 			for (OntologyProperty oProp : oProps) {
-				
+
 				String t = oProp.getRange(oClass, this).getDisplayString(true);
-				sadl.append(String.format("\t%s is described by %s %s with values of type %s.\n", oClass.getNameString(true), oProp.getNameStr(true), oProp.generateAnnotationsSADL(), t));
+				sadl.append(String.format("\t%s is described by %s %s with values of type %s.\n",
+						oClass.getNameString(true), oProp.getNameStr(true), oProp.generateAnnotationsSADL(), t));
 			}
-			
+
 			// enums
 			if (enumVals != null) {
 				sadl.append(String.format("\t%s must be one of {", oClass.getNameString(true)));
-				for (int i=0; i < enumVals.size(); i++) {
+				for (int i = 0; i < enumVals.size(); i++) {
 					if (i > 0) {
 						sadl.append(",");
 					}
@@ -2889,70 +2975,67 @@ public class OntologyInfo {
 				sadl.append("}.\n");
 			}
 		}
-    	return sadl.toString();
-    }
-    
-    
-   
+		return sadl.toString();
+	}
 
-    
-    /**
-     * Get a table with all class and property uris, and their labels, if any
-     * @return
-     * @throws Exception
-     */
+	/**
+	 * Get a table with all class and property uris, and their labels, if any
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
 	public Table getUriLabelTable() throws Exception {
-		
+
 		// set up table
 		String str = XSDSupportedType.STRING.getFullName();
-		Table ret = new Table( new String [] {"type", "uri", "label"},
-				               new String [] {str, str, str });
-		
+		Table ret = new Table(new String[] { "type", "uri", "label" }, new String[] { str, str, str });
+
 		// classes
 		for (String key : this.classHash.keySet()) {
 			OntologyClass c = this.classHash.get(key);
 			ArrayList<String> labels = c.getAnnotationLabels();
 			if (labels.size() == 0) {
-				ret.addRow(new String [] {"class", key, ""});
+				ret.addRow(new String[] { "class", key, "" });
 			} else {
 				for (String l : labels) {
-					ret.addRow(new String [] {"class", key, l});
+					ret.addRow(new String[] { "class", key, l });
 				}
 			}
 		}
-		
+
 		// properties
 		for (String key : this.propertyHash.keySet()) {
 			OntologyProperty prop = this.propertyHash.get(key);
 			ArrayList<String> labels = prop.getAnnotationLabels();
 			if (labels.size() == 0) {
-				ret.addRow(new String [] {"property", key, ""});
+				ret.addRow(new String[] { "property", key, "" });
 			} else {
 				for (String l : labels) {
-					ret.addRow(new String [] {"property", key, l});
+					ret.addRow(new String[] { "property", key, l });
 				}
 			}
 		}
 		return ret;
 	}
-	
+
 	/**
 	 * Checks an sei to see if any version of the owl in owlInputStream is loaded
-	 * (any class with the base specified in the owl)
-	 * If owl is not loaded to the sei, then load it
-	 * See "internal use" note
+	 * (any class with the base specified in the owl) If owl is not loaded to the
+	 * sei, then load it See "internal use" note
+	 * 
 	 * @param sei
 	 * @param owlInputStream
 	 * @return True if load occurred, False if it wasn't needed
 	 * @throws Exception otherwise
 	 */
-	public static boolean uploadOwlModelIfNeeded(SparqlEndpointInterface sei, InputStream owlInputStream) throws Exception {
-		
+	public static boolean uploadOwlModelIfNeeded(SparqlEndpointInterface sei, InputStream owlInputStream)
+			throws Exception {
+
 		OntologyInfo oInfo = new OntologyInfo(new SparqlConnection("name", sei));
 
-		byte [] owl = IOUtils.toByteArray(owlInputStream);
+		byte[] owl = IOUtils.toByteArray(owlInputStream);
 
-		if (! oInfo.containsClassWithBase(new ByteArrayInputStream(owl))) {
+		if (!oInfo.containsClassWithBase(new ByteArrayInputStream(owl))) {
 			JSONObject retJson = sei.executeAuthUploadOwl(owl);
 			SimpleResultSet res = SimpleResultSet.fromJson(retJson);
 			res.throwExceptionIfUnsuccessful();
@@ -2960,25 +3043,5 @@ public class OntologyInfo {
 		}
 		return false;
 	}
-    
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -24,6 +24,7 @@ import java.util.HashSet;
 
 public class OntologyRange {
 	public static final String CLASS = "http://www.w3.org/2002/07/owl#Class";
+	// Complex range:  range is a set of Uris
 	private HashSet<String> uris = new HashSet<String>();
 	
 	public OntologyRange(String fullName) {

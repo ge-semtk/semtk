@@ -307,7 +307,7 @@ SparqlFormatter.prototype = {
 };
 
 /* the node item */
-var NodeItem = function(uri, val, uriVal, jObj, nodeGroup) { // used for
+var NodeItem = function(uri, rangeList, jObj, nodeGroup) { // used for
 																// keeping track
 																// of details
 																// relating two
@@ -316,17 +316,18 @@ var NodeItem = function(uri, val, uriVal, jObj, nodeGroup) { // used for
 	if (jObj) {
 		this.fromJson(jObj, nodeGroup);
 	} else {
-		this.SNodes = [];    // the semantic nodes, if one exists currently,
+		this.nodes = [];    // the semantic nodes, if one exists currently,
 							// represented by this NodeItem.
-		this.OptionalMinus = [];
-        this.Qualifiers = [];
-		this.valueType = val; // the type given for the linked (linkable?) node
-
-		this.UriValueType = uriVal; // full name of val
-		this.ConnectBy = ''; // the connection link, such as "hasSessionCode"
-		this.Connected = false; // toggled if a connection between this node and
+		this.optionalMinus = [];
+        this.qualifiers = [];
+		this.rangeUris = {};
+		for (var r of rangeList) {
+			this.rangeUris[r] = 1;
+		}
+		this.connectedBy = ''; // the connection link, such as "hasSessionCode"
+		this.connected = false; // toggled if a connection between this node and
 								// the Semantic node owning the NodeItem list are linked.
-		this.UriConnectBy = uri;
+		this.uriConnectBy = uri;
 		this.deletionFlags = [];
 	}
 };
@@ -348,17 +349,16 @@ NodeItem.prototype = {
 			OptionalMinus : [],
             Qualifiers : [],
 			DeletionMarkers : [],
-			ValueType : this.valueType,              // NodeItem is not yet updated to plural valueTypes
-			UriValueType : this.UriValueType,
-			ConnectBy : this.ConnectBy,
-			Connected : this.Connected,
-			UriConnectBy : this.UriConnectBy,
+			range : Object.keys(this.rangeUris),
+			ConnectBy : this.connectedBy,
+			Connected : this.connected,
+			UriConnectBy : this.uriConnectBy,
 
 		};
-		for (var i=0; i < this.SNodes.length; i++) {
-			ret.SnodeSparqlIDs.push(this.SNodes[i].getSparqlID());
-			ret.OptionalMinus.push(this.OptionalMinus[i]);
-            ret.Qualifiers.push(this.Qualifiers[i]);
+		for (var i=0; i < this.nodes.length; i++) {
+			ret.SnodeSparqlIDs.push(this.nodes[i].getSparqlID());
+			ret.optionalMinus.push(this.optionalMinus[i]);
+            ret.Qualifiers.push(this.qualifiers[i]);
 			ret.DeletionMarkers.push(this.deletionFlags[i]);
 		}
 
@@ -366,26 +366,26 @@ NodeItem.prototype = {
 	},
 	fromJson : function(jObj, nodeGroup) {
 		// presumes that SNode references have already been created
-		this.SNodes = [];
+		this.nodes = [];
 		for (var i = 0; i < jObj.SnodeSparqlIDs.length; i++) {
 			var snode = nodeGroup.getNodeBySparqlID(jObj.SnodeSparqlIDs[i]);
 			if (!snode) {
                 throw new Error("Error reading JSON in NodeItem.fromJson.  Can't find node: " + jObj.SnodeSparqlIDs[i]);
 			}
-			this.SNodes.push(snode);
+			this.nodes.push(snode);
 		}
 
 
-		this.OptionalMinus = [];
+		this.optionalMinus = [];
 		if (jObj.hasOwnProperty("OptionalMinus")) {
             // version 9
 			for (var i=0; i < jObj.OptionalMinus.length; i++) {
-				this.OptionalMinus.push(jObj.OptionalMinus[i]);
+				this.optionalMinus.push(jObj.OptionalMinus[i]);
 			}
 		} else if (jObj.hasOwnProperty("SnodeOptionals")) {
             // version 3:  SnodeOptionals
 			for (var i=0; i < jObj.SnodeOptionals.length; i++) {
-				this.OptionalMinus.push(jObj.SnodeOptionals[i]);
+				this.optionalMinus.push(jObj.SnodeOptionals[i]);
 			}
 		} else{
             // older versions
@@ -402,20 +402,20 @@ NodeItem.prototype = {
 			}
 
 			for (var i=0; i < jObj.SnodeSparqlIDs.length; i++) {
-				this.OptionalMinus.push(opt);
+				this.optionalMinus.push(opt);
 			}
 		}
 
-        this.Qualifiers = [];
+        this.qualifiers = [];
 		if (jObj.hasOwnProperty("Qualifiers")) {
             // version 9
 			for (var i=0; i < jObj.Qualifiers.length; i++) {
-				this.Qualifiers.push(jObj.Qualifiers[i]);
+				this.qualifiers.push(jObj.Qualifiers[i]);
 			}
 		} else {
 			// backward compatibility
 			for (var i=0; i < jObj.SnodeSparqlIDs.length; i++) {
-				this.Qualifiers.push("");
+				this.qualifiers.push("");
 			}
 		}
 
@@ -431,27 +431,34 @@ NodeItem.prototype = {
 				this.deletionFlags.push(false);
 			}
 		}
-
-		this.valueType = jObj.ValueType;
-		this.UriValueType = jObj.UriValueType;
-		this.ConnectBy = jObj.ConnectBy;
-		this.Connected = jObj.Connected;
-		this.UriConnectBy = jObj.UriConnectBy;
+		
+		this.rangeUris = {};
+		if (jObj.hasOwnProperty("UriValueType")) {
+			// older version
+			this.rangeUris[jObj.UriValueType] = 1;
+		} else {
+			for (var i=0; i < jObj.range.length; i++) {
+				this.rangeUris[jObj.range[i]] = 1;
+			}
+		}
+		this.connectedBy = jObj.ConnectBy;
+		this.connected = jObj.Connected;
+		this.uriConnectBy = jObj.UriConnectBy;
 	},
 
     /*
         Fill in this property with all the non-model values of another property
      */
     merge : function(other, target) {
-        var i = other.SNodes.indexOf(target);
+        var i = other.nodes.indexOf(target);
         if (i == -1) throw "Can't find connection to " + target.getSparqlID() + " in " + this.getKeyName();
 
-        this.SNodes.push(target);
-		this.OptionalMinus.push(other.OptionalMinus[i]);
-        this.Qualifiers.push(other.Qualifiers[i]);
+        this.nodes.push(target);
+		this.optionalMinus.push(other.optionalMinus[i]);
+        this.qualifiers.push(other.qualifiers[i]);
         this.deletionFlags.push(other.deletionFlags[i]);
 
-		this.Connected = true;
+		this.connected = true;
 
     },
 
@@ -462,25 +469,25 @@ NodeItem.prototype = {
     hasConstraints : function() {
 		return false;
 	},
-	// set values used by the NodeItem.
-	setKeyName : function(strName) {
-		// Deprecated
+
+    getRangeUris : function() {
+		return Object.keys(this.rangeUris);
 	},
-    // NodeItem js is still singular valueType
-	setValueType : function(strValType) {
-		this.valueType = strValType;
+	
+	setRangeUris : function(rangeList) {
+		for (var r of rangeSet) {
+			this.rangeUris[r] = 1;
+		}
 	},
-	setUriValueType : function(strUriValType) {
-		this.UriValueType = strUriValType;
-	},
+	
 	setConnected : function(connect) {
-		this.Connected = connect;
+		this.connected = connect;
 	},
 	setConnectBy : function(strConnName) {
-		this.ConnectBy = strConnName;
+		this.connectedBy = strConnName;
 	},
 	setUriConnectBy : function(strConnName) {
-		this.UriConnectBy = strConnName;
+		this.uriConnectBy = strConnName;
 	},
 
     // deprecated
@@ -489,9 +496,9 @@ NodeItem.prototype = {
     },
 
 	setOptionalMinus: function(snode, optionalMinus) {
-		for (var i=0; i < this.SNodes.length; i++) {
-			if (this.SNodes[i] == snode) {
-				this.OptionalMinus[i] = optionalMinus;
+		for (var i=0; i < this.nodes.length; i++) {
+			if (this.nodes[i] == snode) {
+				this.optionalMinus[i] = optionalMinus;
 				return;
 			}
 		}
@@ -504,18 +511,18 @@ NodeItem.prototype = {
     },
 
 	getOptionalMinus: function(snode) {
-		for (var i=0; i < this.SNodes.length; i++) {
-			if (this.SNodes[i] == snode) {
-				return this.OptionalMinus[i] ;
+		for (var i=0; i < this.nodes.length; i++) {
+			if (this.nodes[i] == snode) {
+				return this.optionalMinus[i] ;
 			}
 		}
 		throw new Error("NodeItem can't find link to semantic node");
 	},
 
     setQualifier: function(snode, qual) {
-		for (var i=0; i < this.SNodes.length; i++) {
-			if (this.SNodes[i] == snode) {
-				this.Qualifiers[i] = qual;
+		for (var i=0; i < this.nodes.length; i++) {
+			if (this.nodes[i] == snode) {
+				this.qualifiers[i] = qual;
 				return;
 			}
 		}
@@ -523,9 +530,9 @@ NodeItem.prototype = {
 	},
 
     getQualifier: function(snode) {
-		for (var i=0; i < this.SNodes.length; i++) {
-			if (this.SNodes[i] == snode) {
-				return this.Qualifiers[i] ;
+		for (var i=0; i < this.nodes.length; i++) {
+			if (this.nodes[i] == snode) {
+				return this.qualifiers[i] ;
 			}
 		}
 		throw new Error("NodeItem can't find link to semantic node");
@@ -535,11 +542,11 @@ NodeItem.prototype = {
 		// Does node item make it's owner node optional
 		//  1) connects to something
 		//  2) all optional reverse
-		if (this.OptionalMinus.length == 0) {
+		if (this.optionalMinus.length == 0) {
 			return false;
 		}
-		for (var i=0; i < this.OptionalMinus.length; i++) {
-			if (this.OptionalMinus[i] != NodeItem.OPTIONAL_REVERSE) {
+		for (var i=0; i < this.optionalMinus.length; i++) {
+			if (this.optionalMinus[i] != NodeItem.OPTIONAL_REVERSE) {
 				return false;
 			}
 		}
@@ -547,8 +554,8 @@ NodeItem.prototype = {
 	},
 
 	setSnodeDeletionMarker : function (snode, toDelete){
-		for (var i=0; i < this.SNodes.length; i++) {
-			if (this.SNodes[i] == snode) {
+		for (var i=0; i < this.nodes.length; i++) {
+			if (this.nodes[i] == snode) {
 				this.deletionFlags[i] = toDelete;
 				return;
 			}
@@ -557,8 +564,8 @@ NodeItem.prototype = {
 	},
 
 	getSnodeDeletionMarker : function (snode){
-		for (var i=0; i < this.SNodes.length; i++) {
-			if (this.SNodes[i] == snode) {
+		for (var i=0; i < this.nodes.length; i++) {
+			if (this.nodes[i] == snode) {
 				return this.deletionFlags[i] ;
 			}
 		}
@@ -566,64 +573,57 @@ NodeItem.prototype = {
 	},
 
 	getConnectsTo : function (snode) {
-		return (this.SNodes.indexOf(snode) > -1);
+		return (this.nodes.indexOf(snode) > -1);
 	},
 
 	pushSNode : function(snode, optOptional, optDeletionFlag, optQualifier){
-		this.SNodes.push(snode);
-		this.OptionalMinus.push((optOptional === undefined)     ? NodeItem.OPTIONAL_FALSE : optOptional );
+		this.nodes.push(snode);
+		this.optionalMinus.push((optOptional === undefined)     ? NodeItem.OPTIONAL_FALSE : optOptional );
 		this.deletionFlags.push( (optDeletionFlag === undefined) ? false                   : optDeletionFlag);
-        this.Qualifiers.push( (optQualifier === undefined) ? ""                   : optQualifier);
+        this.qualifiers.push( (optQualifier === undefined) ? ""                   : optQualifier);
 	},
 
 	// get values used by the NodeItem
 	getKeyName : function() {
-		return new OntologyName(this.UriConnectBy).getLocalName();
+		return new OntologyName(this.uriConnectBy).getLocalName();
 	},
     getValueTypes : function() {
         return [this.valueType];   // NodeItem js is still singular valueType
     },
 
-    // for item (match propertyItem)
-    getRangeURI : function() {
-        return this.UriValueType;
-    },
-	getUriValueType : function() {
-		return this.UriValueType;
-	},
 	getConnected : function() {
-		return this.Connected;
+		return this.connected;
 	},
 	getConnectBy : function() {
-		return this.ConnectBy;
+		return this.connectedBy;
 	},
 	getSNodes : function() {
-		return this.SNodes;
+		return this.nodes;
 	},
     // item function
     getURI : function() {
         return this.getURIConnectBy();
     },
 	getURIConnectBy : function() {
-		return this.UriConnectBy;
+		return this.uriConnectBy;
 	},
 
 	removeSNode : function(nd) {
 		// iterate over the nodes, remove the one that makes no sense.
 		// console.log("calling transitive node group removal from " +
 		// this.Keyname);
-		for (var i = 0; i < this.SNodes.length; i++) {
-			if (this.SNodes[i] == nd) {
-				// console.log("removing " + this.SNodes[i].getSparqlID);
-				this.SNodes.splice(i, 1);
-				this.OptionalMinus.splice(i,1);
-                this.Qualifiers.splice(i,1);
+		for (var i = 0; i < this.nodes.length; i++) {
+			if (this.nodes[i] == nd) {
+				// console.log("removing " + this.nodes[i].getSparqlID);
+				this.nodes.splice(i, 1);
+				this.optionalMinus.splice(i,1);
+                this.qualifiers.splice(i,1);
 				this.deletionFlags.splice(i, 1);
 			}
 		}
-		if (this.SNodes.length === 0)
+		if (this.nodes.length === 0)
 		{
-			this.Connected = false;
+			this.connected = false;
 		}
 
 	},
@@ -633,8 +633,8 @@ NodeItem.prototype = {
 		// deletion set to true.
 		var retval = [];
 
-		for( var i = 0; i < this.SNodes.length; i++){
-			var currNode = this.SNodes[i];
+		for( var i = 0; i < this.nodes.length; i++){
+			var currNode = this.nodes[i];
 			if(this.deletionFlags[i]){
 				retval.push(currNode);
 			}
@@ -649,7 +649,7 @@ NodeItem.prototype = {
 	},
 
     getItemUri: function() {
-        return this.UriConnectBy;
+        return this.uriConnectBy;
     },
 };
 
@@ -1151,7 +1151,7 @@ SemanticNode.prototype = {
 		}
 
 		for (var i = 0; i < jObj.nodeList.length; i++) {
-			var n = new NodeItem(null, null, null, jObj.nodeList[i], nodeGroup);
+			var n = new NodeItem(null, [], jObj.nodeList[i], nodeGroup);
 			this.nodeList.push(n);
 		}
 
@@ -1619,9 +1619,9 @@ SemanticNode.prototype = {
 		return this.removalTag;
 	},
 
-	addSubclassProperty : function (valTypes, relation, uriRelation ) {
+	addSubclassProperty : function (valTypes, rangeUri, uriRelation ) {
 		// force-add a subclass property.   So it must be optional.
-		prop = new PropertyItem(valTypes, relation, uriRelation);
+		prop = new PropertyItem(valTypes, rangeUri, uriRelation);
 		prop.optMinus = PropertyItem.OPT_MINUS_OPTIONAL;
 		this.propList.push(prop);
 		return prop;
@@ -1785,7 +1785,8 @@ var SemanticNodeGroup = function() {
                                     // where parent is one of the items in tmpUnionMemberHash[key]
 };
 
-SemanticNodeGroup.JSON_VERSION = 17;
+SemanticNodeGroup.JSON_VERSION = 18;
+// version 18 - complex ranges
 // version 17 - propertyItem domainURI, rangeURI, valueTypes (plural)
 // version 16 - columnOrder
 // version 15 - node.isConstructed  ng.queryType ng.returnTypeOverride
@@ -2973,26 +2974,23 @@ SemanticNodeGroup.prototype = {
 
 		// get a list of the properties not repesenting other nodes.
 		for (var i = 0; i < props.length; i++) {
-			var propNameLocal = props[i].getName().getLocalName();
 			var propNameFull = props[i].getName().getFullName();
-			var propRangeNameLocal = props[i].getRange().getLocalName();
-			var propRangeNameFull = props[i].getRange().getFullName();
+			var oRange = props[i].getRange(oClass, oInfo);
 
-			// is the range a class ?
-			if (oInfo.containsClass(propRangeNameFull)) {
-				var p = new NodeItem(propNameFull, propRangeNameLocal,
-						propRangeNameFull);
+			if (oRange.isComplex() || oInfo.containsClass(oRange.getSimpleUri())) {
+				// range is a class: create node item
+				var p = new NodeItem(propNameFull, oRange.getUriList());
 				belnodes.push(p);
 
-			} else if (oInfo.containsDatatype(propRangeNameFull)) {
-                // range is a datatype
-				var p = new PropertyItem(oInfo.getDatatype(propRangeNameFull).getEquivalentXSDTypes(),
-						propRangeNameFull, propNameFull);
+			} else if (oInfo.containsDatatype(oRange.getSimpleUri())) {
+				// range is a datatype
+				var p = new PropertyItem(oInfo.getDatatype(oRange.getSimpleUri()).getEquivalentXSDTypes(), oRange.getSimpleUri(), propNameFull);
 				belprops.push(p);
-
-            } else {
-                // range is a raw owl data type
-				var p = new PropertyItem([propRangeNameLocal], propRangeNameFull, propNameFull);
+				
+			} else {
+				// range is a raw OWL data type
+				var typeList = oInfo.getPropertyRangeXSDTypes(oRange.getSimpleUri());
+				var p = new PropertyItem(typeList, oRange.getSimpleUri(), propNameFull);
 				belprops.push(p);
 			}
 		}
@@ -3135,9 +3133,9 @@ SemanticNodeGroup.prototype = {
 				for (var n=0; n < snode.nodeList.length; n++) {
 					var nodeItem = snode.nodeList[n];
 
-					for (var c=0; c < nodeItem.SNodes.length; c++) {
+					for (var c=0; c < nodeItem.nodes.length; c++) {
 						// increment hash[sparqlID] for each incoming link
-						linkHash[nodeItem.SNodes[c].getSparqlID()] += 1;
+						linkHash[nodeItem.nodes[c].getSparqlID()] += 1;
 					}
 				}
 			}
@@ -3231,9 +3229,11 @@ SemanticNodeGroup.prototype = {
 		var nodeItems = this.getConnectingNodeItems(sNode);
 		for (j=0; j < nodeItems.length; j++) {
 			if (nodeItems[j].getOptionalMinus(sNode) != NodeItem.OPTIONAL_REVERSE) {
-				var uriValType = nodeItems[j].getRangeURI();
-				if (ret.indexOf(uriValType) < 0)
-					ret.push(uriValType);
+				for (var rangeUri of nodeItems[j].getRangeUris()) {
+					if (ret.indexOf(rangeUri) < 0) {
+						ret.push(rangeUri);
+					}
+				}
 			}
 		}
 
@@ -3327,13 +3327,13 @@ SemanticNodeGroup.prototype = {
 		var ret = [];
 
 		for (var i=0; i < sNode1.nodeList.length; i++) {
-			if (sNode1.nodeList[i].SNodes.indexOf(sNode2) > -1) {
+			if (sNode1.nodeList[i].nodes.indexOf(sNode2) > -1) {
 				ret.push(sNode1.nodeList[i]);
 			}
 		}
 
 		for (var i=0; i < sNode2.nodeList.length; i++) {
-			if (sNode2.nodeList[i].SNodes.indexOf(sNode1) > -1) {
+			if (sNode2.nodeList[i].nodes.indexOf(sNode1) > -1) {
 				ret.push(sNode2.nodeList[i]);
 			}
 		}
@@ -3735,7 +3735,7 @@ SemanticNodeGroup.prototype = {
 
                 // remove nodeItems from unionHash
                 for (var nItem of snode.nodeList) {
-                    for (var target of nItem.SNodes) {
+                    for (var target of nItem.nodes) {
                         this.rmFromUnions(snode, nItem, target);
                     }
                 }
@@ -3912,9 +3912,11 @@ SemanticNodeGroup.prototype = {
 		if (oProp == null) {
 			return null;
 		}
-
-		var prop = snode.addSubclassProperty(oInfo.getPropertyRangeXSDTypes(oProp.getRange().getFullName()),
-				                             oProp.getRange().getFullName(),
+		
+		var oClass = oInfo.getClass(snode.getURI());
+		var oRange = oProp.getRange(oClass, oInfo);
+		var prop = snode.addSubclassProperty(oInfo.getPropertyRangeXSDTypes(oRange.getSimpleUri()),
+				                             oRange.getSimpleUri(),
 				                             oProp.getName().getFullName()
 				                             );
 		return prop;

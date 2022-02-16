@@ -33,6 +33,10 @@ import com.ge.research.semtk.ontologyTools.OntologyRange;
 public class OntologyProperty extends AnnotatableElement{
 
 	private OntologyName  name = null;
+	// Range restrictions:  Range is assigned per domain <String>
+	// this.getRange(domain, oInfo) searches superClass* of domain to find the correct range
+	//
+	// Note that OntologyClass of each domain should also have a pointer to this On tologyProperty
 	private Hashtable<String, OntologyRange> rangeHash = new Hashtable<String,OntologyRange>();
 	
 
@@ -120,6 +124,12 @@ public class OntologyProperty extends AnnotatableElement{
 		}
 	}
 	
-	
+	public HashSet<String> getAllRangeUris() {
+		HashSet<String> ret = new HashSet<String>();
+		for (OntologyRange oRange : this.rangeHash.values()) {
+			ret.addAll(oRange.getUriList());
+		}
+		return ret;
+	}
 	
 }

@@ -274,13 +274,17 @@ public class NodeGroupExecutor {
 		return retval;
 	}
 		
-	
 	// Dispatch actions
 	public void dispatchRawSparql(SparqlConnection sc, String sparqlQuery) throws Exception {
+		this.dispatchRawSparql(sc,  sparqlQuery, SparqlResultTypes.TABLE);
+	}
+	
+	// Dispatch actions
+	public void dispatchRawSparql(SparqlConnection sc, String sparqlQuery, SparqlResultTypes rt) throws Exception {
 	
 		SimpleResultSet simpleRes = null;
 		
-		simpleRes = this.dispatchClient.executeRawSparqlQuery(sc, sparqlQuery);
+		simpleRes = this.dispatchClient.executeRawSparqlQuery(sc, sparqlQuery, rt);
 		
 		// set up the Job ID
 		this.setJobID(simpleRes.getResult("requestID"));

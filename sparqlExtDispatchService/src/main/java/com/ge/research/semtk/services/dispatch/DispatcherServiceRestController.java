@@ -226,19 +226,21 @@ public class DispatcherServiceRestController {
 	public JSONObject asynchronousDirectQuery(@RequestBody SparqlRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			return queryFromSparql(requestBody, SparqlResultTypes.TABLE);
+			return queryFromSparql(requestBody);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
 	}
 	
+	// now not necessary: just call /asynchronousDirectQuery with resultType = CONFIRM
 	@CrossOrigin
 	@RequestMapping(value="/asynchronousDirectUpdateQuery", method=RequestMethod.POST)
 	public JSONObject asynchronousDirectUpdateQuery(@RequestBody SparqlRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			return queryFromSparql(requestBody, SparqlResultTypes.CONFIRM);
+			requestBody.setResultType(SparqlResultTypes.CONFIRM);
+			return queryFromSparql(requestBody);
 		    
 		} finally {
 	    	HeadersManager.clearHeaders();
@@ -257,7 +259,7 @@ public class DispatcherServiceRestController {
 	    }
 	}
 		
-	public JSONObject queryFromSparql(@RequestBody SparqlRequestBody requestBody, SparqlResultTypes rt){
+	public JSONObject queryFromSparql(@RequestBody SparqlRequestBody requestBody){
 		String jobId = this.generateJobId();
 		SimpleResultSet retval = new SimpleResultSet(true);
 		retval.addResult("requestID", jobId); // for backwards compatibility
@@ -278,7 +280,7 @@ public class DispatcherServiceRestController {
 			dsp = getDispatcher(props, jobId, ngrb, true, true);
 			dsp.getJobTracker().incrementPercentComplete(dsp.getJobId(), 1, 10);
 			
-			WorkThread thread = new WorkThread(dsp, null, null, null, rt);
+			WorkThread thread = new WorkThread(dsp, null, null, null, requestBody.getResultType());
 			thread.setRawSparqlSquery(requestBody.getRawSparqlQuery());
 			
 			thread.start();

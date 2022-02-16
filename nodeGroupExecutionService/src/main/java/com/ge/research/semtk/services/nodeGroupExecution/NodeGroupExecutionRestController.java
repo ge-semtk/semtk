@@ -1096,7 +1096,7 @@ public class NodeGroupExecutionRestController {
 				SparqlConnection connection = requestBody.getSparqlConnection();			
 	
 				// dispatch the job. 
-				ngExecutor.dispatchRawSparql(connection, requestBody.getSparql());
+				ngExecutor.dispatchRawSparql(connection, requestBody.getSparql(), requestBody.getResultType());
 				String id = ngExecutor.getJobID();
 				
 				retval.setSuccess(true);
