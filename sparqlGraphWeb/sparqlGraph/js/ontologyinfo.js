@@ -395,6 +395,15 @@ OntologyInfo.getSadlRangeList = function() {
            "http://www.w3.org/2001/XMLSchema#dateTime"];
 };
 
+OntologyInfo.getConstructOntologyQuery = function(conn) {
+	var from = "";
+	for (var i=0; i < conn.getModelInterfaceCount(); i++) {
+		from = from + " FROM <" + conn.getModelInterface(i).getGraph() + "> ";
+	}
+	
+	return "CONSTRUCT { ?s ?p ?o } " + from + " WHERE { ?s ?p ?o }" ;
+};
+
 OntologyInfo.prototype = {
 
     /*
@@ -923,28 +932,7 @@ OntologyInfo.prototype = {
 		return ret;
 	},
 
-	getSuperSubClassQuery : function (domain) {
-        console.log("ontologyinfo.js getSuperSubClassQuery is deprecated.  Use loadFromService() instead.");
-
-        // returns a cheesy query that gives
-		// domain - e.g. caterham.ge.com
-
-		// PEC TODO: domain regex does not match the isInDomain() method logic
-		return 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>    \
-				PREFIX owl: <http://www.w3.org/2002/07/owl#>   \
-				PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>              \
-				PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>         \
-        \
-				select distinct ?x ?y  where {         \
-				?x rdf:type owl:Class .  \
-		        ?y rdf:type owl:Class .  \
-				?x rdfs:subClassOf ?y  				  \
-				  filter regex(str(?x),"^' + domain + '")              \
-				  filter regex(str(?y),"^' + domain + '")              \
-				  filter (?x != ?y).           						  \
-				}    \
-			';
-	},
+	
 
 	loadSuperSubClasses : function(subClassList, superClassList) {
         var tempClasses = {};
@@ -1041,26 +1029,7 @@ OntologyInfo.prototype = {
         }
 	},
 
-	getTopLevelClassQuery : function (domain) {
-        console.log("ontologyinfo.js getTopLevelClassQuery is deprecated.  Use loadFromService() instead.");
-
-        // returns a cheesy query that gives
-		// domain - e.g. caterham.ge.com
-		return 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>                \
-		PREFIX owl: <http://www.w3.org/2002/07/owl#> 	    \
-			PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>     \
-			PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>                \
-        \
-			select distinct ?Class  {  									  \
-			?Class rdf:type owl:Class filter regex(str(?Class),"^' + domain + '") .        \
-			MINUS 													  \
-			{ ?Sup rdf:type owl:Class.  \
-			  ?Class rdfs:subClassOf ?Sup         								       \
-			    filter regex(str(?Sup),"^' + domain + '")    	 				           \
-			    filter (?Class != ?Sup).}   								  \
-			}                \
-			';
-	},
+	
 
 	loadTopLevelClasses : function(classList) {
 		// load from rows of [class]
@@ -1113,74 +1082,7 @@ OntologyInfo.prototype = {
 		return null;
 	},
 
-	getLoadPropertiesQuery : function (domain) {
-        console.log("ontologyinfo.js getLoadPropertiesQuery is deprecated.  Use loadFromService() instead.");
-
-        // returns a cheesy query that gives
-		// domain - e.g. caterham.ge.com
-		return 'PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>              \
-		PREFIX owl: <http://www.w3.org/2002/07/owl#>              \
-			PREFIX xsd: <http://www.w3.org/2001/XMLSchema#>              \
-			PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>              \
-			PREFIX  list: <http://jena.hpl.hp.com/ARQ/list#>              \
-        \
-			select distinct ?Class ?Property ?Range {              \
-			{ \
-			    ?Class rdf:type owl:Class. \
-			    ?Property rdfs:domain ?Class filter regex(str(?Class),"^' + domain + '").              \
-				?Property rdfs:range ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).              \
-			} UNION {             \
-				?Class rdf:type owl:Class. \
-				?Property rdfs:domain ?x.              \
-				?x owl:unionOf ?y.              \
-				?y rdf:rest* ?Rest0. ?Rest0 rdf:first ?Class filter regex(str(?Class),"^' + domain + '").              \
-				?Property rdfs:range ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).             \
-			} UNION {             \
-				?Class rdf:type owl:Class. \
-				?Property rdfs:domain ?Class filter regex(str(?Class),"^' + domain + '").              \
-				?Property rdfs:range ?x.              \
-				?x owl:unionOf ?y.              \
-				?y rdf:rest* ?Rest1. ?Rest1 rdf:first ?Range  filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).              \
-			} UNION {             \
-				?Class rdf:type owl:Class. \
-				?Property rdfs:domain ?x.              \
-				?x owl:unionOf ?y.              \
-				?y rdf:rest* ?Rest2. ?Rest2 rdf:first ?Class filter regex(str(?Class),"^' + domain + '").              \
-				?Property rdfs:range ?x1.              \
-				?x1 owl:unionOf ?y1.              \
-				?y1 rdf:rest* ?Rest3. ?Rest3 rdf:first ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).              \
-			} UNION {             \
-				?Class rdf:type owl:Class. \
-				?Class rdfs:subClassOf ?x filter regex(str(?Class),"^' + domain + '").              \
-				?x rdf:type owl:Restriction. ?x owl:onProperty ?Property.              \
-				?x owl:onClass ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).              \
-			} UNION {             \
-				?Class rdf:type owl:Class. \
-				?Class rdfs:subClassOf ?x filter regex(str(?Class),"^' + domain + '").              \
-				?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. ?x owl:onClass ?y.              \
-				?y owl:unionOf ?z. \
-				?z rdf:rest* ?Rest4. ?Rest4 rdf:first ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).              \
-			} UNION {             \
-				?Class rdf:type owl:Class. \
-				?x1 owl:unionOf ?x2. \
-				?x2 rdf:rest* ?Rest5. ?Rest5 rdf:first ?Class filter regex(str(?Class),"^' + domain + '").              \
-				?x1 rdfs:subClassOf ?x .              \
-				?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. ?x owl:onClass ?y.              \
-				?y owl:unionOf ?z. \
-				?z rdf:rest* ?Rest6. ?Rest6 rdf:first ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).        \               \
-			} UNION {              \
-				?Class rdf:type owl:Class. \
-				?Class rdfs:subClassOf ?x filter regex(str(?Class),"^' + domain + '").              \
-				?x rdf:type owl:Restriction. ?x owl:onProperty ?Property.              \
-				?x owl:someValuesFrom ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")).              \
-			} UNION {              \
-				?Class rdf:type owl:Class. \
-				?Class rdfs:subClassOf ?x filter regex(str(?Class),"^' + domain + '").              \
-				?x rdf:type owl:Restriction. ?x owl:onProperty ?Property.              \
-				?x owl:allValuesFrom ?Range filter (regex(str(?Range),"^' + domain + '") || regex(str(?Range),"XML")). \
-			}              \
-		}';
-	},
+	
 
 	loadProperties : function(classList, propertyList, rangeList) {
 		// load from rows of [class, property, range]
@@ -1228,17 +1130,7 @@ OntologyInfo.prototype = {
 		}
 	},
 
-	getEnumQuery : function (domain) {
-        console.log("ontologyinfo.js getEnumQuery is deprecated.  Use loadFromService() instead.");
-
-        // return every ?t ?e where
-		//     ?t is a class that "must be one of" ?e
-		return  'select ?Class ?EnumVal where { \n' +
-				'  ?Class <http://www.w3.org/2002/07/owl#equivalentClass> ?ec filter regex(str(?Class),"^' + domain + '").' +
-				'  ?ec <http://www.w3.org/2002/07/owl#oneOf> ?c . \n' +
-				'  ?c <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>*/<http://www.w3.org/1999/02/22-rdf-syntax-ns#first> ?EnumVal. \n' +
-				'}';
-	},
+	
 
 	loadEnums : function(classList, valList) {
 		// load from rows of [class, property, range]
@@ -1255,24 +1147,7 @@ OntologyInfo.prototype = {
 		}
 	},
 
-    getAnnotationLabelsQuery : function(domain) {
-        console.log("ontologyinfo.js getAnnotationLabelsQuery is deprecated.  Use loadFromService() instead.");
-
-        // This query will be sub-optimal if there are multiple labels and comments for many elements
-		// because every combination will be returned
-		//
-		// But in the ususal case where each element has zero or 1 labels and comments
-		// It is more efficient to get them in a single query with each element URI only transmitted once.
-		return "prefix owl:<http://www.w3.org/2002/07/owl#>\n" +
-				"prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" +
-				"\n" +
-				"select distinct ?Elem ?Label where {\n" +
-				" ?Elem a ?p.\r\n" +
-				" filter regex(str(?Elem),'^" + domain + "'). " +
-				" VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}.\n" +
-				"    optional { ?Elem rdfs:label ?Label. }\n" +
-				"}";
-	},
+   
 
 	loadAnnotationLabels : function(elemList, labelList) {
 
@@ -1292,25 +1167,7 @@ OntologyInfo.prototype = {
 		}
 	},
 
-	getAnnotationCommentsQuery : function(domain) {
-        console.log("ontologyinfo.js getAnnotationCommentsQuery is deprecated.  Use loadFromService() instead.");
-
-        // This query will be sub-optimal if there are multiple labels and comments for many elements
-		// because every combination will be returned
-		//
-		// But in the ususal case where each element has zero or 1 labels and comments
-		// It is more efficient to get them in a single query with each element URI only transmitted once.
-		return "prefix owl:<http://www.w3.org/2002/07/owl#>\n" +
-				"prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" +
-				"\n" +
-				"select distinct ?Elem ?Comment where {\n" +
-				" ?Elem a ?p.\r\n" +
-				" filter regex(str(?Elem),'^" + domain + "'). " +
-				" VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}.\n" +
-				"    optional { ?Elem rdfs:comment ?Comment. }\n" +
-				"}";
-	},
-
+	
 	loadAnnotationComments : function(elemList, commentList) {
 		for (var i=0; i < elemList.length; i++) {
 
