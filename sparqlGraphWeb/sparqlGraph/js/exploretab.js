@@ -91,10 +91,11 @@ define([	// properly require.config'ed
         };
 
 		ExploreTab.MAX_LAYOUT_ELEMENTS = 100;
-        ExploreTab.MODE_ONTOLOGY = "Ontology";
+        ExploreTab.MODE_ONTOLOGY_CLASSES = "Ontology Classes";
+        ExploreTab.MODE_ONTOLOGY_DETAIL = "Ontology Detail";
         ExploreTab.MODE_INSTANCE = "Instance Data";
         ExploreTab.MODE_STATS = "Instance Counts";
-        ExploreTab.MODES = [ExploreTab.MODE_ONTOLOGY, ExploreTab.MODE_INSTANCE, ExploreTab.MODE_STATS ];
+        ExploreTab.MODES = [ExploreTab.MODE_ONTOLOGY_CLASSES, ExploreTab.MODE_ONTOLOGY_DETAIL, ExploreTab.MODE_INSTANCE, ExploreTab.MODE_STATS ];
 
 		ExploreTab.prototype = {
 
@@ -163,7 +164,7 @@ define([	// properly require.config'ed
                 };
 
                 // options special to each mode
-                if (mode == ExploreTab.MODE_ONTOLOGY) {
+                if (mode == ExploreTab.MODE_ONTOLOGY_CLASSES) {
                     options.layout =  {
                         "hierarchical": {
                           "enabled": true,
@@ -182,6 +183,17 @@ define([	// properly require.config'ed
                         "minVelocity": 0.75,
                         "solver": "hierarchicalRepulsion"
                     };
+
+                } else if (mode == ExploreTab.MODE_ONTOLOGY_DETAIL) {
+                    options.physics ={
+                              "barnesHut": {
+                                "centralGravity": 0.15,
+                                "springLength": 180
+                              },
+                              "maxVelocity": 38,
+                              "minVelocity": 0.75,
+                              "solver": "barnesHut"
+                          };
 
                 } else if (mode == ExploreTab.MODE_INSTANCE) {
                     options.physics ={
@@ -253,7 +265,7 @@ define([	// properly require.config'ed
                 var bold = document.createElement("b");
                 td.appendChild(bold);
                 bold.innerHTML = "Explore mode: ";
-                var select = IIDXHelper.createSelect("etSelect", [ExploreTab.MODE_ONTOLOGY, ExploreTab.MODE_INSTANCE, ExploreTab.MODE_STATS], [ExploreTab.MODE_ONTOLOGY]);
+                var select = IIDXHelper.createSelect("etSelect", [ExploreTab.MODE_ONTOLOGY_CLASSES, ExploreTab.MODE_ONTOLOGY_DETAIL, ExploreTab.MODE_INSTANCE, ExploreTab.MODE_STATS], [ExploreTab.MODE_ONTOLOGY_CLASSES]);
                 select.onchange = this.draw.bind(this);
                 td.appendChild(select);
 
@@ -288,7 +300,8 @@ define([	// properly require.config'ed
             // add controls to empty control divs
             initControlDivs : function() {
                     this.initControlDivInstance();
-                    this.initControlDivOntology();
+                    this.initControlDivOntologyClasses();
+                    this.initControlDivOntologyDetail();
                     this.initControlDivStats();
             },
 
@@ -302,13 +315,22 @@ define([	// properly require.config'ed
                 div.appendChild(IIDXHelper.buildList(["Number of predicates connecting each exact class.","Color by namespace."]));
             },
 
-            initControlDivOntology : function() {
-                var div = this.controlDivHash[ExploreTab.MODE_ONTOLOGY];
+            initControlDivOntologyClasses : function() {
+                var div = this.controlDivHash[ExploreTab.MODE_ONTOLOGY_CLASSES];
                 div.style.margin="1ch";
                 var h = document.createElement("h3");
                 div.appendChild(h);
-                h.innerHTML = ExploreTab.MODE_ONTOLOGY;
+                h.innerHTML = ExploreTab.MODE_ONTOLOGY_CLASSES;
                 div.appendChild(IIDXHelper.buildList(["Show superclass relationships.","Color by namespace."]));
+            },
+            
+            initControlDivOntologyDetail : function() {
+                var div = this.controlDivHash[ExploreTab.MODE_ONTOLOGY_DETAIL];
+                div.style.margin="1ch";
+                var h = document.createElement("h3");
+                div.appendChild(h);
+                h.innerHTML = ExploreTab.MODE_ONTOLOGY_DETAIL;
+                div.appendChild(IIDXHelper.buildList(["Show all raw triples in the ontology graph(s).","Color by type."]));
             },
 
             initControlDivInstance : function() {
@@ -464,7 +486,7 @@ define([	// properly require.config'ed
                 this.draw();
             },
 
-            // get the etSelect value ExploreTab.MODE_ONTOLOGY, or ExploreTab.MODE_INSTANCE
+            // get the etSelect value ExploreTab.MODE_ONTOLOGY_CLASSES, or ExploreTab.MODE_INSTANCE
             getMode : function() {
                 var sel = document.getElementById("etSelect");
                 var value = sel.options[sel.selectedIndex].text;
@@ -524,10 +546,12 @@ define([	// properly require.config'ed
                 // Either way, redraw.
                 if (this.networkHash[this.getMode()].body.data.nodes.getIds().length == 0) {
 
-                    if (this.getMode() == ExploreTab.MODE_ONTOLOGY) {
-                        this.drawOntology();
+                    if (this.getMode() == ExploreTab.MODE_ONTOLOGY_CLASSES) {
+                        this.drawOntologyClasses();
 
-                    } else if (this.getMode() == ExploreTab.MODE_INSTANCE) {
+                    } else if (this.getMode() == ExploreTab.MODE_ONTOLOGY_DETAIL) {
+						this.drawOntologyDetail();
+					} else if (this.getMode() == ExploreTab.MODE_INSTANCE) {
                         this.oTree.showAll();
                         var workList = this.oTree.getSelectedPropertyPairs();
 
@@ -657,12 +681,12 @@ define([	// properly require.config'ed
                 this.updateInfo();
             },
 
-            drawOntology : function () {
+           drawOntologyClasses : function () {
                 var nodeData = [];
                 var edgeData = [];
                 var SHOW_NAMESPACE = false;
 
-                var fontHash = this.setupGroups(this.oInfo.getNamespaceNames(), this.networkHash[ExploreTab.MODE_ONTOLOGY]);
+                var fontHash = this.setupGroups(this.oInfo.getNamespaceNames(), this.networkHash[ExploreTab.MODE_ONTOLOGY_CLASSES]);
 
                 // namespace nodes
                 if (SHOW_NAMESPACE) {
@@ -705,11 +729,72 @@ define([	// properly require.config'ed
                 }
 
                 // add any left-over data
-                this.networkHash[ExploreTab.MODE_ONTOLOGY].body.data.nodes.add(nodeData);
-                this.networkHash[ExploreTab.MODE_ONTOLOGY].body.data.edges.add(edgeData);
+                this.networkHash[ExploreTab.MODE_ONTOLOGY_CLASSES].body.data.nodes.add(nodeData);
+                this.networkHash[ExploreTab.MODE_ONTOLOGY_CLASSES].body.data.edges.add(edgeData);
 
                 this.updateInfo();
 
+            },
+            
+            drawOntologyDetail : function () {
+				var sparql = OntologyInfo.getConstructOntologyQuery(this.conn);
+				
+            	var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.service.status.url, g.service.results.url, g.longTimeoutMsec);
+
+				var progressCallback = function(percent, msg) {
+					IIDXHelper.progressBarSetPercent(this.progressDiv, percent, msg);
+				}.bind(this);
+				
+				var failureCallback = function(msg) {
+					ModalIidx.alert.bind(this, "Construct query failed:" + msg);
+					this.busy(false);
+                    IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
+                	IIDXHelper.progressBarRemove(this.progressDiv);                                           
+				}.bind(this);
+				
+ 				var jsonLdCallback = MsiClientNodeGroupExec.buildJsonLdCallback(
+																this.drawOntologyDetailCallback.bind(this),
+                                                                failureCallback,
+                                                                progressCallback,
+                                                                function() {var checkForCancel=""; return false;},
+                                                                g.service.status.url,
+                                                                g.service.results.url);
+            
+            	IIDXHelper.progressBarCreate(this.progressDiv, "progress-info progress-striped active");
+                IIDXHelper.progressBarSetPercent(this.progressDiv, 0, "");
+                this.busy(true);
+				client.execAsyncDispatchRawSparql(sparql, gConn, jsonLdCallback, failureCallback, "GRAPH_JSONLD");
+			},
+			
+			drawOntologyDetailCallback : function (jsonLdResults) {
+				IIDXHelper.progressBarSetPercent(this.progressDiv, 90);
+               	
+				var network = this.networkHash[ExploreTab.MODE_ONTOLOGY_DETAIL];
+				
+				// delete all
+				network.selectNodes(network.body.data.nodes.getIds());
+				network.deleteSelected();
+				
+				// add new
+	            var jsonLd = jsonLdResults.getGraphResultsJsonArr(false, false, false);
+	            var edgeList = [];
+	            var nodeDict = {};
+	            for (var i=0; i < jsonLd.length; i++) {
+	                VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList, true);
+	                if (i % 20 == 0) {
+	                    network.body.data.nodes.update(Object.values(nodeDict));
+	                    network.body.data.edges.update(edgeList);
+	                }
+	            }
+	            network.body.data.nodes.update(Object.values(nodeDict));
+	            network.body.data.edges.update(edgeList);
+	
+	            network.startSimulation();
+            
+            	this.busy(false);
+                IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
+               	IIDXHelper.progressBarRemove(this.progressDiv);    
+                this.updateInfo();
             },
 
             // add instance data returned by from /dispatchSelectInstanceData REST call

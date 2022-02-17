@@ -137,7 +137,8 @@ define([	// properly require.config'ed
         return ret;
     };
 
-    VisJsHelper.addJsonLdObject = function(j, nodeDict, edgeList) {
+	// optLabelIdFlag - instead of "normal formatting", Label nodes with the id (URI)
+    VisJsHelper.addJsonLdObject = function(j, nodeDict, edgeList, optLabelIdFlag) {
 
         // add the main node
         var shortType = VisJsHelper.getShortType(j);
@@ -150,8 +151,8 @@ define([	// properly require.config'ed
         var id = j["@id"];
         nodeDict[id] = {
             id : id,
-            label: shortType,
-            title: id,
+            label: optLabelIdFlag ? id : shortType,
+            title: optLabelIdFlag ? shortType : id,
             group: groupVal
         };
 
