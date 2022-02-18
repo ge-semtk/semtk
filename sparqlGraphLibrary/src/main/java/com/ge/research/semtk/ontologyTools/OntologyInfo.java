@@ -1497,6 +1497,7 @@ public class OntologyInfo {
 		}
 	}
 	/**
+	 * @author - paul
 	 * Query to get all Properties and their range / domain 
 	 *                    via rdfs:range   and rdfs:domain, 
 	 *    or via restrictions rdfs:onClass and rdfs:subClassOf
@@ -1528,7 +1529,7 @@ public class OntologyInfo {
 				+ "         # domain is a union\n"
 				+ "			{?Property a owl:ObjectProperty. } union { ?Property a owl:DatatypeProperty } .\n"
 				+ "			?Property rdfs:domain ?d0 .\n"
-				+ "			?d0 owl:unionOf ?y1." + buildListMemberSPARQL("?y1", "?Domain", genDomainFilterStatement("Domain", domain, "|| regex(str(?Domain),'XML')")) + " \n" 
+				+ "			?d0 owl:unionOf ?y1." + buildListMemberSPARQL("?y1", "?Domain", domain) + " \n" 
 				+ "		}\n"
 				+ "\n"
 				+ "		# ?Property optional has rdfs:range\n"
@@ -1545,7 +1546,7 @@ public class OntologyInfo {
 				+ "			# range is a union\n"
 				+ "			{?Property a owl:ObjectProperty. } union { ?Property a owl:DatatypeProperty } .\n"
 				+ "			?Property rdfs:range ?r0 .\n"
-				+ "			?r0 owl:unionOf ?r1." + buildListMemberSPARQL("?r1", "?Range", genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " \n" 
+				+ "			?r0 owl:unionOf ?r1." + buildListMemberSPARQL("?r1", "?Range", domain) + " \n" 
 				+ "		}\n"
 				+ "\n"
 				+ "	} UNION {\n"
@@ -1562,8 +1563,8 @@ public class OntologyInfo {
 				+ "			?rest (owl:onClass|owl:allValuesFrom|owl:someValuesFrom) ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n"
 				+ "		} UNION {\n"
 				+ "			# restriction has range is a union\n"
-				+ "			?rest owl:onClass ?y. \n"
-				+ "			?y owl:unionOf ?z. " + buildListMemberSPARQL("?z", "?Range", genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " \n"
+				+ "			?rest (owl:onClass|owl:allValuesFrom|owl:someValuesFrom) ?y. \n"
+				+ "			?y owl:unionOf ?z. " + buildListMemberSPARQL("?z", "?Range", domain) + " \n"
 				+ "		}\n"
 				+ "\n"
 				+ "		{\n"
@@ -1572,16 +1573,34 @@ public class OntologyInfo {
 				+ "		} UNION {\n"
 				+ "			# restriction is subClassOf union \n"
 				+ "			?dx1 rdfs:subClassOf ?rest . \n"
-				+ "			?dx1 owl:unionOf ?dx2. " + buildListMemberSPARQL("?dx2", "?Domain", genDomainFilterStatement("Domain", domain, "|| regex(str(?Domain),'XML')")) + " \n"
+				+ "			?dx1 owl:unionOf ?dx2. " + buildListMemberSPARQL("?dx2", "?Domain", domain) + " \n"
 				+ "		} \n"
 				+ "	}\n"
 				+ "}";
 		return retVal;
 	}
+	
 	/**
+	 * Generate a clause to get all values of a union list that are in domain and not blank nodes
+	 * @param varName - predicate of the union clause
+	 * @param classVar - variable (with ?) to bind the answers
+	 * @param domain
+	 * @return
+	 */
+	private static String buildListMemberSPARQL(String varName, String classVar, String domain) {
+		String filter = genDomainFilterStatement(classVar.substring(1), domain, "|| regex(str(" + classVar + "),'XML')");
+		restCount += 1;
+		return String.format("{ %s rdf:rest* ?Rest%d. ?Rest%d rdf:first %s %s. }", varName, restCount, restCount,
+				classVar, filter);
+	}
+	
+	/**
+	 * 
+	 * @author - Ravi Palla
 	 * The original Ravi version.
 	 * Note it returns ?Class and no ?Domain
-	 * It lasted many years (Hail Ravi) but struggles with missing domain or range
+	 * It lasted many years (Hail Ravi!) but struggles with missing domain or range
+	 * Ravi launched SemTK with this craziness.
 	 */
 	private static String getLoadPropertiesQuery_a_la_Ravi_Palla(String graphName, String domain) {
 
@@ -1600,7 +1619,7 @@ public class OntologyInfo {
 				
 				+ "} UNION { \n"
 				+ "?Property rdfs:domain ?x. \n" + "?x owl:unionOf ?y. \n"
-				+ buildListMemberSPARQL("?y", "?Class", "filter regex(str(?Class),'^" + domain + "') \n") +
+				+ buildListMemberSPARQL_old("?y", "?Class", "filter regex(str(?Class),'^" + domain + "') \n") +
 				// "?y list:member ?Class filter regex(str(?Class),'^" + domain + "'). " +
 				"?Property rdfs:range ?Range "
 				+ genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n" 
@@ -1608,12 +1627,12 @@ public class OntologyInfo {
 				+ "} UNION { \n"
 				+ "?Property rdfs:domain ?Class " + genDomainFilterStatement("Class", domain) + ". \n"
 				+ "?Property rdfs:range ?x.  \n" + "?x owl:unionOf ?y. \n"
-				+ buildListMemberSPARQL("?y", "?Range", genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " \n" 
+				+ buildListMemberSPARQL_old("?y", "?Range", genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " \n" 
 				
 				+ "} UNION { \n" + "?Property rdfs:domain ?x. \n" + "?x owl:unionOf ?y. \n"
-				+ buildListMemberSPARQL("?y", "?Class", genDomainFilterStatement("Class", domain)) + " .\n"
+				+ buildListMemberSPARQL_old("?y", "?Class", genDomainFilterStatement("Class", domain)) + " .\n"
 				+ "?Property rdfs:range ?x1. \n" + "?x1 owl:unionOf ?y1. \n"
-				+ buildListMemberSPARQL("?y1", "?Range",
+				+ buildListMemberSPARQL_old("?y1", "?Range",
 						genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')"))
 				
 				+ "} UNION { \n" + "?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain) + ". \n"
@@ -1624,15 +1643,15 @@ public class OntologyInfo {
 				+ "?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain) + ". \n"
 				+ "?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. ?x owl:onClass ?y. \n"
 				+ "?y owl:unionOf ?z. \n"
-				+ buildListMemberSPARQL("?z", "?Range",
+				+ buildListMemberSPARQL_old("?z", "?Range",
 						genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " .\n" 
 				
 				+ "} UNION { \n" + "?x1 owl:unionOf ?x2. \n"
-				+ buildListMemberSPARQL("?x2", "?Class", genDomainFilterStatement("Class", domain)) + " .\n"
+				+ buildListMemberSPARQL_old("?x2", "?Class", genDomainFilterStatement("Class", domain)) + " .\n"
 				+ "?x1 rdfs:subClassOf ?x . \n"
 				+ "?x rdf:type owl:Restriction. ?x owl:onProperty ?Property. ?x owl:onClass ?y. \n"
 				+ "?y owl:unionOf ?z. \n"
-				+ buildListMemberSPARQL("?z", "?Range",
+				+ buildListMemberSPARQL_old("?z", "?Range",
 						genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " .\n" 
 				
 				+ "} UNION { \n" + "?Class rdfs:subClassOf ?x " + genDomainFilterStatement("Class", domain)
@@ -1664,11 +1683,12 @@ public class OntologyInfo {
 	}
 
 	// Ravi's revised simpler solution 12/05/2016
-	private static String buildListMemberSPARQL(String varName, String classVar, String filter) {
+	private static String buildListMemberSPARQL_old(String varName, String classVar, String filter) {
 		restCount += 1;
 		return String.format("{ %s rdf:rest* ?Rest%d. ?Rest%d rdf:first %s %s. }", varName, restCount, restCount,
 				classVar, filter);
 	}
+	
 
 	/**
 	 * process the results of the properties sparql query and loads them into the
