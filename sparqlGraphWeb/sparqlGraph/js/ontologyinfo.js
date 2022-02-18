@@ -981,6 +981,8 @@ OntologyInfo.prototype = {
 				}
 			} else {
 				// found an existing property, fill in attributes from parent
+				
+				// loop to fix orphan domains
 				var toRemove = {};
 				var toSetRangeClass = [];
 				var toSetRangeRange = [];
@@ -988,34 +990,17 @@ OntologyInfo.prototype = {
             		if (subDomain == OntologyInfo.ORPHAN_STR) {
 						// domain is orphan, apply the range to all the parent domains
 						
-						// get the supProp range and also delete it
-						var oRange = oSubProp.getRange(OntologyInfo.ORPHAN_CLASS, this);
-						
 						toRemove[OntologyInfo.ORPHAN_STR] = 1;
 						
 						// set the supProp range for all the parent prop domains
 						var superDomains = oSuperProp.getRangeDomains();
 						for (var superDomain of superDomains) {
-							toSetRangeClass.push(this.getClass(superDomain));
-							toSetRangeRange.push(oRange.deepCopy());
+							var oSuperDomain = this.getClass(superDomain);
+							var oSuperRange = oSuperProp.getRange(oSuperDomain, this);
+							toSetRangeClass.push(oSuperDomain);
+							toSetRangeRange.push(oSuperRange.deepCopy());
 						}
-					} else {
-                		// range is orphan or CLASS: change to range of given domain in the superProp
-						var subDomainClass = this.getClass(subDomain);
-						var subRangeUris = oSubProp.getRange(subDomainClass, this).getUriList();
-						for (var subRangeUri of subRangeUris) {
-							if (subRangeUri == OntologyInfo.ORPHAN_STR || subRangeUri == CLASS) {
-								// found one: remove it
-								oSubProp.removeFromRange(subDomain, subRangeUri);
-								
-								// now add all the superProp range URIS for this domain to the subProp
-								var superRangeUris = oSuperProp.getRange(this.getClass(subDomain), this).getUriList();
-								for (var superRangeUri of superRangeUris) {
-									oSubProp.addRange(subDomainClass, superRangeUri);
-								}
-							}
-						}
-					}
+					} 
 				}
             	// prevent concurrent operations problem by doing this last
 				for (var k in toRemove) {
@@ -1024,6 +1009,25 @@ OntologyInfo.prototype = {
 				for (var j=0; j < toSetRangeClass.length; j++) {
 					oSubProp.setRange(toSetRangeClass[j], toSetRangeRange[j]);
 					toSetRangeClass[j].addProperty(oSubProp);
+				}
+				
+				// loop again to fix orphan ranges
+				for (var subDomain of oSubProp.getRangeDomains()) {
+            		// range is orphan or CLASS: change to range of given domain in the superProp
+					var oSubDomain = this.getClass(subDomain);
+					var subRangeUris = oSubProp.getRange(oSubDomain, this).getUriList();
+					for (var subRangeUri of subRangeUris) {
+						if (subRangeUri == OntologyInfo.ORPHAN_STR || subRangeUri == CLASS) {
+							// found one: remove it
+							oSubProp.removeFromRange(subDomain, subRangeUri);
+							
+							// now add all the superProp range URIS for this domain to the subProp
+							var superRangeUris = oSuperProp.getRange(this.getClass(subDomain), this).getUriList();
+							for (var superRangeUri of superRangeUris) {
+								oSubProp.addRange(oSubDomain, superRangeUri);
+							}
+						}
+					}
 				}
 			}
         }

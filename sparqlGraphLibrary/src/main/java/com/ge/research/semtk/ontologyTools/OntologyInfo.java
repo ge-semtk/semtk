@@ -1291,6 +1291,8 @@ public class OntologyInfo {
 
 			} else {
 				// found an existing property, fill in attributes from parent
+				
+				// loop to fix orphan domains
 				HashSet<String> toRemove = new HashSet<String>();
 				ArrayList<OntologyClass> toSetRangeClass = new ArrayList<OntologyClass>();
 				ArrayList<OntologyRange> toSetRangeRange = new ArrayList<OntologyRange>();
@@ -1310,25 +1312,7 @@ public class OntologyInfo {
 							toSetRangeClass.add(this.getClass(superDomain));
 							toSetRangeRange.add(oRange.deepCopy());
 						}
-					} else {
-
-						// range is orphan or CLASS: change to range of given domain in the superProp
-						OntologyClass subDomainClass = this.getClass(subDomain);
-						HashSet<String> subRangeUris = oSubProp.getRange(subDomainClass, this).getUriList();
-						for (String subRangeUri : subRangeUris) {
-							if (subRangeUri.equals(ORPHAN_STR) || subRangeUri.equals(OntologyRange.CLASS)) {
-								// found one: remove it
-								oSubProp.removeFromRange(subDomain, subRangeUri);
-
-								// now add all the superProp range URIS for this domain to the subProp
-								HashSet<String> superRangeUris = oSuperProp.getRange(this.getClass(subDomain), this)
-										.getUriList();
-								for (String superRangeUri : superRangeUris) {
-									oSubProp.addRange(subDomainClass, superRangeUri);
-								}
-							}
-						}
-					}
+					} 
 				}
 				// prevent concurrent operations problem by doing this last
 				for (String k : toRemove) {
@@ -1337,6 +1321,27 @@ public class OntologyInfo {
 				for (int j = 0; j < toSetRangeClass.size(); j++) {
 					oSubProp.setRange(toSetRangeClass.get(j), toSetRangeRange.get(j));
 					toSetRangeClass.get(j).addProperty(oSubProp);
+				}
+				
+				// loop again to fix orphan ranges
+				for (String subDomain : oSubProp.getRangeDomains()) {
+
+					// range is orphan or CLASS: change to range of given domain in the superProp
+					OntologyClass oSubDomain = this.getClass(subDomain);
+					HashSet<String> subRangeUris = oSubProp.getRange(oSubDomain, this).getUriList();
+					for (String subRangeUri : subRangeUris) {
+						if (subRangeUri.equals(ORPHAN_STR) || subRangeUri.equals(OntologyRange.CLASS)) {
+							// found one: remove it
+							oSubProp.removeFromRange(subDomain, subRangeUri);
+
+							// now add all the superProp range URIS for this domain to the subProp
+							HashSet<String> superRangeUris = oSuperProp.getRange(this.getClass(subDomain), this)
+									.getUriList();
+							for (String superRangeUri : superRangeUris) {
+								oSubProp.addRange(oSubDomain, superRangeUri);
+							}
+						}
+					}
 				}
 			}
 		}
@@ -1491,25 +1496,101 @@ public class OntologyInfo {
 			}
 		}
 	}
-
 	/**
-	 * returns the sparql query used to get anything with a domain or a range.
-	 * 
-	 * Queries for ?Property rdfs:domain ?Class or the equivalent using lists and/or
-	 * restrictions. IGNORES: owl:ObjectProperty and owl:DatatypeProperty USES:
-	 * rdfs:domain
-	 *
-	 * nb: - Range or domain may be empty
-	 * 
-	 * TODO: extend the OPTIONAL to other clauses in the UNION
+	 * Query to get all Properties and their range / domain 
+	 *                    via rdfs:range   and rdfs:domain, 
+	 *    or via restrictions rdfs:onClass and rdfs:subClassOf
 	 */
 	private static String getLoadPropertiesQuery(String graphName, String domain) {
+		String retVal = ""
+				+ "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n"
+				+ "PREFIX owl: <http://www.w3.org/2002/07/owl#> \n"
+				+ "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \n"
+				+ "\n"
+				+ "select distinct ?Property ?Domain ?Range\n"
+				+ "		FROM <" + graphName + ">\n"
+				+ "		WHERE {  \n"
+				+ "	{\n"
+				+ "        #### Outer UNION: domain and range \n"
+				+ "\n"
+				+ "		# ?Property optionally has a rdfs:domain\n"
+				+ "		{\n"
+				+ "			# No domain\n"
+				+ "         # Note that ?Property needs to be repeated in each union to make the FILTER NOT EXISTS work\n"
+				+ "         # Since FILTERS only apply to inner most block\n"
+				+ "			{?Property a owl:ObjectProperty. } union { ?Property a owl:DatatypeProperty } .\n"
+				+ "			FILTER NOT EXISTS { ?Property rdfs:domain ?Domain } \n"
+				+ "		} UNION {\n"
+				+ "         # domain is a simple non-blank node\n"
+				+ "			{?Property a owl:ObjectProperty. } union { ?Property a owl:DatatypeProperty } .\n"
+				+ "			?Property rdfs:domain ?Domain " + genDomainFilterStatement("Domain", domain, "|| regex(str(?Domain),'XML')") + ". \n"
+				+ "        } UNION {\n"
+				+ "         # domain is a union\n"
+				+ "			{?Property a owl:ObjectProperty. } union { ?Property a owl:DatatypeProperty } .\n"
+				+ "			?Property rdfs:domain ?d0 .\n"
+				+ "			?d0 owl:unionOf ?y1." + buildListMemberSPARQL("?y1", "?Domain", genDomainFilterStatement("Domain", domain, "|| regex(str(?Domain),'XML')")) + " \n" 
+				+ "		}\n"
+				+ "\n"
+				+ "		# ?Property optional has rdfs:range\n"
+				+ "		{\n"
+				+ "			# No range\n"
+				+ "			# Once again ?Property is repeated in each union to make the FILTER NOT EXISTS work\n"
+				+ "			{?Property a owl:ObjectProperty. } union { ?Property a owl:DatatypeProperty } .\n"
+				+ "			FILTER NOT EXISTS { ?Property rdfs:range ?Range } \n"
+				+ "		} UNION {\n"
+				+ "			# range is a simple non-blank node\n"
+				+ "			{?Property a owl:ObjectProperty. } union { ?Property a owl:DatatypeProperty } .\n"
+				+ "			?Property rdfs:range ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n"
+				+ "		} UNION {\n"
+				+ "			# range is a union\n"
+				+ "			{?Property a owl:ObjectProperty. } union { ?Property a owl:DatatypeProperty } .\n"
+				+ "			?Property rdfs:range ?r0 .\n"
+				+ "			?r0 owl:unionOf ?r1." + buildListMemberSPARQL("?r1", "?Range", genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " \n" 
+				+ "		}\n"
+				+ "\n"
+				+ "	} UNION {\n"
+				+ "		#### Outer UNION: restriction ####\n"
+				+ "\n"
+				+ "		# get the restriction\n"
+				+ "		{?Property a owl:ObjectProperty. } union { ?Property a owl:DatatypeProperty } .\n"
+				+ "		?rest owl:onProperty ?Property. \n"
+				+ "		?rest rdf:type owl:Restriction.\n"
+				+ "\n"
+				+ "		# range\n"
+				+ " 	{      \n"
+				+ "			# restriction has simple range or allValuesFrom or someValuesFrom a non-blank node\n"
+				+ "			?rest (owl:onClass|owl:allValuesFrom|owl:someValuesFrom) ?Range " + genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n"
+				+ "		} UNION {\n"
+				+ "			# restriction has range is a union\n"
+				+ "			?rest owl:onClass ?y. \n"
+				+ "			?y owl:unionOf ?z. " + buildListMemberSPARQL("?z", "?Range", genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " \n"
+				+ "		}\n"
+				+ "\n"
+				+ "		{\n"
+				+ "			# restriction is simple subClassOf non-blank node\n"
+				+ "			?Domain rdfs:subClassOf ?rest " + genDomainFilterStatement("Domain", domain, "|| regex(str(?Domain),'XML')") + ". \n"
+				+ "		} UNION {\n"
+				+ "			# restriction is subClassOf union \n"
+				+ "			?dx1 rdfs:subClassOf ?rest . \n"
+				+ "			?dx1 owl:unionOf ?dx2. " + buildListMemberSPARQL("?dx2", "?Domain", genDomainFilterStatement("Domain", domain, "|| regex(str(?Domain),'XML')")) + " \n"
+				+ "		} \n"
+				+ "	}\n"
+				+ "}";
+		return retVal;
+	}
+	/**
+	 * The original Ravi version.
+	 * Note it returns ?Class and no ?Domain
+	 * It lasted many years (Hail Ravi) but struggles with missing domain or range
+	 */
+	private static String getLoadPropertiesQuery_a_la_Ravi_Palla(String graphName, String domain) {
 
 		String retval = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
 				+ "PREFIX owl: <http://www.w3.org/2002/07/owl#> " + "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> "
 				+ "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
 				+ "PREFIX  list: <http://jena.hpl.hp.com/ARQ/list#> " + "select distinct ?Class ?Property ?Range from <"
-				+ graphName + "> where { " + "{" + "?Property rdfs:range ?Range "
+				+ graphName + "> where { " 
+				+ "{" + "?Property rdfs:range ?Range "
 				+ genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n"
 				+ "OPTIONAL { ?Property rdfs:domain ?Class " + genDomainFilterStatement("Class", domain) + ". }\n"
 				
@@ -1527,8 +1608,7 @@ public class OntologyInfo {
 				+ "} UNION { \n"
 				+ "?Property rdfs:domain ?Class " + genDomainFilterStatement("Class", domain) + ". \n"
 				+ "?Property rdfs:range ?x.  \n" + "?x owl:unionOf ?y. \n"
-				+ buildListMemberSPARQL("?y", "?Range",
-						genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " \n" 
+				+ buildListMemberSPARQL("?y", "?Range", genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')")) + " \n" 
 				
 				+ "} UNION { \n" + "?Property rdfs:domain ?x. \n" + "?x owl:unionOf ?y. \n"
 				+ buildListMemberSPARQL("?y", "?Class", genDomainFilterStatement("Class", domain)) + " .\n"
@@ -2455,7 +2535,7 @@ public class OntologyInfo {
 				tab.getColumn("?r_obj"));
 
 		tab = endpoint.executeQueryToTable(OntologyInfo.getLoadPropertiesQuery(endpoint.getGraph(), domain));
-		this.loadProperties(tab.getColumn("Class"), tab.getColumn("Property"), tab.getColumn("Range"));
+		this.loadProperties(tab.getColumn("Domain"), tab.getColumn("Property"), tab.getColumn("Range"));
 
 		tab = endpoint.executeQueryToTable(OntologyInfo.getSuperSubPropertyQuery(endpoint.getGraph(), domain));
 		this.loadSuperSubProperties(tab.getColumn("subProp"), tab.getColumn("superProp"));
@@ -2488,41 +2568,31 @@ public class OntologyInfo {
 		String graphName = client.getConfig().getGraph();
 
 		if (owlImportFlag) {
-			tableRes = (TableResultSet) client.execute(OntologyInfo.getOwlImportsQuery(graphName),
-					SparqlResultTypes.TABLE);
+			tableRes = (TableResultSet) client.execute(OntologyInfo.getOwlImportsQuery(graphName),	SparqlResultTypes.TABLE);
 			this.loadOwlImports(client, tableRes.getTable().getColumn("importee"));
 		}
 
 		// execute each sub-query in order
 
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubClassQuery(graphName, domain),
-				SparqlResultTypes.TABLE);
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubClassQuery(graphName, domain),	SparqlResultTypes.TABLE);
 		this.loadSuperSubClasses(tableRes.getTable().getColumn("x"), tableRes.getTable().getColumn("y"));
 
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getTopLevelClassQuery(graphName, domain),
-				SparqlResultTypes.TABLE);
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getTopLevelClassQuery(graphName, domain),	SparqlResultTypes.TABLE);
 		this.loadTopLevelClasses(tableRes.getTable().getColumn("Class"));
 
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getLoadPropertiesQuery(graphName, domain),
-				SparqlResultTypes.TABLE);
-		this.loadProperties(tableRes.getTable().getColumn("Class"), tableRes.getTable().getColumn("Property"),
-				tableRes.getTable().getColumn("Range"));
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getLoadPropertiesQuery(graphName, domain),	SparqlResultTypes.TABLE);
+		this.loadProperties(tableRes.getTable().getColumn("Domain"), tableRes.getTable().getColumn("Property"),	tableRes.getTable().getColumn("Range"));
 
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubPropertyQuery(graphName, domain),
-				SparqlResultTypes.TABLE);
-		this.loadSuperSubProperties(tableRes.getTable().getColumn("subProp"),
-				tableRes.getTable().getColumn("superProp"));
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubPropertyQuery(graphName, domain), SparqlResultTypes.TABLE);
+		this.loadSuperSubProperties(tableRes.getTable().getColumn("subProp"),tableRes.getTable().getColumn("superProp"));
 
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getEnumQuery(graphName, domain),
-				SparqlResultTypes.TABLE);
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getEnumQuery(graphName, domain), SparqlResultTypes.TABLE);
 		this.loadEnums(tableRes.getTable().getColumn("Class"), tableRes.getTable().getColumn("EnumVal"));
 
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationLabelsQuery(graphName, domain),
-				SparqlResultTypes.TABLE);
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationLabelsQuery(graphName, domain), SparqlResultTypes.TABLE);
 		this.loadAnnotationLabels(tableRes.getTable().getColumn("Elem"), tableRes.getTable().getColumn("Label"));
 
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationCommentsQuery(graphName, domain),
-				SparqlResultTypes.TABLE);
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationCommentsQuery(graphName, domain),	SparqlResultTypes.TABLE);
 		this.loadAnnotationComments(tableRes.getTable().getColumn("Elem"), tableRes.getTable().getColumn("Comment"));
 
 		this.validate();
