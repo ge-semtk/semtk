@@ -1,0 +1,56 @@
+uri "http://rangetest".
+
+Separate is a class,
+    // note the lack of "only":  so SADL gives range {Animal or Another or Separate}
+	described by hasChild with a single value of type Separate.
+
+Another is a class.
+Unusual is a type of Another.
+
+Animal is a class.
+// note the lack of "only":  so SADL gives range {Animal or Another or Separate}
+hasChild describes Animal with values of type {Animal or Another}.
+	
+
+Bird is a type of Animal.
+Duck is a type of Bird.
+Rabbit is a type of Animal.
+WeirdBird is a type of Bird.
+
+hasChild of Duck only has values of type Duck.
+hasChild of Rabbit only has values of type Rabbit.
+
+// generates a warning but Sadl generates correct owl anyway
+hasChild of WeirdBird only has values of type {Duck or Unusual}.
+
+w is a WeirdBird.
+u is a Unusual.
+w hasChild u.
+
+// should fail but don't
+r is a Rabbit.
+w hasChild r.
+
+anm is a Animal.
+w hasChild anm.
+
+Egg is a class.
+
+
+hasBunny describes Rabbit with values of type Rabbit.
+
+// for these, SemTK presumes that the missing domain/range info comes from hasChild
+hasEgg has values of type Egg.
+hasDuckling describes Duck.
+hasDuckling describes WeirdBird.
+
+hasBunny is a type of hasChild.
+hasEgg is a type of hasChild.
+hasDuckling is a type of hasChild.
+
+// demonstrate that hasEgg has inherited domain and range from hasChild
+w hasEgg Egg.
+
+// demonstrate that hasDuckling has inherited range from hasChild
+d is a Duck.
+d hasDuckling d.

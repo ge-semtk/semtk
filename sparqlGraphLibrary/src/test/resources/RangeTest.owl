@@ -1,0 +1,136 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns="http://rangetest#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xml:base="http://rangetest">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'RangeTest.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:ID="Separate">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass rdf:resource="#Separate"/>
+        <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#long"
+        >1</owl:qualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="hasChild"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:ID="Rabbit">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:allValuesFrom rdf:resource="#Rabbit"/>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="#hasChild"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Class rdf:ID="Animal"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:ID="Bird">
+    <rdfs:subClassOf rdf:resource="#Animal"/>
+  </owl:Class>
+  <owl:Class rdf:ID="Duck">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:allValuesFrom rdf:resource="#Duck"/>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="#hasChild"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="#Bird"/>
+  </owl:Class>
+  <owl:Class rdf:ID="Unusual">
+    <rdfs:subClassOf>
+      <owl:Class rdf:ID="Another"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:ID="WeirdBird">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:allValuesFrom>
+          <owl:Class>
+            <owl:unionOf rdf:parseType="Collection">
+              <owl:Class rdf:about="#Duck"/>
+              <owl:Class rdf:about="#Unusual"/>
+            </owl:unionOf>
+          </owl:Class>
+        </owl:allValuesFrom>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:about="#hasChild"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="#Bird"/>
+  </owl:Class>
+  <owl:Class rdf:ID="Egg"/>
+  <owl:ObjectProperty rdf:ID="hasBunny">
+    <rdfs:subPropertyOf>
+      <owl:ObjectProperty rdf:about="#hasChild"/>
+    </rdfs:subPropertyOf>
+    <rdfs:range rdf:resource="#Rabbit"/>
+    <rdfs:domain rdf:resource="#Rabbit"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="#hasChild">
+    <rdfs:range>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="#Animal"/>
+          <owl:Class rdf:about="#Another"/>
+          <owl:Class rdf:about="#Separate"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:range>
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="#Separate"/>
+          <owl:Class rdf:about="#Animal"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="hasDuckling">
+    <rdfs:subPropertyOf rdf:resource="#hasChild"/>
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="#Duck"/>
+          <owl:Class rdf:about="#WeirdBird"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="hasEgg">
+    <rdfs:subPropertyOf rdf:resource="#hasChild"/>
+    <rdfs:range rdf:resource="#Egg"/>
+  </owl:ObjectProperty>
+  <WeirdBird rdf:ID="w">
+    <hasEgg rdf:resource="#Egg"/>
+    <hasChild>
+      <Animal rdf:ID="anm"/>
+    </hasChild>
+    <hasChild>
+      <Rabbit rdf:ID="r"/>
+    </hasChild>
+    <hasChild>
+      <Unusual rdf:ID="u"/>
+    </hasChild>
+  </WeirdBird>
+  <Duck rdf:ID="d">
+    <hasDuckling rdf:resource="#d"/>
+  </Duck>
+</rdf:RDF>

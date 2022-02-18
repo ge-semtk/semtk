@@ -481,6 +481,59 @@ public class OntologyInfoTests_IT {
 		}
 	}
 	
+	/**
+	 * Complex and restricted ranges   RangeTest.sadl
+	 * @throws Exception
+	 */
+	@Test
+	public void testRanges() throws Exception {
+		final String PREFIX = "http://rangetest#";
+		// load test data
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "RangeTest.owl");		
+		OntologyInfo oInfo = new OntologyInfo();
+		oInfo.load(TestGraph.getSei(), false);
+		
+		// the entire ontology expectation:  className,  colon-separated-props,  colon-separated lists of ranges for each prop
+		// See RangeTest.sadl and it's comments for an explanation
+		String table[][] = new String[][] {
+			new String[] {"Animal",     "hasChild:hasEgg",             "Another,Animal,Separate:Egg"},
+			new String[] {"Bird",       "hasChild:hasEgg",             "Another,Animal,Separate:Egg"},
+			new String[] {"Duck",       "hasChild:hasDuckling:hasEgg", "Duck:Duck:Egg"},
+			new String[] {"WeirdBird",  "hasChild:hasDuckling:hasEgg", "Duck,Unusual:Duck,Unusual:Egg"},
+			new String[] {"Rabbit",     "hasChild:hasBunny:hasEgg",    "Rabbit:Rabbit:Egg"},
+			new String[] {"Another",    "",                            ""},
+			new String[] {"Unusual",    "",                            ""},
+			new String[] {"Egg",        "",                            ""},
+			new String[] {"Separate",   "hasChild:hasEgg",             "Another,Animal,Separate:Egg"}
+		};
+		
+		for (String row[] : table) {
+			// get class and prop from ontology
+			String classStr = PREFIX + row[0];
+			OntologyClass oClass = oInfo.getClass(classStr);
+			ArrayList <OntologyProperty> oProps = oInfo.getInheritedProperties(oClass);
+			
+			// get class and props from table
+			String tableProps[] = row[1].isBlank() ? new String[]{} : row[1].split(":");
+			String tableRanges[] = row[2].isBlank() ? new String[]{} : row[2].split(":");
+			
+			assertEquals(row[0] + " has incorrect number of properties", tableProps.length, oProps.size());
+			
+			// loop through expected props
+			for (int i=0; i < tableProps.length; i++) {
+				// get the uriList (ranges)
+				OntologyProperty oProp = oInfo.getInheritedPropertyByUri(oClass, PREFIX + tableProps[i]);
+				OntologyRange oRange = oProp.getRange(oClass, oInfo);
+				HashSet<String> uriList = oRange.getUriList();
+				
+				// compare to table values
+				String [] tableUris = tableRanges[i].split(",");
+				assertEquals(row[0] + "->" + tableProps[i] + " has incorrect number of range uris", tableUris.length, uriList.size());
+			}
+		}
+	}
+	
 	@Test
 	public void testGetLowestCommonSuperclass() throws Exception {
 		TestGraph.clearGraph();
