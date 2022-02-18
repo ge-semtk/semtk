@@ -357,7 +357,7 @@ NodeItem.prototype = {
 		};
 		for (var i=0; i < this.nodes.length; i++) {
 			ret.SnodeSparqlIDs.push(this.nodes[i].getSparqlID());
-			ret.optionalMinus.push(this.optionalMinus[i]);
+			ret.OptionalMinus.push(this.optionalMinus[i]);
             ret.Qualifiers.push(this.qualifiers[i]);
 			ret.DeletionMarkers.push(this.deletionFlags[i]);
 		}

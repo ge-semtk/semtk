@@ -602,41 +602,43 @@
     	var rangeUriList = nItem.getRangeUris();
     	var targetSNodes = [];
     	var unlinkedTargetNames = [];
-    	
+    	var unlinkedUriOrSNodes = [];
+        
 		for (var rangeURI of rangeUriList) {
 			// find nodes that might connect
 			targetSNodes = targetSNodes.concat(gNodeGroup.getNodesBySuperclassURI(rangeURI, gOInfo));
 			// suggest new node
-			unlinkedTargetNames.push("New " + rangeStr);
-			for (var subURI of gOInfo.getSubclassNames(rangeStr)) {
+			unlinkedTargetNames.push("New " + rangeURI);
+			unlinkedUriOrSNodes.push(rangeURI);
+			for (var subURI of gOInfo.getSubclassNames(rangeURI)) {
 				unlinkedTargetNames.push("New " + subURI);
+				unlinkedUriOrSNodes.push(subURI)
 			}
 		}
 		
 		// uniquify
 		targetSNodes = Array.from(new Set(targetSNodes));
-		unlinkedTargetNames = Array.from(new SetZ(unlinkedTargetNames));
+		unlinkedTargetNames = Array.from(new Set(unlinkedTargetNames));
     	
-    	// disqualify nodes already linked
-    	var unlinkedTargetSNodes = [null];
-        var mySubgraph = gNodeGroup.getSubGraph(snode, []);
+    	// find existing snodes to link to
+    	var mySubgraph = gNodeGroup.getSubGraph(snode, []);
 
     	for (var i=0; i < targetSNodes.length; i++) {
             // Not circular, not self, not already linked
     		if (mySubgraph.indexOf(targetSNodes[i]) == -1 && targetSNodes[i] != snode && nItem.getSNodes().indexOf(targetSNodes[i]) == -1) {
     			unlinkedTargetNames.push(targetSNodes[i].getBindingOrSparqlID());
-    			unlinkedTargetSNodes.push(targetSNodes[i]);
+    			unlinkedUriOrSNodes.push(targetSNodes[i]);
     		}
     	}
 
-    	// if there are no possible connections, just add a new node and connect.
-    	if (unlinkedTargetSNodes.length == 1) {
-    		buildLink(snode, nItem, null);
+    	// if only possibility is one unlinked snode
+    	if (unlinkedUriOrSNodes.length == 1 && typeof unlinkedUriOrSNodes[0] == 'string') {
+    		buildLink(snode, nItem, unlinkedUriOrSNodes[0]);
     	} else {
             require([ 'sparqlgraph/js/modaliidx',
                              ], function (ModalIidx) {
 
-                       ModalIidx.listDialog("Choose node to connect", "Submit", unlinkedTargetNames, unlinkedTargetSNodes, 0, buildLink.bind(this, snode, nItem), 75);
+                       ModalIidx.listDialog("Choose node to connect", "Submit", unlinkedTargetNames, unlinkedUriOrSNodes, 0, buildLink.bind(this, snode, nItem), 75);
 
                      });
     	}
@@ -792,18 +794,19 @@
 	 * Link from snode through it's nItem to rangeSNode
 	 * @param snode - starting point
 	 * @param nItem - nodeItem
-	 * @param rangeSnode - range node, if null then create it
+	 * @param rangeOrSnode - range URI to create or exsiting range SNode
 	 */
-	var buildLink = function(snode, nItem, rangeSnode) {
+	var buildLink = function(snode, nItem, rangeOrSnode) {
 
 		var snodeClass = gOInfo.getClass(snode.fullURIName);
 		var domainStr = gOInfo.getInheritedPropertyByKeyname(snodeClass, nItem.getKeyName()).getNameStr();
-		if (rangeSnode == null) {
-			var rangeStr = nItem.getRangeURI();
-			var newNode = gNodeGroup.returnBelmontSemanticNode(rangeStr, gOInfo);
+		if (typeof rangeOrSnode == 'string') {
+			// rangeOrSnode is a URI for Snode to create and connect
+			var newNode = gNodeGroup.returnBelmontSemanticNode(rangeOrSnode, gOInfo);
 			gNodeGroup.addOneNode(newNode, snode, null, domainStr);
 		} else {
-			snode.setConnection(rangeSnode, domainStr);
+			// rangeOrSnode is an Snode to connect
+			snode.setConnection(rangeOrSnode, domainStr);
 		}
         saveUndoState();
         nodeGroupChanged(true);
