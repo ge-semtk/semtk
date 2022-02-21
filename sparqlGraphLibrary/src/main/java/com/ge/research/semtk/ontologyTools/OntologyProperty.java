@@ -93,9 +93,16 @@ public class OntologyProperty extends AnnotatableElement{
 	public void removeRange(String domain) {
 		this.rangeHash.remove(domain);
 	}
+	
+	public void putRange(String domain, OntologyRange oRange) {
+		this.rangeHash.put(domain, oRange);
+	}
 	public void removeFromRange(String domain, String uri) {
 		OntologyRange oRange = this.rangeHash.get(domain);
 		oRange.removeUri(uri);
+	}
+	public OntologyRange getExactRange(String domain) {
+		return this.rangeHash.get(domain);
 	}
 	
 	/**

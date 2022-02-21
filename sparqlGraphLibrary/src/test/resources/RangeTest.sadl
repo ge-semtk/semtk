@@ -23,19 +23,8 @@ hasChild of Rabbit only has values of type Rabbit.
 // generates a warning but Sadl generates correct owl anyway
 hasChild of WeirdBird only has values of type {Duck or Unusual}.
 
-w is a WeirdBird.
-u is a Unusual.
-w hasChild u.
-
-// should fail but don't
-r is a Rabbit.
-w hasChild r.
-
-anm is a Animal.
-w hasChild anm.
 
 Egg is a class.
-
 
 hasBunny describes Rabbit with values of type Rabbit.
 
@@ -48,9 +37,26 @@ hasBunny is a type of hasChild.
 hasEgg is a type of hasChild.
 hasDuckling is a type of hasChild.
 
-// demonstrate that hasEgg has inherited domain and range from hasChild
-w hasEgg Egg.
+hasAnotherEgg is a type of hasEgg.
+
+sep is a Separate.
+unu is a Unusual.
+ani is a Animal.
+ano is a Another.
+
+egg is a Egg.
+bir is a Bird.
+duc is a Duck.
+rab is a Rabbit.
+wei is a WeirdBird.
+
+
+// Sadl warns.  Semtk says this is fine
+wei hasAnotherEgg egg.
 
 // demonstrate that hasDuckling has inherited range from hasChild
-d is a Duck.
-d hasDuckling d.
+duc hasChild ani.
+
+	
+
+

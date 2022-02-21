@@ -497,21 +497,22 @@ public class OntologyInfoTests_IT {
 		// the entire ontology expectation:  className,  colon-separated-props,  colon-separated lists of ranges for each prop
 		// See RangeTest.sadl and it's comments for an explanation
 		String table[][] = new String[][] {
-			new String[] {"Animal",     "hasChild:hasEgg",             "Another,Animal,Separate:Egg"},
-			new String[] {"Bird",       "hasChild:hasEgg",             "Another,Animal,Separate:Egg"},
-			new String[] {"Duck",       "hasChild:hasDuckling:hasEgg", "Duck:Duck:Egg"},
-			new String[] {"WeirdBird",  "hasChild:hasDuckling:hasEgg", "Duck,Unusual:Duck,Unusual:Egg"},
-			new String[] {"Rabbit",     "hasChild:hasBunny:hasEgg",    "Rabbit:Rabbit:Egg"},
+			new String[] {"Animal",     "hasChild:hasEgg:hasAnotherEgg",             "Another,Animal,Separate:Egg:Egg"},
+			new String[] {"Bird",       "hasChild:hasEgg:hasAnotherEgg",             "Another,Animal,Separate:Egg:Egg"},
+			new String[] {"Duck",       "hasChild:hasDuckling:hasEgg:hasAnotherEgg", "Duck:Duck:Egg:Egg"},
+			new String[] {"WeirdBird",  "hasChild:hasDuckling:hasEgg:hasAnotherEgg", "Duck,Unusual:Duck,Unusual:Egg:Egg"},
+			new String[] {"Rabbit",     "hasChild:hasBunny:hasEgg:hasAnotherEgg",    "Rabbit:Rabbit:Egg:Egg"},
 			new String[] {"Another",    "",                            ""},
 			new String[] {"Unusual",    "",                            ""},
 			new String[] {"Egg",        "",                            ""},
-			new String[] {"Separate",   "hasChild:hasEgg",             "Another,Animal,Separate:Egg"}
+			new String[] {"Separate",   "hasChild:hasEgg:hasAnotherEgg",             "Another,Animal,Separate:Egg:Egg"}
 		};
 		
 		for (String row[] : table) {
 			// get class and prop from ontology
-			String classStr = PREFIX + row[0];
-			OntologyClass oClass = oInfo.getClass(classStr);
+			String tableDomainUri = PREFIX + row[0];
+			String tableDomainKeyname = row[0];
+			OntologyClass oClass = oInfo.getClass(tableDomainUri);
 			ArrayList <OntologyProperty> oProps = oInfo.getInheritedProperties(oClass);
 			
 			// get class and props from table
@@ -525,11 +526,15 @@ public class OntologyInfoTests_IT {
 				// get the uriList (ranges)
 				OntologyProperty oProp = oInfo.getInheritedPropertyByUri(oClass, PREFIX + tableProps[i]);
 				OntologyRange oRange = oProp.getRange(oClass, oInfo);
-				HashSet<String> uriList = oRange.getUriList();
+				HashSet<String> actualRangeList = oRange.getUriList();
 				
 				// compare to table values
-				String [] tableUris = tableRanges[i].split(",");
-				assertEquals(row[0] + "->" + tableProps[i] + " has incorrect number of range uris", tableUris.length, uriList.size());
+				String [] tableRangeUris = tableRanges[i].split(",");
+				assertEquals(tableDomainKeyname + "->" + tableProps[i] + " of {" + String.join(",", actualRangeList) + "} has incorrect number of range uris", tableRangeUris.length, actualRangeList.size());
+				
+				for (String expectedRange : tableRangeUris) {
+					assertTrue(tableDomainKeyname + "->" + tableProps[i] + " of {" + String.join(",", actualRangeList) + "} does not contain range " + expectedRange, actualRangeList.contains(PREFIX + expectedRange));
+				}
 			}
 		}
 	}

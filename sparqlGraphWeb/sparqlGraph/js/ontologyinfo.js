@@ -851,9 +851,13 @@ OntologyInfo.prototype = {
 		return (nameStr in this.datatypeHash);
 	},
 
-	containsProperty : function(propNameStr) {
+	containsProperty : function(propertyUri) {
 		// does this contain given property
-		return (propNameStr in this.propertyHash);
+		return (propertyUri in this.propertyHash);
+	},
+	
+	getProperty : function(propertyUri) {
+		return this.propertyHash[propertyUri];
 	},
 
 	getInheritedProperties : function(ontClass, skipSelfFlag) {
@@ -954,7 +958,32 @@ OntologyInfo.prototype = {
 		}
 	},
 
+    getBreadthFirstSuperProps : function(subPropName) {
+		var ret = [];
+		var prevLen = 0;
+		this.addSuperProps(ret, subPropName);
+		while (ret.length > prevLen) {
+			var len = ret.length;
+			for (var i = prevLen; i < len; i++) {
+				this.addSuperProps(ret, ret[i]);
+			}
+			prevLen = len;
+		}
+		return ret;
+		
+	},
+	
+	addSuperProps : function(theList, subPropName) {
+		for (var k of Object.keys(this.subPropHash)) {
+			if (this.subPropHash[subPropName] && theList.indexOf(k) == -1) {
+				theList.push(k);
+			}
+		}
+	},
+	
     loadSuperSubProperties : function(subPropNames, superPropNames) {
+        
+        // pass 1: set up this.subPropHash and make sure subProp exists (for old versions)
         for (var i = 0; i < subPropNames.length; i++) {
             // make sure subpropHash entry exists
 			if (this.subPropHash[superPropNames[i]] == undefined) {
@@ -969,71 +998,72 @@ OntologyInfo.prototype = {
             
             // find existing subProp: has domain so loadProperties got it
 			var oSubProp = this.propertyHash[subPropNames[i]];
-			var oSuperProp = this.propertyHash[superPropNames[i]];
 			
 			if (! oSubProp ) {
 				// found a new sub property, copy it's parent completely
 				// since it was never given a domain or range of its own during loadProperties()
+				// only happens in older versions
 				oSubProp = new OntologyProperty(subPropNames[i], oSuperProp);
-				this.propertyHas[subPropNames[i]] = oSubProp;
+				this.propertyHash[subPropNames[i]] = oSubProp;
 				for (var domain of oSubProp.getRangeDomains()) {
-					this.getClass(domain).addProperty(oSubProp);
-				}
-			} else {
-				// found an existing property, fill in attributes from parent
-				
-				// loop to fix orphan domains
-				var toRemove = {};
-				var toSetRangeClass = [];
-				var toSetRangeRange = [];
-				for (var subDomain of oSubProp.getRangeDomains()) {
-            		if (subDomain == OntologyInfo.ORPHAN_STR) {
-						// domain is orphan, apply the range to all the parent domains
-						
-						toRemove[OntologyInfo.ORPHAN_STR] = 1;
-						
-						// set the supProp range for all the parent prop domains
-						var superDomains = oSuperProp.getRangeDomains();
-						for (var superDomain of superDomains) {
-							var oSuperDomain = this.getClass(superDomain);
-							var oSuperRange = oSuperProp.getRange(oSuperDomain, this);
-							toSetRangeClass.push(oSuperDomain);
-							toSetRangeRange.push(oSuperRange.deepCopy());
-						}
-					} 
-				}
-            	// prevent concurrent operations problem by doing this last
-				for (var k in toRemove) {
-					oSubProp.removeRange(k);
-				}
-				for (var j=0; j < toSetRangeClass.length; j++) {
-					oSubProp.setRange(toSetRangeClass[j], toSetRangeRange[j]);
-					toSetRangeClass[j].addProperty(oSubProp);
-				}
-				
-				// loop again to fix orphan ranges
-				for (var subDomain of oSubProp.getRangeDomains()) {
-            		// range is orphan or CLASS: change to range of given domain in the superProp
-					var oSubDomain = this.getClass(subDomain);
-					var subRangeUris = oSubProp.getRange(oSubDomain, this).getUriList();
-					for (var subRangeUri of subRangeUris) {
-						if (subRangeUri == OntologyInfo.ORPHAN_STR || subRangeUri == CLASS) {
-							// found one: remove it
-							oSubProp.removeFromRange(subDomain, subRangeUri);
-							
-							// now add all the superProp range URIS for this domain to the subProp
-							var superRangeUris = oSuperProp.getRange(this.getClass(subDomain), this).getUriList();
-							for (var superRangeUri of superRangeUris) {
-								oSubProp.addRange(oSubDomain, superRangeUri);
-							}
-						}
+					if (domain != OntologyInfo.ORPHAN_STR) {
+						this.getClass(domain).addProperty(oSubProp);
 					}
 				}
+			}
+			
+		}
+		
+		// pass 2
+		for (var subPropName of subPropNames) {
+			var oSubProp = this.getProperty(subPropName);
+		
+			for (var superPropName of this.getBreadthFirstSuperProps(subPropName)) {
+				var oSuperProp = this.getProperty(superPropName);
+				this.mergeParentRange(oSubProp, oSuperProp);
 			}
         }
 	},
 
-	
+	mergeParentRange : function (oSubProp, oSuperProp) {
+		var myOrphanRange = oSubProp.getExactRange(OntologyInfo.ORPHAN_STR);
+		var supOrphanRange = oSuperProp.getExactRange(OntologyInfo.ORPHAN_STR);
+		
+		// if I have a range with domain ORPHAN, copy the range to every domain that oSuperProp has
+		if (myOrphanRange != null) {
+			oSubProp.removeRange(OntologyInfo.ORPHAN_STR);
+			for (supDomain of oSuperProp.getRangeDomains()) {
+				oSubProp.putRange(supDomain, myOrphanRange.deepCopy());
+				if (supDomain != OntologyInfo.ORPHAN_STR) {
+					this.getClass(supDomain).addProperty(oSubProp);
+				}
+			}
+		}
+		
+		// now check the ranges to see if they contain ORPHAN
+		for (myDomain of oSubProp.getRangeDomains()) {
+			var oMyRange = oSubProp.getExactRange(myDomain);
+			if (oMyRange.containsUri(OntologyInfo.ORPHAN_STR)) {
+				// range contains "orphan"
+				var oSupRange = null;
+				if (myDomain == OntologyInfo.ORPHAN_STR) {
+					// use the superProps orphan range if it has one
+					oSupRange = supOrphanRange;
+				} else {
+					try {
+						// try to get range from superProp via domain incl inheritence (might throw exception that there isn't one)
+						oSupRange = oSuperProp.getRange(this.getClass(myDomain), this);
+					} catch (e) {
+						// superProp doesn't have the range.
+					}
+				}
+				if (oSupRange != null) {
+					// found something: replace it in
+					oSubProp.putRange(myDomain, oSupRange.deepCopy());
+				}
+			}
+		}
+	},
 
 	loadTopLevelClasses : function(classList) {
 		// load from rows of [class]
@@ -2180,6 +2210,10 @@ OntologyProperty.prototype = {
 		} else {
 			this.rangeHash[domainUri] = new OntologyRange(rangeUri);
 		}
+	},
+	
+	getExactRange : function(domain) {
+		return this.rangeHash[domain]
 	},
 
     getLocalName : function() {

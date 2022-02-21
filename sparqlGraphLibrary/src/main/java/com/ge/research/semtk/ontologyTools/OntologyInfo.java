@@ -1258,12 +1258,37 @@ public class OntologyInfo {
 		return retval;
 	}
 
+	public ArrayList<String> getBreadthFirstSuperProps(String subPropName) {
+		ArrayList<String> ret = new ArrayList<String>();
+		int prevLen = 0;
+		this.addSuperProps(ret, subPropName);
+		while (ret.size() > prevLen) {
+			int len = ret.size();
+			for (int i = prevLen; i < len; i++) {
+				this.addSuperProps(ret, ret.get(i));
+			}
+			prevLen = len;
+		}
+		return ret;
+		
+	}
+	
+	private void addSuperProps(ArrayList<String> theList, String subPropName) {
+		for (String k : this.subPropHash.keySet()) {
+			if (this.subPropHash.get(k).contains(subPropName) && !theList.contains(k)) {
+				theList.add(k);
+			}
+		}
+	}
+	
+	
 	/**
 	 * process the results of the query to get all of the sub- and super-props query
 	 * and loads them into the OntologyInfo object.
 	 **/
 	public void loadSuperSubProperties(String subPropNames[], String superPropNames[]) throws Exception {
 
+		// pass 1: set up this.subPropHash and make sure subProp exists (for old versions)
 		for (int i = 0; i < subPropNames.length; i++) {
 			// make sure subpropHash entry exists
 			if (!this.subPropHash.containsKey(superPropNames[i])) {
@@ -1276,77 +1301,80 @@ public class OntologyInfo {
 				subList.add(subPropNames[i]);
 			}
 
-			// find existing subProp: has domain so loadProperties got it
+			// find existing subProp
 			OntologyProperty oSubProp = this.propertyHash.get(subPropNames[i]);
 
-			OntologyProperty oSuperProp = this.propertyHash.get(superPropNames[i]);
 			if (oSubProp == null) {
 				// found a new sub property, copy it's parent completely
 				// since it was never given a domain or range of its own during loadProperties()
+				// only happens in older versions
+				OntologyProperty oSuperProp = this.propertyHash.get(superPropNames[i]);
 				oSubProp = new OntologyProperty(subPropNames[i], oSuperProp);
 				this.propertyHash.put(subPropNames[i], oSubProp);
 				for (String domain : oSubProp.getRangeDomains()) {
-					this.getClass(domain).addProperty(oSubProp);
-				}
-
-			} else {
-				// found an existing property, fill in attributes from parent
-				
-				// loop to fix orphan domains
-				HashSet<String> toRemove = new HashSet<String>();
-				ArrayList<OntologyClass> toSetRangeClass = new ArrayList<OntologyClass>();
-				ArrayList<OntologyRange> toSetRangeRange = new ArrayList<OntologyRange>();
-				for (String subDomain : oSubProp.getRangeDomains()) {
-
-					if (subDomain.equals(ORPHAN_STR)) {
-						// domain is orphan, apply the range to all the parent domains
-
-						// get the supProp range and also delete it
-						OntologyRange oRange = oSubProp.getRange(ORPHAN_CLASS, this);
-
-						toRemove.add(ORPHAN_STR);
-
-						// set the supProp range for all the parent prop domains
-						Set<String> superDomains = oSuperProp.getRangeDomains();
-						for (String superDomain : superDomains) {
-							toSetRangeClass.add(this.getClass(superDomain));
-							toSetRangeRange.add(oRange.deepCopy());
-						}
-					} 
-				}
-				// prevent concurrent operations problem by doing this last
-				for (String k : toRemove) {
-					oSubProp.removeRange(k);
-				}
-				for (int j = 0; j < toSetRangeClass.size(); j++) {
-					oSubProp.setRange(toSetRangeClass.get(j), toSetRangeRange.get(j));
-					toSetRangeClass.get(j).addProperty(oSubProp);
-				}
-				
-				// loop again to fix orphan ranges
-				for (String subDomain : oSubProp.getRangeDomains()) {
-
-					// range is orphan or CLASS: change to range of given domain in the superProp
-					OntologyClass oSubDomain = this.getClass(subDomain);
-					HashSet<String> subRangeUris = oSubProp.getRange(oSubDomain, this).getUriList();
-					for (String subRangeUri : subRangeUris) {
-						if (subRangeUri.equals(ORPHAN_STR) || subRangeUri.equals(OntologyRange.CLASS)) {
-							// found one: remove it
-							oSubProp.removeFromRange(subDomain, subRangeUri);
-
-							// now add all the superProp range URIS for this domain to the subProp
-							HashSet<String> superRangeUris = oSuperProp.getRange(this.getClass(subDomain), this)
-									.getUriList();
-							for (String superRangeUri : superRangeUris) {
-								oSubProp.addRange(oSubDomain, superRangeUri);
-							}
-						}
+					if (!domain.equals(ORPHAN_STR)) {
+						this.getClass(domain).addProperty(oSubProp);
 					}
 				}
 			}
 		}
+		// pass 2
+		for (String subPropName : subPropNames) {
+			OntologyProperty oSubProp = this.getProperty(subPropName);
+		
+			for (String superPropName : this.getBreadthFirstSuperProps(subPropName)) {
+				OntologyProperty oSuperProp = this.getProperty(superPropName);
+				this.mergeParentRange(oSubProp, oSuperProp);
+			}
+			
+		}
 	}
-
+	
+	/**
+	 * SemTK is not clear on how SADL inherits domain and range of properties.
+	 * Here is a guess that kind of lines up.
+	 * @param oSubProp
+	 * @param oSuperProp
+	 */
+	public void mergeParentRange(OntologyProperty oSubProp, OntologyProperty oSuperProp) {
+		OntologyRange myOrphanRange = oSubProp.getExactRange(ORPHAN_STR);
+		OntologyRange supOrphanRange = oSuperProp.getExactRange(ORPHAN_STR);
+		
+		// if subProp has a range with domain ORPHAN, copy the range to every domain that oSuperProp has
+		if (myOrphanRange != null) {
+			oSubProp.removeRange(ORPHAN_STR);
+			for (String supDomain : oSuperProp.getRangeDomains()) {
+				oSubProp.putRange(supDomain, myOrphanRange.deepCopy());
+				if (!supDomain.equals(ORPHAN_STR)) {
+					this.getClass(supDomain).addProperty(oSubProp);
+				}
+			}
+		}
+		
+		// now check the ranges to see if they contain ORPHAN
+		for (String myDomain : oSubProp.getRangeDomains()) {
+			OntologyRange oMyRange = oSubProp.getExactRange(myDomain);
+			if (oMyRange.containsUri(ORPHAN_STR)) {
+				// range contains "orphan"
+				OntologyRange oSupRange = null;
+				if (myDomain.equals(ORPHAN_STR)) {
+					// use the superProps orphan range if it has one
+					oSupRange = supOrphanRange;
+				} else {
+					try {
+						// try to get range from superProp via domain incl inheritence (might throw exception that there isn't one)
+						oSupRange = oSuperProp.getRange(this.getClass(myDomain), this);
+					} catch (Exception e) {
+						// superProp doesn't have the range.
+					}
+				}
+				if (oSupRange != null) {
+					// found something: replace it in
+					oSubProp.putRange(myDomain, oSupRange.deepCopy());
+				}
+			}
+		}
+	}
 	public void loadSuperSubClasses(String subList[], String superList[]) throws Exception {
 
 		for (int i = 0; i < subList.length; i++) {

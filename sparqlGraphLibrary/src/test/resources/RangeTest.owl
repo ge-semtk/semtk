@@ -84,6 +84,11 @@
     <rdfs:range rdf:resource="#Rabbit"/>
     <rdfs:domain rdf:resource="#Rabbit"/>
   </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="hasAnotherEgg">
+    <rdfs:subPropertyOf>
+      <owl:ObjectProperty rdf:ID="hasEgg"/>
+    </rdfs:subPropertyOf>
+  </owl:ObjectProperty>
   <owl:ObjectProperty rdf:about="#hasChild">
     <rdfs:range>
       <owl:Class>
@@ -114,23 +119,23 @@
       </owl:Class>
     </rdfs:domain>
   </owl:ObjectProperty>
-  <owl:ObjectProperty rdf:ID="hasEgg">
+  <owl:ObjectProperty rdf:about="#hasEgg">
     <rdfs:subPropertyOf rdf:resource="#hasChild"/>
     <rdfs:range rdf:resource="#Egg"/>
   </owl:ObjectProperty>
-  <WeirdBird rdf:ID="w">
-    <hasEgg rdf:resource="#Egg"/>
+  <Bird rdf:ID="bir"/>
+  <Duck rdf:ID="duc">
     <hasChild>
-      <Animal rdf:ID="anm"/>
+      <Animal rdf:ID="ani"/>
     </hasChild>
-    <hasChild>
-      <Rabbit rdf:ID="r"/>
-    </hasChild>
-    <hasChild>
-      <Unusual rdf:ID="u"/>
-    </hasChild>
-  </WeirdBird>
-  <Duck rdf:ID="d">
-    <hasDuckling rdf:resource="#d"/>
   </Duck>
+  <Separate rdf:ID="sep"/>
+  <Unusual rdf:ID="unu"/>
+  <WeirdBird rdf:ID="wei">
+    <hasAnotherEgg>
+      <Egg rdf:ID="egg"/>
+    </hasAnotherEgg>
+  </WeirdBird>
+  <Rabbit rdf:ID="rab"/>
+  <Another rdf:ID="ano"/>
 </rdf:RDF>
