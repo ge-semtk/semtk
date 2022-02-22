@@ -1,0 +1,503 @@
+{
+	"version": 3,
+	"sparqlConn": {
+		"name": "demo",
+		"domain": "",
+		"enableOwlImports": false,
+		"model": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/RACK",
+				"graph": "http://semtk/demo"
+			}
+		],
+		"data": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/RACK",
+				"graph": "http://semtk/demo"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 17,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"float"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#float",
+						"domainURI": "http://com.ge.research/sample/testconfig#hasValue",
+						"Constraints": "FILTER (%id>200.0)",
+						"SparqlID": "?Value",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"valueTypes": [
+							"dateTime"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#dateTime",
+						"domainURI": "http://com.ge.research/sample/testconfig#timestamp",
+						"Constraints": "",
+						"SparqlID": "?timestamp",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"fullURIName": "http://com.ge.research/sample/testconfig#MeasurementValue",
+				"SparqlID": "?MeasurementValue",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"domainURI": "http://com.ge.research/sample/testconfig#hasUnits",
+						"Constraints": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"domainURI": "http://com.ge.research/sample/testconfig#tag",
+						"Constraints": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"domainURI": "http://com.ge.research/sample/testconfig#variableName",
+						"Constraints": "FILTER regex(%id, \"temperature\")",
+						"SparqlID": "?variableName",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?MeasurementValue"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"ValueType": "MeasurementValue",
+						"UriValueType": "http://com.ge.research/sample/testconfig#MeasurementValue",
+						"ConnectBy": "measurementValue",
+						"Connected": true,
+						"UriConnectBy": "http://com.ge.research/sample/testconfig#measurementValue"
+					}
+				],
+				"fullURIName": "http://com.ge.research/sample/testconfig#Measurement",
+				"SparqlID": "?Measurement",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Measurement"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"ValueType": "Measurement",
+						"UriValueType": "http://com.ge.research/sample/testconfig#Measurement",
+						"ConnectBy": "measurement",
+						"Connected": true,
+						"UriConnectBy": "http://com.ge.research/sample/testconfig#measurement"
+					}
+				],
+				"fullURIName": "http://com.ge.research/sample/testconfig#MeasurementMap",
+				"SparqlID": "?MeasurementMap",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?MeasurementMap"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"ValueType": "MeasurementMap",
+						"UriValueType": "http://com.ge.research/sample/testconfig#MeasurementMap",
+						"ConnectBy": "hasMap",
+						"Connected": true,
+						"UriConnectBy": "http://com.ge.research/sample/testconfig#hasMap"
+					}
+				],
+				"fullURIName": "http://com.ge.research/sample/testconfig#Table",
+				"SparqlID": "?Table",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"domainURI": "http://com.ge.research/sample/testconfig#code",
+						"Constraints": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Table"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"ValueType": "Table",
+						"UriValueType": "http://com.ge.research/sample/testconfig#Table",
+						"ConnectBy": "hasDataset",
+						"Connected": true,
+						"UriConnectBy": "http://com.ge.research/sample/testconfig#hasDataset"
+					}
+				],
+				"fullURIName": "http://com.ge.research/sample/testconfig#Layer",
+				"SparqlID": "?Layer",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"int"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#int",
+						"domainURI": "http://com.ge.research/sample/testconfig#testNum",
+						"Constraints": "",
+						"SparqlID": "?testNum",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Layer"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"ValueType": "Layer",
+						"UriValueType": "http://com.ge.research/sample/testconfig#Layer",
+						"ConnectBy": "dataLayer",
+						"Connected": true,
+						"UriConnectBy": "http://com.ge.research/sample/testconfig#dataLayer"
+					}
+				],
+				"fullURIName": "http://com.ge.research/sample/testconfig#Test",
+				"SparqlID": "?Test",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": [
+			{
+				"sparqlID": "?timestamp"
+			}
+		],
+		"groupBy": [],
+		"unionHash": {},
+		"columnOrder": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "http://demo/prefix",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "layer_code"
+			},
+			{
+				"colId": "col_1",
+				"colName": "meas_name"
+			},
+			{
+				"colId": "col_2",
+				"colName": "meas_tag"
+			},
+			{
+				"colId": "col_3",
+				"colName": "meas_units"
+			},
+			{
+				"colId": "col_4",
+				"colName": "test_number"
+			},
+			{
+				"colId": "col_5",
+				"colName": "timestamp"
+			},
+			{
+				"colId": "col_6",
+				"colName": "value"
+			}
+		],
+		"dataValidator": [],
+		"texts": [
+			{
+				"textId": "text_0",
+				"text": "Test_"
+			}
+		],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Test",
+				"type": "http://com.ge.research/sample/testconfig#Test",
+				"mapping": [
+					{
+						"textId": "text_0",
+						"text": "Test_"
+					},
+					{
+						"colId": "col_4"
+					}
+				],
+				"props": [
+					{
+						"URIRelation": "http://com.ge.research/sample/testconfig#testNum",
+						"mapping": [
+							{
+								"colId": "col_4"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Layer",
+				"type": "http://com.ge.research/sample/testconfig#Layer",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://com.ge.research/sample/testconfig#code",
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Table",
+				"type": "http://com.ge.research/sample/testconfig#Table",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?MeasurementMap",
+				"type": "http://com.ge.research/sample/testconfig#MeasurementMap",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Measurement",
+				"type": "http://com.ge.research/sample/testconfig#Measurement",
+				"URILookupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://com.ge.research/sample/testconfig#hasUnits",
+						"URILookup": [
+							"?Measurement"
+						],
+						"mapping": [
+							{
+								"colId": "col_3"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://com.ge.research/sample/testconfig#tag",
+						"URILookup": [
+							"?Measurement"
+						],
+						"mapping": [
+							{
+								"colId": "col_2"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://com.ge.research/sample/testconfig#variableName",
+						"URILookup": [
+							"?Measurement"
+						],
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?MeasurementValue",
+				"type": "http://com.ge.research/sample/testconfig#MeasurementValue",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://com.ge.research/sample/testconfig#hasValue",
+						"mapping": [
+							{
+								"colId": "col_6"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://com.ge.research/sample/testconfig#timestamp",
+						"mapping": [
+							{
+								"colId": "col_5"
+							}
+						]
+					}
+				]
+			}
+		]
+	},
+	"plotSpecs": [
+		{
+			"name": "Demo Plot - Scatter",
+			"type": "plotly",
+			"spec": {
+				"layout": {
+					"title": "Sample Scatter Plot"
+				},
+				"data": [
+					{
+						"x": "SEMTK_TABLE.col[?timestamp]",
+						"y": "SEMTK_TABLE.col[?Value]",
+						"type": "scatter"
+					}
+				],
+				"config": {
+					"editable": true
+				}
+			}
+		},
+		{
+			"name": "Demo Plot - Bar",
+			"type": "plotly",
+			"spec": {
+				"layout": {
+					"title": "Sample Bar Graph"
+				},
+				"data": [
+					{
+						"x": "SEMTK_TABLE.col[?timestamp]",
+						"y": "SEMTK_TABLE.col[?Value]",
+						"type": "bar"
+					}
+				],
+				"config": {
+					"editable": true
+				}
+			}
+		}
+	]
+}
