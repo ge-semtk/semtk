@@ -651,6 +651,13 @@ NodeItem.prototype = {
     getItemUri: function() {
         return this.uriConnectBy;
     },
+    getRangeDisplayString : function() {
+		var shortList = [];
+		for (var r of Object.keys(this.rangeUris)) {
+			shortList.push(new OntologyName(r).getLocalName());
+		}
+		return shortList.join(",");
+	}
 };
 
 /* the property item */
@@ -973,6 +980,11 @@ PropertyItem.prototype = {
 
 	getIsMarkedForDeletion : function(){
 		return this.isMarkedForDeletion;
+	},
+	
+	// short names of Range.  For NodeItem and PropItem
+	getRangeDisplayString : function() {
+		return this.getValueTypes().join(",");
 	}
 };
 

@@ -834,10 +834,10 @@ define([	// properly require.config'ed
 
                 if (item instanceof PropertyItem && this.oInfo.containsDatatype(item.getRangeURI())) {
                     // keyname : Datatype (XSDtype)
-                    text.innerHTML = item.getKeyName() + " : " + this.oInfo.getDatatype(item.getRangeURI()).getNameStr(true) + " (" + item.getValueTypes().join(",") + ")";
+                    text.innerHTML = item.getKeyName() + " : " + this.oInfo.getDatatype(item.getRangeURI()).getNameStr(true) + " (" + item.getRangeDisplayString() + ")";
                 } else {
                     // keyname : short type name
-                    text.innerHTML = item.getKeyName() + " : " + item.getValueTypes().join(",");
+                    text.innerHTML = item.getKeyName() + " : " + item.getRangeDisplayString();
                 }
                 if (! (item instanceof NodeItem)) {
                     var retName = item.getBindingOrSparqlID();

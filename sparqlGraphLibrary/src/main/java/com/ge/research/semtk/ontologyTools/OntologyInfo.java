@@ -1777,6 +1777,31 @@ public class OntologyInfo {
 	}
 
 	/**
+	 * Any orphan ranges left over after super-subproperty logic
+	 * are set to CLASS.
+	 * 
+	 * Note: this is currently the horizon of what SemTK can handle.
+	 *       SPARQLgraph makes these property items and no nodes can connect.
+	 *       Future: these should become nodes and connect to anything.
+	 * 
+	 * @throws Exception
+	 */
+	public void changeOrphanRangesToClass() throws Exception {
+		// check for orphaned properties not resolved by subProp query
+		for (OntologyProperty oProp : this.propertyHash.values()) {
+			Set<String> domains = oProp.getRangeDomains();
+			
+			for (String domain : domains) {
+				OntologyRange oRange = oProp.getRange(this.getClass(domain), this);
+				if (oRange.getUriList().contains(ORPHAN_STR)) {
+					oRange.removeUri(ORPHAN_STR);
+					oRange.addRange(OntologyRange.CLASS);
+				}
+			}
+		}
+	}
+	
+	/**
 	 * Check validity of the OntologyInfo
 	 * 
 	 * @throws Exception
@@ -1802,6 +1827,7 @@ public class OntologyInfo {
 			} else {
 				for (String domain : domains) {
 					if (oProp.getRange(this.getClass(domain), this).getUriList().contains(ORPHAN_STR)) {
+						// this should never happen if changeOrphanRangesToClass() was called at the end of the load
 						this.loadWarnings
 								.add("Property has no range for domain " + domain + ": " + oProp.getNameStr(false));
 					}
@@ -2597,6 +2623,7 @@ public class OntologyInfo {
 		tab = endpoint.executeQueryToTable(OntologyInfo.getAnnotationCommentsQuery(endpoint.getGraph(), domain));
 		this.loadAnnotationComments(tab.getColumn("Elem"), tab.getColumn("Comment"));
 
+		this.changeOrphanRangesToClass();
 		this.validate();
 	}
 
@@ -2643,6 +2670,7 @@ public class OntologyInfo {
 		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationCommentsQuery(graphName, domain),	SparqlResultTypes.TABLE);
 		this.loadAnnotationComments(tableRes.getTable().getColumn("Elem"), tableRes.getTable().getColumn("Comment"));
 
+		this.changeOrphanRangesToClass();
 		this.validate();
 	}
 
