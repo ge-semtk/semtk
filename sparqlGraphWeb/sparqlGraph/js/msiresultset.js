@@ -176,8 +176,8 @@ define([	// properly require.config'ed   bootstrap-modal
                                 }
                             }
 
-                            // change the rdf:type into @type
-                            jObj["@type"] = jObj[rdfType];
+                            // change the rdf:type into @type : apparently only the local fragment is used
+                            jObj["@type"] = jObj[rdfType].split("#").slice(-1);
                             delete jObj[rdfType];
                         }
                     }
