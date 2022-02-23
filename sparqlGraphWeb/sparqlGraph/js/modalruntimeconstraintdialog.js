@@ -45,17 +45,17 @@ define([	// properly require.config'ed
 
         var isNumericType = function(dataType){
             // TODO only INT has been tested so far
-            if(dataType == "INT" || dataType.indexOf("INTEGER") >= 0){
+            if(dataType.indexOf("INT") > -1 || dataType.indexOf("INTEGER") >= 0){
                 return true;
             }
-            if(dataType == "DECIMAL" || dataType == "LONG" || dataType == "FLOAT" || dataType == "DOUBLE"){
+            if(dataType.indexOf("DECIMAL") > -1 || dataType.indexOf("LONG") > -1 || dataType.indexOf("FLOAT") > -1 || dataType.indexOf("DOUBLE") > -1){
                 return true;
             }
             return false;
         }
 
         var isDateType = function(dataType) {
-            if (dataType == "DATETIME") {
+            if (dataType.indexOf("DATETIME") > -1) {
                 return true;
             }
             return false;
@@ -159,7 +159,7 @@ define([	// properly require.config'ed
                 for(i = 0; i < this.sparqlIds.length; i++){
 
                     var sparqlId = this.sparqlIds[i];
-                    var valueType = this.valueTypes[i];
+                    var valueTypes = this.valueTypes[i].toUpperCase();
                     var operator1Element = document.getElementById("operator1" + sparqlId);
                     var operand1Element = document.getElementById("operand1" + sparqlId);
                     var operator2Element = document.getElementById("operator2" + sparqlId);
@@ -167,18 +167,18 @@ define([	// properly require.config'ed
                     var e = null;
 
                     if (operator1Element.value.trim() == "=") {
-                        e = this.validateList(valueType, operand1Element.value, sparqlId);
+                        e = this.validateList(valueTypes, operand1Element.value, sparqlId);
                     } else {
-                        e = this.validateValue(valueType, operand1Element.value, sparqlId);
+                        e = this.validateValue(valueTypes, operand1Element.value, sparqlId);
                     }
                     if (e != null) {
                         return e;
                     }
                     if (operator2Element) {
                         if (operator2Element.value.trim() == "=") {
-                            e = this.validateList(valueType, operand2Element.value, sparqlId);
+                            e = this.validateList(valueTypes, operand2Element.value, sparqlId);
                         } else {
-                            e = this.validateValue(valueType, operand2Element.value, sparqlId);
+                            e = this.validateValue(valueTypes, operand2Element.value, sparqlId);
                         }
                     }
                     if (e != null) {
@@ -191,7 +191,7 @@ define([	// properly require.config'ed
 
             // validate a value or every value in list
 
-            validateList : function (valueType, val, sparqlId) {
+            validateList : function (valueTypes, val, sparqlId) {
                 // null or empty: passes
                 if (val == null || val.toString().trim() == "") {
                     return null;
@@ -213,7 +213,7 @@ define([	// properly require.config'ed
 
                 // loop through and validate
                 for (var i=0; i < valList.length; i++) {
-                    var e = this.validateValue(valueType, valList[i], sparqlId);
+                    var e = this.validateValue(valueTypes, valList[i], sparqlId);
                     if (e != null) {
                         return e;
                     }
@@ -222,7 +222,7 @@ define([	// properly require.config'ed
             },
 
             // validate a value
-            validateValue : function (valueType, val, sparqlId) {
+            validateValue : function (valueTypes, val, sparqlId) {
                 var valStr = val.toString().trim();
 
                 // empty: passes
@@ -230,18 +230,18 @@ define([	// properly require.config'ed
                     return null;
                 }
 
-                if (isNumericType(valueType)) {
+                if (isNumericType(valueTypes)) {
                     if(isNaN(valStr)){
                         return "Error: invalid entry for " + sparqlId + ": entry must be numeric: " + valStr;
                     }
-                    if (valueType.indexOf("INT") >= 0 && valStr && !isInteger(valStr)) {
+                    if (valueTypes.indexOf("INT") >= 0 && valStr && !isInteger(valStr)) {
                         return "Error: invalid entry for " + sparqlId + ": entry must be an integer: " + valStr;
                     }
-                } else if (valueType == "NODE_URI") {
+                } else if (valueTypes.indexOf("NODE_URI") >= 0) {
                     if (valStr.indexOf(" ") > -1) {
                         return "Error: invalid entry for " + sparqlId + ": uri cannot contain spaces: " + valStr;
                     }
-                } else if (valueType == "DATETIME") {
+                } else if (valueTypes.indexOf("DATETIME") >= 0) {
                     if (valStr.indexOf("T") != 10 || Date.parse(valStr) == NaN) {
                         return "Error: invalid entry for " + sparqlId + ": invalid dateTime format (e.g. 2008-01-07T00:00:00) : " + valStr;
                     }
@@ -264,7 +264,7 @@ define([	// properly require.config'ed
                         continue;
                     }
 
-                    var valueType = this.valueTypes[j];
+                    var valueTypes = this.valueTypes[j].toUpperCase();
                     var operator1Element = document.getElementById("operator1" + sparqlId);
                     var operand1Element = document.getElementById("operand1" + sparqlId);
                     var operator2Element = document.getElementById("operator2" + sparqlId);
@@ -278,7 +278,7 @@ define([	// properly require.config'ed
                     }
 
                     // collect user input and create runtime constraint object (behavior varies per data type)
-                    if(valueType == "STRING" || valueType == "NODE_URI"){
+                    if(valueTypes.indexOf("STRING") > -1 || valueTypes.indexOf("NODE_URI") > -1){
                         operator1 = operator1Element.value;
                         operand1 = operand1Element.value.trim();    // TODO support multiple operands for MATCHES
                         if(!operand1.trim()){
@@ -294,7 +294,7 @@ define([	// properly require.config'ed
                             alert("Skipping unsupported operator for " + sparqlId + ": " + operator1.value);
                             // TODO cancel instead of skipping?
                         }
-                    }else if(valueType == "BOOLEAN"){
+                    }else if(valueTypes.indexOf("BOOLEAN") > -1){
                         var booleanSelected = null;
                         for(var i=0; i < operandChoicesForBoolean.length; i++){
                             if(document.getElementById("operand1" + sparqlId + "-" + operandChoicesForBoolean[i]).className == "btn active"){
@@ -310,7 +310,7 @@ define([	// properly require.config'ed
                                 break;
                             // do nothing if unspecified
                         }
-                    }else if(isNumericType(valueType) || isDateType(valueType)){
+                    }else if(isNumericType(valueTypes) || isDateType(valueTypes)){
                         var operator1 = operator1Element.value;
                         var operand1 = operand1Element.value;    // TODO support multiple operands for MATCHES
                         var operator2 = operator2Element.value;
@@ -364,7 +364,7 @@ define([	// properly require.config'ed
                         }
 
                     }else{
-                        alert("Type " + valueType + " not supported...add it");
+                        alert("Type " + valueTypes + " not supported...add it");
                     }
 
                 }
@@ -402,7 +402,7 @@ define([	// properly require.config'ed
                 for(i = 0; i < this.sparqlIds.length; i++){
 
                     sparqlId = this.sparqlIds[i];                   // e.g. ?circumference
-                    valueType = this.valueTypes[i];                 // e.g. STRING, INT, etc
+                    valueType = this.valueTypes[i].toUpperCase();   // e.g. STRING, INT, etc
                     operator1ElementId = "operator1" + sparqlId;	// e.g. "operator1?circumference"
                     operand1ElementId = "operand1" + sparqlId;		// e.g. "operand1?circumference"
                     operator2ElementId = "operator2" + sparqlId;	// e.g. "operator2?circumference"
@@ -410,18 +410,18 @@ define([	// properly require.config'ed
 
                     this.div.appendChild(IIDXHelper.createLabel(sparqlId.substring(1) + ":", valueType));  // value type is a tooltip
                     // create UI components for operator/operand (varies per data type)
-                    if(valueType == "STRING"){
+                    if(valueType.indexOf("STRING") > -1) {
                         this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForStrings, ["="], false,  "input-mini"));
                         this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
 
                         this.div.appendChild(IIDXHelper.createButton(">>", this.suggestValues.bind(this, operand1ElementId, sparqlId, isEquals.bind(this, operator1ElementId))));
 
-                    }else if(valueType == "NODE_URI"){
+                    }else if(valueType.indexOf("NODE_URI") > -1){
                         this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForUris, ["="], false, "input-mini"));
                         this.div.appendChild(IIDXHelper.createTextInput(operand1ElementId, "input-xlarge"));
                         this.div.appendChild(IIDXHelper.createButton(">>", this.suggestValues.bind(this, operand1ElementId, sparqlId, isEquals.bind(this, operator1ElementId))));
 
-                    }else if(valueType == "BOOLEAN"){
+                    }else if(valueType.indexOf("BOOLEAN") > -1){
                         this.div.appendChild(IIDXHelper.createButtonGroup(operand1ElementId, operandChoicesForBoolean, "buttons-radio"));
 
                     }else if(isNumericType(valueType) || isDateType(valueType)){

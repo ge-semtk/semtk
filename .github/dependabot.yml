@@ -11,12 +11,12 @@ updates:
     # Location of .github/workflows
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
 
   # Maintain dependencies for Maven
   - package-ecosystem: "maven"
     # Location of poms
     directory: "/"
     schedule:
-      interval: "daily"
+      interval: "weekly"
 

@@ -1,0 +1,85 @@
+{
+    "title": "Sample Battery Report",
+    "sections": [
+        {
+            "header": "Cardinality",
+            "special": {
+                "id": "cardinality"
+            },
+            "description": "now"
+        },
+        {
+            "header": "Class Count",
+            "special": {
+                "id": "class_count"
+            }
+        },
+        {
+            "header": "Table",
+            "table": {
+                "nodegroup": "demoNodegroup"
+            }
+        },
+        {
+            "header": "Plot",
+            "plot": {
+                "nodegroup": "demoNodegroup",
+                "plotname": "Demo Plot - Bar"
+            }
+        },
+        {
+            "header": "Graph",
+            "graph": {
+                "nodegroup": "demoNodegroup"
+            }
+        },
+        {
+            "header": "Count",
+            "description": "Count the regular demo nodegroup expecting the 11 results.",
+            "count": {
+                "nodegroup": "demoNodegroup",
+                "ranges": [
+                    {
+                        "format": "Perfect found {0}",
+                        "lte": 11,
+                        "gte": 11,
+                        "status": "success"
+                    }
+                ]
+            }
+        },
+        {
+            "header": "Count Temp > 200",
+            "count": {
+                "nodegroup": "demoNodegroup temp gt 200",
+                "ranges": [
+                    {
+                        "format": "Found none",
+                        "lte": 0,
+                        "status": "success"
+                    },
+                    {
+                        "format": "Found {0} temperatures > 200.0",
+                        "status": "failure",
+                        "gte": 1,
+                        "sections": [
+                            {
+                                "header": "Failed rows",
+                                "table": {
+                                    "nodegroup": "demoNodegroup temp gt 200"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        },
+        {
+            "header": "Easier table_test_row_count Temp > 200",
+            "table_test_row_count": {
+                "nodegroup": "demoNodegroup temp gt 200",
+                "success_rows": 0
+            }
+        }
+    ]
+}

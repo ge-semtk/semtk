@@ -58,3 +58,8 @@
 .reports-valid {
 	font-size: 14;
 }
+
+input[name*="description"] {
+	width: 80%;
+	
+}
