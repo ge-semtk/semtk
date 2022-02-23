@@ -1975,6 +1975,7 @@
 
             // make a menu button bar
             var editDom = document.createElement("span");
+            editDom.appendChild(document.createTextNode("Results: "));
             var removeButton = IIDXHelper.createIconButton("icon-trash", function(){}, ["btn","btn-danger"], undefined, "Remove", "Remove selected item(s) from this display" );
             removeButton.disabled = true;
             editDom.appendChild(removeButton);
@@ -1983,6 +1984,18 @@
             expandButton.disabled = true;
             editDom.appendChild(expandButton);
 
+			// new feature section
+			var NG_BUTTON_FEATURE=false;
+			if (NG_BUTTON_FEATURE) {
+				for (var i=0; i < 5; i++) {
+					IIDXHelper.appendSpace(editDom);
+				}
+				editDom.appendChild(document.createTextNode("Nodegroup: "));
+	            var addToNgButton = IIDXHelper.createIconButton("icon-plus", function(){}, ["btn"], undefined, "Add", "Add to nodegroup" );
+	            addToNgButton.disabled = true;
+	            editDom.appendChild(addToNgButton);
+	        }
+           	
             var headerTable = IIDXHelper.buildResultsHeaderTable(
                 (jsonDownloadStr === "{}") ? "No results returned" : linkdom,
                 [ "Save JSON" ] ,
@@ -2020,17 +2033,18 @@
             // callback: when selection changes, disable/enable buttons
             network.on('select', function(n) {
                 // count non-data nodes
-                var noNodes = true;
+                var nodeCount = n.getSelectedNodes().length;
+                var edgeCount = n.getSelectedEdges().length;
+                var nonDataNodeCount = 0;
+                
                 for (var id of n.getSelectedNodes()) {
                     if (network.body.data.nodes.get(id).group != "data") {
-                        noNodes = false;
-                        break;
+                        nonDataNodeCount += 1;
                     }
                 };
-                // count all edges
-                var noEdges = n.getSelectedEdges().length == 0;
-                removeButton.disabled=noNodes && noEdges;
-                expandButton.disabled=noNodes;
+               
+                removeButton.disabled = (nodeCount == 0) && (edgeCount == 0);
+                expandButton.disabled = (nodeCount == 0);
             }.bind(this, network));
 
             // button callbacks
