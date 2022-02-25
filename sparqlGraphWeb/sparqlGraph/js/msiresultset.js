@@ -133,7 +133,9 @@ define([	// properly require.config'ed   bootstrap-modal
 
                 for (var key in jObj) {
                     // expand value
-                    if (typeof(jObj[key]) == 'string') {
+                    if (key == "@type") {
+						jObj[key] = this.getTypeExpandedWithContext(jObj[key], context);
+					} else if (typeof(jObj[key]) == 'string') {
                         jObj[key] = this.getValExpandedWithContext(jObj[key], context);
                     } else {
                         this.expandJsonObjWithContext(jObj[key]);
@@ -177,7 +179,8 @@ define([	// properly require.config'ed   bootstrap-modal
                             }
 
                             // change the rdf:type into @type : apparently only the local fragment is used
-                            jObj["@type"] = jObj[rdfType].split("#").slice(-1);
+                            // jObj["@type"] = jObj[rdfType].split("#").slice(-1);
+                            jObj["@type"] = jObj[rdfType];
                             delete jObj[rdfType];
                         }
                     }
@@ -217,6 +220,23 @@ define([	// properly require.config'ed   bootstrap-modal
                     jArr.splice(i,1);
                 }
             },
+            
+            // for a @type json-ld,
+            // attempt to expand it using @context
+            // has special rule for @vocab as described at https://www.w3.org/TR/json-ld11/#context-definitions
+            getTypeExpandedWithContext : function(abbrev, context) {
+
+                if (abbrev.indexOf(":") > -1) {
+	                // normal prefix expansion
+					return this.getValExpandedWithContext(abbrev, context);
+				} else if (context["@vocab"]) {
+					// a type with no ":" recieves the @vocab prefix
+					return context["@vocab"] + abbrev;
+				}
+
+                return abbrev;
+            },
+            
             // for any value in json-ld,
             // attempt to expand it using @context
             getValExpandedWithContext : function(abbrev, context) {
