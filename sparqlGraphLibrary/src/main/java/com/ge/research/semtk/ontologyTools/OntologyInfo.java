@@ -661,7 +661,8 @@ public class OntologyInfo {
 			ArrayList<OntologyProperty> props = this.getInheritedProperties(oClass);
 			for (int i = 0; i < props.size(); i++) {
 				OntologyProperty prop = props.get(i);
-				for (String rangeClassName : prop.getAllRangeUris()) {
+				OntologyRange oRange = prop.getRange(oClass, this);
+				for (String rangeClassName : oRange.getUriList()) {
 
 					// if the range class in this domain
 					if (this.containsClass(rangeClassName)) {
