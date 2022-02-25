@@ -54,7 +54,7 @@ wei is a WeirdBird.
 // Sadl warns.  Semtk says this is fine
 wei hasAnotherEgg egg.
 
-// demonstrate that hasDuckling has inherited range from hasChild
+// SemTK doesn't allow this, but strangely SADL does.
 duc hasChild ani.
 
 	
