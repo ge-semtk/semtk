@@ -20,3 +20,7 @@ updates:
     schedule:
       interval: "weekly"
 
+   ignore:
+   # Ignore all patch updates
+   - dependency-name: "*"
+      update-types: ["version-update:semver-patch"]
