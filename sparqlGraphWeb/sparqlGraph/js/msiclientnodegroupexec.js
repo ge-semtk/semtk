@@ -284,6 +284,17 @@ define([	// properly require.config'ed   bootstrap-modal
                 this.runAsyncNodegroup("dispatchSelectFromNodegroup",
                                         nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
             },
+            execAsyncDispatchQueryFromNodeGroup : function(nodegroup, conn, queryType, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
+                var data = JSON.stringify ({
+                    "jsonRenderedNodeGroup": JSON.stringify(nodegroup.toJson()),
+                    "sparqlConnection":      JSON.stringify(conn.toJson()),
+                    "queryType" : queryType,
+                    "runtimeConstraints":    (typeof runtimeConstraints == "undefined" || runtimeConstraints == null) ? "" : JSON.stringify(runtimeConstraints.toJson()),
+                    "externalDataConnectionConstraints": (typeof edcConstraints == "undefined" || edcConstraints == null) ? "" : JSON.stringify(edcConstraints.toJson())
+                });
+
+				this.runAsync("dispatchQueryFromNodegroup", data, jobIdCallback, failureCallback);
+            },
 
             execAsyncDispatchDeleteFromNodeGroup : function(nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
                 this.runAsyncNodegroup("dispatchDeleteFromNodegroup",

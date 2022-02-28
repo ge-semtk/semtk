@@ -1710,6 +1710,10 @@
 
                     ModalIidx.okCancel("Delete query", "Confirm SPARQL DELETE operation.", okCallback, "Run Delete", cancelCallback);
                     break;
+                case SemanticNodeGroup.QT_ASK:
+                	// newer generic endpoint could be used by others above
+                	client.execAsyncDispatchQueryFromNodeGroup(gNodeGroup, gConn, SemanticNodeGroup.QT_ASK, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
+                    break;
                 default:
                     throw new Error("Internal error: Unknown query type.");
 			}
@@ -2322,25 +2326,19 @@
     //
     var onchangeQueryType1 = function () {
         var s = document.getElementById("SGQueryType");
-        switch (s.options[s.selectedIndex].value) {
-            case "SELECT":
-                gNodeGroup.setQueryType(SemanticNodeGroup.QT_DISTINCT);
+        var choice = s.options[s.selectedIndex].value;
+        switch (choice) {
+            case SemanticNodeGroup.QT_DISTINCT:
+            case SemanticNodeGroup.QT_COUNT:
+            case SemanticNodeGroup.QT_ASK:
+            case SemanticNodeGroup.QT_CONSTRUCT:
+            case SemanticNodeGroup.QT_DELETE:
+                gNodeGroup.setQueryType(choice);
                 gNodeGroup.setReturnTypeOverride(null);
                 break;
-            case "COUNT":
-                gNodeGroup.setQueryType(SemanticNodeGroup.QT_COUNT);
-                gNodeGroup.setReturnTypeOverride(null);
-                break;
-            case "CONSTRUCT":
-                gNodeGroup.setQueryType(SemanticNodeGroup.QT_CONSTRUCT);
-                gNodeGroup.setReturnTypeOverride(null);
-                break;
-            case "DELETE":
-                gNodeGroup.setQueryType(SemanticNodeGroup.QT_DELETE);
-                gNodeGroup.setReturnTypeOverride(null);
-                break;
+        
             default:
-                throw new Error("Internal error: Unknown query type.");
+                throw new Error("Internal error: Unknown query type: " + choice);
         }
         gRenderer.draw(gNodeGroup, gOInfo, gInvalidItems);
     	document.getElementById('queryText').value = "";
@@ -2352,18 +2350,16 @@
             function(IIDXHelper) {
             var name;
             switch (gNodeGroup.getQueryType()) {
-                case SemanticNodeGroup.QT_COUNT:
-                    name = "COUNT";
-                    break;
-                case SemanticNodeGroup.QT_CONSTRUCT:
-                    name = "CONSTRUCT";
-                    break;
-                case SemanticNodeGroup.QT_DELETE:
-                    name = "DELETE";
-                    break;
+	            case SemanticNodeGroup.QT_COUNT:
+	            case SemanticNodeGroup.QT_ASK:
+	            case SemanticNodeGroup.QT_CONSTRUCT:
+	            case SemanticNodeGroup.QT_DELETE:
+	            	name = gNodeGroup.getQueryType();
+	            	break;
+                   
                 case SemanticNodeGroup.QT_DISTINCT:
                 default:
-                    name = "SELECT";
+                    name = SemanticNodeGroup.QT_DISTINCT;
                     break;
             }
             IIDXHelper.selectFirstMatchingVal(document.getElementById("SGQueryType"), name);
@@ -2468,6 +2464,9 @@
                 break;
             case SemanticNodeGroup.QT_COUNT:
                 client.execAsyncGenerateCountAll(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
+                break;
+            case SemanticNodeGroup.QT_ASK:
+                client.execAsyncGenerateAsk(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
                 break;
             case SemanticNodeGroup.QT_CONSTRUCT:
                 client.execAsyncGenerateConstruct(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));

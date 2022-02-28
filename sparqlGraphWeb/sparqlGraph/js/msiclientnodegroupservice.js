@@ -164,6 +164,10 @@ define([	// properly require.config'ed   bootstrap-modal
                 this.execGenerateCountAll(nodegroup, conn,
                                         this.asyncSparqlCallback.bind(this, "generateCountAll", sparqlCallback, failureCallback));
             },
+            execAsyncGenerateAsk : function (nodegroup, conn, sparqlCallback, failureCallback) {
+                this.execGenerateAsk(nodegroup, conn,
+                                        this.asyncSparqlCallback.bind(this, "generateCountAll", sparqlCallback, failureCallback));
+            },
             execAsyncGenerateConstruct : function (nodegroup, conn, sparqlCallback, failureCallback) {
                 this.execGenerateConstruct(nodegroup, conn,
                                         this.asyncSparqlCallback.bind(this, "generateConstruct", sparqlCallback, failureCallback));

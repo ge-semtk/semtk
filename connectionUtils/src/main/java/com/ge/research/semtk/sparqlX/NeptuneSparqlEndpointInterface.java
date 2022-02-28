@@ -586,7 +586,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		if (resp.containsKey("detailedMessage")) {
 			throw new Exception((String)resp.get("detailedMessage"));
 		} else {
-			throw new Exception("Unexepected response (no head.vars): " + resp.toJSONString());
+			return null; // no head vars, no error message
 		}
 	}
 	@SuppressWarnings("unchecked")

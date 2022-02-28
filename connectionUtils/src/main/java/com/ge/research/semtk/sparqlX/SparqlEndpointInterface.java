@@ -1314,8 +1314,13 @@ public abstract class SparqlEndpointInterface {
 		// null is default assumption that one meant a tabular result.
 		if(resultType == SparqlResultTypes.TABLE) {
 			JSONObject resp = (JSONObject) responseObj;
-
-			this.resTable = this.getTable(this.getHeadVars(resp), this.getResultsBindings((JSONObject) resp));
+			JSONArray headVars = this.getHeadVars(resp);
+			if (headVars == null) {
+				this.resTable = this.getBooleanTable((JSONObject) resp);
+					
+			} else {
+				this.resTable = this.getTable(headVars, this.getResultsBindings((JSONObject) resp));
+			}
 			// put on the results
 			retval = new JSONObject();
 			retval.put(TableResultSet.TABLE_JSONKEY, this.resTable.toJson());		
@@ -1343,21 +1348,19 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Get head.vars with some error checking
 	 * @param resp
-	 * @return
+	 * @return head vars or null
 	 * @throws Exception
 	 */
-	protected JSONArray getHeadVars(JSONObject resp) throws Exception {
+	protected JSONArray getHeadVars(JSONObject resp) throws DontRetryException, Exception {
 		// response.head
 		JSONObject head = (JSONObject)resp.get("head");
 		if (head == null) {
-			throw new Exception("Unexepected response from SPARQL endpoint (no head): " + resp.toJSONString());
+			throw new DontRetryException("Unexepected response from SPARQL endpoint (no head): " + resp.toJSONString());
 		}
 		
 		// response.head.vars
 		JSONArray vars = (JSONArray) head.get("vars");
-		if (vars == null){
-			throw new Exception("Unexepected response from SPARQL endpoint (no head.vars): " + resp.toJSONString());
-		}
+		
 		return vars;
 	}
 	
@@ -1418,6 +1421,24 @@ public abstract class SparqlEndpointInterface {
 		return message;
 	}
 	
+	/**
+	 * Given no head vars were found, try to create a table from boolean (or other?) types of responses.
+	 * @param resp
+	 * @return
+	 * @throws Exception
+	 */
+	private Table getBooleanTable(JSONObject resp) throws Exception {
+		if (resp.containsKey("boolean")) {
+			
+			ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+			ArrayList<String> row = new ArrayList<String>();
+			rows.add(row);
+			row.add(resp.get("boolean").toString());
+			return new Table(new String[] {"boolean"}, new String[] {"boolean"}, rows);
+		} else {
+			throw new Exception("Can't find column headers to convert response to table");
+		} 
+	}
 	
 	/**
 	 * Convert response table json to SemTK Table json

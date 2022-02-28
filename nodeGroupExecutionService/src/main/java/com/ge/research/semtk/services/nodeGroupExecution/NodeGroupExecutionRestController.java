@@ -599,7 +599,7 @@ public class NodeGroupExecutionRestController {
 	// end base methods
 	@ApiOperation(
 			value=	"General query nodegroup json, replaces many /dispatch*ById",
-			notes=	"result has 'JobId' and 'resultType' fields"
+			notes=	"<hr>Use this one<hr><br>Result has 'JobId' and 'resultType' fields"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchQueryById", method=RequestMethod.POST)
@@ -618,7 +618,7 @@ public class NodeGroupExecutionRestController {
 	
 	@ApiOperation(
 			value=	"General query nodegroup json, replaces many /dispatch*FromNodeGroup",
-			notes=	"result has 'JobId' and 'resultType' fields"
+			notes=	"<hr>Use this one<hr><br>Result has 'JobId' and 'resultType' fields"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchQueryFromNodegroup", method=RequestMethod.POST)
