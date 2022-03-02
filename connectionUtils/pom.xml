@@ -108,7 +108,7 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-core</artifactId>
-			<version>1.12.162</version>
+			<version>1.12.167</version>
 			<scope>compile</scope>
 		</dependency>
 
@@ -124,21 +124,21 @@
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>s3</artifactId>
-			<version>2.17.134</version>
+			<version>2.17.138</version>
 		</dependency>
 
 		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>sts</artifactId>
-			<version>2.17.134</version>
+			<version>2.17.138</version>
 		</dependency>
 
 		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>com.arangodb</groupId>
 			<artifactId>arangodb-java-driver</artifactId>
-			<version>6.16.0</version>
+			<version>6.16.1</version>
 		</dependency>
 
 		<!-- License: Apache 2.0 -->
@@ -158,7 +158,7 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-athena</artifactId>
-			<version>1.12.162</version>
+			<version>1.12.167</version>
 		</dependency>
 
 		<!-- License: MIT -->
