@@ -1036,7 +1036,10 @@ define([	// properly require.config'ed
                         this.failureCallback(ngDiv, e);
                     }
 
-                }
+                } else {
+					// never launched a thread.  undo.
+					this.sectionThreadDone();
+				}
 
                 if (section["sections"] != undefined) {
                     for (subSection of section["sections"]) {
@@ -1074,7 +1077,8 @@ define([	// properly require.config'ed
 
             plotGetTableCallback : function(div, plotter, tableRes) {
                 div.innerHTML="";
-
+                this.sectionThreadDone();
+                
                 // set up two divs: dynamic and static
                 var dynamicDiv = document.createElement("div");
                 div.appendChild(dynamicDiv);
@@ -1085,7 +1089,6 @@ define([	// properly require.config'ed
                 this.saveDynamicStaticPair(dynamicDiv, staticDiv);
 
                 plotter.addPlotToDiv(dynamicDiv, tableRes, staticImage);
-                this.sectionThreadDone();
             },
 
             //
@@ -1094,6 +1097,8 @@ define([	// properly require.config'ed
                 div.innerHTML="";
                 var count = tableRes.tableGetRowCount();
                 var success_rows = tableTestRowCountJson.success_rows;
+                this.sectionThreadDone();
+                
                 if (count == success_rows) {
                     // DUPLICATE CODE
                     div.appendChild(IIDXHelper.createElement("span", "\u2705 ", className="success-icon"));
@@ -1113,15 +1118,14 @@ define([	// properly require.config'ed
                     subDiv.appendChild(h);
                     this.addTableResult(subDiv, tableRes);
                 }
-
-                this.sectionThreadDone();
             },
 
             countGetTableCallback : function(div, countJson, level, tableRes) {
                 div.innerHTML="";
                 var count = tableRes.getTable().rows[0][0];
-
                 var rangeFlag = false;
+                this.sectionThreadDone();
+                
                 if (countJson["ranges"] != undefined) {
 
                     for (var this_range of countJson["ranges"]) {
@@ -1148,7 +1152,6 @@ define([	// properly require.config'ed
                             // use format to print count, or just a simple one if none
                             var fmt = this_range["format"] || "count: {0}";
                             div.appendChild(IIDXHelper.createElement("span", this.format(fmt, count)));
-                            this.sectionThreadDone();
 
                            // do sections
                            if (this_range["sections"] != undefined) {
@@ -1169,8 +1172,9 @@ define([	// properly require.config'ed
             specialClassCountCallback : function(div, res) {
                 div.innerHTML = "";
                 var blob = res.xhr;
-
                 var rows = [];
+                this.sectionThreadDone();
+                
                 for (var key in blob.exactTab) {
                     var jObj = JSON.parse(key);
 
@@ -1195,7 +1199,7 @@ define([	// properly require.config'ed
                                                'desc'
                                            );
 
-                this.sectionThreadDone();
+                
 
             },
 
@@ -1310,6 +1314,7 @@ define([	// properly require.config'ed
             },
 
             graphGetGraphCallback : function(div, res) {
+                this.sectionThreadDone();
 
                 if (! res.isJsonLdResults()) {
                     div.innerHTML =  "<b>Error:</b> Results returned from service are not JSON-LD";
@@ -1371,8 +1376,6 @@ define([	// properly require.config'ed
                 network.body.data.nodes.update(Object.values(nodeDict));
                 network.body.data.edges.update(edgeList);
 
-                this.sectionThreadDone();
-
                 network.startSimulation();
 
                 // give 2.5 seconds to layout, then fit
@@ -1411,8 +1414,9 @@ define([	// properly require.config'ed
             failureCallback : function(div, eOrMsg) {
                 var msg = eOrMsg.toString();
                 let errorDiv = IIDXHelper.createElement("div", "Error generating this section.", "report-error");
-
                 var summary = null;
+                this.sectionThreadDone();
+
                 if (msg.indexOf("special.id") > -1) {
                     summary = "Unknown special section: " + msg.split(":")[2];
                 } else if (msg.indexOf("Could not find nodegroup with id") > -1) {
@@ -1438,7 +1442,6 @@ define([	// properly require.config'ed
                 div.innerHTML = "";
                 div.appendChild(errorDiv);
                 console.error(eOrMsg);
-                this.sectionThreadDone();
 
             },
 
