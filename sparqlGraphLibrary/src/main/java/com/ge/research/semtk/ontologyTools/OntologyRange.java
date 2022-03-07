@@ -95,6 +95,12 @@ public class OntologyRange {
 		return OntologyRange.getDisplayString(this.uris, abbreviate);
 	}
 	
+	public static String getDisplayString(String classUri, boolean abbreviate) {
+        HashSet<String> uriSet = new HashSet<String>();
+        uriSet.add(classUri);
+        return OntologyRange.getDisplayString(uriSet, abbreviate);
+    }
+	
 	public static String getDisplayString(Collection<String> uris, boolean abbreviate) {
 		if (abbreviate) {
 			HashSet<String> modified = new HashSet<String>();

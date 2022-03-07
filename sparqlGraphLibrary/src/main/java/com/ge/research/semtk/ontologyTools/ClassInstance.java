@@ -12,6 +12,14 @@ public class ClassInstance {
 		this.instanceUri = instanceUri;
 	} 
 	
+	public String getClassUri() {
+		return classUri;
+	}
+
+	public String getInstanceUri() {
+		return instanceUri;
+	}
+	
 	public String toString() {
 		return "class: " + classUri + " instance:" + instanceUri;
 	}
