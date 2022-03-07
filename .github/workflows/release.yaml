@@ -15,7 +15,7 @@ jobs:
 
     steps:
     - name: Check out SemTK source
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Cache local Maven repository
       uses: actions/cache@v2
