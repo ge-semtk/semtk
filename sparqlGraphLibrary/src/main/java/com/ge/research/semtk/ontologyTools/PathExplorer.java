@@ -65,6 +65,9 @@ public class PathExplorer {
 		}
 	}
 	
+	public NodeGroup buildNgWithData(ArrayList<ClassInstance> classInstanceList, ArrayList<ReturnRequest> returns) throws Exception {
+		return this.buildNgWithData(classInstanceList, returns, new ArrayList<Triple>());
+	}
 	/**
 	 * Checks cache first
 	 * Splits returns into property or enum (TODO still ignores domainHints)
@@ -76,9 +79,9 @@ public class PathExplorer {
 	 * @return NodeGroup or null
 	 * @throws Exception
 	 */
-	public NodeGroup buildNgWithData(ArrayList<ClassInstance> classInstanceList, ArrayList<ReturnRequest> returns) throws Exception {
+	public NodeGroup buildNgWithData(ArrayList<ClassInstance> classInstanceList, ArrayList<ReturnRequest> returns, ArrayList<Triple> pathHintList) throws Exception {
 		
-		ArrayList<String> propRetList = new ArrayList<String>();
+		ArrayList<String> dataPropRetList = new ArrayList<String>();
 		ArrayList<String> enumRetList = new ArrayList<String>();
 
 		// build propRetList and enumRetList
@@ -88,7 +91,7 @@ public class PathExplorer {
 			if (this.oInfo.containsClass(uri)) {
 				enumRetList.add(uri);
 			} else {
-				propRetList.add(uri);
+				dataPropRetList.add(uri);
 			}
 		}
 		
@@ -96,7 +99,7 @@ public class PathExplorer {
 		// try pulling from cache
 		NodeGroup cached = this.getFromCache(classInstanceList);
 		if (cached != null) {
-			this.addDataPropReturn(cached, propRetList);
+			this.addDataPropReturn(cached, dataPropRetList);
 			this.addEnumReturns(cached, enumRetList);
 
 			return cached;
@@ -111,8 +114,8 @@ public class PathExplorer {
 			}
 			
 			
-			if (! this.addDataPropReturn(ng, propRetList)) {
-				throw new Exception("Error adding property returns from : " + propRetList);
+			if (! this.addDataPropReturn(ng, dataPropRetList)) {
+				throw new Exception("Error adding property returns from : " + dataPropRetList);
 			}
 			
 			LocalLogger.logToStdOut("...succeeded");
@@ -120,7 +123,7 @@ public class PathExplorer {
 			
 		} else {
 			// actual work
-			return this.buildNgWithData(classInstanceList, propRetList, enumRetList);
+			return this.buildNgWithData(classInstanceList, dataPropRetList, enumRetList, pathHintList);
 		}
 	}
 	
@@ -130,51 +133,69 @@ public class PathExplorer {
 	 * Add property and enum returns 
 	 * Saves to cache 
 	 *   
-	 * @param classInstanceList
-	 * @param propRetList
-	 * @param objRetList
+	 * @param classInstanceList - classes which must be in the nodegroup
+	 * @param dataPropRetList - list of data properties to be returned
+	 * @param objRetList - (enum) classes to be returned
 	 * @return
 	 * @throws Exception
 	 */
-	private NodeGroup buildNgWithData(ArrayList<ClassInstance> classInstanceList, ArrayList<String> propRetList, ArrayList<String> objRetList) throws Exception {
+	private NodeGroup buildNgWithData(ArrayList<ClassInstance> classInstanceList, ArrayList<String> dataPropRetList, ArrayList<String> objRetList, ArrayList<Triple> pathHints) throws Exception {
 
 		// get all model paths between all pairs
 		ArrayList<OntologyPath> pathList = new ArrayList<OntologyPath>(); 
 		ArrayList<ClassInstance> anchorInstanceList = new ArrayList<ClassInstance>();
 		ArrayList<ClassInstance> endInstanceList = new ArrayList<ClassInstance>();
 		
+		// lists of problems for each path
 		ArrayList<ArrayList<ClassInstance>> missingClassLists = new ArrayList<ArrayList<ClassInstance>>();
-		ArrayList<ArrayList<String>> missingPropLists = new ArrayList<ArrayList<String>>();
-
-		int smallest = 9999;
+		ArrayList<ArrayList<String>> unaddablePropLists = new ArrayList<ArrayList<String>>();
+		ArrayList<ArrayList<Triple>> missingTripleHintsLists  = new ArrayList<ArrayList<Triple>>();
 		
+		int smallest = 9999;
+		final boolean LOG_PATHS = true;
 		for (int i=0; i < classInstanceList.size() - 1; i++) {
 			for (int j=i+1; j < classInstanceList.size(); j++) {
 				
+				if (LOG_PATHS) LocalLogger.logToStdOut(classInstanceList.get(j).classUri + "," + classInstanceList.get(i).classUri);
 				for (OntologyPath path : this.oInfo.findAllPaths(classInstanceList.get(j).classUri, classInstanceList.get(i).classUri)) {
 					pathList.add(path);
+					if (LOG_PATHS) LocalLogger.logToStdOut(path.asString());
 					anchorInstanceList.add(classInstanceList.get(i));
 					endInstanceList.add(classInstanceList.get(j));
 					
 					// calculate missing instances for path
-					ArrayList<ClassInstance> missingClassList = path.calcMissingInstances(classInstanceList);
-					ArrayList<String> missingPropList = path.calcMissingProperties(propRetList, this.oInfo);
+					ArrayList<ClassInstance> missingClassList = path.calcMissingClasses(classInstanceList);
+					ArrayList<String> unaddablePropsList = path.calcUnaddableDataProps(dataPropRetList, this.oInfo);
+					ArrayList<Triple> missingPathHints = path.caclMissingTripleHints(pathHints);					
+					
 					missingClassLists.add(missingClassList);
-					missingPropLists.add(missingPropList);
+					unaddablePropLists.add(unaddablePropsList);
+					missingTripleHintsLists.add(missingPathHints);
 
-					if (missingClassList.size() + missingPropList.size() < smallest) {
-						smallest = missingClassList.size() + missingPropList.size();
+					// PEC TODO: this logic is too simple
+					// why would all of these be "weighted" the same
+					// Note that missingClasses could be added below if no linear path finds them all
+					if (missingClassList.size() + unaddablePropsList.size() + missingPathHints.size() < smallest) {
+						smallest = missingClassList.size() + unaddablePropsList.size() + missingPathHints.size();
 					}
 				}
 			}
 		}
 		
+		// PEC TODO: also tenuous logic.  Not even sure this error is correct.
+		if (smallest >= classInstanceList.size() + dataPropRetList.size() + pathHints.size()) {
+			throw new Exception("Could not find instance(s)");
+		}
+		
 		// loop through paths with least missing classes first
-		for (int size=smallest; size < classInstanceList.size(); size++) {
+		for (int size=smallest; size < classInstanceList.size() + dataPropRetList.size() + pathHints.size(); size++) {
 			for (int i = 0; i < pathList.size(); i++) {
+				
+				// loop through paths of length "size"
 				boolean success = true;
-				if (missingClassLists.get(i).size() + missingPropLists.get(i).size() == size) {
-					LocalLogger.logToStdOut("buildNgWithData trying path: " + pathList.get(i).asString());
+				if (missingClassLists.get(i).size() + unaddablePropLists.get(i).size() + missingTripleHintsLists.get(i).size()== size) {
+					if (LOG_PATHS) LocalLogger.logToStdOut("buildNgWithData trying path: " + pathList.get(i).asString());
+					
 					// build nodegroup with anchor node
 					NodeGroup ng = new NodeGroup();
 					Node anchor = null;
@@ -184,7 +205,7 @@ public class PathExplorer {
 						anchor = ng.addNodeInstance(anchorInstanceList.get(i).classUri, this.oInfo, anchorInstanceList.get(i).instanceUri);
 					}
 					
-					// if this path has instances
+					// continue only iff this path has instances
 					if (this.pathHasInstance(ng, anchor, pathList.get(i), endInstanceList.get(i).instanceUri)) {
 						
 						// add the path
@@ -202,6 +223,19 @@ public class PathExplorer {
 								break;
 							}
 						}
+						
+						// PEC TODO HERE:  If we added more classes, we need to re-check that missingPathHints is empty
+						//                 This only checks if missingPathHints was empty to begin with.
+						if (missingTripleHintsLists.get(i).size() != 0) {
+							if (missingClassLists.get(i).size() > 0) {
+								throw new Exception("Not implmented: re-checking triple hints after added classes after initial path.");
+							} else {
+								// still missing triple hints
+								break;
+							}
+						}
+						
+						// classes to add but failed
 						if (! success) 
 							break;
 				
@@ -212,7 +246,7 @@ public class PathExplorer {
 						if (! success) 
 							break;
 						
-						success = this.addDataPropReturn(ng, propRetList);
+						success = this.addDataPropReturn(ng, dataPropRetList);
 						if (! success) 
 							break;
 						

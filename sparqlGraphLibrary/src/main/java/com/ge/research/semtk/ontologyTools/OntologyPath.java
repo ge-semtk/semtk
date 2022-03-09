@@ -229,11 +229,36 @@ public class OntologyPath {
 	}
 	
 	/**
+	 * Return any triples that don't appear in the path
+	 * "" subject, pred, or object will match anything.
+	 * @param hints
+	 * @return
+	 */
+	public ArrayList<Triple> caclMissingTripleHints(ArrayList<Triple> hints) {
+		ArrayList<Triple> ret = new ArrayList<Triple>();
+		
+		for (Triple hint : hints) {
+			boolean found = false;
+		
+			for (Triple t : this.tripleList) {
+				found = ((hint.getSubject().isBlank()  || hint.getSubject().equals(t.getSubject())) &&
+						 (hint.getPredicate().isBlank() || hint.getPredicate().equals(t.getPredicate())) &&
+					     (hint.getObject().isBlank() || hint.getObject().equals(t.getObject()))     );
+				if (found) break;
+			}
+			if (!found) {
+				ret.add(hint);
+			}
+		}
+		return ret;
+	}
+	
+	/**
 	 * Return copy of classList with classes from the path removed
 	 * @param classList
 	 * @return
 	 */
-	public ArrayList<ClassInstance> calcMissingInstances(ArrayList<ClassInstance> instanceList) {
+	public ArrayList<ClassInstance> calcMissingClasses(ArrayList<ClassInstance> instanceList) {
 		HashMap<String, Integer> classHashClone = (HashMap<String, Integer>) this.classHash.clone();
 		ArrayList<ClassInstance> ret = new ArrayList<ClassInstance>();
 		
@@ -250,10 +275,17 @@ public class OntologyPath {
 		return ret;
 	}
 	
-	public ArrayList<String> calcMissingProperties(ArrayList<String> propUriList, OntologyInfo oInfo) throws Exception {
+	/**
+	 * Searches to see if a data property could be added to some class in the Path.
+	 * @param dataPropUriList
+	 * @param oInfo
+	 * @return - those data props that can't be added
+	 * @throws Exception
+	 */
+	public ArrayList<String> calcUnaddableDataProps(ArrayList<String> dataPropUriList, OntologyInfo oInfo) throws Exception {
 		ArrayList<String> ret = new ArrayList<String>();
 		
-		for (String propUri : propUriList) {
+		for (String propUri : dataPropUriList) {
 			
 			// get property
 			OntologyProperty oProp = oInfo.getProperty(propUri);
