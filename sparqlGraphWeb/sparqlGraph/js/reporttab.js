@@ -1097,26 +1097,37 @@ define([	// properly require.config'ed
                 div.innerHTML="";
                 var count = tableRes.tableGetRowCount();
                 var success_rows = tableTestRowCountJson.success_rows;
+                var op = tableTestRowCountJson.success_rows_op || "==";
+                
                 this.sectionThreadDone();
                 
-                if (count == success_rows) {
+                var success = ( op == "==" && count == success_rows) ||
+                	( op == "!=" && count != success_rows) ||
+                	( op == "<"  && count < success_rows)  ||
+                	( op == "<=" && count <= success_rows) ||
+                	( op == ">"  && count > success_rows)  ||
+                	( op == ">=" && count >= success_rows);
+                	
+                if (success) {
                     // DUPLICATE CODE
                     div.appendChild(IIDXHelper.createElement("span", "\u2705 ", className="success-icon"));
-                    div.appendChild(IIDXHelper.createElement("span", success_rows + " found."));
+                    div.appendChild(IIDXHelper.createElement("span", count  + " found. Satisfies (count " + op + " " + success_rows + ")"));
 
                 } else {
                     div.appendChild(IIDXHelper.createElement("span", "\u26d4 ", className="failure-icon"));
-                    div.appendChild(IIDXHelper.createElement("span", "Found " + count  + (success_rows==0 ? (" failures") : (" Expecting " + success_rows))));
+                    div.appendChild(IIDXHelper.createElement("span", count  + " found. Does not satisfy (count " + op + " " + success_rows+ ")"));
 
-                    var subLevel = level + 1;
-                    var subDiv = IIDXHelper.createElement("div", "", "report-div-level-" + subLevel);
-                    div.appendChild(subDiv);
-
-                    // required: header DUPLICATE CODE
-                    var header = "Failed: " + (sectionJson["header"] || "<No Header Specified>");
-                    let h = IIDXHelper.createElement("h" + level, header, "report-h" + subLevel);
-                    subDiv.appendChild(h);
-                    this.addTableResult(subDiv, tableRes);
+					if (count > 0) {
+	                    var subLevel = level + 1;
+	                    var subDiv = IIDXHelper.createElement("div", "", "report-div-level-" + subLevel);
+	                    div.appendChild(subDiv);
+	
+	                    // required: header DUPLICATE CODE
+	                    var header = "Failed: " + (sectionJson["header"] || "<No Header Specified>");
+	                    let h = IIDXHelper.createElement("h" + level, header, "report-h" + subLevel);
+	                    subDiv.appendChild(h);
+	                    this.addTableResult(subDiv, tableRes);
+	                }
                 }
             },
 

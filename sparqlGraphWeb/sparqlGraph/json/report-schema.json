@@ -106,6 +106,17 @@
 				},
 				"success_rows": {
 					"type": "integer"
+				},
+				"success_rows_op": {
+					"type": "string",
+					"enum": [
+						"==",
+						"!=",
+						"<",
+						"<=",
+						">=",
+						">"
+					]
 				}
 			}
 		},
