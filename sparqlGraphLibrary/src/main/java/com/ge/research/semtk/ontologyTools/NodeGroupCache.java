@@ -9,6 +9,7 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.services.nodegroupStore.NgStore;
+import com.ge.research.semtk.services.nodegroupStore.NgStore.StoredItemTypes;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
@@ -43,7 +44,7 @@ public class NodeGroupCache {
 	 */
 	private void readFromTriplestore() throws Exception {
 
-		Table idTable = store.getNodeGroupIdList();
+		Table idTable = store.getStoredItemIdList(StoredItemTypes.PrefabNodeGroup);
 		
 		for (int i=0; i < idTable.getNumRows(); i++) {
 			String id = idTable.getCell(i, 0);

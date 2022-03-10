@@ -41,7 +41,7 @@ import com.ge.research.semtk.utility.Utility;
 public class PathExplorer {
 	// A NodeGroupCache for each unique cacheSei
 	private static HashMap<String, NodeGroupCache> cache = new HashMap<String, NodeGroupCache>();
-
+	private static String NO_CACHE = "No cache";
 	private OntologyInfo oInfo;
 	private SparqlConnection conn;
 	private NodeGroupExecutionClient ngeClient;
@@ -51,13 +51,21 @@ public class PathExplorer {
 		this(new OntologyInfo(conn), conn, ngeClient, cacheSei);
 	}
 	
+	/**
+	 * 
+	 * @param oInfo
+	 * @param conn - graphs being explored
+	 * @param ngeClient
+	 * @param cacheSei - location of ng cache, or null 
+	 * @throws Exception
+	 */
 	public PathExplorer(OntologyInfo oInfo, SparqlConnection conn, NodeGroupExecutionClient ngeClient, SparqlEndpointInterface cacheSei) throws Exception {
 		this.oInfo = oInfo;
 		this.conn = conn;
 		this.ngeClient = ngeClient;
 		
-		// generate key for cacheSei
-		this.cacheKey = Utility.hashMD5(cacheSei.toJson().toJSONString());
+		// generate key for cacheSei, or use NO_CACHE
+		this.cacheKey = cacheSei != null ? Utility.hashMD5(cacheSei.toJson().toJSONString()) : NO_CACHE;
 		
 		// init nodegroup cache from disk if needed
 		if (! PathExplorer.cache.containsKey(this.cacheKey)) {
@@ -97,13 +105,14 @@ public class PathExplorer {
 		
 	
 		// try pulling from cache
-		NodeGroup cached = this.getFromCache(classInstanceList);
+		NodeGroup cached = this.getFromCache(classInstanceList, pathHintList);
 		if (cached != null) {
 			this.addDataPropReturn(cached, dataPropRetList);
 			this.addEnumReturns(cached, enumRetList);
-
+			LocalLogger.logToStdOut("Retrieved nodegroup from cache");
 			return cached;
 		}
+		LocalLogger.logToStdOut("Building new nodegroup");
 		
 		// handle special simple case: just one class
 		if (classInstanceList.size() == 1) {
@@ -152,7 +161,7 @@ public class PathExplorer {
 		ArrayList<ArrayList<Triple>> missingTripleHintsLists  = new ArrayList<ArrayList<Triple>>();
 		
 		int smallest = 9999;
-		final boolean LOG_PATHS = true;
+		final boolean LOG_PATHS = false;
 		for (int i=0; i < classInstanceList.size() - 1; i++) {
 			for (int j=i+1; j < classInstanceList.size(); j++) {
 				
@@ -251,7 +260,8 @@ public class PathExplorer {
 							break;
 						
 						LocalLogger.logToStdOut("...succeeded");
-						this.putToCache(cacheNg, classInstanceList);
+						
+						this.putToCache(cacheNg, classInstanceList, pathHints);
 						return ng;
 					}
 				}
@@ -400,9 +410,9 @@ public class PathExplorer {
 	 * @return null if nodegroup is not there
 	 * @throws Exception
 	 */
-	private NodeGroup getFromCache(ArrayList<ClassInstance> classInstanceList) throws Exception {
-		String ngKey = getNgKey(classInstanceList);
+	private NodeGroup getFromCache(ArrayList<ClassInstance> classInstanceList, ArrayList<Triple> pathHintList) throws Exception {
 		NodeGroup ng = null;
+		String ngKey = getNgKey(classInstanceList, pathHintList);
 		
 		try {
 			// get nodegroup
@@ -435,8 +445,9 @@ public class PathExplorer {
 		return ng;
 	}
 	
-	private void putToCache(NodeGroup ng, ArrayList<ClassInstance> classInstanceList) throws Exception {
+	private void putToCache(NodeGroup ng, ArrayList<ClassInstance> classInstanceList, ArrayList<Triple> pathHints) throws Exception {
 		
+		String ngKey = PathExplorer.getNgKey(classInstanceList, pathHints);
 		// remove all node value contraints
 		for (Node n : ng.getNodeList()) {
 			for (int i=0; i < classInstanceList.size(); i++) {
@@ -450,29 +461,41 @@ public class PathExplorer {
 			n.setValueConstraint(null);
 		}
 		
-		// generate a key for this nodegroup
-		String ngKey = getNgKey(classInstanceList);
 		
 		// generate some comments showing class list
 		ArrayList<String> classList = ClassInstance.getClassList(classInstanceList);
 		Collections.sort(classList);
 		String comments = classList.toString();
 		
-		// add to cache
-		PathExplorer.cache.get(this.cacheKey).put(ngKey, ng, conn, comments);
+		// add to cache unless NO_CACHE
+		if (this.cacheKey != NO_CACHE) {
+			PathExplorer.cache.get(this.cacheKey).put(ngKey, ng, conn, comments);
+		}
 	}
 	
 	/**
-	 * Key is a hash of sorted classes in classInstanceList
+	 * Key is a hash of all inputs.
 	 * @param classInstanceList
+	 * @param pathHints
 	 * @return
 	 * @throws Exception
 	 */
-	private static String getNgKey(ArrayList<ClassInstance> classInstanceList) throws Exception {
-		ArrayList<String> classList = ClassInstance.getClassList(classInstanceList);
-		Collections.sort(classList);
+	private static String getNgKey(ArrayList<ClassInstance> classInstanceList, ArrayList<Triple> pathHints) throws Exception {
+		ArrayList<String> keyList = new ArrayList<String>();
+		ArrayList<String> tmpList = null;
+		
+		tmpList = ClassInstance.getClassList(classInstanceList);
+		Collections.sort(tmpList);
+		keyList.addAll(tmpList);
+		
+		tmpList = new ArrayList<String>();
+		for (Triple t : pathHints) {
+			tmpList.add(t.toCsvString());
+		}
+		Collections.sort(tmpList);
+		keyList.addAll(tmpList);
 	    
-	    return Utility.hashMD5(classList.toString());
+	    return Utility.hashMD5(tmpList.toString());
 	}
 
 }
