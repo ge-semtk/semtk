@@ -2862,6 +2862,8 @@
 
         gExploreTab.releaseFocus();
 
+		// make sure gMappingTab has the same nodegroup in it before passing to UploadTab
+		gMappingTab.updateNodegroup(gNodeGroup, gConn);
 		gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
 
 	};
