@@ -1408,7 +1408,7 @@
         if (modelErrors.length == 0) {
             require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
                 setStatus("");
-                var msgHtml = "Nodegroup is now valid against ontology. <br><b>Re-save nodegroup.</b>";
+                var msgHtml = "Nodegroup is now valid against ontology.";
                 if (warnings.length > 0) {
                     msgHtml = "<list>Auto-corrected additional errors:<li>" + warnings.join("</li><li>") + "</li></list><br>" + msgHtml;
                 }
