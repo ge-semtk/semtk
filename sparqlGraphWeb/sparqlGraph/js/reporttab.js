@@ -469,11 +469,10 @@ define([	// properly require.config'ed
 					editElem.remove();
 				} 
 				// grab report json
-                var jsonStr = JSON.stringify(this.editor.getValue(), null, 4);
+                var json = this.editor.getValue();
                 
                 // launch with new schema
-				this.launchEditor();
-				this.setReport(jsonStr);
+				this.launchEditor(json);
 			},
 			
 			
@@ -527,6 +526,7 @@ define([	// properly require.config'ed
                     iconlib: "fontawesome5"
                 };
                 this.editor = new JSONEditor.JSONEditor(this.editorDiv, options);
+                if (optReport) this.editor.setValue(optReport);
                 this.initValidator();
 
                 this.editor.on('ready',function() {
@@ -570,7 +570,7 @@ define([	// properly require.config'ed
             // set the report
             setReport : function(reportJsonStr) {
                 var json = JSON.parse(reportJsonStr);
-                this.editor.setValue(JSON.parse(reportJsonStr));
+                this.editor.setValue(json);
                 this.storeDialog.suggestId(json.title || "");
                 this.expandOrCollapseAll(false);
                 this.setReportAsUnchanged();
