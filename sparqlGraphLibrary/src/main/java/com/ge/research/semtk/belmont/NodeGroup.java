@@ -2216,27 +2216,35 @@ public class NodeGroup {
 				doneIds.add(id);
 			}
 			
-			// loop through again for any missings
+			// loop through again for any missings, making sure to only do each once (in case of unions)
 			for (Returnable item : items) {
 				if (item.getIsReturned()) {
 					String id = item.getSparqlID();
-					if (!doneIds.contains(id)) 
+					if (!doneIds.contains(id)) {
 						sparql.append(" " + clauseHash.get(id));
+						doneIds.add(id);
+					}
 				}
 				if (item.getIsTypeReturned()) {
 					String id = item.getTypeSparqlID();
-					if (!doneIds.contains(id)) 
+					if (!doneIds.contains(id)) {
 						sparql.append(" " + clauseHash.get(id));
+						doneIds.add(id);
+					}
 				}
 				if (item.getIsBindingReturned()) {
 					String id = item.getBinding();
-					if (!doneIds.contains(id)) 
+					if (!doneIds.contains(id)) {
 						sparql.append(" " + clauseHash.get(id));
+						doneIds.add(id);
+					}
 				}
 				for (String f : item.getFunctions()) {
 					String id = item.getFunctionSparqlID(f);
-					if (!doneIds.contains(id)) 
+					if (!doneIds.contains(id)) {
 						sparql.append(" " + clauseHash.get(id));
+						doneIds.add(id);
+					}
 				}
 			}
 		}
