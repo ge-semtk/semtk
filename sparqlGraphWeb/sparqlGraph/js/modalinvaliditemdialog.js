@@ -89,7 +89,7 @@ define([	// properly require.config'ed
                     var snode = this.nodegroup.getNodeItemParentSNode(this.item);
                     var oPropList = this.oInfo.getInheritedProperties(new OntologyClass(snode.getURI()));
                     var domainList = [];
-					var oClass = this.oInfo.getClass(snode.getURI);
+					var oClass = this.oInfo.getClass(snode.getURI());
 					
                     for (var op of oPropList) {
                         // separate out only nodeItems

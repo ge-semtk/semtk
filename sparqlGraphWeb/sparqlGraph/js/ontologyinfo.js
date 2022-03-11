@@ -2233,7 +2233,7 @@ OntologyProperty.prototype = {
 	getAllRangeUris : function() {
 		ret = [];
 		for (var domainStr in this.rangeHash) {
-			ret = ret.concat(this.rangeHash[comainStr].getUriList());
+			ret = ret.concat(this.rangeHash[domainStr].getUriList());
 		}
 		// uniquify
 		return Array.from(new Set(ret));

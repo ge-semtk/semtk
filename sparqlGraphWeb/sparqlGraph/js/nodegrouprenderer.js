@@ -244,21 +244,21 @@ define([	// properly require.config'ed
 
             // redraw as if it had been dragged in fresh
             // default behavior is to collapse any unused nodes
-            drawCollapsingUnused : function() {
+            drawCollapsingUnused : function(oInfo, invalidItems) {
                 for (var snode of this.nodegroup.getSNodeList()) {
                     var flag = this.calcExpandNeeded(snode);
                     this.setExpandFlag(snode, flag);
                 }
-                this.draw(this.nodegroup, []);
+                this.draw(this.nodegroup, oInfo, invalidItems);
             },
 
             // redraw with all nodes expanded
-            drawExpandAll : function() {
+            drawExpandAll : function(oInfo, invalidItems) {
                 for (var snode of this.nodegroup.getSNodeList()) {
                     this.setExpandFlag(snode, true);
                 }
 
-                this.draw(this.nodegroup, []);
+                this.draw(this.nodegroup, oInfo, invalidItems);
             },
 
             // Update the display to reflect the nodegroup
@@ -440,7 +440,8 @@ define([	// properly require.config'ed
 
             nodeIsInvalid : function(snode) {
                 for (let t of this.invalidItemTuples) {
-                    if (t.length == 1 && t[0] == snode)
+					// entire node invalid or an incoming property has mismatched range
+                    if ((t.length == 1 && t[0] == snode) || (t.length == 3 && t[2] == snode))
                         return true;
                 }
                 return false;

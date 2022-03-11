@@ -2168,11 +2168,11 @@
    	};
 
    	var doCollapseUnused = function() {
-        gRenderer.drawCollapsingUnused();
+        gRenderer.drawCollapsingUnused(gOInfo, gInvalidItems);
     };
 
     var doExpandAll = function() {
-        gRenderer.drawExpandAll();
+        gRenderer.drawExpandAll(gOInfo, gInvalidItems);
     };
 
     // only used for non-microservice code
