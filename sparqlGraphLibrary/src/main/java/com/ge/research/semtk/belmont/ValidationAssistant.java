@@ -23,6 +23,7 @@ import java.util.HashMap;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyProperty;
+import com.ge.research.semtk.ontologyTools.OntologyRange;
 
 public class ValidationAssistant {
 	
@@ -43,7 +44,13 @@ public class ValidationAssistant {
 		int localScore = 1000;
 		ArrayList<NodeItem> incoming = ng.getConnectingNodeItems(snode);
 		for (NodeItem nItem : incoming) {
-			for (String range : nItem.getRangeUris()) {
+			// don't presume nItem.getRangeUris is validated.  Check oInfo instead.
+			Node incomingNode = ng.getNodeItemParentSNode(nItem);
+			OntologyClass incomingClass = oInfo.getClass(incomingNode.getUri());
+			OntologyProperty nItemOProp = oInfo.getProperty(nItem.getUriConnectBy());
+			OntologyRange oRange = nItemOProp.getRange(incomingClass, oInfo);
+	
+			for (String range : oRange.getUriList()) {
 				if (oInfo.classIsA(oClass, oInfo.getClass(range))) {
 					// add incoming node range
 					score.put(range, ++localScore);
