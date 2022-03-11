@@ -712,9 +712,9 @@ public class ImportSpec {
 				if (prop.getIsReturned() || prop.getIsBindingReturned()) {
 					// find or add
 					try {
-						pObj = this.findProp(node.getSparqlID(), prop.getDomainURI());
+						pObj = this.findProp(node.getSparqlID(), prop.getUriRelationship());
 					} catch (Exception e) {
-						pObj = this.addProp(node.getSparqlID(), prop.getDomainURI());
+						pObj = this.addProp(node.getSparqlID(), prop.getUriRelationship());
 					}
 					
 					// if mapping is empty
@@ -722,15 +722,15 @@ public class ImportSpec {
 					if (mapping.size() == 0) {
 						// add a column and simple mapping
 						String colName = ImportSpec.sparqlIDToColname(prop.getBindingOrSparqlID());
-						this.addMapping(node.getSparqlID(), prop.getDomainURI(), this.buildMappingWithCol(colName));
+						this.addMapping(node.getSparqlID(), prop.getUriRelationship(), this.buildMappingWithCol(colName));
 					}
 				} else {
 					// remove if no longer returned
 					try {
-						pObj = this.findProp(node.getSparqlID(), prop.getDomainURI());
+						pObj = this.findProp(node.getSparqlID(), prop.getUriRelationship());
 						JSONArray mapping = (JSONArray) pObj.get(JKEY_IS_MAPPING);
 						if (mapping.size() == 0)
-							this.deleteProperty(node.getSparqlID(), prop.getDomainURI());
+							this.deleteProperty(node.getSparqlID(), prop.getUriRelationship());
 					} catch (Exception e) {
 						// ignore if findProp failed
 					}
@@ -772,7 +772,7 @@ public class ImportSpec {
 			for (PropertyItem prop : node.getPropertyItems()) {
 				String name = prop.getBindingOrSparqlID();
 				if (p.matcher(name).find()) {
-					JSONObject pObj = this.findProp(nodeID, prop.getDomainURI());
+					JSONObject pObj = this.findProp(nodeID, prop.getUriRelationship());
 					JSONArray mArr = (JSONArray) pObj.get(JKEY_IS_MAPPING);
 					
 					// if the property is mapped, add lookup

@@ -665,14 +665,14 @@ NodeItem.prototype = {
 // rangeU - full uri may be http://owl/whatever#int  or a local datatype http://myOntology#MyDataType
 // domainURI - the property URI
 // jObj - if not null then use json instead of any of these other params
-var PropertyItem = function(valTypes, rangeURI, domainURI, jObj) {
+var PropertyItem = function(valTypes, rangeURI, uriRelationship, jObj) {
 
 	if (jObj) {
 		this.fromJson(jObj);
 	} else {
 		this.valueTypes = valTypes;
 		this.rangeURI = rangeURI;
-		this.domainURI = domainURI;
+		this.uriRelationship = uriRelationship;
 		this.Constraints = ''; // the constraints are represented as a str and
 								// will be used in the
 		// in the sparql generation.
@@ -701,7 +701,7 @@ PropertyItem.prototype = {
 		var ret = {
 			valueTypes : this.valueTypes,
 			rangeURI : this.rangeURI,
-			domainURI : this.domainURI,
+			UriRelationship : this.uriRelationship,
 			Constraints : this.Constraints,
 			SparqlID : this.SparqlID,
 			isReturned : this.isReturned,
@@ -725,7 +725,7 @@ PropertyItem.prototype = {
 		// presumes SparqlID's in jObj are already reconciled with the nodeGroup
 		this.valueTypes = jObj.valueTypes || [jObj.ValueType];   // support version<17 "ValueType"
 		this.rangeURI = jObj.rangeURI || jObj.relationship;      // support version<17 "relationship"
-		this.domainURI = jObj.domainURI || jObj.UriRelationship; // support version<17 "UriRelationship"
+		this.uriRelationship = jObj.domainURI || jObj.UriRelationship; // support version<17 "UriRelationship"
 		this.Constraints = jObj.Constraints;
 		this.SparqlID = jObj.SparqlID;
 		this.isReturned = jObj.isReturned;
@@ -911,19 +911,23 @@ PropertyItem.prototype = {
 
 	getKeyName : function() {
 		// return the name of the property
-		return new OntologyName(this.domainURI).getLocalName();;
+		return new OntologyName(this.uriRelationship).getLocalName();;
 	},
     getRangeURI : function() {
         return this.rangeURI;
     },
 
-    // item function
+    // item function:  three different names?  sorry.
     getURI : function() {
-        return this.domainURI;
+        return this.uriRelationship;
     },
-	getDomainURI : function() {
-		return this.domainURI;
+	getUriRelationship : function() {
+		return this.uriRelationship;
 	},
+	// named for "item"
+    getItemUri: function() {
+        return this.uriRelationship;
+    },
 	getValueTypes : function() {
 		// return the type, as determined by the ontology
 		return this.valueTypes;
@@ -968,11 +972,6 @@ PropertyItem.prototype = {
 	getItemType : function () {
 		return "PropertyItem";
 	},
-
-    // named for "item"
-    getItemUri: function() {
-        return this.domainURI;
-    },
 
 	setIsMarkedForDeletion : function(markToSet) {
 		this.isMarkedForDeletion = markToSet;
@@ -1797,7 +1796,8 @@ var SemanticNodeGroup = function() {
                                     // where parent is one of the items in tmpUnionMemberHash[key]
 };
 
-SemanticNodeGroup.JSON_VERSION = 18;
+SemanticNodeGroup.JSON_VERSION = 19;
+// version 19 - fixed buggy wrong name propertyItem.domainURI back to old propertyItem.UriRelationship
 // version 18 - complex ranges
 // version 17 - propertyItem domainURI, rangeURI, valueTypes (plural)
 // version 16 - columnOrder

@@ -66,7 +66,7 @@ public class ValidationAssistant {
 		// get URI for each property and node item
 		ArrayList<String> snodeProps = new ArrayList<String>();
 		for (PropertyItem pItem : snode.getPropertyItems()) {
-			snodeProps.add(pItem.getDomainURI());
+			snodeProps.add(pItem.getUriRelationship());
 		}
 		for (NodeItem nItem : snode.getNodeItemList()) {
 			snodeProps.add(nItem.getUriConnectBy());

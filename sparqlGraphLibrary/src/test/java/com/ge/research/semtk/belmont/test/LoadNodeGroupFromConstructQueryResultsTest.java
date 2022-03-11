@@ -81,7 +81,7 @@ public class LoadNodeGroupFromConstructQueryResultsTest {
 		assertEquals(TShirtPrintingNode.getNodeItemList().size(),0);
 		
 		pi = TShirtPrintingNode.getPropertyByKeyname("mouseLot");
-		assertEquals(pi.getDomainURI(),"http://research.ge.com/soft/testconfig#mouseLot");
+		assertEquals(pi.getUriRelationship(),"http://research.ge.com/soft/testconfig#mouseLot");
 		assertEquals(pi.getInstanceValues().get(0),"50416-1");
 		assertTrue(pi.getValueTypes().contains(XSDSupportedType.STRING));
 		assertTrue(pi.getIsReturned());

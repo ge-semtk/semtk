@@ -60,7 +60,7 @@ public class NodeGroupItemStr {
 	public NodeGroupItemStr(Node snode, PropertyItem item) {
 		this.snode = snode;
 		this.pItem = item;
-		this.str = snode.getSparqlID() + "|" + item.getDomainURI();
+		this.str = snode.getSparqlID() + "|" + item.getUriRelationship();
 	}
 	public NodeGroupItemStr(Node snode) {
 		this.snode = snode;

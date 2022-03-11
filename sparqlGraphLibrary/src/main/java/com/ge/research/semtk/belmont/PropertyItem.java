@@ -43,7 +43,7 @@ public class PropertyItem extends Returnable {
 	private HashSet<XSDSupportedType> valueTypes = null;   // if range is a OntologyDatatype, could be multiple
 	                                                       // only the XSDSupportedTypes are in the PropertyItem
 	private String rangeURI = null;          
-	private String domainURI = null;       
+	private String uriRelationship = null;       
 	
 	private int optMinus = OPT_MINUS_NONE;
 	private ArrayList<String> instanceValues = new ArrayList<String>();
@@ -54,13 +54,13 @@ public class PropertyItem extends Returnable {
 		this.valueTypes = new HashSet<XSDSupportedType>();
 		this.valueTypes.add(valueType);
 		this.rangeURI = rangeUri;   
-		this.domainURI = uriRelationship;
+		this.uriRelationship = uriRelationship;
 	}
 	
 	public PropertyItem(HashSet<XSDSupportedType> valueTypes, String rangeUri, String uriRelationship){
 		this.valueTypes = valueTypes;
 		this.rangeURI = rangeUri;   
-		this.domainURI = uriRelationship;
+		this.uriRelationship = uriRelationship;
 	}
 		
 	
@@ -98,11 +98,15 @@ public class PropertyItem extends Returnable {
 		}
 		
 		if (jObj.containsKey("relationship")) {
-			this.rangeURI = jObj.get("relationship").toString();  // note that label "relationship" in the JSON is misleading
-			this.domainURI = jObj.get("UriRelationship").toString();
+			this.rangeURI = jObj.get("relationship").toString();  // deprecated: note that label "relationship" in the JSON is misleading
 		} else {
-			this.rangeURI = jObj.get("rangeURI").toString();  // note that label "relationship" in the JSON is misleading
-			this.domainURI = jObj.get("domainURI").toString();
+			this.rangeURI = jObj.get("rangeURI").toString();  // correct new name
+		}
+		
+		if (jObj.containsKey("UriRelationship")) {
+			this.uriRelationship = jObj.get("UriRelationship").toString();  // the usual name
+		} else {
+			this.uriRelationship = jObj.get("domainURI").toString(); // this bug of a bad name was used for a brief time
 		}
 				
 		this.optMinus = OPT_MINUS_NONE;
@@ -143,7 +147,7 @@ public class PropertyItem extends Returnable {
 		}
 		ret.put("valueTypes", valTypes);
 		ret.put("rangeURI", this.rangeURI);
-		ret.put("domainURI", this.domainURI);
+		ret.put("UriRelationship", this.uriRelationship);
 		ret.put("optMinus", this.optMinus);
 		ret.put("isMarkedForDeletion", this.isMarkedForDeletion);
 		ret.put("instanceValues", iVals);
@@ -172,15 +176,15 @@ public class PropertyItem extends Returnable {
 	}
 	
 	public String getKeyName() {
-		return new OntologyName(domainURI).getLocalName();
+		return new OntologyName(uriRelationship).getLocalName();
 	}
 	
-	public String getDomainURI() {
-		return this.domainURI;
+	public String getUriRelationship() {
+		return this.uriRelationship;
 	}
 	
-	public void setDomainURI(String uri) {
-		this.domainURI = uri;
+	public void setUriRelationship(String uri) {
+		this.uriRelationship = uri;
 	}
 
 

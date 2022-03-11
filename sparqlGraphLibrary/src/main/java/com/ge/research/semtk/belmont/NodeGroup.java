@@ -82,7 +82,8 @@ public class NodeGroup {
 	// version 16: columnOrder
 	// version 17: property item valueTypes, domainURI, rangeURI
 	// version 18: complex ranges
-	private static final int VERSION = 18;
+	// version 19 - fixed buggy wrong name propertyItem.domainURI back to old propertyItem.UriRelationship
+	private static final int VERSION = 19;
 	
 	// actually used to keep track of our nodes and the nomenclature in use. 
 	private ArrayList<Node> nodes = new ArrayList<Node>();
@@ -809,9 +810,9 @@ public class NodeGroup {
 			}
 			// add the URIs for the properties as well:
 			for(PropertyItem pi : n.getPropertyItems()){
-				this.addToPrefixHash(pi.getDomainURI());
+				this.addToPrefixHash(pi.getUriRelationship());
 				if (this.oInfo != null) {
-					for (String subProp : this.oInfo.inferSubPropertyNames(pi.getDomainURI(), n.getFullUriName())) {
+					for (String subProp : this.oInfo.inferSubPropertyNames(pi.getUriRelationship(), n.getFullUriName())) {
 						this.addToPrefixHash(subProp);
 					}
 				}
@@ -2731,7 +2732,7 @@ public class NodeGroup {
 		}
 		
 		// get subPropNames or null for IDK
-		HashSet<String> subPropNames = (this.oInfo == null) ? null : this.oInfo.inferSubPropertyNames(prop.getDomainURI(), snode.getUri());
+		HashSet<String> subPropNames = (this.oInfo == null) ? null : this.oInfo.inferSubPropertyNames(prop.getUriRelationship(), snode.getUri());
 		
 		/**
 		// Virtuoso can't handle subPropertyOf:
@@ -2765,11 +2766,11 @@ public class NodeGroup {
 			// CONSTRUCT uses the binding, where others use the sparqlID 
 			String nodeId =  (clauseType == ClauseTypes.CONSTRUCT_LEADER) ? snode.getBindingOrSparqlID() : snode.getSparqlID();
 			
-			sparql.append(tab + nodeId + " " + this.applyPrefixing(prop.getDomainURI()) + " " + prop.getSparqlID() +  " .\n");
+			sparql.append(tab + nodeId + " " + this.applyPrefixing(prop.getUriRelationship()) + " " + prop.getSparqlID() +  " .\n");
 		
 		} else {
 			// prop with sub-props
-			String predVarName = SparqlToXUtils.safeSparqlVar(snode.getSparqlID() + "_" + prop.getDomainURI());
+			String predVarName = SparqlToXUtils.safeSparqlVar(snode.getSparqlID() + "_" + prop.getUriRelationship());
 
 			if (clauseType == ClauseTypes.CONSTRUCT_LEADER) {
 				// varname no values clause
@@ -2778,16 +2779,16 @@ public class NodeGroup {
 			} else if (	clauseType == ClauseTypes.CONSTRUCT_WHERE) {
 				// varname plus values clause
 				sparql.append(tab + snode.getBindingOrSparqlID() + " " + predVarName + " " + prop.getSparqlID() + " .\n");
-				sparql.append(tab + this.genSubPropertiesContraint(predVarName, prop.getDomainURI(), subPropNames) + " .\n");
+				sparql.append(tab + this.genSubPropertiesContraint(predVarName, prop.getUriRelationship(), subPropNames) + " .\n");
 				
 			} else if (	clauseType == ClauseTypes.DELETE_WHERE) {
 				// varname plus values clause
 				sparql.append(tab + snode.getSparqlID() + " " + predVarName + " " + prop.getSparqlID() + " .\n");
-				sparql.append(tab + this.genSubPropertiesContraint(predVarName, prop.getDomainURI(), subPropNames) + " .\n");
+				sparql.append(tab + this.genSubPropertiesContraint(predVarName, prop.getUriRelationship(), subPropNames) + " .\n");
 				
 			} else {
 				// "normal": parenthesized predicate
-				sparql.append(tab + snode.getSparqlID() + " " + this.genSubPropertyListParenthesized(prop.getDomainURI(), subPropNames)+  " " + prop.getSparqlID() +  " .\n");
+				sparql.append(tab + snode.getSparqlID() + " " + this.genSubPropertyListParenthesized(prop.getUriRelationship(), subPropNames)+  " " + prop.getSparqlID() +  " .\n");
 			}
 			
 		}
@@ -4415,13 +4416,13 @@ public class NodeGroup {
 			// check the properties.
 			for( PropertyItem pi : n.getPropertyItems() ){
 				if(pi.getIsMarkedForDeletion()){
-					HashSet<String> subPropNames = (this.oInfo == null) ? new HashSet<String>() : this.oInfo.inferSubPropertyNames(pi.getDomainURI(), n.getUri());
+					HashSet<String> subPropNames = (this.oInfo == null) ? new HashSet<String>() : this.oInfo.inferSubPropertyNames(pi.getUriRelationship(), n.getUri());
 					if (subPropNames.size() == 0) {
 						// no sub-props: use prefixed property uri
-						retval.append("   " + n.sparqlID + " " +  this.applyPrefixing( pi.getDomainURI() ) + " " +  pi.sparqlID + " . \n");
+						retval.append("   " + n.sparqlID + " " +  this.applyPrefixing( pi.getUriRelationship() ) + " " +  pi.sparqlID + " . \n");
 					} else {
 						// sub-props: use variable
-						String varName = SparqlToXUtils.safeSparqlVar(n.getSparqlID() + "_" + pi.getDomainURI());
+						String varName = SparqlToXUtils.safeSparqlVar(n.getSparqlID() + "_" + pi.getUriRelationship());
 						retval.append("   " + n.sparqlID + " " + varName + " " + pi.sparqlID + " .\n");
 					}
 				}
@@ -4679,7 +4680,7 @@ public class NodeGroup {
 				// insert each property we know of. 
 				for(PropertyItem prop : node.getPropertyItems()){
 					for(String inst : prop.getInstanceValues()){
-						retval += "\t" + subject + " " + this.applyPrefixing(prop.getDomainURI()) + " " + prop.buildRDF11ValueString(inst, "XMLSchema") + " .\n";  
+						retval += "\t" + subject + " " + this.applyPrefixing(prop.getUriRelationship()) + " " + prop.buildRDF11ValueString(inst, "XMLSchema") + " .\n";  
 					}
 				}
 				
@@ -4751,7 +4752,7 @@ public class NodeGroup {
 					for (PropertyItem pi : constrainedProps) {
 				
 						sparql.append(
-								" " + sparqlId + " " + this.applyPrefixing(pi.getDomainURI()) +
+								" " + sparqlId + " " + this.applyPrefixing(pi.getUriRelationship()) +
 								" " + pi.getSparqlID() + " . " + pi.getConstraints() + " .\n");
 					}
 				}

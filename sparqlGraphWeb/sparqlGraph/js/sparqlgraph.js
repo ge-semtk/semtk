@@ -487,7 +487,7 @@
                 // when this is finally called, propItem and gNodeGroup have changed
                 // gNodeGroup - fine, it's a global
                 // propItem - need to find it in the current gNodeGroup
-                var p = gNodeGroup.getNodeBySparqlID(snodeID).getPropertyByURIRelation(propItem.getDomainURI());
+                var p = gNodeGroup.getNodeBySparqlID(snodeID).getPropertyByURIRelation(propItem.getURI());
 
                 var dialog= new ModalItemDialog(p,
                                                 gNodeGroup,
@@ -518,7 +518,7 @@
                         var changePropItemURI = function() {
                             // same javascript black magic
                             // propItem - need to find it in the current gNodeGroup
-                            var p = gNodeGroup.getNodeBySparqlID(snodeID).getPropertyByURIRelation(propItem.getDomainURI());
+                            var p = gNodeGroup.getNodeBySparqlID(snodeID).getPropertyByURIRelation(propItem.getURI());
                             changeItemURI(p, undefined, oRangeStr, "range", hasConstraints ? raisePropItemDialog : undefined);
                         };
 

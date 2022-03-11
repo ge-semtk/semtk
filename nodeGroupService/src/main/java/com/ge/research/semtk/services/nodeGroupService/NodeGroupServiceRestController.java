@@ -1134,10 +1134,10 @@ public class NodeGroupServiceRestController {
 					PropertyItem prop = itemStr.getpItem();
 					if (deleteFlag) {
 						nodegroup.deleteProperty(node, prop);
-						importSpec.deleteProperty(node.getSparqlID(), prop.getDomainURI());
+						importSpec.deleteProperty(node.getSparqlID(), prop.getUriRelationship());
 					} else {
 						PropertyItem newProp = nodegroup.changeItemDomain(node, prop, newURI);
-						importSpec.changePropertyDomain(node.getSparqlID(), prop.getDomainURI(), newURI);
+						importSpec.changePropertyDomain(node.getSparqlID(), prop.getUriRelationship(), newURI);
 						
 						// If newURI is a valid property in ontology, make sure range is correct too
 						OntologyProperty oProp = oInfo.getProperty(newURI);

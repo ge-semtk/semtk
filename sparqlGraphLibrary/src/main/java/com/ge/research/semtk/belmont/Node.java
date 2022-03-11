@@ -234,7 +234,7 @@ public class Node extends Returnable {
 		// build hash of suggested properties for this class
 		HashMap<String, PropertyItem> inputPItemHash = new HashMap<>();
 		for (PropertyItem p : this.props) {
-			inputPItemHash.put(p.getDomainURI(), p);
+			inputPItemHash.put(p.getUriRelationship(), p);
 		}
 		
 		// build hash of suggested nodes for this class
@@ -510,16 +510,16 @@ public class Node extends Returnable {
 		// check each property's URI and range
 		for (PropertyItem myPropItem : this.props) {
 			// domain
-			if (! oPropHash.containsKey(myPropItem.getDomainURI())) {
+			if (! oPropHash.containsKey(myPropItem.getUriRelationship())) {
 				throw new ValidationException(String.format("Node %s contains property %s which does not exist in the model",
-									this.getSparqlID(), myPropItem.getDomainURI()));
+									this.getSparqlID(), myPropItem.getUriRelationship()));
 			}
 			
 			// range
-			OntologyRange oRange = oPropHash.get(myPropItem.getDomainURI()).getRange(oClass, oInfo);
+			OntologyRange oRange = oPropHash.get(myPropItem.getUriRelationship()).getRange(oClass, oInfo);
 			if (!oRange.equalsUri(myPropItem.getRangeURI())) {
 				throw new ValidationException(String.format("Node %s, property %s has type %s which doesn't match %s in model", 
-									this.getSparqlID(), myPropItem.getDomainURI(), myPropItem.getRangeURI(), oRange.getDisplayString(true)));
+									this.getSparqlID(), myPropItem.getUriRelationship(), myPropItem.getRangeURI(), oRange.getDisplayString(true)));
 			}
 		}
 		
@@ -948,7 +948,7 @@ public class Node extends Returnable {
 	
 	public int getPropertyIndexByURIRelation(String uriRel) {
 		for (int i = 0; i < this.props.size(); i++) {
-			if (this.props.get(i).getDomainURI().equals(uriRel)) {
+			if (this.props.get(i).getUriRelationship().equals(uriRel)) {
 				return i;
 			}
 		}
@@ -957,7 +957,7 @@ public class Node extends Returnable {
 
 	public PropertyItem getPropertyByURIRelation(String uriRel) {
 		for (int i = 0; i < this.props.size(); i++) {
-			if (this.props.get(i).getDomainURI().equals(uriRel)) {
+			if (this.props.get(i).getUriRelationship().equals(uriRel)) {
 				return this.props.get(i);
 			}
 		}
