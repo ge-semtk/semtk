@@ -1152,6 +1152,54 @@ public class DataLoaderTest_IT {
 	}
 	
 	@Test
+	public void testDurabatteryLookupByEnum() throws Exception {
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
+	
+		// Try URI lookup
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "loadTestDuraBatteryLookupByEnum.json");
+		Dataset ds = new CSVDataset(
+							"cellId,Color\n" 
+							+ "red_cell1,red\n" 
+							+ "red_cell2,http://kdl.ge.com/durabattery#red", 
+							true);
+		
+		// import
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		assertEquals(2, dl.getTotalRecordsProcessed());
+
+		Table results = TestGraph.execTableSelect(sgJson);
+		// hoping to add both cellId's to 1 cell because it is looked up by some version of "red"
+		assertEquals("Multiple instances created with URILookup using enum red vs http://url#red", results.getColumnUniqueValues("Cell").length, 1);
+	}
+	
+	@Test
+	public void testDurabatteryLookupByUri() throws Exception {
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
+	
+		// Try URI lookup
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "loadTestDuraBatteryLookupByUri.json");
+		Dataset ds = new CSVDataset(
+							"batteryId,Cell\n"
+							+ "created1,myCell\n"
+							+ "created2,http://semtk.research.ge.com/generated#myCell", 
+							true);
+		
+		// import
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		assertEquals(2, dl.getTotalRecordsProcessed());
+
+		Table results = TestGraph.execTableSelect(sgJson);
+		// hoping to add both cellId's to 1 cell because it is looked up by some version of "myCell"
+		assertEquals("Multiple instances created with URILookup using uri myCell vs http://semtk.research.ge.com/generated#myCell ", results.getColumnUniqueValues("DuraBattery").length, 1);
+	}
+	
+	@Test
 	public void testLoadLookupFailTwoFound() throws Exception {
 		
 		// Lookup fails because two matching URI's are found
@@ -1427,7 +1475,7 @@ public class DataLoaderTest_IT {
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
 			LocalLogger.logToStdErr(err.toCSVString());
-			fail();
+			fail(err.toCSVString());
 		}
 		
 		// the real test : look up battery by two colors and add assembly date.  But one color is blank.
@@ -1439,7 +1487,7 @@ public class DataLoaderTest_IT {
 		// make sure there's an error on URI lookup
 		if (err.getNumRows() != 1) {
 			LocalLogger.logToStdErr(err.toCSVString());
-			fail();
+			fail("Missing URILookup error using blank enum");
 		}
 
 		assertTrue(err.toCSVString().contains("ookup"));
