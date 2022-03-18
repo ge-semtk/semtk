@@ -73,6 +73,13 @@ public class SparqlToXLibUtil {
 		return sparql.toString();
 	}
 	
+	/**
+	 * 
+	 * @param conn - model and data   (model often contains enumerated instances)
+	 * @param oInfo
+	 * @return
+	 * @throws Exception
+	 */
 	public static String generatePredicateStatsQuery(SparqlConnection conn, OntologyInfo oInfo) throws Exception {
 		
 		String sparql = String.format(
@@ -81,6 +88,10 @@ public class SparqlToXLibUtil {
 				+ "WHERE {\n"
 				+ "	   ?s a ?s_class.\n"
 				+ "	   ?s ?p ?o .\n"
+				// filter these out of the model connection
+				+ "	   FILTER (  !regex(str(?s_class), 'www.w3.org')) . "
+				+ "	   FILTER (  !regex(str(?p), 'rdf-schema')) . "
+				
 				+ "    optional {\n"
 				+ "	      ?o a ?o_class.\n"
 				+ "    }\n"

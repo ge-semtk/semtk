@@ -51,9 +51,8 @@ public class PredicateStats {
 	 * @throws Exception
 	 */
 	public PredicateStats(SparqlConnection conn, OntologyInfo oInfo, JobTracker tracker, String jobId, int startPercent, int endPercent) throws Exception {
-		SparqlConnection dataConn = SparqlConnection.deepCopy(conn);
-		dataConn.clearModelInterfaces();
-		String sparql = SparqlToXLibUtil.generatePredicateStatsQuery(dataConn, oInfo);
+		
+		String sparql = SparqlToXLibUtil.generatePredicateStatsQuery(conn, oInfo);
 		
 		tracker.setJobPercentComplete(jobId, startPercent, "querying predicate statistics");
 		Table statsTab = conn.getDefaultQueryInterface().executeQueryToTable(sparql);
