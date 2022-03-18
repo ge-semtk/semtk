@@ -2,6 +2,9 @@ package com.ge.research.semtk.ontologyTools;
 
 import java.util.ArrayList;
 
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+
 public class ClassInstance {
 	public String classUri;
 	public String instanceUri;
@@ -30,5 +33,14 @@ public class ClassInstance {
 			ret.add(i.classUri);
 		}
 		return ret;
+	}
+
+	public static ClassInstance fromJSON(JSONObject o) {
+		if (o.containsKey("class")) {
+			// backwards compatibility
+			return new ClassInstance((String) o.get("class"), (String) o.get("instance"));
+		} else {
+			return new ClassInstance((String) o.get("classUri"), (String) o.get("instanceUri"));
+		}
 	}
 }
