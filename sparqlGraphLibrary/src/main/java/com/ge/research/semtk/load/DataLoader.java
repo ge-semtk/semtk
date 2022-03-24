@@ -361,24 +361,21 @@ public class DataLoader implements Runnable {
 			
 			if(nextRecords == null || nextRecords.size() == 0 ){ break; }
 			
-			// spin up a thread to do the work.
-			if(wrkrs.size() < numThreads){
-				// spin up the thread and do the work. 
-				SparqlEndpointInterface ingestSei = (!skipIngest && this.cacheSei != null) ? this.cacheSei : this.endpoint;
-				IngestionWorkerThread worker = new IngestionWorkerThread(ingestSei, this.batchHandler, nextRecords, startingRow, this.oInfo, skipCheck, skipIngest);
-				if (this.insertQueryIdealSizeOverride > 0) {
-					worker.setOptimalQueryChars(this.insertQueryIdealSizeOverride);
-				}
-				startingRow += nextRecords.size();
-				wrkrs.add(worker);
-				worker.start();
-				recordsProcessed += nextRecords.size();
+			// spin up the thread and do the work. 
+			SparqlEndpointInterface ingestSei = (!skipIngest && this.cacheSei != null) ? this.cacheSei : this.endpoint;
+			IngestionWorkerThread worker = new IngestionWorkerThread(ingestSei, this.batchHandler, nextRecords, startingRow, this.oInfo, skipCheck, skipIngest);
+			if (this.insertQueryIdealSizeOverride > 0) {
+				worker.setOptimalQueryChars(this.insertQueryIdealSizeOverride);
 			}
+			startingRow += nextRecords.size();
+			wrkrs.add(worker);
+			worker.start();
+			recordsProcessed += nextRecords.size();
 			
 			// thread pool is full.  Wait for all of them to complete.
 			// and then we can start over.
 			// Over simplistic logic could be improved for performance.
-			if(wrkrs.size() == numThreads){
+			if(wrkrs.size() >= numThreads){
 				threadsUsed = numThreads;
 				int retries = 0;
 				for(int i = 0; i < wrkrs.size(); i++){

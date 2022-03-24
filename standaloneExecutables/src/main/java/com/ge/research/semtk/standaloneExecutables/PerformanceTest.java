@@ -331,7 +331,8 @@ public class PerformanceTest {
 				"{0} load {1,number,#} totaling, {2,number,#}",
 				taskName, passSize, currentPass * passSize
 			));
-			dl0.importData(NO_PRECHECK);
+			importAndCheck(dl0, NO_PRECHECK);
+			
 			endTask();
 
 			// get new total triples twice
@@ -407,8 +408,10 @@ public class PerformanceTest {
 				Dataset ds1 = new CSVDataset(content1.toString(), true);
 				DataLoader dl1 = new DataLoader(sgJson1, ds1, "dba", "dba");
 				startTask("addBatteryDescriptions load simple, rows, " + rows_per_pass + ",total rows," + total_rows);
-				dl1.importData(PRECHECK);
+				importAndCheck(dl1, PRECHECK);
 				lastSec[0] = endTask();
+			} else {
+				System.out.println("Main circuit breaker fired.  Exit.");
 			}
 
 			// add descriptions
@@ -417,7 +420,7 @@ public class PerformanceTest {
 				DataLoader dl2 = new DataLoader(sgJson2, ds2, "dba", "dba");
 				dl2.setLogPerformance(LOG_QUERY_PERFORMANCE);
 				startTask("addBatteryDescriptions load lookup class, rows," + rows_per_pass/2 + ",total rows," + total_rows);
-				dl2.importData(PRECHECK);
+				importAndCheck(dl2, PRECHECK);
 				lastSec[1] = endTask();
 			}
 
@@ -427,9 +430,11 @@ public class PerformanceTest {
 				DataLoader dl3 = new DataLoader(sgJson3, ds3, "dba", "dba");
 				dl3.setLogPerformance(LOG_QUERY_PERFORMANCE);
 				startTask("addBatteryDescriptions load lookup superclass, rows," + rows_per_pass /2 + ",total rows," + total_rows);
-				dl3.importData(PRECHECK);
+				importAndCheck(dl3, PRECHECK);
 				lastSec[2] = endTask();
 			}
+			
+			boolean loadedDescriptions = (lastSec[1] < circuit_breaker_sec && lastSec[2] < circuit_breaker_sec);
 
 			// get new total triples
 			triples = countTriples("addBatteryDescriptions", total_rows);
@@ -453,7 +458,7 @@ public class PerformanceTest {
 				startTask("addBatteryDescription select filter in 10, triples," + triples + ",total rows," + total_rows);
 				sparql = SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildFilterInConstraint("?o", idList, XSDSupportedType.asSet(XSDSupportedType.STRING), sei));
 				t = sei.executeQueryToTable(sparql);
-				myAssert(String.format("FILTER IN did not return %d rows", SIZE), t.getNumRows() == SIZE);
+				myAssert(String.format("FILTER IN did not return %d rows:\n%s", SIZE, t.toCSVString()), t.getNumRows() == SIZE);
 				lastSec[3] = endTask();
 				if (pass==0) {
 					System.out.println("Sample FILTER IN" + sparql);
@@ -465,7 +470,7 @@ public class PerformanceTest {
 				startTask("addBatteryDescription select filter regex 10, triples," + triples + ",total rows," + total_rows);
 				sparql = SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildRegexConstraint("?o", regex.toString(), XSDSupportedType.asSet(XSDSupportedType.STRING)));
 				t = sei.executeQueryToTable(sparql);
-				myAssert(String.format("FILTER REGEX did not return %d rows", SIZE), t.getNumRows() == SIZE);
+				myAssert(String.format("FILTER REGEX did not return %d rows:\n%s", SIZE, t.toCSVString()), t.getNumRows() == SIZE);
 				lastSec[4] = endTask();
 				if (pass==0) {
 					System.out.println("Sample FILTER REGEX" + sparql);
@@ -477,7 +482,7 @@ public class PerformanceTest {
 				startTask("addBatteryDescription select values 10, triples," + triples + ",total rows," + total_rows);
 				sparql = SparqlToXUtils.generateSelectSPOSparql(sei, ValueConstraint.buildValuesConstraint("?o", idList, XSDSupportedType.asSet(XSDSupportedType.STRING), sei));
 				t =sei.executeQueryToTable(sparql);
-				myAssert(String.format("VALUES clause did not return %d rows", SIZE), t.getNumRows() == SIZE);
+				myAssert(String.format("VALUES clause did not return %d rows:\n%s", SIZE, t.toCSVString()), t.getNumRows() == SIZE);
 				lastSec[5] = endTask();
 				if (pass==0) {
 					System.out.println("Sample VALUES " + sparql);
@@ -485,7 +490,7 @@ public class PerformanceTest {
 			}
 
 			// Select from subclass
-			if (lastSec[6] < circuit_breaker_sec) {
+			if (loadedDescriptions && lastSec[6] < circuit_breaker_sec) {
 				startTask("addBatteryDescription select subclassOf* 10, triples," + triples + ",total rows," + total_rows);
 				NodeGroup ng = sgJson3.getNodeGroup();
 				PropertyItem item = ng.getPropertyItemBySparqlID("?batteryId");
@@ -499,17 +504,24 @@ public class PerformanceTest {
 				
 				sparql = ng.generateSparqlSelect();   // since no oInfo, no optimizing of subclass*.  always subclass*
 				t = sei.executeQueryToTable(sparql);
-				myAssert(String.format("SUBCLASS VALUES did not return %d rows", SIZE), t.getNumRows() == SIZE);
+				myAssert(String.format("SUBCLASS VALUES did not return %d rows:\n%s\nSPARQL:\n%s", SIZE, t.toCSVString(), sparql), t.getNumRows() == SIZE);
 				lastSec[6] = endTask();
 				if (pass==0) {
 					System.out.println("Sample SUBCLASS VALUES " + sparql);
 				}
+				
 			}
 
 		}
 
 	}
-
+	
+	private static void importAndCheck(DataLoader dl, boolean precheck) throws Exception {
+		Table err = dl.importDataGetErrorTable(precheck);
+		if (err != null) {
+			throw new Exception(err.toCSVString());
+		}
+	}
 	private static void myAssert(String failMessage, boolean b) throws Exception {
 		if (!b) {
 			throw new Exception(failMessage);
@@ -549,7 +561,7 @@ public class PerformanceTest {
 		DataLoader loader = new DataLoader(sgJsonItemLoad, ds, "dba", "dba");
 		loader.overrideMaxThreads(MAX_THREADS);
 		startTask("linkItems load items: " + numItems);
-		loader.importData(true);
+		importAndCheck(loader, true);
 		endTask();
 
 
@@ -569,7 +581,7 @@ public class PerformanceTest {
 		loader = new DataLoader(sgJsonItemLoadLinks, ds, "dba", "dba");
 		loader.overrideMaxThreads(MAX_THREADS);
 		startTask("linkItems load links: " + linksBuilt);
-		loader.importData(true);
+		importAndCheck(loader, true);
 		endTask();
 
 	}
@@ -622,7 +634,7 @@ public class PerformanceTest {
 				dl1.overrideMaxThreads(threads);
 				dl1.overrideInsertQueryIdealSize(querySize);
 				startTask("addBatteryDescriptionsVaryingThreadsAndSize load simple " + pass_size + " total," + threads + "," + querySize + "," + (pass + 1) * pass_size);
-				dl1.importData(NO_PRECHECK);
+				importAndCheck(dl1, NO_PRECHECK);
 				endTask();
 
 				// add descriptions
@@ -631,7 +643,7 @@ public class PerformanceTest {
 				dl1.overrideMaxThreads(threads);
 				dl1.overrideInsertQueryIdealSize(querySize);
 				startTask("addBatteryDescriptionsVaryingThreadsAndSize load lookup " + pass_size + "total," + threads + "," + querySize + "," + (pass + 1) * pass_size);
-				dl2.importData(NO_PRECHECK);
+				importAndCheck(dl2, NO_PRECHECK);
 				endTask();
 
 			}

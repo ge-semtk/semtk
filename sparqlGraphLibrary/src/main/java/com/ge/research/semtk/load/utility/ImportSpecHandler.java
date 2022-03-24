@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -52,6 +54,7 @@ import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.sparqlX.XSDSupportedType;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 /*
@@ -90,6 +93,18 @@ public class ImportSpecHandler {
 	SparqlEndpointInterface nonThreadSafeEndpoint = null;  // Endpoint for looking up URI's.  It is not thread safe, so it must be copied before being used.
 	
 	DataValidator dataValidator = null;
+	HashMap<String, AtomicBoolean> prefetchBlocked = new HashMap<String, AtomicBoolean>();
+	HashMap<String, Integer> prefetchLimit = new HashMap<String, Integer>();
+	HashMap<String, Integer> prefetchOffset = new HashMap<String, Integer>();
+	
+	// PRE-FETCH URI lookup ; tuning paramters
+	private final int PREFETCH_START_LIMIT = 1000;    // LIMIT of first pre-fetch query.   Will subsequently double in size each time.
+	private final int PREFETCH_MAX_LIMIT   = 8000;    // maximum LIMIT for pre-fetch query.
+	private final int PREFETCH_MAX_COUNT = 500000;    // stop pre-fetching after this many (worried about memory).
+	                                                  // setting to 0 will turn this off.
+	private final int PREFETCH_MAX_EXIST = 600000;    // Since pre-fetch queries need sort by each field, performance could be awful
+	                                                  // So run a count first, and if it is higher than this, abandon all hope of prefetching
+	                                                  // Divide this number by the number of mappings.  This is the value for simple lookup by 1 field.
 	
 	public ImportSpecHandler(JSONObject importSpecJson, JSONObject ngJson, SparqlConnection lookupConn, OntologyInfo oInfo) throws Exception {
 		this.importspec = new ImportSpec(importSpecJson); 
@@ -419,6 +434,9 @@ public class ImportSpecHandler {
 			lookupNg.removeUnusedBindings();   // for fuseki.  Perhaps generic sparql gen solution would be better.
 			
 			this.lookupNodegroupsJson.put(importNodeId, lookupNg.toJson());
+			this.prefetchBlocked.put(importNodeId, new AtomicBoolean(false));
+			this.prefetchLimit.put(importNodeId, PREFETCH_START_LIMIT);
+			this.prefetchOffset.put(importNodeId, 0);
 			
 			// standardize sparqlids, then generate sparql, then hash it
 			// so we can tell if two lookup nodegroups are identical
@@ -754,24 +772,24 @@ public class ImportSpecHandler {
 		}
 		
 		// create a new nodegroup copy:  
-		ArrayList<String> builtStrings = new ArrayList<String>();
+		ArrayList<String> mappedStrings = new ArrayList<String>();
 		
-		// Build the mapping results into builtStrings
+		// Build the mapping results into mappedStrings
 		for (ImportMapping mapping : this.lookupMappings.get(nodeID)) {
-			String builtStr = mapping.buildString(record);
+			String mappedStr = mapping.buildString(record);
 			
 			// check for empties
-			if (builtStr == null || builtStr.isEmpty()) {
+			if (mappedStr == null || mappedStr.isEmpty()) {
 				return UriCache.EMPTY_LOOKUP;
 			}
 						
-			builtStrings.add(builtStr);
+			mappedStrings.add(mappedStr);
 		}
 		
-		this.expandBuiltStrings(nodeID, builtStrings);
+		this.expandMappedStrings(nodeID, mappedStrings);
 				
 		// return quickly if answer is already cached
-		String cachedUri = this.uriCache.getUri(this.lookupNodegroupMD5.get(nodeID), builtStrings);
+		String cachedUri = this.uriCache.getUri(this.lookupNodegroupMD5.get(nodeID), mappedStrings);
 		
 		// if already cached
 		if (cachedUri != null) {
@@ -807,21 +825,23 @@ public class ImportSpecHandler {
 				tab = new Table(new String[] {"empty_row"}, new String[] {"string"});
 				
 			} else {
+				long startTime = System.nanoTime();
 				lookupNodegroup = this.getLookupNodegroup(nodeID);
 				SparqlEndpointInterface safeEndpoint = this.nonThreadSafeEndpoint.copy();
-				String query = this.getLookupQuery(lookupNodegroup, nodeID, builtStrings);
+				String query = this.getLookupQuery(lookupNodegroup, nodeID, mappedStrings);
 				
 				TableResultSet res = (TableResultSet) safeEndpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 				res.throwExceptionIfUnsuccessful();
 				tab = res.getTable();
-				
+				long lookupTime = System.nanoTime() - startTime;
+				System.err.println("TIME INDIV " + lookupTime);
 			}
 			
 			// Check and return results
 			if (tab.getNumRows() > 1) {
 				// multiple found: error
 				String lookup = lookupNodegroup.getReturnedSparqlIDs().toString();
-				throw new Exception("URI lookup on " + lookup + " found multiple URI's matching: " + String.join(",", builtStrings));
+				throw new Exception("URI lookup on " + lookup + " found multiple URI's matching: " + String.join(",", mappedStrings));
 				
 			} else if (tab.getNumRows() == 0) {
 				// zero found
@@ -831,12 +851,12 @@ public class ImportSpecHandler {
 						lookupNodegroup = this.getLookupNodegroup(nodeID);
 					}
 					String lookup = lookupNodegroup.getReturnedSparqlIDs().toString();
-					throw new Exception("URI lookup on " + lookup + " failed on: " + String.join(",", builtStrings) );
+					throw new Exception("URI lookup on " + lookup + " failed on: " + String.join(",", mappedStrings) );
 					
 				} else {
 					// set URI to NOT_FOUND
 					ImportMapping m = this.getImportMapping(nodeID, ImportMapping.NO_PROPERTY);
-					this.uriCache.setUriNotFound(this.lookupNodegroupMD5.get(nodeID), builtStrings, (m == null) ? null : m.buildString(record));
+					this.uriCache.setUriNotFound(this.lookupNodegroupMD5.get(nodeID), mappedStrings, (m == null) ? null : m.buildString(record));
 					return UriCache.NOT_FOUND;
 				}
 				
@@ -844,15 +864,15 @@ public class ImportSpecHandler {
 				// 1 found:  cache and return
 				if (this.getLookupMode(nodeID).equals(ImportSpec.LOOKUP_MODE_ERR_IF_EXISTS)) {
 					String lookup = lookupNodegroup.getReturnedSparqlIDs().toString();
-					throw new Exception("URI lookup on 'error if exists' " + lookup + " already exists for: " + String.join(",", builtStrings) );
+					throw new Exception("URI lookup on 'error if exists' " + lookup + " already exists for: " + String.join(",", mappedStrings) );
 					
 				} else {
 					// found 1.  Normal success.
 					String uri = tab.getCell(0,0);
-					this.uriCache.putUri(this.lookupNodegroupMD5.get(nodeID), builtStrings, uri);
+					this.uriCache.putUri(this.lookupNodegroupMD5.get(nodeID), mappedStrings, uri);
 					
 					// if we found a URI in via lookup in triplestore, cache some more
-					this.preFetchUriCache(nodeID);
+					this.preFetchUriCache(lookupNodegroup, nodeID);
 					
 					return uri;
 				}
@@ -860,24 +880,24 @@ public class ImportSpecHandler {
 		}
 	}
 	
-	private String getLookupQuery(NodeGroup lookupNodegroup, String nodeID, ArrayList<String> builtStrings) throws Exception {
+	private String getLookupQuery(NodeGroup lookupNodegroup, String nodeID, ArrayList<String> mappedStrings) throws Exception {
 
 		// loop through lookupMappings and add constraints to the lookupNodegroup
 		int i = 0;
 		for (ImportMapping mapping : this.lookupMappings.get(nodeID)) {
 			// short-hand for: 
 			// String builtStr = mapping.buildString(record);
-			String builtString = builtStrings.get(i++);
+			String mappedStr = mappedStrings.get(i++);
 
 			Node node = lookupNodegroup.getNodeBySparqlID(mapping.getNodeSparqlID());
 
 			if (mapping.isNode()) {
 
-				node.setValueConstraint(this.buildBestConstraint(node, builtString));  
+				node.setValueConstraint(this.buildBestConstraint(node, mappedStr));  
 
 			} else {
 				PropertyItem prop = node.getPropertyByURIRelation(mapping.getPropURI());
-				prop.setValueConstraint(this.buildBestConstraint(prop, builtString));  
+				prop.setValueConstraint(this.buildBestConstraint(prop, mappedStr));  
 			}
 		}
 
@@ -885,34 +905,166 @@ public class ImportSpecHandler {
 	}
 	
 	/**
-	 * Expand builtstrings if incomplete enumeration or short-hand generated Uri
+	 * Expand mappedStrings if incomplete enumeration or short-hand generated Uri
 	 * @param nodeID
 	 * @param nodeUri
-	 * @param builtStrings
+	 * @param mappedStrings
 	 * @throws Exception
 	 */
-	private void expandBuiltStrings(String nodeID, ArrayList<String> builtStrings ) throws Exception {
+	private void expandMappedStrings(String nodeID, ArrayList<String> mappedStrings ) throws Exception {
 		
 		ArrayList<ImportMapping> mappings = this.lookupMappings.get(nodeID);
 		for (int i=0; i < mappings.size(); i++) {
 			if (mappings.get(i).isNode()) {
 				
-				String builtString = builtStrings.get(i);
+				String builtString = mappedStrings.get(i);
 				if (mappings.get(i).getIsEnum()) {
 					String mappedNodeUri = this.ng.getNodeBySparqlID(mappings.get(0).getNodeSparqlID()).getUri();
-					builtStrings.set(i, this.oInfo.getMatchingEnumeration(mappedNodeUri, builtString));
+					mappedStrings.set(i, this.oInfo.getMatchingEnumeration(mappedNodeUri, builtString));
 
 				} else if (! builtString.contains("#")) {
 					// add baseURI prefix if there is no prefix
 					String nodeUri = this.ng.getNodeBySparqlID(nodeID).getUri();
-					builtStrings.set(i, this.uriResolver.getInstanceUriWithPrefix(nodeUri, builtString));
+					mappedStrings.set(i, this.uriResolver.getInstanceUriWithPrefix(nodeUri, builtString));
 				} 
 			}
 		}
 
 	}
-	private void preFetchUriCache(String nodeID) throws Exception {
-		// no-op
+	
+	/**
+	 * Try prefetching some URI Lookups with an unconstrained lookup nodegroup
+	 * @param lookupNodegroup
+	 * @param nodeID
+	 */
+	private void preFetchUriCache(NodeGroup lookupNodegroup, String nodeID) {
+		
+		// return if in progress on another thread, done, or there's been an error
+		if (this.prefetchBlocked.get(nodeID).getAndSet(true)) {
+			return;
+		}
+		
+		// set offset and limit for this time
+		int limit = this.prefetchLimit.get(nodeID);
+		int offset = this.prefetchOffset.get(nodeID);
+		
+		if (limit + offset > PREFETCH_MAX_COUNT) {
+			// reached max count, stop prefetching
+			return;   // leaves this.prefetchBlocked.get(nodeID) as true
+		} else {
+			// set up limit and offset for next time
+			this.prefetchOffset.put(nodeID, offset + limit);
+			if (limit * 2 < PREFETCH_MAX_LIMIT) {
+				this.prefetchLimit.put(nodeID, limit * 2);
+			}
+			
+		}
+		
+		// do the pre-fetch
+		try {
+			long startTime = System.nanoTime();
+			
+			ArrayList<ImportMapping> mappings = this.lookupMappings.get(nodeID);
+			
+			// if we haven't yet fetched anything for this nodeID, look up
+			if (offset == 0) {
+				
+				int max = PREFETCH_MAX_EXIST / mappings.size();
+				if (this.lookupCount(nodeID, max + 1) > max) {
+					// too many possibilities in the triplestore, sorting will lock things up.
+					// quit with prefetchBlocked still true so no more attempts are made.
+					return; 
+				}
+			}
+			
+			String colName[] = new String[mappings.size()];
+			String uriColName = nodeID.substring(1);
+			
+			// remove all value constraints
+			// IDEA: in crazy-large spaces, we could (randomly?) choose a subset to remove
+			for (int i=0; i < mappings.size(); i++) {
+				ImportMapping mapping = mappings.get(i);
+				Node node = lookupNodegroup.getNodeBySparqlID(mapping.getNodeSparqlID());
+	
+				if (mapping.isNode()) {
+					colName[i] = node.getBindingOrSparqlID().substring(1);
+					node.setValueConstraint(null);  
+					node.setIsReturned(true);
+					lookupNodegroup.appendOrderBy(node.getBindingOrSparqlID());
+	
+				} else {
+					PropertyItem prop = node.getPropertyByURIRelation(mapping.getPropURI());
+					colName[i] = prop.getBindingOrSparqlID().substring(1);
+					prop.setValueConstraint(null);  
+					prop.setIsReturned(true);
+					lookupNodegroup.appendOrderBy(prop.getBindingOrSparqlID());
+	
+				}
+			}
+			
+			lookupNodegroup.setLimit(limit);
+			lookupNodegroup.setOffset(offset);
+	
+			// run the query
+			String query =  lookupNodegroup.generateSparqlSelect();
+			SparqlEndpointInterface safeEndpoint = this.nonThreadSafeEndpoint.copy();
+			
+			TableResultSet res = (TableResultSet) safeEndpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+			res.throwExceptionIfUnsuccessful();
+			Table tab = res.getTable();
+			
+			// If results came back
+			if (tab.getNumRows() > 1) {
+				// calculate duplicate mappedStrings.
+				boolean skipRow[] = new boolean[tab.getNumRows()];
+				String joinedMappedStrings[] = new String[tab.getNumRows()];
+				for (int r=0; r < tab.getNumRows(); r++) {
+					skipRow[r] = false;
+					joinedMappedStrings[r] = String.join("|||", tab.getRow(r).subList(1, tab.getNumColumns()));
+				}
+				// skip rows with duplicate mapped strings
+				for (int r=0; r < tab.getNumRows()-1; r++) {
+					if (joinedMappedStrings[r+1].equals(joinedMappedStrings[r])) {
+						skipRow[r] = true;
+						skipRow[r+1] = true;
+					} 
+				}
+				// also skip first and last since we don't have enough info
+				skipRow[0] = true;
+				skipRow[tab.getNumRows()-1] = true;
+				
+				for (int r=1; r < tab.getNumRows()-1; r++) {
+					
+					if (skipRow[r]) break;
+					
+					ArrayList<String> mappedStrings = new ArrayList<String>();
+					for (int i=0; i < mappings.size(); i++) {
+						mappedStrings.add(tab.getCell(r, colName[i]));
+					}
+					String uri = tab.getCell(r, uriColName);
+					// put into cache.  No harm done if it is already there.
+					// TODO : Not checking for same mapped strings but different uri.
+					// Hopefully we've already eliminated that possibility?  Should check anyway.
+					this.uriCache.putUri(this.lookupNodegroupMD5.get(nodeID), mappedStrings, uri);
+				}
+				
+				long lookupTime = System.nanoTime() - startTime;
+				System.err.println("TIME BATCH " + lookupTime / tab.getNumRows());
+			} 
+			
+			LocalLogger.logToStdOut("PRE-FETCH limit=" + limit + " offset=" + offset + ": " + tab.getNumRows() + " rows");
+			
+			// if we got a full batch back, un-block so we can fetch more next time
+			if (tab.getNumRows() >= limit) {
+				this.prefetchBlocked.get(nodeID).set(false);
+			}
+			
+		} catch (Exception e) {
+			// this.prefetchBlocked.get(nodeID) will remain true, aborting any further attempts at pre-fetching.
+			LocalLogger.logToStdErr("Exception during URI Lookup prefetch.  Aborting pre-fetching." );
+			LocalLogger.printStackTrace(e);
+		}
+		return;
 	}
 	
 	private ValueConstraint buildBestConstraint(Returnable item, String val) throws Exception {

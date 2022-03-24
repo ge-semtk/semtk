@@ -36,7 +36,7 @@ public class UriCache {
 	
 	/**
 	 * This object holds URI's during the lookup process.
-	 * The unique "key" is the node type and builtStrings. 
+	 * The unique "key" is the node type and mappedStrings. 
 	 * Keeps track of whether each is found or not.
 	 * Generates URI's for the not founds.
 	 * ...
@@ -50,34 +50,34 @@ public class UriCache {
 	/**
 	 * 
 	 * @param lookupNgMD5 - unique hash of the lookup nodegroup
-	 * @param builtStrings
+	 * @param mappedStrings
 	 * @return
 	 */
-	private String getKey(String lookupNgMD5, ArrayList<String> builtStrings) {
-		return lookupNgMD5 + "-" + String.join("-", builtStrings);
+	private String getKey(String lookupNgMD5, ArrayList<String> mappedStrings) {
+		return lookupNgMD5 + "-" + String.join("-", mappedStrings);
 	}
 	
 	/**
-	 * Assign a URI given a unique lookup nodegroup and set of builtStrings
+	 * Assign a URI given a unique lookup nodegroup and set of mappedStrings
 	 * @param lookupNgMD5 - unique hash of the lookup nodegroup
-	 * @param builtStrings
+	 * @param mappedStrings
 	 * @param uri
 	 */
-	public void putUri(String lookupNgMD5, ArrayList<String> builtStrings, String uri) {
-		this.uriCache.putIfAbsent(this.getKey(lookupNgMD5, builtStrings), uri);
-		//LocalLogger.logToStdErr("PUT   : " + this.getKey(lookupNgMD5, builtStrings) + "," + uri);
+	public void putUri(String lookupNgMD5, ArrayList<String> mappedStrings, String uri) {
+		this.uriCache.putIfAbsent(this.getKey(lookupNgMD5, mappedStrings), uri);
+		//LocalLogger.logToStdErr("PUT   : " + this.getKey(lookupNgMD5, mappedStrings) + "," + uri);
 	}
 	
 	/** 
 	 * Add if URI isn't already there.  If it is already there, delete it instead.
 	 * Intended to 
 	 * @param lookupNgMD5
-	 * @param builtStrings
+	 * @param mappedStrings
 	 * @param uri
 	 */
-	public void putIfNewElseDelete(String lookupNgMD5, ArrayList<String> builtStrings, String uri) {
+	public void putIfNewElseDelete(String lookupNgMD5, ArrayList<String> mappedStrings, String uri) {
 		synchronized(this) {
-			String key = this.getKey(lookupNgMD5, builtStrings);
+			String key = this.getKey(lookupNgMD5, mappedStrings);
 		
 			String prev = this.uriCache.putIfAbsent(key, uri);
 			if (prev != null && !prev.equals(uri)) {
@@ -90,15 +90,15 @@ public class UriCache {
 		}
 	}
 	/**
-	 * Get a URI given a unique lookup nodegroup and set of builtStrings
+	 * Get a URI given a unique lookup nodegroup and set of mappedStrings
 	 * @param lookupNgMD5 - unique hash of the lookup nodegroup
-	 * @param builtStrings
+	 * @param mappedStrings
 	 * @return
 	 */
-	public String getUri(String lookupNgMD5, ArrayList<String> builtStrings) {
+	public String getUri(String lookupNgMD5, ArrayList<String> mappedStrings) {
 		try {
-			//LocalLogger.logToStdErr("GET  : " + this.getKey(lookupNgMD5, builtStrings));
-			return this.uriCache.get(this.getKey(lookupNgMD5, builtStrings));
+			//LocalLogger.logToStdErr("GET  : " + this.getKey(lookupNgMD5, mappedStrings));
+			return this.uriCache.get(this.getKey(lookupNgMD5, mappedStrings));
 		} catch (Exception e) {
 			//LocalLogger.logToStdErr("...not found");
 			return null;
@@ -106,13 +106,13 @@ public class UriCache {
 	}
 	
 	/**
-	 * Is it "notFound" given a unique lookup nodegroup and set of builtStrings
+	 * Is it "notFound" given a unique lookup nodegroup and set of mappedStrings
 	 * @param lookupNgMD5 - unique hash of the lookup nodegroup
-	 * @param builtStrings
+	 * @param mappedStrings
 	 * @return
 	 */
-	public boolean isNotFound(String lookupNgMD5, ArrayList<String> builtStrings) {
-		String key = this.getKey(lookupNgMD5, builtStrings);
+	public boolean isNotFound(String lookupNgMD5, ArrayList<String> mappedStrings) {
+		String key = this.getKey(lookupNgMD5, mappedStrings);
 		return this.notFound.containsKey(key);
 	}
 	
@@ -128,11 +128,11 @@ public class UriCache {
 	/**
 	 * Declare a URI 'not found', possibly suggesting a new value
 	 * @param lookupNgMD5 - unique hash of the lookup nodegroup
-	 * @param builtStrings
+	 * @param mappedStrings
 	 * @param generatedValue - value for URI ... or null or ""
 	 */
-	public synchronized void setUriNotFound(String lookupNgMD5, ArrayList<String> builtStrings, String generatedValue) throws Exception {
-		String key = this.getKey(lookupNgMD5, builtStrings);
+	public synchronized void setUriNotFound(String lookupNgMD5, ArrayList<String> mappedStrings, String generatedValue) throws Exception {
+		String key = this.getKey(lookupNgMD5, mappedStrings);
 		String newVal;
 		
 		if (generatedValue != null && generatedValue.length() > 0) {
