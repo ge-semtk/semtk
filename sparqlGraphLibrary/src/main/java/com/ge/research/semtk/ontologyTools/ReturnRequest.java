@@ -18,6 +18,7 @@ public class ReturnRequest {
 		this.dataPropUris = (dataPropUris == null) ? (new ArrayList<String>() ) : dataPropUris;
 		this.returnUri = returnUri;
 	}
+	
 	/**
 	 * 
 	 * @return Array of data properties, possibly empty, never null.

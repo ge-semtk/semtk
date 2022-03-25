@@ -229,87 +229,27 @@ public class OntologyPath {
 	}
 	
 	/**
-	 * Return any triples that don't appear in the path
-	 * "" subject, pred, or object will match anything.
-	 * @param hints
+	 * Get ordered list of classes in the path
 	 * @return
 	 */
-	public ArrayList<Triple> caclMissingTripleHints(ArrayList<Triple> hints) {
-		ArrayList<Triple> ret = new ArrayList<Triple>();
-		
-		for (Triple hint : hints) {
-			boolean found = false;
-		
-			for (Triple t : this.tripleList) {
-				found = ((hint.getSubject().isBlank()  || hint.getSubject().equals(t.getSubject())) &&
-						 (hint.getPredicate().isBlank() || hint.getPredicate().equals(t.getPredicate())) &&
-					     (hint.getObject().isBlank() || hint.getObject().equals(t.getObject()))     );
-				if (found) break;
-			}
-			if (!found) {
-				ret.add(hint);
-			}
-		}
-		return ret;
-	}
-	
-	/**
-	 * Return copy of classList with classes from the path removed
-	 * @param classList
-	 * @return
-	 */
-	public ArrayList<ClassInstance> calcMissingClasses(ArrayList<ClassInstance> instanceList) {
-		HashMap<String, Integer> classHashClone = (HashMap<String, Integer>) this.classHash.clone();
-		ArrayList<ClassInstance> ret = new ArrayList<ClassInstance>();
-		
-		for (ClassInstance instance : instanceList) {
-			// is instance in classHashClone
-			if (classHashClone.containsKey(instance.classUri) && classHashClone.get(instance.classUri) > 0) {
-				// remove instance from the classHashClone
-				classHashClone.put(instance.classUri, classHashClone.get(instance.classUri) - 1);
-			} else {
-				// add instance to return
-				ret.add(instance);
-			}
-		}
-		return ret;
-	}
-	
-	/**
-	 * Searches to see if a data property could be added to some class in the Path.
-	 * @param dataPropUriList
-	 * @param oInfo
-	 * @return - those data props that can't be added
-	 * @throws Exception
-	 */
-	public ArrayList<String> calcUnaddableDataProps(ArrayList<String> dataPropUriList, OntologyInfo oInfo) throws Exception {
+	public ArrayList<String> getClassList() {
 		ArrayList<String> ret = new ArrayList<String>();
+		String lastUri = this.getStartClassName();
+		ret.add(lastUri);
 		
-		for (String propUri : dataPropUriList) {
-			
-			// get property
-			OntologyProperty oProp = oInfo.getProperty(propUri);
-			if (oProp == null) {
-				throw new Exception("Can't find property in model: " + propUri);
-			}
-			
-			// get domain
-			ArrayList<OntologyClass> domain = oInfo.getPropertyDomain(oProp);
-			boolean found = false;
-			
-			// search domain in this path's class hash
-			for (OntologyClass d : domain) {
-				if (this.classHash.keySet().contains(d.getNameString(false)) ) {
-					found = true;
-					break;
-				}
-			}
-			
-			// build return list of not found propUri's
-			if (! found) {
-				ret.add(propUri);
+		for (Triple t : this.tripleList) {
+			if (t.getSubject().equals(lastUri)) {
+				ret.add(t.getPredicate());
+				lastUri = t.getPredicate();
+			} else {
+				ret.add(t.getSubject());
+				lastUri = t.getSubject();
 			}
 		}
+		
 		return ret;
+		
 	}
+	
+	
 }
