@@ -90,6 +90,10 @@ public enum XSDSupportedType {
 			// nodes get their brackets, etc.
 			return buildTypedValueString(val, typePrefixOverride);
 			
+		} else if (this.booleanOperationAvailable()) {
+			// booleans are lower-cased
+			return val.toLowerCase();
+			
 		} else {
 			// default is a plain quoted value
 			String escaped = val.replaceAll("\\\\", "\\\\\\\\");

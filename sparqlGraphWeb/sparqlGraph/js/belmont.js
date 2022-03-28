@@ -215,7 +215,7 @@ SparqlFormatter.prototype = {
 
         if (itemType == "string") {
             return "'" + val + "', '" + val + "'^^" + SemanticNodeGroup.XMLSCHEMA_PREFIX + itemType;
-        } else if (itemType == "int" || itemType == "long" || itemType == "float") {
+        } else if (itemType == "int" || itemType == "long" || itemType == "float" || itemType == "boolean") {
             return val;
         } else if (itemType == "uri") {
             return '<' + val + '>';
@@ -252,6 +252,12 @@ SparqlFormatter.prototype = {
 			if (!op) op = "=";
 
 			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " " + Number(v) + ")";
+
+		} else if (itemType == "boolean") {
+			if (!v) v = true;
+			if (!op) op = "=";
+
+			ret = 'FILTER (' + item.getSparqlID() + ' ' + op + " " + v + ")";
 
 		} else if (itemType == "uri") {
             if (!v) v = "?other";
