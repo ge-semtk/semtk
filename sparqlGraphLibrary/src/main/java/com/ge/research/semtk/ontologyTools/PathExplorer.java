@@ -138,7 +138,7 @@ public class PathExplorer {
 					
 					// calculate missing instances for path
 					ArrayList<PathItemRequest> missingClassList = this.calcMissingClasses(path, requestList);
-					ArrayList<PathItemRequest> missingPathHints = this.caclMissingTripleHints(path, requestList);					
+					ArrayList<PathItemRequest> missingPathHints = this.calcMissingTripleHints(path, requestList);					
 					
 					missingClassLists.add(missingClassList);
 					missingTripleHintsLists.add(missingPathHints);
@@ -199,7 +199,11 @@ public class PathExplorer {
 						//                 This only checks if missingPathHints was empty to begin with.
 						if (missingTripleHintsLists.get(i).size() != 0) {
 							if (missingClassLists.get(i).size() > 0) {
-								throw new Exception("Not implmented: re-checking triple hints after added classes after initial path.");
+								// we added classes:  re-check nodegroup
+								// TODO: could this single function have been used all along instead of searching paths for classes and hints
+								if (this.calcMissingClassesAndTripleHints(ng, requestList).size() > 0) {
+									break;
+								}
 							} else {
 								// still missing triple hints
 								break;
@@ -229,11 +233,10 @@ public class PathExplorer {
 	
 	/**
 	 * Return any triples that don't appear in the path
-	 * "" subject, pred, or object will match anything.
 	 * @param requestList
 	 * @return
 	 */
-	public ArrayList<PathItemRequest> caclMissingTripleHints(OntologyPath path, ArrayList<PathItemRequest> requestList) {
+	public ArrayList<PathItemRequest> calcMissingTripleHints(OntologyPath path, ArrayList<PathItemRequest> requestList) {
 		ArrayList<PathItemRequest> ret = new ArrayList<PathItemRequest>();
 		
 		for (PathItemRequest req : requestList) {
@@ -241,9 +244,9 @@ public class PathExplorer {
 			Triple hint = req.getTripleHint();
 			if (hint != null) {
 				for (Triple t : path.getTripleList()) {
-					found = ((hint.getSubject().isBlank()  || hint.getSubject().equals(t.getSubject())) &&
-							 (hint.getPredicate().isBlank() || hint.getPredicate().equals(t.getPredicate())) &&
-						     (hint.getObject().isBlank() || hint.getObject().equals(t.getObject()))     );
+					found = (hint.getSubject().equals(t.getSubject())) &&
+							 (hint.getPredicate().equals(t.getPredicate())) &&
+						     (hint.getObject().equals(t.getObject())     );
 					if (found) break;
 				}
 				if (!found) {
@@ -254,6 +257,45 @@ public class PathExplorer {
 		return ret;
 	}
 	
+	
+	/**
+	 * Return any triples that don't appear in the path
+	 * "" subject, pred, or object will match anything.
+	 * @param requestList
+	 * @return
+	 */
+	public ArrayList<PathItemRequest> calcMissingClassesAndTripleHints(NodeGroup ng, ArrayList<PathItemRequest> requestList) {
+		ArrayList<PathItemRequest> ret = new ArrayList<PathItemRequest>();
+		
+		for (PathItemRequest req : requestList) {
+			boolean found = false;
+			Triple hint = req.getTripleHint();
+			if (hint != null) {
+				for (Node n : ng.getNodesByURI(hint.getSubject())) {
+					NodeItem nItem = n.getNodeItem(hint.getPredicate());
+					if (nItem != null) {
+						for (Node objectNode :  nItem.getNodeList()) {
+							if (objectNode.getUri().equals(hint.getObject())) {
+								found = true;
+								break;
+							}
+						}
+					}
+					if (found) break;
+				}
+				
+				if (!found) {
+					ret.add(req);
+				}
+			} else {
+				// no path hint, just check that classUri exists
+				if (ng.getNodesByURI(req.getClassUri()) == null) {
+					ret.add(req);
+				}
+			}
+		}
+		return ret;
+	}
 	/**
 	 * Return copy of classList with classes from the path removed
 	 * @param classList
@@ -310,6 +352,10 @@ public class PathExplorer {
 						// funcs
 						String func = request.getFuncName(propUri);
 						
+						String sparqlID = request.getSparqlID(propUri);
+						if (sparqlID != null) {
+							ng.changeSparqlID(propItem, sparqlID);
+						}
 						ng.setIsReturned(propItem, true);
 						allReturns.add(propItem.getBindingOrSparqlID());
 						

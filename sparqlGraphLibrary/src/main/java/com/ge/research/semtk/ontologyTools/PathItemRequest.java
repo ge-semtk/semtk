@@ -16,6 +16,7 @@ public class PathItemRequest {
 	private ArrayList<String> propUriList = null;
 	private ArrayList<String> funcNameList = null;   // TODO mis-named.  NOT aggregate functions.  These are MAX/MIN sort with limit 1
 	private ArrayList<String> filterList = null;     // TODO parallel arrays might not be the best idea
+	private ArrayList<String> sparqlIDList = null;
 	private ArrayList<String> constraintList = null;
 	private ArrayList<Boolean> dontReturnList = null;
 	
@@ -159,6 +160,26 @@ public class PathItemRequest {
 		return ret;
 	}
 	
+	public void setSparqlID(int pos, String val) throws Exception {
+		if (this.sparqlIDList == null) {
+			this.sparqlIDList = new ArrayList<String>();
+		}
+		while (sparqlIDList.size() <= pos ) {
+			this.sparqlIDList.add(null);
+		}
+		
+		this.sparqlIDList.set(pos, val);
+	}
+	
+	public String getSparqlID(String propUri) {
+		int i = this.propUriList.indexOf(propUri);
+		if (this.sparqlIDList != null && this.sparqlIDList.size() > i ) {
+			return this.sparqlIDList.get(i);
+		} else {
+			return null;
+		}
+	}
+	
 	public Triple getTripleHint() {
 		if (this.incomingClassUri != null) 
 			return new Triple(this.incomingClassUri, this.incomingPropUri, this.classUri);
@@ -202,5 +223,15 @@ public class PathItemRequest {
 			}
 		}
 		return null;
+	}
+	
+	public static int countPropUriInList(ArrayList<PathItemRequest> requestList, String propUri) {
+		int ret = 0;
+		for (PathItemRequest req : requestList) {
+			if (req.getPropUriList() != null && req.getPropUriList().contains(propUri)) {
+				ret++;
+			}
+		}
+		return ret;
 	}
 }
