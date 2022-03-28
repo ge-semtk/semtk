@@ -287,18 +287,56 @@ public class PathExplorer {
 	private boolean addNodegroupReturns(NodeGroup ng, ArrayList<PathItemRequest> requestList) throws Exception {
 	
 		// TODO: does not attempt to add the prop's class if it's missing
+		ArrayList<String> allReturns = new ArrayList<String>();
 		
 		for (PathItemRequest request : requestList) {
 			if (request.getPropUriList() != null) {
 				Node foundNode = this.findNodeMatchingRequest(ng, request, true);
 				
-				for (String propUri : request.getPropUriList()) {
-					PropertyItem propItem = foundNode.getPropertyByURIRelation(propUri);
-					if (propItem == null) throw new Exception("Could not find property " + propUri + " in node " + foundNode.getUri());
-					ng.setIsReturned(propItem, true);
-					propItem.setOptMinus(PropertyItem.OPT_MINUS_OPTIONAL);
+				if (request.getPropUriList() == null || request.getPropUriList().size() == 0) {
+					// No properties.  Return the node.
+					ArrayList<NodeItem> incoming = ng.getConnectingNodeItems(foundNode);
+					if (incoming != null && incoming.size() > 0) {
+						incoming.get(0).setOptionalMinus(foundNode, NodeItem.OPTIONAL_TRUE);
+					}
+					ng.setIsReturned(foundNode, true);
+					allReturns.add(foundNode.getBindingOrSparqlID());
+					
+				} else {
+					for (String propUri : request.getPropUriList()) {
+						PropertyItem propItem = foundNode.getPropertyByURIRelation(propUri);
+						if (propItem == null) throw new Exception("Could not find property " + propUri + " in node " + foundNode.getUri());
+						
+						// funcs
+						String func = request.getFuncName(propUri);
+						
+						ng.setIsReturned(propItem, true);
+						allReturns.add(propItem.getBindingOrSparqlID());
+						
+						if (func != null) {
+							propItem.setOptMinus(PropertyItem.OPT_MINUS_NONE);
+							ng.appendOrderBy(propItem.getBindingOrSparqlID(), func.equals("MAX") ? "DESC" : "ASC");
+							ng.setLimit(1);
+						} else {
+							propItem.setOptMinus(PropertyItem.OPT_MINUS_OPTIONAL);
+						}
+						
+						// filters
+						String filter = request.getFilter(propUri);
+						if (filter != null) {
+							String split[] = filter.split("\\s+");
+							propItem.setValueConstraint(new ValueConstraint(ValueConstraint.buildFilterConstraint(propItem, split[0], split[1])));
+							ng.appendOrderBy(propItem.getBindingOrSparqlID(), split[0].contains("<") ? "DESC" : "ASC");
+							propItem.setOptMinus(PropertyItem.OPT_MINUS_NONE);
+						}
+					}
 				}
 			}
+		}
+		
+		// try column order in request order
+		for (String id : allReturns) {
+			ng.appendColumnOrder(id);
 		}
 		return true;
 	}
