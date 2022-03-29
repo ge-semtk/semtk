@@ -41,7 +41,8 @@ define([	// properly require.config'ed
         var operatorChoicesForStrings = ["=", "!=", "regex"];
         var operatorChoicesForUris = ["=", "!="];
         var operatorChoicesForNumerics = [  "=", "!=",">", ">=", "<", "<="];
-        var operandChoicesForBoolean = ["true","false","unspecified"];
+        var operatorChoicesForBoolean = ["=", "!="];
+        var operandChoicesForBoolean = ["-choose-", "true","false"];
 
         var isNumericType = function(dataType){
             // TODO only INT has been tested so far
@@ -294,22 +295,16 @@ define([	// properly require.config'ed
                             alert("Skipping unsupported operator for " + sparqlId + ": " + operator1.value);
                             // TODO cancel instead of skipping?
                         }
-                    }else if(valueTypes.indexOf("BOOLEAN") > -1){
-                        var booleanSelected = null;
-                        for(var i=0; i < operandChoicesForBoolean.length; i++){
-                            if(document.getElementById("operand1" + sparqlId + "-" + operandChoicesForBoolean[i]).className == "btn active"){
-                                booleanSelected = operandChoicesForBoolean[i];
-                            }
-                        }
-                        switch(booleanSelected){
-                            case("true"):
-                                runtimeConstraints.add(sparqlId, "MATCHES", "1");
-                                break;
-                            case("false"):
-                                runtimeConstraints.add(sparqlId, "MATCHES", "0");
-                                break;
-                            // do nothing if unspecified
-                        }
+                    }else if(valueTypes.indexOf("BOOLEAN") > -1) {
+                        operator1 = operator1Element.value;
+                        operand1 = operand1Element.value.trim();
+                        if (operand1 != "-choose-") {
+	                        if (operator1 == "=") {
+	                                runtimeConstraints.add(sparqlId, "MATCHES", [operand1]);
+	                        } else {
+	                                runtimeConstraints.add(sparqlId, "NOTMATCHES", [operand1]);
+	                        }
+	                    }
                     }else if(isNumericType(valueTypes) || isDateType(valueTypes)){
                         var operator1 = operator1Element.value;
                         var operand1 = operand1Element.value;    // TODO support multiple operands for MATCHES
@@ -422,7 +417,8 @@ define([	// properly require.config'ed
                         this.div.appendChild(IIDXHelper.createButton(">>", this.suggestValues.bind(this, operand1ElementId, sparqlId, isEquals.bind(this, operator1ElementId))));
 
                     }else if(valueType.indexOf("BOOLEAN") > -1){
-                        this.div.appendChild(IIDXHelper.createButtonGroup(operand1ElementId, operandChoicesForBoolean, "buttons-radio"));
+                        this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForBoolean, ["="], false, "input-mini"));
+                        this.div.appendChild(IIDXHelper.createSelect(operand1ElementId, operandChoicesForBoolean, ["-choose-"], false, "input-small"));
 
                     }else if(isNumericType(valueType) || isDateType(valueType)){
                         this.div.appendChild(IIDXHelper.createSelect(operator1ElementId, operatorChoicesForNumerics, [">"], false, "input-mini"));

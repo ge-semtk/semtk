@@ -51,7 +51,7 @@
     var gQuerySource = "SERVICES";
 
     var RESULTS_MAX_ROWS = 5000; // 5000 sample rows
-
+    var ALLOW_CIRCULAR_NODEGROUPS = false;
 
     // READY FUNCTION
     $('document').ready(function(){
@@ -524,7 +524,7 @@
 
                         var msg = "Repairing property range<list><li>from " + pRangeStr + "</li><li>to " + oRangeStr + "</li></list><br>" +
                                   (hasConstraints ? "<br>Review constraints to make sure they are compatible." : "") +
-                                  (hasMapping ? "<br>Review item's import mapping" : "")
+                                  (hasMapping ? "<br>Review item's import mapping" : "");
 
                         ModalIidx.alert("Repair property range", msg, false, changePropItemURI);
                     } else {
@@ -624,11 +624,14 @@
     	var mySubgraph = gNodeGroup.getSubGraph(snode, []);
 
     	for (var i=0; i < targetSNodes.length; i++) {
-            // Not circular, not self, not already linked
-    		if (mySubgraph.indexOf(targetSNodes[i]) == -1 && targetSNodes[i] != snode && nItem.getSNodes().indexOf(targetSNodes[i]) == -1) {
-    			unlinkedTargetNames.push(targetSNodes[i].getBindingOrSparqlID());
-    			unlinkedUriOrSNodes.push(targetSNodes[i]);
-    		}
+            if (nItem.getSNodes().indexOf(targetSNodes[i]) == -1) {  // not already connected
+	    		if ( ALLOW_CIRCULAR_NODEGROUPS ||
+					   (mySubgraph.indexOf(targetSNodes[i]) == -1 && targetSNodes[i] != snode ) ){    // not cicular && not self
+					   
+	    			unlinkedTargetNames.push(targetSNodes[i].getBindingOrSparqlID());
+	    			unlinkedUriOrSNodes.push(targetSNodes[i]);
+	    		}
+	    	}
     	}
 
     	// if only possibility is one unlinked snode

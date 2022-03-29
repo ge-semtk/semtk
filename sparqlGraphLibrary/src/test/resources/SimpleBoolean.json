@@ -34,7 +34,7 @@
 						"SparqlID": "?Happy",
 						"isReturned": true,
 						"optMinus": 0,
-						"isRuntimeConstrained": false,
+						"isRuntimeConstrained": true,
 						"instanceValues": [],
 						"isMarkedForDeletion": false
 					},

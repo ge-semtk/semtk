@@ -225,8 +225,10 @@ public class ValueConstraint {
 		
 		// return first thing that works
 		for (XSDSupportedType t : valTypes) {
-			
-			if (t.dateOperationAvailable()) {
+			if (t.numericOperationAvailable() || t.booleanOperationAvailable()) {
+				// numbers & booleans: plain
+				return String.format("FILTER(%s %s %s)", item.getSparqlID(), oper, v);
+			} else if (t.dateOperationAvailable()) {
 				// date
 				return String.format("FILTER(%s %s '%s'%s)", item.getSparqlID(), oper, v, t.getXsdSparqlTrailer());
 			} else if (t.regexIsAvailable()) {

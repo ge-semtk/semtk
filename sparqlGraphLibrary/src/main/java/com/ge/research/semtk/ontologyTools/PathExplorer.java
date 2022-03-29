@@ -26,6 +26,7 @@ import java.util.HashSet;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
 import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
+import com.ge.research.semtk.belmont.NodeItem;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
@@ -68,14 +69,12 @@ public class PathExplorer {
 		this.cacheKey = cacheSei != null ? Utility.hashMD5(cacheSei.toJson().toJSONString()) : NO_CACHE;
 		
 		// init nodegroup cache from disk if needed
-		if (! PathExplorer.cache.containsKey(this.cacheKey)) {
+		if (this.cacheKey != NO_CACHE && ! PathExplorer.cache.containsKey(this.cacheKey)) {
 			PathExplorer.cache.put(cacheKey, new NodeGroupCache(cacheSei, oInfo));
 		}
 	}
 	
-	public NodeGroup buildNgWithData(ArrayList<ClassInstance> classInstanceList, ArrayList<ReturnRequest> returns) throws Exception {
-		return this.buildNgWithData(classInstanceList, returns, new ArrayList<Triple>());
-	}
+
 	/**
 	 * Checks cache first
 	 * Splits returns into property or enum (TODO still ignores domainHints)
@@ -87,148 +86,111 @@ public class PathExplorer {
 	 * @return NodeGroup or null
 	 * @throws Exception
 	 */
-	public NodeGroup buildNgWithData(ArrayList<ClassInstance> classInstanceList, ArrayList<ReturnRequest> returns, ArrayList<Triple> pathHintList) throws Exception {
-		
-		ArrayList<String> dataPropRetList = new ArrayList<String>();
-		ArrayList<String> enumRetList = new ArrayList<String>();
-
-		// build propRetList and enumRetList
-		// TODO: actally use the ReturnRequest domainHintURI
-		for (ReturnRequest r : returns) {
-			String uri = r.getReturnUri();
-			if (this.oInfo.containsClass(uri)) {
-				enumRetList.add(uri);
-			} else {
-				dataPropRetList.add(uri);
-			}
-		}
+	public NodeGroup buildNgWithData(ArrayList<PathItemRequest> requestList) throws Exception {
 		
 	
 		// try pulling from cache
-		NodeGroup cached = this.getFromCache(classInstanceList, pathHintList);
+		NodeGroup cached = this.getFromCache(requestList);
 		if (cached != null) {
-			this.addDataPropReturn(cached, dataPropRetList);
-			this.addEnumReturns(cached, enumRetList);
+			this.addNodegroupInstances(cached, requestList);
+			this.addNodegroupReturns(cached, requestList);
 			LocalLogger.logToStdOut("Retrieved nodegroup from cache");
 			return cached;
 		}
 		LocalLogger.logToStdOut("Building new nodegroup");
 		
+		
 		// handle special simple case: just one class
-		if (classInstanceList.size() == 1) {
+		if (requestList.size() == 1) {
+			
 			NodeGroup ng = new NodeGroup();
-			ng.addNodeInstance(classInstanceList.get(0).classUri, this.oInfo, classInstanceList.get(0).instanceUri);
-			if (! this.addEnumReturns(ng, enumRetList)) {
-				throw new Exception("Error adding enumerated class returns from : " + enumRetList.toString());
-			}
-			
-			
-			if (! this.addDataPropReturn(ng, dataPropRetList)) {
-				throw new Exception("Error adding property returns from : " + dataPropRetList);
-			}
+			ng.addNodeInstance(requestList.get(0).getClassUri(), this.oInfo, requestList.get(0).getInstanceUri());
+			this.addNodegroupReturns(ng, requestList);
 			
 			LocalLogger.logToStdOut("...succeeded");
 			return ng;
 			
-		} else {
-			// actual work
-			return this.buildNgWithData(classInstanceList, dataPropRetList, enumRetList, pathHintList);
-		}
-	}
+		} 
 	
-
-	/**
-	 * Build a nodegroup with all classes in clasInstanceList, possibly constrained to URI's
-	 * Add property and enum returns 
-	 * Saves to cache 
-	 *   
-	 * @param classInstanceList - classes which must be in the nodegroup
-	 * @param dataPropRetList - list of data properties to be returned
-	 * @param objRetList - (enum) classes to be returned
-	 * @return
-	 * @throws Exception
-	 */
-	private NodeGroup buildNgWithData(ArrayList<ClassInstance> classInstanceList, ArrayList<String> dataPropRetList, ArrayList<String> objRetList, ArrayList<Triple> pathHints) throws Exception {
 
 		// get all model paths between all pairs
 		ArrayList<OntologyPath> pathList = new ArrayList<OntologyPath>(); 
-		ArrayList<ClassInstance> anchorInstanceList = new ArrayList<ClassInstance>();
-		ArrayList<ClassInstance> endInstanceList = new ArrayList<ClassInstance>();
+		ArrayList<PathItemRequest> anchorRequestList = new ArrayList<PathItemRequest>();
+		ArrayList<PathItemRequest> endRequestList = new ArrayList<PathItemRequest>();
 		
 		// lists of problems for each path
-		ArrayList<ArrayList<ClassInstance>> missingClassLists = new ArrayList<ArrayList<ClassInstance>>();
-		ArrayList<ArrayList<String>> unaddablePropLists = new ArrayList<ArrayList<String>>();
-		ArrayList<ArrayList<Triple>> missingTripleHintsLists  = new ArrayList<ArrayList<Triple>>();
+		ArrayList<ArrayList<PathItemRequest>> missingClassLists = new ArrayList<ArrayList<PathItemRequest>>();
+		ArrayList<ArrayList<PathItemRequest>> missingTripleHintsLists  = new ArrayList<ArrayList<PathItemRequest>>();
 		
 		int smallest = 9999;
 		final boolean LOG_PATHS = false;
-		for (int i=0; i < classInstanceList.size() - 1; i++) {
-			for (int j=i+1; j < classInstanceList.size(); j++) {
+		for (int i=0; i < requestList.size() - 1; i++) {
+			for (int j=i+1; j < requestList.size(); j++) {
+				PathItemRequest anchorRequest = requestList.get(i);
+				PathItemRequest endRequest = requestList.get(j);
 				
-				if (LOG_PATHS) LocalLogger.logToStdOut(classInstanceList.get(j).classUri + "," + classInstanceList.get(i).classUri);
-				for (OntologyPath path : this.oInfo.findAllPaths(classInstanceList.get(j).classUri, classInstanceList.get(i).classUri)) {
+				if (LOG_PATHS) LocalLogger.logToStdOut(endRequest.getClassUri() + "," + anchorRequest.getClassUri());
+				for (OntologyPath path : this.oInfo.findAllPaths(endRequest.getClassUri() , anchorRequest.getClassUri())) {
 					pathList.add(path);
 					if (LOG_PATHS) LocalLogger.logToStdOut(path.asString());
-					anchorInstanceList.add(classInstanceList.get(i));
-					endInstanceList.add(classInstanceList.get(j));
+					anchorRequestList.add(anchorRequest);
+					endRequestList.add(endRequest);
 					
 					// calculate missing instances for path
-					ArrayList<ClassInstance> missingClassList = path.calcMissingClasses(classInstanceList);
-					ArrayList<String> unaddablePropsList = path.calcUnaddableDataProps(dataPropRetList, this.oInfo);
-					ArrayList<Triple> missingPathHints = path.caclMissingTripleHints(pathHints);					
+					ArrayList<PathItemRequest> missingClassList = this.calcMissingClasses(path, requestList);
+					ArrayList<PathItemRequest> missingPathHints = this.calcMissingTripleHints(path, requestList);					
 					
 					missingClassLists.add(missingClassList);
-					unaddablePropLists.add(unaddablePropsList);
 					missingTripleHintsLists.add(missingPathHints);
 
 					// PEC TODO: this logic is too simple
 					// why would all of these be "weighted" the same
 					// Note that missingClasses could be added below if no linear path finds them all
-					if (missingClassList.size() + unaddablePropsList.size() + missingPathHints.size() < smallest) {
-						smallest = missingClassList.size() + unaddablePropsList.size() + missingPathHints.size();
+					if (missingClassList.size() + missingPathHints.size() < smallest) {
+						smallest = missingClassList.size() + missingPathHints.size();
 					}
 				}
 			}
 		}
 		
-		// PEC TODO: also tenuous logic.  Not even sure this error is correct.
-		if (smallest >= classInstanceList.size() + dataPropRetList.size() + pathHints.size()) {
-			throw new Exception("Could not find instance(s)");
-		}
 		
 		// loop through paths with least missing classes first
-		for (int size=smallest; size < classInstanceList.size() + dataPropRetList.size() + pathHints.size(); size++) {
+		for (int size=smallest; size < requestList.size(); size++) {
 			for (int i = 0; i < pathList.size(); i++) {
 				
 				// loop through paths of length "size"
 				boolean success = true;
-				if (missingClassLists.get(i).size() + unaddablePropLists.get(i).size() + missingTripleHintsLists.get(i).size()== size) {
+				if (missingClassLists.get(i).size() + missingTripleHintsLists.get(i).size()== size) {
 					if (LOG_PATHS) LocalLogger.logToStdOut("buildNgWithData trying path: " + pathList.get(i).asString());
 					
 					// build nodegroup with anchor node
 					NodeGroup ng = new NodeGroup();
 					Node anchor = null;
-					if (anchorInstanceList.get(i) == null) {
-						anchor = ng.addNode(anchorInstanceList.get(i).classUri, this.oInfo);
+					
+					PathItemRequest anchorRequest = anchorRequestList.get(i);
+					PathItemRequest endRequest = endRequestList.get(i);
+					
+					if (anchorRequest.getInstanceUri() == null) {
+						anchor = ng.addNode(anchorRequest.getClassUri(), this.oInfo);
 					} else {
-						anchor = ng.addNodeInstance(anchorInstanceList.get(i).classUri, this.oInfo, anchorInstanceList.get(i).instanceUri);
+						anchor = ng.addNodeInstance(anchorRequest.getClassUri(), this.oInfo, anchorRequest.getInstanceUri());
 					}
 					
 					// continue only iff this path has instances
-					if (this.pathHasInstance(ng, anchor, pathList.get(i), endInstanceList.get(i).instanceUri)) {
+					if (this.pathHasInstance(ng, anchor, pathList.get(i), endRequest.getInstanceUri())) {
 						
 						// add the path
 						Node added = ng.addPath(pathList.get(i), anchor, oInfo);
-						if (endInstanceList.get(i).instanceUri != null) {
-							added.addValueConstraint(ValueConstraint.buildFilterInConstraint(added, endInstanceList.get(i).instanceUri));
+						if (endRequest.getInstanceUri() != null) {
+							added.addValueConstraint(ValueConstraint.buildFilterInConstraint(added, endRequest.getInstanceUri()));
 						}
 						
 						// try adding all the missing instances
-						for (ClassInstance missingInstance : missingClassLists.get(i)) {
-							Node addedMissing = this.addClassFirstPath(ng, missingInstance.classUri, missingInstance.instanceUri);
+						for (PathItemRequest missingClassRequest : missingClassLists.get(i)) {
+							Node addedMissing = this.addClassFirstPath(ng, missingClassRequest.getClassUri(), missingClassRequest.getInstanceUri());
 							if (addedMissing == null) {
 								success = false;
-								LocalLogger.logToStdOut("...failed to add class: " + missingInstance.classUri);
+								LocalLogger.logToStdOut("...failed to add class: " + missingClassRequest.getClassUri());
 								break;
 							}
 						}
@@ -237,7 +199,11 @@ public class PathExplorer {
 						//                 This only checks if missingPathHints was empty to begin with.
 						if (missingTripleHintsLists.get(i).size() != 0) {
 							if (missingClassLists.get(i).size() > 0) {
-								throw new Exception("Not implmented: re-checking triple hints after added classes after initial path.");
+								// we added classes:  re-check nodegroup
+								// TODO: could this single function have been used all along instead of searching paths for classes and hints
+								if (this.calcMissingClassesAndTripleHints(ng, requestList).size() > 0) {
+									break;
+								}
 							} else {
 								// still missing triple hints
 								break;
@@ -251,17 +217,11 @@ public class PathExplorer {
 						// make a copy in hopes we can cache this
 						NodeGroup cacheNg = NodeGroup.deepCopy(ng);
 						
-						success = this.addEnumReturns(ng, objRetList);
-						if (! success) 
-							break;
-						
-						success = this.addDataPropReturn(ng, dataPropRetList);
-						if (! success) 
-							break;
+						this.addNodegroupReturns(ng, requestList);
 						
 						LocalLogger.logToStdOut("...succeeded");
 						
-						this.putToCache(cacheNg, classInstanceList, pathHints);
+						this.putToCache(cacheNg, requestList);
 						return ng;
 					}
 				}
@@ -272,52 +232,210 @@ public class PathExplorer {
 	}
 	
 	/**
-	 * Adds enum classes to a nodegroup.
-	 * @param ng
-	 * @param enumRetList
+	 * Return any triples that don't appear in the path
+	 * @param requestList
 	 * @return
-	 * @throws Exception
 	 */
-	private boolean addEnumReturns(NodeGroup ng, ArrayList<String> enumRetList) throws Exception {
-		// add all enum returns
-		// TODO: this presumes enums are always add-ons at the end
-		for (String enumClassUri : enumRetList) {
-			Node addedEnum = this.addClassFirstPath(ng, enumClassUri);
-			ng.setIsReturned(addedEnum, true);
-			if (addedEnum == null) {
-				LocalLogger.logToStdOut("...failed to add enum: " + enumClassUri);
-				return false;
+	public ArrayList<PathItemRequest> calcMissingTripleHints(OntologyPath path, ArrayList<PathItemRequest> requestList) {
+		ArrayList<PathItemRequest> ret = new ArrayList<PathItemRequest>();
+		
+		for (PathItemRequest req : requestList) {
+			boolean found = false;
+			Triple hint = req.getTripleHint();
+			if (hint != null) {
+				for (Triple t : path.getTripleList()) {
+					found = (hint.getSubject().equals(t.getSubject())) &&
+							 (hint.getPredicate().equals(t.getPredicate())) &&
+						     (hint.getObject().equals(t.getObject())     );
+					if (found) break;
+				}
+				if (!found) {
+					ret.add(req);
+				}
+			}
+		}
+		return ret;
+	}
+	
+	
+	/**
+	 * Return any triples that don't appear in the path
+	 * "" subject, pred, or object will match anything.
+	 * @param requestList
+	 * @return
+	 */
+	public ArrayList<PathItemRequest> calcMissingClassesAndTripleHints(NodeGroup ng, ArrayList<PathItemRequest> requestList) {
+		ArrayList<PathItemRequest> ret = new ArrayList<PathItemRequest>();
+		
+		for (PathItemRequest req : requestList) {
+			boolean found = false;
+			Triple hint = req.getTripleHint();
+			if (hint != null) {
+				for (Node n : ng.getNodesByURI(hint.getSubject())) {
+					NodeItem nItem = n.getNodeItem(hint.getPredicate());
+					if (nItem != null) {
+						for (Node objectNode :  nItem.getNodeList()) {
+							if (objectNode.getUri().equals(hint.getObject())) {
+								found = true;
+								break;
+							}
+						}
+					}
+					if (found) break;
+				}
+				
+				if (!found) {
+					ret.add(req);
+				}
+			} else {
+				// no path hint, just check that classUri exists
+				if (ng.getNodesByURI(req.getClassUri()) == null) {
+					ret.add(req);
+				}
+			}
+		}
+		return ret;
+	}
+	/**
+	 * Return copy of classList with classes from the path removed
+	 * @param classList
+	 * @return
+	 */
+	public ArrayList<PathItemRequest> calcMissingClasses(OntologyPath path, ArrayList<PathItemRequest> requestList) {
+		
+		ArrayList<String> pathClassList = path.getClassList();
+		
+		ArrayList<PathItemRequest> ret = new ArrayList<PathItemRequest>();
+		
+		for (PathItemRequest req : requestList) {
+			int i = pathClassList.indexOf(req.getClassUri());
+			if (i > -1) {
+				// found.  Remove from classList in order to correctly count duplicates
+				pathClassList.remove(i);
+			} else {
+				// not found: add to returns
+				ret.add(req);
+			}
+		}
+		return ret;
+	}
+	
+	/**
+	 * Adds returns to nodegroup  PREREQUISITE: add instances first
+	 * @param ng
+	 * @param propRetList
+	 * @return false if any property could not be found
+	 */
+	private boolean addNodegroupReturns(NodeGroup ng, ArrayList<PathItemRequest> requestList) throws Exception {
+	
+		// TODO: does not attempt to add the prop's class if it's missing
+		ArrayList<String> allReturns = new ArrayList<String>();
+		
+		for (PathItemRequest request : requestList) {
+			if (request.getPropUriList() != null) {
+				Node foundNode = this.findNodeMatchingRequest(ng, request, true);
+				
+				if (request.getPropUriList() == null || request.getPropUriList().size() == 0) {
+					// No properties.  Return the node.
+					ArrayList<NodeItem> incoming = ng.getConnectingNodeItems(foundNode);
+					if (incoming != null && incoming.size() > 0) {
+						incoming.get(0).setOptionalMinus(foundNode, NodeItem.OPTIONAL_TRUE);
+					}
+					ng.setIsReturned(foundNode, true);
+					allReturns.add(foundNode.getBindingOrSparqlID());
+					
+				} else {
+					for (String propUri : request.getPropUriList()) {
+						PropertyItem propItem = foundNode.getPropertyByURIRelation(propUri);
+						if (propItem == null) throw new Exception("Could not find property " + propUri + " in node " + foundNode.getUri());
+						
+						// funcs
+						String func = request.getFuncName(propUri);
+						
+						String sparqlID = request.getSparqlID(propUri);
+						if (sparqlID != null) {
+							ng.changeSparqlID(propItem, sparqlID);
+						}
+						ng.setIsReturned(propItem, true);
+						allReturns.add(propItem.getBindingOrSparqlID());
+						
+						if (func != null) {
+							propItem.setOptMinus(PropertyItem.OPT_MINUS_NONE);
+							ng.appendOrderBy(propItem.getBindingOrSparqlID(), func.equals("MAX") ? "DESC" : "ASC");
+							ng.setLimit(1);
+						} else {
+							propItem.setOptMinus(PropertyItem.OPT_MINUS_OPTIONAL);
+						}
+						
+						// filters
+						String filter = request.getFilter(propUri);
+						if (filter != null) {
+							String split[] = filter.split("\\s+");
+							propItem.setValueConstraint(new ValueConstraint(ValueConstraint.buildFilterConstraint(propItem, split[0], split[1])));
+							ng.appendOrderBy(propItem.getBindingOrSparqlID(), split[0].contains("<") ? "DESC" : "ASC");
+							propItem.setOptMinus(PropertyItem.OPT_MINUS_NONE);
+						}
+					}
+				}
+			}
+		}
+		
+		// try column order in request order
+		for (String id : allReturns) {
+			ng.appendColumnOrder(id);
+		}
+		return true;
+	}
+	
+	/**
+	 * Adds returns to nodegroup
+	 * @param ng
+	 * @param propRetList
+	 * @return false if any property could not be found
+	 */
+	private boolean addNodegroupInstances(NodeGroup ng, ArrayList<PathItemRequest> requestList) throws Exception {
+	
+		for (PathItemRequest request : requestList) {
+			if (request.getInstanceUri() != null) {
+				Node foundNode = this.findNodeMatchingRequest(ng, request, false);
+				
+				foundNode.addValueConstraint(ValueConstraint.buildFilterInConstraint(foundNode, request.getInstanceUri()));
 			}
 		}
 		return true;
 	}
 	
 	/**
-	 * Adds property returns to every class containing them
+	 * Find node in nodegroup because it has request's class and 
+	 *      - instance matches if any, or
+	 *      - incoming property matches if any, or
+	 *      - no instance or incomingProp in the request
 	 * @param ng
-	 * @param propRetList
-	 * @return false if any property could not be found
+	 * @param request
+	 * @return
+	 * @throws Exception
 	 */
-	private boolean addDataPropReturn(NodeGroup ng, ArrayList<String> propRetList) throws Exception {
-	
-		// TODO: does not attempt to add the prop's class if it's missing
-		
-		for (String propUri : propRetList) {
-			boolean found = false;
-			for (Node n : ng.getNodeList()) {
-				PropertyItem propItem = n.getPropertyByURIRelation(propUri);
-				if (propItem != null) {
-					ng.setIsReturned(propItem, true);
-					propItem.setOptMinus(PropertyItem.OPT_MINUS_OPTIONAL);
-					found = true;
+	public Node findNodeMatchingRequest(NodeGroup ng, PathItemRequest request, boolean matchInstance) throws Exception {
+		for (Node n : ng.getNodesByURI(request.getClassUri())) {
+			// match node because request has instance and node has a value constraint
+			if ( matchInstance && request.getInstanceUri() != null && n.getValueConstraint() != null && n.getValueConstraintStr().contains(request.getInstanceUri())) {
+				return n;
+			
+			// match node because request has incoming prop and node has same incoming prop
+			} else if (request.getIncomingPropUri() != null) {
+				
+				for (NodeItem nItem : ng.getNodeItems(request.getIncomingPropUri())) {
+					if (nItem.getNodeList().contains(n)) {
+						return n;
+					}
 				}
-			}
-			if (!found) {
-				LocalLogger.logToStdErr("...failed to add prop: " + propUri);
-				return false;
+			// else match simply on class
+			} else {
+				return n;
 			}
 		}
-		return true;
+			
+		throw new Exception("Could not find " + request.getClassUri() + " in the nodegroup");
 	}
 	
 	public Node addClassFirstPath(NodeGroup ng, String classUri) throws Exception {
@@ -410,92 +528,71 @@ public class PathExplorer {
 	 * @return null if nodegroup is not there
 	 * @throws Exception
 	 */
-	private NodeGroup getFromCache(ArrayList<ClassInstance> classInstanceList, ArrayList<Triple> pathHintList) throws Exception {
+	private NodeGroup getFromCache(ArrayList<PathItemRequest> requestList) throws Exception {
 		NodeGroup ng = null;
-		String ngKey = getNgKey(classInstanceList, pathHintList);
+		String ngKey = getNgKey(requestList);
 		
-		try {
-			// get nodegroup
-			ng = PathExplorer.cache.get(this.cacheKey).get(ngKey);
-			
-		} catch (ValidationException e) {
-			// on ValidationError: delete and return null
-			LocalLogger.logToStdErr("Error validating cached nodegroup.  Deleting id " + ngKey);
-			PathExplorer.cache.get(this.cacheKey).delete(ngKey);
-			return null;
-		}
-		
-		if (ng != null) {
-			// add in classInstanceList
-			for (int i=0; i < classInstanceList.size(); i++) {
-				String instanceUri = classInstanceList.get(i).instanceUri;
-				if (instanceUri != null) {
-					Node n = ng.getNodeBySparqlID("classInstance_" + String.valueOf(i));
-					if (n == null) {
-						LocalLogger.logToStdErr("Error trying to add instance to cached nodegroup.  Deleting id " + ngKey);
-						PathExplorer.cache.get(this.cacheKey).delete(ngKey);
-						ng = null;
-					} else {
-						n.addValueConstraint(ValueConstraint.buildFilterInConstraint(n, classInstanceList.get(i).instanceUri));
-					}
-				}
+		if (this.cacheKey != NO_CACHE) {
+			try {
+				// get nodegroup
+				ng = PathExplorer.cache.get(this.cacheKey).get(ngKey);
+				
+			} catch (ValidationException e) {
+				// on ValidationError: delete and return null
+				LocalLogger.logToStdErr("Error validating cached nodegroup.  Deleting id " + ngKey);
+				PathExplorer.cache.get(this.cacheKey).delete(ngKey);
+				return null;
 			}
 		}
 		
 		return ng;
 	}
 	
-	private void putToCache(NodeGroup ng, ArrayList<ClassInstance> classInstanceList, ArrayList<Triple> pathHints) throws Exception {
-		
-		String ngKey = PathExplorer.getNgKey(classInstanceList, pathHints);
-		// remove all node value contraints
-		for (Node n : ng.getNodeList()) {
-			for (int i=0; i < classInstanceList.size(); i++) {
-				String constraint = n.getValueConstraintStr();
-				String instanceUri = classInstanceList.get(i).instanceUri;
-				if (constraint != null && instanceUri != null && constraint.contains(instanceUri)) {
-					ng.changeSparqlID(n, "classInstance_" + String.valueOf(i));
-					break;
-				}
-			}
-			n.setValueConstraint(null);
-		}
-		
-		
-		// generate some comments showing class list
-		ArrayList<String> classList = ClassInstance.getClassList(classInstanceList);
-		Collections.sort(classList);
-		String comments = classList.toString();
+	private void putToCache(NodeGroup ng, ArrayList<PathItemRequest> requestList) throws Exception {
 		
 		// add to cache unless NO_CACHE
 		if (this.cacheKey != NO_CACHE) {
+			String ngKey = PathExplorer.getNgKey(requestList);
+			ng.unsetAllConstraints();
+			ng.unsetAllReturns();
+			
+			// generate some comments showing class list
+			ArrayList<String> classList = new ArrayList<String>();
+			classList.addAll(PathItemRequest.getClassesInList(requestList));
+			Collections.sort(classList);
+			String comments = classList.toString();
+		
 			PathExplorer.cache.get(this.cacheKey).put(ngKey, ng, conn, comments);
 		}
 	}
 	
 	/**
-	 * Key is a hash of all inputs.
-	 * @param classInstanceList
-	 * @param pathHints
+	 * Key is a hash of classes and path hints
+	 * @param requestList
 	 * @return
 	 * @throws Exception
 	 */
-	private static String getNgKey(ArrayList<ClassInstance> classInstanceList, ArrayList<Triple> pathHints) throws Exception {
+	private static String getNgKey(ArrayList<PathItemRequest> requestList) throws Exception {
 		ArrayList<String> keyList = new ArrayList<String>();
-		ArrayList<String> tmpList = null;
+		ArrayList<String> tmpList = new ArrayList<String>();
 		
-		tmpList = ClassInstance.getClassList(classInstanceList);
+		for (PathItemRequest req : requestList) {
+			HashSet<String> set = req.getClassList();
+			if (set.size() > 0) 
+				tmpList.addAll(set);
+		}
 		Collections.sort(tmpList);
 		keyList.addAll(tmpList);
 		
-		tmpList = new ArrayList<String>();
-		for (Triple t : pathHints) {
-			tmpList.add(t.toCsvString());
+		for (PathItemRequest req : requestList) {
+			Triple t = req.getTripleHint();
+			if (t != null) 
+				tmpList.add(t.toCsvString());
 		}
 		Collections.sort(tmpList);
 		keyList.addAll(tmpList);
 	    
-	    return Utility.hashMD5(tmpList.toString());
+	    return Utility.hashMD5(keyList.toString());
 	}
 
 }

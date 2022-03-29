@@ -1672,6 +1672,15 @@ public class NodeGroup {
 		return retval;
 	}
 
+	public void unsetAllConstraints() throws Exception {
+		for (Node n : this.getNodeList()) {
+			n.setValueConstraint(null);
+			for (PropertyItem p : n.getPropertyItems()) {
+				p.setValueConstraint(null);
+			}
+		}
+	}
+	
 	/**
 	 * Unset every isReturned in the nodegroup
 	 */

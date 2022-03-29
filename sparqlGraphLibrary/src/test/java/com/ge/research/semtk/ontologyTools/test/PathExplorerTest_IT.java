@@ -30,6 +30,7 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.ontologyTools.ClassInstance;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.PathExplorer;
+import com.ge.research.semtk.ontologyTools.PathItemRequest;
 import com.ge.research.semtk.ontologyTools.ReturnRequest;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
@@ -163,15 +164,22 @@ public class PathExplorerTest_IT {
 		String airportUri1 = airportTable.getCell(0, 0);
 		String airportUri2 = airportTable.getCell(1, 0);
 		
-		ArrayList<ClassInstance> classInstanceList = new ArrayList<ClassInstance>();
-		classInstanceList.add(new ClassInstance("http://research.ge.com/semtk/fdcSample/test#Airport", airportUri1));
-		classInstanceList.add(new ClassInstance("http://research.ge.com/semtk/fdcSample/test#Airport", airportUri2));
+		ArrayList<PathItemRequest> requestList = new ArrayList<PathItemRequest>();
+		PathItemRequest req;
 		
-		ArrayList<ReturnRequest> returnList = new ArrayList<ReturnRequest>();
-		// just gets lucky that Distance is in the path in this data set
-		returnList.add(new ReturnRequest("http://research.ge.com/semtk/fdcSample/test#distanceNm"));
+		req = new PathItemRequest("http://research.ge.com/semtk/fdcSample/test#Airport");
+		req.setInstanceUri(airportUri1);
+		requestList.add(req);
+		
+		req = new PathItemRequest("http://research.ge.com/semtk/fdcSample/test#Airport");
+		req.setInstanceUri(airportUri2);
+		requestList.add(req);
+		
+		req = new PathItemRequest("http://research.ge.com/semtk/fdcSample/test#Distance");
+		req.addPropUri("http://research.ge.com/semtk/fdcSample/test#distanceNm");
+		requestList.add(req);
 				
-		ng = explorer.buildNgWithData(classInstanceList, returnList);
+		ng = explorer.buildNgWithData(requestList);
 		
 		assertTrue("buildNgWithData failed to link Airport to Airport", ng != null);
 		

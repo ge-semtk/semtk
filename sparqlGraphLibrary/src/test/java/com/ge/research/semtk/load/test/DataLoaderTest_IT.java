@@ -364,8 +364,11 @@ public class DataLoaderTest_IT {
 	public void testBoolean() throws Exception {
 		// set up the data
 		String contents = "Happy,name\n"
-				+ "true,HappyGuy\n"
-				+ "false,SadGuy\n";
+				+ "true,HappyGuy1\n"
+				+ "TRUE,HappyGuy2\n"
+				+ "tRuE,HappyGuy3\n"
+				+ "false,SadGuy1\n"
+				+ "False,SadGuy2\n";
 		Dataset ds = new CSVDataset(contents, true);
 
 		// get json
@@ -378,13 +381,27 @@ public class DataLoaderTest_IT {
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 
 		int records = dl.importData(true);
-		assertEquals("Did not load expected records", 2, records);
+		assertEquals("Did not load expected records", 5, records);
 		
 		Table t = TestGraph.execTableSelect(sgJson);
 		List<String> col = Arrays.asList(t.getColumn("Happy"));
 		assertTrue("Can't find the ingested value: true", col.contains("true"));
 		assertTrue("Can't find the ingested value: false", col.contains("false"));
-
+		
+		// match true with ValueConstraint.buildFilterConstraint()
+		NodeGroup ng = sgJson.getNodeGroup();
+		PropertyItem pItem = ng.getNode(0).getPropertyByKeyname("isHappy");
+		pItem.setValueConstraint(new ValueConstraint(ValueConstraint.buildFilterConstraint(pItem, "=", "true")));
+		sgJson.setNodeGroup(ng);
+		t = TestGraph.execTableSelect(sgJson);
+		assertEquals("Did not match all true booleans using ValueConstraint.buildFilterConstraint()", 3, t.getNumRows());
+		
+		// match false with hard-coded xsd:  false^^<http://www.w3.org/2001/XMLSchema#boolean>
+		pItem.setValueConstraint(new ValueConstraint("FILTER(?Happy = \"false\"^^<http://www.w3.org/2001/XMLSchema#boolean>) "));
+		sgJson.setNodeGroup(ng);
+		t = TestGraph.execTableSelect(sgJson);
+		assertEquals("Did not match all false booleans using false^^<http://www.w3.org/2001/XMLSchema#boolean>", 2, t.getNumRows());
+		
 		///////// Now fail ///////////
 		contents = "Happy,name\n"
 				+ "t,HappyGuy\n"
