@@ -1477,40 +1477,21 @@ SemanticNode.prototype = {
 		return ret;
 	},
 
-	getConnectedNodesForSparql : function() {
-		// return a list of connections as edges.
-		var k = this.nodeList.length;
-		var retval = [];
-
-		for (var i = 0; i < k; i++) {
-			nd = this.nodeList[i];
-			if (nd.getConnected()) {
-				var nodeConn = this.nodeList[i].getSNodes(); // get the nodes
-															// connecting to
-															// this locus
-				for (var d = 0; d < nodeConn.length; d++) {
-					var nxt = [ nd.getURIConnectBy(), nodeConn[d].getSparqlID() ];
-					retval.push(nxt);
-				}
-			}
-		}
-		return retval;
-	},
-
+	/**
+		Get all nodes connected by nodeItem (object properties) facing outward
+		
+		This includes self and duplicates
+	 */
 	getConnectedNodes : function() {
-		// return a list of connections as SNodes.
-		var k = this.nodeList.length;
+		
 		var retval = [];
-
-		for (var i = 0; i < k; i++) {
-			nd = this.nodeList[i];
-			if (nd.getConnected()) {
-				var nodeConn = this.nodeList[i].getSNodes(); // get the nodes
-															// connecting to
-															// this locus
-				for (var d = 0; d < nodeConn.length; d++) {
-					retval.push(nodeConn[d]);
-				}
+	   	for (var nItem of this.nodeList) {
+            if (nItem.getConnected()) {
+                for (var snode of nItem.getSNodes()) {
+                    if (retval.indexOf(snode) == -1) {
+                        retval.push(snode);
+                    }
+                }
 			}
 		}
 		return retval;
@@ -3047,18 +3028,28 @@ SemanticNodeGroup.prototype = {
 		return ret;
 	},
 
-	getSubNodes : function(topNode) {
-		// recursive function returns topNode and all it's sub-nodes in a top
-		// down breadth-first search
+	/**
+		Recursively walk down object props / nodeItems and find all subNodes
+		Handles circuits.
+	 */
+	getSubNodes : function(topNode, optStopList) {
+		var stopList = optStopList || [topNode];
 		var ret = [];
+		var nextLevel = [];
 
-		var conn = topNode.getConnectedNodes();
-		ret = ret.concat(conn);
-
-		for (var i = 0; i < conn.length; i++) {
-			var subs = this.getSubNodes(conn[i]);
-			ret = ret.concat(subs);
+		// breadth first to match legacy behavior 
+		for (var n of topNode.getConnectedNodes()) {
+			if (stopList.indexOf(n) == -1 && ret.indexOf(n) == -1) {
+				ret.push(n);
+				nextLevel.push(n);
+			}
 		}
+		
+		for (var n of nextLevel) {
+			// to make depth-first, get rid of nextLevel and combine into loop above
+			ret = ret.concat(this.getSubNodes(n, ret.concat(stopList)));
+		}
+		
 		return ret;
 	},
 

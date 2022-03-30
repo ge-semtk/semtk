@@ -4196,19 +4196,39 @@ public class NodeGroup {
 		return ret;
 	}
 	
+	/**
+	 * Recursively walk down object props / nodeItems and find all subNodes
+	 * Handles circuits.
+	 * @param topNode
+	 * @return
+	 */
 	private ArrayList<Node> getSubNodes(Node topNode) {
-		ArrayList<Node> subNodes = new ArrayList<Node>();
-		
-		ArrayList<Node> connectedNodes = topNode.getConnectedNodes();
-		
-		subNodes.addAll(connectedNodes);
-		
-		for (Node n : connectedNodes) {
-			ArrayList<Node> innerSubNodes = this.getSubNodes(n);
-			subNodes.addAll(innerSubNodes);
+		ArrayList<Node> stopList = new ArrayList<Node>();
+		stopList.add(topNode);
+		return this.getSubNodes(topNode, stopList);
+	}
+	
+	// recursive version
+	private ArrayList<Node> getSubNodes(Node topNode, ArrayList<Node> stopList) {
+		ArrayList<Node> ret = new ArrayList<Node>();
+		ArrayList<Node> nextLevel = new ArrayList<Node>();
+		// breadth first to match legacy behavior 
+		for (Node n : topNode.getConnectedNodes()) {
+			if (!stopList.contains(n) && !ret.contains(n)) {
+				ret.add(n);
+				nextLevel.add(n);
+			}
 		}
 		
-		return subNodes;
+		for (Node n : nextLevel) {
+			// to make depth-first, get rid of nextLevel and combine into loop above
+			ArrayList<Node> newStopList = new ArrayList<Node>();
+			newStopList.addAll(ret);
+			newStopList.addAll(stopList);
+			ret.addAll(this.getSubNodes(n, newStopList));	
+		}
+		
+		return ret;
 	}
 	
 	private ArrayList<Node> getHeadNodes()  {
