@@ -1477,16 +1477,39 @@ SemanticNode.prototype = {
 		return ret;
 	},
 
-	getConnectedNodes : function() {
-		// return a list of connections as SNodes.
+	getConnectedNodesForSparql : function() {
+		// return a list of connections as edges.
+		var k = this.nodeList.length;
 		var retval = [];
 
-		for (var nItem of this.nodeList) {
-			if (nItem.getConnected()) {
-				for (var snode of nItem.getSNodes()) {
-					if (retval.indexOf(snode) == -1) {
-						retval.push(snode);
-					}
+		for (var i = 0; i < k; i++) {
+			nd = this.nodeList[i];
+			if (nd.getConnected()) {
+				var nodeConn = this.nodeList[i].getSNodes(); // get the nodes
+															// connecting to
+															// this locus
+				for (var d = 0; d < nodeConn.length; d++) {
+					var nxt = [ nd.getURIConnectBy(), nodeConn[d].getSparqlID() ];
+					retval.push(nxt);
+				}
+			}
+		}
+		return retval;
+	},
+
+	getConnectedNodes : function() {
+		// return a list of connections as SNodes.
+		var k = this.nodeList.length;
+		var retval = [];
+
+		for (var i = 0; i < k; i++) {
+			nd = this.nodeList[i];
+			if (nd.getConnected()) {
+				var nodeConn = this.nodeList[i].getSNodes(); // get the nodes
+															// connecting to
+															// this locus
+				for (var d = 0; d < nodeConn.length; d++) {
+					retval.push(nodeConn[d]);
 				}
 			}
 		}
@@ -3024,22 +3047,18 @@ SemanticNodeGroup.prototype = {
 		return ret;
 	},
 
-	getSubNodes : function(topNode, optStopList) {
-		var stopList = optStopList || [];
+	getSubNodes : function(topNode) {
 		// recursive function returns topNode and all it's sub-nodes in a top
 		// down breadth-first search
 		var ret = [];
 
-		// add next level
-		var nextLevelList = topNode.getConnectedNodes();
-		for (var snode of nextLevelList) {
-			if (snode != topNode && stopList.indexOf(snode) == -1 && ret.indexOf(snode) == -1) {
-				ret.push(snode);
-				var subs = this.getSubNodes(snode, [topNode] + stopList + ret);
-				ret = ret.concat(subs);
-			}
-		}
+		var conn = topNode.getConnectedNodes();
+		ret = ret.concat(conn);
 
+		for (var i = 0; i < conn.length; i++) {
+			var subs = this.getSubNodes(conn[i]);
+			ret = ret.concat(subs);
+		}
 		return ret;
 	},
 
