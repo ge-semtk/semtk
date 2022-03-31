@@ -42,6 +42,7 @@ import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.load.DataValidator;
 import com.ge.research.semtk.load.transform.Transform;
 import com.ge.research.semtk.load.transform.TransformInfo;
+import com.ge.research.semtk.load.utility.UriLookupPerfMonitor.READY;
 import com.ge.research.semtk.ontologyTools.OntologyDatatype;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
@@ -85,15 +86,7 @@ public class ImportSpecHandler {
 	HashMap<String, Integer> colsUsed = new HashMap<String, Integer>(); // count of cols used. Only includes counts > 0
 
 	ImportMapping importMappings[] = null;
-	HashMap<String, ArrayList<ImportMapping>> lookupMappings = new HashMap<String, ArrayList<ImportMapping>>(); // for
-																												// each
-																												// node,
-																												// the
-																												// mappings
-																												// that
-																												// do
-																												// URI
-																												// lookup
+	HashMap<String, ArrayList<ImportMapping>> lookupMappings = new HashMap<String, ArrayList<ImportMapping>>(); // for each node, the mappings that do URI lookup
 
 	UriResolver uriResolver;
 	OntologyInfo oInfo;
@@ -104,27 +97,9 @@ public class ImportSpecHandler {
 															// must be copied before being used.
 
 	DataValidator dataValidator = null;
-	HashMap<String, AtomicBoolean> prefetchBlocked = new HashMap<String, AtomicBoolean>();
-	HashMap<String, Integer> prefetchLimit = new HashMap<String, Integer>();
-	HashMap<String, Integer> prefetchOffset = new HashMap<String, Integer>();
 
-	long precacheIndivCount = 0;
-	long precacheIndivAvgNanosec = 0;
-	long precacheBatchAvgNanosec = 0;
-	private final boolean LOG_PRECACHE = true;
+	HashMap<String, UriLookupPerfMonitor> lookupPerfMonitors = new HashMap<String, UriLookupPerfMonitor>();
 	
-	// PRE-FETCH URI lookup ; tuning paramters
-	private final int PREFETCH_START_LIMIT = 1000; // LIMIT of first pre-fetch query. Will subsequently double in size
-													// each time.
-	private final int PREFETCH_MAX_LIMIT = 8000; // maximum LIMIT for pre-fetch query.
-	private final int PREFETCH_MAX_COUNT = 500000; // stop pre-fetching after this many (worried about memory).
-													// setting to 0 will turn this off.
-	private final int PREFETCH_MAX_EXIST = 600000; // Since pre-fetch queries need sort by each field, performance could
-													// be awful
-													// So run a count first, and if it is higher than this, abandon all
-													// hope of prefetching
-													// Divide this number by the number of mappings. This is the value
-													// for simple lookup by 1 field.
 
 	public ImportSpecHandler(JSONObject importSpecJson, JSONObject ngJson, SparqlConnection lookupConn,
 			OntologyInfo oInfo) throws Exception {
@@ -459,9 +434,7 @@ public class ImportSpecHandler {
 			lookupNg.removeUnusedBindings(); // for fuseki. Perhaps generic sparql gen solution would be better.
 
 			this.lookupNodegroupsJson.put(importNodeId, lookupNg.toJson());
-			this.prefetchBlocked.put(importNodeId, new AtomicBoolean(false));
-			this.prefetchLimit.put(importNodeId, PREFETCH_START_LIMIT);
-			this.prefetchOffset.put(importNodeId, 0);
+			this.lookupPerfMonitors.put(importNodeId, new UriLookupPerfMonitor(this.lookupMappings.get(importNodeId).size()));
 
 			// standardize sparqlids, then generate sparql, then hash it
 			// so we can tell if two lookup nodegroups are identical
@@ -811,6 +784,8 @@ public class ImportSpecHandler {
 	 */
 	private String lookupUri(String nodeID, String nodeUri, ArrayList<String> record) throws Exception {
 
+		this.lookupPerfMonitors.get(nodeID).recordLookup();
+		
 		// get total possible number available, if it isn't known
 		if (!this.lookupResultCount.containsKey(nodeID)) {
 			this.lookupResultCount.put(nodeID, this.lookupCount(nodeID, 2));
@@ -884,8 +859,7 @@ public class ImportSpecHandler {
 						SparqlResultTypes.TABLE);
 				res.throwExceptionIfUnsuccessful();
 				tab = res.getTable();
-				long lookupTime = System.nanoTime() - startTime;
-				this.noteIndividualLookup(lookupTime);
+				this.lookupPerfMonitors.get(nodeID).recordIndivQuery(System.nanoTime() - startTime);
 			}
 
 			// Check and return results
@@ -935,35 +909,7 @@ public class ImportSpecHandler {
 		}
 	}
 	
-	/**
-	 * Log fact that a URI was just looked up, and how long it took
-	 * @param nanosec
-	 */
-	private synchronized void noteIndividualLookup(long nanosec) {
-		this.precacheIndivCount += 1;
-		if (this.precacheIndivAvgNanosec == 0) {
-			this.precacheIndivAvgNanosec = nanosec;
-		} else {
-			// keep 50 rolling average
-			this.precacheIndivAvgNanosec = 	(long) ((double)this.precacheIndivAvgNanosec * 0.98 + (double) nanosec * 0.02);
-		}
-		if (LOG_PRECACHE) LocalLogger.logToStdOut(String.format("PRECACHE: looked up 1 total=%d, avg nanosec=%,d", this.precacheIndivCount, this.precacheIndivAvgNanosec));
-	}
 	
-	private synchronized void noteBatchLookup(long size, long nanosec) {
-		if (this.precacheBatchAvgNanosec == 0) {
-			this.precacheBatchAvgNanosec = nanosec / size;
-		} else {
-			// keep 4-set rolling average
-			this.precacheBatchAvgNanosec = 	(long) ((double)this.precacheBatchAvgNanosec * 0.75 + (double) nanosec / (double) size * 0.25);
-		}
-		if (LOG_PRECACHE) LocalLogger.logToStdOut(String.format("PRECACHE: looked up %d, avg nanosec=%,d", size, this.precacheBatchAvgNanosec));
-
-	} 
-	
-	private synchronized long getPrecacheIndivCount()      {  return this.precacheIndivCount;  }
-	private synchronized long getPrecacheIndivAvgNanosec() {  return this.precacheIndivAvgNanosec;  }
-	private synchronized long getPrecacheBatchAvgNanosec() {  return this.precacheBatchAvgNanosec;  }
 
 	private String getLookupQuery(NodeGroup lookupNodegroup, String nodeID, ArrayList<String> mappedStrings)
 			throws Exception {
@@ -1028,42 +974,35 @@ public class ImportSpecHandler {
 	private void preFetchUriCache(NodeGroup lookupNodegroup, String nodeID) {
 
 		// return if in progress on another thread, done, or there's been an error
-		if (this.prefetchBlocked.get(nodeID).getAndSet(true)) {
+		UriLookupPerfMonitor monitor = this.lookupPerfMonitors.get(nodeID);
+		
+		UriLookupPerfMonitor.READY ready = monitor.requestNextBatchQuery();
+		if (ready == UriLookupPerfMonitor.READY.NO) 
 			return;
-		}
-
-		// set offset and limit for this time
-		int limit = this.prefetchLimit.get(nodeID);
-		int offset = this.prefetchOffset.get(nodeID);
-
-		if (limit + offset > PREFETCH_MAX_COUNT) {
-			// reached max count, stop prefetching
-			return; // leaves this.prefetchBlocked.get(nodeID) as true
-		} else {
-			// set up limit and offset for next time
-			this.prefetchOffset.put(nodeID, offset + limit);
-			if (limit * 2 < PREFETCH_MAX_LIMIT) {
-				this.prefetchLimit.put(nodeID, limit * 2);
+		
+		else if (ready == UriLookupPerfMonitor.READY.COUNT_NEEDED) {
+			try {
+				long countInTriplestore = this.lookupCount(nodeID, UriLookupPerfMonitor.PREFETCH_MAX_EXIST + 1);
+				monitor.setUrisInTriplestore(countInTriplestore);
+				if (monitor.requestNextBatchQuery() != UriLookupPerfMonitor.READY.YES) {
+					return;
+				}
+			} catch (Exception e) {
+				// can't count uris in triplestore:  stop everything forever
+				monitor.setBatchQueryBlocked();
+				return;
 			}
-
 		}
+		
+		// set offset and limit for this time
+		int limit = monitor.getQueryLimit();
+		int offset = monitor.getQueryOffset();
 
 		// do the pre-fetch
 		try {
 			long startTime = System.nanoTime();
 
 			ArrayList<ImportMapping> mappings = this.lookupMappings.get(nodeID);
-
-			// if we haven't yet fetched anything for this nodeID, look up
-			if (offset == 0) {
-
-				int max = PREFETCH_MAX_EXIST / mappings.size();
-				if (this.lookupCount(nodeID, max + 1) > max) {
-					// too many possibilities in the triplestore, sorting will lock things up.
-					// quit with prefetchBlocked still true so no more attempts are made.
-					return;
-				}
-			}
 
 			String colName[] = new String[mappings.size()];
 			String uriColName = nodeID.substring(1);
@@ -1138,18 +1077,10 @@ public class ImportSpecHandler {
 					this.uriCache.putUri(this.lookupNodegroupMD5.get(nodeID), mappedStrings, uri);
 				}
 
-				long lookupTime = System.nanoTime() - startTime;
-				this.noteBatchLookup(tab.getNumRows(), lookupTime);
 			}
 
-			LocalLogger
-					.logToStdOut("PRE-FETCH limit=" + limit + " offset=" + offset + ": " + tab.getNumRows() + " rows");
-
-			// if we got a full batch back, un-block so we can fetch more next time
-			if (tab.getNumRows() >= limit) {
-				this.prefetchBlocked.get(nodeID).set(false);
-			}
-
+			monitor.recordBatchQuery(System.nanoTime() - startTime, tab.getNumRows());
+			
 		} catch (Exception e) {
 			// this.prefetchBlocked.get(nodeID) will remain true, aborting any further
 			// attempts at pre-fetching.
