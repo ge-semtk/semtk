@@ -899,6 +899,7 @@ public class ImportSpecHandler {
 					// found 1. Normal success.
 					String uri = tab.getCell(0, 0);
 					this.uriCache.putUri(this.lookupNodegroupMD5.get(nodeID), mappedStrings, uri);
+					//LocalLogger.logToStdErr("PUT INDIV   : " + String.join(",",mappedStrings));
 
 					// if we found a URI in via lookup in triplestore, cache some more
 					this.preFetchUriCache(lookupNodegroup, nodeID);
@@ -1075,6 +1076,8 @@ public class ImportSpecHandler {
 					// TODO : Not checking for same mapped strings but different uri.
 					// Hopefully we've already eliminated that possibility? Should check anyway.
 					this.uriCache.putUri(this.lookupNodegroupMD5.get(nodeID), mappedStrings, uri);
+					//LocalLogger.logToStdErr("PUT BATCH   : " + String.join(",",mappedStrings));
+
 				}
 
 			}

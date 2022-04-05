@@ -37,13 +37,10 @@ import com.ge.research.semtk.utility.LocalLogger;
  * @author 200001934
  */
 public class UriLookupPerfMonitor {
-
+	private final boolean DISABLE_PRECACHE = false;
 	private final boolean LOG_PRECACHE = true;
 	
-	// TODO: not sure if we need these
-	
-	static final int PREFETCH_MAX_COUNT = 500000; // stop pre-fetching after this many (worried about memory).
-	static final int INDIV_BREAK_IN = 100;   // don't consider a batch until this many individual queries run.											
+	static final int PREFETCH_MAX_COUNT = 300000; // stop pre-fetching after this many (worried about memory).
 	
 	public static final int PREFETCH_MAX_EXIST = 600000; // Since pre-fetch queries need sort by each field, performance could
 													// be awful
@@ -51,6 +48,7 @@ public class UriLookupPerfMonitor {
 													// hope of prefetching
 													// Divide this number by the number of mappings. This is the value
 													// for simple lookup by 1 field.
+	private long ignoreUntilIndivCount = 0;   // don't consider a batch until this many individual queries run.											
 	private long uriLookupCount = 0;
 	private long indivAvgQueryTime = 0;
 	private long indivQueryCount = 0;
@@ -61,11 +59,12 @@ public class UriLookupPerfMonitor {
 	private int queryLimit = 0;
 	private int queryOffset = 0;
 	
-	private AtomicBoolean batchQueryBlocked = new AtomicBoolean(false);  // once true, batch success is only way to unblock
+	private AtomicBoolean batchQueryBlocked = new AtomicBoolean(DISABLE_PRECACHE);  // once true, batch success is only way to unblock
 	
 	public UriLookupPerfMonitor(int mappingCount) {
 		this.queryLimit = 4900 / mappingCount;
-		this.queryOffset = 0;
+		this.queryOffset = -1;
+		this.ignoreUntilIndivCount = 100;
 	}
 	
 	/**
@@ -84,12 +83,13 @@ public class UriLookupPerfMonitor {
 	 *           YES - ready to run a batch query, call recordBatchSuccess() on success
 	 *           COUNT_NEEDED - call setUrisInTriplestore() and try again, counting up to at least PREFETCH_MAX_EXIST + 1
 	 */
-	public synchronized READY requestNextBatchQuery() {
+	public READY requestNextBatchQuery() {
 		if (this.batchQueryBlocked.get()) {
+			// another thread is already doing it OR it has been permanently ended for this load
 			return READY.NO;
 			
-		} else if (this.indivQueryCount < INDIV_BREAK_IN) {
-			// still in break-in period
+		} else if (this.indivQueryCount < this.ignoreUntilIndivCount) {
+			// in break-in or breathing-room spot
 			return READY.NO;
 			
 		} else if (this.urisInTriplestore == -1 ) {
@@ -99,9 +99,11 @@ public class UriLookupPerfMonitor {
 			
 		} else {
 
-			long estimatedLookupsRemaining = 5000; // this.uriLookupCount;  // always presume we're half way through
+			// estimate times to lookup individually vs batch
+			// lots of assumptions
+			// seem 2x to high but the two estimates cross at approximately the correct place
+			long estimatedLookupsRemaining = Math.max(5000, this.uriLookupCount) ;  // generous swag at how many lookups remain 
 			long urisToCache = Math.min(this.urisInTriplestore, PREFETCH_MAX_COUNT) - this.urisCachedSoFar;
-			urisToCache = Math.min(estimatedLookupsRemaining, urisToCache);
 			long batchQueryTime = this.batchAvgQueryTime * urisToCache;
 			long estWithBatch     =  batchQueryTime + this.indivAvgQueryTime * estimatedLookupsRemaining * (1 - (this.urisCachedSoFar + urisToCache) / this.urisInTriplestore); 
 			long estWithoutBatch  =  0              + this.indivAvgQueryTime * estimatedLookupsRemaining * (1 - (this.urisCachedSoFar + 0          ) / this.urisInTriplestore);
@@ -112,8 +114,11 @@ public class UriLookupPerfMonitor {
 			if (this.batchAvgQueryTime == 0 || estWithBatch < estWithoutBatch) {
 				if (LOG_PRECACHE) LocalLogger.logToStdOut(String.format("precache EVAL YES indiv=%,d batch=%,d", estWithoutBatch, estWithBatch));
 				
-				
-				this.queryOffset += this.queryLimit;
+				// set the new offset
+				if (this.queryOffset < 0)
+					this.queryOffset = 0;
+				else
+					this.queryOffset += this.queryLimit;
 				
 				// permanently stop if we've cached enough already
 				if (queryOffset > PREFETCH_MAX_COUNT) {
@@ -122,11 +127,17 @@ public class UriLookupPerfMonitor {
 				} else {
 				
 					this.batchQueryBlocked.set(true);
+					this.ignoreUntilIndivCount = (long) (this.indivQueryCount * 1.05);
 					return READY.YES;
 				}
 				
 			} else {
+				// batch pre-caching doesn't seem efficient
+				
 				if (LOG_PRECACHE) LocalLogger.logToStdOut(String.format("precache EVAL NO  indiv=%,d batch=%,d", estWithoutBatch, estWithBatch));
+				
+				// don't compute efficiency again in a while
+				this.ignoreUntilIndivCount = (long) (this.indivQueryCount * 1.5);
 				return READY.NO;
 			}
 		}
