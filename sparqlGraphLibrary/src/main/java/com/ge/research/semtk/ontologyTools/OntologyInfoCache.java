@@ -1,14 +1,14 @@
 package com.ge.research.semtk.ontologyTools;
 
 import java.util.ArrayList;
-import java.util.Hashtable;
+import java.util.concurrent.ConcurrentHashMap;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
 public class OntologyInfoCache {
 	
 	long maxAgeMillis = 1000 * 60 * 5;   // five minutes
-	Hashtable<String, CachedOntologyInfo> hash = new Hashtable<String, CachedOntologyInfo>();
+	ConcurrentHashMap<String, CachedOntologyInfo> hash = new ConcurrentHashMap<String, CachedOntologyInfo>();
 	
 	public OntologyInfoCache(long maxAgeMillis) {
 		this.maxAgeMillis = maxAgeMillis;
@@ -20,23 +20,29 @@ public class OntologyInfoCache {
 	 * @return
 	 * @throws Exception
 	 */
-	public synchronized OntologyInfo get(SparqlConnection conn) throws Exception {
+	public OntologyInfo get(SparqlConnection conn) throws Exception {
 		String key = conn.getUniqueModelKey();
 		
 		this.clearExpired();
 		
-		if (!hash.containsKey(key)) {
-			hash.put(key, new CachedOntologyInfo(conn));
-		}
+		// in addition to the ConcurrentHashMap synchronization
+		// 1) synchronize the check for contains with the insertion of new
+		// 2) synchronize the CachedOntologyInfo(conn) and .getOInfo() 
+		//       because they both run queries and build the oInfo
+		synchronized(key) {
+			if (!hash.containsKey(key)) {
+				hash.put(key, new CachedOntologyInfo(conn));
+			}
 		
-		return hash.get(key).getOInfo(this.maxAgeMillis);
+			return hash.get(key).getOInfo(this.maxAgeMillis);
+		}
 	}
 	
 	/**
 	 * Clear a connection from the cache, presumably because the ontology has changed.
 	 * @param conn
 	 */
-	public synchronized void remove(SparqlConnection conn) {
+	public void remove(SparqlConnection conn) {
 		String key = conn.getUniqueModelKey();
 		if (this.hash.containsKey(key)) {
 			this.hash.remove(key);
@@ -47,7 +53,7 @@ public class OntologyInfoCache {
 	 * Clear any connection from cache if it shares a model dataset with conn
 	 * @param conn
 	 */
-	public synchronized void removeOverlapping(SparqlConnection conn) {
+	public void removeOverlapping(SparqlConnection conn) {
 		ArrayList<String> toDelete = new ArrayList<String>();
 		
 		for (String key : this.hash.keySet()) {
