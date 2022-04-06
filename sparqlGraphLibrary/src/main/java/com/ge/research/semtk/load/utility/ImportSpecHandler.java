@@ -25,8 +25,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.xml.bind.DatatypeConverter;
 
@@ -42,11 +40,9 @@ import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.load.DataValidator;
 import com.ge.research.semtk.load.transform.Transform;
 import com.ge.research.semtk.load.transform.TransformInfo;
-import com.ge.research.semtk.load.utility.UriLookupPerfMonitor.READY;
 import com.ge.research.semtk.ontologyTools.OntologyDatatype;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
-import com.ge.research.semtk.ontologyTools.OntologyRestriction;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
@@ -123,7 +119,7 @@ public class ImportSpecHandler {
 
 		this.uriResolver = new UriResolver(userUriPrefixValue, oInfo);
 
-		this.uriCache = new UriCache(this.ng);
+		this.uriCache = new UriCache();
 
 		this.dataValidator = new DataValidator(this.importspec.getDataValidatorJson());
 		this.errorCheckImportSpec();
@@ -394,6 +390,9 @@ public class ImportSpecHandler {
 	 * @throws Exception
 	 */
 	private void setupLookupNodegroups() throws Exception {
+		// make sure there is only one nodegroup per class being looked up
+		HashMap<String,String> classToMD5Hash = new HashMap<String,String>();
+		
 		ArrayList<String> sample = new ArrayList<String>();
 		sample.add("sample");
 
@@ -429,7 +428,8 @@ public class ImportSpecHandler {
 			}
 
 			// prune
-			lookupNg.getNodeBySparqlID(importNodeId).setIsReturned(true);
+			Node lookupNode = lookupNg.getNodeBySparqlID(importNodeId);
+			lookupNode.setIsReturned(true);
 			lookupNg.pruneAllUnused();
 			lookupNg.removeUnusedBindings(); // for fuseki. Perhaps generic sparql gen solution would be better.
 
@@ -446,7 +446,18 @@ public class ImportSpecHandler {
 			String ngMD5 = DatatypeConverter.printHexBinary(digiest);
 			this.lookupNodegroupMD5.put(importNodeId, ngMD5);
 
-			// Logger.logToStdOut(String.valueOf(importNodeIndex) + ": " + ngMD5);
+			// error check different columns looking up same type with non-equal nodegroups
+			String mode = this.lookupMode.get(importNodeId);
+			if (mode != null && mode.equals(ImportSpec.LOOKUP_MODE_CREATE)) {
+				String classUri = lookupNode.getFullUriName();
+				if (classToMD5Hash.containsKey(classUri)) {
+					if (!classToMD5Hash.get(classUri).equals(ngMD5)) {
+						throw new Exception(String.format("Class %s is 'create if missing' in multiple columns with URI lookup using different criteria.\nThis may result in duplicates.\nFix: split into multiple ingestion templates and steps.", lookupNode.getUri(true)));
+					}
+				} else {
+					classToMD5Hash.put(classUri, ngMD5);
+				}
+			}
 		}
 	}
 

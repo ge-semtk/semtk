@@ -27,9 +27,7 @@ import com.ge.research.semtk.utility.LocalLogger;
 public class UriCache {
 	static final String NOT_FOUND = "0-NOT-FOUND";
 	static final String EMPTY_LOOKUP = "1-EMPTY-LOOKUP";
-	
-	private NodeGroup nodeGroup;
-	
+		
 	ConcurrentHashMap<String, String> uriCache = new ConcurrentHashMap<String, String>();   // uriCache(key)=uri
 	ConcurrentHashMap<String, Boolean> notFound = new ConcurrentHashMap<String, Boolean>(); // any == NOT_FOUND
 	ConcurrentHashMap<String, Boolean> isGenerated = new ConcurrentHashMap<String, Boolean>();  // any URI that was generated
@@ -43,8 +41,7 @@ public class UriCache {
 	 * 
 	 * @param nodeGroup
 	 */
-	public UriCache(NodeGroup nodeGroup) {
-		this.nodeGroup = nodeGroup;
+	public UriCache() {
 	}
 	
 	/**
@@ -68,27 +65,6 @@ public class UriCache {
 		//LocalLogger.logToStdErr("PUT   : " + this.getKey(lookupNgMD5, mappedStrings) + "," + uri);
 	}
 	
-	/** 
-	 * Add if URI isn't already there.  If it is already there, delete it instead.
-	 * Intended to 
-	 * @param lookupNgMD5
-	 * @param mappedStrings
-	 * @param uri
-	 */
-	public void putIfNewElseDelete(String lookupNgMD5, ArrayList<String> mappedStrings, String uri) {
-		synchronized(this) {
-			String key = this.getKey(lookupNgMD5, mappedStrings);
-		
-			String prev = this.uriCache.putIfAbsent(key, uri);
-			if (prev != null && !prev.equals(uri)) {
-				this.uriCache.remove(key);
-				//LocalLogger.logToStdErr("REMOVE: " + key + "," + uri);
-				
-			} else {
-				//LocalLogger.logToStdErr("PUT-2 : " + key + "," + uri);
-			}
-		}
-	}
 	/**
 	 * Get a URI given a unique lookup nodegroup and set of mappedStrings
 	 * @param lookupNgMD5 - unique hash of the lookup nodegroup
@@ -106,17 +82,6 @@ public class UriCache {
 	}
 	
 	/**
-	 * Is it "notFound" given a unique lookup nodegroup and set of mappedStrings
-	 * @param lookupNgMD5 - unique hash of the lookup nodegroup
-	 * @param mappedStrings
-	 * @return
-	 */
-	public boolean isNotFound(String lookupNgMD5, ArrayList<String> mappedStrings) {
-		String key = this.getKey(lookupNgMD5, mappedStrings);
-		return this.notFound.containsKey(key);
-	}
-	
-	/**
 	 * Is the given URI in the cache and not generated, then it must have been looked up
 	 * @param uri
 	 * @return
@@ -131,7 +96,7 @@ public class UriCache {
 	 * @param mappedStrings
 	 * @param generatedValue - value for URI ... or null or ""
 	 */
-	public synchronized void setUriNotFound(String lookupNgMD5, ArrayList<String> mappedStrings, String generatedValue) throws Exception {
+	public void setUriNotFound(String lookupNgMD5, ArrayList<String> mappedStrings, String generatedValue) throws Exception {
 		String key = this.getKey(lookupNgMD5, mappedStrings);
 		String newVal;
 		
@@ -142,17 +107,11 @@ public class UriCache {
 			newVal = UriCache.NOT_FOUND;
 		}
 		
-		// If already NOT_FOUND
-		if (this.uriCache.containsKey(key)) {
-			// already there: do nothing as along as this value is the same
-			String curVal = this.uriCache.get(key);
-			if (!newVal.equals(curVal)) {
-				throw new Exception("Can't create a URI with two different values: " + curVal + " and " + newVal);
-			}
-		} else {
-			// new: just put it in the cache
-			this.uriCache.put(key, newVal);
+		String prevVal = this.uriCache.putIfAbsent(key, newVal);
+		if (prevVal != null && !prevVal.equals(newVal)) {
+			throw new Exception("Can't create a URI with two different values: " + prevVal + " and " + newVal);
 		}
+		
 		this.notFound.putIfAbsent(key, true);
 	}
 	
