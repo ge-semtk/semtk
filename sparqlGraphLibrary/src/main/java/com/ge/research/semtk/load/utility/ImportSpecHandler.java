@@ -40,6 +40,7 @@ import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.load.DataValidator;
 import com.ge.research.semtk.load.transform.Transform;
 import com.ge.research.semtk.load.transform.TransformInfo;
+import com.ge.research.semtk.load.utility.UriLookupPerfMonitor.READY;
 import com.ge.research.semtk.ontologyTools.OntologyDatatype;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
@@ -61,7 +62,8 @@ import com.ge.research.semtk.utility.Utility;
  * WARNING: This is shared by THREADS.  It must remain THREAD SAFE.
  */
 public class ImportSpecHandler {
-
+	static final String EMPTY_LOOKUP = "1-EMPTY-LOOKUP";
+	
 	ImportSpec importspec = null;
 
 	JSONObject nodegroupJson = null;
@@ -434,7 +436,7 @@ public class ImportSpecHandler {
 			lookupNg.removeUnusedBindings(); // for fuseki. Perhaps generic sparql gen solution would be better.
 
 			this.lookupNodegroupsJson.put(importNodeId, lookupNg.toJson());
-			this.lookupPerfMonitors.put(importNodeId, new UriLookupPerfMonitor(this.lookupMappings.get(importNodeId).size()));
+			this.lookupPerfMonitors.put(importNodeId, new UriLookupPerfMonitor(this.lookupMappings.get(importNodeId).size(), importNodeId));
 
 			// standardize sparqlids, then generate sparql, then hash it
 			// so we can tell if two lookup nodegroups are identical
@@ -647,7 +649,7 @@ public class ImportSpecHandler {
 			// ingestion succeeds without it.
 			// See git commit 9/24/2021
 			// See DataLoaderTest_IT.testMissingURILookups()
-			if (this.uriCache.isGenerated(n.getInstanceValue()) || this.uriCache.isEmptyLookup(n.getInstanceValue())) {
+			if (this.uriCache.isGenerated(n.getInstanceValue()) || this.isEmptyLookup(n.getInstanceValue())) {
 				for (ImportMapping lookupMapping : this.lookupMappings.get(n.getSparqlID())) {
 					this.addMappingToNodegroup(retNodegroup, lookupMapping, record, skipValidation);
 				}
@@ -661,7 +663,9 @@ public class ImportSpecHandler {
 		retNodegroup = this.setURIsForNullNodes(retNodegroup);
 		return retNodegroup;
 	}
-
+	private boolean isEmptyLookup(String instanceValue) {
+		return instanceValue != null && instanceValue.equals(ImportSpecHandler.EMPTY_LOOKUP);
+	}
 	/**
 	 * Prune an import nodegroup, checking for empty URI lookups
 	 * 
@@ -675,7 +679,7 @@ public class ImportSpecHandler {
 		for (int i = 0; i < importNg.getNodeCount(); i++) {
 			Node n = importNg.getNode(i);
 			String instanceVal = n.getInstanceValue();
-			if (instanceVal != null && instanceVal.equals(UriCache.EMPTY_LOOKUP)) {
+			if (instanceVal != null && instanceVal.equals(ImportSpecHandler.EMPTY_LOOKUP)) {
 				// remove the value so it might be pruned
 				n.setInstanceValue(null);
 				// remember the sparqlID
@@ -811,7 +815,7 @@ public class ImportSpecHandler {
 
 			// check for empties
 			if (mappedStr == null || mappedStr.isEmpty()) {
-				return UriCache.EMPTY_LOOKUP;
+				return ImportSpecHandler.EMPTY_LOOKUP;
 			}
 
 			mappedStrings.add(mappedStr);
@@ -822,11 +826,21 @@ public class ImportSpecHandler {
 		// return quickly if answer is already cached
 		String cachedUri = this.uriCache.getUri(this.lookupNodegroupMD5.get(nodeID), mappedStrings);
 
-		// if already cached
+		
 		if (cachedUri != null) {
-
+			// Uri found in cache
+			
+			if (cachedUri.equals(UriCache.DUPLICATE)) {
+				// uri pre-cache found multiple values.
+				NodeGroup lookupNodegroup = this.getLookupNodegroup(nodeID);
+				String lookup = lookupNodegroup.getReturnedSparqlIDs().toString();
+				throw new Exception("URI lookup on " + lookup + " found multiple URI's that match: "
+						+ String.join(",", mappedStrings));
+			
+			
 			// if "createIfMissing" and has a mapping and is a generated (not looked up) URI
-			if (this.lookupMode.containsKey(nodeID) && this.lookupMode.get(nodeID).equals(ImportSpec.LOOKUP_MODE_CREATE)
+			// (making sure node doesn't have it's own mapping that is different from looked-up uri)
+			} else if (this.lookupMode.containsKey(nodeID) && this.lookupMode.get(nodeID).equals(ImportSpec.LOOKUP_MODE_CREATE)
 					&& this.getImportMapping(nodeID, ImportMapping.NO_PROPERTY) != null
 					&& this.uriCache.isGenerated(cachedUri)) {
 
@@ -850,7 +864,9 @@ public class ImportSpecHandler {
 			// survived the check: return the cached value
 			return cachedUri;
 
-		} else {
+		} else if (this.lookupPerfMonitors.get(nodeID).requestNextIndivQuery() == READY.YES) {
+			// perform lookup
+			
 			NodeGroup lookupNodegroup = null; // only build when needed (queries and errors)
 
 			// Run the query
@@ -896,6 +912,10 @@ public class ImportSpecHandler {
 					ImportMapping m = this.getImportMapping(nodeID, ImportMapping.NO_PROPERTY);
 					this.uriCache.setUriNotFound(this.lookupNodegroupMD5.get(nodeID), mappedStrings,
 							(m == null) ? null : m.buildString(record));
+					
+					// try prefeching after indiv query not found
+					this.preFetchUriCache(lookupNodegroup, nodeID);
+					
 					return UriCache.NOT_FOUND;
 				}
 
@@ -910,14 +930,17 @@ public class ImportSpecHandler {
 					// found 1. Normal success.
 					String uri = tab.getCell(0, 0);
 					this.uriCache.putUri(this.lookupNodegroupMD5.get(nodeID), mappedStrings, uri);
-					//LocalLogger.logToStdErr("PUT INDIV   : " + String.join(",",mappedStrings));
 
-					// if we found a URI in via lookup in triplestore, cache some more
+					// try prefetching after indiv query found
 					this.preFetchUriCache(lookupNodegroup, nodeID);
 
 					return uri;
 				}
 			}
+			
+		} else {
+			// wasn't found and UriCache contains all possibilities from triplestore
+			return uriCache.NOT_FOUND;
 		}
 	}
 	
@@ -1020,7 +1043,6 @@ public class ImportSpecHandler {
 			String uriColName = nodeID.substring(1);
 
 			// remove all value constraints
-			// IDEA: in crazy-large spaces, we could (randomly?) choose a subset to remove
 			for (int i = 0; i < mappings.size(); i++) {
 				ImportMapping mapping = mappings.get(i);
 				Node node = lookupNodegroup.getNodeBySparqlID(mapping.getNodeSparqlID());
@@ -1042,7 +1064,11 @@ public class ImportSpecHandler {
 			}
 
 			lookupNodegroup.setLimit(limit);
-			lookupNodegroup.setOffset(offset);
+			// disobey recommended offset by 1 to handle duplicates properly:
+			//  overlap by one record
+			//  if it is clearly a duplicate (prev row) then add it the first time around
+			//  if not, save it for the second time (next row might be a duplicate)
+			lookupNodegroup.setOffset(Math.max(0, offset - 1));   
 
 			// run the query
 			String query = lookupNodegroup.generateSparqlSelect();
@@ -1054,43 +1080,45 @@ public class ImportSpecHandler {
 			Table tab = res.getTable();
 
 			// If results came back
-			if (tab.getNumRows() > 1) {
-				// calculate duplicate mappedStrings.
-				boolean skipRow[] = new boolean[tab.getNumRows()];
-				String joinedMappedStrings[] = new String[tab.getNumRows()];
-				for (int r = 0; r < tab.getNumRows(); r++) {
-					skipRow[r] = false;
-					joinedMappedStrings[r] = String.join("|||", tab.getRow(r).subList(1, tab.getNumColumns()));
+			if (tab.getNumRows() > 0) {
+						
+				// for efficiency: get column numbers
+				int uriCol = tab.getColumnIndex(uriColName);
+				int colNum[] = new int[colName.length];
+				for (int i=0; i < colName.length; i++) {
+					colNum[i] = tab.getColumnIndex(colName[i]);
 				}
-				// skip rows with duplicate mapped strings
-				for (int r = 0; r < tab.getNumRows() - 1; r++) {
-					if (joinedMappedStrings[r + 1].equals(joinedMappedStrings[r])) {
-						skipRow[r] = true;
-						skipRow[r + 1] = true;
-					}
+				
+				// cache all rows except last
+				ArrayList<String> mappedStrings = null;
+				for (int r=0; r < tab.getNumRows() - 1; r++) {
+					mappedStrings = this.addToUriCache(nodeID, tab.getRow(r), colNum, uriCol);
 				}
-				// also skip first and last since we don't have enough info
-				skipRow[0] = true;
-				skipRow[tab.getNumRows() - 1] = true;
-
-				for (int r = 1; r < tab.getNumRows() - 1; r++) {
-
-					if (skipRow[r])
-						break;
-
-					ArrayList<String> mappedStrings = new ArrayList<String>();
+				
+				boolean lastIsDuplicate = false;
+		
+				// is last row a duplicate mapped strings w/ different URI of previous
+				if (tab.getNumRows() > 1) {
+					int lastRow = tab.getNumRows() - 1;
+					lastIsDuplicate = true;
 					for (int i = 0; i < mappings.size(); i++) {
-						mappedStrings.add(tab.getCell(r, colName[i]));
+						// compare lastRow to the last one completed in the loop above
+						if (! tab.getCell(lastRow, colNum[i]).equals(mappedStrings.get(i))) {
+							lastIsDuplicate = false;
+							break;
+						}
 					}
-					String uri = tab.getCell(r, uriColName);
-					// put into cache. No harm done if it is already there.
-					// TODO : Not checking for same mapped strings but different uri.
-					// Hopefully we've already eliminated that possibility? Should check anyway.
-					this.uriCache.putUri(this.lookupNodegroupMD5.get(nodeID), mappedStrings, uri);
-					//LocalLogger.logToStdErr("PUT BATCH   : " + String.join(",",mappedStrings));
-
 				}
+				
+				// Normally, we'll hit the last row again next query (for full duplicate-handling)
+				// do last row only if:
+				//   it is a duplicate of the previous: get it in now so UriCache isn't incorrect
+				//   it is the truly last row: put it in because we won't get the overlap of another query
 
+				if (lastIsDuplicate || tab.getNumRows() < limit) {
+					int lastRow = tab.getNumRows() - 1;
+					this.addToUriCache(nodeID, tab.getRow(lastRow), colNum, uriCol);
+				}
 			}
 
 			monitor.recordBatchQuery(System.nanoTime() - startTime, tab.getNumRows());
@@ -1102,6 +1130,25 @@ public class ImportSpecHandler {
 			LocalLogger.printStackTrace(e);
 		}
 		return;
+	}
+	
+	/**
+	 * Add a row to the UriCache
+	 * @param nodeID
+	 * @param row
+	 * @param colNums
+	 * @param uriCol
+	 * @return mapped strings
+	 */
+	private ArrayList<String> addToUriCache(String nodeID, ArrayList<String> row, int[] colNums, int uriCol) {
+		ArrayList<String> mappedStrings = new ArrayList<String>();
+		for (int i = 0; i < colNums.length; i++) {
+			mappedStrings.add(row.get(colNums[i]));
+		}
+		String uri = row.get(uriCol);
+		// put into cache. Cache will set to DUPLICATE if needed
+		this.uriCache.putUri(this.lookupNodegroupMD5.get(nodeID), mappedStrings, uri);
+		return mappedStrings;
 	}
 
 	private ValueConstraint buildBestConstraint(Returnable item, String val) throws Exception {

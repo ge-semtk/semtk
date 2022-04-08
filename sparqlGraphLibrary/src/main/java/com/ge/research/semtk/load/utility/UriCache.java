@@ -26,7 +26,7 @@ import com.ge.research.semtk.utility.LocalLogger;
 
 public class UriCache {
 	static final String NOT_FOUND = "0-NOT-FOUND";
-	static final String EMPTY_LOOKUP = "1-EMPTY-LOOKUP";
+	static final String DUPLICATE = "0-DUPLICATE";
 		
 	ConcurrentHashMap<String, String> uriCache = new ConcurrentHashMap<String, String>();   // uriCache(key)=uri
 	ConcurrentHashMap<String, Boolean> notFound = new ConcurrentHashMap<String, Boolean>(); // any == NOT_FOUND
@@ -56,20 +56,24 @@ public class UriCache {
 	
 	/**
 	 * Assign a URI given a unique lookup nodegroup and set of mappedStrings
+	 * If it already exists and URI is the same:  do nothing
+	 * If it already exists and URI is different:  change uri to DUPLICATE
 	 * @param lookupNgMD5 - unique hash of the lookup nodegroup
 	 * @param mappedStrings
 	 * @param uri
 	 */
 	public void putUri(String lookupNgMD5, ArrayList<String> mappedStrings, String uri) {
-		this.uriCache.putIfAbsent(this.getKey(lookupNgMD5, mappedStrings), uri);
-		//LocalLogger.logToStdErr("PUT   : " + this.getKey(lookupNgMD5, mappedStrings) + "," + uri);
+		String prev = this.uriCache.putIfAbsent(this.getKey(lookupNgMD5, mappedStrings), uri);
+		if (prev != null && !prev.equals(uri)) {
+			this.uriCache.put(this.getKey(lookupNgMD5, mappedStrings), DUPLICATE);
+		}
 	}
 	
 	/**
 	 * Get a URI given a unique lookup nodegroup and set of mappedStrings
 	 * @param lookupNgMD5 - unique hash of the lookup nodegroup
 	 * @param mappedStrings
-	 * @return
+	 * @return  URI, DUPLICATE, or NOT_FOUND
 	 */
 	public String getUri(String lookupNgMD5, ArrayList<String> mappedStrings) {
 		try {
@@ -147,10 +151,6 @@ public class UriCache {
 		} else {
 			return this.isGenerated.containsKey(uri);
 		}
-	}
-
-	public boolean isEmptyLookup(String instanceValue) {
-		return instanceValue != null && instanceValue.equals(EMPTY_LOOKUP);
 	}
 	
 }
