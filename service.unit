@@ -1,6 +1,6 @@
 [Unit]
 Description=${SERVICE}
-After=fuseki.service virtuoso.service ontologyInfoService.service
+After=configSemTK.service fuseki.service virtuoso.service ontologyInfoService.service
 
 [Service]
 User=${USER}
