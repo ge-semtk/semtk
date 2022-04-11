@@ -74,9 +74,7 @@ public class ImportSpecHandler {
 	HashMap<String, String> lookupNodegroupMD5 = new HashMap<String, String>(); // MD5 hash for standardized lookup
 																				// nodegroup.
 	HashMap<String, String> lookupMode = new HashMap<String, String>();
-	HashMap<String, Long> lookupResultCount = new HashMap<String, Long>(); // number of URI's in the triple-store to
-																			// choose from. zero or non-zero.
-
+	
 	HashMap<String, Integer> colNameToIndexHash = new HashMap<String, Integer>();
 	HashMap<String, Transform> transformHash = new HashMap<String, Transform>();
 	HashMap<String, String> textHash = new HashMap<String, String>();
@@ -798,13 +796,8 @@ public class ImportSpecHandler {
 	 * @throws Exception - error, or not found and NO_CREATE, or found multiple
 	 */
 	private String lookupUri(String nodeID, String nodeUri, ArrayList<String> record) throws Exception {
-
-		this.lookupPerfMonitors.get(nodeID).recordLookup();
-		
-		// get total possible number available, if it isn't known
-		if (!this.lookupResultCount.containsKey(nodeID)) {
-			this.lookupResultCount.put(nodeID, this.lookupCount(nodeID, 2));
-		}
+		UriLookupPerfMonitor monitor = this.lookupPerfMonitors.get(nodeID);
+		monitor.recordLookup();		
 
 		// create a new nodegroup copy:
 		ArrayList<String> mappedStrings = new ArrayList<String>();
@@ -828,7 +821,7 @@ public class ImportSpecHandler {
 
 		
 		if (cachedUri != null) {
-			// Uri found in cache
+			// Uri found in UriCache
 			
 			if (cachedUri.equals(UriCache.DUPLICATE)) {
 				// uri pre-cache found multiple values.
@@ -864,29 +857,38 @@ public class ImportSpecHandler {
 			// survived the check: return the cached value
 			return cachedUri;
 
-		} else if (this.lookupPerfMonitors.get(nodeID).requestNextIndivQuery() == READY.YES) {
-			// perform lookup
+		} else  {
+			// URI was not found in the UriCache
 			
 			NodeGroup lookupNodegroup = null; // only build when needed (queries and errors)
 
-			// Run the query
-			// make this thread-safe
+			// check for permission to run an individual query
+			READY indivQueryRequest = this.lookupPerfMonitors.get(nodeID).requestNextIndivQuery();
+			if (indivQueryRequest == READY.COUNT_NEEDED) {
+				monitor.setAnyUrisInTriplestore(this.lookupCount(nodeID, 2) > 0);
+				// gave an answer, ask again
+				indivQueryRequest = this.lookupPerfMonitors.get(nodeID).requestNextIndivQuery();
+			}
+
+			
 			Table tab = null;
-			if (this.lookupResultCount.get(nodeID) == 0) {
-				// don't run a query if we know it's going to fail.
+			if (indivQueryRequest == READY.NO) {
+				// perf monitor says not to run a query.  
+				// Either none in triplestore, or we've already prefetched them all.
 				tab = new Table(new String[] { "empty_row" }, new String[] { "string" });
 
 			} else {
+				// Run the query
 				long startTime = System.nanoTime();
 				lookupNodegroup = this.getLookupNodegroup(nodeID);
+				// make this thread-safe
 				SparqlEndpointInterface safeEndpoint = this.nonThreadSafeEndpoint.copy();
+				
 				String query = this.getLookupQuery(lookupNodegroup, nodeID, mappedStrings);
-
-				TableResultSet res = (TableResultSet) safeEndpoint.executeQueryAndBuildResultSet(query,
-						SparqlResultTypes.TABLE);
+				TableResultSet res = (TableResultSet) safeEndpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 				res.throwExceptionIfUnsuccessful();
 				tab = res.getTable();
-				this.lookupPerfMonitors.get(nodeID).recordIndivQuery(System.nanoTime() - startTime);
+				monitor.recordIndivQuery(System.nanoTime() - startTime);
 			}
 
 			// Check and return results
@@ -937,11 +939,7 @@ public class ImportSpecHandler {
 					return uri;
 				}
 			}
-			
-		} else {
-			// wasn't found and UriCache contains all possibilities from triplestore
-			return uriCache.NOT_FOUND;
-		}
+		} 
 	}
 	
 	
@@ -1030,9 +1028,18 @@ public class ImportSpecHandler {
 		}
 		
 		// set offset and limit for this time
-		int limit = monitor.getQueryLimit();
-		int offset = monitor.getQueryOffset();
-
+		int suggestedLimit = monitor.getQueryLimit();
+		int suggestedOffset = monitor.getQueryOffset();
+		int actualLimit = suggestedLimit;
+		int actualOffset = suggestedOffset;
+		// if possible, use a one row look-back for duplicate-handling
+		if (suggestedOffset != 0) {
+			actualOffset -= 1;
+			actualLimit += 1;
+		}
+		lookupNodegroup.setLimit(actualLimit);
+		lookupNodegroup.setOffset(actualOffset);   
+		
 		// do the pre-fetch
 		try {
 			long startTime = System.nanoTime();
@@ -1062,13 +1069,6 @@ public class ImportSpecHandler {
 
 				}
 			}
-
-			lookupNodegroup.setLimit(limit);
-			// disobey recommended offset by 1 to handle duplicates properly:
-			//  overlap by one record
-			//  if it is clearly a duplicate (prev row) then add it the first time around
-			//  if not, save it for the second time (next row might be a duplicate)
-			lookupNodegroup.setOffset(Math.max(0, offset - 1));   
 
 			// run the query
 			String query = lookupNodegroup.generateSparqlSelect();
@@ -1110,18 +1110,22 @@ public class ImportSpecHandler {
 					}
 				}
 				
+				// lookback logic:
 				// Normally, we'll hit the last row again next query (for full duplicate-handling)
 				// do last row only if:
 				//   it is a duplicate of the previous: get it in now so UriCache isn't incorrect
 				//   it is the truly last row: put it in because we won't get the overlap of another query
 
-				if (lastIsDuplicate || tab.getNumRows() < limit) {
+				if (lastIsDuplicate || tab.getNumRows() < actualLimit) {
 					int lastRow = tab.getNumRows() - 1;
 					this.addToUriCache(nodeID, tab.getRow(lastRow), colNum, uriCol);
 				}
 			}
-
-			monitor.recordBatchQuery(System.nanoTime() - startTime, tab.getNumRows());
+			
+			// if we got a full return, tell the monitor we got the suggested limit
+			// otherwise tell it we got less.
+			long lieReturnCount =  tab.getNumRows() == actualLimit ? suggestedLimit : Math.max(tab.getNumRows(), suggestedLimit - 1);
+			monitor.recordBatchQuery(System.nanoTime() - startTime, lieReturnCount);
 			
 		} catch (Exception e) {
 			// this.prefetchBlocked.get(nodeID) will remain true, aborting any further

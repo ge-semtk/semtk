@@ -56,6 +56,7 @@ public class UriLookupPerfMonitor {
 	private long batchAvgQueryTime = 0;
 	private long urisCachedSoFar = 0;
 	private long urisInTriplestoreEstimate = -1;    // will be incorrect when there are duplicates
+	private AtomicBoolean anyUrisInTripleStore = null;
 	private AtomicBoolean prefetchedAll = new AtomicBoolean(false);
 	
 	private int queryLimit = 0;
@@ -78,12 +79,30 @@ public class UriLookupPerfMonitor {
 	}
 
 	public static enum READY { NO, YES, COUNT_NEEDED };
-	
-	public READY requestNextIndivQuery() {
-		if (this.prefetchedAll.get()) {
-			return READY.NO;
+	public void setAnyUrisInTriplestore(boolean v) {
+		synchronized(this) {
+			if (this.anyUrisInTripleStore == null) {
+				this.anyUrisInTripleStore = new AtomicBoolean(v);
+			} else {
+				this.anyUrisInTripleStore.set(v);
+			}
 		}
-		return READY.YES;
+	}
+	/**
+	 * @return - NO - a query won't be helpful (none in triplestore, or all already prefetched)
+	 *           YES - ready to run a query, call recordIndiv() on success
+	 *           COUNT_NEEDED - determine whether there is at least one uri in the triplestore and call setAnyUrisInTriplestore()
+	 */
+	public READY requestNextIndivQuery() {
+		synchronized(this) {
+			if (this.anyUrisInTripleStore == null) {
+				return READY.COUNT_NEEDED;
+			
+			} else if (this.anyUrisInTripleStore.get() == false || this.prefetchedAll.get()) {
+				return READY.NO;
+			}
+			return READY.YES;
+		}
 	}
 	
 	/**
