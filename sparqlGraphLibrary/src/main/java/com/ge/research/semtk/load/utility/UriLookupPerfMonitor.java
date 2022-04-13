@@ -38,11 +38,11 @@ import com.ge.research.semtk.utility.LocalLogger;
  */
 public class UriLookupPerfMonitor {
 	private final boolean DISABLE_PRECACHE = false;
-	private final boolean LOG_PRECACHE = true;
+	private final boolean LOG_PRECACHE = false;
 	
-	static final int PREFETCH_MAX_COUNT = 300000; // stop pre-fetching after this many (worried about memory).
+	static final int PREFETCH_MAX_COUNT = 100000; // stop pre-fetching after this many (worried about memory).
 	
-	public static final int PREFETCH_MAX_EXIST = 600000; // Since pre-fetch queries need sort by each field, performance could
+	public static final int PREFETCH_MAX_EXIST = 200000; // Since pre-fetch queries need sort by each field, performance could
 													// be awful
 													// So run a count first, and if it is higher than this, abandon all
 													// hope of prefetching

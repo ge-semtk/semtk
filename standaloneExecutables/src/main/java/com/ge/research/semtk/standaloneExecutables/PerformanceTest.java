@@ -541,11 +541,6 @@ public class PerformanceTest {
 		SparqlGraphJson sgJsonItemLoad = getSGJsonResource("/itemLoad.json", sei, sei);
 		SparqlGraphJson sgJsonItemLoadLinks = getSGJsonResource("/itemLoadLinks.json", sei, sei);
 
-		// set up a query
-		OntologyInfo oInfo = new OntologyInfo(new SparqlConnection("Perftest", sei));
-		NodeGroup ngItemLoad = sgJsonItemLoad.getNodeGroupNoInflateNorValidate(oInfo);
-		NodeGroup ngItemLoadLinks = sgJsonItemLoadLinks.getNodeGroupNoInflateNorValidate(oInfo);
-
 		sei.clearGraph();
 		uploadOwlResource(sei, "/item.owl");
 
@@ -559,7 +554,6 @@ public class PerformanceTest {
 		// load items
 		Dataset ds = new CSVDataset(content.toString(), true);
 		DataLoader loader = new DataLoader(sgJsonItemLoad, ds, "dba", "dba");
-		loader.overrideMaxThreads(MAX_THREADS);
 		startTask("linkItems load items: " + numItems);
 		importAndCheck(loader, true);
 		endTask();
@@ -568,19 +562,17 @@ public class PerformanceTest {
 		// build links
 		content = new StringBuilder();
 		content.append("itemIdFrom, itemIdTo\n");
-		int linksBuilt = 0;
-		for (int i=0; i < numItems-1 && linksBuilt < numLinks; i++) {
-			for (int j=i+1; j < numItems && linksBuilt < numLinks; j++) {
-				content.append("id_" + i + ", id_" + j + "\n");
-				linksBuilt ++;
-			}
+		for (int linksBuilt = 0; linksBuilt < numLinks; linksBuilt++) {
+			int fromItem = (int) (Math.random() * numItems);
+			int toItem = (int) (Math.random() * numItems);
+			content.append("id_" + fromItem + ", id_" + toItem + "\n");
 		}
 
 		// load links
 		ds = new CSVDataset(content.toString(), true);
 		loader = new DataLoader(sgJsonItemLoadLinks, ds, "dba", "dba");
 		loader.overrideMaxThreads(MAX_THREADS);
-		startTask("linkItems load links: " + linksBuilt);
+		startTask("linkItems load links: " + numLinks);
 		importAndCheck(loader, true);
 		endTask();
 

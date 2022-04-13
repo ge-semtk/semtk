@@ -51,7 +51,12 @@ public class UriCache {
 	 * @return
 	 */
 	private String getKey(String lookupNgMD5, ArrayList<String> mappedStrings) {
-		return lookupNgMD5 + "-" + String.join("-", mappedStrings);
+		if (mappedStrings.size() == 1) {
+			// most common most efficient
+			return mappedStrings.get(0) + "-" + lookupNgMD5;
+		} else {
+			return String.join("-", mappedStrings) + "-" + lookupNgMD5;
+		}
 	}
 	
 	/**

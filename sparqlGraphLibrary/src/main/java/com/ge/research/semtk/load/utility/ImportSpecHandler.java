@@ -434,7 +434,7 @@ public class ImportSpecHandler {
 			lookupNg.removeUnusedBindings(); // for fuseki. Perhaps generic sparql gen solution would be better.
 
 			this.lookupNodegroupsJson.put(importNodeId, lookupNg.toJson());
-			this.lookupPerfMonitors.put(importNodeId, new UriLookupPerfMonitor(this.lookupMappings.get(importNodeId).size(), importNodeId));
+			
 
 			// standardize sparqlids, then generate sparql, then hash it
 			// so we can tell if two lookup nodegroups are identical
@@ -445,6 +445,11 @@ public class ImportSpecHandler {
 			byte[] digiest = messageDigest.digest();
 			String ngMD5 = DatatypeConverter.printHexBinary(digiest);
 			this.lookupNodegroupMD5.put(importNodeId, ngMD5);
+			
+			// set up performance monitor
+			if (!this.lookupPerfMonitors.containsKey(ngMD5)) {
+				this.lookupPerfMonitors.put(ngMD5, new UriLookupPerfMonitor(this.lookupMappings.get(importNodeId).size(), importNodeId));
+			}
 
 			// error check different columns looking up same type with non-equal nodegroups
 			String mode = this.lookupMode.get(importNodeId);
@@ -796,7 +801,7 @@ public class ImportSpecHandler {
 	 * @throws Exception - error, or not found and NO_CREATE, or found multiple
 	 */
 	private String lookupUri(String nodeID, String nodeUri, ArrayList<String> record) throws Exception {
-		UriLookupPerfMonitor monitor = this.lookupPerfMonitors.get(nodeID);
+		UriLookupPerfMonitor monitor = this.lookupPerfMonitors.get(this.lookupNodegroupMD5.get(nodeID));
 		monitor.recordLookup();		
 
 		// create a new nodegroup copy:
@@ -863,11 +868,12 @@ public class ImportSpecHandler {
 			NodeGroup lookupNodegroup = null; // only build when needed (queries and errors)
 
 			// check for permission to run an individual query
-			READY indivQueryRequest = this.lookupPerfMonitors.get(nodeID).requestNextIndivQuery();
+
+			READY indivQueryRequest = monitor.requestNextIndivQuery();
 			if (indivQueryRequest == READY.COUNT_NEEDED) {
 				monitor.setAnyUrisInTriplestore(this.lookupCount(nodeID, 2) > 0);
 				// gave an answer, ask again
-				indivQueryRequest = this.lookupPerfMonitors.get(nodeID).requestNextIndivQuery();
+				indivQueryRequest = monitor.requestNextIndivQuery();
 			}
 
 			
@@ -1007,7 +1013,7 @@ public class ImportSpecHandler {
 	private void preFetchUriCache(NodeGroup lookupNodegroup, String nodeID) {
 
 		// return if in progress on another thread, done, or there's been an error
-		UriLookupPerfMonitor monitor = this.lookupPerfMonitors.get(nodeID);
+		UriLookupPerfMonitor monitor = this.lookupPerfMonitors.get(this.lookupNodegroupMD5.get(nodeID));
 		
 		UriLookupPerfMonitor.READY ready = monitor.requestNextBatchQuery();
 		if (ready == UriLookupPerfMonitor.READY.NO) 
