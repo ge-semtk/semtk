@@ -785,7 +785,8 @@ public class ImportSpecHandler {
 			n.setInstanceValue(uri);
 
 			// save the fact that this uri was looked up and found
-			if (this.uriCache.wasFound(uri)) {
+			//if (this.uriCache.wasFound(uri)) {
+			if (! uri.equals(UriCache.NOT_FOUND) && ! uri.equals(ImportSpecHandler.EMPTY_LOOKUP) && ! this.uriCache.isGenerated(uri)) {
 				n.setInstanceLookedUp(true);
 			}
 		}
@@ -797,7 +798,7 @@ public class ImportSpecHandler {
 	 * caller is responsible for generating not found guids.
 	 * 
 	 * @param ImportMappings
-	 * @return uri or URICache.NOT_FOUND or URICache.EMPTY_LOOKUP
+	 * @return uri or URICache.NOT_FOUND or ImportSpecHandler.EMPTY_LOOKUP
 	 * @throws Exception - error, or not found and NO_CREATE, or found multiple
 	 */
 	private String lookupUri(String nodeID, String nodeUri, ArrayList<String> record) throws Exception {

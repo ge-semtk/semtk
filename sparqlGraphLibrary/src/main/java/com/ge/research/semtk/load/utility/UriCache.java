@@ -92,6 +92,7 @@ public class UriCache {
 	
 	/**
 	 * Is the given URI in the cache and not generated, then it must have been looked up
+	 * The "this.uriCache.contains(uri)" can be very expensive.  Think twice.
 	 * @param uri
 	 * @return
 	 */

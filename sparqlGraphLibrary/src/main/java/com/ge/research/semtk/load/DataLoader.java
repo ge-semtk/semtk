@@ -48,14 +48,15 @@ public class DataLoader implements Runnable {
 
 	public final static String FAILURE_CAUSE_COLUMN_NAME = "Failure Cause";
 	public final static String FAILURE_RECORD_COLUMN_NAME = "Failure Record Number";
-	public final static int DEFAULT_BATCH_SIZE = 8;
+	public final static int DEFAULT_BATCH_SIZE_INGEST = 8;
+	public final static int DEFAULT_BATCH_SIZE_PRECHECK = 64;
 	
 
 	NodeGroup master = null;
 	ArrayList<NodeGroup> nodeGroupBatch = new ArrayList<NodeGroup>();     // stores the subgraphs to be loaded.  
 	SparqlEndpointInterface endpoint = null;
 	DataLoadBatchHandler batchHandler = null; 
-	int batchSize = DEFAULT_BATCH_SIZE;
+	int batchSize = DEFAULT_BATCH_SIZE_INGEST;
 	String username = null;
 	String password = null;
 	OntologyInfo oInfo = null;
@@ -92,7 +93,7 @@ public class DataLoader implements Runnable {
 	public DataLoader(SparqlGraphJson sgJson) throws Exception {
 		// take a json object which encodes the node group, the import spec and the connection in one package. 
 		
-		this.batchSize = DEFAULT_BATCH_SIZE;
+		this.batchSize = DEFAULT_BATCH_SIZE_INGEST;
 		
 		this.endpoint = sgJson.getSparqlConn().getInsertInterface();
 		
@@ -130,22 +131,8 @@ public class DataLoader implements Runnable {
 		this(new SparqlGraphJson(json));
 	}
 	
-	@Deprecated
-	public DataLoader(JSONObject json, int bSize) throws Exception {
-		this(new SparqlGraphJson(json));
-		this.batchSize = Math.min(100, bSize);
-		this.batchHandler.setBatchSize(this.batchSize);
-	}
-	
 	public DataLoader(JSONObject json, Dataset ds, String username, String password) throws Exception{
 		this(new SparqlGraphJson(json), ds, username, password);
-	}
-	
-	@Deprecated
-	public DataLoader(JSONObject json, int bSize, Dataset ds, String username, String password) throws Exception{
-		this(new SparqlGraphJson(json),  ds, username, password);
-		this.batchSize = Math.min(100, bSize);
-		this.batchHandler.setBatchSize(this.batchSize);
 	}
 	
 	public void setLogPerformance(boolean logFlag) {
@@ -352,6 +339,7 @@ public class DataLoader implements Runnable {
 		ArrayList<ArrayList<String>> nextRecords = null;
 		
 		int numThreads = 2;    // first pass, run few threads to get recommendBatchSize
+		
 		while (true) {
 			// get the next set of records from the data set.
 			
@@ -383,7 +371,12 @@ public class DataLoader implements Runnable {
 					this.joinAndThrowIfException(thread, exceptionHeader);
 					
 					// check recommended batch size
-					if (thread.getRecommendedBatchSize() != this.batchHandler.getBatchSize()) {
+					if (skipIngest) {
+						if (this.batchHandler.getBatchSize() < DEFAULT_BATCH_SIZE_PRECHECK) {
+							this.batchHandler.setBatchSize(Math.min(DEFAULT_BATCH_SIZE_PRECHECK, this.batchHandler.getBatchSize() * 2));
+						}
+					
+					} else if (thread.getRecommendedBatchSize() != this.batchHandler.getBatchSize()) {
 						//LocalLogger.logToStdOut("Changing batch size from " + this.batchHandler.getBatchSize() + " to " + thread.getRecommendedBatchSize()); 
 						this.batchHandler.setBatchSize(thread.getRecommendedBatchSize());
 					}
@@ -465,6 +458,10 @@ public class DataLoader implements Runnable {
 		if (this.sClient != null) {
 			this.sClient.execSetPercentComplete(Math.min(99,this.percentEnd));
 		}
+		
+		// return to defaults
+		this.batchSize = DEFAULT_BATCH_SIZE_INGEST;
+		this.batchHandler.setBatchSize(DEFAULT_BATCH_SIZE_INGEST);
 		
 		return recordsProcessed;
 	}
@@ -700,7 +697,7 @@ public class DataLoader implements Runnable {
 		LocalLogger.logToStdOut("--------- Load data from CSV... ---------------------------------------");
 		LocalLogger.logToStdOut("Template:   " + loadTemplateFilePath);
 		LocalLogger.logToStdOut("CSV file:   " + csvFilePath);
-		LocalLogger.logToStdOut("Batch size: " + DEFAULT_BATCH_SIZE);	
+		LocalLogger.logToStdOut("Batch size: " + DEFAULT_BATCH_SIZE_INGEST);	
 		LocalLogger.logToStdOut("Connection override: " + connectionOverride);	// may be null if no override connection provided
 				
 		return loadFromCsv(Utility.getJSONObjectFromFilePath(loadTemplateFilePath), csvFilePath, sparqlEndpointUser, sparqlEndpointPassword, connectionOverride);
@@ -715,7 +712,7 @@ public class DataLoader implements Runnable {
 		LocalLogger.logToStdOut("--------- Load data from CSV... ---------------------------------------");
 		LocalLogger.logToStdOut("Template:   " + loadTemplateFilePath);
 		LocalLogger.logToStdOut("CSV file:   " + csvFilePath);
-		LocalLogger.logToStdOut("Batch size: " + DEFAULT_BATCH_SIZE);	
+		LocalLogger.logToStdOut("Batch size: " + DEFAULT_BATCH_SIZE_INGEST);	
 		LocalLogger.logToStdOut("Connection override: " + connectionOverride);	// may be null if no override connection provided
 				
 		return loadFromCsv(Utility.getJSONObjectFromFilePath(loadTemplateFilePath), csvFilePath, sparqlEndpointUser, sparqlEndpointPassword, connectionOverride, -1, preCheck, skipIngest);
