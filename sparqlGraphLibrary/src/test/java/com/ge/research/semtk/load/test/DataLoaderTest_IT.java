@@ -1543,6 +1543,47 @@ public class DataLoaderTest_IT {
 	}
 	
 	@Test
+	/**
+	 * Lookup same type in different columns with different criteria
+	 * 
+	 * @throws Exception
+	 */
+	public void testMultiMismatchedLookups() throws Exception {
+		Dataset ds = new CSVDataset("src/test/resources/chain_multi_lookups_empty.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/chain.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "chain_multi_lookups_errifmissing.json");
+
+		// nodegroup looks up link in two different ingestion columns
+		// lookup criteria are different
+		// BUT both are errIfMissing so this might work.  no error
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+		// nodegroup looks up link in two different ingestion columns
+		// lookup criteria are different
+		// both are createIfMissing
+		// this is illegal
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "chain_multi_lookups_createifmissing.json");
+		try {
+			dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+			assertTrue("Missing expected exception createIfmissing same class in multiple columns with different lookups", false);
+		} catch (Exception e) {
+			assertTrue("Exception doesn't contain 'create if missing'", e.getMessage().contains("create if missing"));
+		}
+		
+		
+		
+	}
+	
+	@Test
 	public void testLookupPruneBlanks() throws Exception {
 		
 		// setup

@@ -747,6 +747,9 @@ public class Node extends Returnable {
 		return this.constraints != null ? this.constraints.toString() : "";
 	}
 	
+	/**
+	 * v - value constraint, or null to clear
+	 */
 	public void setValueConstraint(ValueConstraint v) {
 		this.constraints = v;
 	}

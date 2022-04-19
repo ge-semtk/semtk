@@ -1228,6 +1228,37 @@ public class Table {
 	}
 	
 	/**
+	 * Sort by multiple adjacent columns in order treated as strings
+	 * @param colName
+	 */
+	public void sortByCols(int startCol, int endCol) {
+		this.rows.sort((ArrayList<String> rowA, ArrayList<String> rowB) -> {
+			for (int i=startCol; i < endCol; i++) {
+				int compared = rowA.get(i).compareTo(rowB.get(i));
+				if (compared != 0)
+					return compared;
+			}
+			return 0;
+		});	
+	}
+	
+	/**
+	 * Sort by multiple adjacent columns in order treated as strings
+	 * @param colName
+	 */
+	public void sortByAllCols() {
+		int size = this.getNumColumns();
+		this.rows.sort((ArrayList<String> rowA, ArrayList<String> rowB) -> {
+			for (int i=0; i < size; i++) {
+				int compared = rowA.get(i).compareTo(rowB.get(i));
+				if (compared != 0)
+					return compared;
+			}
+			return 0;
+		});	
+	}
+	
+	/**
 	 * Returns true if all the rows in the table are the same.
 	 */
 	public boolean allRowsMatch(){
