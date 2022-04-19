@@ -37,7 +37,7 @@
 		<dependency>
 			<groupId>org.springdoc</groupId>
      			<artifactId>springdoc-openapi-ui</artifactId>
-     			<version>1.5.9</version>
+     			<version>1.6.7</version>
 		</dependency>
 		<!--dependency>
 			<groupId>io.springfox</groupId>
