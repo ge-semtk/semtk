@@ -2150,7 +2150,7 @@ public class DataLoaderTest_IT {
 		
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
-			LocalLogger.logToStdErr(err.toCSVString());
+			LocalLogger.logToStdErr("Load error: \n" + err.toCSVString());
 			fail();
 		}
 	}

@@ -103,7 +103,7 @@ public class DataLoadBatchHandler {
 	}
 	
 	public void setBatchSize(int bSize){
-		System.err.println("Set batch size " + bSize);
+		//System.err.println("Set batch size " + bSize);
 		this.batchSize = bSize;
 	}
 	
