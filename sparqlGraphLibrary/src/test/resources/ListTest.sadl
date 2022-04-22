@@ -1,0 +1,27 @@
+uri "http://list".
+
+Pet is a class.
+Dog is a type of Pet.
+
+ListTest is a class,
+	described by name with values of type string,
+	described by quantity with a single value of type UnittedQuantity,
+	described by favorite with a single value of type Pet,
+	described by pets with values of type Pet List length 0-3.
+
+ListTestDifferent is a type of ListTest.
+favorate of ListTestDifferent only has values of type Dog.
+// Illegal
+//pets of ListTestDifferent only has values of type Dog List length 0-3.
+
+Fido is a Pet.
+Fluffy is a Pet.
+PetList is the Pet List [Fido, Fluffy].
+test is a ListTest.
+test has name "generic".
+test has favorite Fluffy.
+test has pets PetList.
+
+Whiskers is a Pet.
+Molly is a Pet.
+test2 is a ListTest, has name "generic", has pets [Whiskers, Molly].

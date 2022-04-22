@@ -224,9 +224,10 @@ define([	// properly require.config'ed
                         var typ;
 						var grp;
 						
-						// If blank node has slipped in as an object, stop exploration here
+						// If we're not in special lablIdFlag mode AND blank node has slipped in as an object
+						// stop exploration here
 						// (blank nodes are not consistent across queries)
-						if (val.match(VisJsHelper.BLANK_NODE_REGEX)) {
+						if (!optLabelIdFlag && val.match(VisJsHelper.BLANK_NODE_REGEX)) {
 							grp = VisJsHelper.BLANK_NODE;
 							val = VisJsHelper.BLANK_NODE
 							id = j['@id'] + "_" + key + "_blank";
