@@ -552,7 +552,7 @@ public class OntologyInfoTests_IT {
 		OntologyProperty oProp = oClass.getProperty("http://list#Pets");
 		assertTrue("Property with range List did not show up in ontology when SadlListModel.owl IS NOT loaded", oProp != null);
 		
-		TestGraph.uploadOwlResource(this, "SadlListModel.owl");		
+		TestGraph.uploadOwlResource(this, "SadlListModelTest.owl");		// SadlListModel.owl is in .gitignore, so use a different name.
 		oInfo = new OntologyInfo();
 		oInfo.load(TestGraph.getSei(), false);
 		
