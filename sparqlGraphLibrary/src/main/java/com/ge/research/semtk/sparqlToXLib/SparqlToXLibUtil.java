@@ -35,6 +35,7 @@ import com.ge.research.semtk.sparqlX.XSDSupportedType;
  * Split from SparqlToXUtils - functions requiring Ontology and other advance sparqlGraphLibrary imports
  */
 public class SparqlToXLibUtil {
+	private static final String BLANK_NODE_REGEX = "^(nodeID://|_:)";
 	/**
 	 * FROM or USING clause logic
 	 * Generates clauses if this.conn has
@@ -283,19 +284,32 @@ public class SparqlToXLibUtil {
 
 	public static String generateConstructConnected(SparqlConnection conn, OntologyInfo oInfo, String instance, XSDSupportedType instanceType) throws Exception {
 		
-		if (instanceType.isURI()) {
-			String val = instanceType.buildRDF11ValueString(instance);
+		if (instanceType == null) {
+
+			// try to guess whether type matters (only if it is a date
+			ArrayList<String> rdf11vals = XSDSupportedType.buildPossibleRDF11Values(instance);
+
+			String values = ValueConstraint.buildValuesConstraint("?o", rdf11vals);
+			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st.  } \n" +
+			generateSparqlFromOrUsing("", "FROM", conn, oInfo) +
+			"WHERE { " + 
+			values + ". ?s ?p ?o . \n"  +
+			"OPTIONAL { ?s a ?st } \n" +
+			"}";
 			
+		} else if (instanceType.isURI()) {
+			String val = instanceType.buildRDF11ValueString(instance);
+
 			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st. ?o a ?ot } \n" +
-					generateSparqlFromOrUsing("", "FROM", conn, oInfo) +
-					"WHERE { " + 
-					"{ BIND ( " + val + " as ?s) . ?s ?p ?o } \n" +
-					"UNION \n" +
+			generateSparqlFromOrUsing("", "FROM", conn, oInfo) +
+			"WHERE { " + 
+			"{ BIND ( " + val + " as ?s) . ?s ?p ?o } \n" +
+			"UNION \n" +
 					"{ BIND ( " + val + " as ?o) . ?s ?p ?o } \n" +
 					"OPTIONAL { ?s a ?st } \n" +
 					"OPTIONAL { ?o a ?ot } \n" +
 					"}";
-		} else if (instanceType != null) {
+		} else {
 			String val = instanceType.buildRDF11ValueString(instance);
 			
 			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st.  } \n" +
@@ -304,19 +318,7 @@ public class SparqlToXLibUtil {
 					"BIND ( " + val + " as ?o) . ?s ?p ?o . \n" +
 					"OPTIONAL { ?s a ?st } \n" +
 					"}";
-		} else {
-			
-			// try to guess whether type matters (only if it is a date
-			ArrayList<String> rdf11vals = XSDSupportedType.buildPossibleRDF11Values(instance);
-			
-			String values = ValueConstraint.buildValuesConstraint("?o", rdf11vals);
-			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st.  } \n" +
-				generateSparqlFromOrUsing("", "FROM", conn, oInfo) +
-				"WHERE { " + 
-				values + ". ?s ?p ?o . \n"  +
-				"OPTIONAL { ?s a ?st } \n" +
-				"}";
-		}
+		} 
 	}
 
 	/**
@@ -392,7 +394,7 @@ public class SparqlToXLibUtil {
 	public static String genDomainFilterStatement(String varName, String domain, String clause) {
 		if (domain == null || domain.isEmpty()) {
 			// remove blank nodes
-			String ret = "filter (!regex(str(?" + varName + "),'^(nodeID://|_:)') " + clause + ") ";
+			String ret = "filter (!regex(str(?" + varName + "),'" + BLANK_NODE_REGEX + "') " + clause + ") ";
 			return ret;
 			
 		} else {
@@ -401,6 +403,12 @@ public class SparqlToXLibUtil {
 			return ret;
 			
 		}
+	}
+	
+	public static String genBlankNodeFilterStatement(String varName, boolean flag) {	
+		String var = !varName.startsWith("?") ? ("?" + varName) : varName;
+		String ret = "filter (" + (flag?"":"!") + "regex(str(" + var + "),'" + BLANK_NODE_REGEX + "')) ";
+		return ret;
 	}
 	
 	/**

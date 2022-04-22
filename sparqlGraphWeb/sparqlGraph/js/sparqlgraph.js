@@ -2042,7 +2042,7 @@
                 var nonDataNodeCount = 0;
                 
                 for (var id of n.getSelectedNodes()) {
-                    if (network.body.data.nodes.get(id).group != "data") {
+                    if (network.body.data.nodes.get(id).group != VisJsHelper.DATA_NODE) {
                         nonDataNodeCount += 1;
                     }
                 };
@@ -2081,8 +2081,8 @@
 
     // user clicked to add to CONSTRUCT graph
     var constructExpandCallback = function(origRes, canvasDiv, network) {
-        require(['sparqlgraph/js/msiclientnodegroupexec',
-			    ], function(MsiClientNodeGroupExec) {
+        require(['sparqlgraph/js/modaliidx', 'sparqlgraph/js/msiclientnodegroupexec', 'sparqlgraph/js/visjshelper'
+			    ], function(ModalIidx, MsiClientNodeGroupExec, VisJsHelper) {
 
             networkBusy(canvasDiv, true);
             var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.longTimeoutMsec);
@@ -2097,7 +2097,10 @@
             var classList = [];
             for (var id of idList) {
                 var classUri = network.body.data.nodes.get(id).group;
-                if (classUri == "data") {
+             	if (classUri == VisJsHelper.BLANK_NODE) {
+					networkBusy(canvasDiv, false);
+					ModalIidx.alert("Blank node error", "Can not expand a blank node returned from a previous query.")
+				} else if (classUri == VisJsHelper.DATA_NODE) {
                     var instanceUri = id;
                     client.execAsyncConstructConnectedData(instanceUri, null, gConn, jsonLdCallback, networkFailureCallback.bind(this, canvasDiv));
 
