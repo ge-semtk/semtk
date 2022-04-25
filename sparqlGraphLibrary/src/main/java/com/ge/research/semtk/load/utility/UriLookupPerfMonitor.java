@@ -56,7 +56,7 @@ public class UriLookupPerfMonitor {
 	private long batchAvgQueryTime = 0;
 	private long urisCachedSoFar = 0;
 	private long urisInTriplestoreEstimate = -1;    // will be incorrect when there are duplicates
-	private AtomicBoolean anyUrisInTripleStore = null;
+	private Boolean anyUrisInTripleStore = null;
 	private AtomicBoolean prefetchedAll = new AtomicBoolean(false);
 	
 	private int queryLimit = 0;
@@ -82,9 +82,9 @@ public class UriLookupPerfMonitor {
 	public void setAnyUrisInTriplestore(boolean v) {
 		synchronized(this) {
 			if (this.anyUrisInTripleStore == null) {
-				this.anyUrisInTripleStore = new AtomicBoolean(v);
+				this.anyUrisInTripleStore = new Boolean(v);
 			} else {
-				this.anyUrisInTripleStore.set(v);
+				this.anyUrisInTripleStore = v;
 			}
 		}
 	}
@@ -93,16 +93,15 @@ public class UriLookupPerfMonitor {
 	 *           YES - ready to run a query, call recordIndiv() on success
 	 *           COUNT_NEEDED - determine whether there is at least one uri in the triplestore and call setAnyUrisInTriplestore()
 	 */
-	public READY requestNextIndivQuery() {
-		synchronized(this) {
-			if (this.anyUrisInTripleStore == null) {
-				return READY.COUNT_NEEDED;
-			
-			} else if (this.anyUrisInTripleStore.get() == false || this.prefetchedAll.get()) {
-				return READY.NO;
-			}
-			return READY.YES;
+	public READY requestNextIndivQuery() throws InternalError {
+		if (this.anyUrisInTripleStore == null) {
+			throw new InternalError("requestNextIndivQuery() was called before anyUrisInTripleStore was set");
+		
+		} else if (this.anyUrisInTripleStore == false || this.prefetchedAll.get()) {
+			return READY.NO;
 		}
+		return READY.YES;
+		
 	}
 	
 	/**
@@ -111,7 +110,7 @@ public class UriLookupPerfMonitor {
 	 *           YES - ready to run a batch query, call recordBatchSuccess() on success
 	 *           COUNT_NEEDED - call setUrisInTriplestore() and try again, counting up to at least PREFETCH_MAX_EXIST + 1
 	 */
-	public READY requestNextBatchQuery() {
+	synchronized public READY requestNextBatchQuery() {
 		if (this.batchQueryBlocked.get()) {
 			// another thread is already doing it OR it has been permanently ended for this load
 			return READY.NO;
@@ -126,52 +125,50 @@ public class UriLookupPerfMonitor {
 			return READY.COUNT_NEEDED;
 			
 		} else {
-			// sync: don't let two threads get permission for batch lookup
-			synchronized(this) {
+		
+			// estimate times to lookup individually vs batch
+			// lots of assumptions
+			// seem 2x to high but the two estimates cross at approximately the correct place
+			long estimatedLookupsRemaining = Math.max(5000, this.uriLookupCount) ;  // generous swag at how many lookups remain 
+			long urisToCache = Math.min(this.urisInTriplestoreEstimate, PREFETCH_MAX_COUNT) - this.urisCachedSoFar;
+			long batchQueryTime = this.batchAvgQueryTime * urisToCache;
+			long estWithBatch     =  batchQueryTime + this.indivAvgQueryTime * estimatedLookupsRemaining * (1 - (this.urisCachedSoFar + urisToCache) / this.urisInTriplestoreEstimate); 
+			long estWithoutBatch  =  0              + this.indivAvgQueryTime * estimatedLookupsRemaining * (1 - (this.urisCachedSoFar + 0          ) / this.urisInTriplestoreEstimate);
+			
+			
+			
+			// if no batch lookups have been tried yet or it looks faster
+			if (this.batchAvgQueryTime == 0 || estWithBatch < estWithoutBatch) {
+				if (LOG_PRECACHE) LocalLogger.logToStdOut(String.format("precache %s EVAL YES indiv=%,d batch=%,d", this.nodeName, estWithoutBatch, estWithBatch));
 				
-				// estimate times to lookup individually vs batch
-				// lots of assumptions
-				// seem 2x to high but the two estimates cross at approximately the correct place
-				long estimatedLookupsRemaining = Math.max(5000, this.uriLookupCount) ;  // generous swag at how many lookups remain 
-				long urisToCache = Math.min(this.urisInTriplestoreEstimate, PREFETCH_MAX_COUNT) - this.urisCachedSoFar;
-				long batchQueryTime = this.batchAvgQueryTime * urisToCache;
-				long estWithBatch     =  batchQueryTime + this.indivAvgQueryTime * estimatedLookupsRemaining * (1 - (this.urisCachedSoFar + urisToCache) / this.urisInTriplestoreEstimate); 
-				long estWithoutBatch  =  0              + this.indivAvgQueryTime * estimatedLookupsRemaining * (1 - (this.urisCachedSoFar + 0          ) / this.urisInTriplestoreEstimate);
+				// set the new offset
+				if (this.queryOffset < 0)
+					this.queryOffset = 0;
+				else
+					this.queryOffset += this.queryLimit;
 				
-				
-				
-				// if no batch lookups have been tried yet or it looks faster
-				if (this.batchAvgQueryTime == 0 || estWithBatch < estWithoutBatch) {
-					if (LOG_PRECACHE) LocalLogger.logToStdOut(String.format("precache %s EVAL YES indiv=%,d batch=%,d", this.nodeName, estWithoutBatch, estWithBatch));
-					
-					// set the new offset
-					if (this.queryOffset < 0)
-						this.queryOffset = 0;
-					else
-						this.queryOffset += this.queryLimit;
-					
-					// permanently stop if we've cached enough already
-					if (queryOffset > PREFETCH_MAX_COUNT) {
-						this.batchQueryBlocked.set(true);
-						return READY.NO;
-					} else {
-					
-						this.batchQueryBlocked.set(true);
-						this.ignoreUntilIndivCount = (long) (this.indivQueryCount * 1.05);
-						return READY.YES;
-					}
-					
-				} else {
-					// batch pre-caching doesn't seem efficient
-					
-					if (LOG_PRECACHE) LocalLogger.logToStdOut(String.format("precache %s EVAL NO  indiv=%,d batch=%,d", this.nodeName, estWithoutBatch, estWithBatch));
-					
-					// don't compute efficiency again in a while
-					this.ignoreUntilIndivCount = (long) (this.indivQueryCount * 1.5);
+				// permanently stop if we've cached enough already
+				if (queryOffset > PREFETCH_MAX_COUNT) {
+					this.batchQueryBlocked.set(true);
 					return READY.NO;
+				} else {
+				
+					this.batchQueryBlocked.set(true);
+					this.ignoreUntilIndivCount = (long) (this.indivQueryCount * 1.05);
+					return READY.YES;
 				}
+				
+			} else {
+				// batch pre-caching doesn't seem efficient
+				
+				if (LOG_PRECACHE) LocalLogger.logToStdOut(String.format("precache %s EVAL NO  indiv=%,d batch=%,d", this.nodeName, estWithoutBatch, estWithBatch));
+				
+				// don't compute efficiency again in a while
+				this.ignoreUntilIndivCount = (long) (this.indivQueryCount * 1.5);
+				return READY.NO;
 			}
 		}
+		
 	}
 	
 	public int getQueryLimit() { return this.queryLimit; }

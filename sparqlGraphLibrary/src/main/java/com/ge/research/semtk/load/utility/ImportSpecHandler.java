@@ -142,8 +142,16 @@ public class ImportSpecHandler {
 		return tmp.toJson();
 	}
 
-	public void setEndpoint(SparqlEndpointInterface endpoint) {
+	public void initEndpoint(SparqlEndpointInterface endpoint) throws Exception {
 		this.nonThreadSafeEndpoint = endpoint;
+		
+		// check whether any Uris exist in triplestore
+		for (String nodeID : this.lookupMappings.keySet()) {
+			String md5 = this.lookupNodegroupMD5.get(nodeID);
+			UriLookupPerfMonitor monitor = this.lookupPerfMonitors.get(md5);
+			long smallCount = this.lookupCount(nodeID, 2);
+			monitor.setAnyUrisInTriplestore(smallCount > 0);
+		}
 	}
 
 	/**
@@ -871,13 +879,6 @@ public class ImportSpecHandler {
 			// check for permission to run an individual query
 
 			READY indivQueryRequest = monitor.requestNextIndivQuery();
-			if (indivQueryRequest == READY.COUNT_NEEDED) {
-				monitor.setAnyUrisInTriplestore(this.lookupCount(nodeID, 2) > 0);
-				// gave an answer, ask again
-				indivQueryRequest = monitor.requestNextIndivQuery();
-			}
-
-			
 			Table tab = null;
 			if (indivQueryRequest == READY.NO) {
 				// perf monitor says not to run a query.  
