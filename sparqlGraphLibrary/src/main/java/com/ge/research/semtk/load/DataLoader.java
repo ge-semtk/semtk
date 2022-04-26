@@ -20,6 +20,7 @@ package com.ge.research.semtk.load;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.json.simple.JSONObject;
 
@@ -66,7 +67,7 @@ public class DataLoader implements Runnable {
 	
 	int totalRecordsProcessed = 0;
 	
-	private int maxCacheLength = (int) (Integer.MAX_VALUE / 4);
+	private int maxCacheLength = (int) (20000000);  // 20 meg-ish
 	
 	// async information
 	Boolean asyncSkipIngest = null;
@@ -81,6 +82,7 @@ public class DataLoader implements Runnable {
 	InMemoryInterface cacheSei = null;
 	boolean doNotCache = false;
 	InMemoryInterfaceUploadThread uploadThread = null;
+	AtomicInteger lastUploadSize = new AtomicInteger(0);
 	
 	public DataLoader(){
 		// default and does nothing special 
@@ -413,21 +415,26 @@ public class DataLoader implements Runnable {
 					if (dumpCacheRowInterval == 0 && startingRow > 100) {
 						int testSize = this.cacheSei.dumpToTurtle().length();
 						
+						// estimate rows between dumping cache based on first 100+ rows of ingestion
+						// use at least 75,000 characters in the cache for the estimate
 						dumpCacheRowInterval = (int) (this.maxCacheLength) / Math.max(50000, testSize) * startingRow;
-						dumpCacheRowInterval = Math.min(15000, dumpCacheRowInterval);
 						dumpCacheNext = dumpCacheRowInterval;
-						
+						LocalLogger.logToStdErr("Cache interval rows init: " + dumpCacheRowInterval);
 					}
 					// do upload when needed
 					if (dumpCacheNext > 0 && startingRow > dumpCacheNext) {
 						// upload and clear
-						int len = launchUploadCache();
+						launchUploadCache();
 						this.cacheSei = new InMemoryInterface("http://cache");
 						
-						// check size and adjust dumpCacheRowInterval with 1/3 weighted average
-						int newInterval = (int) (this.maxCacheLength) / Math.max(50000, len) * dumpCacheRowInterval;
-						newInterval = Math.min(15000, newInterval);
-						dumpCacheRowInterval = (int) (((dumpCacheRowInterval * 2) + newInterval)/3);  
+						int lastUploadSize = this.lastUploadSize.get();
+						
+						if (lastUploadSize > 0) {
+							// check size and adjust dumpCacheRowInterval with 1/5 weighted average
+							int newInterval = (int) (this.maxCacheLength / lastUploadSize) * dumpCacheRowInterval;
+							dumpCacheRowInterval = (int) (((dumpCacheRowInterval * 4) + newInterval) / 5);  
+							LocalLogger.logToStdErr("Cache interval rows new: " + dumpCacheRowInterval);
+						}
 						dumpCacheNext += dumpCacheRowInterval;
 						
 					}
@@ -445,14 +452,15 @@ public class DataLoader implements Runnable {
 		for(int i = 0; i < wrkrs.size(); i++){
 			this.joinAndThrowIfException(wrkrs.get(i), exceptionHeader);
 		}
-		String timingInfo = String.format(" %d threads %sed %d records in %d sec", threadsUsed, mode, recordsProcessed, Instant.now().getEpochSecond() - startEpoch);
-		LocalLogger.logToStdOut(" (DONE)" + "\n" + timingInfo, false, true);
 		
 		// If a temporary in-memory graph was used, then dump it to owl and upload it
 		if (!skipIngest && this.cacheSei != null) {
 			this.launchUploadCache();
 			this.waitForUpload();    // wait for last one.
 		}
+		
+		String timingInfo = String.format(" %d threads %sed %d records in %d sec", threadsUsed, mode, recordsProcessed, Instant.now().getEpochSecond() - startEpoch);
+		LocalLogger.logToStdOut(" (DONE)" + "\n" + timingInfo, false, true);
 		
 		// tell status client if there is one set up
 		if (this.sClient != null) {
@@ -471,31 +479,26 @@ public class DataLoader implements Runnable {
 	 * @return length of previous upload, or 0
 	 * @throws Exception
 	 */
-	private int launchUploadCache() throws Exception {
+	private void launchUploadCache() throws Exception {
 		
-		int previousLength = this.waitForUpload();
-
-		this.uploadThread = new InMemoryInterfaceUploadThread(this.cacheSei , this.endpoint, this.headerTable);
+		this.uploadThread = new InMemoryInterfaceUploadThread(this.cacheSei , this.endpoint, this.headerTable, this.lastUploadSize);
 		this.uploadThread.start();
-		
-		return previousLength;
 	}
 	
 	/**
 	 * Wait for previous upload to complete, if any
-	 * @return length of upload or 0
 	 * @throws Exception
 	 */
-	private int waitForUpload() throws Exception {
+	private void waitForUpload() throws Exception {
 		if (this.uploadThread != null) {
 			this.uploadThread.join();
 			if (this.uploadThread.getException() != null) {
 				throw this.uploadThread.getException();
 			}
-			return this.uploadThread.getLength();
+			return;
 		}
 		else {
-			return 0;
+			return;
 		}
 	}
 	
