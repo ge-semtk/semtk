@@ -134,14 +134,18 @@ public class IngestionNodegroupBuilder {
 				Node objNode = nodegroup.addNode(rangeUri, node, null, nItem.getUriConnectBy());
 				nItem.setOptionalMinus(objNode, NodeItem.OPTIONAL_TRUE);
 				
-				if (oInfo.hasSubclass(className)) {
-					// If node has subclasses then NO_CREATE ("error if missing")
-					// This will create the need for ingestion order to matter:  linked items must be ingested first.
-					ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_NO_CREATE);
-				} else {
-					// If node has NO subclasses then we may create it.
-					ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_CREATE);
-				}
+				ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_NO_CREATE);
+
+//  we might want to re-add this for a different "flavor" of auto-generated nodegroups
+//
+//				if (oInfo.hasSubclass(className)) {
+//					// If node has subclasses then NO_CREATE ("error if missing")
+//					// This will create the need for ingestion order to matter:  linked items must be ingested first.
+//					ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_NO_CREATE);
+//				} else {
+//					// If node has NO subclasses then we may create it.
+//					ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_CREATE);
+//				}
 				
 				// give it a name, e.g.: verifies_ENTITY
 				String objNodeName = nItem.getKeyName() + "_" + new OntologyName(rangeUri).getLocalName();
