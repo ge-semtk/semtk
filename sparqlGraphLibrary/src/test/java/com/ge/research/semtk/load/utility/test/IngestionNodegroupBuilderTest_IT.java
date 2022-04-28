@@ -52,32 +52,56 @@ public class IngestionNodegroupBuilderTest_IT {
 		TestGraph.uploadOwlResource(this, "sampleBattery.owl");		
 		
 		// build the ingestion template
-		IngestionNodegroupBuilder builder = new IngestionNodegroupBuilder("http://kdl.ge.com/batterydemo#Battery", TestGraph.getSparqlConn(), TestGraph.getOInfo());
-		builder.setIdRegex("(name|Id$)");
-		builder.build();
+		IngestionNodegroupBuilder battryBuilder = new IngestionNodegroupBuilder("http://kdl.ge.com/batterydemo#Battery", TestGraph.getSparqlConn(), TestGraph.getOInfo());
+		battryBuilder.setIdRegex("(name|Id$)");
+		battryBuilder.build();
 		
 		// check the CSV
-		String csv = builder.getCsvTemplate();
+		String csv = battryBuilder.getCsvTemplate();
 		assertTrue(csv.contains("birthday"));
 		assertTrue(csv.contains("name"));
 		assertTrue(csv.contains("cell_cellId"));
 		
-		// ingest some data 
+		// ingest some data without cells:  error
 		String data = 	"birthday,name,cell_cellId\n" +
 						"03/23/1966, batt1, cell1\n" +
 						"03/23/1966, batt2, cell2\n" +
 						"null      , batt2, cell3\n";
 	
-		SparqlGraphJson sgJson = builder.getSgjson();
+		SparqlGraphJson batterySGJson = battryBuilder.getSgjson();
 		
 		Dataset ds = new CSVDataset(data, true);
-		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		DataLoader dl = new DataLoader(batterySGJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		int records = dl.importData(true);
-		assertEquals(dl.getLoadingErrorReport().toCSVString(), 3, records);
+		assertEquals("Error if missing did not occur as expected on cells", 0, records);
+		
+		// ingest the cells
+		String cellData = 	"cellId\n" +
+				"cell1\n" +
+				"cell2\n" +
+				"cell3\n";
+		// build the ingestion template
+		IngestionNodegroupBuilder cellBuilder = new IngestionNodegroupBuilder("http://kdl.ge.com/batterydemo#Cell", TestGraph.getSparqlConn(), TestGraph.getOInfo());
+		cellBuilder.setIdRegex("(name|Id$)");
+		cellBuilder.build();
+		SparqlGraphJson cellSGJson = cellBuilder.getSgjson();
+		
+		csv = cellBuilder.getCsvTemplate();
+		
+		Dataset cellDs = new CSVDataset(cellData, true);
+		DataLoader cellDl = new DataLoader(cellSGJson, cellDs, TestGraph.getUsername(), TestGraph.getPassword());
+		records = cellDl.importData(true);
+		assertEquals(dl.getLoadingErrorReportBrief(), 3, records);
+		
+		// now try the batteries again
+		ds = new CSVDataset(data, true);
+		dl = new DataLoader(batterySGJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		records = dl.importData(true);
+		assertEquals(dl.getLoadingErrorReportBrief(), 3, records);
 		
 		// use same sgJson to query data back out
-		sgJson.getNodeGroup().orderByAll();
-		Table roundTrip = TestGraph.execTableSelect(sgJson);
+		batterySGJson.getNodeGroup().orderByAll();
+		Table roundTrip = TestGraph.execTableSelect(batterySGJson);
 		assertEquals(3, roundTrip.getNumRows());
 		// name column
 		assertTrue(roundTrip.getCellAsString(0, 1).equals("batt1"));
