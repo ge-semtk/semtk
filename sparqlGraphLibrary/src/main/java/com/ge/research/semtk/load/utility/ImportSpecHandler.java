@@ -313,8 +313,8 @@ public class ImportSpecHandler {
 			// lookup mode
 			if (mode != null) {
 				switch (mode) {
-				case ImportSpec.LOOKUP_MODE_CREATE:
-				case ImportSpec.LOOKUP_MODE_NO_CREATE:
+				case ImportSpec.LOOKUP_MODE_CREATE_IF_MISSING:
+				case ImportSpec.LOOKUP_MODE_ERR_IF_MISSING:
 				case ImportSpec.LOOKUP_MODE_ERR_IF_EXISTS:
 					this.lookupMode.put(nodeSparqlID, mode);
 					break;
@@ -461,7 +461,7 @@ public class ImportSpecHandler {
 
 			// error check different columns looking up same type with non-equal nodegroups
 			String mode = this.lookupMode.get(importNodeId);
-			if (mode != null && mode.equals(ImportSpec.LOOKUP_MODE_CREATE)) {
+			if (mode != null && mode.equals(ImportSpec.LOOKUP_MODE_CREATE_IF_MISSING)) {
 				String classUri = lookupNode.getFullUriName();
 				if (classToMD5Hash.containsKey(classUri)) {
 					if (!classToMD5Hash.get(classUri).equals(ngMD5)) {
@@ -847,7 +847,7 @@ public class ImportSpecHandler {
 			
 			// if "createIfMissing" and has a mapping and is a generated (not looked up) URI
 			// (making sure node doesn't have it's own mapping that is different from looked-up uri)
-			} else if (this.lookupMode.containsKey(nodeID) && this.lookupMode.get(nodeID).equals(ImportSpec.LOOKUP_MODE_CREATE)
+			} else if (this.lookupMode.containsKey(nodeID) && this.lookupMode.get(nodeID).equals(ImportSpec.LOOKUP_MODE_CREATE_IF_MISSING)
 					&& this.getImportMapping(nodeID, ImportMapping.NO_PROPERTY) != null
 					&& this.uriCache.isGenerated(cachedUri)) {
 
@@ -908,7 +908,7 @@ public class ImportSpecHandler {
 
 			} else if (tab.getNumRows() == 0) {
 				// zero found
-				if (this.getLookupMode(nodeID).equals(ImportSpec.LOOKUP_MODE_NO_CREATE)) {
+				if (this.getLookupMode(nodeID).equals(ImportSpec.LOOKUP_MODE_ERR_IF_MISSING)) {
 					// this is the only spot where we didn't run query but need lookupNodegroup for
 					// error msg
 					if (lookupNodegroup == null) {
@@ -1233,7 +1233,7 @@ public class ImportSpecHandler {
 	private String getLookupMode(String nodeID) {
 		String mode = this.lookupMode.get(nodeID);
 		if (mode == null) {
-			return ImportSpec.LOOKUP_MODE_NO_CREATE; // default mode
+			return ImportSpec.LOOKUP_MODE_ERR_IF_MISSING; // default mode
 		} else {
 			return mode;
 		}
@@ -1319,7 +1319,7 @@ public class ImportSpecHandler {
 	 */
 	public boolean containsLookupWithCreate() {
 		for (String id : this.lookupMode.keySet()) {
-			if (this.getLookupMode(id).equals(ImportSpec.LOOKUP_MODE_CREATE)
+			if (this.getLookupMode(id).equals(ImportSpec.LOOKUP_MODE_CREATE_IF_MISSING)
 					|| this.getLookupMode(id).equals(ImportSpec.LOOKUP_MODE_ERR_IF_EXISTS)) {
 				return true;
 			}
