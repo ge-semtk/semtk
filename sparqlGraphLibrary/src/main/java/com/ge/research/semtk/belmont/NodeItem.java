@@ -436,5 +436,4 @@ public class NodeItem {
 		//uriConnectBy 
 		this.connected = this.nodes.size() > 0;
 	}
-	
 }

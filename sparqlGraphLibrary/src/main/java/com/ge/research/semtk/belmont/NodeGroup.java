@@ -25,7 +25,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -3474,15 +3477,18 @@ public class NodeGroup {
 	 */
 	private ArrayList<Node> getSubGraph(Node startNode, ArrayList<Node> stopList) {
 		ArrayList<Node> ret = new ArrayList<Node>();
+		Stack<Node> work = new Stack<>();
 		
-		ret.add(startNode);
-		ArrayList<Node> conn = this.getAllConnectedNodes(startNode);
+		work.push(startNode);
 		
-		for (Node n : conn) {
-			if (! stopList.contains(n) && ! ret.contains(n)) {
-				ret.addAll(this.getSubGraph(n, ret));
+		while (!work.isEmpty()) {
+			Node next = work.pop();
+			if (! stopList.contains(next) && ! ret.contains(next)) {
+				ret.add(next);
+				work.addAll(this.getAllConnectedNodes(next));
 			}
 		}
+
 		return ret;
 	}
 	
@@ -4256,21 +4262,79 @@ public class NodeGroup {
 		return ret;
 	}
 	
+	private UnionFind<Node> calcSimpleGroups() throws Exception {
+		UnionFind<Node> result = new UnionFind<>();
+
+		for (Node source : nodes) {
+			for (NodeItem ni : source.getNodeItemList()) {
+				for (Node target : ni.getNodeList()) {
+
+					// Check for a plain edge: no optional, no minus, no reverse
+					if (NodeItem.OPTIONAL_FALSE == ni.getOptionalMinus(target)
+						&& null == getUnionKey(source, ni, target))
+					{
+						result.union(source, target);							
+					}
+				}
+			}
+		}
+		
+		return result;
+	}
+	
+	private Map<Node, List<Node>> calcReducedGraph(UnionFind<Node> cliques) throws Exception
+	{
+		HashMap<Node, List<Node>> edges = new HashMap<>();
+
+		for (Node node : nodes) {
+			Node leader = cliques.find(node);
+			List<Node> sources = edges.get(leader);
+			if (null == sources) {
+				sources = new ArrayList<>();
+				edges.put(leader, sources);
+			}
+		}
+		
+		for (Node source : nodes) {
+			Node sourceLeader = cliques.find(source);
+
+			for (NodeItem ni : source.getNodeItemList()) {
+				for (Node target : ni.getNodeList()) {					
+					
+					// Check for a plain edge: no optional, no minus, no reverse
+					if (NodeItem.OPTIONAL_FALSE != ni.getOptionalMinus(target)
+						|| null != getUnionKey(source, ni, target))
+					{
+						Node targetLeader = cliques.find(target);
+						edges.get(targetLeader).add(sourceLeader);
+					}
+				}
+			}
+		}
+		
+		return edges;
+	}
+	
 	private Node getNextHeadNode(ArrayList<Node> skipNodes) throws Exception  {
 		if (skipNodes.size() == this.nodes.size()) {
 			return null;
 		}
-		
-		HashMap<String,Integer> optHash = this.calcOptionalHash(skipNodes);
+
+		UnionFind<Node> cliques = this.calcSimpleGroups();
+		Map<Node, List<Node>> graph = this.calcReducedGraph(cliques);
+
+//		HashMap<String,Integer> optHash = this.calcOptionalHash(skipNodes);
 		HashMap<String,Integer> linkHash = this.calcIncomingLinkHash(skipNodes);
 		
 		String retID = null;
 		int minLinks = 99;
 		
 		// both hashes have same keys: loop through valid snode SparqlID's
-		for (String id : optHash.keySet()) {
-			// find nodes that are not optional
-			if (optHash.get(id) == 0) {
+		for (Map.Entry<Node, List<Node>> entry : graph.entrySet()) {
+			
+			if (!skipNodes.contains(entry.getKey()) && skipNodes.containsAll(entry.getValue())) {
+				String id = entry.getKey().getSparqlID();
+
 				// choose node with lowest number of incoming links
 				if (retID == null || linkHash.get(id) < minLinks) {
 					retID = id;

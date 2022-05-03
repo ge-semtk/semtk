@@ -3380,14 +3380,21 @@ SemanticNodeGroup.prototype = {
 	getSubGraph : function(startSNode, stopList) {
 		// get all the nodes connected recursively through all connections
 		// except stopList.
-		var ret = [startSNode];
-		var conn = this.getAllConnectedNodes(startSNode);
+		var ret = [];
+		var work = [startSNode];
 
-		for (var i=0; i < conn.length; i++) {
-			if (stopList.indexOf(conn[i]) === -1 && ret.indexOf(conn[i]) === -1) {
-				ret = ret.concat(this.getSubGraph(conn[i], ret));
+		while (work.length > 0) {
+			var node = work.pop()
+			if (stopList.indexOf(node) === -1 && ret.indexOf(node) === -1) {
+				ret.push(node);
+
+				var conn = this.getAllConnectedNodes(startSNode);
+				for (var i=0; i < conn.length; i++) {
+					work.push(conn[i])
+				}
 			}
 		}
+
 		return ret;
 	},
 
