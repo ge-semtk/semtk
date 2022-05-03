@@ -1,0 +1,6 @@
+description,batt_ID,COMMENTS
+has a comma,"id with, comma"                                ,// strings with commas must be quoted
+has double quotes,"id with ""double quotes"""               ,// double-quote is "" and must be quoted 
+has single quotes,id with 'single quotes'                   ,// single quotes are plain.  Originally ingested quoted. That's fine too.
+hello World ascii,Hello World                               ,// id was ingested unicode.  looking it up Ascii.  Results will be ascii
+hello World unicode,"\u0048\u0065\u006c\u006c\u006f World"  ,// id was ingested unicode w/ uppercase letters.  look it up unicode w/ lowercase letters.  Results will be ascii

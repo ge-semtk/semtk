@@ -68,12 +68,6 @@ SparqlFormatter.prototype = {
 		return ret;
 	},
 
-	sparqlSafe : function(str) {
-		// return a version of a string that can be used as a string in SPARQL
-
-	    return String(str).replace(/"/g, '\\"').replace(/\n/g, '\\n').replace(/\r/g, '\\n');
-	},
-
 	tagSparqlID : function(sparql, id) {
 		var ret = sparql;
 

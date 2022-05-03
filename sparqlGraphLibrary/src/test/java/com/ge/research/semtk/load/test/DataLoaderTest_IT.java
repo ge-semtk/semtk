@@ -1003,22 +1003,6 @@ public class DataLoaderTest_IT {
 		
 		
 		loadData(dl0, "doLookupBatteryIdAddDesc PRELOAD", cacheFlag);
-
-		// It looks like when we insert via inMemory graph, the strings go in as plain literals.
-		// InMemoryInterfaceTest_IT.testInsertSelectTypedString() shows they go into the in-memory graph ok.
-		// test_TypedString() shows that cached load is failing to preserve type
-		//
-		// So the problem must be in dumping to OWL/RDF and uploading.   The Owl looks wrong.  
-		//        <j.0:batteryId>id_733344685</j.0:batteryId>
-		//    instead of
-		//        <j.0:batteryId>"id_733344685"^^XMLSchema:string</j.0:batteryId>
-		// When we do URI lookups, we query for "value"^^xsd:string
-		//
-		//   http://iswc2011.semanticweb.org/fileadmin/iswc/Papers/Workshops/SSWS/Emmons-et-all-SSWS2011.pdf
-		//   	literal types are often handled inconsistently
-		// 	    filter clause will probably work
-		//
-		// BEST: figure out how to dump to turtle since owl/rdf is too verbose AND wrong
 		
 				
 				
@@ -1145,6 +1129,54 @@ public class DataLoaderTest_IT {
 		loadData(dl, "testLookupBatteryIdAddDescUTF8", cacheFlag);
 
 		TestGraph.queryAndCheckResults(sgJson, this, "/lookupBatteryIdAddDescUTF8Results.csv");
+		
+	}
+	
+	@Test
+	public void test_LookupBatteryIdAddDescExcelEscape() throws Exception {
+		
+		doLookupBatteryIdAddDescExcelEscape(false);
+		doLookupBatteryIdAddDescExcelEscape(true);
+	}
+
+	/**
+	 * Test excel-style escaping of quotes in a csv
+	 *  double quotes are "" and the entire cell must be double quoted or else it seems behavior is undefined
+	 *  single quotes are normal (may be quoted or unquoted)
+	 *  unicode \u006c
+	 * 
+	 *  won't test un-clearly-specified behavior such as unquoted field containing ""
+	 * 
+	 * ------------------------------------------------------------------------------------
+	 * comments on each test case can be found in:  loadTestDuraBatteryExcelDescData.csv
+	 * ------------------------------------------------------------------------------------
+	 * 
+	 * @param cacheFlag
+	 * @throws Exception
+	 */
+	public void doLookupBatteryIdAddDescExcelEscape(boolean cacheFlag) throws Exception {
+		// setup
+		TestGraph.clearGraph();
+				
+		// ==== pre set some data =====
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
+		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
+		Dataset ds0 = new CSVDataset("src/test/resources/loadTestDuraBatteryExcelData.csv", false);
+
+		DataLoader dl0 = new DataLoader(sgJson0, ds0, TestGraph.getUsername(), TestGraph.getPassword());
+		loadData(dl0, "testLookupBatteryIdAddDescExcel preload", cacheFlag);
+				
+		LocalLogger.logToStdErr("------ done import 1 -------");	
+		
+		// URI lookup
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/lookupBatteryIdAddDescAndRetThem.json");
+		Dataset ds = new CSVDataset("src/test/resources/loadTestDuraBatteryExcelDescData.csv", false);
+		
+		// import the actual test: lookup URI and add description
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		loadData(dl, "testLookupBatteryIdAddDescUTF8", cacheFlag);
+
+		TestGraph.queryAndCheckResults(sgJson, this, "/loadTestDuraBatteryExcelResults.csv");
 		
 	}
 	
