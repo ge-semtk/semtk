@@ -1167,10 +1167,19 @@ SemanticNode.prototype = {
 			this.propList.push(p);
 		}
 
-		for (var i = 0; i < jObj.nodeList.length; i++) {
-			var n = new NodeItem(null, [], jObj.nodeList[i], nodeGroup);
-			this.nodeList.push(n);
-		}
+		// (val) Temporarily commenting this out: it assumes that `the nodes
+		// referenced in the `nodeList` are readily available, but this was only
+		// true when 1. the nodegroups could not have cycles and 2. the
+		// `sNodeList` was topologically sorted.  Since we are breaking those
+		// assumptions, we can no longer start creating `NodeItem` instances
+		// until all `SemanticNode` instances have been created. Only then will
+		// a second pass add the `NodeItem`s, see
+		// `SemanticNodeGroup.prototype.addJson` for details.
+
+		// for (var i = 0; i < jObj.nodeList.length; i++) {
+		// 	var n = new NodeItem(null, [], jObj.nodeList[i], nodeGroup);
+		// 	this.nodeList.push(n);
+		// }
 
 	},
 
@@ -1937,14 +1946,32 @@ SemanticNodeGroup.prototype = {
             this.columnOrder = jObj.columnOrder;
         }
 
+		for (var i = 0; i < jObj.sNodeList.length; i++) {
+		}
+
+		// (val) We temporarily store the semantic nodes by index, just so that
+		// the second pass can easily re-access them by index.
+		let snodes = []
+
 		// loop through SNodes in the json
 		for (var i = 0; i < jObj.sNodeList.length; i++) {
-			var newNode = new SemanticNode(null, null, null, null, null, this,
+			snodes[i] = new SemanticNode(null, null, null, null, null, this,
 					jObj.sNodeList[i]);
 
 			// add the node without messing with any connections...they are
 			// already there.
-			this.addOneNode(newNode, null, null, null, false);
+			this.addOneNode(snodes[i], null, null, null, false);
+		}
+
+		// (val) In this second pass, we can now create `NodeItem`s since the
+		// `SemanticNode`s they will refer to have all been created.
+		for (var i = 0; i < jObj.sNodeList.length; i++) {
+			const jObjSNode = jObj.sNodeList[i]
+			const snode = snodes[i]
+			for (var j = 0; j < jObjSNode.nodeList.length; j++) {
+				var n = new NodeItem(null, [], jObjSNode.nodeList[j], this);
+				snode.nodeList.push(n);
+			}
 		}
 
         if (jObj.hasOwnProperty("orderBy")) {
