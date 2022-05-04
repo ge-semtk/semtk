@@ -33,11 +33,11 @@ import com.ge.research.semtk.utility.LocalLogger;
 public class NodeItem {
 	// this is the class that controls the access to nodes that a given belmont node 
 	// believes it is linked to...
-	public static int OPTIONAL_FALSE = 0;
-	public static int OPTIONAL_TRUE = 1;
-	public static int OPTIONAL_REVERSE = -1;
-	public static int MINUS_TRUE = 2;
-	public static int MINUS_REVERSE = -2;
+	public static final int OPTIONAL_FALSE = 0;
+	public static final int OPTIONAL_TRUE = 1;
+	public static final int OPTIONAL_REVERSE = -1;
+	public static final int MINUS_TRUE = 2;
+	public static final int MINUS_REVERSE = -2;
 	
 	private ArrayList<Node> nodes = new ArrayList<Node>();
 	private ArrayList<Integer> optionalMinus = new ArrayList<Integer>();

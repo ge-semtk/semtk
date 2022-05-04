@@ -2438,6 +2438,7 @@ public class NodeGroup {
 		} else {
 			doneNodes.add(snode);
 		}
+		int myDone = doneNodes.size() - 1;
 				
 		// delete where
 		if (clauseType == ClauseTypes.DELETE_WHERE && snode.getDeletionMode() != NodeDeletionTypes.NO_DELETE){
@@ -2482,7 +2483,10 @@ public class NodeGroup {
 			
 			// each nItem might point to multiple children
 			for(Node targetNode : nItem.getNodeList()) {
-				if (nItem != skipNodeItem || targetNode != skipNodeTarget) {
+				int targetDone = doneNodes.indexOf(targetNode);
+				if (targetDone == -1) { targetDone = doneNodes.size(); }
+				
+				if (myDone <= targetDone) { // less-then-equal-to to catch self edges
 					Integer unionKey = this.getUnionKey(snode, nItem, targetNode);
 					if (unionKey == null || clauseType == ClauseTypes.CONSTRUCT_LEADER) {
 						sparql.append(this.generateSparqlSubgraphClausesNodeItem(clauseType, false, snode, nItem, targetNode, targetObj, doneNodes, doneUnions, tab));
@@ -2496,9 +2500,13 @@ public class NodeGroup {
 		}
 		
 		// Recursively process incoming nItems
-		for(NodeItem nItem : this.getConnectingNodeItems(snode)) {   
-			if (nItem != skipNodeItem || snode != skipNodeTarget) {
-				Node incomingSNode = this.getNodeItemParentSNode(nItem); 
+		for(NodeItem nItem : this.getConnectingNodeItems(snode)) {
+			Node incomingSNode = this.getNodeItemParentSNode(nItem);
+		
+			int sourceDone = doneNodes.indexOf(incomingSNode);
+			if (sourceDone == -1) { sourceDone = doneNodes.size(); }
+			
+			if (myDone < sourceDone) { // less-than to avoid self-edges
 				Integer unionKey = this.getUnionKey(incomingSNode, nItem, snode);
 				if (unionKey == null || clauseType == ClauseTypes.CONSTRUCT_LEADER) {
 					sparql.append(
@@ -4262,7 +4270,7 @@ public class NodeGroup {
 		return ret;
 	}
 	
-	private UnionFind<Node> calcSimpleGroups() throws Exception {
+	private UnionFind<Node> calcSimpleCliques() throws Exception {
 		UnionFind<Node> result = new UnionFind<>();
 
 		for (Node source : nodes) {
@@ -4282,7 +4290,7 @@ public class NodeGroup {
 		return result;
 	}
 	
-	private Map<Node, List<Node>> calcReducedGraph(UnionFind<Node> cliques) throws Exception
+	private Map<Node, List<Node>> calcCliqueGraph(UnionFind<Node> cliques) throws Exception
 	{
 		HashMap<Node, List<Node>> edges = new HashMap<>();
 
@@ -4301,8 +4309,12 @@ public class NodeGroup {
 			for (NodeItem ni : source.getNodeItemList()) {
 				for (Node target : ni.getNodeList()) {					
 					
-					// Check for a plain edge: no optional, no minus, no reverse
-					if (NodeItem.OPTIONAL_FALSE != ni.getOptionalMinus(target)
+					int opt = ni.getOptionalMinus(target);
+
+					if (opt == NodeItem.OPTIONAL_REVERSE || opt == NodeItem.MINUS_REVERSE) {
+						Node targetLeader = cliques.find(target);
+						edges.get(sourceLeader).add(targetLeader);
+					} else if (NodeItem.OPTIONAL_FALSE != ni.getOptionalMinus(target)
 						|| null != getUnionKey(source, ni, target))
 					{
 						Node targetLeader = cliques.find(target);
@@ -4320,10 +4332,8 @@ public class NodeGroup {
 			return null;
 		}
 
-		UnionFind<Node> cliques = this.calcSimpleGroups();
-		Map<Node, List<Node>> graph = this.calcReducedGraph(cliques);
-
-//		HashMap<String,Integer> optHash = this.calcOptionalHash(skipNodes);
+		UnionFind<Node> cliques = this.calcSimpleCliques();
+		Map<Node, List<Node>> graph = this.calcCliqueGraph(cliques);
 		HashMap<String,Integer> linkHash = this.calcIncomingLinkHash(skipNodes);
 		
 		String retID = null;
