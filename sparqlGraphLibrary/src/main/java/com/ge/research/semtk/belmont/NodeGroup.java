@@ -2144,9 +2144,8 @@ public class NodeGroup {
 			if (unionKey == null ) {
 				sparql.append(this.generateSparqlSubgraphClausesNode(	whereClauseType, 
 																		headNode, 
-																		null, null,   // skip nodeItem.  Null means do them all.
-																		keepTargetConstraints ? null : targetObj, 
-																		doneNodes, doneUnions,
+																		keepTargetConstraints ? null : targetObj, doneNodes,   // skip nodeItem.  Null means do them all.
+																		doneUnions, 
 																		tab));
 			} else {
 				sparql.append(this.generateSparqlSubgraphClausesUnion(	whereClauseType, unionKey, keepTargetConstraints ? null : targetObj, doneNodes, doneUnions, tab));
@@ -2286,9 +2285,8 @@ public class NodeGroup {
 			
 			sparql.append(this.generateSparqlSubgraphClausesNode(	ClauseTypes.CONSTRUCT_LEADER, 
 																	headNode, 
-																	null, null,    // skip nodeItem.  Null means do them all.
-																	null,    // no targetObj
-																	doneNodes, doneUnions,
+																	null, doneNodes,    // skip nodeItem.  Null means do them all.
+																	doneUnions,    // no targetObj
 																	tab));
 			headNode = this.getNextHeadNode(doneNodes);
 		}
@@ -2420,8 +2418,6 @@ public class NodeGroup {
 	 * Top-level subgraph SPARQL generator
 	 * @param clauseType
 	 * @param snode
-	 * @param skipNodeItem nodeItem to skip
-	 * @param skipNodeTarget target snode to skip
 	 * @param targetObj - target of FILTER queries
 	 * @param doneNodes - nodes to skip
 	 * @param tab - text TAB
@@ -2429,7 +2425,7 @@ public class NodeGroup {
 	 * @throws Exception
 	 */
 	
-	private String generateSparqlSubgraphClausesNode(ClauseTypes clauseType, Node snode, NodeItem skipNodeItem, Node skipNodeTarget, Returnable targetObj, ArrayList<Node> doneNodes, ArrayList<Integer> doneUnions, String tab) throws Exception  {
+	private String generateSparqlSubgraphClausesNode(ClauseTypes clauseType, Node snode, Returnable targetObj, ArrayList<Node> doneNodes, ArrayList<Integer> doneUnions, String tab) throws Exception  {
 		StringBuilder sparql = new StringBuilder();
 		
 		// check to see if this node has already been processed. 
@@ -2541,7 +2537,7 @@ public class NodeGroup {
 			
 			if (keyStr.getType() == Node.class) {
 				tab = SparqlToXUtils.tabIndent(tab);
-				sparql.append(this.generateSparqlSubgraphClausesNode(clauseType, keyStr.getSnode(), null, null, targetObj, doneNodes, doneUnions, tab));
+				sparql.append(this.generateSparqlSubgraphClausesNode(clauseType, keyStr.getSnode(), targetObj, doneNodes, doneUnions, tab));
 				tab = SparqlToXUtils.tabOutdent(tab);
 			} else if (keyStr.getType() == NodeItem.class) {
 				tab = SparqlToXUtils.tabIndent(tab);
@@ -2666,9 +2662,9 @@ public class NodeGroup {
 		
 		// RECURSION
 		if (incomingFlag) {
-			recursionSparql.append(this.generateSparqlSubgraphClausesNode(clauseType, snode, nItem, targetNode, targetObj, doneNodes, doneUnions, tab));
+			recursionSparql.append(this.generateSparqlSubgraphClausesNode(clauseType, snode, targetObj, doneNodes, doneUnions, tab));
 		} else {
-			recursionSparql.append(this.generateSparqlSubgraphClausesNode(clauseType, targetNode, nItem, targetNode, targetObj, doneNodes, doneUnions, tab));
+			recursionSparql.append(this.generateSparqlSubgraphClausesNode(clauseType, targetNode, targetObj, doneNodes, doneUnions, tab));
 		}
 		tab = SparqlToXUtils.tabOutdent(tab);
 		
@@ -4611,7 +4607,7 @@ public class NodeGroup {
 		Node headNode = this.getNextHeadNode(doneNodes);
 		while (headNode != null) {
 			// for each node, get the subgraph clauses, including constraints.
-			retval.append(this.generateSparqlSubgraphClausesNode(	ClauseTypes.DELETE_WHERE, headNode, null, null, null, doneNodes, doneUnions, "   "));
+			retval.append(this.generateSparqlSubgraphClausesNode(	ClauseTypes.DELETE_WHERE, headNode, null, doneNodes, doneUnions, "   "));
 			headNode = this.getNextHeadNode(doneNodes);
 		}
 		
