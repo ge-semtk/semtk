@@ -4311,11 +4311,14 @@ public class NodeGroup {
 					
 					int opt = ni.getOptionalMinus(target);
 
-					if (opt == NodeItem.OPTIONAL_REVERSE || opt == NodeItem.MINUS_REVERSE) {
+					if (NodeItem.OPTIONAL_REVERSE == opt ||
+                        NodeItem.MINUS_REVERSE == opt ||
+                        this.isReverseUnion(source, ni, target))
+                   	{
 						Node targetLeader = cliques.find(target);
 						edges.get(sourceLeader).add(targetLeader);
-					} else if (NodeItem.OPTIONAL_FALSE != ni.getOptionalMinus(target)
-						|| null != getUnionKey(source, ni, target))
+					} else if (NodeItem.OPTIONAL_FALSE != ni.getOptionalMinus(target) ||
+						null != getUnionKey(source, ni, target))
 					{
 						Node targetLeader = cliques.find(target);
 						edges.get(targetLeader).add(sourceLeader);
