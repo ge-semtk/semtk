@@ -39,7 +39,19 @@ define([	// properly require.config'ed   bootstrap-modal
 
 
 		MsiClientIngestion.prototype = {
+			execGetClassTemplate(uri, conn, idRegex, successJsonCallback) {
+				var data = {}
+				data.connection = JSON.stringify(conn.toJson());
+				data.classURI = uri;
+				if (idRegex && idRegex.length > 0) {
+					data.idRegex = idRegex;
+				}
+				callback = function(msiRes) {
+					successJsonCallback(msiRes.getSimpleResultField("sgjson"));
+				}
+				this.msi.postAndCheckSuccess("getClassTemplateAndCsv", JSON.stringify(data), "application/json", callback);
 
+			},
 
 			execFromCsvFilePrecheck : function (jsonFile, dataFile, successCallback) {
 				var formdata = new FormData();

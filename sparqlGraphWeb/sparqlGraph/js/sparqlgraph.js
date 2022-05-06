@@ -467,7 +467,20 @@
 
 
     };
-
+	
+	var getTemplateDialogCallback =function (sgjsonJson) {
+		checkAnythingUnsavedThen(doQueryLoadJsonStr.bind(this, JSON.stringify(sgjsonJson)));
+	};
+	
+	var doLaunchGetTemplateDialog = function () {
+		require(['sparqlgraph/js/modalgettemplatedialog'],
+    	         function (ModalGetTemplateDialog) {
+                     dialog = new ModalGetTemplateDialog(g.service.ingestion.url, gConn, gOInfo);
+                     dialog.launch(getTemplateDialogCallback.bind(this));
+				});
+	};
+	
+	
     // application-specific property editing
     var launchPropertyItemDialog = function (propItem, snodeID) {
         checkQueryTextUnsavedThen(launchPropertyItemDialog1.bind(this, propItem, snodeID));
