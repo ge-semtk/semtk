@@ -48,7 +48,8 @@ public enum XSDSupportedType {
 	GMONTHDAY("gMonthDay", "28"), 
 	NODE_URI("node_uri", "http://uri#uri"),
 	URI("uri", "http://uri#uri"),
-	ANYURI("anyURI", "http://uri#uri");
+	ANYURI("anyURI", "http://uri#uri"),
+	CLASS("class", "http://uri#myclass");
 	
 	// note: "node_uri" was added for compatibility reasons to the way nodes in a nodegroup spec
 	// when their URI is able to be constrained at runtime.
@@ -264,7 +265,8 @@ public enum XSDSupportedType {
 	public boolean isURI() {
 		return (this == URI || 
 				this == NODE_URI ||
-				this == ANYURI);
+				this == ANYURI ||
+				this == CLASS);
 	}
 	
 	public boolean rangeOperationsAvailable() {
@@ -377,7 +379,9 @@ public enum XSDSupportedType {
 				throw new Exception(proposedValue + " can't be converted to" + this.name() + ". Accepted format is HH:mm:ss." );
 			}
 		case NODE_URI:
+		case URI:
 		case ANYURI:
+		case CLASS:
 			if (SparqlToXUtils.isLegalURI(proposedValue)) {
 				ret = proposedValue;
 				return ret;
