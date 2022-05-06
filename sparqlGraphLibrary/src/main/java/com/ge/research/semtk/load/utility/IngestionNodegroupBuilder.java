@@ -185,7 +185,7 @@ public class IngestionNodegroupBuilder {
 		this.sgjson.setImportSpecJson(ispecBuilder.toJson());
 		
 		// replace last comma in csvTemplate with a line return
-		csvTemplate.setLength(csvTemplate.length()-1);
+		csvTemplate.setLength(Math.max(0,csvTemplate.length()-1));
 		csvTemplate.append("\n");
 		
 	}
