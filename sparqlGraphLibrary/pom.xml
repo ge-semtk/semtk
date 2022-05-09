@@ -156,7 +156,7 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-athena</artifactId>
-			<version>1.12.205</version>
+			<version>1.12.215</version>
 		</dependency>
 
 		<!-- License: MIT -->
