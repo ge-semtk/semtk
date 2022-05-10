@@ -18,32 +18,30 @@
 
 package com.ge.research.semtk.springutilib.requests;
 
-
-import io.swagger.annotations.ApiModelProperty;
-
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class TrackQueryRequestBody extends SparqlEndpointOptionalRequestBody {
 	
-	@ApiModelProperty(
-			value = "key",
+	@Schema(
+			name = "key",
 			required = false,
 			example = "uuid-1234-abcd-1234")
 	public String key = null;
 
-	@ApiModelProperty(
-			value = "user",
+	@Schema(
+			name = "user",
 			required = false,
 			example = "fred")
 	public String user = null;
 
-	@ApiModelProperty(
-			value = "startEpoch",
+	@Schema(
+			name = "startEpoch",
 			required = false,
 			example = "1599164758")
 	public Long startEpoch = null;
 	
-	@ApiModelProperty(
-			value = "endEpoch",
+	@Schema(
+			name = "endEpoch",
 			required = false,
 			example = "1599164759")
 	public Long endEpoch = null;

@@ -22,7 +22,8 @@ import javax.validation.constraints.Pattern;
 
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
-import io.swagger.annotations.ApiModelProperty;
+
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * For service calls needing SPARQL connection information.
@@ -31,21 +32,21 @@ public class SparqlEndpointRequestBody {
 	
 	// missing the deprecated "dataset"  So don't splice this into legacy code.
 	
-	@ApiModelProperty(required = true,  example = "http://my_server:2420")
+	@Schema(required = true,  example = "http://my_server:2420")
 	@Pattern(regexp="https?://.*:[0-9]+", message="Triplestore URL with port is required")
 	public String serverAndPort;  
 	
-	@ApiModelProperty(required = true,  example = "virtuoso|fuseki|neptune")
+	@Schema(required = true,  example = "virtuoso|fuseki|neptune")
 	@Pattern(regexp="^(virtuoso|fuseki|neptune)$", message="valid server types: virtuoso|fuseki|neptune")
 	public String serverType;		
 	
-	@ApiModelProperty(required = true,  example = "http://graph/name")
+	@Schema(required = true,  example = "http://graph/name")
 	public String graph;	        
     
-	@ApiModelProperty(required = false)
+	@Schema(required = false)
 	public String user;
     
-	@ApiModelProperty(required = false)
+	@Schema(required = false)
 	public String password;
     /**
      * Print request info to console

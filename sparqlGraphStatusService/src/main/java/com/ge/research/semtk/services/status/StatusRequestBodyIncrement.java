@@ -18,18 +18,18 @@
 
 package com.ge.research.semtk.services.status;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class StatusRequestBodyIncrement extends StatusRequestBody {
-	@ApiModelProperty(
-			value = "increment",
+	@Schema(
+			name = "increment",
 			required = true,
 			example = "1"
 	)	
 	public int increment;
 	
-	@ApiModelProperty(
-			value = "increment",
+	@Schema(
+			name = "increment",
 			required = false,
 			example = "10"
 	)	

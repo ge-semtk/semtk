@@ -54,7 +54,7 @@ import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -186,9 +186,9 @@ public class NodeGroupStoreRestController {
 	    }
 	}
 
-	@ApiOperation(
-			value="Get nodegroup as table with only one cell.",
-			notes="Column name is NodeGroup."
+	@Operation(
+			summary="Get nodegroup as table with only one cell.",
+			description="Column name is NodeGroup."
 			)     
 	@CrossOrigin
 	@RequestMapping(value={"/getNodeGroupById"}, method=RequestMethod.POST)
@@ -219,9 +219,9 @@ public class NodeGroupStoreRestController {
 	}
 
 
-	@ApiOperation(
-			value="Get stored item as table with only one cell.",
-			notes="Column name is item."
+	@Operation(
+			summary="Get stored item as table with only one cell.",
+			description="Column name is item."
 			)
 	@CrossOrigin
 	@RequestMapping(value={"/getStoredItemById"}, method=RequestMethod.POST)
@@ -282,9 +282,9 @@ public class NodeGroupStoreRestController {
 	    	HeadersManager.clearHeaders();
 	    }
 	}
-	@ApiOperation(
-			value="Get a table of info about stored items of a given type.",
-			notes="More general version of /getNodeGroupMetadata."
+	@Operation(
+			summary="Get a table of info about stored items of a given type.",
+			description="More general version of /getNodeGroupMetadata."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getStoredItemsMetadata", method=RequestMethod.POST)
@@ -310,9 +310,9 @@ public class NodeGroupStoreRestController {
 	    	HeadersManager.clearHeaders();
 	    }
 	}
-	@ApiOperation(
-			value="Get a table of info about stored nodegroups.",
-			notes="Legacy.  Use /getStoredItemsMetadata."
+	@Operation(
+			summary="Get a table of info about stored nodegroups.",
+			description="Legacy.  Use /getStoredItemsMetadata."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getNodeGroupMetadata", method=RequestMethod.POST)

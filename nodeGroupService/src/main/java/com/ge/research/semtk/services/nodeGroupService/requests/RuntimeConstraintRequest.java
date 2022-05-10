@@ -18,23 +18,21 @@
 package com.ge.research.semtk.services.nodeGroupService.requests;
 
 import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.ArrayList;
 
 public class RuntimeConstraintRequest {
 
-    @ApiModelProperty(
-            position = 1,
-            value = "sparqlID",
+    @Schema(
+            name = "sparqlID",
             required = true,
             example = "123456")
     private String sparqlID;
 
-    @ApiModelProperty(
-            position = 2,
-            value = "operation",
-            notes = "\tMATCHES  // value matches one of the operands (accepts collections)\n" +
+    @Schema(
+            name = "operation",
+            description = "\tMATCHES  // value matches one of the operands (accepts collections)\n" +
                     "\tREGEX  // value matches the string indicated by the given operand\n" +
                     "\tGREATERTHAN  // value is greater than the operand\n" +
                     "\tGREATERTHANOREQUALS // value is greater than or equal to the operand\n" +
@@ -47,11 +45,10 @@ public class RuntimeConstraintRequest {
             example = "MATCHES")
     private SupportedOperations operation;
 
-    @ApiModelProperty(
-            position = 3,
-            value = "operandList",
+    @Schema(
+            name = "operandList",
             required = true,
-            dataType = "[Ljava.lang.String;")
+            type = "[Ljava.lang.String;")
     private ArrayList<String> operandList;
 
     public String getSparqlID() {

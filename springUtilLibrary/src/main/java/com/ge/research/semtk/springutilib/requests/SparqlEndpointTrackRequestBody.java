@@ -18,14 +18,12 @@
 
 package com.ge.research.semtk.springutilib.requests;
 
-
-import io.swagger.annotations.ApiModelProperty;
-
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class SparqlEndpointTrackRequestBody extends SparqlEndpointRequestBody {
 	
-	@ApiModelProperty(
-	   value = "trackFlag",
+	@Schema(
+	   name = "trackFlag",
 	   required = false,
 	   example = "true")
 	public Boolean trackFlag = false;

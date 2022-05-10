@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import com.ge.research.semtk.ontologyTools.ClassInstance;
 import com.ge.research.semtk.ontologyTools.ReturnProperty;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  ** Copyright 2018 General Electric Company
@@ -28,13 +28,13 @@ public class EntitiesReturnsRequest {
 
 
 
-	@ApiModelProperty(
-			value = "entities",
+	@Schema(
+			name = "entities",
 			required = true
 			)	
 	private ClassInstance[] entities;
-	@ApiModelProperty(
-			value = "returns",
+	@Schema(
+			name = "returns",
 			required = true
 			)	
 	private ReturnProperty[] returns;

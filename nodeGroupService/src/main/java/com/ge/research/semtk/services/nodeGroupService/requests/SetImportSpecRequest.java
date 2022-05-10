@@ -17,13 +17,12 @@
 
 package com.ge.research.semtk.services.nodeGroupService.requests;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class SetImportSpecRequest extends NodegroupRequest {
 
-	@ApiModelProperty(
-            position = 1,
-            value = "action",
+	@Schema(
+            name = "action",
             required = false,
             example = "one of: \"Build from nodegroup\"")
     private String action = "";
@@ -38,9 +37,8 @@ public class SetImportSpecRequest extends NodegroupRequest {
 		}
 	}
 	
-	@ApiModelProperty(
-            position = 2,
-            value = "lookupRegex",
+	@Schema(
+            name = "lookupRegex",
             required = false,
             example = "_id")
     private String lookupRegex = "";
@@ -49,9 +47,8 @@ public class SetImportSpecRequest extends NodegroupRequest {
 		return this.lookupRegex;
 	}
 	
-	@ApiModelProperty(
-            position = 2,
-            value = "lookupMode",
+	@Schema(
+            name = "lookupMode",
             required = false,
             example = "one of: \"noCreate\", \"createIfMissing\", \"errorIfExists\"")
     private String lookupMode = "";

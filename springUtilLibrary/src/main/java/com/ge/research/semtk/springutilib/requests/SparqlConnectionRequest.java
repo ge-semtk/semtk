@@ -19,12 +19,12 @@ package com.ge.research.semtk.springutilib.requests;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class SparqlConnectionRequest {
 
-	@ApiModelProperty(
-		value = "conn",
+	@Schema(
+		name = "conn",
 		required = true,
 		example = "\"{\"name\": \"Sample\", \"domain\": \"\", \"model\": [{\"type\": \"virtuoso\", \"url\": \"http://server.com:2420\", \"graph\": \"http://graph/model\"}], \"data\": [{\"type\": \"virtuoso\", \"url\": \"http://server.com:2420\", \"graph\": \"http://graph/data\"}]}\""
 	)	

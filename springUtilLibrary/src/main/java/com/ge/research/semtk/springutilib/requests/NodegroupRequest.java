@@ -21,12 +21,14 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
-import io.swagger.annotations.ApiModelProperty;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+
 
 public class NodegroupRequest {
 
-	@ApiModelProperty(
-			value = "jsonRenderedNodeGroup",
+	@Schema(
+			name = "jsonRenderedNodeGroup",
 			required = true,
 			example = 	"{ \"sparqlConn\": {...}, \"sNodeGroup\": {...}, \"importSpec\": {...} }\n" +
 						"or\n"+

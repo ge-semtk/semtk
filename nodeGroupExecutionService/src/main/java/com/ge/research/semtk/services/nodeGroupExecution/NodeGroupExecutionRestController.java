@@ -99,7 +99,7 @@ import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.LocalLogger;
 
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * service to run stored nodegroups. 
@@ -153,9 +153,9 @@ public class NodeGroupExecutionRestController {
 		AuthorizationManager.authorizeWithExit(auth_prop);
 	}
 	
-	@ApiOperation(
-			value="Get job status",
-			notes="results json contains 'status' string"
+	@Operation(
+			summary="Get job status",
+			description="results json contains 'status' string"
 			)
 	@CrossOrigin 
 	@RequestMapping(value="/jobStatus", method=RequestMethod.POST)
@@ -190,9 +190,9 @@ public class NodeGroupExecutionRestController {
 	    }
 	} 
 	
-	@ApiOperation(
-			value="Get job status message",
-			notes="results json contains 'message'"
+	@Operation(
+			summary="Get job status message",
+			description="results json contains 'message'"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/jobStatusMessage", method=RequestMethod.POST)
@@ -228,9 +228,9 @@ public class NodeGroupExecutionRestController {
 	    }
 	} 
 	
-	@ApiOperation(
-			value="Get job completed",
-			notes="results json contains 'completed' field: true or false"
+	@Operation(
+			summary="Get job completed",
+			description="results json contains 'completed' field: true or false"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getJobCompletionCheck", method=RequestMethod.POST)
@@ -269,9 +269,9 @@ public class NodeGroupExecutionRestController {
 	    }
 	}
 	
-	@ApiOperation(
-			value="Get job percent complete",
-			notes="results json contains 'percent' integer string"
+	@Operation(
+			summary="Get job percent complete",
+			description="results json contains 'percent' integer string"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getJobCompletionPercentage", method=RequestMethod.POST)
@@ -305,9 +305,9 @@ public class NodeGroupExecutionRestController {
 	    	HeadersManager.clearHeaders();
 	    }
 	}
-	@ApiOperation(
-			value="Wait for percent or msec",
-			notes="Returns as soon as the requested Msec elapses or percent complete is reached<br>" +
+	@Operation(
+			summary="Wait for percent or msec",
+			description="Returns as soon as the requested Msec elapses or percent complete is reached<br>" +
 			      "whichever comes first."
 			)
 	@CrossOrigin
@@ -355,9 +355,9 @@ public class NodeGroupExecutionRestController {
 	    }
 	}
 	
-	@ApiOperation(
-			value="get results table",
-			notes="Can fail if table is too big.<br>" +
+	@Operation(
+			summary="get results table",
+			description="Can fail if table is too big.<br>" +
 			      "Results service /getTableResultsJsonForWebClient and /getTableResultsCsvForWebClient are safer "
 			)
 	@CrossOrigin
@@ -423,9 +423,9 @@ public class NodeGroupExecutionRestController {
 	//    2) don't know the results file location so can't instantiate a GenericJsonBlobResultsStorage
 	// call the results service
 	
-	@ApiOperation(
-			value=	"get results URLs",
-			notes=	"DEPRECATED: URLS may not work in secure deployment of SemTK<br>" +
+	@Operation(
+			summary=	"get results URLs",
+			description=	"DEPRECATED: URLS may not work in secure deployment of SemTK<br>" +
 					"result json has 'sample' URL of sample JSON, and 'full' URL of entire CSV<br>" +
 					"Results service /getTableResultsJsonForWebClient and /getTableResultsCsvForWebClient are safer<br> "
 			)
@@ -597,9 +597,9 @@ public class NodeGroupExecutionRestController {
 	}
 
 	// end base methods
-	@ApiOperation(
-			value=	"General query nodegroup json, replaces many /dispatch*ById",
-			notes=	"<hr>Use this one<hr><br>Result has 'JobId' and 'resultType' fields"
+	@Operation(
+			summary=	"General query nodegroup json, replaces many /dispatch*ById",
+			description=	"<hr>Use this one<hr><br>Result has 'JobId' and 'resultType' fields"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchQueryById", method=RequestMethod.POST)
@@ -616,9 +616,9 @@ public class NodeGroupExecutionRestController {
 	    }
 	}
 	
-	@ApiOperation(
-			value=	"General query nodegroup json, replaces many /dispatch*FromNodeGroup",
-			notes=	"<hr>Use this one<hr><br>Result has 'JobId' and 'resultType' fields"
+	@Operation(
+			summary=	"General query nodegroup json, replaces many /dispatch*FromNodeGroup",
+			description=	"<hr>Use this one<hr><br>Result has 'JobId' and 'resultType' fields"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchQueryFromNodegroup", method=RequestMethod.POST)
@@ -636,9 +636,9 @@ public class NodeGroupExecutionRestController {
 
 	}
 
-	@ApiOperation(
-			value=	"SELECT query on nodegroupID",
-			notes=	"result has 'JobId' field"
+	@Operation(
+			summary=	"SELECT query on nodegroupID",
+			description=	"result has 'JobId' field"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchById", method=RequestMethod.POST)
@@ -655,9 +655,9 @@ public class NodeGroupExecutionRestController {
 	    }
 	}
 	
-	@ApiOperation(
-			value=	"SELECT query on nodegroup",
-			notes=	"result has 'JobId' field"
+	@Operation(
+			summary=	"SELECT query on nodegroup",
+			description=	"result has 'JobId' field"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchFromNodegroup", method=RequestMethod.POST)
@@ -675,9 +675,9 @@ public class NodeGroupExecutionRestController {
 
 	}
 
-	@ApiOperation(
-			value=	"SELECT query on nodegroupID",
-			notes=	"result has 'JobId' field"
+	@Operation(
+			summary=	"SELECT query on nodegroupID",
+			description=	"result has 'JobId' field"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchSelectById", method=RequestMethod.POST)
@@ -694,9 +694,9 @@ public class NodeGroupExecutionRestController {
 	    }
 	}
 	
-	@ApiOperation(
-			value="Run SELECT query by nodegroup id synchronously.",
-			notes="Returns a table or times out.<br>Use only for simple queries or tests.<br><b>Preferred endpoint is /dispatchSelectById.</b>"
+	@Operation(
+			summary="Run SELECT query by nodegroup id synchronously.",
+			description="Returns a table or times out.<br>Use only for simple queries or tests.<br><b>Preferred endpoint is /dispatchSelectById.</b>"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchSelectByIdSync", method=RequestMethod.POST)
@@ -751,9 +751,9 @@ public class NodeGroupExecutionRestController {
 	    }
 	}
 	
-	@ApiOperation(
-			value=	"SELECT query on nodegroup json",
-			notes=	"result has 'JobId' field"
+	@Operation(
+			summary=	"SELECT query on nodegroup json",
+			description=	"result has 'JobId' field"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchSelectFromNodegroup", method=RequestMethod.POST)
@@ -771,9 +771,9 @@ public class NodeGroupExecutionRestController {
 
 	}
 	
-	@ApiOperation(
-			value=	"CONSTRUCT query on nodegroup id",
-			notes=	"result has 'JobId' field"
+	@Operation(
+			summary=	"CONSTRUCT query on nodegroup id",
+			description=	"result has 'JobId' field"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchConstructById", method=RequestMethod.POST)
@@ -790,9 +790,9 @@ public class NodeGroupExecutionRestController {
 	    }
 	}
 	
-	@ApiOperation(
-			value=	"CONSTRUCT query on nodegroup json",
-			notes=	"result has 'JobId' field"
+	@Operation(
+			summary=	"CONSTRUCT query on nodegroup json",
+			description=	"result has 'JobId' field"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchConstructFromNodegroup", method=RequestMethod.POST)
@@ -810,9 +810,9 @@ public class NodeGroupExecutionRestController {
 
 	}
 	
-	@ApiOperation(
-			value=	"COUNT query on nodegroup id",
-			notes=	"result has 'JobId' field"
+	@Operation(
+			summary=	"COUNT query on nodegroup id",
+			description=	"result has 'JobId' field"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchCountById", method=RequestMethod.POST)
@@ -829,9 +829,9 @@ public class NodeGroupExecutionRestController {
 	    }
 	}
 	
-	@ApiOperation(
-			value=	"COUNT query on nodegroup json",
-			notes=	"result has 'JobId' field"
+	@Operation(
+			summary=	"COUNT query on nodegroup json",
+			description=	"result has 'JobId' field"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchCountFromNodegroup", method=RequestMethod.POST)
@@ -849,9 +849,9 @@ public class NodeGroupExecutionRestController {
 
 	}
 
-	@ApiOperation(
-			value=	"FILTER query nodegroup id",
-			notes=	"result has 'JobId' field"
+	@Operation(
+			summary=	"FILTER query nodegroup id",
+			description=	"result has 'JobId' field"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchFilterById", method=RequestMethod.POST)
@@ -868,9 +868,9 @@ public class NodeGroupExecutionRestController {
 	    }
 	}
 	
-	@ApiOperation(
-			value=	"FILTER query nodegroup json",
-			notes=	"result has 'JobId' field"
+	@Operation(
+			summary=	"FILTER query nodegroup json",
+			description=	"result has 'JobId' field"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchFilterFromNodegroup", method=RequestMethod.POST)
@@ -889,9 +889,9 @@ public class NodeGroupExecutionRestController {
 	}
 
     	
-	@ApiOperation(
-			value=	"get instance data predicates",
-			notes=	"returns job id.  Resulting table will have columns: ?s ?s_class ?p ?o ?o_class"
+	@Operation(
+			summary=	"get instance data predicates",
+			description=	"returns job id.  Resulting table will have columns: ?s ?s_class ?p ?o ?o_class"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchSelectInstanceDataPredicates", method=RequestMethod.POST)
@@ -945,9 +945,9 @@ public class NodeGroupExecutionRestController {
 
 	}
 	
-	@ApiOperation(
-			value=	"get instance data subjects",
-			notes=	"returns job id.  Resulting table will have columns: ?s ?s_class " 
+	@Operation(
+			summary=	"get instance data subjects",
+			description=	"returns job id.  Resulting table will have columns: ?s ?s_class " 
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchSelectInstanceDataSubjects", method=RequestMethod.POST)
@@ -1001,9 +1001,9 @@ public class NodeGroupExecutionRestController {
 
 	}
 
-	@ApiOperation(
-			value=	"CONSTRUCT connected data",
-			notes=	"result has 'JobId' field"
+	@Operation(
+			summary=	"CONSTRUCT connected data",
+			description=	"result has 'JobId' field"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/constructConnectedData", method=RequestMethod.POST)
@@ -1035,9 +1035,9 @@ public class NodeGroupExecutionRestController {
 	}
 		
 		
-	@ApiOperation(
-			value=	"DELETE query nodegroup id",
-			notes=	"result has 'JobId' field"
+	@Operation(
+			summary=	"DELETE query nodegroup id",
+			description=	"result has 'JobId' field"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchDeleteById", method=RequestMethod.POST)
@@ -1054,9 +1054,9 @@ public class NodeGroupExecutionRestController {
 	    }
 	}
 	
-	@ApiOperation(
-			value=	"DELETE query nodegroup json",
-			notes=	"result has 'JobId' field"
+	@Operation(
+			summary=	"DELETE query nodegroup json",
+			description=	"result has 'JobId' field"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchDeleteFromNodegroup", method=RequestMethod.POST)
@@ -1074,9 +1074,9 @@ public class NodeGroupExecutionRestController {
 
 	}
 	
-	@ApiOperation(
-			value=	"raw SPARQL SELECT query",
-			notes=	"result has 'JobId' field"
+	@Operation(
+			summary=	"raw SPARQL SELECT query",
+			description=	"result has 'JobId' field"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchRawSparql", method=RequestMethod.POST)
@@ -1119,9 +1119,9 @@ public class NodeGroupExecutionRestController {
 
 	}
 	
-	@ApiOperation(
-			value=	"raw SPARQL query performing an UPDATE, DELETE, CLEAR, etc.",
-			notes=	"result has 'JobId' field"
+	@Operation(
+			summary=	"raw SPARQL query performing an UPDATE, DELETE, CLEAR, etc.",
+			description=	"result has 'JobId' field"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchRawSparqlUpdate", method=RequestMethod.POST)
@@ -1163,9 +1163,9 @@ public class NodeGroupExecutionRestController {
 
 	}
 	
-	@ApiOperation(
-			value=	"clear graph",
-			notes=	"result a single cell with status message<br>that is redundant with job status."
+	@Operation(
+			summary=	"clear graph",
+			description=	"result a single cell with status message<br>that is redundant with job status."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchClearGraph", method=RequestMethod.POST)
@@ -1225,9 +1225,9 @@ public class NodeGroupExecutionRestController {
 	 * Perform ingestion using a stored nodegroup ID.
 	 * PEC:  "NewConnection" in name is inconsistent with most other "ById" endpoints.  Others imply it.
 	 */
-	@ApiOperation(
-			value=	"ingest CSV data given nodegroup id",
-			notes=	""
+	@Operation(
+			summary=	"ingest CSV data given nodegroup id",
+			description=	""
 			)
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsNewConnection", method=RequestMethod.POST)
@@ -1258,9 +1258,9 @@ public class NodeGroupExecutionRestController {
 	 * Perform ingestion by passing in a nodegroup.
 	 * PEC:  "NewConnection" in name is inconsistent with most other "ById" endpoints.  Others imply it.
 	 */
-	@ApiOperation(
-			value=	"ingest CSV data given nodegroup json",
-			notes=	""
+	@Operation(
+			summary=	"ingest CSV data given nodegroup json",
+			description=	""
 			)
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsAndTemplateNewConnection", method=RequestMethod.POST)
@@ -1292,9 +1292,9 @@ public class NodeGroupExecutionRestController {
 	 * Perform ingestion by passing in a nodegroup.
 	 * PEC:  "NewConnection" in name is inconsistent with most other "ById" endpoints.  Others imply it.
 	 */
-	@ApiOperation(
-			value=	"Async ingest CSV data given nodegroup json",
-			notes=	"Returns JobId. \n" +
+	@Operation(
+			summary=	"Async ingest CSV data given nodegroup json",
+			description=	"Returns JobId. \n" +
 			        "Successful status will have number of records proccessed message at /jobStatusMessage.\n" +
 					"Failure will have an error table at /getResultsTable. \n"
 			)
@@ -1330,9 +1330,9 @@ public class NodeGroupExecutionRestController {
 	/**
 	 * Perform ingestion using a stored nodegroup ID.
 	 */
-	@ApiOperation(
-			value=	"ingest CSV data given nodegroup id",
-			notes=	""
+	@Operation(
+			summary=	"ingest CSV data given nodegroup id",
+			description=	""
 			)
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsById", method=RequestMethod.POST)
@@ -1362,9 +1362,9 @@ public class NodeGroupExecutionRestController {
 	/**
 	 * Perform ingestion using a stored nodegroup ID.
 	 */
-	@ApiOperation(
-			value=	"Async ingest CSV data given nodegroup id",
-			notes=	"Returns JobId. \n" +
+	@Operation(
+			summary=	"Async ingest CSV data given nodegroup id",
+			description=	"Returns JobId. \n" +
 			        "Successful status will have number of records proccessed message at /jobStatusMessage.\n" +
 					"Failure will have an error table at /getResultsTable. \n"
 			)
@@ -1396,9 +1396,9 @@ public class NodeGroupExecutionRestController {
 	    }
 	}
 
-	@ApiOperation(
-			value=	"get runtime constraint sparqlIDs given nodegroup id",
-			notes=	"returns table of 'valueId', 'itemType', 'valueType'"
+	@Operation(
+			summary=	"get runtime constraint sparqlIDs given nodegroup id",
+			description=	"returns table of 'valueId', 'itemType', 'valueType'"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getRuntimeConstraintsByNodeGroupID", method=RequestMethod.POST)
@@ -1428,9 +1428,9 @@ public class NodeGroupExecutionRestController {
 	    }
 	}
 	
-	@ApiOperation(
-			value=	"get runtime constraint sparqlIDs given nodegroup json",
-			notes=	"returns table of 'valueId', 'itemType', 'valueType'"
+	@Operation(
+			summary=	"get runtime constraint sparqlIDs given nodegroup json",
+			description=	"returns table of 'valueId', 'itemType', 'valueType'"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getRuntimeConstraintsByNodeGroup", method=RequestMethod.POST)
@@ -1462,9 +1462,9 @@ public class NodeGroupExecutionRestController {
 	    }
 	}
 	
-	@ApiOperation(
-			value="Get columns required by import spec",
-			notes="Returns \"columnNames\" array"
+	@Operation(
+			summary="Get columns required by import spec",
+			description="Returns \"columnNames\" array"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getIngestionColumnsById", method=RequestMethod.POST)
@@ -1491,9 +1491,9 @@ public class NodeGroupExecutionRestController {
 	}
 
 	
-	@ApiOperation(
-			value="Get ingestion validation rules",
-			notes="Returns columnNames array and dataValidator json array"
+	@Operation(
+			summary="Get ingestion validation rules",
+			description="Returns columnNames array and dataValidator json array"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getIngestionColumnInfoById", method=RequestMethod.POST)
@@ -1517,8 +1517,8 @@ public class NodeGroupExecutionRestController {
 		return retval.toJson();		
 	}
 	
-	@ApiOperation(
-			value=	"Clear a graph with optional trackFlag."
+	@Operation(
+			summary=	"Clear a graph with optional trackFlag."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/clearGraph", method= RequestMethod.POST)
@@ -1537,8 +1537,8 @@ public class NodeGroupExecutionRestController {
 		}
 	}
 	
-	@ApiOperation(
-			value=	"Run a query of tracked events."
+	@Operation(
+			summary=	"Run a query of tracked events."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/runTrackingQuery", method= RequestMethod.POST)
@@ -1556,8 +1556,8 @@ public class NodeGroupExecutionRestController {
 		}
 	}
 	
-	@ApiOperation(
-			value=	"Delete tracked events."
+	@Operation(
+			summary=	"Delete tracked events."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/deleteTrackingEvents", method= RequestMethod.POST)
@@ -1575,8 +1575,8 @@ public class NodeGroupExecutionRestController {
 		}
 	}
 			
-	@ApiOperation(
-			value=	"Get contents of file key from /runTrackingQuery, returns 'contents' field in simple results"
+	@Operation(
+			summary=	"Get contents of file key from /runTrackingQuery, returns 'contents' field in simple results"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getTrackedIngestFile", method= RequestMethod.POST)
@@ -1594,8 +1594,8 @@ public class NodeGroupExecutionRestController {
 		}
 	}
 	
-	@ApiOperation(
-			value=	"Delete data from a tracked load"
+	@Operation(
+			summary=	"Delete data from a tracked load"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/undoLoad", method= RequestMethod.POST)

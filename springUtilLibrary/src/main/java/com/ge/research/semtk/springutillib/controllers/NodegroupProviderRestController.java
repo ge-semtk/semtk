@@ -30,7 +30,7 @@ import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * Super-class for FDC services.
@@ -45,8 +45,8 @@ import io.swagger.annotations.ApiOperation;
  *
  */
 public class NodegroupProviderRestController {
-	@ApiOperation(
-			value="Return a nodegroup json (full SparqlGraphJson)"
+	@Operation(
+			description="Return a nodegroup json (full SparqlGraphJson)"
 			//notes=""
 			)
 	@CrossOrigin

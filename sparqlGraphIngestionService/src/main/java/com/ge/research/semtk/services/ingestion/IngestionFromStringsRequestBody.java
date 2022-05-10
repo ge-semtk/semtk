@@ -20,13 +20,13 @@ package com.ge.research.semtk.services.ingestion;
 
 import javax.validation.constraints.NotNull;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 
 public class IngestionFromStringsRequestBody extends FromStringsRequestBody {
 	@NotNull
-	@ApiModelProperty(
-			value = "template",
+	@Schema(
+			name = "template",
 			required = true,
 			example = "{ nodegroup json with ingestion template }")
 	public String template;

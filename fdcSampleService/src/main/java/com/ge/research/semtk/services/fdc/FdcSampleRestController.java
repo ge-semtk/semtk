@@ -55,8 +55,7 @@ import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
-
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * Sample FDC service
@@ -219,9 +218,9 @@ public class FdcSampleRestController extends NodegroupProviderRestController {
 		}  
 	}
 	
-	@ApiOperation(
-			value="Generate fake elevation for testing only",
-			notes="elevation = floor(latitude) + 1000"
+	@Operation(
+			summary="Generate fake elevation for testing only",
+			description="elevation = floor(latitude) + 1000"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/elevation", method= RequestMethod.POST)

@@ -21,12 +21,12 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class NodegroupPropertyRequest extends NodegroupRequest {
 	@NotNull
-	@ApiModelProperty(
-			value = "nodeSparqlId",
+	@Schema(
+			name = "nodeSparqlId",
 			required = true,
 			example = "?MyClass")	
 	private String nodeSparqlId;
@@ -34,22 +34,22 @@ public class NodegroupPropertyRequest extends NodegroupRequest {
 	@NotNull
 	@Pattern(regexp="^[^{}[]:;\"'#]+#[^{}[]:;\\\"'#]+$", message="uri is ill-formed")
 	@Size(min=8, max=256, message="uri must be 8-256 characters in length")
-	@ApiModelProperty(
-				value = "propertyUri",
+	@Schema(
+				name = "propertyUri",
 				required = true,
 				example = "http://sample/uri#property")	
 	private String propertyUri;
 	
 	@NotNull
-	@ApiModelProperty(
-			value = "newPropSparqlId",
+	@Schema(
+			name = "newPropSparqlId",
 			required = true,
 			example = "?MyProp")	
 	private String newPropSparqlId;
 	
 	@NotNull
-	@ApiModelProperty(
-			value = "isReturned",
+	@Schema(
+			name = "isReturned",
 			required = true,
 			example = "true")	
 	Boolean isReturned;

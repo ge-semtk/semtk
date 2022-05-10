@@ -19,20 +19,18 @@ package com.ge.research.semtk.services.nodeGroupService.requests;
 
 import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel
 public class ConnectionUriClassRequest extends SparqlConnectionRequest {
 
-    @ApiModelProperty(
-    		value = "className",
+    @Schema(
+    		name = "className",
             required = true,
             example = "http://domain#class")
     private String className;
     
-    @ApiModelProperty(
-    		value = "instanceUri",
+    @Schema(
+    		name = "instanceUri",
             required = true,
             example = "http://path#this")
     private String instanceUri;

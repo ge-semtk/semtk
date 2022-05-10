@@ -23,8 +23,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import com.ge.research.semtk.services.ingestion.ServiceApplication;
 
-import springfox.documentation.swagger2.annotations.EnableSwagger2;
-
 @SpringBootApplication
 public class ServiceApplication {
 

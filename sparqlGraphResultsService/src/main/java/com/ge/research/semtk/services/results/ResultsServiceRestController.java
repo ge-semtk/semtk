@@ -84,7 +84,7 @@ import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 
 import org.springframework.web.multipart.MultipartFile;
 
@@ -238,9 +238,9 @@ public class ResultsServiceRestController {
 	}
 	
 	
-	@ApiOperation(
-			value="Get fileIDs of all files in job",
-			notes="binary files are returned in a table with columns 'name' and 'fileId'"
+	@Operation(
+			summary="Get fileIDs of all files in job",
+			description="binary files are returned in a table with columns 'name' and 'fileId'"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getResultsFiles", method=RequestMethod.POST)
@@ -292,9 +292,9 @@ public class ResultsServiceRestController {
 	 * @param headers
 	 * @return  res.fullURL  res.fileId
 	 */
-	@ApiOperation(
-			value="Store binary file to jobId",
-			notes="Return has fileId <br>"
+	@Operation(
+			summary="Store binary file to jobId",
+			description="Return has fileId <br>"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/storeBinaryFile", method=RequestMethod.POST)
@@ -346,9 +346,9 @@ public class ResultsServiceRestController {
 	 * @param headers
 	 * @return  res.fullURL  res.fileId
 	 */
-	@ApiOperation(
-			value="Associate a file with a jobId by path",
-			notes="Return has fileId <br>" + 
+	@Operation(
+			summary="Associate a file with a jobId by path",
+			description="Return has fileId <br>" + 
 					"The path must be accessible by results service.  <br>" +
 					"The file will be removed during results service cleanup."
 			)
@@ -400,9 +400,9 @@ public class ResultsServiceRestController {
 	}
 	
 	
-	@ApiOperation(
-			value="Get binary file",
-			notes="On error, filename will be authorizationError.html or resultsExpired.html, with message inside."
+	@Operation(
+			summary="Get binary file",
+			description="On error, filename will be authorizationError.html or resultsExpired.html, with message inside."
 			)
     @CrossOrigin
     @RequestMapping(value="/getBinaryFile/{fileId}", method=RequestMethod.GET)
@@ -471,9 +471,9 @@ public class ResultsServiceRestController {
 	 * Call 1 of 3 for storing JSON results.
 	 * Writes JSON start, column names, and column types.
 	 */
-	@ApiOperation(
-			value="initialize json table storage",
-			notes="Use this before storeTableResultsJsonAddIncremental"
+	@Operation(
+			summary="initialize json table storage",
+			description="Use this before storeTableResultsJsonAddIncremental"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/storeTableResultsJsonInitialize", method=RequestMethod.POST)
@@ -513,9 +513,9 @@ public class ResultsServiceRestController {
 	 * ["a2","b2","c2"],
 	 * ["a3","b3","c3"]
 	 */
-	@ApiOperation(
-			value="store chunk of json table storage",
-			notes="Use this after storeTableResultsJsonInitialize<br>" +
+	@Operation(
+			summary="store chunk of json table storage",
+			description="Use this after storeTableResultsJsonInitialize<br>" +
 					"Call storeTableResultsJsonFinalize when done. "
 			)
 	@CrossOrigin
@@ -551,9 +551,9 @@ public class ResultsServiceRestController {
 	 * Call 3 of 3 for storing JSON results.
 	 * Writes row count and JSON end.
 	 */
-	@ApiOperation(
-			value="finish json table storage",
-			notes="Use this after storeTableResultsJsonAddIncremental<br>" 
+	@Operation(
+			summary="finish json table storage",
+			description="Use this after storeTableResultsJsonAddIncremental<br>" 
 			)
 	@CrossOrigin
 	@RequestMapping(value="/storeTableResultsJsonFinalize", method=RequestMethod.POST)
@@ -589,9 +589,9 @@ public class ResultsServiceRestController {
 	/**
 	 * Return a CSV file containing results (possibly truncated) for job
 	 */
-	@ApiOperation(
-			value="Get CSV table",
-			notes="Too large a file can fail.  <br>" +
+	@Operation(
+			summary="Get CSV table",
+			description="Too large a file can fail.  <br>" +
 				  "This is good for a preview, for example, in a browser with limited memory.<br>" +
 			      "GET /getTableResultsCsvForWebClient safely retrieves entire large files."
 			)
@@ -631,9 +631,9 @@ public class ResultsServiceRestController {
 
 	}
 
-	@ApiOperation(
-			value="Get JSON table results",
-			notes="GET triggers browser MIME type handling"
+	@Operation(
+			summary="Get JSON table results",
+			description="GET triggers browser MIME type handling"
 			)
 	@CrossOrigin
 	@RequestMapping(value= "/getTableResultsJsonForWebClient" , method= RequestMethod.GET)
@@ -664,9 +664,9 @@ public class ResultsServiceRestController {
 	}
 
 	
-	@ApiOperation(
-			value="Get CSV table results",
-			notes="GET triggers browser MIME type handling"
+	@Operation(
+			summary="Get CSV table results",
+			description="GET triggers browser MIME type handling"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsCsvForWebClient", method= RequestMethod.GET)
@@ -704,9 +704,9 @@ public class ResultsServiceRestController {
 	}
 	
 	
-	@ApiOperation(
-			value="Get table results row count",
-			notes=""
+	@Operation(
+			summary="Get table results row count",
+			description=""
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getTableResultsRowCount", method= RequestMethod.POST)
@@ -739,9 +739,9 @@ public class ResultsServiceRestController {
 	}
 	
 	
-	@ApiOperation(
-			value="Get JSON table",
-			notes="Too large a file can fail.  <br>" +
+	@Operation(
+			summary="Get JSON table",
+			description="Too large a file can fail.  <br>" +
 					  "This is good for a preview, for example, in a browser with limited memory.<br>" +
 				      "GET /getTableResultsCsvForWebClient safely retrieves entire large files.")
 	@CrossOrigin
@@ -797,9 +797,9 @@ public class ResultsServiceRestController {
 	 * "fullURL"   is the CSV  file (retaining bad label for backward compatibility)
 	 * "sampleURL" is the JSON file (retaining bad label for backward compatibility)
 	 */
-	@ApiOperation(
-			value="Get fullURL (csv) and sampleURL (JSON)",
-			notes="DEPRECATED<br>" +
+	@Operation(
+			summary="Get fullURL (csv) and sampleURL (JSON)",
+			description="DEPRECATED<br>" +
 			      "Use /getTableResultsJsonForWebClient and /getTableResultsCsvForWebClient instead <br>" +
 				  "URL's may not work in a secure deployment of SemTK"
 			)
@@ -842,9 +842,9 @@ public class ResultsServiceRestController {
 	/**
 	 * Delete file and metadata associated with this jobId
 	 */
-	@ApiOperation(
-			value="delete job",
-			notes=""
+	@Operation(
+			summary="delete job",
+			description=""
 			)
 	@CrossOrigin
 	@RequestMapping(value="/deleteJob", method= RequestMethod.POST)

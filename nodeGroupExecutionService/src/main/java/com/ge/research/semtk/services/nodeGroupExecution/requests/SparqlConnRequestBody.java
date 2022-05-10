@@ -20,13 +20,13 @@ package com.ge.research.semtk.services.nodeGroupExecution.requests;
 import com.ge.research.semtk.api.nodeGroupExecution.NodeGroupExecutor;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 // TODO: note there is a newer SparqlConnectionRequest in the springutil that has conflicting names.
 public class SparqlConnRequestBody {
 	
-	@ApiModelProperty(
-			value = "Connection json or \"NODEGROUP_DEFAULT\" flag",
+	@Schema(
+			name = "Connection json or \"NODEGROUP_DEFAULT\" flag",
 			required = true,
 			example = "NODEGROUP_DEFAULT")
 	private String sparqlConnection;

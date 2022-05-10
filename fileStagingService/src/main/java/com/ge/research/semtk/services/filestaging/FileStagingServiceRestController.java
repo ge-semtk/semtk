@@ -49,8 +49,7 @@ import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utilityge.Utility;
 
-import io.swagger.annotations.ApiOperation;
-
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * Service to retrieve files from an external file store (e.g. S3)
@@ -85,8 +84,8 @@ public class FileStagingServiceRestController {
 	/**
 	 * Stage a file: copy from a file store (e.g. S3) to an accessible location, and then send it to the ResultsService.
 	 */
-	@ApiOperation(
-			value="Stage a file from a file store"
+	@Operation(
+			summary="Stage a file from a file store"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/stageFile", method= RequestMethod.POST)

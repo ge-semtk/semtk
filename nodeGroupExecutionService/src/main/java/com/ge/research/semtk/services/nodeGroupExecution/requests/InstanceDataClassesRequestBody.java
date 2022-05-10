@@ -12,13 +12,13 @@ import org.json.simple.JSONArray;
 
 import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class InstanceDataClassesRequestBody extends SparqlConnectionLimitOffsetCountRequestBody {
 	
 	
-	@ApiModelProperty(
-			value = "Class values",
+	@Schema(
+			name = "Class values",
 			required = true,
 			example = "[\"http:/namespace#class1\", \"http:/namespace#class2\"]")
 	private String [] classValues = new String[0];

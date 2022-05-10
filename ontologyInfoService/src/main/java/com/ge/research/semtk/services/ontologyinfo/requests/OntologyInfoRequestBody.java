@@ -20,7 +20,7 @@ package com.ge.research.semtk.services.ontologyinfo.requests;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * For service calls needing SPARQL connection and domain
@@ -30,14 +30,14 @@ import io.swagger.annotations.ApiModelProperty;
  */
 
 public class OntologyInfoRequestBody {
-	@ApiModelProperty(
-			value = "jsonRenderedSparqlConnection",
+	@Schema(
+			name = "jsonRenderedSparqlConnection",
 			required = false,
 			example = 	"Deprecated version of 'conn'"
 			)	
 	private String jsonRenderedSparqlConnection = "";
-	@ApiModelProperty(
-			value = "conn",
+	@Schema(
+			name = "conn",
 			required = false,
 			example = 	"\"{ \"name\":\"my-conn\",\"serverType\":\"virtuoso\",\"dataServerUrl\": ... }\""
 			)	

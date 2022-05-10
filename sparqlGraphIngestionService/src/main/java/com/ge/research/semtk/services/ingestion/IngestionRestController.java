@@ -61,7 +61,7 @@ import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
@@ -194,9 +194,9 @@ public class IngestionRestController {
 	    	HeadersManager.clearHeaders();
 	    }
 	}
-	@ApiOperation(
-			value=	"Synchronous load from multipart file, with override connection and no precheck.",
-			notes=	ASYNC_NOTES
+	@Operation(
+			summary=	"Synchronous load from multipart file, with override connection and no precheck.",
+			description=	ASYNC_NOTES
 			)
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFileWithNewConnection", method= RequestMethod.POST)
@@ -272,9 +272,9 @@ public class IngestionRestController {
 	    }
 	}
 	
-	@ApiOperation(
-			value=	"File-based no-override ASYNC endpoint.  With override connection and precheck.",
-			notes=	ASYNC_NOTES
+	@Operation(
+			summary=	"File-based no-override ASYNC endpoint.  With override connection and precheck.",
+			description=	ASYNC_NOTES
 			)
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFilePrecheckAsync", method= RequestMethod.POST)
@@ -388,9 +388,9 @@ public class IngestionRestController {
 	    }
 	}
 	
-	@ApiOperation(
-			value=	"Main ASYNC endpoint.  With override connection and precheck.",
-			notes=	ASYNC_NOTES
+	@Operation(
+			summary=	"Main ASYNC endpoint.  With override connection and precheck.",
+			description=	ASYNC_NOTES
 			)
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvWithNewConnectionPrecheckAsync", method= RequestMethod.POST)
@@ -405,9 +405,9 @@ public class IngestionRestController {
 	    }
 	}
 	
-	@ApiOperation(
-			value=	"Ingest a file against the default ingestion template for this class.",
-			notes=	ASYNC_NOTES
+	@Operation(
+			summary=	"Ingest a file against the default ingestion template for this class.",
+			description=	ASYNC_NOTES
 			)
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvUsingClassTemplate", method= RequestMethod.POST)
@@ -437,9 +437,9 @@ public class IngestionRestController {
 	    }
 	}
 	
-	@ApiOperation(
-			value=	"Get a class' default ingestion template and sample CSV file.",
-			notes=	"synchronous.  Returns simpleResult containing \'sgjson\' JSON and \'csv\' String fields."
+	@Operation(
+			summary=	"Get a class' default ingestion template and sample CSV file.",
+			description=	"synchronous.  Returns simpleResult containing \'sgjson\' JSON and \'csv\' String fields."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getClassTemplateAndCsv", method= RequestMethod.POST)
@@ -479,8 +479,8 @@ public class IngestionRestController {
 		return builder;
 	}
 	
-	@ApiOperation(
-			value=	"Clear a graph with optional trackFlag."
+	@Operation(
+			summary=	"Clear a graph with optional trackFlag."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/clearGraph", method= RequestMethod.POST)
@@ -527,8 +527,8 @@ public class IngestionRestController {
 		return resultSet.toJson();
 	}
 	
-	@ApiOperation(
-			value=	"Run a query of tracked events."
+	@Operation(
+			summary=	"Run a query of tracked events."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/runTrackingQuery", method= RequestMethod.POST)
@@ -555,8 +555,8 @@ public class IngestionRestController {
 		
 	}	
 	
-	@ApiOperation(
-			value=	"Delete tracked events."
+	@Operation(
+			summary=	"Delete tracked events."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/deleteTrackingEvents", method= RequestMethod.POST)
@@ -597,8 +597,8 @@ public class IngestionRestController {
 		return resultSet.toJson();
 	}	
 	
-	@ApiOperation(
-			value=	"Get contents of file key from /runTrackingQuery, returns 'contents' field in simple results"
+	@Operation(
+			summary=	"Get contents of file key from /runTrackingQuery, returns 'contents' field in simple results"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getTrackedIngestFile", method= RequestMethod.POST)
@@ -618,8 +618,8 @@ public class IngestionRestController {
 		return resultSet.toJson();
 	}	
 	
-	@ApiOperation(
-			value=	"Delete data from a tracked load"
+	@Operation(
+			summary=	"Delete data from a tracked load"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/undoLoad", method= RequestMethod.POST)

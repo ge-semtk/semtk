@@ -10,13 +10,12 @@
 	<description>store and retrieve a nodegroup for "canned" queries. </description>
 
 	<dependencies>
-	
+		
 		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
-		
 		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>com.googlecode.json-simple</groupId>
@@ -28,20 +27,6 @@
 			<groupId>com.ge.research.semtk</groupId>
 			<artifactId>sparqlGraphLibrary</artifactId>
 			<version>${project.version}</version>
-		</dependency>
-		
-		<!-- License: Apache 2.0 -->
-		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-swagger2</artifactId>
-			<version>${swagger.version}</version>
-		</dependency>
-		
-		<!-- License: Apache 2.0 -->
-		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-swagger-ui</artifactId>
-			<version>${swagger.version}</version>
 		</dependency>
 		
 		<dependency>
@@ -56,12 +41,20 @@
 			<version>${project.version}</version>
 		</dependency>
 		
+		<!-- License: Apache 2.0 -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+     			<artifactId>springdoc-openapi-ui</artifactId>
+     			<version>1.6.8</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>io.swagger.core.v3</groupId>
+		    <artifactId>swagger-annotations</artifactId>
+		    <version>2.2.0</version>
+		</dependency>
+		
 	</dependencies>
-
-	<properties>
-		<maven.compiler.target>1.8</maven.compiler.target>
-		<maven.compiler.source>1.8</maven.compiler.source>
-	</properties>
 
 	<build>
 		<plugins>

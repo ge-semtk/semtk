@@ -23,6 +23,12 @@
 		</dependency>
 		
 		<dependency>
+		    <groupId>io.swagger.core.v3</groupId>
+		    <artifactId>swagger-annotations</artifactId>
+		    <version>2.2.0</version>
+		</dependency>
+		
+		<dependency>
 			<groupId>com.ge.research.semtk</groupId>
 			<artifactId>sparqlGraphLibrary</artifactId>
 			<version>${project.version}</version>
@@ -35,11 +41,6 @@
 		</dependency>
 		
 	</dependencies>
-
-	<properties>
-		<maven.compiler.target>1.8</maven.compiler.target>
-		<maven.compiler.source>1.8</maven.compiler.source>
-	</properties>
 
 	<build>
 		<plugins>

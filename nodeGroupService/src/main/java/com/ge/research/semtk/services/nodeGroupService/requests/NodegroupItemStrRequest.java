@@ -19,12 +19,12 @@ package com.ge.research.semtk.services.nodeGroupService.requests;
 
 import javax.validation.constraints.NotNull;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class NodegroupItemStrRequest extends NodegroupRequest {
 	@NotNull
-	@ApiModelProperty(
-			value = "itemStr",
+	@Schema(
+			name = "itemStr",
 			required = true,
 			example = "?sNodeSparqlID")	
 	private String itemStr;

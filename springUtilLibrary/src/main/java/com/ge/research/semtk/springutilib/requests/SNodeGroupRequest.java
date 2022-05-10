@@ -21,14 +21,13 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.belmont.NodeGroup;
-import com.ge.research.semtk.load.utility.SparqlGraphJson;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class SNodeGroupRequest {
 
-	@ApiModelProperty(
-			value = "nodeGroup",
+	@Schema(
+			name = "nodeGroup",
 			required = true,
 			example = "{\"version\": 3, \"limit\": 0, \"offset\": 0, \"sNodeList\": [...], \"orderBy\": []}"
 	)	

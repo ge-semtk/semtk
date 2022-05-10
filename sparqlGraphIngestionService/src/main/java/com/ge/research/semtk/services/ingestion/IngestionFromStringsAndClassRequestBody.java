@@ -22,26 +22,26 @@ import javax.validation.constraints.NotNull;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 
 public class IngestionFromStringsAndClassRequestBody extends FromStringsRequestBody {
 	@NotNull
-	@ApiModelProperty(
-			value = "classURI",
+	@Schema(
+			name = "classURI",
 			required = true,
 			example = "http://myprefix#className")
 	public String classURI;
 	
 	@NotNull
-	@ApiModelProperty(
-			value = "connection",
+	@Schema(
+			name = "connection",
 			required = true,
 			example = "{ connection json }")
 	private String connection;
 
-	@ApiModelProperty(
-			value = "idRegex",
+	@Schema(
+			name = "idRegex",
 			required = false,
 			example = "identifier")
 	private String idRegex = "identifier";

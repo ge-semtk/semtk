@@ -21,11 +21,11 @@ package com.ge.research.semtk.services.ontologyinfo.requests;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class OntologyInfoClassRequestBody extends SparqlConnectionRequest {
-	@ApiModelProperty(
-			value = "className",
+	@Schema(
+			name = "className",
 			required = true,
 			example = 	"http://my/model#Object17"
 			           )	

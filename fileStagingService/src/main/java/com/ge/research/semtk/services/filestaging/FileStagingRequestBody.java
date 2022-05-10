@@ -22,7 +22,7 @@ import javax.validation.constraints.Pattern;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ge.research.semtk.springutilib.requests.JobIdRequest;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * For service calls to file staging service
@@ -32,8 +32,8 @@ public class FileStagingRequestBody extends JobIdRequest{
 	private final static String DELIMITER = "###"; // delimiter for the "query" (e.g. "dir/test1-98231834.img###test1.img")
 	
 	@Pattern(regexp="###", message="query is missing the ### delimiter")
-	@ApiModelProperty(
-			value = "\"query\"",
+	@Schema(
+			name = "\"query\"",
 			required = true,
 			example = "test1-98231834.img###test1.img")   // The first element is the key (omit s3://bucketname).  The second element is the file name to use for the staged file.
     public String query;  	// a URL and filename

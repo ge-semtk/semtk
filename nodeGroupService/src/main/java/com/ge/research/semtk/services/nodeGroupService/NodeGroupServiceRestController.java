@@ -77,7 +77,8 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.google.gson.JsonArray;
 
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+
 
 @RestController
 @RequestMapping("/nodeGroup")
@@ -136,9 +137,9 @@ public class NodeGroupServiceRestController {
 	
 	
 	
-	@ApiOperation(
-			value="Find paths from a class to a nodegroup.",
-			notes="Returns pathList and pathWarnings."
+	@Operation(
+			summary="Find paths from a class to a nodegroup.",
+			description="Returns pathList and pathWarnings."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/findAllPaths", method=RequestMethod.POST)
@@ -247,9 +248,9 @@ public class NodeGroupServiceRestController {
 	 *       	SparqlQuery - the SPARQL
 	 *          QueryType - same "SELECT" "COUNT_ALL" "DELETE" "FILTER" "ASK" "CONSTRUCT"
 	 */
-	@ApiOperation(
-			value="Generate a SELECT query",
-			notes="Generic query with no special options."
+	@Operation(
+			summary="Generate a SELECT query",
+			description="Generic query with no special options."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/generateSelect", method=RequestMethod.POST)
@@ -277,9 +278,9 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();
 	}
 	
-	@ApiOperation(
-			value="Generate a COUNT query",
-			notes="Generic query with no special options"
+	@Operation(
+			summary="Generate a COUNT query",
+			description="Generic query with no special options"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/generateCountAll", method=RequestMethod.POST)
@@ -307,8 +308,8 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();
 	}
 
-	@ApiOperation(
-			value="Generate DELETE query"
+	@Operation(
+			summary="Generate DELETE query"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/generateDelete", method=RequestMethod.POST)
@@ -337,9 +338,9 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();
 	}
 
-	@ApiOperation(
-			value="Generate filter query",
-			notes="Returns all values for a given sparqlId"
+	@Operation(
+			summary="Generate filter query",
+			description="Returns all values for a given sparqlId"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/generateFilter", method=RequestMethod.POST)
@@ -372,8 +373,8 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();
 	}
 
-	@ApiOperation(
-			value="Generate ASK query"
+	@Operation(
+			summary="Generate ASK query"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/generateAsk", method=RequestMethod.POST)
@@ -428,9 +429,9 @@ public class NodeGroupServiceRestController {
 		
 		return retval.toJson();
 	}
-	@ApiOperation(
-			value="Get table of runtime constraints",
-			notes="Returns table of: \"valueId\", \"itemType\", \"valueType\""
+	@Operation(
+			summary="Get table of runtime constraints",
+			description="Returns table of: \"valueId\", \"itemType\", \"valueType\""
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getRuntimeConstraints", method=RequestMethod.POST)
@@ -457,9 +458,9 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 	
-	@ApiOperation(
-			value="Give a property a SparqlID and set isReturned.",
-			notes="If it is illegal or duplicate, SparqlID will be modified to a close match."
+	@Operation(
+			summary="Give a property a SparqlID and set isReturned.",
+			description="If it is illegal or duplicate, SparqlID will be modified to a close match."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/setPropertySparqlId", method=RequestMethod.POST)
@@ -499,8 +500,8 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 	
-	@ApiOperation(
-			value="Set isReturned for existing sparqlID(s)"
+	@Operation(
+			summary="Set isReturned for existing sparqlID(s)"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/setIsReturned", method=RequestMethod.POST)
@@ -535,8 +536,8 @@ public class NodeGroupServiceRestController {
 		
 		return retval.toJson();		
 	}
-	@ApiOperation(
-			value="Change sparqlIds in nodegroup"
+	@Operation(
+			summary="Change sparqlIds in nodegroup"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/changeSparqlIds", method=RequestMethod.POST)
@@ -576,8 +577,8 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 	
-	@ApiOperation(
-			value="Get list of nodegroup returns"
+	@Operation(
+			summary="Get list of nodegroup returns"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getReturnedSparqlIds", method=RequestMethod.POST)
@@ -610,9 +611,9 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 	
-	@ApiOperation(
-			value="Get columns required by import spec",
-			notes="Returns \"columnNames\" array"
+	@Operation(
+			summary="Get columns required by import spec",
+			description="Returns \"columnNames\" array"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getIngestionColumns", method=RequestMethod.POST)
@@ -638,9 +639,9 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 	
-	@ApiOperation(
-			value="Get ingestion validation rules",
-			notes="Returns columnNames array and dataValidator json array"
+	@Operation(
+			summary="Get ingestion validation rules",
+			description="Returns columnNames array and dataValidator json array"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getIngestionColumnInfo", method=RequestMethod.POST)
@@ -665,9 +666,9 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 	
-	@ApiOperation(
-			value="Get a sample CSV that could be ingested",
-			notes="Returns \"sampleCSV\" string which may be \"\" if there is no import spec in the nodegroup"
+	@Operation(
+			summary="Get a sample CSV that could be ingested",
+			description="Returns \"sampleCSV\" string which may be \"\" if there is no import spec in the nodegroup"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getSampleIngestionCSV", method=RequestMethod.POST)
@@ -703,9 +704,9 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 
-	@ApiOperation(
-			value="Build a valid nodegroup constrain, with the provided parameters, to be used in nodegroup queries",
-			notes="Returns \"sampleOBJ\" with a JSON constrain populated with the the provided request parameters: \n" +
+	@Operation(
+			summary="Build a valid nodegroup constrain, with the provided parameters, to be used in nodegroup queries",
+			description="Returns \"sampleOBJ\" with a JSON constrain populated with the the provided request parameters: \n" +
 					"sparqlId, operation and operandsList. \n It also validates the parameters producing 400 Bad Request exceptions" +
 					" including error explanations"
 	)
@@ -738,9 +739,9 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();
 	}
 	
-	@ApiOperation(
-			value="Get a sample CSV that could be ingested",
-			notes="Returns \"sampleCSV\" string which may be \"\" if there is no import spec in the nodegroup"
+	@Operation(
+			summary="Get a sample CSV that could be ingested",
+			description="Returns \"sampleCSV\" string which may be \"\" if there is no import spec in the nodegroup"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getSampleIngestionCSVMulti", method=RequestMethod.POST)
@@ -804,8 +805,8 @@ public class NodeGroupServiceRestController {
 	//  Use the OInfoCache
 	//  JUnit testing is covered by the NodeGroup tests, etc.
 	
-	@ApiOperation(
-			value="Create a node group with given class"
+	@Operation(
+			summary="Create a node group with given class"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/createNodeGroup", method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -838,8 +839,8 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 
-	@ApiOperation(
-			value="Create a nodegroup to retrieve"
+	@Operation(
+			summary="Create a nodegroup to retrieve"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/createConstructAllConnected", method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -871,8 +872,8 @@ public class NodeGroupServiceRestController {
 	}
 
 
-	@ApiOperation(
-			value="Adds a new node to an existing nodeGroup"
+	@Operation(
+			summary="Adds a new node to an existing nodeGroup"
 	)
 	@CrossOrigin
 	@RequestMapping(value="/addNode", method=RequestMethod.POST, produces=MediaType.APPLICATION_JSON_UTF8_VALUE)
@@ -913,9 +914,9 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();
 	}
 
-	@ApiOperation(
-			value="Build default importSpec from returns in nodegroup",
-			notes="Intended for use by the SPARQLgraph client.  Not too useful otherwise."
+	@Operation(
+			summary="Build default importSpec from returns in nodegroup",
+			description="Intended for use by the SPARQLgraph client.  Not too useful otherwise."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/setImportSpecFromReturns", method=RequestMethod.POST)
@@ -963,9 +964,9 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 	
-	@ApiOperation(
-			value="Get a list of supported server types.",
-			notes="return key is 'serverTypes'"
+	@Operation(
+			summary="Get a list of supported server types.",
+			description="return key is 'serverTypes'"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getServerTypes", method=RequestMethod.POST)
@@ -985,9 +986,9 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 	
-	@ApiOperation(
-			value="Inflate a nodegroup, return validation errors.",
-			notes="returns 'nodegroup' 'modelErrorMessages' and 'invalidItemStrings'"
+	@Operation(
+			summary="Inflate a nodegroup, return validation errors.",
+			description="returns 'nodegroup' 'modelErrorMessages' and 'invalidItemStrings'"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/inflateAndValidate", method=RequestMethod.POST)
@@ -1029,9 +1030,9 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 	
-	@ApiOperation(
-			value="Suggest a valid class URI for a node",
-			notes="returns classList = array of class URI's sorted from best to worst match"
+	@Operation(
+			summary="Suggest a valid class URI for a node",
+			description="returns classList = array of class URI's sorted from best to worst match"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/suggestNodeClass", method=RequestMethod.POST)
@@ -1058,8 +1059,8 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();		
 	}
 	
-	@ApiOperation(
-			value="Add a sample plot to a nodegroup"
+	@Operation(
+			summary="Add a sample plot to a nodegroup"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/plot/addSamplePlot", method=RequestMethod.POST)
@@ -1100,9 +1101,9 @@ public class NodeGroupServiceRestController {
 		return retval.toJson();	
 	}
 
-	@ApiOperation(
-			value="change the domain or range of a nodegroup element",
-			notes="domain: if domain is a valid property, sets the range too"
+	@Operation(
+			summary="change the domain or range of a nodegroup element",
+			description="domain: if domain is a valid property, sets the range too"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/changeItemURI", method=RequestMethod.POST)

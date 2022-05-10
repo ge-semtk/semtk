@@ -48,7 +48,7 @@ import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.utility.LocalLogger;
 
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.services.dispatch.DispatchProperties;
@@ -104,9 +104,9 @@ public class DispatcherServiceRestController {
 		AuthorizationManager.authorizeWithExit(auth_prop);
 
 	}
-	@ApiOperation(
-			value=	"Run any kind of query on a nodegroup.",
-			notes=	"Newer replacement for /query*FromNodegroup endpoints  <br>" +
+	@Operation(
+			summary=	"Run any kind of query on a nodegroup.",
+			description=	"Newer replacement for /query*FromNodegroup endpoints  <br>" +
 			        "If empty, query and result types will come from nodegroup <br>" +
 					"If missing from nodegroup too, query and result types default to SELECT_DISTINCT and TABLE. <br>" +
 			        "Result will contain jobId and resultType"

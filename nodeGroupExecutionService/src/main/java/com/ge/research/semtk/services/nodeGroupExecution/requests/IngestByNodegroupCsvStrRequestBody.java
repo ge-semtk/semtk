@@ -19,7 +19,7 @@ package com.ge.research.semtk.services.nodeGroupExecution.requests;
 
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class IngestByNodegroupCsvStrRequestBody {
 
@@ -27,14 +27,14 @@ public class IngestByNodegroupCsvStrRequestBody {
 	private String sparqlConnection = "";
 	private String csvContent = "";
 	
-	@ApiModelProperty(
-			value = "trackFlag",
+	@Schema(
+			name = "trackFlag",
 			required = false,
 			example = "true")
 	public Boolean trackFlag = false;
 
-	@ApiModelProperty(
-			value = "overrideBaseURI",
+	@Schema(
+			name = "overrideBaseURI",
 			required = false,
 			example = "$TRACK_KEY  or  http://freds/data")
 	public String overrideBaseURI = null;

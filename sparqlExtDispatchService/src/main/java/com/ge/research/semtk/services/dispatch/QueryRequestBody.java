@@ -24,14 +24,14 @@ import org.json.simple.parser.JSONParser;
 import com.ge.research.semtk.sparqlX.dispatch.QueryFlags;
 import com.ge.research.semtk.utility.Utility;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class QueryRequestBody extends NodegroupRequestBody {
 
-	@ApiModelProperty(required = false,  example = "[{\"SparqlID\":\"?name\",\"Operator\":\"MATCHES\",\"Operands\":[\"Fred\"]}]")
+	@Schema(required = false,  example = "[{\"SparqlID\":\"?name\",\"Operator\":\"MATCHES\",\"Operands\":[\"Fred\"]}]")
 	private String constraintSet;	
 	
-	@ApiModelProperty(required = false,  example = "[\"UNOPTIONALIZE_CONSTRAINED\"]")
+	@Schema(required = false,  example = "[\"UNOPTIONALIZE_CONSTRAINED\"]")
 	private String flags;			// a string parseable to a JSONArray
 
 	public void setConstraintSet(String constraintSet){
