@@ -6,12 +6,16 @@
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>2.6.7</version>
 	</parent>
+	<properties>
+		<revision>2.5.0-SNAPSHOT</revision>
+		<swagger.version>3.0.0</swagger.version>
+	</properties>
 
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.ge.research.semtk</groupId>
 	<artifactId>semtk-oss</artifactId>
-	<version>2.4.0-SNAPSHOT</version>
+	<version>${revision}</version>
 	<packaging>pom</packaging>
 
 
@@ -136,12 +140,6 @@
 		<module>utilityService</module>
 		<module>distribution</module>
 	</modules>
-
-	<properties>
-		<maven.compiler.target>1.8</maven.compiler.target>
-		<maven.compiler.source>1.8</maven.compiler.source>
-		<swagger.version>3.0.0</swagger.version>
-	</properties>
 
 	<dependencyManagement>
 		<dependencies>
