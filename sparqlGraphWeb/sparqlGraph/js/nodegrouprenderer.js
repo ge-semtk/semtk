@@ -378,11 +378,18 @@ define([	// properly require.config'ed
                 var edgeIDsToRemove = this.network.body.data.edges.getIds();
                 var edgeData = [];
                 for (var snode of this.nodegroup.getSNodeList()) {
-                    for (var nItem of snode.getNodeList()) {
+                    const nodeItems = snode.getNodeList()
+                    for (var nItem of nodeItems) {
                         for (var snode2 of nItem.getSNodes()) {
                             var fromID = snode.getSparqlID();
                             var toID = snode2.getSparqlID();
-                            var id = fromID + "-" + toID;
+
+                            // Now that we allow multiple (distinct) edges
+                            // between the same two nodes, it is no longer
+                            // enough to use only `fromID` and `toID` to
+                            // identify an edge, we also want to include the
+                            // "key name".
+                            var id = `${nItem.getKeyName()}-${fromID}-${toID}`;
                             var label = this.buildEdgeLabel(nItem, snode2);
 
                             var foreground = this.calcNodeItemForeground(nItem, snode, snode2);
@@ -404,14 +411,52 @@ define([	// properly require.config'ed
                             if (unionColor != null) {
                                 edgeFont.color = unionColor;
                             }
+
+                            // Multiple edges between the same two nodes can be
+                            // displayed without overlap by bending each edge
+                            // appropriately via the roundness attribute.
+                            // The idea is to evenly space them out around 0 by
+                            // increments of 0.2.
+
+                            // Edges that have the same source and target as me
+                            // (source is implicitly the same: snode)
+                            const competingEdges = (
+                                nodeItems
+                                .filter(ni => ni.getSNodes().some(tgt => tgt.getSparqlID() == toID))
+                            )
+
+                            // Among competing edges, which index am I?
+                            const competingEdgeIndex =
+                                competingEdges.findIndex(ni => ni.getKeyName() == nItem.getKeyName())
+
+                            // This makes it so that among N competing edges,
+                            // they fan out evenly on both sides of 0.
+                            // e.g.
+                            // for N = 3, [-SPACING, 0, SPACING]
+                            // for N = 4, [-(3/2)*SPACING, -(1/2)*SPACING, (1/2)*SPACING, (3/2)*SPACING]
+                            const SPACING = 0.2
+                            const roundness = (
+                                (SPACING * competingEdgeIndex) - (SPACING * (competingEdges.length - 1) / 2)
+                            )
+
                             var edge = {
                                 id:     id,
                                 from:   fromID,
                                 to:     toID,
                                 label:  label,
                                 color:  {color: unionMemberColor, highlight: unionMemberColor, inherit: false},
-                                font :  edgeFont
+                                font :  edgeFont,
                             };
+
+                            // We only add the 'smooth' attribute when there are
+                            // more than one edge competing between two nodes,
+                            // because it changes how singular edges are
+                            // rendered (they get straightened, which we don't
+                            // want).
+                            if (competingEdges.length > 1) {
+                                edge['smooth'] = { type: 'curvedCW', roundness }
+                            }
+
                             edgeData.push(edge);
                             this.edgeCallbackData[id] = {uri: nItem.getItemUri()};
 
