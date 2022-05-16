@@ -4306,6 +4306,36 @@ public class NodeGroup {
 		return edges;
 	}
 	
+	/**
+	 * Check if the given graph is a forest. It should be comprised of zero or more
+	 * disjoint trees. Each tree should have a single root node from which there is
+	 * a unique path to every other node in the tree.
+	 * 
+	 * @param <T> Type of graph nodes
+	 * @param graph Graph in adjacency list form 
+	 * @return true when the graph is a forest
+	 */
+	private static <T> boolean graphIsForest(Map<T, List<T>> graph) {
+		
+		// Determine all the nodes with no incoming edges. These are the roots of the forest
+		Set<T> headNodes = graph.keySet();
+		for (List<T> targets : graph.values()) {
+			headNodes.removeAll(targets);
+		}
+		
+		Set<T> seen = new HashSet<>();
+		Stack<T> work = new Stack<T>();
+		work.addAll(headNodes);
+		
+		while (!work.isEmpty()) {
+			T next = work.pop();
+			if (!seen.add(next)) { return false; } // check not previously visited
+			work.addAll(graph.get(next)); // add reachable nodes to work stack
+		}
+
+		return seen.size() == graph.size(); // check all nodes visited
+	}
+	
 	private Node getNextHeadNode(ArrayList<Node> skipNodes) throws Exception  {
 		if (skipNodes.size() == this.nodes.size()) {
 			return null;
@@ -4315,6 +4345,10 @@ public class NodeGroup {
 		Map<Node, List<Node>> graph = this.calcCliqueGraph(cliques);
 		HashMap<String,Integer> linkHash = this.calcIncomingLinkHash(skipNodes);
 		
+		if (!graphIsForest(graph)) {
+			throw new NoValidSparqlException("Graph does not reduce to a forest");
+		}
+
 		String retID = null;
 		int minLinks = 99;
 		
