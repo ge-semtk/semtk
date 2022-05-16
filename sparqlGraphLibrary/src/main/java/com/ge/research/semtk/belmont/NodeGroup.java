@@ -19,6 +19,7 @@
 package com.ge.research.semtk.belmont;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -30,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import org.json.simple.JSONArray;
@@ -253,7 +255,6 @@ public class NodeGroup {
 		        	if(property == null){  // only create property once
 		        		String relationship = key; 		// e.g. http://research.ge.com/print/testconfig#material
 		        		String propertyValueType = valueJSONObject.get("@type").toString();	// e.g. http://www.w3.org/2001/XMLSchema#string
-		        		String relationshipLocal = new OntologyName(relationship).getLocalName();   // e.g. pasteMaterial
 		        		String propertyValueTypeLocal = new OntologyName(propertyValueType).getLocalName();	// e.g. string
 		        		property = new PropertyItem(XSDSupportedType.getMatchingValue(propertyValueTypeLocal), propertyValueType, relationship); 		        		
 		        	}
@@ -1234,7 +1235,7 @@ public class NodeGroup {
         this.tmpUnionParentHash.get(keyStr).put(id, parentEntryStr);
 	}
 	
-	private class DepthTuple implements Comparator {
+	private class DepthTuple implements Comparator<DepthTuple> {
 		public int key;
 		public int depth;
 		public DepthTuple(int key, int depth) {
@@ -1242,9 +1243,9 @@ public class NodeGroup {
 			this.depth= depth;
 		}
 		// deepest first
-		public int compare(Object obj1, Object obj2) {
-	       Integer p1 = ((DepthTuple) obj1).depth;
-	       Integer p2 = ((DepthTuple) obj2).depth;
+		public int compare(DepthTuple obj1, DepthTuple obj2) {
+	       Integer p1 = obj1.depth;
+	       Integer p2 = obj2.depth;
 
 	       if (p1 > p2) {
 	           return -1;
@@ -2381,29 +2382,6 @@ public class NodeGroup {
             return "";
     	}
     }
-
-
-	
-	/**
-	 * FROM clause logic
-	 * Generates FROM clause if this.conn has
-	 *     - exactly 1 data connection
-	 */
-	private String generateSparqlWithClause(String tab) {
-		
-		// do nothing if no conn
-		if (this.conn == null) return "";
-		
-		// multiple ServerURLs is not implemented
-		if (this.conn.getDataInterfaceCount() < 1) {
-			throw new Error("Can not generate a WITH clause when there is no data connection");
-		}
-		if (this.conn.getDataInterfaceCount() > 1) {
-			throw new Error("Can not generate a WITH clause when there are multiple data connections");
-		}
-		
-		return tab + " WITH <" + this.conn.getDataInterface(0).getGraph() + "> ";
-	}
 	
 	@Deprecated
 	public String generateSparqlConstruct(boolean unused) throws Exception {
@@ -4271,13 +4249,15 @@ public class NodeGroup {
 
 		for (Node source : nodes) {
 			for (NodeItem ni : source.getNodeItemList()) {
-				for (Node target : ni.getNodeList()) {
-
-					// Check for a plain edge: no optional, no minus, no reverse
-					if (NodeItem.OPTIONAL_FALSE == ni.getOptionalMinus(target)
-						&& null == getUnionKey(source, ni, target))
-					{
-						result.union(source, target);							
+				if (ni.getConnected()) {
+					for (Node target : ni.getNodeList()) {
+	
+						// Check for a plain edge: no optional, no minus, no reverse
+						if (NodeItem.OPTIONAL_FALSE == ni.getOptionalMinus(target)
+							&& null == getUnionKey(source, ni, target))
+						{
+							result.union(source, target);							
+						}
 					}
 				}
 			}
@@ -4355,9 +4335,9 @@ public class NodeGroup {
 		}
 		// throw an error if no nodes have optHash == 0
 		if (retID == null) {
-			throw new Exception("Internal error in NodeGroup.getHeadNextHeadNode(): No head nodes found. Probable cause: no non-optional semantic nodes.");
+			throw new Exception("Internal error in NodeGroup.getNextHeadNode(): No head nodes found. Probable cause: no non-optional semantic nodes.");
 		}
-		
+
 		return this.getNodeBySparqlID(retID);
 	}
 	
@@ -4403,61 +4383,7 @@ public class NodeGroup {
 		}
 		return linkHash;
 	}
-	
-	private HashMap<String, Integer>  calcOptionalHash(ArrayList<Node> skipNodes) throws Exception  {
-		
-		// ---- set optHash ----
-		// so optHash[snode.getSparqlID()] == count of nodeItems indicating this node is optional
-		HashMap<String, Integer> optHash = new HashMap<String, Integer>();
 
-		// initialize optHash
-		for (Node snode : this.nodes) {
-
-			if (! skipNodes.contains(snode)) {
-				optHash.put(snode.getSparqlID(), 0);
-			}
-		}
-		
-		// loop through all snodes
-		for (Node snode : this.nodes) {
-			
-			if (! skipNodes.contains(snode)) {
-				
-				// loop through all nodeItems
-				for (NodeItem nodeItem : snode.getNodeItemList()) {
-					
-					// loop through all connectedSNodes
-					for (Node targetSNode : nodeItem.getNodeList()) {
-						
-						// if found an optional nodeItem
-						int opt = nodeItem.getOptionalMinus(targetSNode);
-						
-						ArrayList<Node> subGraph = new ArrayList<Node>();
-						
-						// get subGraph(s) on the optional side of the nodeItem
-						if (opt == NodeItem.OPTIONAL_TRUE) {
-							ArrayList<Node> stopList = new ArrayList<Node>();
-							stopList.add(snode);
-							subGraph.addAll(this.getSubGraph(targetSNode, stopList));
-							
-						} else if (opt == NodeItem.OPTIONAL_REVERSE) {
-							ArrayList<Node> stopList = new ArrayList<Node>();
-							stopList.add(targetSNode);
-							subGraph.addAll(this.getSubGraph(snode, stopList));
-						}
-							
-						// increment every node on the optional side of the nodeItem
-						for (Node k : subGraph) {
-							int val = optHash.get(k.getSparqlID());
-							optHash.put(k.getSparqlID(), val + 1);
-						}	
-					}
-				}
-			}
-		}
-		
-		return optHash;
-	}
 	
 	private ArrayList<String> getConnectedRange(Node node) throws Exception  {
 		ArrayList<String> ret = new ArrayList<String>();
@@ -4614,39 +4540,47 @@ public class NodeGroup {
 		return retval.toString();
 	}
 	
+	
 	/**
-	 * Return a list of nodes ordered by headnodes depth first
-	 * @return
-	 * @throws Exception
+	 * 
+	 * Lexicographic comparison of array elements
+	 *
+	 * @param <T> element type
 	 */
-	private ArrayList<Node> getOrderedNodes() throws Exception {
-		ArrayList<Node> ret = new ArrayList<Node>();
-		Node headNode = this.getNextHeadNode(ret);
-		while (headNode != null) {
-			this.addOrderedSubnodes(headNode, ret);
-			headNode = this.getNextHeadNode(ret);
+	private class ListComparator<T extends Comparable<T>> implements Comparator<List<T>> {
+		@Override
+		public int compare(List<T> o1, List<T> o2) {
+			int n1 = o1.size();
+			int n2 = o2.size();
+			int n = Math.min(n1, n2);
+			for (int i = 0; i < n; i++) {
+				int r = o1.get(i).compareTo(o2.get(i));
+				if (0 != r) return r;
+			}
+			return Integer.compare(n1, n2);
 		}
-		return ret;
+	}
+
+	static private List<String> orderedNodeItems(Node n) {
+		ArrayList<String> items = new ArrayList<>();
+		for (NodeItem ni : n.getConnectedNodeItems()) {
+			items.add(ni.getKeyName());
+		}
+		items.sort(Comparator.naturalOrder());
+		return items;
 	}
 	
 	/**
-	 * Buddy to getOrderedNodes
-	 * @param snode
-	 * @param ret
+	 * 
+	 * @return List of nodes in node group with a best-effort deterministic ordering.
 	 */
-	private void addOrderedSubnodes(Node snode, ArrayList<Node> ret) {
-		if(ret.contains(snode)){
-			return;
-		}
-		else{
-			ret.add(snode);
-			for(NodeItem nItem : snode.getNodeItemList()) {
-				
-				for (Node n : nItem.getNodeList()) {
-					addOrderedSubnodes(n, ret);
-				}
-			}
-		}
+	private ArrayList<Node> getOrderedNodes() {
+		Comparator<Node> uriComparator = Comparator.comparing(Node::getUri);
+		Comparator<Node> nisComparator = Comparator.comparing(NodeGroup::orderedNodeItems, new ListComparator<String>());
+		
+		ArrayList<Node> result = new ArrayList<Node>(nodes);
+		result.sort(uriComparator.thenComparing(nisComparator));
+		return result;
 	}
 	
 	/**
@@ -4655,7 +4589,7 @@ public class NodeGroup {
 	 */
 	public void assignStandardSparqlIds() throws Exception {
 		int i=0;
-		for (Node n : this.getOrderedNodes()) {
+		for (Node n : getOrderedNodes()) {
 			this.changeSparqlID(n, n.getUri(true) + String.valueOf(i));
 			this.setBinding(n, null);
 			for (PropertyItem p : n.getPropertyItems()) {
