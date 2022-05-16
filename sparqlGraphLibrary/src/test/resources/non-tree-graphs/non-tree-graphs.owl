@@ -1,0 +1,184 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel#"
+    xmlns="http://non-tree-graphs#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+  <owl:Ontology rdf:about="http://non-tree-graphs">
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'non-tree-graphs.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:about="http://non-tree-graphs#PNode">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onDataRange rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#long"
+        >1</owl:qualifiedCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://non-tree-graphs#id"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://non-tree-graphs#CNode">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onDataRange rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#long"
+        >1</owl:qualifiedCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://non-tree-graphs#id"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://non-tree-graphs#RNode">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onDataRange rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#long"
+        >1</owl:qualifiedCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://non-tree-graphs#id"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://non-tree-graphs#BNode">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onDataRange rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#long"
+        >1</owl:qualifiedCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://non-tree-graphs#id"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://non-tree-graphs#ANode">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onDataRange rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#long"
+        >1</owl:qualifiedCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://non-tree-graphs#id"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://non-tree-graphs#QNode">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onDataRange rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+        <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#long"
+        >1</owl:qualifiedCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://non-tree-graphs#id"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="http://non-tree-graphs#qRs">
+    <rdfs:domain rdf:resource="http://non-tree-graphs#QNode"/>
+    <rdfs:range rdf:resource="http://non-tree-graphs#RNode"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://non-tree-graphs#bNodes">
+    <rdfs:domain rdf:resource="http://non-tree-graphs#ANode"/>
+    <rdfs:range rdf:resource="http://non-tree-graphs#BNode"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://non-tree-graphs#aNodes">
+    <rdfs:domain rdf:resource="http://non-tree-graphs#CNode"/>
+    <rdfs:range rdf:resource="http://non-tree-graphs#ANode"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://non-tree-graphs#rP">
+    <rdfs:domain rdf:resource="http://non-tree-graphs#RNode"/>
+    <rdfs:range rdf:resource="http://non-tree-graphs#PNode"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://non-tree-graphs#cNodes">
+    <rdfs:domain rdf:resource="http://non-tree-graphs#BNode"/>
+    <rdfs:range rdf:resource="http://non-tree-graphs#CNode"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="http://non-tree-graphs#qP">
+    <rdfs:domain rdf:resource="http://non-tree-graphs#QNode"/>
+    <rdfs:range rdf:resource="http://non-tree-graphs#PNode"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="http://non-tree-graphs#id">
+    <rdfs:domain>
+      <owl:Class>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="http://non-tree-graphs#PNode"/>
+          <owl:Class rdf:about="http://non-tree-graphs#QNode"/>
+          <owl:Class rdf:about="http://non-tree-graphs#RNode"/>
+          <owl:Class rdf:about="http://non-tree-graphs#ANode"/>
+          <owl:Class rdf:about="http://non-tree-graphs#BNode"/>
+          <owl:Class rdf:about="http://non-tree-graphs#CNode"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <QNode rdf:about="http://non-tree-graphs#Q1">
+    <qRs>
+      <RNode rdf:about="http://non-tree-graphs#R2">
+        <rP>
+          <PNode rdf:about="http://non-tree-graphs#P2">
+            <id>P2</id>
+          </PNode>
+        </rP>
+        <id>R2</id>
+      </RNode>
+    </qRs>
+    <qRs>
+      <RNode rdf:about="http://non-tree-graphs#R1">
+        <rP>
+          <PNode rdf:about="http://non-tree-graphs#P1">
+            <id>P1</id>
+          </PNode>
+        </rP>
+        <id>R1</id>
+      </RNode>
+    </qRs>
+    <qP rdf:resource="http://non-tree-graphs#P1"/>
+    <id>Q1</id>
+  </QNode>
+  <RNode rdf:about="http://non-tree-graphs#R3">
+    <rP rdf:resource="http://non-tree-graphs#P1"/>
+    <id>R3</id>
+  </RNode>
+  <CNode rdf:about="http://non-tree-graphs#C5">
+    <aNodes>
+      <ANode rdf:about="http://non-tree-graphs#A5">
+        <bNodes>
+          <BNode rdf:about="http://non-tree-graphs#B5">
+            <cNodes rdf:resource="http://non-tree-graphs#C5"/>
+            <id>B5</id>
+          </BNode>
+        </bNodes>
+        <id>A5</id>
+      </ANode>
+    </aNodes>
+    <id>C5</id>
+  </CNode>
+  <CNode rdf:about="http://non-tree-graphs#C4">
+    <aNodes>
+      <ANode rdf:about="http://non-tree-graphs#A4">
+        <bNodes>
+          <BNode rdf:about="http://non-tree-graphs#B4">
+            <cNodes rdf:resource="http://non-tree-graphs#C5"/>
+            <cNodes rdf:resource="http://non-tree-graphs#C4"/>
+            <id>B4</id>
+          </BNode>
+        </bNodes>
+        <id>A4</id>
+      </ANode>
+    </aNodes>
+    <id>C4</id>
+  </CNode>
+</rdf:RDF>

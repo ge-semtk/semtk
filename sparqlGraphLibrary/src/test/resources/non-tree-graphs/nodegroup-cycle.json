@@ -1,0 +1,203 @@
+{
+	"version": 3,
+	"sparqlConn": {
+		"name": "Local",
+		"domain": "",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/RACK",
+				"graph": "http://rack001/model"
+			}
+		],
+		"data": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/RACK",
+				"graph": "http://rack001/data"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 19,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://non-tree-graphs#id",
+						"Constraints": "",
+						"SparqlID": "?C",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?ANode"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"range": [
+							"http://non-tree-graphs#ANode"
+						],
+						"ConnectBy": "aNodes",
+						"Connected": true,
+						"UriConnectBy": "http://non-tree-graphs#aNodes"
+					}
+				],
+				"fullURIName": "http://non-tree-graphs#CNode",
+				"SparqlID": "?CNode",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://non-tree-graphs#id",
+						"Constraints": "",
+						"SparqlID": "?B",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?CNode"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"range": [
+							"http://non-tree-graphs#CNode"
+						],
+						"ConnectBy": "cNodes",
+						"Connected": true,
+						"UriConnectBy": "http://non-tree-graphs#cNodes"
+					}
+				],
+				"fullURIName": "http://non-tree-graphs#BNode",
+				"SparqlID": "?BNode",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://non-tree-graphs#id",
+						"Constraints": "",
+						"SparqlID": "?A",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?BNode"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"range": [
+							"http://non-tree-graphs#BNode"
+						],
+						"ConnectBy": "bNodes",
+						"Connected": true,
+						"UriConnectBy": "http://non-tree-graphs#bNodes"
+					}
+				],
+				"fullURIName": "http://non-tree-graphs#ANode",
+				"SparqlID": "?ANode",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": [],
+		"groupBy": [],
+		"unionHash": {},
+		"columnOrder": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?ANode",
+				"type": "http://non-tree-graphs#ANode",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?BNode",
+				"type": "http://non-tree-graphs#BNode",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?CNode",
+				"type": "http://non-tree-graphs#CNode",
+				"mapping": [],
+				"props": []
+			}
+		]
+	},
+	"plotSpecs": null
+}
