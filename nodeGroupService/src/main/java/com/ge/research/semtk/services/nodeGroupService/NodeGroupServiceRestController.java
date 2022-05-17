@@ -267,9 +267,11 @@ public class NodeGroupServiceRestController {
 			
 		}
 		catch(NoValidSparqlException ise) {
+			// Handle known sparql generation errors
 			retval = this.generateNoValidSparqlOutput("generateSelect", ise.getMessage());
 		}
 		catch(Exception eee){
+			// Unexpected errors
 			retval = new SimpleResultSet(false);
 			retval.addRationaleMessage(SERVICE_NAME, "generateSelect", eee);
 			LocalLogger.printStackTrace(eee);
