@@ -8,7 +8,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class InstanceDataPredicatesRequestBody extends SparqlConnectionLimitOffsetCountRequestBody {
 	
 	@Schema(
-			name = "list of domainURI, predicateURI pairs",
+			description = "list of domainURI, predicateURI pairs",
 			required = true,
 			example = "[[\"http:/namespace#class1\", \"http:/namespace#predicate\"]]")
 	private ArrayList<InstanceDataPredicate> predicateList;

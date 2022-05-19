@@ -28,7 +28,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class DispatchFromNodegroupRequestBody extends DispatchRequestBody {
 
 	@Schema(
-	   name = "jsonRenderedNodegroup",
 	   required = true,
 	   example = "\"{ \"version\": 2,\"sparqlConn\":{...},\"sNodeGroup\": {}... }\""
 	   )

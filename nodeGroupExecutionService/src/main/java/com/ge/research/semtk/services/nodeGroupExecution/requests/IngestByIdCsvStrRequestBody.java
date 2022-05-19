@@ -25,13 +25,11 @@ public class IngestByIdCsvStrRequestBody extends SparqlConnRequestBody {
 	private String csvContent = "";
 	
 	@Schema(
-			name = "trackFlag",
 			required = false,
 			example = "true")
 	public Boolean trackFlag = false;
 
 	@Schema(
-			name = "overrideBaseURI",
 			required = false,
 			example = "$TRACK_KEY  or  http://maries/data")
 	public String overrideBaseURI = null;

@@ -7,13 +7,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class SparqlConnectionLimitOffsetCountRequestBody extends SparqlConnectionRequest {
 	
 	@Schema(
-			name = "Maximum number of results to return.<br>Overrides LIMIT stored in nodegroup.",
+			description = "Maximum number of results to return.<br>Overrides LIMIT stored in nodegroup.",
 			required = false,
 			example = "-1")
 	private int limitOverride = -1;
 	
 	@Schema(
-			name = "Query offset.<br>Overrides OFFSET stored in nodegroup.",
+			description = "Query offset.<br>Overrides OFFSET stored in nodegroup.",
 			required = false,
 			example = "-1")
 	private int offsetOverride = -1;

@@ -28,13 +28,11 @@ public class IngestByNodegroupCsvStrRequestBody {
 	private String csvContent = "";
 	
 	@Schema(
-			name = "trackFlag",
 			required = false,
 			example = "true")
 	public Boolean trackFlag = false;
 
 	@Schema(
-			name = "overrideBaseURI",
 			required = false,
 			example = "$TRACK_KEY  or  http://freds/data")
 	public String overrideBaseURI = null;

@@ -10,13 +10,11 @@ public class InstanceDataRequestBody extends SparqlConnectionLimitOffsetCountReq
 	
 	
 	@Schema(
-			name = "Class values",
 			required = false,
 			example = "[\"http:/namespace#class1\", \"http:/namespace#class2\"]")
 	private String [] classValues = new String[0];
 	
 	@Schema(
-			name = "Predicate values",
 			required = false,
 			example = "[\"http:/namespace#predicate1\", \"http:/namespace#predicate2\"]")
 	private String [] predicateValues = new String[0];

@@ -26,7 +26,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class SparqlConnRequestBody {
 	
 	@Schema(
-			name = "Connection json or \"NODEGROUP_DEFAULT\" flag",
+			description = "Connection json or \"NODEGROUP_DEFAULT\" flag",
 			required = true,
 			example = "NODEGROUP_DEFAULT")
 	private String sparqlConnection;

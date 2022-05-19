@@ -18,7 +18,6 @@ public class InstanceDataClassesRequestBody extends SparqlConnectionLimitOffsetC
 	
 	
 	@Schema(
-			name = "Class values",
 			required = true,
 			example = "[\"http:/namespace#class1\", \"http:/namespace#class2\"]")
 	private String [] classValues = new String[0];

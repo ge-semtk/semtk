@@ -22,19 +22,18 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class DispatchByIdRequestBody extends DispatchRequestBody {
 	
 	@Schema(
-			name = "Nodegroup ID",
 			required = true,
 			example = "demoNodegroup")
 	private String nodeGroupId;
 	
 	@Schema(
-			name = "Maximum number of results to return.<br>Overrides LIMIT stored in nodegroup.",
+			description = "Maximum number of results to return.<br>Overrides LIMIT stored in nodegroup.",
 			required = false,
 			example = "-1")
 	private int limitOverride = -1;
 	
 	@Schema(
-			name = "Query offset.<br>Overrides OFFSET stored in nodegroup.",
+			description = "Query offset.<br>Overrides OFFSET stored in nodegroup.",
 			required = false,
 			example = "-1")
 	private int offsetOverride = -1;

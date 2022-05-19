@@ -15,36 +15,23 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.nodeGroupExecution.requests;
-import com.ge.research.semtk.sparqlX.XSDSupportedType;
+package com.ge.research.semtk.services.ontologyinfo.requests;
+
 import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
+public class CardinalityReportRequest extends SparqlConnectionRequest {
 
-public class ConstructConnectedDataRequest extends SparqlConnectionRequest {
-    
     @Schema(
-            required = true,
-            example = "http://path#this")
-    private String instanceVal;
-    
-    @Schema(
+    		name = "maxRows",
+    		description = "Return only this many violations (e.g. protect browser memory)",
             required = false,
-            example = "node_uri")
-    private String instanceType = null;
-
+            example = "1000")
+    private int maxRows = 0;
  
-    public String getInstanceVal() {
-		return instanceVal;
+    public int getMaxRows() {
+		return this.maxRows;
 	}
-    
-    public String getInstanceType() {
-		return instanceType;
-	}
-
-	public XSDSupportedType buildInstanceType() throws Exception {
-        return this.instanceType == null ? null :  XSDSupportedType.getMatchingValue(this.instanceType);
-    }
 
 }
