@@ -46,7 +46,7 @@ public class DataLoadBatchHandler {
 	public DataLoadBatchHandler(SparqlGraphJson sgJson, SparqlEndpointInterface endpoint) throws Exception{
 		this.oInfo = sgJson.getOntologyInfo();
 		this.importSpec = sgJson.getImportSpecHandler();
-		this.importSpec.setEndpoint(endpoint);
+		this.importSpec.initEndpoint(endpoint);
 		
 		if (sgJson.getImportSpecJson() == null) {
 			throw new Exception("The data transformation import spec is null.");
@@ -103,10 +103,12 @@ public class DataLoadBatchHandler {
 	}
 	
 	public void setBatchSize(int bSize){
+		//System.err.println("Set batch size " + bSize);
 		this.batchSize = bSize;
 	}
 	
 	public ArrayList<ArrayList<String>> getNextRecordsFromDataSet(int nRecordsRequested) throws Exception{
+		//System.err.println("Get next recor " + this.batchSize);
 		 return this.ds.getNextRecords(nRecordsRequested);
 	}
 

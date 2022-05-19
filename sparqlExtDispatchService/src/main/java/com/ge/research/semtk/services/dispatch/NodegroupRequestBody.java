@@ -25,10 +25,10 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.utility.LocalLogger;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class NodegroupRequestBody {
-	@ApiModelProperty(required = true,  example = "{ \"contents\" : \"Internal SemTK-formmated JSON\" } ")
+	@Schema(required = true,  example = "{ \"contents\" : \"Internal SemTK-formmated JSON\" } ")
 	private String jsonRenderedNodeGroup;
 	 
 	public void setjsonRenderedNodeGroup(String jsonRenderedNodeGroup){

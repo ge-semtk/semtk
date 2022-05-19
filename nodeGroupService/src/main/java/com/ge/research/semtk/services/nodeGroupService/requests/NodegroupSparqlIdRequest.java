@@ -17,13 +17,12 @@
 
 package com.ge.research.semtk.services.nodeGroupService.requests;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class NodegroupSparqlIdRequest extends NodegroupRequest {
 
-	@ApiModelProperty(
-            position = 1,
-            value = "sparqlID",
+	@Schema(
+            name = "sparqlID",
             required = false,
             example = "myVarName")
     private String sparqlID;

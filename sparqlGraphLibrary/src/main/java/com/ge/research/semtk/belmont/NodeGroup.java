@@ -2870,8 +2870,9 @@ public class NodeGroup {
 					// ?Binding_or_sparqlid a ?target_type
 					retval += tab + node.getBindingOrSparqlID() + " a " + this.applyPrefixing(node.getFullUriName()) + " .\n";
 				
-				} else {
+				} else if (!node.getFullUriName().equals("http://sadl.org/sadllistmodel#List")){
 					// we know there are no subClasses
+					// skipping SADL3 List to try to handle it just a tiny bit gracefully.  Actual type of the Instance will be a blank node.
 					retval += tab + node.getSparqlID() + " a " + this.applyPrefixing(node.getFullUriName()) + " .\n";
 				}
 			}

@@ -112,7 +112,7 @@ public class IngestionNodegroupBuilder {
 			if (this.idRegex != null &&  Pattern.compile(this.idRegex).matcher(pItem.getKeyName()).find()) {
 				// lookup ID is a lookup and is NOT optional
 				ispecBuilder.addURILookup(node.getSparqlID(), pItem.getUriRelationship(), node.getSparqlID());
-				ispecBuilder.addLookupMode(node.getSparqlID(), ImportSpec.LOOKUP_MODE_CREATE);
+				ispecBuilder.addLookupMode(node.getSparqlID(), ImportSpec.LOOKUP_MODE_CREATE_IF_MISSING);
 			} else {
 				// normal properties ARE optional
 				pItem.setOptMinus(PropertyItem.OPT_MINUS_OPTIONAL);
@@ -134,14 +134,18 @@ public class IngestionNodegroupBuilder {
 				Node objNode = nodegroup.addNode(rangeUri, node, null, nItem.getUriConnectBy());
 				nItem.setOptionalMinus(objNode, NodeItem.OPTIONAL_TRUE);
 				
-				if (oInfo.hasSubclass(className)) {
-					// If node has subclasses then NO_CREATE ("error if missing")
-					// This will create the need for ingestion order to matter:  linked items must be ingested first.
-					ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_NO_CREATE);
-				} else {
-					// If node has NO subclasses then we may create it.
-					ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_CREATE);
-				}
+				ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_ERR_IF_MISSING);
+
+//  we might want to re-add this for a different "flavor" of auto-generated nodegroups
+//
+//				if (oInfo.hasSubclass(className)) {
+//					// If node has subclasses then NO_CREATE ("error if missing")
+//					// This will create the need for ingestion order to matter:  linked items must be ingested first.
+//					ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_NO_CREATE);
+//				} else {
+//					// If node has NO subclasses then we may create it.
+//					ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_CREATE);
+//				}
 				
 				// give it a name, e.g.: verifies_ENTITY
 				String objNodeName = nItem.getKeyName() + "_" + new OntologyName(rangeUri).getLocalName();
@@ -181,7 +185,7 @@ public class IngestionNodegroupBuilder {
 		this.sgjson.setImportSpecJson(ispecBuilder.toJson());
 		
 		// replace last comma in csvTemplate with a line return
-		csvTemplate.setLength(csvTemplate.length()-1);
+		csvTemplate.setLength(Math.max(0,csvTemplate.length()-1));
 		csvTemplate.append("\n");
 		
 	}

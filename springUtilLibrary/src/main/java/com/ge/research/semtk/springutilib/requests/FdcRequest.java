@@ -26,12 +26,13 @@ import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.resultSet.Table;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
+
 
 public class FdcRequest {
 
-	@ApiModelProperty(
-		value = "tables",
+	@Schema(
+		name = "tables",
 		required = true,
 		example = "\"{\"1\": {\"col_names\":[\"aircraftUri\",\"tailNumber\"],\"rows\":[[\"http://uri\",\"007a\"]],\"col_type\":[\"String\",\"String\"],\"col_count\":1,\"row_count\":1}}\""
 					

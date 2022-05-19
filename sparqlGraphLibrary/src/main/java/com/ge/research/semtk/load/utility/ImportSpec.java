@@ -37,9 +37,9 @@ import com.ge.research.semtk.load.transform.TransformInfo;
  */
 @SuppressWarnings("unchecked") // suppress all the json .put type warnings
 public class ImportSpec {
-	public static final String LOOKUP_MODE_NO_CREATE = 	   "noCreate";    // should be 'errorIfMissing'
-	public static final String LOOKUP_MODE_CREATE =        "createIfMissing";
-	public static final String LOOKUP_MODE_ERR_IF_EXISTS = "errorIfExists";  
+	public static final String LOOKUP_MODE_ERR_IF_MISSING = 	"noCreate";    
+	public static final String LOOKUP_MODE_CREATE_IF_MISSING =	"createIfMissing";
+	public static final String LOOKUP_MODE_ERR_IF_EXISTS = 		"errorIfExists";  
 	
 	public static final String JKEY_IS_VERSION = "version";
 	public static final String JKEY_IS_BASE_URI = "baseURI";
@@ -757,8 +757,8 @@ public class ImportSpec {
 	 */
 	public void addURILookups(NodeGroup ng, String propRegex, String lookupMode) throws Exception {
 		switch (lookupMode) {
-		case LOOKUP_MODE_NO_CREATE:
-		case LOOKUP_MODE_CREATE:
+		case LOOKUP_MODE_ERR_IF_MISSING:
+		case LOOKUP_MODE_CREATE_IF_MISSING:
 		case LOOKUP_MODE_ERR_IF_EXISTS:
 			break;
 		default:

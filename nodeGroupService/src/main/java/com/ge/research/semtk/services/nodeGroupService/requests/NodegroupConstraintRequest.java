@@ -21,15 +21,15 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 
 public class NodegroupConstraintRequest extends RuntimeConstraintRequest {
 
 	// total copy-and-paste from NodegroupRequest because I can't figure out 
 	// how to fake multiple inheritance and keep the annotations.
-	@ApiModelProperty(
-			value = "jsonRenderedNodeGroup",
+	@Schema(
+			name = "jsonRenderedNodeGroup",
 			required = true,
 			example = 	"{ \"sparqlConn\": {...}, \"sNodeGroup\": {...}, \"importSpec\": {...} }\n" +
 						"or\n"+

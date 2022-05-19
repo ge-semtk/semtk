@@ -540,6 +540,28 @@ public class OntologyInfoTests_IT {
 	}
 	
 	@Test
+	public void testList() throws Exception {
+		// SADL3 List is not supported.
+		// Make sure it is handled slightly gracefully
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "ListTest.owl");		
+		OntologyInfo oInfo = new OntologyInfo();
+		oInfo.load(TestGraph.getSei(), false);
+		
+		OntologyClass oClass = oInfo.getClass("http://list#ListTest");
+		OntologyProperty oProp = oClass.getProperty("http://list#Pets");
+		assertTrue("Property with range List did not show up in ontology when SadlListModel.owl IS NOT loaded", oProp != null);
+		
+		TestGraph.uploadOwlResource(this, "SadlListModelTest.owl");		// SadlListModel.owl is in .gitignore, so use a different name.
+		oInfo = new OntologyInfo();
+		oInfo.load(TestGraph.getSei(), false);
+		
+		oClass = oInfo.getClass("http://list#ListTest");
+		oProp = oClass.getProperty("http://list#Pets");
+		assertTrue("Property with range List did not show up in ontology when SadlListModel.owl IS loaded", oProp != null);
+		
+	}
+	@Test
 	public void testGetLowestCommonSuperclass() throws Exception {
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlContents(Utility.getResourceAsString(QueryGenTest_IT.class, 

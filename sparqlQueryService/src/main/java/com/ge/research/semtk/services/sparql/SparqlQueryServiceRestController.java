@@ -42,10 +42,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
-import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
-import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.services.sparql.requests.SparqlAuthRequestBody;
@@ -65,9 +63,8 @@ import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
-import com.google.common.net.MediaType;
 
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * Service to execute SPARQL queries.
@@ -435,8 +432,8 @@ public class SparqlQueryServiceRestController {
 	//public JSONObject uploadOwl(@RequestBody SparqlAuthRequestBody requestBody, @RequestParam("owlFile") MultipartFile owlFile){
     // We can't use a @RequestBody with a @RequestParam,
 	// So the SparqlAuthRequestBody is broken into individual string @RequestParams
-	@ApiOperation(
-			value="Upload owl to specified connection information"
+	@Operation(
+			description="Upload owl to specified connection information"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/uploadOwl", method= RequestMethod.POST)
@@ -498,8 +495,8 @@ public class SparqlQueryServiceRestController {
 	}	
 	
 	
-	@ApiOperation(
-			value="Upload turtle file to specified connection information"
+	@Operation(
+			description="Upload turtle file to specified connection information"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/uploadTurtle", method= RequestMethod.POST)
@@ -554,8 +551,8 @@ public class SparqlQueryServiceRestController {
 		
 		return simpleResultSetJson;	
 	}	
-	@ApiOperation(
-			value="Using graph in owl's rdf:RDF xml:base, clear graph and (re-)import owl" 
+	@Operation(
+			description="Using graph in owl's rdf:RDF xml:base, clear graph and (re-)import owl" 
 			)
 	@CrossOrigin
 	@RequestMapping(value="/syncOwl", method= RequestMethod.POST)

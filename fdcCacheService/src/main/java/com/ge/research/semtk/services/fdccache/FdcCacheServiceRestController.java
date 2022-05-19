@@ -42,7 +42,7 @@ import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 
 /**
  * Cache service
@@ -82,9 +82,9 @@ public class FdcCacheServiceRestController {
 		servicesgraph_prop.validateWithExit();
 	}
 	
-	@ApiOperation(
-			value="Start a cache process with bootstrap table if cache hasn't been run recently enough.",
-			notes="Data graph[0] may be cleared and re-populated.  Other graphs are read-only."
+	@Operation(
+			summary="Start a cache process with bootstrap table if cache hasn't been run recently enough.",
+			description="Data graph[0] may be cleared and re-populated.  Other graphs are read-only."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/cacheUsingTableBootstrap", method= RequestMethod.POST)
@@ -118,9 +118,9 @@ public class FdcCacheServiceRestController {
 		}  
 	}
 	
-	@ApiOperation(
-			value="Start a cache process with the first query.",
-			notes="Data graph[0] will be appended.  Other graphs are read-only."
+	@Operation(
+			summary="Start a cache process with the first query.",
+			description="Data graph[0] will be appended.  Other graphs are read-only."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/runFdcSpec", method= RequestMethod.POST)

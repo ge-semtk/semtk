@@ -146,9 +146,12 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.msi.postToEndpoint("getPredicateStats", myData, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
             },
 
-            execGetCardinalityViolations : function (conn, successCallback) {
+		
+			// Get cardinality violations
+            execGetCardinalityViolations : function (conn, maxRows, successCallback) {
                 var myData = JSON.stringify ({
 					"conn" : JSON.stringify(conn.toJson()),
+					"maxRows" : maxRows
 				});
 
 				this.msi.postToEndpoint("getCardinalityViolations", myData, "application/json", successCallback, this.optFailureCallback, this.optTimeout);

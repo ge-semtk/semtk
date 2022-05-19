@@ -21,15 +21,15 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class NodegroupURIRequest extends NodegroupRequest {
 
 	@NotNull
 	@Pattern(regexp="^[^{}[]:;\"'#]+#[^{}[]:;\\\"'#]+$", message="uri is ill-formed")
 	@Size(min=8, max=256, message="uri must be 8-256 characters in length")
-	@ApiModelProperty(
-				value = "uri",
+	@Schema(
+				name = "uri",
 				required = true,
 				example = "http://sample/uri#name")	
 	private String uri;

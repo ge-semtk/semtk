@@ -20,22 +20,20 @@ package com.ge.research.semtk.services.nodeGroupService.requests;
 import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
 import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.util.ArrayList;
 
-@ApiModel
 public class ConnectionUriRequest extends SparqlConnectionRequest {
 
-    @ApiModelProperty(
-    		value = "sparqlID",
+    @Schema(
+    		name = "sparqlID",
             required = false,
             example = "myVarName")
     private String sparqlID;
     
-    @ApiModelProperty(
-    		value = "uri",
+    @Schema(
+    		name = "uri",
             required = true,
             example = "http://path#this")
     private String uri;

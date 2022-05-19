@@ -18,8 +18,7 @@
 package com.ge.research.semtk.services.ingestion;
 
 import javax.validation.constraints.NotNull;
-
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * For requests that provide a SPARQL connection to override the connection in the template.
@@ -27,8 +26,8 @@ import io.swagger.annotations.ApiModelProperty;
 public class IngestionFromStringsWithNewConnectionRequestBody extends IngestionFromStringsRequestBody {
 
 	@NotNull
-	@ApiModelProperty(
-	   value = "connectionOverride",
+	@Schema(
+	   name = "connectionOverride",
 	   required = true,
 	   example = "{ connection json }")
 	private String connectionOverride;

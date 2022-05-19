@@ -57,7 +57,7 @@ import com.ge.research.semtk.services.utility.UtilityProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 
 
 /**
@@ -89,7 +89,7 @@ public class UtilityServiceRestController {
 	/**
 	 * Show the services connection configured in the UtilityService
 	 */
-	@ApiOperation(value="Show the services connection")
+	@Operation(description="Show the services connection")
 	@CrossOrigin
 	@RequestMapping(value="/getServicesGraphConnection", method= RequestMethod.POST)
 	public JSONObject getServicesGraphConnection(){	
@@ -107,7 +107,7 @@ public class UtilityServiceRestController {
 	}	
 	
 	
-	@ApiOperation(value="Get a list of EDC mnemonics")
+	@Operation(description="Get a list of EDC mnemonics")
 	@CrossOrigin
 	@RequestMapping(value="/edc/getEdcMnemonicList", method= RequestMethod.POST)
 	public JSONObject getEdcMnemonicList(){	
@@ -134,7 +134,7 @@ public class UtilityServiceRestController {
 	}	
 	
 	
-	@ApiOperation(value="Insert an EDC mnemonic")
+	@Operation(description="Insert an EDC mnemonic")
 	@CrossOrigin
 	@RequestMapping(value="/edc/insertEdcMnemonic", method= RequestMethod.POST)
 	public JSONObject insertEdcMnemonic(@RequestParam("data") MultipartFile dataFile){	
@@ -170,7 +170,7 @@ public class UtilityServiceRestController {
 	 * but does not delete the Services/Parameters/Constraints/Restrictions themselves because they
 	 * may be shared across mnemonics.
 	 */
-	@ApiOperation(value="Delete an EDC mnemonic")
+	@Operation(description="Delete an EDC mnemonic")
 	@CrossOrigin
 	@RequestMapping(value="/edc/deleteEdcMnemonic", method= RequestMethod.POST)
 	public JSONObject deleteEdcMnemonic(@RequestParam String mnemonic){	
@@ -214,7 +214,7 @@ public class UtilityServiceRestController {
 	}	
 	
 	
-	@ApiOperation(value="Get a list of FDC cache specifications")
+	@Operation(description="Get a list of FDC cache specifications")
 	@CrossOrigin
 	@RequestMapping(value="/fdc/getFdcCacheSpecList", method=RequestMethod.POST)
 	public JSONObject getFdcCacheSpecList(){	
@@ -238,7 +238,7 @@ public class UtilityServiceRestController {
 	// TODO add insertFDCCacheSpec endpoint
 	
 	
-	@ApiOperation(value="Delete an FDC cache specification")
+	@Operation(description="Delete an FDC cache specification")
 	@CrossOrigin
 	@RequestMapping(value="/fdc/deleteFdcCacheSpec", method= RequestMethod.POST)
 	public JSONObject deleteFdcCacheSpec(@RequestParam String specId) {
@@ -280,9 +280,8 @@ public class UtilityServiceRestController {
 	}
 	
 	
-	@ApiOperation(
-			value="Get user name provided by a proxy",
-			notes="{ name : 'fred' } or { name : 'anonymous' } if none"
+	@Operation(
+			description="Get user name provided by a proxy\n{ name : 'fred' } or { name : 'anonymous' } if none"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/authUser", method= RequestMethod.GET)
@@ -309,7 +308,7 @@ public class UtilityServiceRestController {
 	/**
 	 * Process a plot specification (e.g. fill in data values from table)
 	 */
-	@ApiOperation(value="Process a plot specification")
+	@Operation(description="Process a plot specification")
 	@CrossOrigin
 	@RequestMapping(value="/processPlotSpec", method= RequestMethod.POST)
 	public JSONObject processPlotSpec(@RequestBody ProcessPlotSpecRequest requestBody){

@@ -1,18 +1,16 @@
 package com.ge.research.semtk.services.nodeGroupExecution.requests;
 
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class InstanceDataPredicate  {
 	
-	@ApiModelProperty(
-			value = "domain URI",
+	@Schema(
 			required = true,
 			example = "http://my/domain#className")
 	private String domainURI;
 	
-	@ApiModelProperty(
-			value = "Predicate URI",
+	@Schema(
 			required = false,
 			example = "http://my/domain#predicate")
 	private String predicateURI;

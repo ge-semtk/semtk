@@ -144,7 +144,7 @@ public class InMemoryInterface extends SparqlEndpointInterface {
 
 	@Override
 	public int getInsertQueryMaxSize() {
-		return 20000;
+		return 30000;
 	}
 
 	@Override

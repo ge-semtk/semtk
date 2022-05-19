@@ -21,7 +21,7 @@ package com.ge.research.semtk.springutilib.requests;
 import javax.validation.constraints.Pattern;
 
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /**
  * For service calls with optional SPARQL connection information.
@@ -30,21 +30,21 @@ public class SparqlEndpointOptionalRequestBody {
 	
 	// missing the deprecated "dataset"  So don't splice this into legacy code.
 	
-	@ApiModelProperty(required = false,  example = "http://my_server:2420")
+	@Schema(required = false,  example = "http://my_server:2420")
 	@Pattern(regexp="https?://.*:[0-9]+", message="Triplestore URL with port is required")
 	public String serverAndPort = null;  
 	
-	@ApiModelProperty(required = false,  example = "virtuoso|fuseki|neptune")
+	@Schema(required = false,  example = "virtuoso|fuseki|neptune")
 	@Pattern(regexp="^(virtuoso|fuseki|neptune)$", message="valid server types: virtuoso|fuseki|neptune")
 	public String serverType = null;		
 	
-	@ApiModelProperty(required = false,  example = "http://graph/name")
+	@Schema(required = false,  example = "http://graph/name")
 	public String graph = null;	        
     
-	@ApiModelProperty(required = false)
+	@Schema(required = false)
 	public String user = null;
     
-	@ApiModelProperty(required = false)
+	@Schema(required = false)
 	public String password = null;
    
     

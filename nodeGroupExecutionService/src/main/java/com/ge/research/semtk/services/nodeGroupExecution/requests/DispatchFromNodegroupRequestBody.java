@@ -21,15 +21,13 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class DispatchFromNodegroupRequestBody extends DispatchRequestBody {
 
-	@ApiModelProperty(
-	   value = "jsonRenderedNodegroup",
+	@Schema(
 	   required = true,
 	   example = "\"{ \"version\": 2,\"sparqlConn\":{...},\"sNodeGroup\": {}... }\""
 	   )

@@ -21,20 +21,19 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.resultSet.Table;
-import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class TableBootstrapRequest extends FdcRequest {
 	
-	@ApiModelProperty(
-			value = "bootstrapTableJsonStr",
+	@Schema(
+			name = "bootstrapTableJsonStr",
 			required = true,
 			example = "\"{\"col_names\":[\"aircraftUri\",\"tailNumber\"],\"rows\":[[\"http://uri\",\"007a\"]],\"col_type\":[\"String\",\"String\"],\"col_count\":1,\"row_count\":1}\"")
 	private String bootstrapTableJsonStr;
 	
-	@ApiModelProperty(
-			value = "recacheAfterSec",
+	@Schema(
+			name = "recacheAfterSec",
 			required = false,
 			example = "300")
 	private int recacheAfterSec = 0;

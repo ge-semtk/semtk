@@ -1003,22 +1003,6 @@ public class DataLoaderTest_IT {
 		
 		
 		loadData(dl0, "doLookupBatteryIdAddDesc PRELOAD", cacheFlag);
-
-		// It looks like when we insert via inMemory graph, the strings go in as plain literals.
-		// InMemoryInterfaceTest_IT.testInsertSelectTypedString() shows they go into the in-memory graph ok.
-		// test_TypedString() shows that cached load is failing to preserve type
-		//
-		// So the problem must be in dumping to OWL/RDF and uploading.   The Owl looks wrong.  
-		//        <j.0:batteryId>id_733344685</j.0:batteryId>
-		//    instead of
-		//        <j.0:batteryId>"id_733344685"^^XMLSchema:string</j.0:batteryId>
-		// When we do URI lookups, we query for "value"^^xsd:string
-		//
-		//   http://iswc2011.semanticweb.org/fileadmin/iswc/Papers/Workshops/SSWS/Emmons-et-all-SSWS2011.pdf
-		//   	literal types are often handled inconsistently
-		// 	    filter clause will probably work
-		//
-		// BEST: figure out how to dump to turtle since owl/rdf is too verbose AND wrong
 		
 				
 				
@@ -1145,6 +1129,54 @@ public class DataLoaderTest_IT {
 		loadData(dl, "testLookupBatteryIdAddDescUTF8", cacheFlag);
 
 		TestGraph.queryAndCheckResults(sgJson, this, "/lookupBatteryIdAddDescUTF8Results.csv");
+		
+	}
+	
+	@Test
+	public void test_LookupBatteryIdAddDescExcelEscape() throws Exception {
+		
+		doLookupBatteryIdAddDescExcelEscape(false);
+		doLookupBatteryIdAddDescExcelEscape(true);
+	}
+
+	/**
+	 * Test excel-style escaping of quotes in a csv
+	 *  double quotes are "" and the entire cell must be double quoted or else it seems behavior is undefined
+	 *  single quotes are normal (may be quoted or unquoted)
+	 *  unicode \u006c
+	 * 
+	 *  won't test un-clearly-specified behavior such as unquoted field containing ""
+	 * 
+	 * ------------------------------------------------------------------------------------
+	 * comments on each test case can be found in:  loadTestDuraBatteryExcelDescData.csv
+	 * ------------------------------------------------------------------------------------
+	 * 
+	 * @param cacheFlag
+	 * @throws Exception
+	 */
+	public void doLookupBatteryIdAddDescExcelEscape(boolean cacheFlag) throws Exception {
+		// setup
+		TestGraph.clearGraph();
+				
+		// ==== pre set some data =====
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
+		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
+		Dataset ds0 = new CSVDataset("src/test/resources/loadTestDuraBatteryExcelData.csv", false);
+
+		DataLoader dl0 = new DataLoader(sgJson0, ds0, TestGraph.getUsername(), TestGraph.getPassword());
+		loadData(dl0, "testLookupBatteryIdAddDescExcel preload", cacheFlag);
+				
+		LocalLogger.logToStdErr("------ done import 1 -------");	
+		
+		// URI lookup
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/lookupBatteryIdAddDescAndRetThem.json");
+		Dataset ds = new CSVDataset("src/test/resources/loadTestDuraBatteryExcelDescData.csv", false);
+		
+		// import the actual test: lookup URI and add description
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		loadData(dl, "testLookupBatteryIdAddDescUTF8", cacheFlag);
+
+		TestGraph.queryAndCheckResults(sgJson, this, "/loadTestDuraBatteryExcelResults.csv");
 		
 	}
 	
@@ -1540,6 +1572,47 @@ public class DataLoaderTest_IT {
 		// test to see that only three links, A,B,C were created.  
 		Table res = TestGraph.execSelectFromResource(this, "chain_duplicate_lookup_results.json");
 		assertEquals("Import with identical lookups on two columns returned wrong number of results", 3, res.getNumRows());
+	}
+	
+	@Test
+	/**
+	 * Lookup same type in different columns with different criteria
+	 * 
+	 * @throws Exception
+	 */
+	public void testMultiMismatchedLookups() throws Exception {
+		Dataset ds = new CSVDataset("src/test/resources/chain_multi_lookups_empty.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/chain.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "chain_multi_lookups_errifmissing.json");
+
+		// nodegroup looks up link in two different ingestion columns
+		// lookup criteria are different
+		// BUT both are errIfMissing so this might work.  no error
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+		// nodegroup looks up link in two different ingestion columns
+		// lookup criteria are different
+		// both are createIfMissing
+		// this is illegal
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "chain_multi_lookups_createifmissing.json");
+		try {
+			dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+			assertTrue("Missing expected exception createIfmissing same class in multiple columns with different lookups", false);
+		} catch (Exception e) {
+			assertTrue("Exception doesn't contain 'create if missing'", e.getMessage().contains("create if missing"));
+		}
+		
+		
+		
 	}
 	
 	@Test
@@ -2109,7 +2182,7 @@ public class DataLoaderTest_IT {
 		
 		Table err = dl.getLoadingErrorReport();
 		if (err.getNumRows() > 0) {
-			LocalLogger.logToStdErr(err.toCSVString());
+			LocalLogger.logToStdErr("Load error: \n" + err.toCSVString());
 			fail();
 		}
 	}

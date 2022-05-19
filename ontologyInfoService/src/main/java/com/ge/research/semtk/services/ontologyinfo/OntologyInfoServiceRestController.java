@@ -52,6 +52,7 @@ import com.ge.research.semtk.ontologyTools.PredicateStatsCache;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.services.ontologyinfo.requests.CardinalityReportRequest;
 import com.ge.research.semtk.services.ontologyinfo.requests.OntologyInfoClassRequestBody;
 import com.ge.research.semtk.services.ontologyinfo.requests.OntologyInfoRequestBody;
 import com.ge.research.semtk.services.ontologyinfo.requests.SparqlConnectionRequestBody;
@@ -65,7 +66,7 @@ import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
 
 @CrossOrigin
 @RestController
@@ -129,8 +130,8 @@ public class OntologyInfoServiceRestController {
 	    return res.toJson();
 	}
 	
-	@ApiOperation(
-		    value= "Experimental"
+	@Operation(
+		    summary= "Experimental"
 		)
 	@CrossOrigin
 	@RequestMapping(value="/getRdfOWL", method=RequestMethod.POST)
@@ -152,8 +153,8 @@ public class OntologyInfoServiceRestController {
 		
 		return retval.toJson();		
 	}
-	@ApiOperation(
-		    value= "Experimental"
+	@Operation(
+		    summary= "Experimental"
 		)
 	@CrossOrigin
 	@RequestMapping(value="/getSADL", method=RequestMethod.POST)
@@ -178,9 +179,9 @@ public class OntologyInfoServiceRestController {
 
 	
 	@SuppressWarnings("unchecked")
-	@ApiOperation(
-		    value= "Get all data and object properties of a class, including those inherited from superclasses.",
-		    notes= "Returns classInfo = { name : 'classname', properties = [ { domain : 'http://model#hasTree', range: ['http://model#Tree'] } ]"
+	@Operation(
+		    summary= "Get all data and object properties of a class, including those inherited from superclasses.",
+		    description= "Returns classInfo = { name : 'classname', properties = [ { domain : 'http://model#hasTree', range: ['http://model#Tree'] } ]"
 		)
 	@CrossOrigin
 	@RequestMapping(value="/getClassInfo", method=RequestMethod.POST)
@@ -233,9 +234,9 @@ public class OntologyInfoServiceRestController {
 		return retval.toJson();
 	}
 	
-	@ApiOperation(
-		    value= "Get a table of:  type (class|property), uri, label",
-		    notes= "If a URI has no labels, it will appear with label = \"\""
+	@Operation(
+		    summary= "Get a table of:  type (class|property), uri, label",
+		    description= "If a URI has no labels, it will appear with label = \"\""
 		)
 	@CrossOrigin
 	@RequestMapping(value="/getUriLabelTable", method=RequestMethod.POST)
@@ -259,9 +260,9 @@ public class OntologyInfoServiceRestController {
 		return retval.toJson();
 	}
 	
-	@ApiOperation(
-		    value= "Get 'obj class prop str' table for all strings in the data interface graphs",
-		    notes= "TESTING ONLY.  <br>" +
+	@Operation(
+		    summary= "Get 'obj class prop str' table for all strings in the data interface graphs",
+		    description= "TESTING ONLY.  <br>" +
 		           "This needs to be async <br> " +
 		           "and handle results > 50000 gracefully"
 		)
@@ -300,9 +301,9 @@ public class OntologyInfoServiceRestController {
 		return retval.toJson();
 	}
 	
-	@ApiOperation(
-		    value= "Get the oInfo JSON",
-		    notes= "This is the 'main' endpoint for this service."
+	@Operation(
+		    summary= "Get the oInfo JSON",
+		    description= "This is the 'main' endpoint for this service."
 		)
 	@CrossOrigin
 	@RequestMapping(value="/getOntologyInfoJson", method=RequestMethod.POST)
@@ -328,8 +329,8 @@ public class OntologyInfoServiceRestController {
 		return retval.toJson();
 	}
 	
-	@ApiOperation(
-			value="Un-cache anything based on any dataset in the given connection."
+	@Operation(
+			summary="Un-cache anything based on any dataset in the given connection."
 			)	
 	@CrossOrigin
 	@RequestMapping(value="/uncacheChangedConn", method=RequestMethod.POST)
@@ -355,9 +356,9 @@ public class OntologyInfoServiceRestController {
 		return retval.toJson();		
 	}
 	
-	@ApiOperation(
-			value="Un-cache the ontology loaded by given connection.",
-			notes="For very specific UI operations only.<p>Generally, use <i>/uncacheChangedModel</i> instead."
+	@Operation(
+			summary="Un-cache the ontology loaded by given connection.",
+			description="For very specific UI operations only.<p>Generally, use <i>/uncacheChangedModel</i> instead."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/uncacheOntology", method=RequestMethod.POST)
@@ -386,9 +387,9 @@ public class OntologyInfoServiceRestController {
 		return retval.toJson();		
 	}
 	
-	@ApiOperation(
-			value="Get predicate stats for a given connections ontology and data.",
-			notes="Async.  Returns a jobID.  If stats are in the cache, job will already be complete."
+	@Operation(
+			summary="Get predicate stats for a given connections ontology and data.",
+			description="Async.  Returns a jobID.  If stats are in the cache, job will already be complete."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getPredicateStats", method=RequestMethod.POST)
@@ -445,13 +446,13 @@ public class OntologyInfoServiceRestController {
 		return retval.toJson();		
 	}
 	
-	@ApiOperation(
-			value="Check for violations of cardinality restrictions.",
-			notes="Async.  Returns a jobID."
+	@Operation(
+			summary="Check for violations of cardinality restrictions.",
+			description="Async.  Returns a jobID."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getCardinalityViolations", method=RequestMethod.POST)
-	public JSONObject getCardinalityViolations(@RequestBody SparqlConnectionRequest requestBody, @RequestHeader HttpHeaders headers){
+	public JSONObject getCardinalityViolations(@RequestBody CardinalityReportRequest requestBody, @RequestHeader HttpHeaders headers){
 		HeadersManager.setHeaders(headers);
 		final String ENDPOINT_NAME = "getCardinalityViolations";
 		SimpleResultSet retval = new SimpleResultSet(false);
@@ -471,7 +472,7 @@ public class OntologyInfoServiceRestController {
 					
 					OntologyInfo oInfo = oInfoCache.get(conn);
 					RestrictionChecker checker = new RestrictionChecker(conn, oInfo, tracker, jobId, 0, 100);
-					Table violationTab = checker.checkCardinality();
+					Table violationTab = checker.checkCardinality(requestBody.getMaxRows());
 					rclient.execStoreTableResults(jobId, violationTab);
 					tracker.setJobSuccess(jobId);
 					
@@ -499,9 +500,9 @@ public class OntologyInfoServiceRestController {
 		return retval.toJson();		
 	}
 	
-	@ApiOperation(
-			value="Get predicate stats for a given connections ontology and data.",
-			notes="Sync.   if stats are not currently cached returns cached: 'none', else 'predicateStats': json"
+	@Operation(
+			summary="Get predicate stats for a given connections ontology and data.",
+			description="Sync.   if stats are not currently cached returns cached: 'none', else 'predicateStats': json"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getCachedPredicateStats", method=RequestMethod.POST)

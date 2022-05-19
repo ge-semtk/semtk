@@ -17,23 +17,19 @@
 
 package com.ge.research.semtk.services.nodeGroupExecution.requests;
 
-import com.ge.research.semtk.sparqlX.SparqlConnection;
-
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class IngestByIdCsvStrRequestBody extends SparqlConnRequestBody {
 
 	private String templateId = "";
 	private String csvContent = "";
 	
-	@ApiModelProperty(
-			value = "trackFlag",
+	@Schema(
 			required = false,
 			example = "true")
 	public Boolean trackFlag = false;
 
-	@ApiModelProperty(
-			value = "overrideBaseURI",
+	@Schema(
 			required = false,
 			example = "$TRACK_KEY  or  http://maries/data")
 	public String overrideBaseURI = null;

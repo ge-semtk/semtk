@@ -17,20 +17,20 @@
 
 package com.ge.research.semtk.services.nodeGroupService.requests;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class NodegroupPlotRequest extends NodegroupRequest {
 
-	@ApiModelProperty(position = 1,  value = "plotName", required = true, example = "Sample Plot")
+	@Schema(name = "plotName", required = true, example = "Sample Plot")
     private String plotName;
 
-	@ApiModelProperty(position = 1,  value = "plotType", required = true, example = "plotly")
+	@Schema(name = "plotType", required = true, example = "plotly")
     private String plotType;
 	
-	@ApiModelProperty(position = 1,  value = "graphType", required = true, example = "scatter")
+	@Schema(name = "graphType", required = true, example = "scatter")
     private String graphType;
 	
-	@ApiModelProperty(value = "columnNames[]", required = true, example = "[colA, colB]")	
+	@Schema(name = "columnNames[]", required = true, example = "[colA, colB]")	
 	private String[] columnNames;
 	
 	public String getPlotName() {

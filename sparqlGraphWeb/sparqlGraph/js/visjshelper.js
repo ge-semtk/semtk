@@ -13,6 +13,10 @@ define([	// properly require.config'ed
     var VisJsHelper = function () {
     };
 
+	VisJsHelper.BLANK_NODE = "blank_node";
+	VisJsHelper.DATA_NODE = "data";
+	VisJsHelper.BLANK_NODE_REGEX ="^(nodeID://|_:)";
+	
     VisJsHelper.createCanvasDiv = function(id) {
         var canvasdiv = document.createElement("div");
         canvasdiv.id= id;
@@ -57,7 +61,8 @@ define([	// properly require.config'ed
             },
             groups: {
                 useDefaultGroups: true,
-                data: {color:{background:'white'}, shape: 'box'}
+                data: {color:{background:'white'}, shape: 'box'},
+                blank_node: {color:{background:'white', border:'red'}, shape: 'box'}
             },
             interaction: {
                 multiselect: true,
@@ -144,7 +149,7 @@ define([	// properly require.config'ed
         var shortType = VisJsHelper.getShortType(j);
         var groupVal = VisJsHelper.getLongType(j);
         if (groupVal.indexOf("XMLSchema") > -1) {
-            groupVal = "data";
+            groupVal = VisJsHelper.DATA_NODE;
         }
 
         // add node to nodeDict, potentially overwriting any place-holder
@@ -161,7 +166,7 @@ define([	// properly require.config'ed
         // if potentially changing the node's group from a known group back to a useDefaultGroups
         // (this happens if node was originally a data property but now we run across it in the JSON-LD)
         // then reset the shape manually or visJs will leave it custom.
-        if (groupVal != "data") {
+        if (groupVal != VisJsHelper.DATA_NODE) {
             nodeDict[id].shape = undefined;
         }
 
@@ -215,16 +220,33 @@ define([	// properly require.config'ed
                         // get value and type:
                         // sometimes { @value: 35, @type: integer } and sometimes just "35" or 35
                         var val = o.hasOwnProperty("@value") ? o["@value"] : o.toString();
-                        var typ = VisJsHelper.getLongType(o);
+                        var id;
+                        var typ;
+						var grp;
+						
+						// If we're not in special lablIdFlag mode AND blank node has slipped in as an object
+						// stop exploration here
+						// (blank nodes are not consistent across queries)
+						if (!optLabelIdFlag && val.match(VisJsHelper.BLANK_NODE_REGEX)) {
+							grp = VisJsHelper.BLANK_NODE;
+							val = VisJsHelper.BLANK_NODE
+							id = j['@id'] + "_" + key + "_blank";
+							typ = VisJsHelper.BLANK_NODE;
 
+						} else {
+							grp = VisJsHelper.DATA_NODE;
+							id = val;
+							typ  = VisJsHelper.getLongType(o);
+						}
+						
                         // add data property node
                         // if it later turns out that this is a node (fuseki's JSON_LD format)
                         // it will be overwritten later at the logic above "add node to nodeDict"
                         nodeDict[val] = {
-                            id : val,
+                            id : id,
                             label: val,
                             title: typ,
-                            group: "data"
+                            group: grp
                         };
 
                         // add the edge
@@ -232,7 +254,7 @@ define([	// properly require.config'ed
                         edgeList.push({
                             id: j["@id"]+"-"+predName+"-"+val,   // prevent duplicate edges
                             from: j["@id"],
-                            to: val,
+                            to: id,
                             label: predName,
                             arrows: 'to',
                             color: {inherit: false},

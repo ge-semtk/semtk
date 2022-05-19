@@ -48,16 +48,19 @@ public class ValidationAssistant {
 			Node incomingNode = ng.getNodeItemParentSNode(nItem);
 			OntologyClass incomingClass = oInfo.getClass(incomingNode.getUri());
 			OntologyProperty nItemOProp = oInfo.getProperty(nItem.getUriConnectBy());
-			OntologyRange oRange = nItemOProp.getRange(incomingClass, oInfo);
-	
-			for (String range : oRange.getUriList()) {
-				if (oInfo.classIsA(oClass, oInfo.getClass(range))) {
-					// add incoming node range
-					score.put(range, ++localScore);
-					// also add range's superclasses
-					
-					for (String rangeSuper : oInfo.getSuperclassNames(range)) {
-						score.put(rangeSuper, ++localScore);
+			if (incomingClass != null) {
+			
+				OntologyRange oRange = nItemOProp.getRange(incomingClass, oInfo);
+		
+				for (String range : oRange.getUriList()) {
+					if (oInfo.classIsA(oClass, oInfo.getClass(range))) {
+						// add incoming node range
+						score.put(range, ++localScore);
+						// also add range's superclasses
+						
+						for (String rangeSuper : oInfo.getSuperclassNames(range)) {
+							score.put(rangeSuper, ++localScore);
+						}
 					}
 				}
 			}

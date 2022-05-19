@@ -19,6 +19,7 @@ package com.ge.research.semtk.load;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.ge.research.semtk.auth.HeaderTable;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
@@ -37,13 +38,21 @@ public class InMemoryInterfaceUploadThread extends Thread {
 	private SparqlEndpointInterface endpoint;
 	private HeaderTable headerTable;
 	private Exception e = null;
-	private int length;
+	private AtomicInteger uploadSize;
 	
-	public InMemoryInterfaceUploadThread(InMemoryInterface cacheSei, SparqlEndpointInterface endpoint, HeaderTable headerTable) {
+	/**
+	 * 
+	 * @param cacheSei
+	 * @param endpoint
+	 * @param headerTable
+	 * @param uploadSize - an AtomicInteger (reference) to set to the number of chars uploaded if successful
+	 */
+	public InMemoryInterfaceUploadThread(InMemoryInterface cacheSei, SparqlEndpointInterface endpoint, HeaderTable headerTable, AtomicInteger uploadSize) {
 		super();
 		this.cacheSei = cacheSei;
 		this.endpoint = endpoint;
 		this.headerTable = headerTable;
+		this.uploadSize = uploadSize;  // this is pass-by-reference 
 	}
 	
 	/**
@@ -61,10 +70,10 @@ public class InMemoryInterfaceUploadThread extends Thread {
 			boolean done = false;
 			while (! done) {
 				try {
-					LocalLogger.logToStdErr("Uploading " + s.length() + " chars of ttl");
+					LocalLogger.logToStdErr(String.format("Uploading %,d chars of ttl", len));
 					
 					this.endpoint.authUploadTurtle(s.getBytes());
-					this.length = len;
+					this.uploadSize.set(len);
 					LocalLogger.logToStdErr("upload complete");
 					done = true;
 					
@@ -78,18 +87,12 @@ public class InMemoryInterfaceUploadThread extends Thread {
 							tryCount ++;
 						}
 					} else { 
-						this.length = 0;
 						this.e = new Exception("Giving up uploading temp graph", e);
 						done = true;
 					}
 				}
 			}
 		}
-	}
-
-	public int getLength() {
-		return this.length;
-		
 	}
 	
 	/**

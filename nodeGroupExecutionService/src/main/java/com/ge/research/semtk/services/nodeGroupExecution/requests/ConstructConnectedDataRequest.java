@@ -19,21 +19,17 @@ package com.ge.research.semtk.services.nodeGroupExecution.requests;
 import com.ge.research.semtk.sparqlX.XSDSupportedType;
 import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 
-@ApiModel
 public class ConstructConnectedDataRequest extends SparqlConnectionRequest {
     
-    @ApiModelProperty(
-    		value = "instanceVal",
+    @Schema(
             required = true,
             example = "http://path#this")
     private String instanceVal;
     
-    @ApiModelProperty(
-    		value = "instanceType",
+    @Schema(
             required = false,
             example = "node_uri")
     private String instanceType = null;

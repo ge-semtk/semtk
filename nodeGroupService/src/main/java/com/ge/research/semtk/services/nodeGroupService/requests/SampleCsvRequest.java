@@ -17,14 +17,13 @@
 
 package com.ge.research.semtk.services.nodeGroupService.requests;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class SampleCsvRequest extends NodegroupRequest {
 
 	
-	@ApiModelProperty(
-            position = 2,
-            value = "format",
+	@Schema(
+            name = "format",
             required = false,
             example = "one of: \"default\", \"simple\"")
     private String format = "default";

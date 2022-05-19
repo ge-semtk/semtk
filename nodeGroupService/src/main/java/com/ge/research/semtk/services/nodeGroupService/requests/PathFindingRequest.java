@@ -19,66 +19,57 @@ package com.ge.research.semtk.services.nodeGroupService.requests;
 
 import com.ge.research.semtk.springutilib.requests.NodegroupRequest;
 
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
-@ApiModel
 public class PathFindingRequest extends NodegroupRequest {
 
 	
-	@ApiModelProperty(
-            position = 2,
+	@Schema(
             name = "addClass",
-            value = "Find paths to add this class to nodegroup",
+            description = "Find paths to add this class to nodegroup",
             required = true,
             example = "http://semtk#MyClass")
     private String addClass = "";
 	
-	@ApiModelProperty(
-            position = 3,
+	@Schema(
             name = "propsInDataFlag",
-            value = "Use only links where instance(s) of class->prop->class exists in instance data",
+            		description = "Use only links where instance(s) of class->prop->class exists in instance data",
             required = false,
             example = "true")
     private Boolean propsInDataFlag = false;
 	
 	
-	@ApiModelProperty(
-            position = 4,
+	@Schema(
             name = "nodegroupInDataFlag",
-            value = "Return only paths such that new nodegroup w/o constraints returns data in instance data",
+            		description = "Return only paths such that new nodegroup w/o constraints returns data in instance data",
             required = false,
             example = "true")
     private Boolean nodegroupInDataFlag = false;
 	
-	@ApiModelProperty(
-            position = 5,
+	@Schema(
             name = "maxLengthRange",
-            value = "Stop when longest path is this much longer than shortest",
+            description = "Stop when longest path is this much longer than shortest",
             required = false,
             example = "5")
 	private int maxLengthRange = 5;
 	
-	@ApiModelProperty(
-            position = 6,
+	@Schema(
             name = "maxTimeMsec",
-            value = "Stop after this many milliseconds of path-finding",
+            description = "Stop after this many milliseconds of path-finding",
             required = false,
             example = "5000")
 	private int maxTimeMsec = 5000;
 	
-	@ApiModelProperty(
-            position = 7,
+	@Schema(
             name = "maxPathLength",
-            value = "Stop when all paths this length or shorter have been found",
+            description = "Stop when all paths this length or shorter have been found",
             required = false,
             example = "10")
 	private int maxPathLength = 10;
 	
-	@ApiModelProperty(
-            position = 7,
+	@Schema(
             name = "maxPathCount",
-            value = "Stop when this many paths have been found",
+            description = "Stop when this many paths have been found",
             required = false,
             example = "100")
 	private int maxPathCount = 100;

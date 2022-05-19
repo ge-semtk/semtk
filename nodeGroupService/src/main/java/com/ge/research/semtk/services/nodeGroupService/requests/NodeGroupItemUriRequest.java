@@ -18,28 +18,28 @@
 package com.ge.research.semtk.services.nodeGroupService.requests;
 
 import javax.validation.constraints.Pattern;
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class NodeGroupItemUriRequest extends NodegroupRequest {
 
-	@ApiModelProperty(
-            value = "itemStr",
+	@Schema(
+            name = "itemStr",
             required = true,
             example = "sparqlID|keyname")
     private String itemStr;
 	
-	@ApiModelProperty(
-            value = "newURI",
+	@Schema(
+            name = "newURI",
             required = true,
             example = "uri://this")
 	@Pattern(regexp = "(domain|range)")
     private String newURI;
 	
-	@ApiModelProperty(
-            value = "domainOrRange",
+	@Schema(
+            name = "domainOrRange",
             required = true,
             example = "domain",
-            notes = "range - change the range only<br>" + "domain - change domain.  If domain is valid to model, change range too if wrong.")
+            description = "range - change the range only<br>" + "domain - change domain.  If domain is valid to model, change range too if wrong.")
 	@Pattern(regexp = "(domain|range)")
     private String domainOrRange;
 

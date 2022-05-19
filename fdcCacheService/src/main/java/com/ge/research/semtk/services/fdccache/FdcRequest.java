@@ -17,17 +17,13 @@
 
 package com.ge.research.semtk.services.fdccache;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-
-import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class FdcRequest extends SparqlConnectionRequest {
-	@ApiModelProperty(
-			value = "specId",
+	@Schema(
+			name = "specId",
 			required = true,
 			example = "realBOM")
 	private String specId;

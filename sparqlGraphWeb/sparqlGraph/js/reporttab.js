@@ -86,6 +86,7 @@ define([	// properly require.config'ed
 
         };
 
+		ReportTab.MAX_ROWS = 1;
         ReportTab.CSS = `
         /* colors    */
         /* https://digitalsynopsis.com/design/color-combinations-palettes-schemes/ */
@@ -918,7 +919,7 @@ define([	// properly require.config'ed
                                                                                                 this.failureCallback.bind(this, spDiv),
                                                                                                 this.statusCallback.bind(this, spDiv),
                                                                                                 this.checkForCancelCallback.bind(this, spDiv));
-                            client.execGetCardinalityViolations(this.conn, tableCallback);
+                            client.execGetCardinalityViolations(this.conn, ReportTab.MAX_ROWS, tableCallback);
                         } else {
                             throw new Error("Report 'special.id' has unknown value value: " + id);
                         }
@@ -958,13 +959,15 @@ define([	// properly require.config'ed
                         if (! nodegroup) throw new Error("Report section['table'] is missing field 'nodegroup'");
 
                         var ngExecClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url);
-                        var tableCallback = MsiClientNodeGroupExec.buildFullJsonCallback(this.tableGetTableCallback.bind(this, ngDiv),
-                                                                                         this.failureCallback.bind(this, ngDiv),
-                                                                                         this.statusCallback.bind(this, ngDiv),
-                                                                                         this.checkForCancelCallback.bind(this, ngDiv),
-                                                                                         this.g.service.status.url,
-                                                                                         this.g.service.results.url);
-                        ngExecClient.execAsyncDispatchSelectById(nodegroup, this.conn, null, null, tableCallback, this.failureCallback.bind(this, ngDiv));
+                        var tableCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(
+																		ReportTab.MAX_ROWS,
+						                                                this.tableGetTableCallback.bind(this, ngDiv),
+						                                                this.failureCallback.bind(this, ngDiv),
+						                                                this.statusCallback.bind(this, ngDiv),
+						                                                this.checkForCancelCallback.bind(this, ngDiv),
+						                                                this.g.service.status.url,
+						                                                this.g.service.results.url);
+                        ngExecClient.execAsyncDispatchSelectById(nodegroup, this.conn, null, null, null, null, tableCallback, this.failureCallback.bind(this, ngDiv));
                     } catch (e) {
                         this.failureCallback(ngDiv, e);
                     }
@@ -980,13 +983,15 @@ define([	// properly require.config'ed
                         if (!nodegroup) throw new Error("Report section['count'] is missing field 'nodegroup'");
 
                         var ngExecClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url);
-                        var tableTestRowCountCallback = MsiClientNodeGroupExec.buildFullJsonCallback(this.tableTestRowCountGetTableCallback.bind(this, ngDiv, section, level),
-                                                                                         this.failureCallback.bind(this, ngDiv),
-                                                                                         this.statusCallback.bind(this, ngDiv),
-                                                                                         this.checkForCancelCallback.bind(this, ngDiv),
-                                                                                         this.g.service.status.url,
-                                                                                         this.g.service.results.url);
-                        ngExecClient.execAsyncDispatchSelectById(nodegroup, this.conn, null, null, tableTestRowCountCallback, this.failureCallback.bind(this, ngDiv));
+                        var tableTestRowCountCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(
+																						ReportTab.MAX_ROWS,
+																						this.tableTestRowCountGetTableCallback.bind(this, ngDiv, section, level),
+                                                                                        this.failureCallback.bind(this, ngDiv),
+                                                                                        this.statusCallback.bind(this, ngDiv),
+                                                                                        this.checkForCancelCallback.bind(this, ngDiv),
+                                                                                        this.g.service.status.url,
+                                                                                        this.g.service.results.url);
+                        ngExecClient.execAsyncDispatchSelectById(nodegroup, this.conn, null, null, null, null, tableTestRowCountCallback, this.failureCallback.bind(this, ngDiv));
 
                     } catch (e) {
                         this.failureCallback(div, e)
@@ -1009,7 +1014,7 @@ define([	// properly require.config'ed
                                                                                          this.checkForCancelCallback.bind(this, ngDiv),
                                                                                          this.g.service.status.url,
                                                                                          this.g.service.results.url);
-                        ngExecClient.execAsyncDispatchCountById(nodegroup, this.conn, null, null, countCallback, this.failureCallback.bind(this, ngDiv));
+                        ngExecClient.execAsyncDispatchCountById(nodegroup, this.conn, null, null, null, null, countCallback, this.failureCallback.bind(this, ngDiv));
 
                     } catch (e) {
                         this.failureCallback(div, e)
@@ -1031,7 +1036,7 @@ define([	// properly require.config'ed
                                                                                          this.checkForCancelCallback.bind(this, ngDiv),
                                                                                          this.g.service.status.url,
                                                                                          this.g.service.results.url);
-                        ngExecClient.execAsyncDispatchConstructById(nodegroup, this.conn, null, null, graphCallback, this.failureCallback.bind(this, ngDiv));
+                        ngExecClient.execAsyncDispatchConstructById(nodegroup, this.conn, ReportTab.MAX_ROWS, null, null, null, graphCallback, this.failureCallback.bind(this, ngDiv));
                     } catch (e) {
                         this.failureCallback(ngDiv, e);
                     }
@@ -1066,7 +1071,9 @@ define([	// properly require.config'ed
                 var plotter = plotSpecHandler.getPlotterByName(plotId);
 
                 var ngExecClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url);
-                var jsonCallback = MsiClientNodeGroupExec.buildFullJsonCallback(this.plotGetTableCallback.bind(this, div, plotter),
+                var jsonCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(
+																				 ReportTab.MAX_ROWS,
+																				 this.plotGetTableCallback.bind(this, div, plotter),
                                                                                  this.failureCallback.bind(this, div),
                                                                                  this.statusCallback.bind(this, div),
                                                                                  this.checkForCancelCallback.bind(this.div),
@@ -1075,10 +1082,13 @@ define([	// properly require.config'ed
                 ngExecClient.execAsyncDispatchSelectFromNodeGroup(ng, this.conn, null, null, jsonCallback, this.failureCallback.bind(this, div));
             },
 
-            plotGetTableCallback : function(div, plotter, tableRes) {
+            plotGetTableCallback : function(div, plotter, unusedCsvFilename, unusedFullRUL, tableRes) {
                 div.innerHTML="";
                 this.sectionThreadDone();
                 
+                if (tableRes.getRowCount() == ReportTab.MAX_ROWS) {
+					div.appendChild(this.getTruncateWarningElement());
+				}
                 // set up two divs: dynamic and static
                 var dynamicDiv = document.createElement("div");
                 div.appendChild(dynamicDiv);
@@ -1092,7 +1102,7 @@ define([	// properly require.config'ed
             },
 
             //
-            tableTestRowCountGetTableCallback : function(div, sectionJson, level, tableRes) {
+            tableTestRowCountGetTableCallback : function(div, sectionJson, level, csvFilename, fullURL, tableRes) {
                 var tableTestRowCountJson = sectionJson["table_test_row_count"];
                 div.innerHTML="";
                 var count = tableRes.tableGetRowCount();
@@ -1105,17 +1115,22 @@ define([	// properly require.config'ed
                 	( op == "!=" && count != success_rows) ||
                 	( op == "<"  && count < success_rows)  ||
                 	( op == "<=" && count <= success_rows) ||
-                	( op == ">"  && count > success_rows)  ||
+                	( op == ">"  && count > success_rows)  ||	
                 	( op == ">=" && count >= success_rows);
                 	
-                if (success) {
+                var atLeast = count >= ReportTab.MAX_ROWS ? "At least " : "";
+                
+                if (count >= ReportTab.MAX_ROWS && success_rows >= ReportTab.MAX_ROWS) {
+					var errorDiv = IIDXHelper.createElement("div", "Error: Browser-based reports only test up to " + ReportTab.MAX_ROWS.toString() + " rows.<br>Can not test count " + op + " " + success_rows , "report-error");
+                	div.appendChild(errorDiv);
+				} else if (success) {
                     // DUPLICATE CODE
                     div.appendChild(IIDXHelper.createElement("span", "\u2705 ", className="success-icon"));
-                    div.appendChild(IIDXHelper.createElement("span", count  + " found. Satisfies (count " + op + " " + success_rows + ")"));
-
+                    div.appendChild(IIDXHelper.createElement("span", atLeast + count  + " found. Satisfies (count " + op + " " + success_rows + ")"));
+ 
                 } else {
                     div.appendChild(IIDXHelper.createElement("span", "\u26d4 ", className="failure-icon"));
-                    div.appendChild(IIDXHelper.createElement("span", count  + " found. Does not satisfy (count " + op + " " + success_rows+ ")"));
+                    div.appendChild(IIDXHelper.createElement("span", atLeast + count  + " found. Does not satisfy (count " + op + " " + success_rows+ ")"));
 
 					if (count > 0) {
 	                    var subLevel = level + 1;
@@ -1126,7 +1141,7 @@ define([	// properly require.config'ed
 	                    var header = "Failed: " + (sectionJson["header"] || "<No Header Specified>");
 	                    let h = IIDXHelper.createElement("h" + level, header, "report-h" + subLevel);
 	                    subDiv.appendChild(h);
-	                    this.addTableResult(subDiv, tableRes);
+	                    this.addTableResult(subDiv, tableRes, csvFilename, fullURL);
 	                }
                 }
             },
@@ -1238,24 +1253,64 @@ define([	// properly require.config'ed
                 this.staticElements.push(staticElem);
             },
 
-            tableGetTableCallback : function(div, tableRes) {
+            tableGetTableCallback : function(div, csvFilename, fullURL, tableRes) {
                 div.innerHTML="";
-                this.addTableResult(div, tableRes);
+                this.addTableResult(div, tableRes, csvFilename, fullURL);
                 this.sectionThreadDone();
             },
 
+			// should be truncated (preferably by service layer to prevent memory overflow)
             // add tableRes to a div
-            addTableResult : function(div, tableRes) {
+            // If table is truncated we often, not always have link to full table:
+            //       optCsvFilename
+            //       optFullUrl
+            addTableResult : function(div, tableRes, optCsvFilename, optFullUrl) {
+				
+				var fullTableLinkSpan = undefined;
+				
+				// handle truncated table
+				if (tableRes.tableGetRowCount() >= ReportTab.MAX_ROWS) {
+					
+					div.appendChild(this.getTruncateWarningElement());
+					if (optFullUrl) {
+						// create link to full table
+						fullTableLinkSpan =  document.createElement("center");
+						fullTableLinkSpan.innerHTML = " Full csv: <a href='" + optFullUrl + "' download>"+ optCsvFilename + "</a>"
+					}
+				}
+   
+				// add dynamic table to div
                 var tableElem = tableRes.putTableResultsDatagridInDiv(div, undefined, []);
+                if (fullTableLinkSpan) {
+					// if truncated: only dynamic gets the link to full results
+                	tableElem.parentElement.prepend(fullTableLinkSpan);
+                }
                 this.fixDynamicDatagrid(div, tableElem);
 
+				// add static table to div
                 var staticTable = tableRes.tableGetElem();
                 this.fixStaticTable(staticTable);
-
+				div.appendChild(staticTable);
+				
+				// hash the two tables for later manipulation
+				// and set display "none" for static
                 this.saveDynamicStaticPair(tableElem.parentElement, staticTable);
-                div.appendChild(staticTable);
+                
             },
-
+            
+            // build a centered warning label
+			getTruncateWarningElement : function() {
+				var span = document.createElement("span");
+				span.classList.add("label");
+				span.classList.add("label-warning");
+				span.innerHTML = "Showing first " + ReportTab.MAX_ROWS.toString() + " rows of data.";
+				// append message where it shows up on dynamic and static
+				var center = document.createElement("center");
+				center.appendChild(span);
+				
+				return center;
+			},
+			
             // here : buildDatagridInDiv needs to call this instead
             addTable : function(div, headerJson, rows, optSortCol, optSortDesc) {
                 // add the "regular" dynamic table
@@ -1299,10 +1354,9 @@ define([	// properly require.config'ed
                     descDiv.appendChild(IIDXHelper.createElement("span", "Cardinality violations were found."));
                     descDiv.appendChild(document.createElement("br"));
 
-                    if (tableRes.getRowCount() == 5000) {
-                        descDiv.appendChild(IIDXHelper.createElement("span", "\u26d4 ", className="failure-icon"));
-                        descDiv.appendChild(IIDXHelper.createElement("span", "Only the first 5000 violations are shown."));
-                        descDiv.appendChild(document.createElement("br"));
+                    if (tableRes.getRowCount() == ReportTab.MAX_ROWS) {
+						// truncate the cardinality table if needed
+                        IIDXHelper.truncateTableRows(tableRes.getTable(), ReportTab.MAX_ROWS);
                     }
 
                     // add a table description
@@ -1333,6 +1387,9 @@ define([	// properly require.config'ed
                 }
                 div.innerHTML="";  // clear the spinner
 
+				if (res.getGraphResultsJsonArr(false, false, false).length >= ReportTab.MAX_ROWS) {
+					div.appendChild(this.getTruncateWarningElement());
+				}
                 // set up two divs: dynamic and static
                 var dynamicDiv = document.createElement("div");
                 div.appendChild(dynamicDiv);
@@ -1409,9 +1466,6 @@ define([	// properly require.config'ed
 
             // make tweaks needed for static tables
             fixStaticTable : function(tableElem) {
-                var STATIC_TABLE_TRUNCATE_ROWS = 500;
-
-                IIDXHelper.truncateTableRows(tableElem, STATIC_TABLE_TRUNCATE_ROWS)
                 tableElem.classList.add("table");
                 tableElem.classList.add("report-table");
             },

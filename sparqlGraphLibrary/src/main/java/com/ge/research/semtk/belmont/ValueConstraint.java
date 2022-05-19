@@ -218,33 +218,15 @@ public class ValueConstraint {
 				oper.equals("<=")) ) {
 			throw new Exception("Unknown operator for constraint: " + oper);
 		}
-		
-		HashSet<XSDSupportedType> valTypes = item.getValueTypes();
-		
-		String v = BelmontUtil.sparqlSafe(pred);
-		
+				
 		// return first thing that works
-		for (XSDSupportedType t : valTypes) {
-			if (t.numericOperationAvailable() || t.booleanOperationAvailable()) {
-				// numbers & booleans: plain
-				return String.format("FILTER(%s %s %s)", item.getSparqlID(), oper, v);
-			} else if (t.dateOperationAvailable()) {
-				// date
-				return String.format("FILTER(%s %s '%s'%s)", item.getSparqlID(), oper, v, t.getXsdSparqlTrailer());
-			} else if (t.regexIsAvailable()) {
-				// string
-				return String.format("FILTER(%s %s \"%s\"%s)", item.getSparqlID(), oper, v, t.getXsdSparqlTrailer());
-			} else if (t.isURI()) {
-				// URI
-				return String.format("FILTER(%s %s <%s>)", item.getSparqlID(), oper, v);
-			} 
+		for (XSDSupportedType t : item.getValueTypes()) {
+			String v = t.buildRDF11ValueString(pred);
+			return String.format("FILTER(%s %s %s)", item.getSparqlID(), oper, v);
+			
 		}
-		
-		// leftovers: first one: hard trailer
-		for (XSDSupportedType t : valTypes) {
-			ret = String.format("FILTER(%s %s %s%s)", item.getSparqlID(), oper, v, t.getXsdSparqlTrailer());
-		}
-		return ret;
+		throw new Exception("Internal error: item has no valueType: " + item.getBindingOrSparqlID());
+
 	}
 	
 	public static String buildFilterConstraintWithVariable(Returnable item, String oper, String variable)  throws Exception {
@@ -325,7 +307,6 @@ public class ValueConstraint {
 		retval.append("VALUES " + sparqlId + " { ");
 		// go through each passed value and add them.
 		for(String v : valList){
-			v = BelmontUtil.sparqlSafe(v);
 			for (XSDSupportedType valType : valTypes) {
 				try {
 					valType.validate(v);
@@ -399,7 +380,6 @@ public class ValueConstraint {
 		ArrayList<String> list = new ArrayList<String>();
 		// go through each passed value and add them.
 		for(String v : valList){
-			v = BelmontUtil.sparqlSafe(v);
 			for (XSDSupportedType valType : valTypes) {
 				try {
 					valType.validate(v);
@@ -478,9 +458,7 @@ public class ValueConstraint {
 				
 		ArrayList<String> list = new ArrayList<String>();
 		// go through each passed value and add them.
-		for(String v : valList){
-			v = BelmontUtil.sparqlSafe(v);
-		
+		for(String v : valList){		
 			for (XSDSupportedType valType : valTypes) {
 				try {
 					valType.validate(v);
@@ -490,7 +468,6 @@ public class ValueConstraint {
 					// try next one
 				}
 			}
-			
 		}
 		
 		return "FILTER (" + sparqlId + " NOT IN ( " + String.join(", ", list) + ")) ";
@@ -644,4 +621,6 @@ public class ValueConstraint {
 		throw new Exception("requested type (" + XSDSupportedType.buildTypeListString(valTypes) + ") for the sparqlId (" + sparqlId + ") does not support range operation constraints");
 		
 	}
+	
+	
 }

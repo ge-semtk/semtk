@@ -22,27 +22,27 @@ import javax.validation.constraints.NotNull;
 
 import com.ge.research.semtk.utility.LocalLogger;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 /* contains no template */
 
 public abstract class FromStringsRequestBody {
 
 	@NotNull
-	@ApiModelProperty(
-			value = "data",
+	@Schema(
+			name = "data",
 			required = true,
 			example = "csv,file\n1,2\n")
 	public String data;
 
-	@ApiModelProperty(
-			value = "trackFlag",
+	@Schema(
+			name = "trackFlag",
 			required = false,
 			example = "true")
 	public Boolean trackFlag = false;
 
-	@ApiModelProperty(
-			value = "overrideBaseURI",
+	@Schema(
+			name = "overrideBaseURI",
 			required = false,
 			example = "$TRACK_KEY  or  http://johns/data")
 	public String overrideBaseURI = null;

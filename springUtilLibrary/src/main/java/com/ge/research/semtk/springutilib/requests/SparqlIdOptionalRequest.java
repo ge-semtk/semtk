@@ -20,14 +20,14 @@ package com.ge.research.semtk.springutilib.requests;
 import javax.validation.constraints.Pattern;
 import javax.validation.constraints.Size;
 
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class SparqlIdOptionalRequest  {
 
 	@Pattern(regexp="^[a-zA-Z][a-zA-Z0-9_-]+$", message="sparqlId is ill-formed")
 	@Size(min=4, max=64, message="sparqlId must be 4-64 characters in length")
-	@ApiModelProperty(
-	   value = "sparqlId",
+	@Schema(
+	   name = "sparqlId",
 	   required = true,
 	   example = "Var_Name")
 	private String sparqlId;

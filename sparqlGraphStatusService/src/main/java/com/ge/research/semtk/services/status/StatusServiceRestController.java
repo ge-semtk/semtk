@@ -48,7 +48,8 @@ import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+
 
 
 /**
@@ -206,9 +207,9 @@ public class StatusServiceRestController {
 	    }
 	}
 	
-	@ApiOperation(
-			value="Get table of information about my (header's userName) jobs",
-			notes="Returns table of: creationTime, id, name, percentcomplete, statusMessage, userName, status"
+	@Operation(
+			summary="Get table of information about my (header's userName) jobs",
+			description="Returns table of: creationTime, id, name, percentcomplete, statusMessage, userName, status"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getJobsInfo", method=RequestMethod.POST)
@@ -238,9 +239,9 @@ public class StatusServiceRestController {
 	    }
 	}
 	
-	@ApiOperation(
-			value="Get seiJson SparqlEndpointInterface",
-			notes="This allows SemTK services to run efficient JobTrackers instead of inefficient internal calls to this service"
+	@Operation(
+			summary="Get seiJson SparqlEndpointInterface",
+			description="This allows SemTK services to run efficient JobTrackers instead of inefficient internal calls to this service"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getJobTrackerSei", method=RequestMethod.POST)
@@ -388,8 +389,8 @@ public class StatusServiceRestController {
 	 * @param requestBody
 	 * @return
 	 */
-	@ApiOperation(
-			value=	"Increment percent complete within specified maximum"
+	@Operation(
+			summary=	"Increment percent complete within specified maximum"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/incrementPercentComplete", method= RequestMethod.POST)

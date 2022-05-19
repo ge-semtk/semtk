@@ -1,0 +1,132 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions#"
+    xmlns:sadllistmodel="http://sadl.org/sadllistmodel#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns="http://list#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xml:base="http://list">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="http://sadl.org/sadllistmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'ListTest.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:ID="Pet"/>
+  <owl:Class rdf:ID="ListTest">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass rdf:resource="#Pet"/>
+        <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#long"
+        >1</owl:qualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="favorite"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass rdf:resource="http://sadl.org/sadlimplicitmodel#UnittedQuantity"/>
+        <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#long"
+        >1</owl:qualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="quantity"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:ID="Dog">
+    <rdfs:subClassOf rdf:resource="#Pet"/>
+  </owl:Class>
+  <owl:Class rdf:ID="ListTestDifferent">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:allValuesFrom rdf:resource="#Dog"/>
+        <owl:onProperty rdf:resource="#favorate"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="#ListTest"/>
+  </owl:Class>
+  <owl:Class rdf:nodeID="A0">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >3</owl:hasValue>
+        <owl:onProperty rdf:resource="http://sadl.org/sadllistmodel#maxLengthRestriction"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:hasValue rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >0</owl:hasValue>
+        <owl:onProperty rdf:resource="http://sadl.org/sadllistmodel#minLengthRestriction"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:allValuesFrom rdf:nodeID="A0"/>
+        <owl:onProperty rdf:resource="http://sadl.org/sadllistmodel#rest"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:allValuesFrom rdf:resource="#Pet"/>
+        <owl:onProperty rdf:resource="http://sadl.org/sadllistmodel#first"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://sadl.org/sadllistmodel#List"/>
+  </owl:Class>
+  <owl:ObjectProperty rdf:ID="pets">
+    <rdfs:domain rdf:resource="#ListTest"/>
+    <rdfs:range rdf:nodeID="A0"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="#favorite">
+    <rdfs:domain rdf:resource="#ListTest"/>
+    <rdfs:range rdf:resource="#Pet"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="#quantity">
+    <rdfs:domain rdf:resource="#ListTest"/>
+    <rdfs:range rdf:resource="http://sadl.org/sadlimplicitmodel#UnittedQuantity"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:ID="name">
+    <rdfs:domain rdf:resource="#ListTest"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  </owl:DatatypeProperty>
+  <ListTest rdf:ID="test2">
+    <pets rdf:parseType="Resource">
+      <sadllistmodel:rest rdf:parseType="Resource">
+        <sadllistmodel:first>
+          <Pet rdf:ID="Molly"/>
+        </sadllistmodel:first>
+        <rdf:type rdf:nodeID="A0"/>
+      </sadllistmodel:rest>
+      <sadllistmodel:first>
+        <Pet rdf:ID="Whiskers"/>
+      </sadllistmodel:first>
+      <rdf:type rdf:nodeID="A0"/>
+    </pets>
+    <name>generic</name>
+  </ListTest>
+  <ListTest rdf:ID="test">
+    <pets>
+      <rdf:Description rdf:ID="PetList">
+        <sadllistmodel:rest rdf:parseType="Resource">
+          <sadllistmodel:first>
+            <Pet rdf:ID="Fluffy"/>
+          </sadllistmodel:first>
+          <rdf:type rdf:nodeID="A0"/>
+        </sadllistmodel:rest>
+        <sadllistmodel:first>
+          <Pet rdf:ID="Fido"/>
+        </sadllistmodel:first>
+        <rdf:type rdf:nodeID="A0"/>
+      </rdf:Description>
+    </pets>
+    <favorite rdf:resource="#Fluffy"/>
+    <name>generic</name>
+  </ListTest>
+</rdf:RDF>

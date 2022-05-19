@@ -1,0 +1,6 @@
+batteryDesc,batteryId
+has a comma,"id with, comma"
+has double quotes,"id with ""double quotes"""
+has single quotes,id with 'single quotes'
+hello World ascii,Hello World
+hello World unicode,Hello World

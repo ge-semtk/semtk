@@ -1,23 +1,14 @@
 package com.ge.research.semtk.services.nodeGroupExecution.requests;
 
-import static org.hamcrest.CoreMatchers.anything;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Pattern;
 
-import org.json.simple.JSONArray;
-
-import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
-
-import io.swagger.annotations.ApiModelProperty;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 public class InstanceDataPredicatesRequestBody extends SparqlConnectionLimitOffsetCountRequestBody {
 	
-	@ApiModelProperty(
-			value = "list of domainURI, predicateURI pairs",
+	@Schema(
+			description = "list of domainURI, predicateURI pairs",
 			required = true,
 			example = "[[\"http:/namespace#class1\", \"http:/namespace#predicate\"]]")
 	private ArrayList<InstanceDataPredicate> predicateList;

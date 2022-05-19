@@ -48,7 +48,8 @@ public enum XSDSupportedType {
 	GMONTHDAY("gMonthDay", "28"), 
 	NODE_URI("node_uri", "http://uri#uri"),
 	URI("uri", "http://uri#uri"),
-	ANYURI("anyURI", "http://uri#uri");
+	ANYURI("anyURI", "http://uri#uri"),
+	CLASS("class", "http://uri#myclass");
 	
 	// note: "node_uri" was added for compatibility reasons to the way nodes in a nodegroup spec
 	// when their URI is able to be constrained at runtime.
@@ -95,13 +96,8 @@ public enum XSDSupportedType {
 			return val.toLowerCase();
 			
 		} else {
-			// default is a plain quoted value
-			String escaped = val.replaceAll("\\\\", "\\\\\\\\");
-			if (escaped.contains("\"") || escaped.contains("\n")) {
-				return "'''" + escaped + "'''";
-			} else {
-				return "\"" + escaped + "\"";
-			}
+			// default to string
+			return "\"" + escapeQuotesAndNewlines(val) + "\"";
 		}
 				
 	}
@@ -137,7 +133,7 @@ public enum XSDSupportedType {
 		}
 		
 		// default is a plain quoted value
-		ret.add("\"" + val + "\"");
+		ret.add("\"" + escapeQuotesAndNewlines(val) + "\"");
 		return ret;
 				
 	}
@@ -174,7 +170,7 @@ public enum XSDSupportedType {
 			return val.toLowerCase();
 			
 		} else {
-			return "\"" + val + "\"" + this.getXsdSparqlTrailer(typePrefixOverride); 
+			return "\"" +  escapeQuotesAndNewlines(val) + "\"" + this.getXsdSparqlTrailer(typePrefixOverride); 
 		}
 	}
 	
@@ -269,7 +265,8 @@ public enum XSDSupportedType {
 	public boolean isURI() {
 		return (this == URI || 
 				this == NODE_URI ||
-				this == ANYURI);
+				this == ANYURI ||
+				this == CLASS);
 	}
 	
 	public boolean rangeOperationsAvailable() {
@@ -382,7 +379,9 @@ public enum XSDSupportedType {
 				throw new Exception(proposedValue + " can't be converted to" + this.name() + ". Accepted format is HH:mm:ss." );
 			}
 		case NODE_URI:
+		case URI:
 		case ANYURI:
+		case CLASS:
 			if (SparqlToXUtils.isLegalURI(proposedValue)) {
 				ret = proposedValue;
 				return ret;
@@ -460,6 +459,37 @@ public enum XSDSupportedType {
 				return true;
 		}
 		return false;
+	}
+	
+	/**
+	 * W3C Recommendation
+	 * -------------------
+	 * valid sparql string is enclosed in " ",  ANY OF:
+	 * 		any character EXCEPT these 4: " ' \n \r 
+	 *      a unicode character represented with a backslash-u followed by four hex digits, or a backslash-U followed by eight hex digits; or
+     *      an escape character, which is a \ followed by any of t, b, n, r, f, ", ', and \, which represent various characters.
+	 */
+	
+	/**
+	 * Make a string safe for use as part of a SPARQL statement
+	 * 
+	 * Known weaknesses:
+	 * 		- changes illegal strings to legal ones instead of throwing an exception, but requiring escaping quotes etc would be a great hassle
+	 *      - doesn't handle inline non-ascii.  could it easily?  Probably better to create an ingest transform
+	 *      - doesn't check that the \u0000 and \U00000000 are actually legal
+	 * 
+	 * @param str
+	 * @return
+	 */
+	private static String escapeQuotesAndNewlines(String str) {
+		return str                        // escape the \ before anything except: uU
+				.replaceAll("\\\\([^uU])", "\\\\\\\\$1")
+				
+				.replace("\"", "\\\"")    // escape quotes
+				.replace("\'", "\\\'")
+				.replace("\n", "\\n")     // escape \n and \r
+				.replace("\r", "\\r")
+				;
 	}
 }
 
