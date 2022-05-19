@@ -51,7 +51,7 @@
     var gQuerySource = "SERVICES";
 
     var RESULTS_MAX_ROWS = 5000; // 5000 sample rows
-    var ALLOW_CIRCULAR_NODEGROUPS = false;
+    var ALLOW_CIRCULAR_NODEGROUPS = true;
 
     // READY FUNCTION
     $('document').ready(function(){
