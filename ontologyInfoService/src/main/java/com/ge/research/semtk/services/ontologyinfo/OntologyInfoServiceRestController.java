@@ -52,6 +52,7 @@ import com.ge.research.semtk.ontologyTools.PredicateStatsCache;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.services.ontologyinfo.requests.CardinalityReportRequest;
 import com.ge.research.semtk.services.ontologyinfo.requests.OntologyInfoClassRequestBody;
 import com.ge.research.semtk.services.ontologyinfo.requests.OntologyInfoRequestBody;
 import com.ge.research.semtk.services.ontologyinfo.requests.SparqlConnectionRequestBody;
@@ -451,7 +452,7 @@ public class OntologyInfoServiceRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getCardinalityViolations", method=RequestMethod.POST)
-	public JSONObject getCardinalityViolations(@RequestBody SparqlConnectionRequest requestBody, @RequestHeader HttpHeaders headers){
+	public JSONObject getCardinalityViolations(@RequestBody CardinalityReportRequest requestBody, @RequestHeader HttpHeaders headers){
 		HeadersManager.setHeaders(headers);
 		final String ENDPOINT_NAME = "getCardinalityViolations";
 		SimpleResultSet retval = new SimpleResultSet(false);
@@ -471,7 +472,7 @@ public class OntologyInfoServiceRestController {
 					
 					OntologyInfo oInfo = oInfoCache.get(conn);
 					RestrictionChecker checker = new RestrictionChecker(conn, oInfo, tracker, jobId, 0, 100);
-					Table violationTab = checker.checkCardinality();
+					Table violationTab = checker.checkCardinality(requestBody.getMaxRows());
 					rclient.execStoreTableResults(jobId, violationTab);
 					tracker.setJobSuccess(jobId);
 					

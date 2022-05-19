@@ -73,8 +73,11 @@ public class RestrictionChecker {
 		
 		this.oInfo = oInfo;
 	}
-	
 	public Table checkCardinality() throws Exception {
+		return this.checkCardinality(0);
+	}
+
+	public Table checkCardinality(int maxRows) throws Exception {
 		int percent = this.startPercent;
 		
 		// get restrictions
@@ -118,9 +121,14 @@ public class RestrictionChecker {
 			Table failureTab = this.dataConn.getDefaultQueryInterface().executeToTable(sparql);
 			for (ArrayList<String> row : failureTab.getRows()) {
 				retTable.addRow(new String[] {className, propName, restriction, Integer.toString(limit), row.get(0), row.get(1)});
+				
+				// return if hit maxRows
+				if (maxRows > 0 && retTable.getNumRows() >= maxRows) {
+					return retTable;
+				}
 			}
-			
 		}
+		// return if finished without hitting maxRows
 		return retTable;
 	}
 	

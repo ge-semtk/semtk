@@ -57,11 +57,8 @@ define([	// properly require.config'ed   bootstrap-modal
          *          tableResults - MsiResultSet where isTableResults() == true
          *
          *      failureCallback(html)
-         *
          *      percentCallback(progressPercentInteger)
-         *
          *      statusUrl - url of status service
-         *
          *      resultUrl - url of results service
          */
 		MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback = function(maxRows, csvUrlSampleJsonCallback, failureCallback, percentCallback, checkForCancelCallback, statusUrl, resultUrl) {
@@ -104,6 +101,8 @@ define([	// properly require.config'ed   bootstrap-modal
          * EXCEPT:
          *    no max rows or csv URL
          *    tableResCallback(tableRes)
+         * THIS ONE MAY CRASH YOUR BROWSER WITH MEMORY OVERFLOW
+         *    make sure your query has a LIMIT, or else use buildCsvUrlSampleJsonCallback()
          */
         MsiClientNodeGroupExec.buildFullJsonCallback = function(tableResCallback, failureCallback, percentCallback, checkForCancelCallback, statusUrl, resultUrl) {
 
