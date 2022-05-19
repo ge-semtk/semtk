@@ -833,4 +833,46 @@ public class QueryGenTest_IT {
 		}
 		return ret;
 	}
+
+	public static final String NON_TREE_GRAPHS_DIR = "non-tree-graphs";
+
+	@Test
+	public void testNodegroupWithDAG() throws Exception {
+		String nodeGroupJSONPath = String.format("%s/nodegroup-dag.json", NON_TREE_GRAPHS_DIR);
+		TestGraph.clearGraph();
+
+		TestGraph.uploadOwlContents(
+				Utility.getResourceAsString(
+						QueryGenTest_IT.class, 
+						String.format("%s/non-tree-graphs.owl", NON_TREE_GRAPHS_DIR)
+				)
+		);
+
+		NodeGroup ng = TestGraph.getNodeGroupFromResource(this, nodeGroupJSONPath);
+		Table tab = TestGraph.execTableSelect(ng.generateSparqlSelect());
+
+		// We expect exactly one result
+		assertEquals(1, tab.getNumRows());
+	}
+
+	@Test
+	public void testNodegroupWithCycle() throws Exception {
+		String nodeGroupJSONPath = String.format("%s/nodegroup-cycle.json", NON_TREE_GRAPHS_DIR);
+		TestGraph.clearGraph();
+
+		TestGraph.uploadOwlContents(
+				Utility.getResourceAsString(
+						QueryGenTest_IT.class, 
+						String.format("%s/non-tree-graphs.owl", NON_TREE_GRAPHS_DIR)
+				)
+		);
+
+		NodeGroup ng = TestGraph.getNodeGroupFromResource(this, nodeGroupJSONPath);
+
+		Table tab = TestGraph.execTableSelect(ng.generateSparqlSelect());
+
+		// We expect exactly two results
+		assertEquals(2, tab.getNumRows());
+	}
+
 }
