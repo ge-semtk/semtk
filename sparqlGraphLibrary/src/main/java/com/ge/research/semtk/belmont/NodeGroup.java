@@ -4290,12 +4290,12 @@ public class NodeGroup {
                         this.isReverseUnion(source, ni, target))
                    	{
 						Node targetLeader = cliques.find(target);
-						edges.get(sourceLeader).add(targetLeader);
+						edges.get(targetLeader).add(sourceLeader);
 					} else if (NodeItem.OPTIONAL_FALSE != ni.getOptionalMinus(target) ||
 						null != getUnionKey(source, ni, target))
 					{
 						Node targetLeader = cliques.find(target);
-						edges.get(targetLeader).add(sourceLeader);
+						edges.get(sourceLeader).add(targetLeader);
 					}
 				}
 			}
@@ -4316,7 +4316,7 @@ public class NodeGroup {
 	private static <T> boolean graphIsForest(Map<T, List<T>> graph) {
 		
 		// Determine all the nodes with no incoming edges. These are the roots of the forest
-		Set<T> headNodes = graph.keySet();
+		Set<T> headNodes = new HashSet<>(graph.keySet());
 		for (List<T> targets : graph.values()) {
 			headNodes.removeAll(targets);
 		}
@@ -4334,6 +4334,20 @@ public class NodeGroup {
 		return seen.size() == graph.size(); // check all nodes visited
 	}
 	
+	private static <T> Map<T, List<T>> invertGraph(Map<T, List<T>> graph) {
+		Map<T, List<T>> result = new HashMap<>();
+		for (Map.Entry<T, List<T>> entry : graph.entrySet()) {
+			result.put(entry.getKey(), new ArrayList<T>());
+		}
+		for (Map.Entry<T, List<T>> entry : graph.entrySet()) {
+			T source = entry.getKey();
+			for (T target : entry.getValue()) {
+				result.get(target).add(source);
+			}
+		}
+		return result;
+	}
+	
 	private Node getNextHeadNode(ArrayList<Node> skipNodes) throws Exception  {
 		if (skipNodes.size() == this.nodes.size()) {
 			return null;
@@ -4341,6 +4355,7 @@ public class NodeGroup {
 
 		UnionFind<Node> cliques = this.calcSimpleCliques();
 		Map<Node, List<Node>> graph = this.calcCliqueGraph(cliques);
+		Map<Node, List<Node>> invertedGraph = NodeGroup.invertGraph(graph);
 		HashMap<String,Integer> linkHash = this.calcIncomingLinkHash(skipNodes);
 		
 		if (!graphIsForest(graph)) {
@@ -4351,9 +4366,10 @@ public class NodeGroup {
 		int minLinks = 99;
 		
 		// both hashes have same keys: loop through valid snode SparqlID's
-		for (Map.Entry<Node, List<Node>> entry : graph.entrySet()) {
+		for (Map.Entry<Node, List<Node>> entry : invertedGraph.entrySet()) {
 			
-			if (!skipNodes.contains(entry.getKey()) && skipNodes.containsAll(entry.getValue())) {
+			if (!skipNodes.contains(entry.getKey()) &&
+				 skipNodes.containsAll(entry.getValue())) {
 				String id = entry.getKey().getSparqlID();
 
 				// choose node with lowest number of incoming links
