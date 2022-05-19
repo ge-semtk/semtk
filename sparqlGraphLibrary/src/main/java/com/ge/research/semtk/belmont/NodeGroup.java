@@ -4269,14 +4269,11 @@ public class NodeGroup {
 	
 	private Map<Node, List<Node>> calcCliqueGraph(UnionFind<Node> cliques) throws Exception
 	{
-		HashMap<Node, List<Node>> edges = new HashMap<>();
-
+		Map<Node, List<Node>> edges = new HashMap<>();
 		for (Node node : nodes) {
 			Node leader = cliques.find(node);
-			List<Node> sources = edges.get(leader);
-			if (null == sources) {
-				sources = new ArrayList<>();
-				edges.put(leader, sources);
+			if (leader == node) {
+				edges.put(leader, new ArrayList<>());
 			}
 		}
 		
