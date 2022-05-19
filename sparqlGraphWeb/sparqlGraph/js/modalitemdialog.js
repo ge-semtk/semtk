@@ -341,7 +341,7 @@ define([	// properly require.config'ed
 											});
 
 					// insert "..." if we hit the limit
-					if (res.getRowCount() == this.limit) {
+					if (res.getRowCount() >= this.limit) {
 						this.setStatusAlert("Too many values.  A random subset of " + this.limit + " are shown.");
 						element[this.limit] = {name: "", val: ""};
 						element[this.limit].name = "...";
