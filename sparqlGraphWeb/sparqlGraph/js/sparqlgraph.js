@@ -1113,6 +1113,7 @@
             } else {
                 var checkForCancel = function() { return false; };
                 // Run nodegroup via Node Group Exec Svc
+                // TODO: runNodegroup needs to have  LIMIT to avoid browser memory issues
                 var jsonCallback = MsiClientNodeGroupExec.buildFullJsonCallback(msiOrQsResultCallback,
                                                                                  failureCallback,
                                                                                  statusCallback,
@@ -1712,6 +1713,7 @@
                     client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
                     break;
                 case SemanticNodeGroup.QT_CONSTRUCT:
+                    // TODO need a limit so browser memory problems don't happen
                     client.execAsyncDispatchConstructFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jsonLdCallback, asyncFailureCallback);
                     break;
     			case SemanticNodeGroup.QT_DELETE:
