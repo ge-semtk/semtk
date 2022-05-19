@@ -22,14 +22,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 public class StatusRequestBodyIncrement extends StatusRequestBody {
 	@Schema(
-			name = "increment",
 			required = true,
 			example = "1"
 	)	
 	public int increment;
 	
 	@Schema(
-			name = "increment",
 			required = false,
 			example = "10"
 	)	

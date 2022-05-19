@@ -33,7 +33,6 @@ public class FileStagingRequestBody extends JobIdRequest{
 	
 	@Pattern(regexp="###", message="query is missing the ### delimiter")
 	@Schema(
-			name = "\"query\"",
 			required = true,
 			example = "test1-98231834.img###test1.img")   // The first element is the key (omit s3://bucketname).  The second element is the file name to use for the staged file.
     public String query;  	// a URL and filename

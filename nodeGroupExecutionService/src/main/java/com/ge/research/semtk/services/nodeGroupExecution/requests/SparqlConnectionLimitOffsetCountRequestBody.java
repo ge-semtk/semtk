@@ -19,7 +19,6 @@ public class SparqlConnectionLimitOffsetCountRequestBody extends SparqlConnectio
 	private int offsetOverride = -1;
 	
 	@Schema(
-			name = "On",
 			required = false,
 			example = "false")
 	private boolean countOnly = false;
