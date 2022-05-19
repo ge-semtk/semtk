@@ -137,10 +137,14 @@ define([	// properly require.config'ed   bootstrap-modal
 
 
         /*
-         * just like buildCsvUrlSampleJsonCallback
+         * just like buildCsvUrlSampleJsonCallback except there is no JsonLD version of buildCsvUrlSampleJsonCallback(),
+         *   so you may need to use this.  Be careful that the query has a LIMIT so the browser doesn't have memory issues.
          * EXCEPT:
-         *    no max rows or csv URL
+         *    no max rows or csv URL - The results service can't safely split up json the way it does tables
          *    jsonLdCallback(jsonLdRes)
+         *
+         *    THIS ONE MAY CRASH YOUR BROWSER WITH MEMORY OVERFLOW
+         *     make sure your query has a LIMIT
          */
         MsiClientNodeGroupExec.buildJsonLdCallback = function(jsonLdCallback, failureCallback, percentCallback, checkForCancelCallback, statusUrl, resultUrl) {
 
@@ -328,19 +332,19 @@ define([	// properly require.config'ed   bootstrap-modal
                                         sparql, conn, jobIdCallback, failureCallback, optResultType);
             },
 
-            execAsyncDispatchSelectById : function(nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
+            execAsyncDispatchSelectById : function(nodegroupId, conn, limitOverride, offsetOverride, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
                 this.runAsyncNodegroupId("dispatchSelectById",
-                                         nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
+                                         nodegroupId, conn, limitOverride, offsetOverride, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
             },
 
-            execAsyncDispatchCountById : function(nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
+            execAsyncDispatchCountById : function(nodegroupId, conn, limitOverride, offsetOverride, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
                 this.runAsyncNodegroupId("dispatchCountById",
-                                         nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
+                                         nodegroupId, conn, limitOverride, offsetOverride, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
             },
 
-            execAsyncDispatchConstructById : function(nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
+            execAsyncDispatchConstructById : function(nodegroupId, conn, limitOverride, offsetOverride, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
                 this.runAsyncNodegroupId("dispatchConstructById",
-                                         nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
+                                         nodegroupId, conn, limitOverride, offsetOverride, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
             },
 
             execAsyncDispatchClearGraph : function(sei, jobIdCallback, failureCallback) {
@@ -420,16 +424,22 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.runAsync(endpoint, data, jobIdCallback, failureCallback);
 			},
 
-            runAsyncNodegroupId : function (endpoint, nodegroupId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
+            runAsyncNodegroupId : function (endpoint, nodegroupId, conn, limitOverride, offsetOverride, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
 
-				var data = JSON.stringify ({
+				var rawData = {
                     "nodeGroupId": nodegroupId,
                     "sparqlConnection":      JSON.stringify(conn.toJson()),
                     "runtimeConstraints":    (typeof runtimeConstraints == "undefined" || runtimeConstraints == null) ? "" : JSON.stringify(runtimeConstraints.toJson()),
                     "externalDataConnectionConstraints": (typeof edcConstraints == "undefined" || edcConstraints == null) ? "" : JSON.stringify(edcConstraints.toJson())
-                });
+                };
+                if (limitOverride && limitOverride > -1) {
+					rawData["limitOverride"] = limitOverride;
+				};
+				if (offsetOverride && offsetOverride > -1) {
+					rawData["offsetOverride"] = offsetOverride;
+				};
 
-				this.runAsync(endpoint, data, jobIdCallback, failureCallback);
+				this.runAsync(endpoint, JSON.stringify(rawData), jobIdCallback, failureCallback);
 			},
 
             runAsyncNodegroupSparqlId : function (endpoint, nodegroup, sparqlId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {

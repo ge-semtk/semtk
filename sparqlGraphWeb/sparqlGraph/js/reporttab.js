@@ -86,7 +86,7 @@ define([	// properly require.config'ed
 
         };
 
-		ReportTab.MAX_ROWS = 5;
+		ReportTab.MAX_ROWS = 1;
         ReportTab.CSS = `
         /* colors    */
         /* https://digitalsynopsis.com/design/color-combinations-palettes-schemes/ */
@@ -967,7 +967,7 @@ define([	// properly require.config'ed
 						                                                this.checkForCancelCallback.bind(this, ngDiv),
 						                                                this.g.service.status.url,
 						                                                this.g.service.results.url);
-                        ngExecClient.execAsyncDispatchSelectById(nodegroup, this.conn, null, null, tableCallback, this.failureCallback.bind(this, ngDiv));
+                        ngExecClient.execAsyncDispatchSelectById(nodegroup, this.conn, null, null, null, null, tableCallback, this.failureCallback.bind(this, ngDiv));
                     } catch (e) {
                         this.failureCallback(ngDiv, e);
                     }
@@ -991,7 +991,7 @@ define([	// properly require.config'ed
                                                                                         this.checkForCancelCallback.bind(this, ngDiv),
                                                                                         this.g.service.status.url,
                                                                                         this.g.service.results.url);
-                        ngExecClient.execAsyncDispatchSelectById(nodegroup, this.conn, null, null, tableTestRowCountCallback, this.failureCallback.bind(this, ngDiv));
+                        ngExecClient.execAsyncDispatchSelectById(nodegroup, this.conn, null, null, null, null, tableTestRowCountCallback, this.failureCallback.bind(this, ngDiv));
 
                     } catch (e) {
                         this.failureCallback(div, e)
@@ -1014,7 +1014,7 @@ define([	// properly require.config'ed
                                                                                          this.checkForCancelCallback.bind(this, ngDiv),
                                                                                          this.g.service.status.url,
                                                                                          this.g.service.results.url);
-                        ngExecClient.execAsyncDispatchCountById(nodegroup, this.conn, null, null, countCallback, this.failureCallback.bind(this, ngDiv));
+                        ngExecClient.execAsyncDispatchCountById(nodegroup, this.conn, null, null, null, null, countCallback, this.failureCallback.bind(this, ngDiv));
 
                     } catch (e) {
                         this.failureCallback(div, e)
@@ -1036,7 +1036,7 @@ define([	// properly require.config'ed
                                                                                          this.checkForCancelCallback.bind(this, ngDiv),
                                                                                          this.g.service.status.url,
                                                                                          this.g.service.results.url);
-                        ngExecClient.execAsyncDispatchConstructById(nodegroup, this.conn, null, null, graphCallback, this.failureCallback.bind(this, ngDiv));
+                        ngExecClient.execAsyncDispatchConstructById(nodegroup, this.conn, ReportTab.MAX_ROWS, null, null, null, graphCallback, this.failureCallback.bind(this, ngDiv));
                     } catch (e) {
                         this.failureCallback(ngDiv, e);
                     }
@@ -1067,12 +1067,13 @@ define([	// properly require.config'ed
                 sgJson.parse(jsonStr);
                 var ng = new SemanticNodeGroup();
                 sgJson.getNodeGroup(ng);
-                ng.setLimit(ReportTab.MAX_ROWS);
                 var plotSpecHandler = sgJson.getPlotSpecsHandler();
                 var plotter = plotSpecHandler.getPlotterByName(plotId);
 
                 var ngExecClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url);
-                var jsonCallback = MsiClientNodeGroupExec.buildFullJsonCallback(this.plotGetTableCallback.bind(this, div, plotter),
+                var jsonCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(
+																				 ReportTab.MAX_ROWS,
+																				 this.plotGetTableCallback.bind(this, div, plotter),
                                                                                  this.failureCallback.bind(this, div),
                                                                                  this.statusCallback.bind(this, div),
                                                                                  this.checkForCancelCallback.bind(this.div),
@@ -1081,7 +1082,7 @@ define([	// properly require.config'ed
                 ngExecClient.execAsyncDispatchSelectFromNodeGroup(ng, this.conn, null, null, jsonCallback, this.failureCallback.bind(this, div));
             },
 
-            plotGetTableCallback : function(div, plotter, tableRes) {
+            plotGetTableCallback : function(div, plotter, unusedCsvFilename, unusedFullRUL, tableRes) {
                 div.innerHTML="";
                 this.sectionThreadDone();
                 
@@ -1386,6 +1387,9 @@ define([	// properly require.config'ed
                 }
                 div.innerHTML="";  // clear the spinner
 
+				if (res.getGraphResultsJsonArr(false, false, false).length >= ReportTab.MAX_ROWS) {
+					div.appendChild(this.getTruncateWarningElement());
+				}
                 // set up two divs: dynamic and static
                 var dynamicDiv = document.createElement("div");
                 div.appendChild(dynamicDiv);
