@@ -2438,8 +2438,11 @@
     };
 
     // set status to a message or "" to finish progress.
+    //
+    // optHighlightCanvas - mark the treeCanvasWrapper with bold red border
     var setStatus = function(msg) {
         var div = document.getElementById("status");
+        
     	div.innerHTML= "<font color='red'>" + msg + "</font><br>";
         if (!msg || msg.length == 0) {
             gCancelled = false;
@@ -2518,11 +2521,12 @@
     var buildQuerySuccess = function (sparql, optMsg) {
         document.getElementById('queryText').value = sparql;
         if (optMsg) {
-            setStatus(optMsg);
+            setStatus(optMsg, true);
         } else {
             setStatus("");
         }
-
+	    gRenderer.setError("");
+	    
         if (sparql.length > 0) {
             guiQueryNonEmpty();
         } else {
@@ -2533,9 +2537,10 @@
 
     var buildQueryFailure = function (msgHtml, sparqlMsgOrCallback) {
         if (typeof sparqlMsgOrCallback == "string") {
-            setStatus(sparqlMsgOrCallback.replace(/\n/g,' '));
+            	
+            gRenderer.setError(sparqlMsgOrCallback.replace(/\n/g,' '), true);
         } else {
-            setStatus("");
+            gRenderer.setError("");
             require(['sparqlgraph/js/modaliidx'],
     	         function (ModalIidx) {
 					ModalIidx.alert("Query Generation Failed", msgHtml, false, sparqlMsgOrCallback);
@@ -2772,6 +2777,7 @@
 	 	document.getElementById('SGQueryLimit').value = "";
 	 	document.getElementById('SGQueryNamespace').checked = true;
 
+		gRenderer.setError(null);
 	 	clearResults();
 	 	guiQueryEmpty();
 	};

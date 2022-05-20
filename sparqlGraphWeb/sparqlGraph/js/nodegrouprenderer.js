@@ -47,6 +47,7 @@ define([	// properly require.config'ed
 		//============ local object  ExploreTab =============
 		var NodegroupRenderer = function(parentdiv) {
             this.ctx = document.createElement("canvas").getContext("2d");
+			this.parentDiv = parentdiv;
 
             this.nodegroup = null;
             this.oInfo = null;
@@ -57,11 +58,23 @@ define([	// properly require.config'ed
             this.snodeRemoverCallback = null;
             this.linkBuilderCallback = null;
             this.linkEditorCallback = null;
-
+            
+			// create errorElem invisible take up no space
+			this.errorElem = document.createElement("center");
+			this.errorElem.style.display = "none";   
+			this.errorElem.style.position = "absolute";  
+			this.errorElem.style.marginTop = "5px";
+			this.errorElem.style.marginLeft = "5px";
+			this.errorElem.style.paddingLeft = "5px";
+			this.errorElem.style.paddingRight = "5px";
+			this.errorElem.style.color = NodegroupRenderer.COLOR_INVALID_FOREGROUND;
+			this.errorElem.style.backgroundColor = NodegroupRenderer.COLOR_INVALID_BACKGROUND;
+			parentdiv.appendChild(this.errorElem);
+			
             this.configdiv = VisJsHelper.createConfigDiv("ngrConfigDiv");
             this.canvasdiv = VisJsHelper.createCanvasDiv("NodegroupRenderer.canvasdiv_" + Math.floor(Math.random() * 10000).toString());
             parentdiv.appendChild(this.canvasdiv);
-
+			
             this.network = new vis.Network(this.canvasdiv, {}, NodegroupRenderer.getDefaultOptions(this.configdiv));
             this.network.on('click', this.click.bind(this));
 
@@ -181,6 +194,20 @@ define([	// properly require.config'ed
 
 		NodegroupRenderer.prototype = {
 
+			// If non-empty put error at the top of canvas and highlight the border
+			setError : function(html) {
+				if (!html || html == "") {
+					this.ctx.fillText("fill text", 100,100);
+					this.errorElem.style.display = "none";
+					this.errorElem.innerHTML = "";
+					this.parentDiv.style.border = "1px solid gray";
+				} else {
+					this.errorElem.style.display = "";
+					this.errorElem.innerHTML = html;
+					this.parentDiv.style.border = "3px solid " + NodegroupRenderer.COLOR_INVALID_FOREGROUND;
+				}
+			},
+			
             setPropEditorCallback : function (callback) {
                 this.propEditorCallback = callback;
             },
