@@ -86,7 +86,7 @@ define([	// properly require.config'ed
 
         };
 
-		ReportTab.MAX_ROWS = 1;
+		ReportTab.MAX_ROWS = 5000;
         ReportTab.CSS = `
         /* colors    */
         /* https://digitalsynopsis.com/design/color-combinations-palettes-schemes/ */
