@@ -40,6 +40,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.XSDSupportedType;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
+import com.ge.research.semtk.utility.Utility;
 
 public class NodeGroupTest_IT {
 	private static OntologyInfo oInfo = null;
@@ -58,7 +59,9 @@ public class NodeGroupTest_IT {
 		IntegrationTestUtility.authenticateJunit();
 		
 		String owlPath = "/sampleBattery.owl";
+		String chainPath = "/chain.owl";
 		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(NodeGroupTest_IT.class, chainPath);
 		TestGraph.uploadOwlResource(NodeGroupTest_IT.class, owlPath);
 		TestGraph.ingest(NodeGroupTest_IT.class, "/sampleBattery.json", "/sampleBattery.csv");
 		
@@ -74,7 +77,52 @@ public class NodeGroupTest_IT {
 		
 		nodegroup.validateAgainstModel(oInfo);
 	}
+	@Test
+	public void nodeGroupWithOrphanFromJson() throws Exception {		
+		// load a nodegroup json with nodes purposely mis-ordered so an orphan will occur
+		// (first node has a link to a node that hasn't been read in yet)
+		// this is the simplest case of what is needed for circularity-handling
+		
+        SparqlGraphJson sgJson = new SparqlGraphJson(Utility.getJSONObjectFromFilePath("src/test/resources/sampleBatteryOrphanNode.json"));
+        
+        // load without validation
+        NodeGroup ngNoValidate = sgJson.getNodeGroup(null);
+        assertEquals(3, ngNoValidate.getNodeList().size());
+		assertEquals("http://kdl.ge.com/batterydemo#Color",   ngNoValidate.getNodeList().get(0).getFullUriName());
+		assertEquals("http://kdl.ge.com/batterydemo#Cell",    ngNoValidate.getNodeList().get(1).getFullUriName());
+		assertEquals("http://kdl.ge.com/batterydemo#Battery", ngNoValidate.getNodeList().get(2).getFullUriName());	
+        
+		// load with validation
+		NodeGroup ng = sgJson.getNodeGroup(oInfo);
+		
+		assertEquals(3, ng.getNodeList().size());
+		assertEquals("http://kdl.ge.com/batterydemo#Color",   ng.getNodeList().get(0).getFullUriName());
+		assertEquals("http://kdl.ge.com/batterydemo#Cell",    ng.getNodeList().get(1).getFullUriName());
+		assertEquals("http://kdl.ge.com/batterydemo#Battery", ng.getNodeList().get(2).getFullUriName());	
+		
+	}
 	
+	@Test
+	public void nodeGroupFixableErrInCycle() throws Exception {		
+		// load a nodegroup with a cycle and one of the class URI's in the cycle is wrong
+		
+        SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/chain_loop_fixably_invalid.json");
+        
+        // load without validation
+        NodeGroup ngNoValidate = sgJson.getNodeGroup(null);
+        assertEquals(3, ngNoValidate.getNodeList().size());
+        
+		// load with validation:  changes a rogue Color uri to a Link
+        ArrayList<String> modelErrors = new ArrayList<String>();
+        ArrayList<NodeGroupItemStr> invalidItems = new ArrayList<NodeGroupItemStr>();
+        ArrayList<String> modelWarnings = new ArrayList<String>();
+		NodeGroup ng = sgJson.getNodeGroupInflateAndValidate(oInfo, modelErrors, invalidItems, modelWarnings);
+		
+		assertEquals(3, ng.getNodeList().size());
+		assertEquals("Fixable node URI in a loop did not generate expected model warning", modelWarnings.size(), 1);
+		assertTrue("Fixable node URI in a loop model warning is missing 'Link'", modelWarnings.get(0).contains("Link"));
+
+	}
 	
 	@Test
 	/**

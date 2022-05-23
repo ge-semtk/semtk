@@ -1614,6 +1614,78 @@ public class DataLoaderTest_IT {
 		
 		
 	}
+	/**
+	 * Load three chains.  Each has two links in a loop.
+	 * chain1 -> link 1a -> link 1b -> back to 1a
+	 * chain2 -> link 2a -> link 2b -> back to 2b
+	 * chain3 -> link 1b -> link 2b -> back to 1b
+	 * 
+	 * Without lookups there should be three chains, six links, nothing shared.
+	 * @throws Exception
+	 */
+	@Test
+	public void testChainLoopNoLookups() throws Exception {
+		Dataset ds = new CSVDataset("src/test/resources/chain_loop_data.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/chain.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/chain_loop_noLookup.json");
+
+		// load chain loop without lookup
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+		// test for three looped chains
+		Table res = TestGraph.execSelectFromResource(this, "chain_loop_noLookup.json");
+		assertEquals("Ingesting chains with loops and no lookups returned wrong number of rows", 3, res.getNumRows());
+		
+		// six distinct links
+		Table res2 = TestGraph.execSelectFromResource(this, "chain_loop_count_links.json");
+		assertEquals("Ingesting chains with loops and no lookups returned wrong number of links", 6, res2.getNumRows());
+	}
+	
+	/**
+	 * Load three chains.  Each has two links in a loop.
+	 * chain1 -> link 1a -> link 1b -> back to 1a
+	 * chain2 -> link 2a -> link 2b -> back to 2b
+	 * chain3 -> link 1b -> link 2b -> back to 1b
+	 * 
+	 * CreateIfMissing creates only 4 links
+	 * Query for chain3's loop of links gets 2 loops: 1b/1a and 1b/2b (hard to visualize w/o construct query)
+	 * @throws Exception
+	 */
+	@Test
+	public void testChainLoopCreateIfMissing() throws Exception {
+		Dataset ds = new CSVDataset("src/test/resources/chain_loop_data.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/chain.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/chain_loop_createIfMissing.json");
+
+		// load chain loop without lookup
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+		// test for 4 looped chains
+		Table res = TestGraph.execSelectFromResource(this, "chain_loop_noLookup.json");
+		assertEquals("Ingesting chains with loops and no lookups returned wrong number of rows", 4, res.getNumRows());
+		
+		// 4 distinct links
+		Table res2 = TestGraph.execSelectFromResource(this, "chain_loop_count_links.json");
+		assertEquals("Ingesting chains with loops and no lookups returned wrong number of links", 4, res2.getNumRows());
+	}
 	
 	@Test
 	public void testLookupPruneBlanks() throws Exception {

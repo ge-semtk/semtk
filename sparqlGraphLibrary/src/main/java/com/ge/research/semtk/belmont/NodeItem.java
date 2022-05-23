@@ -86,7 +86,7 @@ public class NodeItem {
 			Node curr = ng.getNodeBySparqlID(currId);
 			if(curr == null){ 
 				// do not panic. add it. 
-				curr = new Node(currId, null, null, "update-me", ng);
+				curr = new Node(currId, null, null, NodeGroup.ORPHAN_URI, ng);
 				curr.setSparqlID(currId);
 				ng.addOrphanedNode(curr);
 			}

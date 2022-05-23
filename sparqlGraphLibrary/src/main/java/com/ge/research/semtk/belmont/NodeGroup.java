@@ -34,6 +34,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -72,8 +73,9 @@ public class NodeGroup {
 		ASK,
 	}
 	
-	public  static String[] FUNCTION_NAMES = new String [] {"MAX", "MIN", "SUM", "COUNT", "AVG", "SAMPLE", "GROUP_CONCAT"};
-
+	public static String[] FUNCTION_NAMES = new String [] {"MAX", "MIN", "SUM", "COUNT", "AVG", "SAMPLE", "GROUP_CONCAT"};
+	public static String ORPHAN_URI = "orphan-uri";
+	
 	private static final String JSON_KEY_NODELIST = "sNodeList";
 	private static final String JSON_KEY_UNIONHASH = "unionHash";
 	
@@ -969,6 +971,8 @@ public class NodeGroup {
 	 * @
 	 */
 	public void addJson(JSONArray nodeArr, OntologyInfo uncompressOInfo) throws Exception  {
+		boolean orphanFlag = false;   // did this function process any orphan nodes
+		
 		this.oInfo = uncompressOInfo;
 		for (int j = 0; j < nodeArr.size(); ++j) {
 			JSONObject nodeJson = (JSONObject) nodeArr.get(j);
@@ -993,17 +997,24 @@ public class NodeGroup {
 				}
 				if(check != null){
 					// remove from the orphan list. we do not want to mod this node more than once. 
-				//	this.orphanOnCreate.remove(check);
+					
+					// leave this for validation. It does a better job.
+					//this.orphanOnCreate.remove(check);
+					orphanFlag = true;
 					check.updateFromJson(nodeJson);
 				}
 				else{
 					throw new Exception( "--uncreated node referenced: " + curr.sparqlID );
 				}
-					
 			}
-			
 		}
-		this.orphanOnCreate.clear();
+		
+		if (orphanFlag && uncompressOInfo != null) {
+			// need to re-validate targets of nodeItems to make sure an orphan didn't slip through unvalidated
+			for (Node n : this.nodes) {
+				n.validateNodeItemTargets(uncompressOInfo);
+			}
+		}
 	}
 	
 	/**
@@ -3177,46 +3188,62 @@ public class NodeGroup {
     }
     
 	/**
-	 * Prune subgraphs of node that don't have any nodes.isUsed()==true
+	 * Prune subgraphs of node that don't have any nodes.isUsed()==true 
+	 * by removing them from the nodegroup
 	 * @param node
 	 * @param instanceOnly
-	 * @return
+	 * @return - boolean : was anything pruned
 	 */
 	public boolean pruneUnusedSubGraph (Node node, boolean instanceOnly) {
 		
+		// Only begin pruning if this node is not used
 		if (! node.isUsed(instanceOnly)) {
-			ArrayList<Node> subNodes = this.getAllConnectedNodes(node);
+			// Parallel array lists
+		    //    connNodes = connected nodes (either direction)
+			//    subGraphs = the list of subgraph nodes for each connNode
+			//    subGraphUsedNodeIDs = list of nodeIds in each subgraph that are used
+			ArrayList<Node> connNodes = this.getAllConnectedNodes(node);
 			ArrayList<ArrayList<Node>> subGraphs = new ArrayList<ArrayList<Node>>();
-			ArrayList<Boolean> subGraphIsUsed = new ArrayList<Boolean>();
-			int usedSubGraphCount = 0;
+			ArrayList<String> subGraphUsedNodeIDs = new ArrayList<String>();
 			
 			ArrayList<Node> stopList = new ArrayList<Node>();
 			stopList.add(node);
 			
-			// build a subGraph for every connection
-			for (int i = 0; i < subNodes.size(); i++) {
-				subGraphs.add(this.getSubGraph(subNodes.get(i), stopList));
-				subGraphIsUsed.add(false);
+			// build a subGraph info for every connected node
+			for (int i = 0; i < connNodes.size(); i++) {
 				
+				// get subgraph[i]
+				subGraphs.add(this.getSubGraph(connNodes.get(i), stopList));
+				
+				// fill list of used node ids for subgraph[i]
+				HashSet<String> usedIdList = new HashSet<String>();
 				for (int j=0; j < subGraphs.get(i).size(); j++) {
-					Node n = subGraphs.get(i).get(j);
-					
-					// if this subGraph isUsed, then note it and break
+					Node n = subGraphs.get(i).get(j);					
 					if (n.isUsed(instanceOnly))  {
-						subGraphIsUsed.set(i, true);
-						usedSubGraphCount += 1;
-						break;
+						usedIdList.add(n.getSparqlID());
 					}
 				}
-				if (usedSubGraphCount > 1) break;
+				//changed usedIdList into a sorted single string
+				ArrayList<String> sortedUsedIDs = new ArrayList<String>(usedIdList);
+				Collections.sort(sortedUsedIDs);
+				subGraphUsedNodeIDs.add(String.join(",", sortedUsedIDs));
 			}
 			
-			// if only one subGraph has nodes that are constrained or returned
-			if (usedSubGraphCount < 2) {
+			// In order to take circularities into account
+			// create a HashSet to count number of unique subgraphs:  unique by the list of used nodes they contain
+			HashSet<String>  uniqueSubgraphUsedNodeLists = new HashSet<>(subGraphUsedNodeIDs);
+			
+			
+			// if there aren't two unique subGraphs that are "used"
+			//    delete unused subgraphs
+			//    delete node
+			//    walk towards the used node(s) and prune
+			if (uniqueSubgraphUsedNodeLists.size() < 2) {
 				
 				// delete any subGraph with no returned or constrained nodes
 				for (int i=0; i < subGraphs.size(); i++) {
-					if (subGraphIsUsed.get(i) == false) {
+					// if subGraph is unused, delete all the nodes
+					if (subGraphUsedNodeIDs.get(i).equals("")) {
 						for (int j=0; j < subGraphs.get(i).size(); j++) {
 							Node n = subGraphs.get(i).get(j);
 							this.deleteNode(n, false);
@@ -3224,10 +3251,11 @@ public class NodeGroup {
 					}
 				}
 				
-				// recursively walk up the 'needed' subtree
+				// recursively walk up the used subtrees
 				// pruning off any unUsed nodes and subGraphs
 				ArrayList<Node> connList = this.getAllConnectedNodes(node);
 				this.deleteNode(node, false);
+				// wonky: there is always only 1 left
 				for (int i=0; i < connList.size(); i++) {
 					this.pruneUnusedSubGraph(connList.get(i), instanceOnly);
 				}

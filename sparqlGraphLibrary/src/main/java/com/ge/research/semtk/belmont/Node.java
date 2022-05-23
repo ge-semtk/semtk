@@ -354,10 +354,12 @@ public class Node extends Returnable {
 				if (nodeItem.getConnected()) {
 					
 					for (Node target : nodeItem.getNodeList()) {
-						OntologyClass targetClass = oInfo.getClass(target.getUri());
-						
-						if (!oInfo.classIsInRange(targetClass, modelRange)) {
-							targetErrList.add(target);
+						// Check class of target nodes, giving free pass to orphans
+						String targetUri = target.getUri();
+						if (!targetUri.equals(NodeGroup.ORPHAN_URI)) {							
+							if (!oInfo.classIsInRange(oInfo.getClass(targetUri), modelRange)) {
+								targetErrList.add(target);
+							}
 						}
 					}
 				} 
@@ -397,7 +399,7 @@ public class Node extends Returnable {
 				} else {
 					// range is ok.  report any bad connections 
 					for (Node target : targetErrList) {
-						modelErrList.add( this.getBindingOrSparqlID() + " edge " + ontPropShortName + "'s range of " + modelRange.getDisplayString(true) + " does not allow connection to " + target.getBindingOrSparqlID());
+						modelErrList.add( this.getBindingOrSparqlID() + " edge " + ontPropShortName + "'s range of " + modelRange.getDisplayString(true) + " does not allow connection to " + target.getBindingOrSparqlID() + " of class " + target.getUri());
 						itemStrList.add(new NodeGroupItemStr(this, nodeItem, target));
 					}
 					
@@ -471,6 +473,30 @@ public class Node extends Returnable {
 		this.props = inflatedPItems;
 		this.nodes = inflatedNItems;
 		
+	}
+	
+	/**
+	 * Validate just node item target classes.  
+	 * This is clean-up from JSON loading when there were orphans that might not have been checkable during the load.
+	 * So it just throws exceptions, no model error and warning lists.
+	 * @param oInfo
+	 * @throws Exception
+	 */
+	public void validateNodeItemTargets(OntologyInfo oInfo) throws Exception {
+		OntologyClass ontClass = oInfo.getClass(this.getFullUriName());
+		
+		for (NodeItem nodeItem : this.getNodeItemList()) {
+			if (nodeItem.getConnected()) {	
+				OntologyProperty ontProp = oInfo.getProperty(nodeItem.getUriConnectBy());
+				OntologyRange modelRange = ontProp.getRange(ontClass, oInfo);
+				for (Node target : nodeItem.getNodeList()) {
+					String targetUri = target.getUri();
+					if (!oInfo.classIsInRange(oInfo.getClass(targetUri), modelRange)) {
+						throw new Exception (this.getBindingOrSparqlID() + " edge " + nodeItem.getKeyName() + "'s range of " + modelRange.getDisplayString(true) + " does not allow connection to " + target.getBindingOrSparqlID() + " of class " + targetUri);
+					}
+				}
+			} 
+		}
 	}
 	
 	/**
