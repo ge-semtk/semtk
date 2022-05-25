@@ -86,6 +86,8 @@ public class QueryGenTest_IT {
 		// load Batttery
 		sgJsonBattery = TestGraph.addModelAndData(QueryGenTest_IT.class, "sampleBattery");
 
+		// load RangeTest (owl contains model and a little data)
+		TestGraph.uploadOwlContents(Utility.getResourceAsString(QueryGenTest_IT.class, "RangeTest.owl"));
 	}
 	
 	// TODO : all tests should have corresponding CONSTRUCT
@@ -812,6 +814,16 @@ public class QueryGenTest_IT {
 			assertTrue("Results are missing: " + lookup, res.contains(lookup));
 		}
 	}
+	
+	@Test
+	public void testComplexRangeQuery() throws Exception {	
+		// WeirdBird has two children, and hasChild has a complex range {Bird, Unusual}
+		// A query for just the bird should return just the bird
+		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(this.getClass(), "rangeTestComplexRangeQuery.json");
+		Table res = TestGraph.execTableSelect(sgjson);
+		assertEquals("Complex range query returned the wrong number of rows", 1, res.getNumRows());
+	}
+	
 	/**
 	 * Count the number of attributes of items in a Graph where key.contains(keyContains) and value.contains(valContains)
 	 * Not recursive, checks each element in the graph array.

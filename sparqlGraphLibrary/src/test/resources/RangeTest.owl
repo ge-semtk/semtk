@@ -124,17 +124,21 @@
     <rdfs:range rdf:resource="#Egg"/>
   </owl:ObjectProperty>
   <Bird rdf:ID="bir"/>
-  <Duck rdf:ID="duc">
-    <hasChild>
-      <Animal rdf:ID="ani"/>
-    </hasChild>
-  </Duck>
   <Separate rdf:ID="sep"/>
-  <Unusual rdf:ID="unu"/>
   <WeirdBird rdf:ID="wei">
     <hasAnotherEgg>
       <Egg rdf:ID="egg"/>
     </hasAnotherEgg>
+    <hasChild>
+      <Unusual rdf:ID="unu"/>
+    </hasChild>
+    <hasChild>
+      <Duck rdf:ID="duc">
+        <hasChild>
+          <Animal rdf:ID="ani"/>
+        </hasChild>
+      </Duck>
+    </hasChild>
   </WeirdBird>
   <Rabbit rdf:ID="rab"/>
   <Another rdf:ID="ano"/>
