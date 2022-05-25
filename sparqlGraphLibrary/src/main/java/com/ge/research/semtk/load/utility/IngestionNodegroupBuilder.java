@@ -131,6 +131,7 @@ public class IngestionNodegroupBuilder {
 			
 			for (String rangeUri : nItem.getRangeUris()) {
 				// Add object property node to nodegroup (optional) and importSpec
+				String rangeKeyname =  new OntologyName(rangeUri).getLocalName();
 				Node objNode = nodegroup.addNode(rangeUri, node, null, nItem.getUriConnectBy());
 				nItem.setOptionalMinus(objNode, NodeItem.OPTIONAL_TRUE);
 				
@@ -148,7 +149,7 @@ public class IngestionNodegroupBuilder {
 //				}
 				
 				// give it a name, e.g.: verifies_ENTITY
-				String objNodeName = nItem.getKeyName() + "_" + new OntologyName(rangeUri).getLocalName();
+				String objNodeName = nItem.getKeyName() + "_" + rangeKeyname;
 				nodegroup.setBinding(objNode, objNodeName);
 				
 				// set data property matching ID_REGEX returned
@@ -158,8 +159,17 @@ public class IngestionNodegroupBuilder {
 						// but not optional (link to node is optional instead)
 						nodegroup.setIsReturned(pItem, true);
 						
-						// give it a meaningful name
-						String propId = nodegroup.changeSparqlID(pItem, nItem.getKeyName() + "_" + pItem.getKeyName());
+						// give ID_REGEX property a meaningful sparqlID
+						String sparqlID;
+						if (nItem.getRangeUris().size() > 1) {
+							// complex range: include the class
+							sparqlID = nItem.getKeyName() + "_" + rangeKeyname + "_" + pItem.getKeyName();
+							
+						} else {
+							// 'default'
+							sparqlID = nItem.getKeyName() + "_" + pItem.getKeyName();
+						}
+						String propId = nodegroup.changeSparqlID(pItem, sparqlID);
 						
 						
 						
