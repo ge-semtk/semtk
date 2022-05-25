@@ -2826,17 +2826,25 @@ public class NodeGroup {
 		return sparql.toString();
 	}
 	
+	/**
+	 * Generate a type constraint for a node IF it is "needed", where that means:
+	 * 		- there are no incoming edges that constrain it, OR
+	 *      - incoming edge(s) do not fully constrain the type, OR
+	 *      - it is a CONSTRUCT query.  Always want the types.
+	 * @param node
+	 * @param tab
+	 * @param clauseType
+	 * @return
+	 * @throws Exception
+	 */
 	private String generateSparqlTypeClause(Node node, String tab, ClauseTypes clauseType) throws Exception  {
 		String retval = "";
-		// Generates SPARQL to constrain the type of this node if
-		// There is no edge that constrains it's type OR
-		// the edge(s) that constrain it don't actually include it (they're all
-		// super classes, so not enough constraint)
-		// or CONSTRUCT
 		
-		ArrayList<String> constrainedTypes = this.getConnectedRange(node);
+		// Get range which is union of ranges of all incoming properties
+		ArrayList<String> constrainedTypes = this.getConnectingRange(node);
 		
-		if(constrainedTypes.size() == 0 || !constrainedTypes.contains(node.getFullUriName() ) || 
+		// Only skip if there's exactly one type (the correct one) in incoming ranges  AND not a CONSTRUCT
+		if(constrainedTypes.size() != 1 || ! constrainedTypes.get(0).equals(node.getFullUriName() ) || 
 				clauseType == ClauseTypes.CONSTRUCT_LEADER ||
 				clauseType == ClauseTypes.CONSTRUCT_WHERE){
 			
@@ -4366,8 +4374,13 @@ public class NodeGroup {
 		
 		return optHash;
 	}
-	
-	private ArrayList<String> getConnectedRange(Node node) throws Exception  {
+	/**
+	 * Get Union of all possible ranges of properties connecting TO this node.
+	 * @param node
+	 * @return
+	 * @throws Exception
+	 */
+	private ArrayList<String> getConnectingRange(Node node) throws Exception  {
 		ArrayList<String> ret = new ArrayList<String>();
 		
 		
