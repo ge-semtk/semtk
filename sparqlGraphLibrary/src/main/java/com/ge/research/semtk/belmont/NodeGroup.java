@@ -4387,7 +4387,8 @@ public class NodeGroup {
 		HashMap<String,Integer> linkHash = this.calcIncomingLinkHash(skipNodes);
 		
 		if (!graphIsForest(graph)) {
-			throw new NoValidSparqlException("Graph does not reduce to a forest");
+			//throw new NoValidSparqlException("Graph does not reduce to a forest");
+			throw new NoValidSparqlException("Nodegroup contains an ambiguous loop");
 		}
 
 		String retID = null;

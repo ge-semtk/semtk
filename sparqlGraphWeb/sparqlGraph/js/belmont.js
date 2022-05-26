@@ -3098,7 +3098,7 @@ SemanticNodeGroup.prototype = {
 		// catch the problem for the day we allow circular graphs
 		if (nodeCount > 0 && ret.length == 0) {
 			ret.push(this.SNodeList[0]);
-			console.log("Danger in belmont.js getOrderedNodeList(): No head nodes found.  Graph is totally circular.");
+			//console.log("Danger in belmont.js getOrderedNodeList(): No head nodes found.  Graph is totally circular.");
 		}
 
 		return ret;
