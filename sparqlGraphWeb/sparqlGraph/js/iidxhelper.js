@@ -984,7 +984,7 @@ define([	// properly require.config'ed
         return headerTable;
     };
 
-    IIDXHelper.buildTableElem = function(headerJson, rows, optSortCol, optSortDesc) {
+    IIDXHelper.buildTableElem = function(headers, rows, optSortCol, optSortDesc) {
         if (optSortCol) {
             if (optSortDesc) {
                 rows.sort((a, b) => a[optSortCol] < b[optSortCol] ? 1 : -1)
@@ -997,10 +997,10 @@ define([	// properly require.config'ed
         var tr = document.createElement("tr");
         dom.appendChild(tr);
 
-        for (var h of headerJson) {
+        for (var h of headers) {
             var th = document.createElement("th");
             tr.appendChild(th);
-            th.innerHTML = IIDXHelper.htmlSafe(h.sTitle);
+            th.innerHTML = IIDXHelper.htmlSafe(h);
         }
 
         for (var row of rows) {

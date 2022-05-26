@@ -50,6 +50,8 @@ duc is a Duck.
 rab is a Rabbit.
 wei is a WeirdBird.
 
+wei hasChild duc.
+wei hasChild unu.
 
 // Sadl warns.  Semtk says this is fine
 wei hasAnotherEgg egg.
