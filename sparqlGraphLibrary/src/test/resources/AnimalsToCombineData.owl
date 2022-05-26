@@ -1,0 +1,50 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions#"
+    xmlns="http://AnimalsToCombineData#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:j.0="http://AnimalSubProps#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xml:base="http://AnimalsToCombineData">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="http://AnimalSubProps"/>
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'AnimalsToCombineData.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <j.0:Tiger rdf:ID="grandma">
+    <j.0:hasKitties>
+      <j.0:Tiger rdf:ID="auntyEm">
+        <j.0:name>auntyEm</j.0:name>
+      </j.0:Tiger>
+    </j.0:hasKitties>
+    <j.0:hasKitties>
+      <j.0:Tiger rdf:ID="mom">
+        <j.0:hasKitties>
+          <j.0:Tiger rdf:ID="daughterMichaela">
+            <j.0:scaryName>scary Michaela</j.0:scaryName>
+            <j.0:name>Michaela</j.0:name>
+          </j.0:Tiger>
+        </j.0:hasKitties>
+        <j.0:scaryName>scary mom</j.0:scaryName>
+        <j.0:name>mom</j.0:name>
+      </j.0:Tiger>
+    </j.0:hasKitties>
+    <j.0:scaryName>scary grandma</j.0:scaryName>
+    <j.0:name>grandma</j.0:name>
+  </j.0:Tiger>
+  <j.0:Tiger rdf:ID="auntyEmDuplicate">
+    <j.0:hasKitties>
+      <j.0:Tiger rdf:ID="cousinKaylee">
+        <j.0:scaryName>scary Kaylee</j.0:scaryName>
+        <j.0:name>Kaylee</j.0:name>
+      </j.0:Tiger>
+    </j.0:hasKitties>
+    <j.0:scaryName>scary auntyEm</j.0:scaryName>
+    <j.0:name>AUNTY_EM</j.0:name>
+  </j.0:Tiger>
+</rdf:RDF>
