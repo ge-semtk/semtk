@@ -125,7 +125,33 @@ public class QueryGenTest_IT {
 		// should get same number of rows as basicSelectQuery and an extra column
 		Table tab = tRes.getTable();
 		assertEquals(2, tab.getNumRows());
+		assertTrue("row 0 col 0 is blank", !tab.getCell(0, 0).isBlank());
+		assertTrue("row 0 col 1 is blank", !tab.getCell(0, 1).isBlank());
 		assertEquals(5, tab.getNumColumns());
+	}
+	
+	/**
+	 * Past bugs have shown that using an oInfo generating SPARQL on a leaf node
+	 * is an extra risk for bugs in returning type.
+	 * @throws Exception
+	 */
+	@Test
+	public void selectTigerWithType() throws Exception {
+		
+		NodeGroup ng = new NodeGroup();
+		ng.setSparqlConnection(TestGraph.getSparqlConn());
+		ng.noInflateNorValidate(TestGraph.getOInfo());
+		Node tiger = ng.addNode("http://AnimalSubProps#Tiger", TestGraph.getOInfo());
+		tiger.setIsReturned(true);
+		tiger.setIsTypeReturned(true);
+		
+		Table tab = TestGraph.execTableSelect(ng.generateSparqlSelect());
+		
+		assertEquals(2, tab.getNumRows());
+		assertEquals(2, tab.getNumColumns());
+		assertTrue("row 0 uri is blank", !tab.getCell(0, "Tiger").isBlank());
+		assertTrue("row 0 type is blank", !tab.getCell(0, "Tiger_type").isBlank());
+		
 	}
 	
 	@Test
