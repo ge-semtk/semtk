@@ -253,7 +253,9 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 			} else if (responseTxt.contains("Encountered ")) {
 				throw new DontRetryException("SPARQL syntax error: " + responseTxt);
 			} else if (responseTxt.contains("Lexical ")) {
-				throw new DontRetryException("SPARQL syntax error: " + responseTxt);
+				throw new DontRetryException("SPARQL lexical error: " + responseTxt);
+			} else if (responseTxt.contains("Parse ")) {
+				throw new DontRetryException("SPARQL parse error: " + responseTxt);
 			}
 			throw new Exception("Fuseki non-JSON response: " + responseTxt);
 		}
