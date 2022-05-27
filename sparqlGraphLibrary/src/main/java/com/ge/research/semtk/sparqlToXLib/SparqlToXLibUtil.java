@@ -455,18 +455,38 @@ public class SparqlToXLibUtil {
 	 * @param duplicateURI
 	 * @return
 	 */
-	public static String generateCombineEntitiesInsert(SparqlConnection conn, String targetURI, String duplicateURI) throws Exception {
+	public static String generateCombineEntitiesInsertOutgoing(SparqlConnection conn, String targetURI, String duplicateURI) throws Exception {
 		StringBuilder ret = new StringBuilder();
 		ret.append("INSERT { \n");
 		ret.append(generateGraphClause(conn.getInsertInterface(), "    "));
 		ret.append("    {\n");
 		ret.append(String.format("        <%s> ?outgoingPred ?outgoingObj . \n", targetURI));
-		ret.append(String.format("        ?incomingSub ?incomingPred <%s> . \n", targetURI));
 		ret.append("    }\n");
 		ret.append("} \n");
 		ret.append(generateUsingDatagraphsClause(conn, ""));
 		ret.append("WHERE { \n");
 		ret.append(String.format("        <%s> ?outgoingPred ?outgoingObj . \n", duplicateURI));
+		ret.append("} \n");
+		return ret.toString();
+	}
+	
+	/**
+	 * Add all incoming and outgoing triples of duplicateURI to targetURI
+	 * @param conn
+	 * @param targetURI
+	 * @param duplicateURI
+	 * @return
+	 */
+	public static String generateCombineEntitiesInsertIncoming(SparqlConnection conn, String targetURI, String duplicateURI) throws Exception {
+		StringBuilder ret = new StringBuilder();
+		ret.append("INSERT { \n");
+		ret.append(generateGraphClause(conn.getInsertInterface(), "    "));
+		ret.append("    {\n");
+		ret.append(String.format("        ?incomingSub ?incomingPred <%s> . \n", targetURI));
+		ret.append("    }\n");
+		ret.append("} \n");
+		ret.append(generateUsingDatagraphsClause(conn, ""));
+		ret.append("WHERE { \n");
 		ret.append(String.format("        ?incomingSub ?incomingPred <%s> . \n", duplicateURI));
 		ret.append("} \n");
 		return ret.toString();
@@ -489,7 +509,7 @@ public class SparqlToXLibUtil {
 		ret.append("} \n");
 		ret.append(generateUsingDatagraphsClause(conn, ""));
 		ret.append("WHERE { \n");
-		
+		ret.append(String.format("        <%s> ?pred ?obj . \n", itemURI));
 		ret.append(String.format("        %s . \n", 
 				ValueConstraint.buildBestListConstraint("?pred", exactPropURIs, XSDSupportedType.asSet(XSDSupportedType.URI), conn.getDeleteInterface()))
 				);

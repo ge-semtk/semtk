@@ -712,6 +712,10 @@ public class Table {
 		return Float.parseFloat(getCell(row, col));
 	}
 	
+	public boolean getCellAsBoolean(int row, int col) {
+		return Boolean.parseBoolean(getCell(row, col));
+	}
+	
 	public String getCell(int row, String colName) throws Exception {
 		return this.rows.get(row).get(this.getColumnIndexOrError(colName));
 	}
@@ -730,6 +734,10 @@ public class Table {
 	
 	public float getCellAsFloat(int row, String colName) throws Exception {
 		return Float.parseFloat(getCell(row, colName));
+	}
+	
+	public boolean getCellAsBoolean(int row, String colName) throws Exception {
+		return Boolean.parseBoolean(getCell(row, colName));
 	}
 	
 	/**
@@ -1270,4 +1278,6 @@ public class Table {
 		}
 		return true;
 	}
+
+	
 }

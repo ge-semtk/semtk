@@ -40,20 +40,34 @@ public class CombineEntitiesRequest extends SparqlConnectionRequest {
     private String duplicateUri;
 	
 	@Schema(
-			description = "list of predicates to leave off the newly merged targetUri",
+			description = "list of predicates to delete from duplicate before merge",
 			required = false,
 			example = "[[\"http:/namespace#class1\", \"http:/namespace#predicate\"]]")
-	private ArrayList<String> duplicatePredicatesToSkip = null;
+	private ArrayList<String> deletePredicatesFromDuplicate = null;
+	
+	@Schema(
+			description = "list of predicates to delete from target before merge",
+			required = false,
+			example = "[[\"http:/namespace#class1\", \"http:/namespace#predicate\"]]")
+	private ArrayList<String> deletePredicatesFromTarget = null;
 
 	public String getClassUri() {
 		return classUri;
 	}
 	/**
 	 * 
-	 * @return list or null
+	 * @return list, possibly empty
 	 */
-	public ArrayList<String> getDuplicatePredicatesToSkip() {
-		return duplicatePredicatesToSkip;
+	public ArrayList<String> getDeletePredicatesFromDuplicate() {
+		return deletePredicatesFromDuplicate;
+	}
+	
+	/**
+	 * 
+	 * @return list, possibly empty
+	 */
+	public ArrayList<String> getDeletePredicatesFromTarget() {
+		return deletePredicatesFromTarget;
 	}
 
 

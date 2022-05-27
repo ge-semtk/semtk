@@ -8,6 +8,7 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.edc.JobTracker;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlToXLib.SparqlToXLibUtil;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -20,10 +21,25 @@ public class CombineEntitiesThread extends Thread {
 	private String classUri;
 	private String targetUri;
 	private String duplicateUri;
-	private ArrayList<String> duplicatePredicatesToSkip;
+	private ArrayList<String> deletePredicatesFromTarget;
+	private ArrayList<String> deletePredicatesFromDuplicate;
 	
+	/**
+	 * 
+	 * @param tracker
+	 * @param jobId
+	 * @param oInfo
+	 * @param conn
+	 * @param classUri
+	 * @param targetUri
+	 * @param duplicateUri
+	 * @param deletePredicatesFromTarget
+	 * @param deletePredicatesFromDuplicate
+	 * @throws Exception
+	 */
 	public CombineEntitiesThread(JobTracker tracker, String jobId, OntologyInfo oInfo, SparqlConnection conn,
-			String classUri, String targetUri, String duplicateUri, ArrayList<String> duplicatePredicatesToSkip) throws Exception {
+			String classUri, String targetUri, String duplicateUri, 
+			ArrayList<String> deletePredicatesFromTarget, ArrayList<String> deletePredicatesFromDuplicate) throws Exception {
 		this.tracker = tracker;
 		this.jobId = jobId;
 		this.oInfo = oInfo;
@@ -31,27 +47,41 @@ public class CombineEntitiesThread extends Thread {
 		this.classUri = classUri;
 		this.targetUri = targetUri;
 		this.duplicateUri = duplicateUri;
-		this.duplicatePredicatesToSkip = duplicatePredicatesToSkip;
+		this.deletePredicatesFromTarget = deletePredicatesFromTarget != null ? deletePredicatesFromTarget : new ArrayList<String>();
+		this.deletePredicatesFromDuplicate = deletePredicatesFromDuplicate != null ? deletePredicatesFromDuplicate : new ArrayList<String>();
 		
+		// check ontology for class
 		OntologyClass oClass = oInfo.getClass(classUri);
 		if (oClass == null) throw new Exception("Class was not found in ontology: " + classUri);
 		
-		for (String propUri : duplicatePredicatesToSkip) {
+		// check ontology for properties
+		for (String propUri : this.deletePredicatesFromTarget) {
 			OntologyProperty p = oInfo.getInheritedPropertyByUri(oClass, propUri);
 			if (p == null) throw new Exception(String.format("Class %s does not have property %s", classUri, propUri));
 		}
+		
+		for (String propUri : this.deletePredicatesFromDuplicate) {
+			OntologyProperty p = oInfo.getInheritedPropertyByUri(oClass, propUri);
+			if (p == null) throw new Exception(String.format("Class %s does not have property %s", classUri, propUri));
+		}
+		
+		// get the job started
 		this.tracker.createJob(this.jobId);
 	}
 	
 	public void run() {
 		try {
-			this.tracker.setJobPercentComplete(this.jobId, 5, "Deleting skipped properties");
+			this.tracker.setJobPercentComplete(this.jobId, 5, "Confirming instances exist");
+			this.confirmExists(this.targetUri, this.classUri);
+			this.confirmExists(this.duplicateUri, this.classUri);
+			
+			this.tracker.setJobPercentComplete(this.jobId, 25, "Deleting skipped properties");
 			this.deleteSkippedProperties();
 			
-			this.tracker.setJobPercentComplete(this.jobId, 35, "Combining entities");
+			this.tracker.setJobPercentComplete(this.jobId, 50, "Combining entities");
 			this.combineEntities();
 			
-			this.tracker.setJobPercentComplete(this.jobId, 65, "Deleting duplicate");
+			this.tracker.setJobPercentComplete(this.jobId, 75, "Deleting duplicate");
 			this.deleteDuplicate();
 			
 			this.tracker.setJobSuccess(this.jobId);
@@ -70,15 +100,37 @@ public class CombineEntitiesThread extends Thread {
 	}
 
 	/**
+	 * Check existance of and instance of a class via exception
+	 * @param instanceUri
+	 * @param classUri
+	 * @throws Exception - not found
+	 */
+	private void confirmExists(String instanceUri, String classUri) throws Exception {
+		NodeGroup ng = new NodeGroup();
+		ng.noInflateNorValidate(this.oInfo);
+		ng.setSparqlConnection(this.conn);
+		ng.addNodeInstance(classUri, oInfo, instanceUri);
+		Table table = this.conn.getDefaultQueryInterface().executeQueryToTable(ng.generateSparqlAsk());
+		if (! table.getCellAsBoolean(0,0) ) 
+			throw new Exception(String.format("Could not find instance of %s with URI %s", classUri, instanceUri));
+	}
+	
+	/**
 	 * Build nodegroup to delete duplicatePredicatesToSkip
 	 * @throws Exception
 	 */
 	private void deleteSkippedProperties() throws Exception {
 		// build one-node nodegroup constrained to this.duplicateUri
-		String sparql = SparqlToXLibUtil.generateDeleteExactProps(this.conn, this.targetUri, this.duplicatePredicatesToSkip);
+
+		if (deletePredicatesFromTarget.size() > 0) {
+			String sparql = SparqlToXLibUtil.generateDeleteExactProps(this.conn, this.targetUri, this.deletePredicatesFromTarget);
+			this.conn.getDefaultQueryInterface().executeQueryAndConfirm(sparql);
+		}
 		
-		// run the query synchronously
-		this.conn.getDefaultQueryInterface().executeQueryAndConfirm(sparql);
+		if (this.deletePredicatesFromDuplicate.size() > 0) {
+			String sparql = SparqlToXLibUtil.generateDeleteExactProps(this.conn, this.duplicateUri, this.deletePredicatesFromDuplicate);
+			this.conn.getDefaultQueryInterface().executeQueryAndConfirm(sparql);
+		}
 	}
 	
 	/**
@@ -87,9 +139,10 @@ public class CombineEntitiesThread extends Thread {
 	 */
 	private void combineEntities() throws Exception {
 		// build one-node nodegroup constrained to this.duplicateUri
-		String sparql = SparqlToXLibUtil.generateCombineEntitiesInsert(this.conn, this.targetUri, this.duplicateUri);
+		String sparql = SparqlToXLibUtil.generateCombineEntitiesInsertOutgoing(this.conn, this.targetUri, this.duplicateUri);
+		this.conn.getDefaultQueryInterface().executeQueryAndConfirm(sparql);
 		
-		// run the query synchronously
+		sparql = SparqlToXLibUtil.generateCombineEntitiesInsertIncoming(this.conn, this.targetUri, this.duplicateUri);
 		this.conn.getDefaultQueryInterface().executeQueryAndConfirm(sparql);
 	}
 	
