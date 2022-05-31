@@ -54,21 +54,21 @@ public class SparqlToXLibUtil {
 		conn.confirmSingleServerURL();
 		
 		// get graphs/datasets for first model server.  All others must be equal
-		ArrayList<String> datasets = conn.getAllGraphsForServer(conn.getDataInterface(0).getServerAndPort());
+		ArrayList<String> graphs = conn.getAllGraphsForServer(conn.getDataInterface(0).getServerAndPort());
 		
 		// add graphs from owlImports
 		if (oInfo != null) {
 			ArrayList<String> owlImports = oInfo.getImportedGraphs();
 			for (String g : owlImports) {
-				datasets.add(g);
+				graphs.add(g);
 			}
 		}
 				
 		StringBuilder sparql = new StringBuilder().append("\n");
 		// No optimization: always "from" all datasets
 		tab = SparqlToXUtils.tabIndent(tab);
-		for (int i=0; i < datasets.size(); i++) {
-			sparql.append(tab + fromOrUsing + " <" + datasets.get(i) + ">\n");
+		for (int i=0; i < graphs.size(); i++) {
+			sparql.append(tab + fromOrUsing + " <" + graphs.get(i) + ">\n");
 		}
 		tab = SparqlToXUtils.tabOutdent(tab);
 		
