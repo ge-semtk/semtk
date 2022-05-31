@@ -30,8 +30,8 @@ public class CombineEntitiesThreadTest_IT {
 	public void test1() throws Exception {
 		// load test data
 		TestGraph.clearGraph();
-		TestGraph.uploadOwlResource(this, "animalSubProps.owl");
-		TestGraph.uploadOwlResource(this, "animalsToCombineData.owl");	
+		TestGraph.uploadOwlResource(this, "AnimalSubProps.owl");
+		TestGraph.uploadOwlResource(this, "AnimalsToCombineData.owl");	
 		
 		JobTracker tracker = new JobTracker(TestGraph.getSei());
 		String jobId = JobTracker.generateJobId();
@@ -64,8 +64,8 @@ public class CombineEntitiesThreadTest_IT {
 	public void test2() throws Exception {
 		// load test data
 		TestGraph.clearGraph();
-		TestGraph.uploadOwlResource(this, "animalSubProps.owl");
-		TestGraph.uploadOwlResource(this, "animalsToCombineData.owl");	
+		TestGraph.uploadOwlResource(this, "AnimalSubProps.owl");
+		TestGraph.uploadOwlResource(this, "AnimalsToCombineData.owl");	
 		
 		JobTracker tracker = new JobTracker(TestGraph.getSei());
 		String jobId = JobTracker.generateJobId();
@@ -96,8 +96,8 @@ public class CombineEntitiesThreadTest_IT {
 	public void testErrors() throws Exception {
 		// load test data
 		TestGraph.clearGraph();
-		TestGraph.uploadOwlResource(this, "animalSubProps.owl");
-		TestGraph.uploadOwlResource(this, "animalsToCombineData.owl");	
+		TestGraph.uploadOwlResource(this, "AnimalSubProps.owl");
+		TestGraph.uploadOwlResource(this, "AnimalsToCombineData.owl");	
 		
 		JobTracker tracker = new JobTracker(TestGraph.getSei());
 		
