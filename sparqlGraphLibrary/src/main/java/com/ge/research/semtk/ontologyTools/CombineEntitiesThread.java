@@ -108,7 +108,14 @@ public class CombineEntitiesThread extends Thread {
 	private void confirmExists(String instanceUri, String classUri) throws Exception {
 		NodeGroup ng = new NodeGroup();
 		ng.noInflateNorValidate(this.oInfo);
-		ng.setSparqlConnection(this.conn);
+		SparqlConnection connect = SparqlConnection.deepCopy(this.conn);
+		
+		// check only the data connection
+		connect.clearModelInterfaces();
+		connect.addModelInterface(connect.getDataInterface(0));
+		ng.setSparqlConnection(connect);
+		
+		// build nodegroup
 		ng.addNodeInstance(classUri, oInfo, instanceUri);
 		Table table = this.conn.getDefaultQueryInterface().executeQueryToTable(ng.generateSparqlAsk());
 		if (! table.getCellAsBoolean(0,0) ) 
