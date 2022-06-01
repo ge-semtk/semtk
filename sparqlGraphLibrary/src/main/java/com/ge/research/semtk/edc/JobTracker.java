@@ -1308,6 +1308,22 @@ public class JobTracker {
 	}
 	
 	/**
+	 * Wait for success, throwing an exception if not.
+	 * @param jobId
+	 * @param maxWaitSec
+	 * @throws Exception
+	 */
+	public void waitForSuccess(String jobId, int maxWaitMsec) throws Exception {
+		int percent = this.waitForPercentOrMsec(jobId, 100, maxWaitMsec);
+		if (percent < 100) {
+			throw new Exception(String.format("Job %s not complete within %d seconds ", jobId, maxWaitMsec));
+		}
+		if (!this.jobSucceeded(jobId)) {
+			throw new Exception(String.format("Job %s failed: %s", jobId, this.getJobStatusMessage(jobId)));
+		}
+		return;
+	}
+	/**
 	 * Return when job is at least percentComplete complete or maxWaitMse have expired
 	 * @param jobId
 	 * @param percentComplete

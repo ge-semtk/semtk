@@ -27,6 +27,7 @@ import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.ontologyTools.Triple;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.sparqlX.XSDSupportedType;
 
@@ -53,21 +54,21 @@ public class SparqlToXLibUtil {
 		conn.confirmSingleServerURL();
 		
 		// get graphs/datasets for first model server.  All others must be equal
-		ArrayList<String> datasets = conn.getAllGraphsForServer(conn.getDataInterface(0).getServerAndPort());
+		ArrayList<String> graphs = conn.getAllGraphsForServer(conn.getDataInterface(0).getServerAndPort());
 		
 		// add graphs from owlImports
 		if (oInfo != null) {
 			ArrayList<String> owlImports = oInfo.getImportedGraphs();
 			for (String g : owlImports) {
-				datasets.add(g);
+				graphs.add(g);
 			}
 		}
 				
 		StringBuilder sparql = new StringBuilder().append("\n");
 		// No optimization: always "from" all datasets
 		tab = SparqlToXUtils.tabIndent(tab);
-		for (int i=0; i < datasets.size(); i++) {
-			sparql.append(tab + fromOrUsing + " <" + datasets.get(i) + ">\n");
+		for (int i=0; i < graphs.size(); i++) {
+			sparql.append(tab + fromOrUsing + " <" + graphs.get(i) + ">\n");
 		}
 		tab = SparqlToXUtils.tabOutdent(tab);
 		
@@ -445,5 +446,86 @@ public class SparqlToXLibUtil {
 		sparql.append("  HAVING ( ?object_COUNT " + op + " " + Integer.toString(limit) + " ) \n");
 		
 		return sparql.toString();
+	}
+	
+	/**
+	 * Add all incoming and outgoing triples of duplicateURI to targetURI
+	 * @param conn
+	 * @param targetURI
+	 * @param duplicateURI
+	 * @return
+	 */
+	public static String generateCombineEntitiesInsertOutgoing(SparqlConnection conn, String targetURI, String duplicateURI) throws Exception {
+		StringBuilder ret = new StringBuilder();
+		ret.append("INSERT { \n");
+		ret.append(generateGraphClause(conn.getInsertInterface(), "    "));
+		ret.append("    {\n");
+		ret.append(String.format("        <%s> ?outgoingPred ?outgoingObj . \n", targetURI));
+		ret.append("    }\n");
+		ret.append("} \n");
+		ret.append(generateUsingDatagraphsClause(conn, ""));
+		ret.append("WHERE { \n");
+		ret.append(String.format("        <%s> ?outgoingPred ?outgoingObj . \n", duplicateURI));
+		ret.append("} \n");
+		return ret.toString();
+	}
+	
+	/**
+	 * Add all incoming and outgoing triples of duplicateURI to targetURI
+	 * @param conn
+	 * @param targetURI
+	 * @param duplicateURI
+	 * @return
+	 */
+	public static String generateCombineEntitiesInsertIncoming(SparqlConnection conn, String targetURI, String duplicateURI) throws Exception {
+		StringBuilder ret = new StringBuilder();
+		ret.append("INSERT { \n");
+		ret.append(generateGraphClause(conn.getInsertInterface(), "    "));
+		ret.append("    {\n");
+		ret.append(String.format("        ?incomingSub ?incomingPred <%s> . \n", targetURI));
+		ret.append("    }\n");
+		ret.append("} \n");
+		ret.append(generateUsingDatagraphsClause(conn, ""));
+		ret.append("WHERE { \n");
+		ret.append(String.format("        ?incomingSub ?incomingPred <%s> . \n", duplicateURI));
+		ret.append("} \n");
+		return ret.toString();
+	}
+	
+	/**
+	 * Add all incoming and outgoing triples of duplicateURI to targetURI
+	 * @param conn
+	 * @param targetURI
+	 * @param duplicateURI
+	 * @return
+	 */
+	public static String generateDeleteExactProps(SparqlConnection conn, String itemURI, ArrayList<String> exactPropURIs) throws Exception {
+		StringBuilder ret = new StringBuilder();
+		ret.append("DELETE { \n");
+		ret.append(generateGraphClause(conn.getInsertInterface(), "    "));
+		ret.append("    {\n");
+		ret.append(String.format("        <%s> ?pred ?obj . \n", itemURI));
+		ret.append("    }\n");
+		ret.append("} \n");
+		ret.append(generateUsingDatagraphsClause(conn, ""));
+		ret.append("WHERE { \n");
+		ret.append(String.format("        <%s> ?pred ?obj . \n", itemURI));
+		ret.append(String.format("        %s . \n", 
+				ValueConstraint.buildBestListConstraint("?pred", exactPropURIs, XSDSupportedType.asSet(XSDSupportedType.URI), conn.getDeleteInterface()))
+				);
+		ret.append("} \n");
+		return ret.toString();
+	}
+	
+	public static String generateGraphClause(SparqlEndpointInterface sei, String tab) {
+		return tab + "GRAPH <" + sei.getGraph() + ">\n" ;
+	}
+	
+	public static String generateUsingDatagraphsClause(SparqlConnection conn, String tab) {
+		StringBuilder ret = new StringBuilder();
+		for (SparqlEndpointInterface sei : conn.getDataInterfaces()) {
+			ret.append(tab + "USING <" + sei.getGraph() + ">\n" );
+		}
+		return ret.toString();
 	}
 }

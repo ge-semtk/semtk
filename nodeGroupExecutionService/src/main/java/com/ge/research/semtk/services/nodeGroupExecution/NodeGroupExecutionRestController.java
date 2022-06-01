@@ -56,6 +56,7 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
+import com.ge.research.semtk.ontologyTools.CombineEntitiesThread;
 import com.ge.research.semtk.ontologyTools.ConnectedDataConstructor;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
@@ -64,6 +65,7 @@ import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.services.nodeGroupExecution.requests.CombineEntitiesRequest;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.ConstraintsFromIdRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.ConstructConnectedDataRequest;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.DispatchByIdRequestBody;
@@ -1613,6 +1615,37 @@ public class NodeGroupExecutionRestController {
 		}
 	}
 			
+	@Operation(
+			summary=	"Combine two URI's into one entity"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/dispatchCombineEntities", method= RequestMethod.POST)
+	public JSONObject dispatchCombineEntities(@RequestBody CombineEntitiesRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		try {
+			SimpleResultSet res = new SimpleResultSet(true);
+			JobTracker tracker = this.getJobTracker();
+			String jobId = JobTracker.generateJobId();
+			
+			SparqlConnection conn = requestBody.buildSparqlConnection();
+			
+			new CombineEntitiesThread(
+					tracker, jobId, this.retrieveOInfo(conn), conn, 
+					requestBody.getClassUri(), requestBody.getTargetUri(), requestBody.getDuplicateUri(), 
+					requestBody.getDeletePredicatesFromTarget(), requestBody.getDeletePredicatesFromDuplicate()
+					).start();
+			
+			res.addJobId(jobId);
+			return res.toJson();
+		}
+		catch (Exception e) {
+			SimpleResultSet err = new SimpleResultSet(false);
+			err.addRationaleMessage(SERVICE_NAME, "dispatchCombineEntities", e);
+			LocalLogger.printStackTrace(e);
+			return err.toJson();
+		}
+	}
+	
 	// get the runtime constraints, if any.
 	private JSONArray getRuntimeConstraintsAsJsonArray(String potentialConstraints) throws Exception{
 		JSONArray retval = null;

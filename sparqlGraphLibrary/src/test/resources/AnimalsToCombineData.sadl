@@ -1,0 +1,30 @@
+uri "http://AnimalsToCombineData".
+
+import "http://AnimalSubProps".
+
+grandma is a Tiger,
+	name "grandma",
+	scaryName "scary grandma",
+	hasKitties mom,
+	hasKitties auntyEm.
+	
+mom is a Tiger,
+	name "mom",
+	scaryName "scary mom",
+	hasKitties daughterMichaela.
+
+auntyEm is a Tiger,
+	name "auntyEm".
+
+auntyEmDuplicate is a Tiger,
+	name "AUNTY_EM",
+	scaryName "scary auntyEm",
+	hasKitties cousinKaylee.
+	
+daughterMichaela is a Tiger,
+	name "Michaela",
+	scaryName "scary Michaela".
+	
+cousinKaylee is a Tiger,
+	name "Kaylee",
+	scaryName "scary Kaylee".
