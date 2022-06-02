@@ -4281,6 +4281,16 @@ public class NodeGroup {
 		return ret;
 	}
 	
+	/**
+	 * A clique in the nodegroup is a set of nodes that are connected to each
+	 * other using simple edges. (A simple edge is one that is not part of a
+	 * union, minus, or optional). This function computes the cliques for the
+	 * current nodegroup by mapping each node in the nodegroup to a common
+	 * leader node for that group.
+	 * 
+	 * @return mapping from node to clique leader
+	 * @throws Exception
+	 */
 	private UnionFind<Node> calcSimpleCliques() throws Exception {
 		UnionFind<Node> result = new UnionFind<>();
 
@@ -4303,13 +4313,25 @@ public class NodeGroup {
 		return result;
 	}
 	
-	private Map<Node, List<Node>> calcCliqueGraph(UnionFind<Node> cliques) throws Exception
+	/**
+	 * This function creates the graph of non-simple edges between cliques.
+	 * Non-simple edges are those that are part of a union, minus, or optional.
+	 * 
+	 * The nodes of this graph are clique leaders. The edges of this graph are
+	 * the non-simple edges of the current nodegroup.
+	 * 
+	 * @param cliques Simply connected node cliques
+	 * @return summary of the connections between cliques
+	 * @throws Exception
+	 */
+	private SimpleGraph<Node> calcCliqueGraph(UnionFind<Node> cliques) throws Exception
 	{
-		Map<Node, List<Node>> edges = new HashMap<>();
+		SimpleGraph<Node> result = new SimpleGraph<>();
+		
 		for (Node node : nodes) {
 			Node leader = cliques.find(node);
 			if (leader == node) {
-				edges.put(leader, new ArrayList<>());
+				result.addNode(leader);
 			}
 		}
 		
@@ -4326,61 +4348,17 @@ public class NodeGroup {
                         this.isReverseUnion(source, ni, target))
                    	{
 						Node targetLeader = cliques.find(target);
-						edges.get(targetLeader).add(sourceLeader);
+						result.addEdge(targetLeader, sourceLeader);
 					} else if (NodeItem.OPTIONAL_FALSE != ni.getOptionalMinus(target) ||
 						null != getUnionKey(source, ni, target))
 					{
 						Node targetLeader = cliques.find(target);
-						edges.get(sourceLeader).add(targetLeader);
+						result.addEdge(sourceLeader, targetLeader);
 					}
 				}
 			}
 		}
 		
-		return edges;
-	}
-	
-	/**
-	 * Check if the given graph is a forest. It should be comprised of zero or more
-	 * disjoint trees. Each tree should have a single root node from which there is
-	 * a unique path to every other node in the tree.
-	 * 
-	 * @param <T> Type of graph nodes
-	 * @param graph Graph in adjacency list form 
-	 * @return true when the graph is a forest
-	 */
-	private static <T> boolean graphIsForest(Map<T, List<T>> graph) {
-		
-		// Determine all the nodes with no incoming edges. These are the roots of the forest
-		Set<T> headNodes = new HashSet<>(graph.keySet());
-		for (List<T> targets : graph.values()) {
-			headNodes.removeAll(targets);
-		}
-		
-		Set<T> seen = new HashSet<>();
-		Stack<T> work = new Stack<T>();
-		work.addAll(headNodes);
-		
-		while (!work.isEmpty()) {
-			T next = work.pop();
-			if (!seen.add(next)) { return false; } // check not previously visited
-			work.addAll(graph.get(next)); // add reachable nodes to work stack
-		}
-
-		return seen.size() == graph.size(); // check all nodes visited
-	}
-	
-	private static <T> Map<T, List<T>> invertGraph(Map<T, List<T>> graph) {
-		Map<T, List<T>> result = new HashMap<>();
-		for (Map.Entry<T, List<T>> entry : graph.entrySet()) {
-			result.put(entry.getKey(), new ArrayList<T>());
-		}
-		for (Map.Entry<T, List<T>> entry : graph.entrySet()) {
-			T source = entry.getKey();
-			for (T target : entry.getValue()) {
-				result.get(target).add(source);
-			}
-		}
 		return result;
 	}
 	
@@ -4390,11 +4368,11 @@ public class NodeGroup {
 		}
 
 		UnionFind<Node> cliques = this.calcSimpleCliques();
-		Map<Node, List<Node>> graph = this.calcCliqueGraph(cliques);
-		Map<Node, List<Node>> invertedGraph = NodeGroup.invertGraph(graph);
+		SimpleGraph<Node> graph = this.calcCliqueGraph(cliques);
+		SimpleGraph<Node> invertedGraph = graph.invert();
 		HashMap<String,Integer> linkHash = this.calcIncomingLinkHash(skipNodes);
 		
-		if (!graphIsForest(graph)) {
+		if (!graph.isForest()) {
 			//throw new NoValidSparqlException("Graph does not reduce to a forest");
 			throw new NoValidSparqlException("Nodegroup contains an ambiguous loop");
 		}
