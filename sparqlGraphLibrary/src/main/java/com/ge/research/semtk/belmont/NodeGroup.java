@@ -2899,12 +2899,19 @@ public class NodeGroup {
 				subClassNames.set(i, this.applyPrefixing(subClassNames.get(i)));
 			}
 
-			retval += typeSparqlIdClause;
+			// VALUES
 			retval += tab + ValueConstraint.buildBestSubclassConstraint(
 					node.getTypeSparqlID(), 
 					this.applyPrefixing(node.getFullUriName()),
 					subClassNames, 
 					this.conn.getInsertInterface()) + " .\n";
+			
+			// This has been moved to last so it goes:
+			//     VALUES ?Node_type { a b c } .
+			//     ?Node a ?Node_type.
+			// Because the opposite order cause "?Node a ?Node_type?" to match every instance in the triplestore.
+			// Sparql optimizers should handle this but why tempt fate (and btw Fuseki doesn't handle it.)
+			retval += typeSparqlIdClause;
 		}
 
 		return retval;
