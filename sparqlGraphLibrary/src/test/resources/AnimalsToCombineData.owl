@@ -47,4 +47,7 @@
     <j.0:scaryName>scary auntyEm</j.0:scaryName>
     <j.0:name>AUNTY_EM</j.0:name>
   </j.0:Tiger>
+  <j.0:Animal rdf:ID="drummer">
+    <j.0:name>Animal</j.0:name>
+  </j.0:Animal>
 </rdf:RDF>

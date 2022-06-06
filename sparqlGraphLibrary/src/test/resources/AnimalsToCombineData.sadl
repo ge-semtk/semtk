@@ -28,3 +28,6 @@ daughterMichaela is a Tiger,
 cousinKaylee is a Tiger,
 	name "Kaylee",
 	scaryName "scary Kaylee".
+	
+drummer is a Animal,
+	name "Animal".

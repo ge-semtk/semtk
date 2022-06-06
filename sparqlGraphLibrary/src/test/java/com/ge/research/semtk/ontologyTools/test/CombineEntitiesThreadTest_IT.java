@@ -9,9 +9,6 @@ import org.junit.Test;
 
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.ontologyTools.CombineEntitiesThread;
-import com.ge.research.semtk.ontologyTools.DataDictionaryGenerator;
-import com.ge.research.semtk.ontologyTools.OntologyInfo;
-import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 
@@ -40,7 +37,7 @@ public class CombineEntitiesThreadTest_IT {
 		CombineEntitiesThread combiner = new CombineEntitiesThread(
 				tracker, jobId, 
 				TestGraph.getOInfo(), TestGraph.getSparqlConn(), 
-				"http://AnimalSubProps#Tiger", "http://AnimalsToCombineData#auntyEm", "http://AnimalsToCombineData#auntyEmDuplicate", 
+				"http://AnimalsToCombineData#auntyEm", "http://AnimalsToCombineData#auntyEmDuplicate", 
 				null, skipProps
 				);
 		combiner.start();
@@ -74,7 +71,7 @@ public class CombineEntitiesThreadTest_IT {
 		CombineEntitiesThread combiner = new CombineEntitiesThread(
 				tracker, jobId, 
 				TestGraph.getOInfo(), TestGraph.getSparqlConn(), 
-				"http://AnimalSubProps#Tiger", "http://AnimalsToCombineData#auntyEmDuplicate", "http://AnimalsToCombineData#auntyEm", 
+				"http://AnimalsToCombineData#auntyEmDuplicate", "http://AnimalsToCombineData#auntyEm", 
 				skipProps, null
 				);
 		combiner.start();
@@ -104,51 +101,13 @@ public class CombineEntitiesThreadTest_IT {
 		ArrayList<String> skipProps = new ArrayList<String>();
 		skipProps.add("http://AnimalSubProps#nameBAD"); 
 		
-		try {
-			String jobId = JobTracker.generateJobId();
-			new CombineEntitiesThread(
-				tracker, jobId, 
-				TestGraph.getOInfo(), TestGraph.getSparqlConn(), 
-				"http://AnimalSubProps#BAD_CLASS", "http://AnimalsToCombineData#auntyEmDuplicate", "http://AnimalsToCombineData#auntyEm", 
-				null, null
-				);
-			fail("Missing exception for bad class");
-		} catch (Exception e) {
-			assertTrue("Exception is missing BAD_CLASS", e.getMessage().contains("BAD_CLASS"));
-		}
-		
-		try {
-			String jobId = JobTracker.generateJobId();
-			new CombineEntitiesThread(
-				tracker, jobId, 
-				TestGraph.getOInfo(), TestGraph.getSparqlConn(), 
-				"http://AnimalSubProps#BAD_CLASS", "http://AnimalsToCombineData#auntyEmDuplicate", "http://AnimalsToCombineData#auntyEm", 
-				skipProps, null
-				);
-			fail("Missing exception for bad target props");
-		} catch (Exception e) {
-			assertTrue("Exception is missing BAD_CLASS", e.getMessage().contains("BAD_CLASS"));
-		}
-		
-		try {
-			String jobId = JobTracker.generateJobId();
-			new CombineEntitiesThread(
-				tracker, jobId, 
-				TestGraph.getOInfo(), TestGraph.getSparqlConn(), 
-				"http://AnimalSubProps#BAD_CLASS", "http://AnimalsToCombineData#auntyEmDuplicate", "http://AnimalsToCombineData#auntyEm", 
-				null, skipProps
-				);
-			fail("Missing exception for bad duplicate props");
-		} catch (Exception e) {
-			assertTrue("Exception is missing BAD_CLASS", e.getMessage().contains("BAD_CLASS"));
-		}
-		
+		// bad target uri
 		try {
 			String jobId = JobTracker.generateJobId();
 			CombineEntitiesThread combiner= new CombineEntitiesThread(
 				tracker, jobId, 
 				TestGraph.getOInfo(), TestGraph.getSparqlConn(), 
-				"http://AnimalSubProps#Tiger", "http://AnimalsToCombineData#BAD_TARGET_URI", "http://AnimalsToCombineData#auntyEm", 
+				"http://AnimalsToCombineData#BAD_TARGET_URI", "http://AnimalsToCombineData#auntyEm", 
 				null, null
 				);
 			combiner.start();
@@ -159,12 +118,13 @@ public class CombineEntitiesThreadTest_IT {
 			assertTrue("Exception is missing BAD_TARGET_URI", e.getMessage().contains("BAD_TARGET_URI"));
 		}
 		
+		// bad duplicate uri
 		try {
 			String jobId = JobTracker.generateJobId();
 			CombineEntitiesThread combiner = new CombineEntitiesThread(
 				tracker, jobId, 
 				TestGraph.getOInfo(), TestGraph.getSparqlConn(), 
-				"http://AnimalSubProps#Tiger", "http://AnimalsToCombineData#auntyEm", "http://AnimalsToCombineData#BAD_DUPLICATE_URI", 
+				"http://AnimalsToCombineData#auntyEm", "http://AnimalsToCombineData#BAD_DUPLICATE_URI", 
 				null, null
 				);
 			combiner.start();
@@ -173,6 +133,33 @@ public class CombineEntitiesThreadTest_IT {
 		} catch (Exception e) {
 			assertTrue("Exception is missing BAD_DUPLICATE_URI", e.getMessage().contains("BAD_DUPLICATE_URI"));
 		}
+		
+		// target is a superclass of duplicate
+		try {
+			String jobId = JobTracker.generateJobId();
+			CombineEntitiesThread combiner = new CombineEntitiesThread(
+				tracker, jobId, 
+				TestGraph.getOInfo(), TestGraph.getSparqlConn(), 
+				"http://AnimalsToCombineData#drummer", "http://AnimalsToCombineData#auntyEm", 
+				null, null
+				);
+			combiner.start();
+			tracker.waitForSuccess(jobId, 300 * 1000);
+			fail("Missing exception when duplicate is a subclass of target");
+		} catch (Exception e) {
+			assertTrue("Exception is missing 'not a superClass'", e.getMessage().contains("n"));
+		}
+		
+		// should not error when duplicate is a superclass of target
+		String jobId = JobTracker.generateJobId();
+		CombineEntitiesThread combiner = new CombineEntitiesThread(
+			tracker, jobId, 
+			TestGraph.getOInfo(), TestGraph.getSparqlConn(), 
+			"http://AnimalsToCombineData#auntyEm", "http://AnimalsToCombineData#drummer", 
+			null, null
+			);
+		combiner.start();
+		tracker.waitForSuccess(jobId, 300 * 1000);
 		
 	}
 	

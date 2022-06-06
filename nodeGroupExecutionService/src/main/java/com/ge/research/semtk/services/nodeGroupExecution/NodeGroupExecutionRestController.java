@@ -1631,7 +1631,7 @@ public class NodeGroupExecutionRestController {
 			
 			new CombineEntitiesThread(
 					tracker, jobId, this.retrieveOInfo(conn), conn, 
-					requestBody.getClassUri(), requestBody.getTargetUri(), requestBody.getDuplicateUri(), 
+					requestBody.getTargetUri(), requestBody.getDuplicateUri(), 
 					requestBody.getDeletePredicatesFromTarget(), requestBody.getDeletePredicatesFromDuplicate()
 					).start();
 			

@@ -221,6 +221,44 @@ public class SparqlToXLibUtil {
 	}
 	
 	/**
+	 * Generate query to get values of ?class for an instanceUri
+	 * @param conn
+	 * @param oInfo
+	 * @param instanceUri
+	 * @return
+	 * @throws Exception
+	 */
+	public static String generateGetInstanceClass(SparqlConnection conn, OntologyInfo oInfo, String instanceUri) throws Exception {
+		StringBuilder sparql = new StringBuilder();
+		
+		// select FROM WHERE
+		sparql.append("SELECT DISTINCT ?class \n");
+		sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
+		sparql.append(String.format("WHERE { <%s> a ?class . } \n", instanceUri));
+
+		return sparql.toString();
+	}
+	
+	/**
+	 * Generate query to get values of ?class for an instanceUri
+	 * @param conn
+	 * @param oInfo
+	 * @param instanceUri
+	 * @return
+	 * @throws Exception
+	 */
+	public static String generateAskInstanceExists(SparqlConnection conn, OntologyInfo oInfo, String instanceUri) throws Exception {
+		StringBuilder sparql = new StringBuilder();
+		
+		// select FROM WHERE
+		sparql.append("ASK \n");
+		sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
+		sparql.append(String.format("WHERE { <%s> a ?class . } \n", instanceUri));
+
+		return sparql.toString();
+	}
+	
+	/**
 	 * Generate query to return ?s ?s_class
 	 * where ?s_class is in classValues
 	 * @param conn
@@ -279,7 +317,6 @@ public class SparqlToXLibUtil {
 			sparql.append("OFFSET " + String.valueOf(offsetOverride) + "\n");
 		}
 		
-		System.out.println(sparql.toString());
 		return sparql.toString();
 	}
 

@@ -24,10 +24,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 
 public class CombineEntitiesRequest extends SparqlConnectionRequest {
-	@Schema(
-            required = true,
-            example = "http://myprefix#MyClass")
-    private String classUri;
+
 	
 	@Schema(
             required = true,
@@ -51,9 +48,7 @@ public class CombineEntitiesRequest extends SparqlConnectionRequest {
 			example = "[[\"http:/namespace#class1\", \"http:/namespace#predicate\"]]")
 	private ArrayList<String> deletePredicatesFromTarget = null;
 
-	public String getClassUri() {
-		return classUri;
-	}
+
 	/**
 	 * 
 	 * @return list, possibly empty
