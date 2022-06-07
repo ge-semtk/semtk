@@ -1161,10 +1161,19 @@ SemanticNode.prototype = {
 			this.propList.push(p);
 		}
 
-		for (var i = 0; i < jObj.nodeList.length; i++) {
-			var n = new NodeItem(null, [], jObj.nodeList[i], nodeGroup);
-			this.nodeList.push(n);
-		}
+		// (val) Temporarily commenting this out: it assumes that `the nodes
+		// referenced in the `nodeList` are readily available, but this was only
+		// true when 1. the nodegroups could not have cycles and 2. the
+		// `sNodeList` was topologically sorted.  Since we are breaking those
+		// assumptions, we can no longer start creating `NodeItem` instances
+		// until all `SemanticNode` instances have been created. Only then will
+		// a second pass add the `NodeItem`s, see
+		// `SemanticNodeGroup.prototype.addJson` for details.
+
+		// for (var i = 0; i < jObj.nodeList.length; i++) {
+		// 	var n = new NodeItem(null, [], jObj.nodeList[i], nodeGroup);
+		// 	this.nodeList.push(n);
+		// }
 
 	},
 
@@ -1471,40 +1480,21 @@ SemanticNode.prototype = {
 		return ret;
 	},
 
-	getConnectedNodesForSparql : function() {
-		// return a list of connections as edges.
-		var k = this.nodeList.length;
-		var retval = [];
-
-		for (var i = 0; i < k; i++) {
-			nd = this.nodeList[i];
-			if (nd.getConnected()) {
-				var nodeConn = this.nodeList[i].getSNodes(); // get the nodes
-															// connecting to
-															// this locus
-				for (var d = 0; d < nodeConn.length; d++) {
-					var nxt = [ nd.getURIConnectBy(), nodeConn[d].getSparqlID() ];
-					retval.push(nxt);
-				}
-			}
-		}
-		return retval;
-	},
-
+	/**
+		Get all nodes connected by nodeItem (object properties) facing outward
+		
+		This includes self and duplicates
+	 */
 	getConnectedNodes : function() {
-		// return a list of connections as SNodes.
-		var k = this.nodeList.length;
+		
 		var retval = [];
-
-		for (var i = 0; i < k; i++) {
-			nd = this.nodeList[i];
-			if (nd.getConnected()) {
-				var nodeConn = this.nodeList[i].getSNodes(); // get the nodes
-															// connecting to
-															// this locus
-				for (var d = 0; d < nodeConn.length; d++) {
-					retval.push(nodeConn[d]);
-				}
+	   	for (var nItem of this.nodeList) {
+            if (nItem.getConnected()) {
+                for (var snode of nItem.getSNodes()) {
+                    if (retval.indexOf(snode) == -1) {
+                        retval.push(snode);
+                    }
+                }
 			}
 		}
 		return retval;
@@ -1950,14 +1940,32 @@ SemanticNodeGroup.prototype = {
             this.columnOrder = jObj.columnOrder;
         }
 
+		for (var i = 0; i < jObj.sNodeList.length; i++) {
+		}
+
+		// (val) We temporarily store the semantic nodes by index, just so that
+		// the second pass can easily re-access them by index.
+		let snodes = []
+
 		// loop through SNodes in the json
 		for (var i = 0; i < jObj.sNodeList.length; i++) {
-			var newNode = new SemanticNode(null, null, null, null, null, this,
+			snodes[i] = new SemanticNode(null, null, null, null, null, this,
 					jObj.sNodeList[i]);
 
 			// add the node without messing with any connections...they are
 			// already there.
-			this.addOneNode(newNode, null, null, null, false);
+			this.addOneNode(snodes[i], null, null, null, false);
+		}
+
+		// (val) In this second pass, we can now create `NodeItem`s since the
+		// `SemanticNode`s they will refer to have all been created.
+		for (var i = 0; i < jObj.sNodeList.length; i++) {
+			const jObjSNode = jObj.sNodeList[i]
+			const snode = snodes[i]
+			for (var j = 0; j < jObjSNode.nodeList.length; j++) {
+				var n = new NodeItem(null, [], jObjSNode.nodeList[j], this);
+				snode.nodeList.push(n);
+			}
 		}
 
         if (jObj.hasOwnProperty("orderBy")) {
@@ -3041,18 +3049,28 @@ SemanticNodeGroup.prototype = {
 		return ret;
 	},
 
-	getSubNodes : function(topNode) {
-		// recursive function returns topNode and all it's sub-nodes in a top
-		// down breadth-first search
+	/**
+		Recursively walk down object props / nodeItems and find all subNodes
+		Handles circuits.
+	 */
+	getSubNodes : function(topNode, optStopList) {
+		var stopList = optStopList || [topNode];
 		var ret = [];
+		var nextLevel = [];
 
-		var conn = topNode.getConnectedNodes();
-		ret = ret.concat(conn);
-
-		for (var i = 0; i < conn.length; i++) {
-			var subs = this.getSubNodes(conn[i]);
-			ret = ret.concat(subs);
+		// breadth first to match legacy behavior 
+		for (var n of topNode.getConnectedNodes()) {
+			if (stopList.indexOf(n) == -1 && ret.indexOf(n) == -1) {
+				ret.push(n);
+				nextLevel.push(n);
+			}
 		}
+		
+		for (var n of nextLevel) {
+			// to make depth-first, get rid of nextLevel and combine into loop above
+			ret = ret.concat(this.getSubNodes(n, ret.concat(stopList)));
+		}
+		
 		return ret;
 	},
 
@@ -3080,7 +3098,7 @@ SemanticNodeGroup.prototype = {
 		// catch the problem for the day we allow circular graphs
 		if (nodeCount > 0 && ret.length == 0) {
 			ret.push(this.SNodeList[0]);
-			console.log("Danger in belmont.js getOrderedNodeList(): No head nodes found.  Graph is totally circular.");
+			//console.log("Danger in belmont.js getOrderedNodeList(): No head nodes found.  Graph is totally circular.");
 		}
 
 		return ret;
@@ -3356,14 +3374,21 @@ SemanticNodeGroup.prototype = {
 	getSubGraph : function(startSNode, stopList) {
 		// get all the nodes connected recursively through all connections
 		// except stopList.
-		var ret = [startSNode];
-		var conn = this.getAllConnectedNodes(startSNode);
+		var ret = [];
+		var work = [startSNode];
 
-		for (var i=0; i < conn.length; i++) {
-			if (stopList.indexOf(conn[i]) === -1 && ret.indexOf(conn[i]) === -1) {
-				ret = ret.concat(this.getSubGraph(conn[i], ret));
+		while (work.length > 0) {
+			var node = work.pop()
+			if (stopList.indexOf(node) === -1 && ret.indexOf(node) === -1) {
+				ret.push(node);
+
+				var conn = this.getAllConnectedNodes(startSNode);
+				for (var i=0; i < conn.length; i++) {
+					work.push(conn[i])
+				}
 			}
 		}
+
 		return ret;
 	},
 

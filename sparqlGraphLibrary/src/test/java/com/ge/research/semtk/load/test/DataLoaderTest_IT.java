@@ -90,7 +90,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/testTransforms.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/testTransforms.json");
 
 		// test
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -189,7 +189,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/testTransforms.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/testTransforms.json");
 
 		// calculate expected uri after applying transform. Capitalize all the
 		// "E"s in the column value but not the text "Cell_"
@@ -426,7 +426,7 @@ public class DataLoaderTest_IT {
 		Dataset ds = new CSVDataset(contents, true);
 
 		// get json
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/testTransforms.json");
 
 		// calculate expected uri after applying transform. Capitalize all the "E"s in the column value but not the text "Cell_"
 		String prefix = sgJson.getImportSpecHandler().getUriPrefix();
@@ -479,7 +479,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/testTransforms.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/testTransforms.json");
 
 		// import
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -565,7 +565,7 @@ public class DataLoaderTest_IT {
 	}
 	@Test
 	public void test_LoadData() throws Exception {
-		doLoadData(false);
+		// doLoadData(false);  // takes a long time. does it add value?
 		doLoadData(true);
 	}
 	
@@ -579,7 +579,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTest.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTest.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTest.json");
 
 		// import
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -599,7 +599,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTest.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTest.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTest.json");
 
 		// import
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -652,7 +652,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTest.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTest.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTest.json");
 
 		// import with stupid small starting batch size
 		DataLoader dl = new DataLoader(sgJson, 1, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -684,7 +684,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTest.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTest.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTest.json");
 
 		// import with stupid big starting batch size
 		DataLoader dl = new DataLoader(sgJson, 10000, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -714,7 +714,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTest.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestMessyBaseURI.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestMessyBaseURI.json");
 		
 		// import 
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -741,7 +741,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTest.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTest.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTest.json");
 
 		// precheck
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -773,7 +773,7 @@ public class DataLoaderTest_IT {
 	 */
 	@Test
 	public void test_LoadDataDuraBattery() throws Exception {
-		doLoadDataDuraBattery(false);
+		// doLoadDataDuraBattery(false);   // takes a long time. does it add value?
 		doLoadDataDuraBattery(true);
 	}
 	
@@ -784,7 +784,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 
 		// import
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -804,7 +804,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBatteryIngestTime.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBatteryIngestTime.json");
 
 		// import
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -842,7 +842,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 
 		// import
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -878,7 +878,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDBattEmptyCol.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDBattEmptyCol.json");
 
 		// import
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -901,7 +901,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDBattEmptyCol.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDBattEmptyCol.json");
 
 		String jobId = IntegrationTestUtility.generateJobId("testLoadDataDuraBatteryEmptyColAsync");
 		StatusClient sClient = IntegrationTestUtility.getStatusClient(jobId);
@@ -950,7 +950,7 @@ public class DataLoaderTest_IT {
 				
 		// ==== pre set some data =====
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 		Dataset ds0 = new CSVDataset("src/test/resources/loadTestDuraBatteryFirst4Data.csv", false);
 		DataLoader dl0 = new DataLoader(sgJson0, ds0, TestGraph.getUsername(), TestGraph.getPassword());
 		loadData(dl0, "doLookupBatteryIdAddDesc PRELOAD", cacheFlag);
@@ -986,7 +986,7 @@ public class DataLoaderTest_IT {
 	@Test
 	public void test_LookupBatteryIdAddDesc() throws Exception {
 		doLookupBatteryIdAddDesc(true);  
-		doLookupBatteryIdAddDesc(false);
+		// doLookupBatteryIdAddDesc(false);   // takes a long time. does it add value?
 	}
 	
 	public void doLookupBatteryIdAddDesc(boolean cacheFlag) throws Exception {
@@ -996,7 +996,7 @@ public class DataLoaderTest_IT {
 				
 		// ==== pre set some data =====
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 		Dataset ds0 = new CSVDataset("src/test/resources/loadTestDuraBatteryData.csv", false);
 
 		DataLoader dl0 = new DataLoader(sgJson0, ds0, TestGraph.getUsername(), TestGraph.getPassword());
@@ -1009,7 +1009,7 @@ public class DataLoaderTest_IT {
 		// Try URI lookup
 		// This nodegroup has some cells that should be pruned
 		// One cell has bindings
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupBatteryIdAddDescXtras.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/lookupBatteryIdAddDescXtras.json");
 
 		Dataset ds = new CSVDataset("src/test/resources/lookupBatteryIdAddDescData.csv", false);
 		
@@ -1017,7 +1017,7 @@ public class DataLoaderTest_IT {
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		loadData(dl, "doLookupBatteryIdAddDesc LOOKUP", cacheFlag);
 		
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupBatteryIdAddDesc.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/lookupBatteryIdAddDesc.json");
 		TestGraph.queryAndCheckResults(sgJson, this, "/lookupBatteryIdAddDescResults.csv");
 		
 	}
@@ -1040,7 +1040,7 @@ public class DataLoaderTest_IT {
 				
 		// ==== pre set some data =====
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 		Dataset ds0 = new CSVDataset("src/test/resources/loadTestDuraBatteryData.csv", false);
 
 		DataLoader dl0 = new DataLoader(sgJson0, ds0, TestGraph.getUsername(), TestGraph.getPassword());
@@ -1048,7 +1048,7 @@ public class DataLoaderTest_IT {
 		loadData(dl0, "doLookupBatteryIdAddDesc PRELOAD", cacheFlag);	
 				
 		// Try URI lookup
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupSuperclassIdAddDesc.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/lookupSuperclassIdAddDesc.json");
 
 		Dataset ds = new CSVDataset("src/test/resources/lookupBatteryIdAddDescData.csv", false);
 		
@@ -1056,7 +1056,7 @@ public class DataLoaderTest_IT {
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		loadData(dl, "doLookupBatteryIdAddDesc LOOKUP", cacheFlag);
 		
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupBatteryIdAddDesc.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/lookupBatteryIdAddDesc.json");
 		TestGraph.queryAndCheckResults(sgJson, this, "/lookupBatteryIdAddDescResults.csv");
 		
 	}
@@ -1079,7 +1079,7 @@ public class DataLoaderTest_IT {
 				
 		// ==== pre set some data =====
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 		Dataset ds0 = new CSVDataset("src/test/resources/" + battCsvBasename + ".csv", false);
 
 		DataLoader dl0 = new DataLoader(sgJson0, ds0, TestGraph.getUsername(), TestGraph.getPassword());
@@ -1087,7 +1087,7 @@ public class DataLoaderTest_IT {
 				
 		LocalLogger.logToStdErr("------ done import 1 -------");		
 		// Try URI lookup
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/" + addDescJsonBasename + ".json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/" + addDescJsonBasename + ".json");
 
 		Dataset ds = new CSVDataset("src/test/resources/" + descCsvBasename + ".csv", false);
 		
@@ -1111,7 +1111,7 @@ public class DataLoaderTest_IT {
 				
 		// ==== pre set some data =====
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson0 = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 		Dataset ds0 = new CSVDataset("src/test/resources/loadTestDuraBatteryUTF8Data.csv", false);
 
 		DataLoader dl0 = new DataLoader(sgJson0, ds0, TestGraph.getUsername(), TestGraph.getPassword());
@@ -1121,7 +1121,7 @@ public class DataLoaderTest_IT {
 		
 		// Try URI lookup
 		// lookupBatteryIdAddDescAndRetThem:  does not return the Battery URI.  (See "what-were-we-thinking" above)
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupBatteryIdAddDescAndRetThem.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/lookupBatteryIdAddDescAndRetThem.json");
 		Dataset ds = new CSVDataset("src/test/resources/lookupBatteryIdAddDescUTF8Data.csv", false);
 		
 		// import the actual test: lookup URI and add description
@@ -1187,7 +1187,7 @@ public class DataLoaderTest_IT {
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 	
 		// Try URI lookup
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupBatteryIdAddDesc.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/lookupBatteryIdAddDesc.json");
 		Dataset ds = new CSVDataset("src/test/resources/lookupBatteryIdAddDescShortData.csv", false);
 		
 		// import
@@ -1257,7 +1257,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 
 		// import durabattery twice.  
 		// Puts two copies of each cell (GUID URI)  on each battery (mapped URI)
@@ -1279,7 +1279,7 @@ public class DataLoaderTest_IT {
 		}
 
 		// the real test
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupCellDuraBattery.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/lookupCellDuraBattery.json");
 		// real test's load
 		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
@@ -1304,7 +1304,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -1317,7 +1317,7 @@ public class DataLoaderTest_IT {
 		TestGraph.queryAndCheckResults(sgJson, this, "/loadTestDuraBatteryFirst4Results.csv");
 
 		// the real test
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBatteryLookXNodes.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBatteryLookXNodes.json");
 		ds = new CSVDataset("src/test/resources/loadTestDuraBatteryLookXNodesData.csv", false);
 		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
@@ -1341,7 +1341,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -1356,7 +1356,7 @@ public class DataLoaderTest_IT {
 		// Lookup up Battery by two fields battery id and connected cell's id.
 		// The battery id is missing
 		// Fails:  to URI lookups with one non-empty and one empty
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBatteryLookupXEmptyLookup.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBatteryLookupXEmptyLookup.json");
 		ds = new CSVDataset("src/test/resources/loadTestDuraBatteryLookupXEmptyLookupFail.csv", false);
 		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
@@ -1366,7 +1366,7 @@ public class DataLoaderTest_IT {
 		// Lookup up Battery by two fields battery id and connected cell's id.
 		// Succeeds:  Both URI lookups are missing, so 
 		//            battery is pruned and cell is inserted with no connection
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBatteryLookupXEmptyLookup.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBatteryLookupXEmptyLookup.json");
 		ds = new CSVDataset("src/test/resources/loadTestDuraBatteryLookupXEmptyLookupsOK.csv", false);
 		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
@@ -1375,13 +1375,13 @@ public class DataLoaderTest_IT {
 			LocalLogger.logToStdErr(err.toCSVString());
 			fail();
 		}
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBatteryFindOrphanCells.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBatteryFindOrphanCells.json");
 		TestGraph.queryAndCheckResults(sgJson, this, "/loadTestDuraBatteryLookupXEmptyLookupsOKResults.csv");
 		
 		// Lookup up Battery by two fields battery id and connected cell's id.
 		// Fails:  Both URI lookups are missing, but 
 		//            battery can not be pruned because battery_desc is not empty
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBatteryLookupXEmptyLookup.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBatteryLookupXEmptyLookup.json");
 		ds = new CSVDataset("src/test/resources/loadTestDuraBatteryLookupXEmptyLookupsFail2.csv", false);
 		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
@@ -1403,7 +1403,7 @@ public class DataLoaderTest_IT {
 		// setup as normal
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 
 		// import durabattery first4 as normal
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -1420,7 +1420,7 @@ public class DataLoaderTest_IT {
 		connBothPlusData0.addDataInterface(seiData0);
 		connBothPlusData0.addDataInterface(seiBoth);
 		
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBatteryLookXNodes.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBatteryLookXNodes.json");
 		sgJson.setSparqlConn(connBothPlusData0);
 		ds = new CSVDataset("src/test/resources/loadTestDuraBatteryLookXNodesData.csv", false);
 		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -1450,7 +1450,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -1462,7 +1462,7 @@ public class DataLoaderTest_IT {
 		}
 
 		// the real test
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/lookupBatteryConnectNodes.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/lookupBatteryConnectNodes.json");
 		ds = new CSVDataset("src/test/resources/lookupBatteryConnectNodesData.csv", false);
 		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
@@ -1483,7 +1483,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -1495,7 +1495,7 @@ public class DataLoaderTest_IT {
 		}
 		
 		// the real test 
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupByEnum.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestLookupByEnum.json");
 		ds = new CSVDataset("src/test/resources/loadTestLookupByEnumData.csv", false);
 		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
@@ -1516,7 +1516,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -1528,7 +1528,7 @@ public class DataLoaderTest_IT {
 		}
 		
 		// the real test : look up battery by two colors and add assembly date.  But one color is blank.
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupByEnum.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestLookupByEnum.json");
 		ds = new CSVDataset("src/test/resources/loadTestLookupByEnumBlanksData.csv", false);
 		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
@@ -1558,7 +1558,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/chain.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/chain_duplicate_lookup.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/chain_duplicate_lookup.json");
 
 		// load chain where links named A, B, and C appear in both "from" and "to" columns
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -1614,6 +1614,78 @@ public class DataLoaderTest_IT {
 		
 		
 	}
+	/**
+	 * Load three chains.  Each has two links in a loop.
+	 * chain1 -> link 1a -> link 1b -> back to 1a
+	 * chain2 -> link 2a -> link 2b -> back to 2b
+	 * chain3 -> link 1b -> link 2b -> back to 1b
+	 * 
+	 * Without lookups there should be three chains, six links, nothing shared.
+	 * @throws Exception
+	 */
+	@Test
+	public void testChainLoopNoLookups() throws Exception {
+		Dataset ds = new CSVDataset("src/test/resources/chain_loop_data.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/chain.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/chain_loop_noLookup.json");
+
+		// load chain loop without lookup
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+		// test for three looped chains
+		Table res = TestGraph.execSelectFromResource(this, "chain_loop_noLookup.json");
+		assertEquals("Ingesting chains with loops and no lookups returned wrong number of rows", 3, res.getNumRows());
+		
+		// six distinct links
+		Table res2 = TestGraph.execSelectFromResource(this, "chain_loop_count_links.json");
+		assertEquals("Ingesting chains with loops and no lookups returned wrong number of links", 6, res2.getNumRows());
+	}
+	
+	/**
+	 * Load three chains.  Each has two links in a loop.
+	 * chain1 -> link 1a -> link 1b -> back to 1a
+	 * chain2 -> link 2a -> link 2b -> back to 2b
+	 * chain3 -> link 1b -> link 2b -> back to 1b
+	 * 
+	 * CreateIfMissing creates only 4 links
+	 * Query for chain3's loop of links gets 2 loops: 1b/1a and 1b/2b (hard to visualize w/o construct query)
+	 * @throws Exception
+	 */
+	@Test
+	public void testChainLoopCreateIfMissing() throws Exception {
+		Dataset ds = new CSVDataset("src/test/resources/chain_loop_data.csv", false);
+
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/chain.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/chain_loop_createIfMissing.json");
+
+		// load chain loop without lookup
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+		// test for 4 looped chains
+		Table res = TestGraph.execSelectFromResource(this, "chain_loop_noLookup.json");
+		assertEquals("Ingesting chains with loops and no lookups returned wrong number of rows", 4, res.getNumRows());
+		
+		// 4 distinct links
+		Table res2 = TestGraph.execSelectFromResource(this, "chain_loop_count_links.json");
+		assertEquals("Ingesting chains with loops and no lookups returned wrong number of links", 4, res2.getNumRows());
+	}
 	
 	@Test
 	public void testLookupPruneBlanks() throws Exception {
@@ -1623,7 +1695,7 @@ public class DataLoaderTest_IT {
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
 		
 		// the real test : look up battery by two colors and add assembly date.  But one color is blank.
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupPruneBlanks.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestLookupPruneBlanks.json");
 		CSVDataset ds = new CSVDataset("src/test/resources/loadTestLookupPruneBlanks.csv", false);
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
@@ -1660,7 +1732,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -1672,7 +1744,7 @@ public class DataLoaderTest_IT {
 		}
 		
 		// the real test  
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupCreate.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestLookupCreate.json");
 		ds = new CSVDataset("src/test/resources/loadTestLookupCreateData.csv", false);
 		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
@@ -1694,7 +1766,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -1705,7 +1777,7 @@ public class DataLoaderTest_IT {
 		}
 		
 		// the real test  
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupCreate_NOPROPS.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestLookupCreate_NOPROPS.json");
 		ds = new CSVDataset("src/test/resources/loadTestLookupCreateData.csv", false);
 		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
@@ -1714,7 +1786,7 @@ public class DataLoaderTest_IT {
 			fail(err.toCSVString());
 		}
 
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupCreate.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestLookupCreate.json");
 		TestGraph.queryAndCheckResults(sgJson, this, "/loadTestLookupCreateResults.csv");
 	}
 	
@@ -1727,8 +1799,8 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/Pet.owl");
-		SparqlGraphJson sgJson1 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/pet_ingest_cat_info.json");
-		SparqlGraphJson sgJson2 = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/pet_ingest_pet_nicknames.json");
+		SparqlGraphJson sgJson1 = TestGraph.getSparqlGraphJsonFromResource(this, "/pet_ingest_cat_info.json");
+		SparqlGraphJson sgJson2 = TestGraph.getSparqlGraphJsonFromResource(this, "/pet_ingest_pet_nicknames.json");
 		Dataset ds1 = new CSVDataset("src/test/resources/pet_cat_info.csv", false);
 		Dataset ds2 = new CSVDataset("src/test/resources/pet_nicknames.csv", false);
 
@@ -1780,7 +1852,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -1792,7 +1864,7 @@ public class DataLoaderTest_IT {
 		}
 		
 		// the real test  
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupCreatePartial.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestLookupCreatePartial.json");
 		ds = new CSVDataset("src/test/resources/loadTestLookupCreatePartialData.csv", false);
 		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
@@ -1805,7 +1877,7 @@ public class DataLoaderTest_IT {
 		// check that results match expected in csv
 		TestGraph.queryAndCheckResults(sgJson, this, "/loadTestLookupCreatePartialResults.csv");
 		
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBatteryCellIdQuery.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBatteryCellIdQuery.json");
 		String query = TestGraph.getNodeGroupWithOInfo(sgJson).generateSparql(AutoGeneratedQueryTypes.COUNT, false, -1, null);
 		Table tab = TestGraph.runQuery(query);
 		assertEquals(7, tab.getCellAsInt(0, 0));
@@ -1829,7 +1901,7 @@ public class DataLoaderTest_IT {
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/testTransforms.owl");
 
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/testTransforms.json");
 
 		// calculate expected uri after applying transform. Capitalize all the
 		// "E"s in the column value but not the text "Cell_"
@@ -1916,7 +1988,7 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 
 		// import durabattery first4.  
 		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -1928,7 +2000,7 @@ public class DataLoaderTest_IT {
 		}
 		
 		// the real test  
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupCreateWMap.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestLookupCreateWMap.json");
 		ds = new CSVDataset("src/test/resources/loadTestLookupCreateData.csv", false);
 		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
@@ -1951,14 +2023,14 @@ public class DataLoaderTest_IT {
 		// setup
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
-		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestDuraBattery.json");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBattery.json");
 
 	  
 		DataLoader dl;
 		Table err;
 		
 		// the real test  
-		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/loadTestLookupCreateWMapFail.json");
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestLookupCreateWMapFail.json");
 		ds = new CSVDataset("src/test/resources/loadTestLookupCreateWMapFailData.csv", false);
 		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);

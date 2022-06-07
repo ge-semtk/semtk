@@ -1,0 +1,73 @@
+uri "http://non-tree-graphs".
+
+PNode is a class,
+	described by id with a single value of type string.
+QNode is a class, 
+	described by id with a single value of type string,
+	described by qP with values of type PNode,
+	described by qRs with values of type RNode.
+RNode is a class,
+	described by id with a single value of type string,
+	described by rP with values of type PNode.
+
+/***** Acyclic graph *****/
+
+/*
+ * A nodegroup searching for a pair Q-►R such that they share **the same**
+ * P should only find P1-Q1-R1.
+ * 
+ *  P1◄──R3   P2
+ *  ▲▲        ▲
+ *  ││        │
+ *  │└──Q1    │
+ *  │   ││    │
+ *  │   ││    │
+ * R1◄──┘└───►R2
+ *
+ */
+P1 is a PNode with id "P1".
+Q1 is a QNode with id "Q1", with qP P1, with qRs R1, with qRs R2.
+R1 is a RNode with id "R1", with rP P1.
+
+P2 is a PNode with id "P2".
+R2 is a RNode with id "R2", with rP P2.
+
+R3 is a RNode with id "R3", with rP P1.
+
+/***** Cyclic graph *****/
+
+ANode is a class,
+	described by id with a single value of type string,
+	described by bNodes with values of type BNode.
+BNode is a class, 
+	described by id with a single value of type string,
+	described by cNodes with values of type CNode.
+CNode is a class,
+	described by id with a single value of type string,
+	described by aNodes with values of type ANode.
+
+/*
+ * A4───►B4──►C5───►A5
+ *  ▲    │     ▲    │
+ *  └─C4◄┘     └─B5◄┘
+ */
+A4 is a ANode with id "A4", with bNodes B4.
+B4 is a BNode with id "B4", with cNodes C4, with cNodes C5.
+C4 is a CNode with id "C4", with aNodes A4.
+
+A5 is a ANode with id "A5", with bNodes B5.
+B5 is a BNode with id "B5", with cNodes C5.
+C5 is a CNode with id "C5", with aNodes A5. 
+
+/* A nodegroup searching for A-B-C loops with the same A node at both ends should find:
+ *
+ * A4───►B4
+ *  ▲    │
+ *  └─C4◄┘
+ * 
+ * and:
+ * 
+ * A5───►B5
+ *  ▲    │
+ *  └─C5◄┘
+ */

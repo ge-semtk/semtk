@@ -51,7 +51,7 @@
     var gQuerySource = "SERVICES";
 
     var RESULTS_MAX_ROWS = 5000; // 5000 sample rows
-
+    var ALLOW_CIRCULAR_NODEGROUPS = true;
 
     // READY FUNCTION
     $('document').ready(function(){
@@ -538,7 +538,7 @@
 
                         var msg = "Repairing property range<list><li>from " + pRangeStr + "</li><li>to " + oRangeStr + "</li></list><br>" +
                                   (hasConstraints ? "<br>Review constraints to make sure they are compatible." : "") +
-                                  (hasMapping ? "<br>Review item's import mapping" : "")
+                                  (hasMapping ? "<br>Review item's import mapping" : "");
 
                         ModalIidx.alert("Repair property range", msg, false, changePropItemURI);
                     } else {
@@ -638,10 +638,13 @@
     	var mySubgraph = gNodeGroup.getSubGraph(snode, []);
 
     	for (var i=0; i < targetSNodes.length; i++) {
-            // Not circular, not self, not already linked
-    		if (mySubgraph.indexOf(targetSNodes[i]) == -1 && targetSNodes[i] != snode && nItem.getSNodes().indexOf(targetSNodes[i]) == -1) {
-    			unlinkedTargetNames.push(targetSNodes[i].getBindingOrSparqlID());
-    			unlinkedUriOrSNodes.push(targetSNodes[i]);
+            if (nItem.getSNodes().indexOf(targetSNodes[i]) == -1) {  // not already connected
+                if ( ALLOW_CIRCULAR_NODEGROUPS ||
+                       (mySubgraph.indexOf(targetSNodes[i]) == -1 && targetSNodes[i] != snode ) ){    // not cicular && not self
+                       
+    				unlinkedTargetNames.push(targetSNodes[i].getBindingOrSparqlID());
+    				unlinkedUriOrSNodes.push(targetSNodes[i]);
+    			}
     		}
     	}
 
@@ -2435,8 +2438,11 @@
     };
 
     // set status to a message or "" to finish progress.
+    //
+    // optHighlightCanvas - mark the treeCanvasWrapper with bold red border
     var setStatus = function(msg) {
         var div = document.getElementById("status");
+        
     	div.innerHTML= "<font color='red'>" + msg + "</font><br>";
         if (!msg || msg.length == 0) {
             gCancelled = false;
@@ -2515,11 +2521,12 @@
     var buildQuerySuccess = function (sparql, optMsg) {
         document.getElementById('queryText').value = sparql;
         if (optMsg) {
-            setStatus(optMsg);
+            setStatus(optMsg, true);
         } else {
             setStatus("");
         }
-
+	    gRenderer.setError("");
+	    
         if (sparql.length > 0) {
             guiQueryNonEmpty();
         } else {
@@ -2530,9 +2537,10 @@
 
     var buildQueryFailure = function (msgHtml, sparqlMsgOrCallback) {
         if (typeof sparqlMsgOrCallback == "string") {
-            setStatus(sparqlMsgOrCallback.replace(/\n/g,' '));
+            	
+            gRenderer.setError(sparqlMsgOrCallback.replace(/\n/g,' '), true);
         } else {
-            setStatus("");
+            gRenderer.setError("");
             require(['sparqlgraph/js/modaliidx'],
     	         function (ModalIidx) {
 					ModalIidx.alert("Query Generation Failed", msgHtml, false, sparqlMsgOrCallback);
@@ -2769,6 +2777,7 @@
 	 	document.getElementById('SGQueryLimit').value = "";
 	 	document.getElementById('SGQueryNamespace').checked = true;
 
+		gRenderer.setError(null);
 	 	clearResults();
 	 	guiQueryEmpty();
 	};

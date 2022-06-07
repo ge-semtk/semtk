@@ -47,6 +47,7 @@ define([	// properly require.config'ed
 		//============ local object  ExploreTab =============
 		var NodegroupRenderer = function(parentdiv) {
             this.ctx = document.createElement("canvas").getContext("2d");
+			this.parentDiv = parentdiv;
 
             this.nodegroup = null;
             this.oInfo = null;
@@ -57,11 +58,23 @@ define([	// properly require.config'ed
             this.snodeRemoverCallback = null;
             this.linkBuilderCallback = null;
             this.linkEditorCallback = null;
-
+            
+			// create errorElem invisible take up no space
+			this.errorElem = document.createElement("center");
+			this.errorElem.style.display = "none";   
+			this.errorElem.style.position = "absolute";  
+			this.errorElem.style.marginTop = "5px";
+			this.errorElem.style.marginLeft = "5px";
+			this.errorElem.style.paddingLeft = "5px";
+			this.errorElem.style.paddingRight = "5px";
+			this.errorElem.style.color = NodegroupRenderer.COLOR_INVALID_FOREGROUND;
+			this.errorElem.style.backgroundColor = NodegroupRenderer.COLOR_INVALID_BACKGROUND;
+			parentdiv.appendChild(this.errorElem);
+			
             this.configdiv = VisJsHelper.createConfigDiv("ngrConfigDiv");
             this.canvasdiv = VisJsHelper.createCanvasDiv("NodegroupRenderer.canvasdiv_" + Math.floor(Math.random() * 10000).toString());
             parentdiv.appendChild(this.canvasdiv);
-
+			
             this.network = new vis.Network(this.canvasdiv, {}, NodegroupRenderer.getDefaultOptions(this.configdiv));
             this.network.on('click', this.click.bind(this));
 
@@ -181,6 +194,20 @@ define([	// properly require.config'ed
 
 		NodegroupRenderer.prototype = {
 
+			// If non-empty put error at the top of canvas and highlight the border
+			setError : function(html) {
+				if (!html || html == "") {
+					this.ctx.fillText("fill text", 100,100);
+					this.errorElem.style.display = "none";
+					this.errorElem.innerHTML = "";
+					this.parentDiv.style.border = "1px solid gray";
+				} else {
+					this.errorElem.style.display = "";
+					this.errorElem.innerHTML = html;
+					this.parentDiv.style.border = "3px solid " + NodegroupRenderer.COLOR_INVALID_FOREGROUND;
+				}
+			},
+			
             setPropEditorCallback : function (callback) {
                 this.propEditorCallback = callback;
             },
@@ -351,11 +378,18 @@ define([	// properly require.config'ed
                 var edgeIDsToRemove = this.network.body.data.edges.getIds();
                 var edgeData = [];
                 for (var snode of this.nodegroup.getSNodeList()) {
-                    for (var nItem of snode.getNodeList()) {
+                    const nodeItems = snode.getNodeList()
+                    for (var nItem of nodeItems) {
                         for (var snode2 of nItem.getSNodes()) {
                             var fromID = snode.getSparqlID();
                             var toID = snode2.getSparqlID();
-                            var id = fromID + "-" + toID;
+
+                            // Now that we allow multiple (distinct) edges
+                            // between the same two nodes, it is no longer
+                            // enough to use only `fromID` and `toID` to
+                            // identify an edge, we also want to include the
+                            // "key name".
+                            var id = `${nItem.getKeyName()}-${fromID}-${toID}`;
                             var label = this.buildEdgeLabel(nItem, snode2);
 
                             var foreground = this.calcNodeItemForeground(nItem, snode, snode2);
@@ -377,14 +411,52 @@ define([	// properly require.config'ed
                             if (unionColor != null) {
                                 edgeFont.color = unionColor;
                             }
+
+                            // Multiple edges between the same two nodes can be
+                            // displayed without overlap by bending each edge
+                            // appropriately via the roundness attribute.
+                            // The idea is to evenly space them out around 0 by
+                            // increments of 0.2.
+
+                            // Edges that have the same source and target as me
+                            // (source is implicitly the same: snode)
+                            const competingEdges = (
+                                nodeItems
+                                .filter(ni => ni.getSNodes().some(tgt => tgt.getSparqlID() == toID))
+                            )
+
+                            // Among competing edges, which index am I?
+                            const competingEdgeIndex =
+                                competingEdges.findIndex(ni => ni.getKeyName() == nItem.getKeyName())
+
+                            // This makes it so that among N competing edges,
+                            // they fan out evenly on both sides of 0.
+                            // e.g.
+                            // for N = 3, [-SPACING, 0, SPACING]
+                            // for N = 4, [-(3/2)*SPACING, -(1/2)*SPACING, (1/2)*SPACING, (3/2)*SPACING]
+                            const SPACING = 0.2
+                            const roundness = (
+                                (SPACING * competingEdgeIndex) - (SPACING * (competingEdges.length - 1) / 2)
+                            )
+
                             var edge = {
                                 id:     id,
                                 from:   fromID,
                                 to:     toID,
                                 label:  label,
                                 color:  {color: unionMemberColor, highlight: unionMemberColor, inherit: false},
-                                font :  edgeFont
+                                font :  edgeFont,
                             };
+
+                            // We only add the 'smooth' attribute when there are
+                            // more than one edge competing between two nodes,
+                            // because it changes how singular edges are
+                            // rendered (they get straightened, which we don't
+                            // want).
+                            if (competingEdges.length > 1) {
+                                edge['smooth'] = { type: 'curvedCW', roundness }
+                            }
+
                             edgeData.push(edge);
                             this.edgeCallbackData[id] = {uri: nItem.getItemUri()};
 

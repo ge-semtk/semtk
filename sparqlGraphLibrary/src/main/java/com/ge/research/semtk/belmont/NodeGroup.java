@@ -19,16 +19,22 @@
 package com.ge.research.semtk.belmont;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -67,8 +73,9 @@ public class NodeGroup {
 		ASK,
 	}
 	
-	public  static String[] FUNCTION_NAMES = new String [] {"MAX", "MIN", "SUM", "COUNT", "AVG", "SAMPLE", "GROUP_CONCAT"};
-
+	public static String[] FUNCTION_NAMES = new String [] {"MAX", "MIN", "SUM", "COUNT", "AVG", "SAMPLE", "GROUP_CONCAT"};
+	public static String ORPHAN_URI = "orphan-uri";
+	
 	private static final String JSON_KEY_NODELIST = "sNodeList";
 	private static final String JSON_KEY_UNIONHASH = "unionHash";
 	
@@ -250,7 +257,6 @@ public class NodeGroup {
 		        	if(property == null){  // only create property once
 		        		String relationship = key; 		// e.g. http://research.ge.com/print/testconfig#material
 		        		String propertyValueType = valueJSONObject.get("@type").toString();	// e.g. http://www.w3.org/2001/XMLSchema#string
-		        		String relationshipLocal = new OntologyName(relationship).getLocalName();   // e.g. pasteMaterial
 		        		String propertyValueTypeLocal = new OntologyName(propertyValueType).getLocalName();	// e.g. string
 		        		property = new PropertyItem(XSDSupportedType.getMatchingValue(propertyValueTypeLocal), propertyValueType, relationship); 		        		
 		        	}
@@ -965,6 +971,8 @@ public class NodeGroup {
 	 * @
 	 */
 	public void addJson(JSONArray nodeArr, OntologyInfo uncompressOInfo) throws Exception  {
+		boolean orphanFlag = false;   // did this function process any orphan nodes
+		
 		this.oInfo = uncompressOInfo;
 		for (int j = 0; j < nodeArr.size(); ++j) {
 			JSONObject nodeJson = (JSONObject) nodeArr.get(j);
@@ -989,17 +997,24 @@ public class NodeGroup {
 				}
 				if(check != null){
 					// remove from the orphan list. we do not want to mod this node more than once. 
-				//	this.orphanOnCreate.remove(check);
+					
+					// leave this for validation. It does a better job.
+					//this.orphanOnCreate.remove(check);
+					orphanFlag = true;
 					check.updateFromJson(nodeJson);
 				}
 				else{
 					throw new Exception( "--uncreated node referenced: " + curr.sparqlID );
 				}
-					
 			}
-			
 		}
-		this.orphanOnCreate.clear();
+		
+		if (orphanFlag && uncompressOInfo != null) {
+			// need to re-validate targets of nodeItems to make sure an orphan didn't slip through unvalidated
+			for (Node n : this.nodes) {
+				n.validateNodeItemTargets(uncompressOInfo);
+			}
+		}
 	}
 	
 	/**
@@ -1231,7 +1246,7 @@ public class NodeGroup {
         this.tmpUnionParentHash.get(keyStr).put(id, parentEntryStr);
 	}
 	
-	private class DepthTuple implements Comparator {
+	private class DepthTuple implements Comparator<DepthTuple> {
 		public int key;
 		public int depth;
 		public DepthTuple(int key, int depth) {
@@ -1239,9 +1254,9 @@ public class NodeGroup {
 			this.depth= depth;
 		}
 		// deepest first
-		public int compare(Object obj1, Object obj2) {
-	       Integer p1 = ((DepthTuple) obj1).depth;
-	       Integer p2 = ((DepthTuple) obj2).depth;
+		public int compare(DepthTuple obj1, DepthTuple obj2) {
+	       Integer p1 = obj1.depth;
+	       Integer p2 = obj2.depth;
 
 	       if (p1 > p2) {
 	           return -1;
@@ -2141,9 +2156,8 @@ public class NodeGroup {
 			if (unionKey == null ) {
 				sparql.append(this.generateSparqlSubgraphClausesNode(	whereClauseType, 
 																		headNode, 
-																		null, null,   // skip nodeItem.  Null means do them all.
-																		keepTargetConstraints ? null : targetObj, 
-																		doneNodes, doneUnions,
+																		keepTargetConstraints ? null : targetObj, doneNodes,   // skip nodeItem.  Null means do them all.
+																		doneUnions, 
 																		tab));
 			} else {
 				sparql.append(this.generateSparqlSubgraphClausesUnion(	whereClauseType, unionKey, keepTargetConstraints ? null : targetObj, doneNodes, doneUnions, tab));
@@ -2283,9 +2297,8 @@ public class NodeGroup {
 			
 			sparql.append(this.generateSparqlSubgraphClausesNode(	ClauseTypes.CONSTRUCT_LEADER, 
 																	headNode, 
-																	null, null,    // skip nodeItem.  Null means do them all.
-																	null,    // no targetObj
-																	doneNodes, doneUnions,
+																	null, doneNodes,    // skip nodeItem.  Null means do them all.
+																	doneUnions,    // no targetObj
 																	tab));
 			headNode = this.getNextHeadNode(doneNodes);
 		}
@@ -2380,29 +2393,6 @@ public class NodeGroup {
             return "";
     	}
     }
-
-
-	
-	/**
-	 * FROM clause logic
-	 * Generates FROM clause if this.conn has
-	 *     - exactly 1 data connection
-	 */
-	private String generateSparqlWithClause(String tab) {
-		
-		// do nothing if no conn
-		if (this.conn == null) return "";
-		
-		// multiple ServerURLs is not implemented
-		if (this.conn.getDataInterfaceCount() < 1) {
-			throw new Error("Can not generate a WITH clause when there is no data connection");
-		}
-		if (this.conn.getDataInterfaceCount() > 1) {
-			throw new Error("Can not generate a WITH clause when there are multiple data connections");
-		}
-		
-		return tab + " WITH <" + this.conn.getDataInterface(0).getGraph() + "> ";
-	}
 	
 	@Deprecated
 	public String generateSparqlConstruct(boolean unused) throws Exception {
@@ -2417,8 +2407,6 @@ public class NodeGroup {
 	 * Top-level subgraph SPARQL generator
 	 * @param clauseType
 	 * @param snode
-	 * @param skipNodeItem nodeItem to skip
-	 * @param skipNodeTarget target snode to skip
 	 * @param targetObj - target of FILTER queries
 	 * @param doneNodes - nodes to skip
 	 * @param tab - text TAB
@@ -2426,7 +2414,7 @@ public class NodeGroup {
 	 * @throws Exception
 	 */
 	
-	private String generateSparqlSubgraphClausesNode(ClauseTypes clauseType, Node snode, NodeItem skipNodeItem, Node skipNodeTarget, Returnable targetObj, ArrayList<Node> doneNodes, ArrayList<Integer> doneUnions, String tab) throws Exception  {
+	private String generateSparqlSubgraphClausesNode(ClauseTypes clauseType, Node snode, Returnable targetObj, ArrayList<Node> doneNodes, ArrayList<Integer> doneUnions, String tab) throws Exception  {
 		StringBuilder sparql = new StringBuilder();
 		
 		// check to see if this node has already been processed. 
@@ -2435,6 +2423,7 @@ public class NodeGroup {
 		} else {
 			doneNodes.add(snode);
 		}
+		int myDone = doneNodes.size() - 1;
 				
 		// delete where
 		if (clauseType == ClauseTypes.DELETE_WHERE && snode.getDeletionMode() != NodeDeletionTypes.NO_DELETE){
@@ -2479,7 +2468,10 @@ public class NodeGroup {
 			
 			// each nItem might point to multiple children
 			for(Node targetNode : nItem.getNodeList()) {
-				if (nItem != skipNodeItem || targetNode != skipNodeTarget) {
+				int targetDone = doneNodes.indexOf(targetNode);
+				if (targetDone == -1) { targetDone = doneNodes.size(); }
+				
+				if (myDone <= targetDone) { // less-then-equal-to to catch self edges
 					Integer unionKey = this.getUnionKey(snode, nItem, targetNode);
 					if (unionKey == null || clauseType == ClauseTypes.CONSTRUCT_LEADER) {
 						sparql.append(this.generateSparqlSubgraphClausesNodeItem(clauseType, false, snode, nItem, targetNode, targetObj, doneNodes, doneUnions, tab));
@@ -2493,9 +2485,13 @@ public class NodeGroup {
 		}
 		
 		// Recursively process incoming nItems
-		for(NodeItem nItem : this.getConnectingNodeItems(snode)) {   
-			if (nItem != skipNodeItem || snode != skipNodeTarget) {
-				Node incomingSNode = this.getNodeItemParentSNode(nItem); 
+		for(NodeItem nItem : this.getConnectingNodeItems(snode)) {
+			Node incomingSNode = this.getNodeItemParentSNode(nItem);
+		
+			int sourceDone = doneNodes.indexOf(incomingSNode);
+			if (sourceDone == -1) { sourceDone = doneNodes.size(); }
+			
+			if (myDone < sourceDone) { // less-than to avoid self-edges
 				Integer unionKey = this.getUnionKey(incomingSNode, nItem, snode);
 				if (unionKey == null || clauseType == ClauseTypes.CONSTRUCT_LEADER) {
 					sparql.append(
@@ -2530,7 +2526,7 @@ public class NodeGroup {
 			
 			if (keyStr.getType() == Node.class) {
 				tab = SparqlToXUtils.tabIndent(tab);
-				sparql.append(this.generateSparqlSubgraphClausesNode(clauseType, keyStr.getSnode(), null, null, targetObj, doneNodes, doneUnions, tab));
+				sparql.append(this.generateSparqlSubgraphClausesNode(clauseType, keyStr.getSnode(), targetObj, doneNodes, doneUnions, tab));
 				tab = SparqlToXUtils.tabOutdent(tab);
 			} else if (keyStr.getType() == NodeItem.class) {
 				tab = SparqlToXUtils.tabIndent(tab);
@@ -2655,9 +2651,9 @@ public class NodeGroup {
 		
 		// RECURSION
 		if (incomingFlag) {
-			recursionSparql.append(this.generateSparqlSubgraphClausesNode(clauseType, snode, nItem, targetNode, targetObj, doneNodes, doneUnions, tab));
+			recursionSparql.append(this.generateSparqlSubgraphClausesNode(clauseType, snode, targetObj, doneNodes, doneUnions, tab));
 		} else {
-			recursionSparql.append(this.generateSparqlSubgraphClausesNode(clauseType, targetNode, nItem, targetNode, targetObj, doneNodes, doneUnions, tab));
+			recursionSparql.append(this.generateSparqlSubgraphClausesNode(clauseType, targetNode, targetObj, doneNodes, doneUnions, tab));
 		}
 		tab = SparqlToXUtils.tabOutdent(tab);
 		
@@ -3194,46 +3190,62 @@ public class NodeGroup {
     }
     
 	/**
-	 * Prune subgraphs of node that don't have any nodes.isUsed()==true
+	 * Prune subgraphs of node that don't have any nodes.isUsed()==true 
+	 * by removing them from the nodegroup
 	 * @param node
 	 * @param instanceOnly
-	 * @return
+	 * @return - boolean : was anything pruned
 	 */
 	public boolean pruneUnusedSubGraph (Node node, boolean instanceOnly) {
 		
+		// Only begin pruning if this node is not used
 		if (! node.isUsed(instanceOnly)) {
-			ArrayList<Node> subNodes = this.getAllConnectedNodes(node);
+			// Parallel array lists
+		    //    connNodes = connected nodes (either direction)
+			//    subGraphs = the list of subgraph nodes for each connNode
+			//    subGraphUsedNodeIDs = list of nodeIds in each subgraph that are used
+			ArrayList<Node> connNodes = this.getAllConnectedNodes(node);
 			ArrayList<ArrayList<Node>> subGraphs = new ArrayList<ArrayList<Node>>();
-			ArrayList<Boolean> subGraphIsUsed = new ArrayList<Boolean>();
-			int usedSubGraphCount = 0;
+			ArrayList<String> subGraphUsedNodeIDs = new ArrayList<String>();
 			
 			ArrayList<Node> stopList = new ArrayList<Node>();
 			stopList.add(node);
 			
-			// build a subGraph for every connection
-			for (int i = 0; i < subNodes.size(); i++) {
-				subGraphs.add(this.getSubGraph(subNodes.get(i), stopList));
-				subGraphIsUsed.add(false);
+			// build a subGraph info for every connected node
+			for (int i = 0; i < connNodes.size(); i++) {
 				
+				// get subgraph[i]
+				subGraphs.add(this.getSubGraph(connNodes.get(i), stopList));
+				
+				// fill list of used node ids for subgraph[i]
+				HashSet<String> usedIdList = new HashSet<String>();
 				for (int j=0; j < subGraphs.get(i).size(); j++) {
-					Node n = subGraphs.get(i).get(j);
-					
-					// if this subGraph isUsed, then note it and break
+					Node n = subGraphs.get(i).get(j);					
 					if (n.isUsed(instanceOnly))  {
-						subGraphIsUsed.set(i, true);
-						usedSubGraphCount += 1;
-						break;
+						usedIdList.add(n.getSparqlID());
 					}
 				}
-				if (usedSubGraphCount > 1) break;
+				//changed usedIdList into a sorted single string
+				ArrayList<String> sortedUsedIDs = new ArrayList<String>(usedIdList);
+				Collections.sort(sortedUsedIDs);
+				subGraphUsedNodeIDs.add(String.join(",", sortedUsedIDs));
 			}
 			
-			// if only one subGraph has nodes that are constrained or returned
-			if (usedSubGraphCount < 2) {
+			// In order to take circularities into account
+			// create a HashSet to count number of unique subgraphs:  unique by the list of used nodes they contain
+			HashSet<String>  uniqueSubgraphUsedNodeLists = new HashSet<>(subGraphUsedNodeIDs);
+			
+			
+			// if there aren't two unique subGraphs that are "used"
+			//    delete unused subgraphs
+			//    delete node
+			//    walk towards the used node(s) and prune
+			if (uniqueSubgraphUsedNodeLists.size() < 2) {
 				
 				// delete any subGraph with no returned or constrained nodes
 				for (int i=0; i < subGraphs.size(); i++) {
-					if (subGraphIsUsed.get(i) == false) {
+					// if subGraph is unused, delete all the nodes
+					if (subGraphUsedNodeIDs.get(i).equals("")) {
 						for (int j=0; j < subGraphs.get(i).size(); j++) {
 							Node n = subGraphs.get(i).get(j);
 							this.deleteNode(n, false);
@@ -3241,10 +3253,11 @@ public class NodeGroup {
 					}
 				}
 				
-				// recursively walk up the 'needed' subtree
+				// recursively walk up the used subtrees
 				// pruning off any unUsed nodes and subGraphs
 				ArrayList<Node> connList = this.getAllConnectedNodes(node);
 				this.deleteNode(node, false);
+				// wonky: there is always only 1 left
 				for (int i=0; i < connList.size(); i++) {
 					this.pruneUnusedSubGraph(connList.get(i), instanceOnly);
 				}
@@ -3477,15 +3490,18 @@ public class NodeGroup {
 	 */
 	private ArrayList<Node> getSubGraph(Node startNode, ArrayList<Node> stopList) {
 		ArrayList<Node> ret = new ArrayList<Node>();
+		Stack<Node> work = new Stack<>();
 		
-		ret.add(startNode);
-		ArrayList<Node> conn = this.getAllConnectedNodes(startNode);
+		work.push(startNode);
 		
-		for (Node n : conn) {
-			if (! stopList.contains(n) && ! ret.contains(n)) {
-				ret.addAll(this.getSubGraph(n, ret));
+		while (!work.isEmpty()) {
+			Node next = work.pop();
+			if (! stopList.contains(next) && ! ret.contains(next)) {
+				ret.add(next);
+				work.addAll(this.getAllConnectedNodes(next));
 			}
 		}
+
 		return ret;
 	}
 	
@@ -4199,19 +4215,39 @@ public class NodeGroup {
 		return ret;
 	}
 	
+	/**
+	 * Recursively walk down object props / nodeItems and find all subNodes
+	 * Handles circuits.
+	 * @param topNode
+	 * @return
+	 */
 	private ArrayList<Node> getSubNodes(Node topNode) {
-		ArrayList<Node> subNodes = new ArrayList<Node>();
-		
-		ArrayList<Node> connectedNodes = topNode.getConnectedNodes();
-		
-		subNodes.addAll(connectedNodes);
-		
-		for (Node n : connectedNodes) {
-			ArrayList<Node> innerSubNodes = this.getSubNodes(n);
-			subNodes.addAll(innerSubNodes);
+		ArrayList<Node> stopList = new ArrayList<Node>();
+		stopList.add(topNode);
+		return this.getSubNodes(topNode, stopList);
+	}
+	
+	// recursive version
+	private ArrayList<Node> getSubNodes(Node topNode, ArrayList<Node> stopList) {
+		ArrayList<Node> ret = new ArrayList<Node>();
+		ArrayList<Node> nextLevel = new ArrayList<Node>();
+		// breadth first to match legacy behavior 
+		for (Node n : topNode.getConnectedNodes()) {
+			if (!stopList.contains(n) && !ret.contains(n)) {
+				ret.add(n);
+				nextLevel.add(n);
+			}
 		}
 		
-		return subNodes;
+		for (Node n : nextLevel) {
+			// to make depth-first, get rid of nextLevel and combine into loop above
+			ArrayList<Node> newStopList = new ArrayList<Node>();
+			newStopList.addAll(ret);
+			newStopList.addAll(stopList);
+			ret.addAll(this.getSubNodes(n, newStopList));	
+		}
+		
+		return ret;
 	}
 	
 	private ArrayList<Node> getHeadNodes()  {
@@ -4239,21 +4275,112 @@ public class NodeGroup {
 		return ret;
 	}
 	
+	/**
+	 * A clique in the nodegroup is a set of nodes that are connected to each
+	 * other using simple edges. (A simple edge is one that is not part of a
+	 * union, minus, or optional). This function computes the cliques for the
+	 * current nodegroup by mapping each node in the nodegroup to a common
+	 * leader node for that group.
+	 * 
+	 * @return mapping from node to clique leader
+	 * @throws Exception
+	 */
+	private UnionFind<Node> calcSimpleCliques() throws Exception {
+		UnionFind<Node> result = new UnionFind<>();
+
+		for (Node source : nodes) {
+			for (NodeItem ni : source.getNodeItemList()) {
+				if (ni.getConnected()) {
+					for (Node target : ni.getNodeList()) {
+	
+						// Check for a plain edge: no optional, no minus, no reverse
+						if (NodeItem.OPTIONAL_FALSE == ni.getOptionalMinus(target)
+							&& null == getUnionKey(source, ni, target))
+						{
+							result.union(source, target);							
+						}
+					}
+				}
+			}
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * This function creates the graph of non-simple edges between cliques.
+	 * Non-simple edges are those that are part of a union, minus, or optional.
+	 * 
+	 * The nodes of this graph are clique leaders. The edges of this graph are
+	 * the non-simple edges of the current nodegroup.
+	 * 
+	 * @param cliques Simply connected node cliques
+	 * @return summary of the connections between cliques
+	 * @throws Exception
+	 */
+	private SimpleGraph<Node> calcCliqueGraph(UnionFind<Node> cliques) throws Exception
+	{
+		SimpleGraph<Node> result = new SimpleGraph<>();
+		
+		for (Node node : nodes) {
+			Node leader = cliques.find(node);
+			if (leader == node) {
+				result.addNode(leader);
+			}
+		}
+		
+		for (Node source : nodes) {
+			Node sourceLeader = cliques.find(source);
+
+			for (NodeItem ni : source.getNodeItemList()) {
+				for (Node target : ni.getNodeList()) {					
+					
+					int opt = ni.getOptionalMinus(target);
+
+					if (NodeItem.OPTIONAL_REVERSE == opt ||
+                        NodeItem.MINUS_REVERSE == opt ||
+                        this.isReverseUnion(source, ni, target))
+                   	{
+						Node targetLeader = cliques.find(target);
+						result.addEdge(targetLeader, sourceLeader);
+					} else if (NodeItem.OPTIONAL_FALSE != ni.getOptionalMinus(target) ||
+						null != getUnionKey(source, ni, target))
+					{
+						Node targetLeader = cliques.find(target);
+						result.addEdge(sourceLeader, targetLeader);
+					}
+				}
+			}
+		}
+		
+		return result;
+	}
+	
 	private Node getNextHeadNode(ArrayList<Node> skipNodes) throws Exception  {
 		if (skipNodes.size() == this.nodes.size()) {
 			return null;
 		}
-		
-		HashMap<String,Integer> optHash = this.calcOptionalHash(skipNodes);
+
+		UnionFind<Node> cliques = this.calcSimpleCliques();
+		SimpleGraph<Node> graph = this.calcCliqueGraph(cliques);
+		SimpleGraph<Node> invertedGraph = graph.invert();
 		HashMap<String,Integer> linkHash = this.calcIncomingLinkHash(skipNodes);
 		
+		if (!graph.isForest()) {
+			//throw new NoValidSparqlException("Graph does not reduce to a forest");
+			throw new NoValidSparqlException("Nodegroup contains an ambiguous loop");
+		}
+
 		String retID = null;
 		int minLinks = 99;
 		
 		// both hashes have same keys: loop through valid snode SparqlID's
-		for (String id : optHash.keySet()) {
-			// find nodes that are not optional
-			if (optHash.get(id) == 0) {
+		for (Map.Entry<Node, List<Node>> entry : invertedGraph.entrySet()) {
+			
+			if (!skipNodes.contains(entry.getKey()) &&
+				 skipNodes.containsAll(entry.getValue())) {
+				String id = entry.getKey().getSparqlID();
+
 				// choose node with lowest number of incoming links
 				if (retID == null || linkHash.get(id) < minLinks) {
 					retID = id;
@@ -4265,9 +4392,9 @@ public class NodeGroup {
 		}
 		// throw an error if no nodes have optHash == 0
 		if (retID == null) {
-			throw new Exception("Internal error in NodeGroup.getHeadNextHeadNode(): No head nodes found. Probable cause: no non-optional semantic nodes.");
+			throw new Exception("Internal error in NodeGroup.getNextHeadNode(): No head nodes found. Probable cause: no non-optional semantic nodes.");
 		}
-		
+
 		return this.getNodeBySparqlID(retID);
 	}
 	
@@ -4314,60 +4441,6 @@ public class NodeGroup {
 		return linkHash;
 	}
 	
-	private HashMap<String, Integer>  calcOptionalHash(ArrayList<Node> skipNodes) throws Exception  {
-		
-		// ---- set optHash ----
-		// so optHash[snode.getSparqlID()] == count of nodeItems indicating this node is optional
-		HashMap<String, Integer> optHash = new HashMap<String, Integer>();
-
-		// initialize optHash
-		for (Node snode : this.nodes) {
-
-			if (! skipNodes.contains(snode)) {
-				optHash.put(snode.getSparqlID(), 0);
-			}
-		}
-		
-		// loop through all snodes
-		for (Node snode : this.nodes) {
-			
-			if (! skipNodes.contains(snode)) {
-				
-				// loop through all nodeItems
-				for (NodeItem nodeItem : snode.getNodeItemList()) {
-					
-					// loop through all connectedSNodes
-					for (Node targetSNode : nodeItem.getNodeList()) {
-						
-						// if found an optional nodeItem
-						int opt = nodeItem.getOptionalMinus(targetSNode);
-						
-						ArrayList<Node> subGraph = new ArrayList<Node>();
-						
-						// get subGraph(s) on the optional side of the nodeItem
-						if (opt == NodeItem.OPTIONAL_TRUE) {
-							ArrayList<Node> stopList = new ArrayList<Node>();
-							stopList.add(snode);
-							subGraph.addAll(this.getSubGraph(targetSNode, stopList));
-							
-						} else if (opt == NodeItem.OPTIONAL_REVERSE) {
-							ArrayList<Node> stopList = new ArrayList<Node>();
-							stopList.add(targetSNode);
-							subGraph.addAll(this.getSubGraph(snode, stopList));
-						}
-							
-						// increment every node on the optional side of the nodeItem
-						for (Node k : subGraph) {
-							int val = optHash.get(k.getSparqlID());
-							optHash.put(k.getSparqlID(), val + 1);
-						}	
-					}
-				}
-			}
-		}
-		
-		return optHash;
-	}
 	/**
 	 * Get Union of all possible ranges of properties connecting TO this node.
 	 * @param node
@@ -4522,46 +4595,54 @@ public class NodeGroup {
 		Node headNode = this.getNextHeadNode(doneNodes);
 		while (headNode != null) {
 			// for each node, get the subgraph clauses, including constraints.
-			retval.append(this.generateSparqlSubgraphClausesNode(	ClauseTypes.DELETE_WHERE, headNode, null, null, null, doneNodes, doneUnions, "   "));
+			retval.append(this.generateSparqlSubgraphClausesNode(	ClauseTypes.DELETE_WHERE, headNode, null, doneNodes, doneUnions, "   "));
 			headNode = this.getNextHeadNode(doneNodes);
 		}
 		
 		return retval.toString();
 	}
 	
+	
 	/**
-	 * Return a list of nodes ordered by headnodes depth first
-	 * @return
-	 * @throws Exception
+	 * 
+	 * Lexicographic comparison of array elements
+	 *
+	 * @param <T> element type
 	 */
-	private ArrayList<Node> getOrderedNodes() throws Exception {
-		ArrayList<Node> ret = new ArrayList<Node>();
-		Node headNode = this.getNextHeadNode(ret);
-		while (headNode != null) {
-			this.addOrderedSubnodes(headNode, ret);
-			headNode = this.getNextHeadNode(ret);
+	private class ListComparator<T extends Comparable<T>> implements Comparator<List<T>> {
+		@Override
+		public int compare(List<T> o1, List<T> o2) {
+			int n1 = o1.size();
+			int n2 = o2.size();
+			int n = Math.min(n1, n2);
+			for (int i = 0; i < n; i++) {
+				int r = o1.get(i).compareTo(o2.get(i));
+				if (0 != r) return r;
+			}
+			return Integer.compare(n1, n2);
 		}
-		return ret;
+	}
+
+	static private List<String> orderedNodeItems(Node n) {
+		ArrayList<String> items = new ArrayList<>();
+		for (NodeItem ni : n.getConnectedNodeItems()) {
+			items.add(ni.getKeyName());
+		}
+		items.sort(Comparator.naturalOrder());
+		return items;
 	}
 	
 	/**
-	 * Buddy to getOrderedNodes
-	 * @param snode
-	 * @param ret
+	 * 
+	 * @return List of nodes in node group with a best-effort deterministic ordering.
 	 */
-	private void addOrderedSubnodes(Node snode, ArrayList<Node> ret) {
-		if(ret.contains(snode)){
-			return;
-		}
-		else{
-			ret.add(snode);
-			for(NodeItem nItem : snode.getNodeItemList()) {
-				
-				for (Node n : nItem.getNodeList()) {
-					addOrderedSubnodes(n, ret);
-				}
-			}
-		}
+	private ArrayList<Node> getOrderedNodes() {
+		Comparator<Node> uriComparator = Comparator.comparing(Node::getUri);
+		Comparator<Node> nisComparator = Comparator.comparing(NodeGroup::orderedNodeItems, new ListComparator<String>());
+		
+		ArrayList<Node> result = new ArrayList<Node>(nodes);
+		result.sort(uriComparator.thenComparing(nisComparator));
+		return result;
 	}
 	
 	/**
@@ -4570,7 +4651,7 @@ public class NodeGroup {
 	 */
 	public void assignStandardSparqlIds() throws Exception {
 		int i=0;
-		for (Node n : this.getOrderedNodes()) {
+		for (Node n : getOrderedNodes()) {
 			this.changeSparqlID(n, n.getUri(true) + String.valueOf(i));
 			this.setBinding(n, null);
 			for (PropertyItem p : n.getPropertyItems()) {

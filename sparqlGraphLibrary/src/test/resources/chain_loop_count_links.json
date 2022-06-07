@@ -1,0 +1,103 @@
+{
+	"version": 3,
+	"sparqlConn": {
+		"name": "Junit fuseki",
+		"domain": "",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 19,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/junit/chain#linkName",
+						"Constraints": "",
+						"SparqlID": "?linkName1",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"fullURIName": "http://kdl.ge.com/junit/chain#Link",
+				"SparqlID": "?Link",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": [
+			{
+				"sparqlID": "?linkName1"
+			}
+		],
+		"groupBy": [],
+		"unionHash": {},
+		"queryType": "COUNT",
+		"columnOrder": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "chainName"
+			},
+			{
+				"colId": "col_1",
+				"colName": "linkName1"
+			},
+			{
+				"colId": "col_2",
+				"colName": "linkName2"
+			}
+		],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Link",
+				"type": "http://kdl.ge.com/junit/chain#Link",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/junit/chain#linkName",
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					}
+				]
+			}
+		]
+	},
+	"plotSpecs": []
+}

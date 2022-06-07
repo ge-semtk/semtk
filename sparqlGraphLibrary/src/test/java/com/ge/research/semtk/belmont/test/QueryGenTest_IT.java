@@ -55,10 +55,16 @@ public class QueryGenTest_IT {
 	private static SparqlGraphJson sgJsonChain = null;
 	private static SparqlGraphJson sgJsonBattery = null;
 
+	public static final String NON_TREE_GRAPHS_DIR = "non-tree-graphs";
 	
 	@BeforeClass
 	public static void setup() throws Exception {
 		IntegrationTestUtility.authenticateJunit();
+		
+		/*
+		 * In this Unit, all the owl and data is pushed up-front.
+		 * Tests don't load additional owl nor data, nor do they clear the graph.
+		 */
 		
 		// load Chain
 		sgJsonChain = TestGraph.initGraphWithData(QueryGenTest_IT.class, "chain");
@@ -86,8 +92,17 @@ public class QueryGenTest_IT {
 		// load Batttery
 		sgJsonBattery = TestGraph.addModelAndData(QueryGenTest_IT.class, "sampleBattery");
 
+		// non-tree graph 
+		TestGraph.uploadOwlContents(
+				Utility.getResourceAsString(
+						QueryGenTest_IT.class, 
+						String.format("%s/non-tree-graphs.owl", NON_TREE_GRAPHS_DIR)
+				)
+		);
+
 		// load RangeTest (owl contains model and a little data)
 		TestGraph.uploadOwlContents(Utility.getResourceAsString(QueryGenTest_IT.class, "RangeTest.owl"));
+
 	}
 	
 	// TODO : all tests should have corresponding CONSTRUCT
@@ -871,4 +886,29 @@ public class QueryGenTest_IT {
 		}
 		return ret;
 	}
+
+	// Eric & Val: what is "DAG" ?
+	@Test
+	public void testNodegroupWithDAG() throws Exception {
+		String nodeGroupJSONPath = String.format("%s/nodegroup-dag.json", NON_TREE_GRAPHS_DIR);
+		
+		NodeGroup ng = TestGraph.getNodeGroupFromResource(this, nodeGroupJSONPath);
+		Table tab = TestGraph.execTableSelect(ng.generateSparqlSelect());
+
+		// We expect exactly one result
+		assertEquals(1, tab.getNumRows());
+	}
+
+	@Test
+	public void testNodegroupWithCycle() throws Exception {
+		String nodeGroupJSONPath = String.format("%s/nodegroup-cycle.json", NON_TREE_GRAPHS_DIR);
+		
+		NodeGroup ng = TestGraph.getNodeGroupFromResource(this, nodeGroupJSONPath);
+
+		Table tab = TestGraph.execTableSelect(ng.generateSparqlSelect());
+
+		// We expect exactly two results
+		assertEquals(2, tab.getNumRows());
+	}
+
 }
