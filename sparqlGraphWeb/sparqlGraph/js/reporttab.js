@@ -84,6 +84,7 @@ define([	// properly require.config'ed
             
             this.rawSchema = {};  // schema from disk with Nodgroup as string with enum: ["--invalid--"]
 
+			this.maxQueryThreads = 1; // could depend on connection type
         };
 
 		ReportTab.MAX_ROWS = 5000;
@@ -873,12 +874,12 @@ define([	// properly require.config'ed
 
                 // -------- control threading --------
                 // not positive this is needed, but seems bad to send dozens of large queries to fuseki
-                // need to make sure every callback calls sectionThreadDone() or else this will go wrong
+                // need to make sure every callback chain ends with sectionThreadDone() or else this will go wrong
 
                 // create div first time only
                 var div = optDivWaiting ? optDivWaiting : IIDXHelper.createElement("div", "", "report-div-level-" + level);
 
-                if(this.threadCounter >= 3) {
+                if(this.threadCounter >= this.maxQueryThreads) {
                     //wait then try again
                     setTimeout(this.generateSection.bind(this,section,level,div), 500);
                     //return an empty div
