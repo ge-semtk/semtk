@@ -108,7 +108,7 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-core</artifactId>
-			<version>1.12.230</version>
+			<version>1.12.233</version>
 			<scope>compile</scope>
 		</dependency>
 
@@ -124,14 +124,14 @@
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>s3</artifactId>
-			<version>2.17.201</version>
+			<version>2.17.204</version>
 		</dependency>
 
 		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>sts</artifactId>
-			<version>2.17.201</version>
+			<version>2.17.204</version>
 		</dependency>
 
 		<!-- License: Apache 2.0 -->
@@ -158,7 +158,7 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-athena</artifactId>
-			<version>1.12.230</version>
+			<version>1.12.233</version>
 		</dependency>
 
 		<!-- License: MIT -->
