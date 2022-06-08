@@ -220,8 +220,8 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 	
 	@Override
 	public JSONObject handleNonJSONResponse(String responseTxt, SparqlResultTypes resulttype) throws DontRetryException, Exception {
-		
-		// Fuseki seems to only return html when successful
+
+		// Fuseki (<4.5) seems to only return html when successful
 		// SemTK needs either SimpleResults or TableResults style JSON.
 		if (responseTxt.toLowerCase().contains("<html>")) {
 			
@@ -240,11 +240,19 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 				return ret.getResultsJSON();
 				
 			} else {
-				throw new Exception("Fuseki non-JSON non-HTML reponse: " + responseTxt);
+				throw new Exception("Fuseki unsupported HTML reponse: " + responseTxt);
 			}
 			
 		} else {
-			if (this.timeout > 0 && responseTxt.contains("503")) {
+
+			// Fuseki 4.5 returns text messages not in HTML (note "No such graph" is not a failure, it creates the graph)
+			if(responseTxt.contains("Update succeeded") || responseTxt.contains("No such graph")) {
+				if (resulttype == SparqlResultTypes.CONFIRM) {
+					SimpleResultSet ret = new SimpleResultSet(true);
+					ret.setMessage(responseTxt);
+					return ret.getResultsJSON();
+				}
+			}else if (this.timeout > 0 && responseTxt.contains("503")) {
 				throw new QueryTimeoutException("Timed out after " + String.valueOf(this.timeout) + " sec");
 			} else if (responseTxt.contains("Error 400")) {
 				throw new DontRetryException(responseTxt);
@@ -257,7 +265,7 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 			} else if (responseTxt.contains("Parse ")) {
 				throw new DontRetryException("SPARQL parse error: " + responseTxt);
 			}
-			throw new Exception("Fuseki non-JSON response: " + responseTxt);
+			throw new Exception("Fuseki unsupported non-HTML response: " + responseTxt);
 		}
 	}
 

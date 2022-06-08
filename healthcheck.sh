@@ -56,7 +56,6 @@ declare -a PORTS=("$PORT_SPARQLGRAPH_STATUS_SERVICE"
                   "$PORT_NODEGROUP_SERVICE"
                   "$PORT_EDCQUERYGEN_SERVICE"
                   "$PORT_ATHENA_SERVICE"
-                  "$PORT_ARANGODB_SERVICE"
                   "$PORT_UTILITY_SERVICE"
                  )
 # protocol for ping

@@ -176,13 +176,6 @@ if [[ "$ENABLED_SERVICES" == *athenaService* ]]; then
 	PORT_ARRAY+=($PORT_ATHENA_SERVICE)
 fi
 
-if [[ "$ENABLED_SERVICES" == *arangoDbService* ]]; then
-	"$JAVA_HOME"/bin/java -jar "$SEMTK"/arangoDbService/target/arangoDbService-*.jar > "$LOGS"/arangoDbService.log 2>&1 &
-	PID_ARRAY+=($!)
-	PROC_ARRAY+=("arangoDbService");
-	PORT_ARRAY+=($PORT_ARANGODB_SERVICE)
-fi
-
 if [[ "$ENABLED_SERVICES" == *utilityService* ]]; then
 	"$JAVA_HOME"/bin/java $JVM_OPTIONS -jar "$SEMTK"/utilityService/target/utilityService-*.jar > "$LOGS"/utilityService.log 2>&1 &
 	PID_ARRAY+=($!)
