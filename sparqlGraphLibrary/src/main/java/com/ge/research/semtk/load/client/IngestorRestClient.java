@@ -19,7 +19,9 @@
 package com.ge.research.semtk.load.client;
 
 import java.net.ConnectException;
+import java.util.ArrayList;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.connutil.EndpointNotFoundException;
@@ -32,6 +34,7 @@ import com.ge.research.semtk.services.client.RestClientConfig;
 public class IngestorRestClient extends SharedIngestNgeClient {
 
 	RecordProcessResults lastResult = null;
+	ArrayList<String> warnings = null;
 	
 	public IngestorRestClient (IngestorClientConfig config){
 		super(config, "ingestion/");
@@ -40,6 +43,13 @@ public class IngestorRestClient extends SharedIngestNgeClient {
 		super("ingestion/");
 	}
 
+	/**
+	 * Get warnings from last async ingest call, if any.  Otherwise null.
+	 * @return
+	 */
+	public ArrayList<String> getWarnings() {
+		return warnings;
+	}
 	
 	@Override
 	public void buildParametersJSON() throws Exception {
@@ -77,7 +87,7 @@ public class IngestorRestClient extends SharedIngestNgeClient {
 	 * @return
 	 * @throws Exception
 	 */
-	private String executeToJobId() throws ConnectException, EndpointNotFoundException, Exception {
+	private String executeToJobIdSaveWarnings() throws ConnectException, EndpointNotFoundException, Exception {
 		
 		if (conf.getServiceEndpoint().isEmpty()) {
 			throw new Exception("Attempting to execute IngestionClient with no enpoint specified.");
@@ -86,8 +96,20 @@ public class IngestorRestClient extends SharedIngestNgeClient {
 		SimpleResultSet ret = SimpleResultSet.fromJson((JSONObject)super.execute());
 		ret.throwExceptionIfUnsuccessful("Ingestion error");
 		
+		try {
+			// check for warnings
+			this.warnings = null;
+			JSONArray jArr = ret.getResultJSONArray(SimpleResultSet.WARNINGS_RESULT_KEY);
+			this.warnings = new ArrayList<String>();
+			this.warnings.addAll(jArr);
+		} catch (Exception e) {
+			// leave warnings null
+		}
+		
 		return ret.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
 	}
+	
+
 	
 	/**
 	 * Ingest from CSV, with the option to override the SPARQL connection
@@ -138,6 +160,19 @@ public class IngestorRestClient extends SharedIngestNgeClient {
 		}
 	}
 	
+	/**
+	 * 
+	 * Puts any warnings into getWarnings()
+	 * @param template
+	 * @param data
+	 * @param sparqlConnectionOverride
+	 * @param trackFlag
+	 * @param overrideBaseURI
+	 * @return
+	 * @throws ConnectException
+	 * @throws EndpointNotFoundException
+	 * @throws Exception
+	 */
 	public String execIngestionFromCsvAsync(String template, String data, String sparqlConnectionOverride, boolean trackFlag, String overrideBaseURI) throws ConnectException, EndpointNotFoundException, Exception{
 		conf.setServiceEndpoint("ingestion/fromCsvWithNewConnectionPrecheckAsync");
 		this.parametersJSON.put("template", template);
@@ -147,7 +182,7 @@ public class IngestorRestClient extends SharedIngestNgeClient {
 		this.parametersJSON.put("overrideBaseURI", overrideBaseURI);
 
 		try{
-			return this.executeToJobId();
+			return this.executeToJobIdSaveWarnings();
 		} 
 		finally {
 			// reset conf and parametersJSON
@@ -163,6 +198,7 @@ public class IngestorRestClient extends SharedIngestNgeClient {
 	/**
 	 * Simpler API with modern naming (not "exec" since it doesn't return a ResultSet)
 	 * Should be the default ingest function
+	 * Puts any warnings into getWarnings()
 	 * @param sgJsonWithOverride
 	 * @param data
 	 * @return
@@ -176,6 +212,7 @@ public class IngestorRestClient extends SharedIngestNgeClient {
 	
 	/**
 	 * Ingest from CSV, with the option to override the SPARQL connection
+	 * Puts any warnings into getWarnings()
 	 * @param template the template (as a String)
 	 * @param data the data (as a String)
 	 * @param sparqlConnectionOverride the SPARQL connection as a String, or null to use the connection from the template.
@@ -188,7 +225,7 @@ public class IngestorRestClient extends SharedIngestNgeClient {
 		this.parametersJSON.put("connectionOverride", sparqlConnectionOverride);
 		
 		try{
-			return this.executeToJobId();
+			return this.executeToJobIdSaveWarnings();
 		} 
 		finally {
 			// reset conf and parametersJSON

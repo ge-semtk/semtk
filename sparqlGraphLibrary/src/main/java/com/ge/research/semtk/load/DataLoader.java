@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.HeaderTable;
@@ -135,6 +136,23 @@ public class DataLoader implements Runnable {
 	
 	public DataLoader(JSONObject json, Dataset ds, String username, String password) throws Exception{
 		this(new SparqlGraphJson(json), ds, username, password);
+	}
+	
+	public ArrayList<String> getWarnings() {
+		return this.batchHandler.getWarnings();
+	}
+	
+	/**
+	 * Get a JSONArray of warnings
+	 * @return
+	 */
+	public JSONArray getWarningsJson() {
+		JSONArray ret = new JSONArray();
+		ArrayList<String> warnings = this.batchHandler.getWarnings();
+		if (warnings != null && warnings.size() > 0) {
+			ret.addAll(warnings);
+		} 
+		return ret;
 	}
 	
 	public void setLogPerformance(boolean logFlag) {

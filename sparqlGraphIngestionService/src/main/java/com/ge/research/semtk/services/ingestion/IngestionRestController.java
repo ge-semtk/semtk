@@ -42,6 +42,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -673,6 +674,11 @@ public class IngestionRestController {
 	
 	/**
 	 * Load data from csv.
+	 * 
+	 * All synchronous calls (not recommended) pass through here
+	 * Always get back a record process result with possibly empty table
+	 * Warnings are not implemented here.
+	 * 
 	 * @param templateFile the json template (File if fromFiles=true, else String)
 	 * @param dataFile the data file (File if fromFiles=true, else String)
 	 * @param sparqlConnectionOverride SPARQL connection json (File if fromFiles=true, else String)  If non-null, will override the connection in the template.
@@ -750,7 +756,7 @@ public class IngestionRestController {
 			// load
 			DataLoader dl = new DataLoader(sgJson, ds, prop.getSparqlUserName(), prop.getSparqlPassword());
 			dl.overrideMaxThreads(prop.getMaxThreads());
-
+			
 			recordsProcessed = dl.importData(precheck, skipIngest);
 	
 			// yet some more logging
@@ -780,6 +786,7 @@ public class IngestionRestController {
 			retval.setRecordsProcessed(recordsProcessed);
 			retval.setFailuresEncountered(dl.getLoadingErrorReport().getRows().size());
 			retval.addResults(dl.getLoadingErrorReport());
+			
 		} catch (Exception e) {
 			LocalLogger.printStackTrace(e);			
 			retval.setSuccess(false);
@@ -851,9 +858,16 @@ public class IngestionRestController {
 	}
 
 	/**
-	 * Load data from csv.
-	 * Note this is a newer copy of fromAsynCsv with Async added
-	 *     - more "modern" logging
+	 * All async calls pass through here - recommended path
+	 * Returns simple results including 
+	 * 	 - jobid, and 
+	 *   - warnings, if any  (e.g. missing or extra columns)
+	 *   - success or failure of launching the job
+	 *   
+	 * Final status:
+	 * 	- success - status service has a status message with number of rows
+	 *  - failure - results service has getTableResults explaining the errors
+	 *     
 	 * @param template the json template (SparqlGraphJson or MultipartFile if fromFiles=true, else String)
 	 * @param dataFile the data file (File if fromFiles=true, else String)
 	 * @param sparqlConnectionOverride SPARQL connection json (File if fromFiles=true, else String)  If non-null, will override the connection in the template.
@@ -903,7 +917,9 @@ public class IngestionRestController {
 			Dataset ds = new CSVDataset(dataFileContent, true);
 			DataLoader dl = new DataLoader(sgJson, ds, prop.getSparqlUserName(), prop.getSparqlPassword());
 			dl.overrideMaxThreads(prop.getMaxThreads());
-			
+			JSONArray w = dl.getWarningsJson();
+			if (w.size() > 0) 
+				simpleResult.addResult("warnings", w);
 			
 			dl.runAsync(precheck, skipIngest, 
 					new StatusClient(new StatusClientConfig(status_prop.getProtocol(), status_prop.getServer(), status_prop.getPort(), jobId)), 

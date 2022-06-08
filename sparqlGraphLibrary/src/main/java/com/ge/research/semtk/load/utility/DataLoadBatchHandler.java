@@ -42,7 +42,8 @@ public class DataLoadBatchHandler {
 	ImportSpecHandler importSpec = null;
 	OntologyInfo oInfo = null;
 	Table failuresEncountered = null;
-	
+	ArrayList<String> warnings = null;
+
 	public DataLoadBatchHandler(SparqlGraphJson sgJson, SparqlEndpointInterface endpoint) throws Exception{
 		this.oInfo = sgJson.getOntologyInfo();
 		this.importSpec = sgJson.getImportSpecHandler();
@@ -67,6 +68,14 @@ public class DataLoadBatchHandler {
 		this.setDataset(ds);
 	}
 	
+	/**
+	 * Possibly null or empty list of column warnings (missing or extra)
+	 * @return
+	 */
+	public ArrayList<String> getWarnings() {
+		return warnings;
+	}
+	
 	public String [] getImportColNames() {
 		return importSpec.getColNamesUsed();
 	}
@@ -74,8 +83,10 @@ public class DataLoadBatchHandler {
 	public void setDataset(Dataset ds) throws Exception{
 		this.ds = ds;
 		if(ds != null){
+			// tell importSpec about incoming columns
 			this.importSpec.setHeaders(ds.getColumnNamesinOrder());
 			
+			// set up empty failure table
 			ArrayList<String> failureCols = this.ds.getColumnNamesinOrder();
 			failureCols.add(DataLoader.FAILURE_CAUSE_COLUMN_NAME);
 			failureCols.add(DataLoader.FAILURE_RECORD_COLUMN_NAME);
@@ -91,6 +102,9 @@ public class DataLoadBatchHandler {
 			failureColTypesArray = failureColTypes.toArray(failureColTypesArray);
 
 			this.failuresEncountered = new Table(failureColsArray, failureColTypesArray, null);
+			
+			// get warnings about missing/extra columns
+			this.warnings = this.importSpec.generateColumnWarnings(ds.getColumnNamesinOrder());
 		}
 		else{
 			throw new Exception("dataset cannot be null");

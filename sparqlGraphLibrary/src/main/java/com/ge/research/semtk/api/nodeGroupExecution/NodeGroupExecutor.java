@@ -21,6 +21,7 @@
 package com.ge.research.semtk.api.nodeGroupExecution;
 
 import java.net.URL;
+import java.util.ArrayList;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -493,6 +494,7 @@ public class NodeGroupExecutor {
 	
 	/**
 	 * Ingest CSV, given a nodegroup ID
+	 * Warnings are available immediately via getWarnings()
 	 * @param conn - override, may be null
 	 * @param storedNodeGroupId
 	 * @param csvContents
@@ -555,6 +557,7 @@ public class NodeGroupExecutor {
 	
 	/**
 	 * Ingest CSV, given a nodegroup object
+	 * Warnings are available immediately via getWarnings()
 	 * @param conn - override, may be null
 	 * @param sparqlGraphJson
 	 * @param csvContents
@@ -573,6 +576,33 @@ public class NodeGroupExecutor {
 		String connStr = this.getOverrideConnJson(conn, sparqlGraphJson).toJSONString();
 		
 		return this.ingestClient.execIngestionFromCsvAsync(sgjStr, csvContents, connStr, trackFlag, overrideBaseURI);
+	}
+	
+	/**
+	 * Get warnings from most recent ingest...Async()
+	 * @return warnings, could be empty or null
+	 */
+	public ArrayList<String> getWarnings() {
+		return this.ingestClient.getWarnings();
+	}
+	
+	/**
+	 * Get warnings as JSONArray which is never empty but might be null
+	 * @return
+	 */
+	public JSONArray getWarningsJson() {
+		ArrayList<String> w = this.ingestClient.getWarnings();
+		if (w != null && w.size() > 0) {
+			JSONArray j = new JSONArray();
+			j.addAll(w);
+			return j;
+		} else {
+			return null;
+		}
+	}
+	
+	public boolean hasWarnings() {
+		return (this.ingestClient.getWarnings() != null && this.ingestClient.getWarnings().size() > 0);
 	}
 	
 	/**

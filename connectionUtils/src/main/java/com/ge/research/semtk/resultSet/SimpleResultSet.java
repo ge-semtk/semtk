@@ -34,6 +34,7 @@ public class SimpleResultSet extends GeneralResultSet{
 	public static final String RESULTS_BLOCK_NAME = "simpleresults";  
 	public static final String MESSAGE_JSONKEY = "@message";
  	public static final String JOB_ID_RESULT_KEY = "JobId";
+ 	public static final String WARNINGS_RESULT_KEY = "warnings";
  	public static final String STATUS_RESULT_KEY = "status";
  	public static final String RESULT_TYPE_KEY = "resultType";
  	public static final String STATUS_MESSAGE_RESULT_KEY = "statusMessage";

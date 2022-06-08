@@ -1229,7 +1229,7 @@ public class NodeGroupExecutionRestController {
 	 */
 	@Operation(
 			summary=	"ingest CSV data given nodegroup id",
-			description=	""
+			description=	"deprecated synchronous endpoint"
 			)
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsNewConnection", method=RequestMethod.POST)
@@ -1316,6 +1316,10 @@ public class NodeGroupExecutionRestController {
 				String jobId = nodeGroupExecutor.ingestFromTemplateAndCsvStringAsync(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 				retval = new SimpleResultSet(true);
 				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, jobId);
+				JSONArray warnings = nodeGroupExecutor.getWarningsJson();
+				if (warnings != null) {
+					retval.addResult(SimpleResultSet.WARNINGS_RESULT_KEY, warnings);
+				}
 				
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
@@ -1385,6 +1389,10 @@ public class NodeGroupExecutionRestController {
 				String jobId = nodeGroupExecutor.ingestFromTemplateIdAndCsvStringAsync(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 				retval = new SimpleResultSet(true);
 				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, jobId);
+				JSONArray warnings = nodeGroupExecutor.getWarningsJson();
+				if (warnings != null) {
+					retval.addResult(SimpleResultSet.WARNINGS_RESULT_KEY, warnings);
+				}
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
 				retval = new SimpleResultSet(false);

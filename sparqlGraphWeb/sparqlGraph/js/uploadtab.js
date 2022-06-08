@@ -1293,6 +1293,8 @@ define([	// properly require.config'ed
 			    kdlLogEvent("Import Service Call");
 			    e.preventDefault();
 
+				var warningsHtml = "";
+				
                 var gotFailureTable = function(tableResults) {
                     if (!tableResults.isSuccess()) {
                         gotFailureMessage.bind(this)(tableResults.getRationaleHtml());
@@ -1309,13 +1311,13 @@ define([	// properly require.config'ed
                 };
 
                 var gotSuccessStatusMessage = function(message) {
-                    ModalIidx.alert("Import successful", message);
+                    ModalIidx.alert("Import successful", message + warningsHtml);
 					IIDXHelper.progressBarRemove(this.progressDiv);
 					this.fillAll();
                 };
 
                 var gotFailureMessage = function(message) {
-                    ModalIidx.alert("Import failed", message);
+                    ModalIidx.alert("Import failed", message + warningsHtml);
 					IIDXHelper.progressBarRemove(this.progressDiv);
 					this.fillAll();
                 };
@@ -1345,43 +1347,21 @@ define([	// properly require.config'ed
 			    var successCallback = function (client, resultSet) {
                     if (resultSet.isSuccess()) {
                         var jobId = resultSet.getSimpleResultField("JobId");
-
+                        // put warningsHtml into outer scope
+						var warnings = resultSet.getSimpleResultField("warnings");
+						if (warnings) {
+							// html designed to go after the message.  Defaults to "".
+							warningsHtml = "<br><br><b>Warnings:</b><list><li>" + warnings.join("</li><li>") + "</li></list>";
+						}
+						
                         var statusClient = new MsiClientStatus(g.service.status.url, jobId, this.msiFailureCallback.bind(this));
                         var resultsClient = new MsiClientResults(g.service.results.url, jobId, this.msiFailureCallback.bind(this));
 
-                        waitingCallback.bind(this)(statusClient, resultsClient, 1);
+                        waitingCallback.bind(this)(statusClient, resultsClient, "Setup ingestion", 1);
                     } else {
                         gotFailureMessage.bind(this)(resultSet.getRationaleHtml());
                     }
                 };
-
-                /*
-                // PEC here
-                // left over code
-					IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
-
-			    	// figure out if dialog should say "success" or "failure"
-					var title = resultSet.isSuccess() ? "Success" : "Failure";
-
-					// get the generic HTML results
-					var html = client.getFromCsvResultHtml(resultSet)
-
-					// check for an error table and download
-					var csv = client.getFromCsvErrorTable(resultSet);
-					if (csv) {
-						html += "<h3><b>CSV containing failed rows is being downloaded.</b>";
-						IIDXHelper.downloadFile(csv, "error_report.csv", "text/csv;charset=utf8");
-					}
-
-					// display to user
-                    kdlLogEvent("Import Complete",
-                                "recordsProcessed",    resultSet.getRecordProcessResultField(MsiClientIngestion.RECORDS_PROCESSED) || 0,
-                                "failuresEncountered", resultSet.getRecordProcessResultField(MsiClientIngestion.FAILURE_ROWS) || 0  );
-					ModalIidx.alert(title, html);
-					IIDXHelper.progressBarRemove(this.progressDiv);
-					this.fillAll();
-				};
-                */
 
 				IIDXHelper.progressBarCreate(this.progressDiv, "progress-success progress-striped active");
 				IIDXHelper.progressBarSetPercent(this.progressDiv, 1);
