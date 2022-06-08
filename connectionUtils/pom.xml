@@ -135,13 +135,6 @@
 		</dependency>
 
 		<!-- License: Apache 2.0 -->
-		<dependency>
-			<groupId>com.arangodb</groupId>
-			<artifactId>arangodb-java-driver</artifactId>
-			<version>6.17.0</version>
-		</dependency>
-
-		<!-- License: Apache 2.0 -->
 		<!--dependency>
 			<groupId>org.kairosdb</groupId>
 			<artifactId>client</artifactId>

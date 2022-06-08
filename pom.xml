@@ -133,7 +133,6 @@
 		<module>fdcSampleService</module>
 		<module>edcQueryGenerationService</module>
 		<module>athenaService</module>
-		<module>arangoDbService</module>
 		<module>fileStagingService</module>
 		<module>utilityService</module>
 		<module>distribution</module>

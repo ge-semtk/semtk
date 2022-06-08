@@ -3,7 +3,7 @@ package com.ge.research.semtk.aws;
 import java.io.DataInputStream;
 import java.io.IOException;
 
-import com.arangodb.internal.util.IOUtils;
+import org.apache.commons.io.IOUtils;
 import com.ge.research.semtk.connutil.FileSystemConnector;
 
 import software.amazon.awssdk.core.ResponseInputStream;
