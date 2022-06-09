@@ -1472,7 +1472,17 @@
 
 				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), deflateFlag, gPlotSpecsHandler);
 
-	    		IIDXHelper.downloadFile(sgJson.stringify(), "sparql_graph.json", "text/csv;charset=utf8");
+				// name for downloaded file
+				fileName = "nodegroup.json";
+				if( gNodeGroupName != null ) {
+					if (!gNodeGroupChangedFlag) {
+						fileName = gNodeGroupName + ".json";
+					}else{
+						fileName = gNodeGroupName + " - modified.json";
+					}
+				}
+
+				IIDXHelper.downloadFile(sgJson.stringify(), fileName, "text/csv;charset=utf8");
                 nodeGroupChanged(false);
 
                 if (optCallback) {
