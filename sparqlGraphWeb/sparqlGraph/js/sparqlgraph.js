@@ -2197,7 +2197,9 @@
             // save user when done
             var doneCallback = function () {
                 localStorage.setItem("SPARQLgraph_user", gStoreDialog.getUser());
+                gNodeGroupName = gStoreDialog.getId();  // update nodegroup name to the one just saved to store
                 nodeGroupChanged(false);
+                updateStoreConnStr();
                 gReportTab.reloadNodegroupIDs();
             }
 

@@ -37,6 +37,7 @@ define([	// properly require.config'ed
             this.div = null;
             this.selTable = null;
             this.user = user;
+            this.id = "";
             this.serviceUrl = serviceUrl;
             this.itemType = optItemType || MsiClientNodeGroupStore.TYPE_NODEGROUP;
             this.userRetrieveJsonStrCallback = function () {};
@@ -50,6 +51,11 @@ define([	// properly require.config'ed
             // can be "" but never null or undefined.
             getUser : function () {
                 return this.user;
+            },
+
+            // get the nodegroup id
+            getId : function() {
+                return this.id;
             },
 
             show : function () {
@@ -266,7 +272,8 @@ define([	// properly require.config'ed
 
                     var mq = new MsiClientNodeGroupStore(this.serviceUrl);
 
-                    // save user/creator
+                    // save id/user/creator
+                    this.id = id;
                     this.user = creator;
                     this.lastRetrievedId = id;
                     mq.storeItem(item, creator, id, comments, this.itemType, successCallback.bind(this, id, closeModal));
