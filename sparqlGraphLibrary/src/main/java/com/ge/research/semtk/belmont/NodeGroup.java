@@ -4381,8 +4381,11 @@ public class NodeGroup {
 				 skipNodes.containsAll(entry.getValue())) {
 				String id = entry.getKey().getSparqlID();
 
-				// choose node with lowest number of incoming links
-				if (retID == null || linkHash.get(id) < minLinks) {
+				// choose node with lowest number of incoming links,
+				// and break tie by comparing ID's, just to get deterministic behavior
+				if (retID == null || 
+						linkHash.get(id) < minLinks ||
+						(linkHash.get(id) == minLinks && retID.compareTo(id) < 0)) {
 					retID = id;
 					minLinks = linkHash.get(id);
 					// be efficient
