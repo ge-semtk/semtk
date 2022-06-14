@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 
 import com.ge.research.semtk.springutilib.requests.IdRequest;
+import com.ge.research.semtk.springutilib.requests.StoredItemRenameRequest;
 import com.ge.research.semtk.springutilib.requests.StoredItemRequest;
 import com.ge.research.semtk.springutilib.requests.StoredItemTypeRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
@@ -443,6 +444,33 @@ public class NodeGroupStoreRestController {
 	    }
 	}
 	
+
+	/**
+	 * Rename a stored item.
+	 */
+	@CrossOrigin
+	@RequestMapping(value={"/renameStoredItem"}, method=RequestMethod.POST)
+	public JSONObject renameStoredItem(@RequestBody @Valid StoredItemRenameRequest requestBody, @RequestHeader HttpHeaders headers) throws Exception {
+		HeadersManager.setHeaders(headers);
+		try {
+			SimpleResultSet retval = null;
+			NgStore store = new NgStore(this.getStoreDataSei());
+			try{
+				store.renameStoredItem(requestBody.getId(), requestBody.getNewId(), requestBody.getItemType());
+				retval = new SimpleResultSet(true);
+			}catch(Exception e){
+				LocalLogger.logToStdErr("Failure renaming " +  requestBody.getId() + ": " + e.getMessage());
+				retval = new SimpleResultSet(false);
+				retval.addRationaleMessage(e.getMessage());
+			}
+			return retval.toJson();
+
+		} finally {
+			HeadersManager.clearHeaders();
+	    }
+	}
+
+
     private SparqlEndpointInterface getStoreDataSei() throws Exception{
 
         SparqlEndpointInterface ret = SparqlEndpointInterface.getInstance(    
