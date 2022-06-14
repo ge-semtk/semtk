@@ -46,6 +46,7 @@ define([	// properly require.config'ed
 			textVals.sort(function(a,b){return a[1].localeCompare(b[1]);})
 			this.classSelect = IIDXHelper.createSelect(noId, textVals, [], false, "input-xlarge");
 			this.idRegexInput = IIDXHelper.createTextInput(noId, "input-xlarge");	
+			this.okCallback = function(){throw new Error("this.okCallback is not set");};
 		};
 
 
@@ -63,7 +64,10 @@ define([	// properly require.config'ed
 				// already confirmed by validateCallback()
 				var classUri = IIDXHelper.getSelectValues(this.classSelect)[0];
 				var idRegex = this.idRegexInput.value;
-				this.iClient.execGetClassTemplate(classUri, this.conn, idRegex, this.sgjsonJsonCallback);
+				var okCallback2 = function(sgJsonJson) {
+						this.okCallback(classUri, sgJsonJson);
+				}.bind(this);
+				this.iClient.execGetClassTemplate(classUri, this.conn, idRegex, okCallback2);  
 			},
 			
 			validateCallback : function() {
@@ -74,9 +78,11 @@ define([	// properly require.config'ed
 				}
 			},
 
-
-	        launch : function (sgjsonJsonCallback) {
-				this.sgjsonJsonCallback = sgjsonJsonCallback;
+			//
+			//  callback(classUri, sgJsonJson) -
+			//
+	        launch : function (okCallback) {
+				this.okCallback = okCallback;
 				
 				div = document.createElement("div");
 				

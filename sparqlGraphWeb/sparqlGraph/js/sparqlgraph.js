@@ -41,8 +41,10 @@
     var gUploadTab = null;
     var gReady = false;
 
-    var gNodeGroupName = null;
-    var gNodeGroupChangedFlag = false;
+	
+    var gNodeGroupName = "";          // set in nodeGroupChanged.  Read anywhere
+    var gNodeGroupChangedFlag = false;  // set in nodeGroupChanged.  Read anywhere
+    
     var gQueryTextChangedFlag = false;
 
     var gCancelled = false;
@@ -468,8 +470,9 @@
 
     };
 	
-	var getTemplateDialogCallback =function (sgjsonJson) {
-		checkAnythingUnsavedThen(doQueryLoadJsonStr.bind(this, JSON.stringify(sgjsonJson)));
+	var getTemplateDialogCallback =function (classUri, sgjsonJson) {
+		var newNgName = "ingest_" + classUri.split("#")[1];
+		checkAnythingUnsavedThen(doQueryLoadJsonStr.bind(this, JSON.stringify(sgjsonJson), newNgName));
 	};
 	
 	var doLaunchGetTemplateDialog = function () {
@@ -974,7 +977,7 @@
 		setStatus("");
 		guiTreeNonEmpty();
 		gMappingTab.updateNodegroup(gNodeGroup, gConn);
-		gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
+		gUploadTab.setNodeGroup(gConn, gNodeGroup, gNodeGroupName, gOInfo, gMappingTab, gOInfoLoadTime);
 
 		logEvent("SG Load Success");
     };
@@ -998,7 +1001,7 @@
             gReportTab.setConn(gConn);
 
 	    	gMappingTab.updateNodegroup(gNodeGroup, gConn);
-			gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
+			gUploadTab.setNodeGroup(gConn, gNodeGroup, gNodeGroupName, gOInfo, gMappingTab, gOInfoLoadTime);
 
     	});
  		// retains gConn
@@ -1041,9 +1044,9 @@
     };
 
     // update display of nodegroup store id and connection
-    var updateStoreConnStr = function() {
+    var updateNgAndConnDisplay = function() {
         var connStr = "";
-        if (gNodeGroupName != null ) {
+        if (gNodeGroupName) {
             connStr = "<b>Name: </b>" + gNodeGroupName;
 
             if (gNodeGroupChangedFlag == true) {
@@ -1059,7 +1062,7 @@
     var setConn = function (conn) {
         resetUndo();   // changing connection clears out Undo
         gConn = conn;
-        this.updateStoreConnStr();
+        this.updateNgAndConnDisplay();
     };
 
     var getQueryClientOrInterface = function() {
@@ -1235,14 +1238,14 @@
 			} catch (e) {
 				logAndAlert("Error reading connection from JSON file.\n" + e);
 				console.log(e.stack);
-				clearGraph();
+				clearNodeGroup();
 			}
 
             // no conn provided in json
             if (conn == null) {
                 if (!gConn) {
                     ModalIidx.alert("No connection", "This JSON has no connection information.<br>Load a connection first.");
-                    clearGraph();
+                    clearNodeGroup();
                 } else {
                     ModalIidx.alert("No connection", "This JSON has no connection information.<br>Attempting to load against existing connection.");
                     doQueryLoadFile2(sgJson);
@@ -1325,11 +1328,10 @@
     	require(['sparqlgraph/js/modaliidx', 'sparqlgraph/js/iidxhelper', 'sparqlgraph/js/msiclientnodegroupservice', 'sparqlgraph/js/sparqlgraphjson'],
                 function(ModalIidx, IIDXHelper, MsiClientNodeGroupService, SparqlGraphJson) {
 
-            clearGraph();
+            clearNodeGroup();
             logEvent("SG Loaded Nodegroup");
 
-            gNodeGroupName = optNgName != undefined ? optNgName : null;
-            gNodeGroupChangedFlag = false;
+            var newNgName = (optNgName != undefined) ? optNgName : null;
 
             try {
                 // get nodegroup explicitly w/o the oInfo
@@ -1341,7 +1343,7 @@
             } catch (e) {
                 // real non-model error loading the nodegroup
                 console.log(e.stack);
-                clearGraph();
+                clearNodeGroup();
                 ModalIidx.choose("Error reading nodegroup JSON",
                  (e.hasOwnProperty("message") ? e.message : e) + "<br><hr>Would you like to save a copy of the nodegroup?",
                  ["Yes", "No"],
@@ -1356,21 +1358,20 @@
 
             // inflate and validate the nodegroup
             var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, validateFailure.bind(this));
-            client.execAsyncInflateAndValidate(new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec()), validateCallback, validateFailure)
+            client.execAsyncInflateAndValidate(new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec()), validateCallback.bind(this, newNgName), validateFailure)
         });
     };
     var validateFailure = function(msgHtml) {
         require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
             doNodeGroupDownload(undefined, function() {
-                nodeGroupChanged(false);
                 ModalIidx.alert("Nodegroup validation call failed", msgHtml + "<hr>Nodegroup downloaded", false);
-                clearGraph();
+                clearNodeGroup();
             });
         });
     };
 
     // callback: successfully determined whether there are modelErrors
-    var validateCallback = function(nodegroupJson, modelErrors, invalidItemStrings, warnings) {
+    var validateCallback = function(newNgName, nodegroupJson, modelErrors, invalidItemStrings, warnings) {
 
         if (modelErrors.length > 0) {
             // some errors
@@ -1401,7 +1402,7 @@
 
         gNodeGroup = new SemanticNodeGroup();
         gNodeGroup.addJson(nodegroupJson);
-        nodeGroupChanged(false);
+        nodeGroupChanged(false, newNgName);
         saveUndoState();
         buildQuery();
     };
@@ -1473,17 +1474,20 @@
 				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), deflateFlag, gPlotSpecsHandler);
 
 				// name for downloaded file
-				fileName = "nodegroup.json";
-				if( gNodeGroupName != null ) {
+				var filename;
+				if( gNodeGroupName ) {
 					if (!gNodeGroupChangedFlag) {
 						fileName = gNodeGroupName + ".json";
-					}else{
+					} else {
 						fileName = gNodeGroupName + " - modified.json";
 					}
+					nodeGroupChanged(false);
+				} else {
+					fileName = "nodegroup.json";
+					nodeGroupChanged(false, fileName);
 				}
 
 				IIDXHelper.downloadFile(sgJson.stringify(), fileName, "text/csv;charset=utf8");
-                nodeGroupChanged(false);
 
                 if (optCallback) {
                     optCallback();
@@ -2197,9 +2201,7 @@
             // save user when done
             var doneCallback = function () {
                 localStorage.setItem("SPARQLgraph_user", gStoreDialog.getUser());
-                gNodeGroupName = gStoreDialog.getId();  // update nodegroup name to the one just saved to store
-                nodeGroupChanged(false);
-                updateStoreConnStr();
+                nodeGroupChanged(false, gStoreDialog.getId());
                 gReportTab.reloadNodegroupIDs();
             }
 
@@ -2250,14 +2252,25 @@
     	return document.getElementById("SGQueryNamespace").checked;
     };
 
+	//
     // Tell GUI that nodegroup has changed, and display needs updating
-    // flag - there are unsaved changes
-    var nodeGroupChanged = function(flag) {
-        gNodeGroupChangedFlag = flag;
-
+    // Check that ORDER BY and GROUP BY are valid, fix them
+    // Fix button statuses:  Run, Group, Order
+    // Params:
+    //     flag - there are unsaved changes
+    //     optNewName - only way that gNodeGroupName should be changed.  
+    //                     undefined/null - leave as-is.  
+    //                     "" - valid empty name.
+    //
+    var nodeGroupChanged = function(flag, optNewName) {
+		gNodeGroupChangedFlag = flag;
+		
+		if (optNewName != undefined)
+			gNodeGroupName = optNewName;
+			
         guiUpdateGraphRunButton();
 
-        // check up ORDER BY
+        // check up ORDER BY and GROUP BY
         gNodeGroup.removeInvalidOrderBy();
         gNodeGroup.removeInvalidGroupBy();
 
@@ -2273,31 +2286,35 @@
             document.getElementById("SGGroupBy").classList.remove("btn-primary");
         }
 
-        // check up GROUP BY
-        // TODO
-
         // check up on LIMIT
         var limit = gNodeGroup.getLimit();
         var elem = document.getElementById("SGQueryLimit");
         elem.value = (limit < 1) ? "" : limit;
 
+		// draw canvas
         gRenderer.draw(gNodeGroup, gOInfo, gInvalidItems);
+        
         if (flag) {
+			// changes must be on cavas of query tab.  No load or validate has occurred.
             buildQuery();
-            gMappingTab.updateNodegroup(gNodeGroup, gConn);
-            gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
+            
         } else {
-			// if we're on a tab, update it because that's normally done during tab changes
+			// save or load
+			
+			// if we're on a different tab, set that tab's nodegroup since that usually occurs at tab-switching time
 			if (gCurrentTab == g.tab.upload) {
-				gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
+				gUploadTab.setNodeGroup(gConn, gNodeGroup, gNodeGroupName, gOInfo, gMappingTab, gOInfoLoadTime);
 			} else if (gCurrentTab == g.tab.mapping) {
             	gMappingTab.updateNodegroup(gNodeGroup, gConn);
 			}
 			
+			// set various changed Flags.
             gMappingTab.setChangedFlag(false);
             queryTextChanged(false);
         }
-        updateStoreConnStr();
+        
+        // update dislay of conn and ng name
+        updateNgAndConnDisplay();
     };
 
     var queryTextChanged = function(flag) {
@@ -2423,7 +2440,7 @@
     	clearEverything();
 
     	gMappingTab.updateNodegroup(gNodeGroup, gConn);
-		gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
+		gUploadTab.setNodeGroup(gConn, gNodeGroup, gNodeGroupName, gOInfo, gMappingTab, gOInfoLoadTime);
     };
 
     var doSearch = function() {
@@ -2794,16 +2811,14 @@
 	 	guiQueryEmpty();
 	};
 
-	var clearGraph = function () {
+	var clearNodeGroup = function () {
         gNodeGroup = new SemanticNodeGroup();
         gInvalidItems = [];
         gNodeGroup.setSparqlConnection(gConn);
         gMappingTab.clear();
-        gNodeGroupName = null;
-        gNodeGroupChangedFlag = false;
         gPlotSpecsHandler = null;
         saveUndoState();
-        nodeGroupChanged(false);
+        nodeGroupChanged(false, "");
     	clearQuery();
     	giuGraphEmpty();
 
@@ -2815,7 +2830,7 @@
 
     var clearTree = function () {
     	gOTree.removeAll();
-    	clearGraph();
+    	clearNodeGroup();
     	guiTreeEmpty();  //guiTreeEmpty();
     	clearMappingTab();
 
@@ -2917,7 +2932,7 @@
 
 		// make sure gMappingTab has the same nodegroup in it before passing to UploadTab
 		gMappingTab.updateNodegroup(gNodeGroup, gConn);
-		gUploadTab.setNodeGroup(gConn, gNodeGroup, gOInfo, gMappingTab, gOInfoLoadTime);
+		gUploadTab.setNodeGroup(gConn, gNodeGroup, gNodeGroupName, gOInfo, gMappingTab, gOInfoLoadTime);
 
 	};
 

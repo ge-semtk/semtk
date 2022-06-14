@@ -217,7 +217,7 @@ define([	// properly require.config'ed
 					IIDXHelper.setDropzoneLabel(dropZone, msgTxt, IIDXHelper.DROPZONE_FULL);
 				// display node group
 				} else {
-					msgTxt = "Nodegroup from: " + this.importNgName;
+					msgTxt = this.importNgName ? this.importNgName : "<Drop or Load Nodegroup>";
 					IIDXHelper.setDropzoneLabel(dropZone, msgTxt, IIDXHelper.DROPZONE_FULL);
 				}
 
@@ -1020,7 +1020,7 @@ define([	// properly require.config'ed
 			/**
 			 * Set up the connection and nodegroup
 			 */
-			setNodeGroup : function (conn, nodegroup, oInfo, mappingTab, oInfoLoadTime) {
+			setNodeGroup : function (conn, nodegroup, ngName, oInfo, mappingTab, oInfoLoadTime) {
 
 				if (mappingTab !== null && nodegroup !== null && conn !== null) {
 					// set json, data, and suggested Prefix
@@ -1038,13 +1038,8 @@ define([	// properly require.config'ed
 					this.suggestedPrefix = null;
 				}
 
-				if (conn !== null) {
-		    		this.importNgName = conn.name;
-		    		this.conn = conn;
-				} else {
-					this.importNgName = "";
-					this.conn = null;
-				}
+				this.importNgName = ngName;
+				this.conn = conn;
 
 	    		this.nodegroup = nodegroup;
                 this.oInfo = oInfo;
