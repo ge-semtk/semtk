@@ -2,12 +2,6 @@ package com.ge.research.semtk.nodegroupstore.test;
 
 import static org.junit.Assert.*;
 
-import java.io.File;
-import java.nio.charset.Charset;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.jena.atlas.json.JSON;
-import org.apache.jena.atlas.json.io.parserjavacc.JSONPrinter;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -18,8 +12,7 @@ import com.ge.research.semtk.services.nodegroupStore.NgStore.StoredItemTypes;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+
 /**
  * Test NgStore without any services, but still uses triplestore
  * @author 200001934
@@ -45,7 +38,7 @@ public class NodeGroupStoreTestLocal_IT {
 		NgStore store = new NgStore(TestGraph.getSei());
 		SparqlGraphJson sgjson = new SparqlGraphJson(Utility.getResourceAsJson(this, "/sampleBattery.json"));
 		store.insertNodeGroup(sgjson.toJson(), sgjson.getSparqlConnJson(), ID, "junit_comments", "junit");
-		
+
 		// check getNodegroup()
 		sgjson = store.getNodegroup(ID);
 		assertTrue("retrieval from ng store failed", sgjson != null);
@@ -61,6 +54,76 @@ public class NodeGroupStoreTestLocal_IT {
 		assertTrue("Dangling triples in store after delete.", t.getNumRows() == 0);
 	}
 	
+	@Test
+	/**
+	 * Test renaming a nodegroup
+	 */
+	public void testRename() throws Exception {
+		TestGraph.clearGraph();
+		String ID1 = "junit_test_ID1";
+		String ID2 = "junit_test_ID2";
+		String ID3 = "junit_test_ID3";
+
+		// add nodegroup ID1
+		NgStore store = new NgStore(TestGraph.getSei());
+		SparqlGraphJson sgjson = new SparqlGraphJson(Utility.getResourceAsJson(this, "/sampleBattery.json"));
+		store.insertNodeGroup(sgjson.toJson(), sgjson.getSparqlConnJson(), ID1, "junit_comments", "junit");
+
+		assertTrue("ID1 should exist now", store.getNodegroup(ID1) != null);
+		assertTrue("ID2 should not exist now", store.getNodegroup(ID2) == null);
+
+		// rename nodegroup to ID2
+		store.renameStoredItem(ID1, ID2, StoredItemTypes.PrefabNodeGroup);
+
+		assertTrue("ID1 should not exist now", store.getNodegroup(ID1) == null);
+		assertTrue("ID2 should exist now", store.getNodegroup(ID2) != null);
+
+		// confirm errors if attempt to rename a current id that does not exist
+		boolean exceptionThrown = false;
+		try{
+			store.renameStoredItem(ID1, ID2, StoredItemTypes.PrefabNodeGroup);
+			fail(); // should not get here
+		}catch(Exception e){
+			exceptionThrown = true;
+			assertTrue(e.getMessage().contains("Cannot rename item with current id 'junit_test_ID1' and type: 'PrefabNodeGroup': no such item exists"));
+		}
+		assertTrue(exceptionThrown);
+
+		// confirm errors if trying to rename to a null id
+		exceptionThrown = false;
+		try{
+			store.renameStoredItem(ID2, null, StoredItemTypes.PrefabNodeGroup);
+			fail(); // should not get here
+		}catch(Exception e){
+			exceptionThrown = true;
+			assertTrue(e.getMessage().contains("Cannot rename item to null or empty id"));
+		}
+		assertTrue(exceptionThrown);
+
+		// confirm errors if trying to rename to a blank id
+		exceptionThrown = false;
+		try{
+			store.renameStoredItem(ID2, "  ", StoredItemTypes.PrefabNodeGroup);
+			fail(); // should not get here
+		}catch(Exception e){
+			exceptionThrown = true;
+			assertTrue(e.getMessage().contains("Cannot rename item to null or empty id"));
+		}
+		assertTrue(exceptionThrown);
+
+		// TODO test trying to name to an id that already exists
+		exceptionThrown = false;
+		store.insertNodeGroup(sgjson.toJson(), sgjson.getSparqlConnJson(), ID3, "junit_comments", "junit");
+		try{
+			store.renameStoredItem(ID2, ID3, StoredItemTypes.PrefabNodeGroup);
+			fail(); // should not get here
+		}catch(Exception e){
+			exceptionThrown = true;
+			assertTrue(e.getMessage().contains("Cannot rename item to new id 'junit_test_ID3' and type: 'PrefabNodeGroup': item with this id already exists"));
+		}
+		assertTrue(exceptionThrown);
+	}
+
 	@Test
 	/**
 	 * Insert, get, delete a nodegroup

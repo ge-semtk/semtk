@@ -95,10 +95,16 @@ public class NgStore {
 			else
 				return tbl.getCell(0, "stringChunk");
 		} else {
-			throw new Exception("Internal error: muliple rows found");
+			throw new Exception("Internal error: multiple rows found");
 		}
 	}
 	
+	/**
+	 * Get the number of stored items with a given ID and blob type.
+	 */
+	public int getNumStoredItems(String id, StoredItemTypes blobType) throws Exception{
+		return getStoredItemTable(id, blobType).getNumRows();
+	}
 
 	/**
 	 * Return item as a table.  Column will be NodeGroup or stringChunk
@@ -233,7 +239,6 @@ public class NgStore {
 	 * @param blobType
 	 * @throws Exception
 	 */
-
 	public void deleteStoredItem(String id, StoredItemTypes blobType) throws Exception {
 		if (blobType == StoredItemTypes.PrefabNodeGroup) 
 			this.executeConfirmQuery(this.genSparqlDeleteNodeGroup(id));
@@ -241,6 +246,38 @@ public class NgStore {
 			this.executeConfirmQuery(this.genSparqlDeleteStringBlob(id));
 	}
 	
+	/**
+	 * Rename a stored item
+	 * @param id the current id
+	 * @param newId the new id
+	 * @param blobType
+	 * @throws Exception
+	 */
+	public void renameStoredItem(String id, String newId, StoredItemTypes blobType) throws Exception {
+
+		if (blobType != StoredItemTypes.PrefabNodeGroup) {
+			throw new Exception("Renaming an item other than a nodegroup is not yet supported");
+		}
+
+		// validate the current id
+		int numStored = this.getNumStoredItems(id, blobType);
+		if(numStored < 1){  		// no stored item with this id
+			throw new Exception("Cannot rename item with current id '" + id + "' and type: '" + blobType + "': no such item exists");
+		} else if(numStored > 1){  // multiple items with this id
+			throw new Exception("Cannot rename item with current id '" + id + "' and type: '" + blobType + "': multiple such items exist");
+		}
+
+		// validate the new id
+		if (newId == null || newId.trim().isEmpty()) {
+			throw new Exception("Cannot rename item to null or empty id");
+		}else if(this.getNumStoredItems(newId, blobType) > 0){
+			throw new Exception("Cannot rename item to new id '" + newId + "' and type: '" + blobType + "': item with this id already exists");
+		}
+
+		// perform the rename
+		this.executeConfirmQuery(this.genSparqlRenameNodeGroup(id, newId));
+	}
+
 	public void insertNodeGroup(JSONObject sgJsonJson, JSONObject connJson, String id, String comments, String creator ) throws Exception {
 		ArrayList<String> insertQueries = this.genSparqlInsertNodeGroup(sgJsonJson, connJson, id, comments, creator);
 	
@@ -248,7 +285,7 @@ public class NgStore {
 			this.executeConfirmQuery(insertQuery);
 		}
 	}
-	
+
 	public void insertStringBlob(String blob, StoredItemTypes blobType, String id, String comments, String creator ) throws Exception {
 		String safeBlob = SparqlToXUtils.escapeForSparql(blob);
 		ArrayList<String> insertQueries = this.genSparqlInsertStringBlob(safeBlob, blobType, id, comments, creator);
@@ -418,6 +455,25 @@ public class NgStore {
                 "  ?stringChunkObj ?scPred ?scObj . " +
 				"  ?PrefabNodeGroup ?pred ?obj." +
 				"}";
+		return ret;
+	}
+
+
+	/**
+	 * Generate SPARQL to rename a nodegroup
+	 * @param id the current id
+	 * @param newId the new id
+	 * @return the SPARQL
+	 */
+	private String genSparqlRenameNodeGroup(String id, String newId) {
+		String ret = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> "
+				+ "WITH <" + this.dataGraph + "> "
+				+ "DELETE { ?item prefabNodeGroup:ID '" + id + "' } "
+				+ "INSERT { ?item prefabNodeGroup:ID '" + newId + "' } "
+				+ "WHERE  { "
+				+ "?item a prefabNodeGroup:PrefabNodeGroup . "
+				+ "?item prefabNodeGroup:ID '" + id + "'"
+				+ "}";
 		return ret;
 	}
 
