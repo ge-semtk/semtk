@@ -4363,6 +4363,10 @@ public class NodeGroup {
 
 		UnionFind<Node> cliques = this.calcSimpleCliques();
 		SimpleGraph<Node> graph = this.calcCliqueGraph(cliques);
+
+		// Allow self-edges; the semantics are simple enough to understand
+		graph.removeSelfEdges();
+
 		SimpleGraph<Node> invertedGraph = graph.invert();
 		HashMap<String,Integer> linkHash = this.calcIncomingLinkHash(skipNodes);
 		

@@ -103,4 +103,14 @@ public class SimpleGraph<T> {
 	public Set<Map.Entry<T, List<T>>> entrySet() {
 		return adjacencies.entrySet();
 	}
+	
+	/**
+	 * Remove all edges in the graph with matching source and target.
+	 */
+	public void removeSelfEdges() {
+		for (Map.Entry<T, List<T>> entry : adjacencies.entrySet()) {
+			T src = entry.getKey();
+			entry.getValue().removeIf((T x) -> { return x == src; });
+		}
+	}
 }
