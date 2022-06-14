@@ -298,7 +298,8 @@ OntologyClass.prototype = {
             }
         }
     },
-
+    
+    
     /* =========== Edit functions =============== */
 
     //
@@ -729,6 +730,24 @@ OntologyInfo.prototype = {
 
         return ret;
     },
+
+	isDataProperty : function(oProp, oDomain) {
+		return !this.isObjectProperty(oProp, oDomain);
+	},
+
+	isObjectProperty(oProp, oDomain) {
+		var oRange = oProp.getRange(oDomain, this);
+		if (oRange.isComplex()) {
+			for (uri of oRange.getUriList()) {
+				// check first one, presuming mixture is illegal as it seems to be in SADL
+				return (uri in this.classHash);
+			}
+		} else {
+			// return false for Datatype or owl:data
+			return (oRange.getSimpleUri() in this.classHash);
+		}
+		return false;
+	},
 
     uriIsKnown : function(uri) {
         return (    this.getPropNames().indexOf(uri) > -1   ||

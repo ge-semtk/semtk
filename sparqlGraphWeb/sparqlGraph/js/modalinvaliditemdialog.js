@@ -74,11 +74,12 @@ define([	// properly require.config'ed
                 } else if (this.item.getItemType() == "PropertyItem") {
                     // find all properties for this CLASS
                     var snode = this.nodegroup.getPropertyItemParentSNode(this.item);
-                    var oPropList = this.oInfo.getInheritedProperties(new OntologyClass(snode.getURI()));
+                    var oClass = this.oInfo.getClass(snode.getURI());
+                    var oPropList = this.oInfo.getInheritedProperties(oClass);
                     var domainList = [];
                     for (var op of oPropList) {
                         // separate propItems from nodeItems
-                        if (! this.oInfo.containsClass(op.getRangeURI())) {
+                        if (this.oInfo.isDataProperty(op, oClass)) {
                             domainList.push(op.getNameStr());
                         }
                     }
