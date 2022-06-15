@@ -42,6 +42,11 @@ define([	// properly require.config'ed   bootstrap-modal
 				var data = JSON.stringify ({ "id": id, "itemType" : itemType });
 				this.msi.postToEndpoint("deleteStoredItem", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
+			
+			renameStoredItem : function (id, newId, itemType, successCallback) {
+				var data = JSON.stringify ({ "id": id, "newId": newId, "itemType" : itemType });
+				this.msi.postToEndpoint("renameStoredItem", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+			},
 
 			getStoredItemById : function (id, itemType, successCallback) {
 				var data = JSON.stringify ({ "id": id, "itemType" : itemType });

@@ -140,6 +140,17 @@ define([	// properly require.config'ed   bootstrap-modal
             var m = new ModalIidx("ModalIidx_choicesDialog");
             m.showChoices(headerText, div, buttonNameList, callbackList, optWidthPercent);
         };
+        
+        /*
+         * Create a simple text input dialog with a label 
+         *   callback(input_string)
+         *   inputClass - one of: input-small input-medium input-large input-xlarge
+         */
+        ModalIidx.input = function (headerText, labelHtml, defaultVal, inputClass, callback, optWidthPercent) {
+        
+            var m = new ModalIidx("ModalIidx_inputDialog");
+            m.showInput(headerText, labelHtml, defaultVal, inputClass, callback, optWidthPercent);
+        };
 
         /*
          * slightly more modern listDialog supporting multi-select
@@ -375,7 +386,32 @@ define([	// properly require.config'ed   bootstrap-modal
 
                 $(this.div).modal('show');
             },
+ 
+			showInput : function (headerText, label, defaultVal, inputClass, callback, optWidthPercent) {
+				this.div = this.createModalDiv(optWidthPercent);
 
+                var header = this.createHeader(headerText);
+                this.div.appendChild(header);
+
+                //----- body -----
+                var body = document.createElement("div");
+                body.className="modal-body";
+                this.div.appendChild(body);
+                
+                var form = IIDXHelper.buildHorizontalForm();
+				var fieldset = IIDXHelper.addFieldset(form);
+				var input =  IIDXHelper.createTextInput(undefined, inputClass);
+				input.value = defaultVal;
+				fieldset.appendChild(IIDXHelper.buildControlGroup(label + ":", input));
+				body.appendChild(form);
+				
+				  // ----- footer -----
+                var footer = this.createCancelSubmitFooter(function(){}, function() { callback(input.value);}, "OK");
+                this.div.appendChild(footer);
+
+                $(this.div).modal('show');
+			},
+			
             createModalDiv : function (optWidthPercent) {
                 // make sure modal exists and is attached to document.body
 

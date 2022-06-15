@@ -35,6 +35,7 @@ define([	// properly require.config'ed
 		 */
 		var ModalStoreDialog= function (user, serviceUrl, optItemType) {
             this.div = null;
+            this.tableDiv = null;
             this.selTable = null;
             this.user = user;
             this.id = "";
@@ -76,6 +77,31 @@ define([	// properly require.config'ed
 			cancelButtonCallback : function() {
 
             },
+            
+            renameStoredItemCallback : function(resultSet) {
+				if (! resultSet.isSuccess()) {
+					ModalIidx.alert("Service failed", resultSet.getGeneralResultHtml());
+				} else {
+					this.refreshStoredItems();
+					this.storeChangedCallback();
+				}
+			},
+			
+            // have new name for an item
+            renameGotNewIdCallback : function(id, newId) {
+				if (newId == id) { return; }
+				
+				var mq = new MsiClientNodeGroupStore(this.serviceUrl);
+                mq.renameStoredItem(id, newId, this.itemType, this.renameStoredItemCallback.bind(this));
+			},
+			
+            // user hit the "rename" button
+            renameButtonCallback : function() {
+				// rowClickCallback makes sure there is exactly 1 selected before we get here
+				var id = this.selTable.getSelectedValues("ID")[0];
+				
+				ModalIidx.input("Rename", "Id", id, "input-large", this.renameGotNewIdCallback.bind(this, id));
+            },
 
             deleteButtonCallback : function() {
 				// other URI controls (button disable, etc) assure list is length 1
@@ -87,6 +113,7 @@ define([	// properly require.config'ed
 
             rowClickCallback : function(tr) {
                 var selIndices = this.selTable.getSelectedIndices();
+                var renameBut = document.getElementById("msdRenameBut");
                 var cancelBut = document.getElementById("msdCancelBut");
                 var deleteBut = document.getElementById("msdDeleteBut");
                 var loadBut = document.getElementById("msdLoadBut");
@@ -94,23 +121,28 @@ define([	// properly require.config'ed
                 cancelBut.removeAttribute("disabled");
 
 				if (selIndices.length == 0) {
+					renameBut.setAttribute("disabled", true);
                     deleteBut.setAttribute("disabled", true);
                     loadBut.setAttribute("disabled", true);
 				} else if (selIndices.length == 1) {
+                    renameBut.removeAttribute("disabled");
                     deleteBut.removeAttribute("disabled");
                     loadBut.removeAttribute("disabled");
 				} else {
+                    renameBut.setAttribute("disabled", true);
                     deleteBut.removeAttribute("disabled");
                     loadBut.setAttribute("disabled", true);
                 }
             },
 
-            /**
-              * got nodegroup store contents.  Launch dialog.
-             **/
-            gotMetadataLaunchDialog : function (resultSet) {
+			//
+			// Update this.selTable with data
+			// returns:  success - boolean
+			//
+			gotMetadataRefresh : function(resultSet) {
 				if (! resultSet.isSuccess()) {
 					ModalIidx.alert("Service failed", resultSet.getGeneralResultHtml());
+					return false;
 				} else {
 
                     // build this.div with a SelectTable
@@ -127,20 +159,41 @@ define([	// properly require.config'ed
                                                     undefined,
                                                     this.rowClickCallback.bind(this)
                                                     );
-
-                    this.div = document.createElement("div");
-                    this.div.appendChild(this.selTable.getTableDom());
+                    this.tableDiv.innerHTML = "";  
+                    this.tableDiv.appendChild(this.selTable.getTableDom());
+                    return true;
+                }
+			}, 
+			
+            /**
+              * got nodegroup store contents.  Launch dialog.
+             **/
+            gotMetadataLaunchDialog : function (resultSet) {
+				this.div = document.createElement("div");
+				this.tableDiv = document.createElement("div");
+				this.div.appendChild(this.tableDiv);
+				
+				if (this.gotMetadataRefresh(resultSet)) {
+                    
+                    // button bar
+                    var buttonDiv = document.createElement("div");
+                    buttonDiv.align="right";
+                    this.div.appendChild(document.createElement("hr"));
+                    this.div.appendChild(buttonDiv);
+                    buttonDiv.appendChild(IIDXHelper.createButton("Rename", this.renameButtonCallback.bind(this), [], "msdRenameBut", undefined));
+                    buttonDiv.appendChild(IIDXHelper.createNbspText());
+                    buttonDiv.appendChild(IIDXHelper.createButton("Delete", this.deleteButtonCallback.bind(this), [], "msdDeleteBut", undefined));
 
 
                     // launch the modal
                     var m = new ModalIidx();
                     m.showChoices(  this.title,
                                     this.div,
-                                    ["Cancel", "Delete", "Load"],
-                                    [this.cancelButtonCallback.bind(this), this.deleteButtonCallback.bind(this), this.loadButtonCallback.bind(this)],
+                                    ["Close", "Load"],
+                                    [this.cancelButtonCallback.bind(this), this.loadButtonCallback.bind(this)],
                                     90,
-                                    ["", "btn-danger", "btn-primary"],
-                                    ["msdCancelBut", "msdDeleteBut", "msdLoadBut"]
+                                    ["","btn-primary"],
+                                    ["msdCancelBut", "msdLoadBut"]
                                 );
 
 
@@ -156,13 +209,6 @@ define([	// properly require.config'ed
                
             },
 
-            getSuggestedId : function() {
-                return this.lastRetrievedId;
-            },
-
-            suggestId : function(suggestion) {
-                this.lastRetrievedId = suggestion.substring(0,32).replace(/\W+/g, "_");
-            },
 
             /**
               * Callback after deletion
@@ -184,6 +230,7 @@ define([	// properly require.config'ed
                         msg += "<p><p><b>Deletes were not attempted on remaining ids:<br></b>" + idList;
                     }
 					ModalIidx.alert("Service failed", msg);
+					this.refreshStoredItems();
 					this.storeChangedCallback();
 
 				} else {
@@ -193,7 +240,7 @@ define([	// properly require.config'ed
                         this.deleteNodeGroupList(idList);
                     } else {
                         //ModalIidx.alert("Delete Nodegroup", resultSet.getSimpleResultsHtml());
-                        ModalIidx.alert("Delete Nodegroup", "Successfully deleted.");
+                        this.refreshStoredItems();
                         this.storeChangedCallback();
                     }
 				}
@@ -210,6 +257,9 @@ define([	// properly require.config'ed
 
             /**
               * External call to retrieve a nodegroup from the store
+              *
+              * userRetrieveJsonStrCallback(jsonStr, id) - called when closing after user loaded a nodegroup
+              * storeChangedCallback() - called any time a nodegroup is deleted or renamed
               */
             launchOpenStoreDialog : function (userRetrieveJsonStrCallback, storeChangedCallback) {
                      
@@ -222,18 +272,33 @@ define([	// properly require.config'ed
   
             },
 
-            /**
-              * Totally different dialog but functionally related
-              * so I'm slamming it into this file
-              * -Paul
-              */
-            launchStoreDialog : function (itemStr, doneCallback) {
+			/**
+			 *  re-query and re-draw the select table
+			 */
+			refreshStoredItems : function() {
+				var mq = new MsiClientNodeGroupStore(this.serviceUrl);
+    		    mq.getStoredItemsMetadata(this.itemType, this.gotMetadataRefresh.bind(this));
+			},
+			
+			/* ************************************************************************************************** 
+              Totally different dialog but functionally related
+              so I'm slamming it into this file
+             ************************************************************************************************** */
+
+			/**
+			 *    Store a nodegroup
+			 *    
+			 *    itemStr - nodegroup json string
+			 *    suggestedId - prefill the "id" field
+			 *    doneCallback - no params
+			 */
+            launchStoreDialog : function (itemStr, suggestedId, doneCallback) {
                 // get all existing meta data, and call launchStoreDialog2
                 var mq = new MsiClientNodeGroupStore(this.serviceUrl);
-    		    mq.getStoredItemsMetadata(this.itemType, this.launchStoreDialog2.bind(this, itemStr, doneCallback));
+    		    mq.getStoredItemsMetadata(this.itemType, this.launchStoreDialog2.bind(this, itemStr, suggestedId, doneCallback));
             },
 
-            launchStoreDialog2 : function (itemStr, doneCallback, resultSet) {
+            launchStoreDialog2 : function (itemStr, suggestedId, doneCallback, resultSet) {
                 // check that meta data returned
                 if (! resultSet.isSuccess()) {
                     ModalIidx.alert("Failure retrieving store contents",
@@ -353,7 +418,9 @@ define([	// properly require.config'ed
                 div.appendChild(idListElem);
                 var idText =      IIDXHelper.createTextInput("sngIdText", "input-xlarge", idListElem);
                 idText.onchange = updateMetaData;
-                idText.value =      this.lastRetrievedId;
+                var cleanSuggestion = (suggestedId || "").substring(0,32).replace(/\W+/g, "_");
+                idText.value = cleanSuggestion;
+                
 
                 // build the simple inputs
                 var commentText = IIDXHelper.createTextArea("sngCommentsText", 2);

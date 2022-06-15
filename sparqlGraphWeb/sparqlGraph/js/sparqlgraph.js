@@ -1331,8 +1331,8 @@
             clearNodeGroup();
             logEvent("SG Loaded Nodegroup");
 
-            var newNgName = (optNgName != undefined) ? optNgName : null;
-
+            var newNgName = (optNgName != undefined) ? optNgName.replace(".json","") : null;
+			
             try {
                 // get nodegroup explicitly w/o the oInfo
                 sgJson.getNodeGroup(gNodeGroup);
@@ -2206,7 +2206,7 @@
             }
 
             var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), true, gPlotSpecsHandler);
-            gStoreDialog.launchStoreDialog(JSON.stringify(sgJson.toJson()), doneCallback);
+            gStoreDialog.launchStoreDialog(JSON.stringify(sgJson.toJson()), gNodeGroupName, doneCallback);
 
         });
 

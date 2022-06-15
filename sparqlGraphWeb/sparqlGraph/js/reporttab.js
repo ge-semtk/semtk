@@ -573,7 +573,6 @@ define([	// properly require.config'ed
             setReport : function(reportJsonStr) {
                 var json = JSON.parse(reportJsonStr);
                 this.editor.setValue(json);
-                this.storeDialog.suggestId(json.title || "");
                 this.expandOrCollapseAll(false);
                 this.setReportAsUnchanged();
             },
@@ -685,10 +684,7 @@ define([	// properly require.config'ed
             doSaveToStore : function() {
                 try {
                     var reportJson = this.editor.getValue();
-                    if (! this.storeDialog.getSuggestedId() && reportJson.title) {
-                        this.storeDialog.suggestId(reportJson.title);
-                    }
-                    this.storeDialog.launchStoreDialog(JSON.stringify(reportJson), this.setReportAsUnchanged.bind(this));
+                    this.storeDialog.launchStoreDialog(JSON.stringify(reportJson), reportJson.title, this.setReportAsUnchanged.bind(this));
                 } catch (err) {
                     console.log(err.stack);
                     alert(err);   // need to make it to "return false" so page doesn't reload
