@@ -46,9 +46,7 @@ sed --in-place "s#%%BUILD%%#${BUILD}#g" "${WEBAPPS}/sparqlGraph/main-oss/sparqlG
 
 # define array of versioned files
 declare -a VERSIONED=("sparqlGraph/main-oss/sparqlgraphconfigOss.js"
-                      "sparqlGraph/main-oss/KDLEasyLoggerConfigOss.js"
-                      "sparqlForm/main-oss/sparqlformconfig.js"
-                      "sparqlForm/main-oss/KDLEasyLoggerConfig.js")
+                      "sparqlGraph/main-oss/KDLEasyLoggerConfigOss.js")
 
 # replace versioned files
 for v in "${VERSIONED[@]}"

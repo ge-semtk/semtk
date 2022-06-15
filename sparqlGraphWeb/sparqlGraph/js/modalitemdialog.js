@@ -50,7 +50,7 @@ define([	// properly require.config'ed
 			// data.textId
 			//
 			// GHOST ITEM and NODEGROUP:
-			//  GhostNodegroup : copy of nodegroup with changes made (e.g. remove trigger class in sparqlForm)
+			//  GhostNodegroup : copy of nodegroup with changes made
 			//  GhostItem : corresponding to item
 			//  These will be used to generate the SPARQL
 			this.item = item;
@@ -66,8 +66,6 @@ define([	// properly require.config'ed
             // if a values clause has too many params.
             // Actual limit is in the 2,000 - 10,000 range
             this.maxValues = 1000;
-
-			this.sparqlformFlag = false;
 		};
 
 
@@ -115,22 +113,11 @@ define([	// properly require.config'ed
 
 				// build new constraints
                 if (valList.length > this.maxValues) {
-                    if (this.sparqlformFlag) {
-                        ModalIidx.alert("Too many items selected",
-                                        "Selecting more than " +  this.maxValues + " values is not supported<br>" +
-                                        "due to performance impact.<br>" +
-                                        "Consider using REGEX.");
-                        // SparqlForm: disallow large FILTER IN clause.
-                        this.setFieldValue(ModalItemDialog.CONSTRAINT_TEXT, "");
-                        return;
-
-                    } else {
                         ModalIidx.alert("Large values clause",
-                                        "Warning: Large number of values selected: " + valList.length + "<br>" +
-                                        "Query engine may error or misbehave.<br>" +
-                                        "Consider using REGEX.");
+                                    "Warning: Large number of values selected: " + valList.length + "<br>" +
+                                    "Query engine may error or misbehave.<br>" +
+                                    "Consider using REGEX.");
                         // SparqlGraph: allow large FILTER IN clause, at user's peril.
-                    }
                 }
 
                 // swap in sparqlID
@@ -147,11 +134,9 @@ define([	// properly require.config'ed
 				// clear button
 
 				// uncheck "return"
-				if (! this.sparqlformFlag) {
-					var returnCheck = this.getFieldElement(ModalItemDialog.RETURN_CHECK);
-					returnCheck.checked = false;
-					this.selectValsOnChange();   // handles any disabling fields
-				}
+				var returnCheck = this.getFieldElement(ModalItemDialog.RETURN_CHECK);
+				returnCheck.checked = false;
+				this.selectValsOnChange();   // handles any disabling fields
 
                 // return type
                 var retTypeCheck = this.getFieldElement(ModalItemDialog.RETURN_TYPE_CHECK);
@@ -321,7 +306,7 @@ define([	// properly require.config'ed
 					var element = [];
 
 					for (var i=0; i <res.getRowCount(); i++) {
-						element[i] = {	name: res.getRsData(i, 0, this.sparqlformFlag ? res.NAMESPACE_NO : res.NAMESPACE_YES),  // strip ns from name if sparqlform
+						element[i] = {	name: res.getRsData(i, 0, res.NAMESPACE_YES),
 								      	val: res.getRsData(i, 0, res.NAMESPACE_YES)
 								     };
 
@@ -672,10 +657,7 @@ define([	// properly require.config'ed
 
             //  Build the dialog.
             //  300 line function probably needs fixing (ya think?)
-			show : function (optSparqlformFlag) {
-				if (typeof optSparqlformFlag != "undefined") {
-					this.sparqlformFlag = optSparqlformFlag;
-				}
+			show : function () {
 
 				var dom = document.createElement("fieldset");
 				dom.id = "modalitemdialogdom";
@@ -728,7 +710,7 @@ define([	// properly require.config'ed
 
 				sparqlIDTxt.onfocus    = this.sparqlIDOnFocus.bind(this);
 				sparqlIDTxt.onfocusout = this.sparqlIDOnFocusOut.bind(this);
-				sparqlIDTxt.style.disabled = this.sparqlformFlag;
+				sparqlIDTxt.style.disabled = false;
 				td.appendChild(sparqlIDTxt);
                 anythingSetFlag = anythingSetFlag || (binding != null && binding != sparqlID);
 
@@ -788,7 +770,7 @@ define([	// properly require.config'ed
                 tr.appendChild(td);
                 b = document.createElement("b");
                 td.appendChild(b);
-                if (!this.sparqlformFlag && this.item.getItemType() == "SemanticNode") {
+                if (this.item.getItemType() == "SemanticNode") {
                     b.appendChild(document.createTextNode("Type:"));
                     b.appendChild(document.createElement("br"));
                 }
@@ -800,7 +782,7 @@ define([	// properly require.config'ed
 				td = document.createElement("td");
                 td.style.verticalAlign="top";
 				tr.appendChild(td);
-                if (!this.sparqlformFlag && this.item.getItemType() == "SemanticNode") {
+                if (this.item.getItemType() == "SemanticNode") {
                     returnClassCheck = IIDXHelper.createVAlignedCheckbox(
                                             this.getFieldID(ModalItemDialog.RETURN_TYPE_CHECK),
                                             this.item.getIsTypeReturned(),
@@ -819,25 +801,16 @@ define([	// properly require.config'ed
                 }
 
                 // cell 2,2 continued: functions
-
-                if (!this.sparqlformFlag) {
-                    td.appendChild(document.createElement("br"));
-
-                    td.appendChild(this.buildFunctionTable());
-                    anythingSetFlag = anythingSetFlag || this.item.getFunctions().length > 0;
-                }
+                td.appendChild(document.createElement("br"));
+                td.appendChild(this.buildFunctionTable());
+                anythingSetFlag = anythingSetFlag || this.item.getFunctions().length > 0;
 
 				// cell 2,3: batch of controls:  opt/min, delete, runtime constrain
 				td = document.createElement("td");
 				td.style.verticalAlign = "top";
 				tr.appendChild(td);
 
-				// if sparqlform and this is a node, look for singleNodeItem
 				var singleNodeItem = null;
-
-				if (this.sparqlformFlag && this.item.getItemType() == "SemanticNode") {
-					singleNodeItem = this.nodegroup.getSingleConnectedNodeItem(this.item);
-				}
 				// is optional applicable to this item
 				var showSelect = (this.item.getItemType() == "PropertyItem" || this.item.getItemType() == "SemanticNode" || singleNodeItem != null);
 
@@ -929,25 +902,7 @@ define([	// properly require.config'ed
                                         );
                 anythingSetFlag = anythingSetFlag || runtimeConstrainedCheck.checked;
 
-				// Top section is handled totally differently with sparqlformFlag
-				if (this.sparqlformFlag) {
-					// create a right-justified div just for optional
-					var div = document.createElement("div");
-					div.align = "right";
 
-					// assemble
-					if (showSelect) {
-						div.appendChild(select);
-                        div.appendChild(document.createElement("br"));
-					}
-					div.appendChild(runtimeConstrainedCheck)
-					div.appendChild(document.createTextNode(" runtime constrained"));
-					dom.appendChild(div);
-
-					// make top table invisible
-					table.style.display = "none";
-
-				} else {
 					// normal operation: put optional check into the top table
 					if (showSelect) {
                         td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
@@ -956,45 +911,44 @@ define([	// properly require.config'ed
 					}
 
 
-					// deletion
-					if (this.item.getItemType() == "PropertyItem") {
-                        // deleting a property is just a check box
-						var deleteCheck = IIDXHelper.createVAlignedCheckbox(
-                                            this.getFieldID(ModalItemDialog.DELETE_CHECK),
-						                    this.item.getIsMarkedForDeletion()
-                                        );
-                        IIDXHelper.appendCheckBox(td, deleteCheck, "mark for delete");
-                        anythingSetFlag = anythingSetFlag || deleteCheck.checked;
+				// deletion
+				if (this.item.getItemType() == "PropertyItem") {
+                    // deleting a property is just a check box
+					var deleteCheck = IIDXHelper.createVAlignedCheckbox(
+                                        this.getFieldID(ModalItemDialog.DELETE_CHECK),
+						                this.item.getIsMarkedForDeletion()
+                                    );
+                    IIDXHelper.appendCheckBox(td, deleteCheck, "mark for delete");
+                    anythingSetFlag = anythingSetFlag || deleteCheck.checked;
 
-					} else {
-                        // deleting a Semantic node has many options
-						var options = [];
-                        var selectedText = [];
-						for (var key in NodeDeletionTypes) {
-							options.push([key, NodeDeletionTypes[key]]);
+				} else {
+                    // deleting a Semantic node has many options
+					var options = [];
+                    var selectedText = [];
+					for (var key in NodeDeletionTypes) {
+						options.push([key, NodeDeletionTypes[key]]);
 
-                            if (NodeDeletionTypes[key] == this.item.getDeletionMode()) {
-                                selectedText.push(key);
-                            }
-						}
-						var deleteSelect = IIDXHelper.createSelect(   this.getFieldID(ModalItemDialog.DELETE_SELECT),
-                                                                      options,
-                                                                      selectedText);
-
-                        // TODO: last two aren't implemented on the other end
-                        //       They probably shouldn't be in belmont.js
-                        deleteSelect.options[3].disabled = true;
-                        deleteSelect.options[4].disabled = true;
-
-                        td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
-						td.appendChild(deleteSelect);
-                        anythingSetFlag = anythingSetFlag || deleteSelect.selectedIndex != 0;
+                        if (NodeDeletionTypes[key] == this.item.getDeletionMode()) {
+                            selectedText.push(key);
+                        }
 					}
+					var deleteSelect = IIDXHelper.createSelect(   this.getFieldID(ModalItemDialog.DELETE_SELECT),
+                                                                    options,
+                                                                    selectedText);
 
-					td.appendChild(document.createElement("br"));
-                    IIDXHelper.appendCheckBox(td, runtimeConstrainedCheck, "runtime constrained");
+                    // TODO: last two aren't implemented on the other end
+                    //       They probably shouldn't be in belmont.js
+                    deleteSelect.options[3].disabled = true;
+                    deleteSelect.options[4].disabled = true;
 
+                    td.appendChild( document.createTextNode( '\u00A0\u00A0' ) );
+					td.appendChild(deleteSelect);
+                    anythingSetFlag = anythingSetFlag || deleteSelect.selectedIndex != 0;
 				}
+
+				td.appendChild(document.createElement("br"));
+                IIDXHelper.appendCheckBox(td, runtimeConstrainedCheck, "runtime constrained");
+
 
 				// regex button
 				but = document.createElement("button");
@@ -1028,10 +982,6 @@ define([	// properly require.config'ed
 				var list = document.createElement("datalist");
 				list.id = this.getFieldID(ModalItemDialog.AUTO_TEXT_LIST);
 				dom.appendChild(list);
-
-				if (this.sparqlformFlag) {
-					div.appendChild(document.createTextNode(" "));
-				}
 
 				// auto-complete text
 				elem = document.createElement("input");
@@ -1092,9 +1042,6 @@ define([	// properly require.config'ed
 				elem.id = "btnSuggest";
 				elem.type = "button";
 				elem.onclick = this.query.bind(this);
-				if (this.sparqlformFlag) {
-					elem.style.display = "none";   // hide the "Suggest" button if suggestions have already been generated
-				}
 				elem.innerHTML = "Suggest Values";
 				div.appendChild(elem);
 				// ----- done with buttons under select -----
@@ -1107,13 +1054,9 @@ define([	// properly require.config'ed
 
 				ModalIidx.clearCancelSubmit(title, dom, this.clear.bind(this), this.submit.bind(this));
 
-				if (this.sparqlformFlag) {
-					this.query();
-				} else {
-                    if (! anythingSetFlag) {
-                        returnCheck.checked = true;
-                        this.returnCheckCallback();
-                    }
+                if (! anythingSetFlag) {
+                    returnCheck.checked = true;
+                    this.returnCheckCallback();
                 }
 
 				// tooltips

@@ -27,7 +27,7 @@
 //			{                                                <--------- standard require.js config object ----------
 //				baseUrl : '../iidx-2.0.3',                   <-- base URL for your require (usually iidx relative to your project)
 //				paths : {
-//					"sparqlform" : "../sparqlForm",          <-- anything else you need (relative to baseUrl)
+//					"somecode" : "../somecode",          <-- anything else you need (relative to baseUrl)
 //			    }
 //	        });
 //	</script>

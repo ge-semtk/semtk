@@ -902,8 +902,6 @@
 
             snodeItem.setIsTypeReturned(returnTypeFlag);
 
-        	// ignore optMinus in sparqlGraph.  It is still used in sparqlForm
-
             // union
             gNodeGroup.rmFromUnions(snodeItem);
 
