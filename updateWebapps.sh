@@ -35,7 +35,6 @@ popd
 # or else the COPYDIRS might fail in weird ways
 CREATEDIRS=(
            "sparqlGraph"
-           "sparqlForm"
          )
 for DIR in "${CREATEDIRS[@]}"
 do
@@ -47,7 +46,6 @@ COPYDIRS=( "iidx-oss"
            "jsoneditor"
            "PapaParse"
            "plotly"
-           "sparqlForm/main-oss"
            "sparqlGraph/css"
            "sparqlGraph/dynatree-1.2.5"
            "sparqlGraph/images"
@@ -75,8 +73,7 @@ done
 mkdir -p "${SG_WEB_OSS}"/ROOT
 cp -r "${SG_WEB_OSS}"/ROOT/* "${WEBAPPS}"/ROOT
 
-# Copy over html files from sparqlForm & sparqlGraph
-cp "${SG_WEB_OSS}"/sparqlForm/*.html "${WEBAPPS}"/sparqlForm
+# Copy over html files from sparqlGraph
 cp "${SG_WEB_OSS}"/sparqlGraph/*.html "${WEBAPPS}"/sparqlGraph
 
 ./configWebapps.sh "${WEBAPPS}" "${OPT_VARNAME_FILTER}" "${OPT_VARNAME_SEARCH}" "${OPT_VARNAME_REPLACE}"

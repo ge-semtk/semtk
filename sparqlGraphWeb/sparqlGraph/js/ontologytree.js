@@ -44,7 +44,7 @@ var OntologyTree = function(dynaTree, optEnumFlag, optCollapseNamespaceList) {
 	this.enumFlag = (typeof optEnumFlag === 'undefined') ? true : optEnumFlag;
 	this.collapseList = (typeof optCollapseNamespaceList === 'undefined') ? [] : optCollapseNamespaceList;
 
-    // ----- options for all dynatrees (sparqlGraph, sparqlForm, ExploreTab) ------
+    // ----- options for all dynatrees (sparqlGraph, ExploreTab) ------
 
     // don't allow closing of non-folders (sub-properties)
     this.tree.options.onQueryExpand = function(x, node) {

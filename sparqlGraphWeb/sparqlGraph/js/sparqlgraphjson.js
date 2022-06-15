@@ -104,7 +104,7 @@ define([	// properly require.config'ed
             },
 
             /*
-             * return the connection    or null if this is an old SparqlForm file
+             * return the connection
              */
 			getSparqlConn : function() {
                 if (this.jObj.hasOwnProperty("sparqlConn")) {
