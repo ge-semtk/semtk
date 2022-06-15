@@ -255,10 +255,6 @@ public class NgStore {
 	 */
 	public void renameStoredItem(String id, String newId, StoredItemTypes blobType) throws Exception {
 
-		if (blobType != StoredItemTypes.PrefabNodeGroup) {
-			throw new Exception("Renaming an item other than a nodegroup is not yet supported");
-		}
-
 		// validate the current id
 		int numStored = this.getNumStoredItems(id, blobType);
 		if(numStored < 1){  		// no stored item with this id
@@ -275,7 +271,7 @@ public class NgStore {
 		}
 
 		// perform the rename
-		this.executeConfirmQuery(this.genSparqlRenameNodeGroup(id, newId));
+		this.executeConfirmQuery(this.genSparqlRenameNodeGroup(id, newId, blobType));
 	}
 
 	public void insertNodeGroup(JSONObject sgJsonJson, JSONObject connJson, String id, String comments, String creator ) throws Exception {
@@ -465,14 +461,14 @@ public class NgStore {
 	 * @param newId the new id
 	 * @return the SPARQL
 	 */
-	private String genSparqlRenameNodeGroup(String id, String newId) {
+	private String genSparqlRenameNodeGroup(String id, String newId, StoredItemTypes blobType) {
 		String ret = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> "
 				+ "WITH <" + this.dataGraph + "> "
 				+ "DELETE { ?item prefabNodeGroup:ID '" + id + "' } "
 				+ "INSERT { ?item prefabNodeGroup:ID '" + newId + "' } "
 				+ "WHERE  { "
-				+ "?item a prefabNodeGroup:PrefabNodeGroup . "
-				+ "?item prefabNodeGroup:ID '" + id + "'"
+				+ "	   ?item a prefabNodeGroup:" + blobType + " . " 
+				+ "    ?item prefabNodeGroup:ID '" + id + "'"
 				+ "}";
 		return ret;
 	}
