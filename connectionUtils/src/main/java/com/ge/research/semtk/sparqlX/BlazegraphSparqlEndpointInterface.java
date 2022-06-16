@@ -37,6 +37,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.util.EntityUtils;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
@@ -120,6 +121,30 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 
 	}
 	
+	/**
+	 * Get a results content type to be set in the HTTP header.
+	 * 
+	 * in Blazegraph, this is used for the "Accept" header, not "Content-type"
+	 */
+	@Override
+	protected String getContentType(SparqlResultTypes resultType) throws Exception{
+		if (resultType == null) {
+			return this.getContentType(getDefaultResultType());
+			
+		} else if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.CONFIRM) { 
+			return CONTENTTYPE_SPARQL_QUERY_RESULT_JSON; 
+			
+		} else if (resultType == SparqlResultTypes.GRAPH_JSONLD) { 
+			return CONTENTTYPE_LD_JSON;    // different from fuseki
+		} else if (resultType == SparqlResultTypes.HTML) { 
+			return CONTENTTYPE_HTML; 
+		} else if (resultType == SparqlResultTypes.RDF) { 
+			return CONTENTTYPE_RDF; 
+		} 
+		
+		// fail and throw an exception if the value was not valid.
+		throw new Exception("Cannot get content type for query type " + resultType);
+	}
 	@Override
 	public boolean isExceptionRetryAble(Exception e) {
 		String msg = e.getMessage();
@@ -154,6 +179,24 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 		return this.executeUpload(turtle, "file.ttl");
 	}
 	
+	/**
+	 * Blazegraph appears to not return { @context: [],  @graph: [] } 
+	 *  but just an array that should be inside @graph
+	 */
+	@Override
+	protected JSONObject getJsonldResponse(Object responseObj) {
+		if (responseObj instanceof JSONArray) {
+			// this might always be true for Blazegraph
+			
+			JSONObject ret = new JSONObject();
+			ret.put("@context", new JSONArray());
+			ret.put("@graph", (JSONArray) responseObj);
+			return ret;
+			
+		} else {
+			return new JSONObject((JSONObject) responseObj);
+		}
+	}
 	/** 
 	 * Default Upload of OWL
 	 */

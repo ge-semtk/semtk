@@ -103,6 +103,7 @@ public abstract class SparqlEndpointInterface {
 	// results types to request
 	protected static final String CONTENTTYPE_SPARQL_QUERY_RESULT_JSON = "application/sparql-results+json"; 
 	protected static final String CONTENTTYPE_X_JSON_LD = "application/x-json+ld";
+	protected static final String CONTENTTYPE_LD_JSON = "application/ld+json";
 	protected static final String CONTENTTYPE_HTML = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
 	protected static final String CONTENTTYPE_RDF = "application/rdf+xml";
 	
