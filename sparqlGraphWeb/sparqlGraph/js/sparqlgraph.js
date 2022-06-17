@@ -717,7 +717,7 @@
     			gNodeGroup.removeLink(nItem, targetSNode);
     		}
 
-            nodeGroupChanged(true, gNodeGroup.getSNodeSparqlIDs());
+            nodeGroupChanged(true);
             saveUndoState();
         });
 	};
