@@ -42,7 +42,6 @@ define([	// properly require.config'ed
             this.serviceUrl = serviceUrl;
             this.itemType = optItemType || MsiClientNodeGroupStore.TYPE_NODEGROUP;
             this.userRetrieveJsonStrCallback = function () {};
-            this.lastRetrievedId = null;
 		};
 
 
@@ -71,18 +70,17 @@ define([	// properly require.config'ed
 				var idList = this.selTable.getSelectedValues("ID");
 				var mq = new MsiClientNodeGroupStore(this.serviceUrl);
                 mq.getStoredItemByIdToStr(idList[0], this.itemType, this.userRetrieveJsonStrCallback);
-                this.lastRetrievedId = idList[0];
 			},
 
 			cancelButtonCallback : function() {
 
             },
             
-            renameStoredItemCallback : function(resultSet) {
+            renameStoredItemCallback : function(newId, resultSet) {
 				if (! resultSet.isSuccess()) {
 					ModalIidx.alert("Service failed", resultSet.getGeneralResultHtml());
 				} else {
-					this.refreshStoredItems();
+					this.refreshStoredItems([newId]);
 					this.storeChangedCallback();
 				}
 			},
@@ -92,7 +90,7 @@ define([	// properly require.config'ed
 				if (newId == id) { return; }
 				
 				var mq = new MsiClientNodeGroupStore(this.serviceUrl);
-                mq.renameStoredItem(id, newId, this.itemType, this.renameStoredItemCallback.bind(this));
+                mq.renameStoredItem(id, newId, this.itemType, this.renameStoredItemCallback.bind(this, newId));
 			},
 			
             // user hit the "rename" button
@@ -111,7 +109,10 @@ define([	// properly require.config'ed
            
             },
 
-            rowClickCallback : function(tr) {
+			/**
+				Update UI buttons after a row has been clicked
+			 */
+            rowClickCallback : function(tr_UNUSED) {
                 var selIndices = this.selTable.getSelectedIndices();
                 var renameBut = document.getElementById("msdRenameBut");
                 var cancelBut = document.getElementById("msdCancelBut");
@@ -139,7 +140,7 @@ define([	// properly require.config'ed
 			// Update this.selTable with data
 			// returns:  success - boolean
 			//
-			gotMetadataRefresh : function(resultSet) {
+			gotMetadataRefresh : function(selectIdList, resultSet) {
 				if (! resultSet.isSuccess()) {
 					ModalIidx.alert("Service failed", resultSet.getGeneralResultHtml());
 					return false;
@@ -151,16 +152,23 @@ define([	// properly require.config'ed
                     var undefVal = "";
 
                     var widthList = [15, 30, 15, 40];
-                    this.selTable = new SelectTable(resultSet.tableGetNamedRows(colList, undefVal, sortFlag),
-                                                    colList,
-                                                    widthList,
-                                                    10,
-                                                    true,  // multiFlag
-                                                    undefined,
-                                                    this.rowClickCallback.bind(this)
-                                                    );
+                    var scrollSave = this.selTable ? this.selTable.getScrollY() : 0;
+                    if (this.selTable) {
+						this.selTable.replaceRows(resultSet.tableGetNamedRows(colList, undefVal, sortFlag));
+					} else {
+	                    this.selTable = new SelectTable(resultSet.tableGetNamedRows(colList, undefVal, sortFlag),
+	                                                    colList,
+	                                                    widthList,
+	                                                    10,
+	                                                    true,  // multiFlag
+	                                                    undefined,
+	                                                    this.rowClickCallback.bind(this)
+	                                                    );
+	                }
                     this.tableDiv.innerHTML = "";  
                     this.tableDiv.appendChild(this.selTable.getTableDom());
+                    this.selTable.selectValues("ID", selectIdList);
+                    this.selTable.setScrollY(scrollSave);
                     return true;
                 }
 			}, 
@@ -173,7 +181,7 @@ define([	// properly require.config'ed
 				this.tableDiv = document.createElement("div");
 				this.div.appendChild(this.tableDiv);
 				
-				if (this.gotMetadataRefresh(resultSet)) {
+				if (this.gotMetadataRefresh([], resultSet)) {
                     
                     // button bar
                     var buttonDiv = document.createElement("div");
@@ -230,7 +238,7 @@ define([	// properly require.config'ed
                         msg += "<p><p><b>Deletes were not attempted on remaining ids:<br></b>" + idList;
                     }
 					ModalIidx.alert("Service failed", msg);
-					this.refreshStoredItems();
+					this.refreshStoredItems([]);
 					this.storeChangedCallback();
 
 				} else {
@@ -240,7 +248,7 @@ define([	// properly require.config'ed
                         this.deleteNodeGroupList(idList);
                     } else {
                         //ModalIidx.alert("Delete Nodegroup", resultSet.getSimpleResultsHtml());
-                        this.refreshStoredItems();
+                        this.refreshStoredItems([]);
                         this.storeChangedCallback();
                     }
 				}
@@ -268,6 +276,11 @@ define([	// properly require.config'ed
                 this.storeChangedCallback = storeChangedCallback;
 
                 var mq = new MsiClientNodeGroupStore(this.serviceUrl);
+                
+                // clean out left-over selections from previous launch
+                if (this.selTable) {
+                	this.selTable.deselectAll();
+				}
     		    mq.getStoredItemsMetadata(this.itemType, this.gotMetadataLaunchDialog.bind(this));
   
             },
@@ -275,9 +288,9 @@ define([	// properly require.config'ed
 			/**
 			 *  re-query and re-draw the select table
 			 */
-			refreshStoredItems : function() {
+			refreshStoredItems : function(selIdList) {
 				var mq = new MsiClientNodeGroupStore(this.serviceUrl);
-    		    mq.getStoredItemsMetadata(this.itemType, this.gotMetadataRefresh.bind(this));
+    		    mq.getStoredItemsMetadata(this.itemType, this.gotMetadataRefresh.bind(this, selIdList));
 			},
 			
 			/* ************************************************************************************************** 
@@ -340,7 +353,6 @@ define([	// properly require.config'ed
                     // save id/user/creator
                     this.id = id;
                     this.user = creator;
-                    this.lastRetrievedId = id;
                     mq.storeItem(item, creator, id, comments, this.itemType, successCallback.bind(this, id, closeModal));
                 }.bind(this);
 
@@ -418,7 +430,7 @@ define([	// properly require.config'ed
                 div.appendChild(idListElem);
                 var idText =      IIDXHelper.createTextInput("sngIdText", "input-xlarge", idListElem);
                 idText.onchange = updateMetaData;
-                var cleanSuggestion = (suggestedId || "").substring(0,32).replace(/\W+/g, "_");
+                var cleanSuggestion = (suggestedId || "").substring(0,128);
                 idText.value = cleanSuggestion;
                 
 

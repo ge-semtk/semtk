@@ -60,7 +60,8 @@ define([	// properly require.config'ed   bootstrap-modal
             this.headTab = null;
             this.rowsTab = null;
             this.filter = null;     // this.filter[12][1] = true if row 12 col 1 matches filter
-
+			this.filterInputElems = [];
+			this.rowDiv = null;
             this.populateTable();
 		};
 
@@ -78,6 +79,19 @@ define([	// properly require.config'ed   bootstrap-modal
                 return this.dom;
             },
 
+			getScrollY : function () {
+				return this.rowDiv ? this.rowDiv.scrollTop : 0;
+			},	
+			
+			setScrollY : function (y) {
+				if (this.rowDiv) {
+					this.rowDiv.scrollTop = y;
+				}
+			},
+			
+			/**
+				Get list of values in col colName of each selected row
+			 */
             getSelectedValues : function (colName) {
                 var ret = [];
                 var indices = this.getSelectedIndices();
@@ -88,6 +102,18 @@ define([	// properly require.config'ed   bootstrap-modal
 
                 return ret;
             },
+            
+            /**
+            	Select all rows where a value of valList matches the value in col colName
+             */
+            selectValues : function (colName, valList) {
+				var c = this.getColumnByName(colName);
+				for (var i=0; i < this.rows.length; i++) {
+					if (valList.indexOf(this.rows[i][c]) > -1) {
+						this.selectRow(i);
+					}
+				}
+			},
 
             getColumnByName : function (colName) {
                 var match = colName.toLowerCase();
@@ -99,6 +125,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 }
                 return -1;
             },
+            
 
             /*
              *
@@ -125,6 +152,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 head.appendChild(row);
 
                 // header
+                this.filterInputElems = [];
                 for (var i=0; i < this.cols.length; i++) {
                     cell = document.createElement("th");
                     row.appendChild(cell);
@@ -139,6 +167,7 @@ define([	// properly require.config'ed   bootstrap-modal
                         input.classList.add("input-small");
                         input.placeholder=("filter...");
                         input.onkeyup=this.filterCallback.bind(this, input, i);
+                        this.filterInputElems.push(input);
                     }
 
                     // cell styles
@@ -149,16 +178,16 @@ define([	// properly require.config'ed   bootstrap-modal
                 }
 
                 // row div and # rows
-                var rowDiv = document.createElement("div");
-                this.dom.appendChild(rowDiv);
+                this.rowDiv = document.createElement("div");
+                this.dom.appendChild(this.rowDiv);
                 if (this.heightRows != 0) {
-                    rowDiv.style.height = this.heightRows * 3 + "ch";
-                    rowDiv.style.overflowY = "auto";
+                    this.rowDiv.style.height = this.heightRows * 3 + "ch";
+                    this.rowDiv.style.overflowY = "auto";
                 }
-                rowDiv.style.width = "100%";
+                this.rowDiv.style.width = "100%";
 
                 this.rowsTab = document.createElement("table");
-                rowDiv.appendChild(this.rowsTab);
+                this.rowDiv.appendChild(this.rowsTab);
                 this.rowsTab.classList.add("table");
                 this.rowsTab.classList.add("dataTable");
                 this.rowsTab.classList.add("table-condensed");
@@ -203,6 +232,23 @@ define([	// properly require.config'ed   bootstrap-modal
                 }
             },
 
+			reapplyAllFilters : function() {
+				for (var i=0; i < this.filterInputElems.length; i++) {
+					this.filterCallback(this.filterInputElems[i], i);
+				}
+			},
+			
+			replaceRows : function(rows) {
+				this.filter = [];
+				var tbody = this.rowsTab.getElementsByTagName("tbody");
+				tbody[0].innerHTML = "";
+				this.rows = rows;
+				for (var r of rows) {
+					this.addRow(r);
+				}
+				this.reapplyAllFilters();
+			},
+		
             addRow : function(rowList) {
                 this.filter.push([]);
 
@@ -265,14 +311,16 @@ define([	// properly require.config'ed   bootstrap-modal
             selectRow : function (r) {
                 // unselect others if not multiFlag
                 if (! this.multiFlag) {
-                    for (var i=0; i < this.rowsTab.rows.length; i++) {
-                        if (i != r) {
-                            this.rowsTab.rows[i].classList.remove("row_selected");
-                        }
-                    }
+                    this.deselectAll();
                 }
                 this.rowsTab.rows[r].classList.add("row_selected");
             },
+            
+            deselectAll : function () {
+				for (var i=0; i < this.rowsTab.rows.length; i++) {
+                    this.rowsTab.rows[i].classList.remove("row_selected");
+                }
+			},
 
             removeRow : function (i) {
                 this.rowsTab.rows[i].remove();
