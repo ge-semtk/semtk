@@ -141,8 +141,8 @@ define([	// properly require.config'ed   bootstrap-modal
                         this.expandJsonObjWithContext(jObj[key]);
                     }
                     // expand key
-                    if (key in context) {
-                        var newKey = context[key]["@id"];
+                    var newKey = this.getValExpandedWithContext(key, context);
+                    if (newKey != key) {
                         jObj[newKey] = jObj[key];
                         delete jObj[key];
                     }
