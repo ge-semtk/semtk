@@ -1052,7 +1052,10 @@
             }
             connStr += "&nbsp&nbsp&nbsp";
         }
-        connStr += (gConn != null && gConn.getName() != null) ? ("<b>Conn: </b>" + gConn.getName()) : "";
+        if (gConn != null && gConn.getName()) {
+			connStr = connStr + "<b>Conn: </b>" + gConn.getName();
+		}
+        
 
         document.getElementById("spanConnection").innerHTML = connStr;
     };
