@@ -19,7 +19,6 @@
 package com.ge.research.semtk.belmont;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -31,10 +30,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.UUID;
-import java.util.function.Function;
 import java.util.regex.Pattern;
 
-import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -1246,7 +1243,7 @@ public class NodeGroup {
         this.tmpUnionParentHash.get(keyStr).put(id, parentEntryStr);
 	}
 	
-	private class DepthTuple implements Comparator<DepthTuple> {
+	private class DepthTuple implements Comparable<DepthTuple> {
 		public int key;
 		public int depth;
 		public DepthTuple(int key, int depth) {
@@ -1254,9 +1251,9 @@ public class NodeGroup {
 			this.depth= depth;
 		}
 		// deepest first
-		public int compare(DepthTuple obj1, DepthTuple obj2) {
-	       Integer p1 = obj1.depth;
-	       Integer p2 = obj2.depth;
+		public int compareTo(DepthTuple other) {
+	       Integer p1 = this.depth;
+	       Integer p2 = other.depth;
 
 	       if (p1 > p2) {
 	           return -1;
