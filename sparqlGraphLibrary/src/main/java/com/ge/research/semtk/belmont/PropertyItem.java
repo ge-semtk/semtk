@@ -225,6 +225,21 @@ public class PropertyItem extends Returnable {
 		return this.valueTypes;
 	}
 	
+	/**
+	 * Get value type simple string such as "integer" but could be list using delim
+	 * @param delim
+	 * @return
+	 */
+	public String getValueTypesString(String delim) {
+		String ret = "";
+		for (XSDSupportedType t : this.valueTypes) {
+			if (ret.length() > 0) 
+				ret += delim;
+			ret += t.getSimpleName();
+		}
+		return ret;
+	}
+	
 	public String getRangeURI() {
 		return this.rangeURI;
 	}
