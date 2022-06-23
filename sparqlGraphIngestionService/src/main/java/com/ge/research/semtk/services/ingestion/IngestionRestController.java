@@ -440,7 +440,7 @@ public class IngestionRestController {
 	
 	@Operation(
 			summary=	"Get a class' default ingestion template and sample CSV file.",
-			description=	"synchronous.  Returns simpleResult containing \'sgjson\' JSON and \'csv\' String fields."
+			description=	"synchronous.  Returns simpleResult containing 'sgjson' JSON, 'csv' string, and  'csvTypes' string fields."
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getClassTemplateAndCsv", method= RequestMethod.POST)
@@ -453,6 +453,7 @@ public class IngestionRestController {
 			SimpleResultSet result = new SimpleResultSet(true);
 			result.addResult("sgjson", builder.getSgjson().toJson());
 			result.addResult("csv", builder.getCsvTemplate());
+			result.addResult("csvTypes", builder.getCsvTypes());
 			return result.toJson();
 			
 		} catch (Exception e) {

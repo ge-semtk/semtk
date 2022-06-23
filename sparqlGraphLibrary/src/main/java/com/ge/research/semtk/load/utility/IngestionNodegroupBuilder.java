@@ -1,5 +1,7 @@
 package com.ge.research.semtk.load.utility;
+import java.util.ArrayList;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  ** Copyright 2021 General Electric Company
@@ -25,6 +27,7 @@ import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.XSDSupportedType;
 
 /**
  * Builds an ingestion template (RACK "CDR") for a particular class based on oInfo.
@@ -53,6 +56,7 @@ public class IngestionNodegroupBuilder {
 	private OntologyInfo oInfo;
 	private SparqlGraphJson sgjson;
 	private StringBuilder csvTemplate;
+	private StringBuilder csvTypes;
 	private String idRegex = null;
 	
 	/**
@@ -84,11 +88,28 @@ public class IngestionNodegroupBuilder {
 		return this.sgjson;
 	}
 	
+	/**
+	 * Get a string of "colname1, colname2, ..."
+	 * @return
+	 */
 	public String getCsvTemplate() {
 		return this.csvTemplate.toString();
 	}
+	
+	/**
+	 * Get a string of types that go along with the csv template column names
+	 * Also comma separated
+	 * If a property can have multiple types they will be space-separated
+	 * Short types are used (XSDSupportedTypes simple lower camelcase names like "integer" or "dateTime") 
+	 * @return
+	 */
+	public String getCsvTypes() {
+		return this.csvTypes.toString();
+	}
+	
 	public void build() throws Exception {
 		this.csvTemplate = new StringBuilder();
+		this.csvTypes = new StringBuilder();
 		ImportSpec ispecBuilder = new ImportSpec();
 		
 		// create nodegroup with single node of stated type
@@ -123,7 +144,8 @@ public class IngestionNodegroupBuilder {
 			ispecBuilder.addMapping(node.getSparqlID(), pItem.getUriRelationship(), ispecBuilder.buildMappingWithCol(colName, new String [] {transformId}));
 			
 			// add to csvTemplate
-			csvTemplate.append(colName + ",");
+			csvTemplate.append(colName + ",");		
+			csvTypes.append(pItem.getValueTypesString(" ") + ",");     
 		}
 		
 		// connect a node for each object property
@@ -182,8 +204,9 @@ public class IngestionNodegroupBuilder {
 						ispecBuilder.addColumn(colName);
 						ispecBuilder.addMapping(objNode.getSparqlID(), pItem.getUriRelationship(), ispecBuilder.buildMappingWithCol(colName, new String [] {transformId}));
 						
-						// add to csvTemplate
+						// add to csvTemplate and csvTypes
 						csvTemplate.append(colName + ",");
+						csvTypes.append(pItem.getValueTypesString(" ") + ","); 
 						break;
 					}
 				}
@@ -197,6 +220,8 @@ public class IngestionNodegroupBuilder {
 		// replace last comma in csvTemplate with a line return
 		csvTemplate.setLength(Math.max(0,csvTemplate.length()-1));
 		csvTemplate.append("\n");
+		csvTypes.setLength(Math.max(0,csvTypes.length()-1));
+		csvTypes.append("\n");
 		
 	}
 	
