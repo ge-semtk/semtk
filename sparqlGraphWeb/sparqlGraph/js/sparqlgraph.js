@@ -104,6 +104,7 @@
             gRenderer = new NodegroupRenderer(canvasWrapper);
 	        gRenderer.setPropEditorCallback(launchPropertyItemDialog);
 	        gRenderer.setSNodeEditorCallback(launchSNodeItemDialog);
+	        gRenderer.setSNodeMenuCallback(launchSNodeMenuDialog);
             gRenderer.setSNodeRemoverCallback(snodeRemover);
 	        gRenderer.setLinkBuilderCallback(launchLinkBuilder);
 	        gRenderer.setLinkEditorCallback(launchLinkEditor);
@@ -722,6 +723,37 @@
         });
 	};
 
+
+	/**
+	Hashes at top left of a node's grab bar
+	 */
+    var launchSNodeMenuDialog = function (snodeItem) {
+        checkQueryTextUnsavedThen(launchSNodeMenuDialog1.bind(this, snodeItem));
+    };
+
+
+    var launchSNodeMenuDialog1 = function (snodeItem) {
+        require([ 'sparqlgraph/js/modalitemdialog',
+                  'sparqlgraph/js/modalinvaliditemdialog',
+                  'sparqlgraph/js/msiclientnodegroupservice',
+              ], function (ModalItemDialog, ModalInvalidItemDialog, MsiClientNodeGroupService) {
+
+            
+                var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
+
+                var dialog= new ModalInvalidItemDialog( ngClient,
+                                                        snodeItem, null,
+                                                        gNodeGroup,
+                                                        gConn,
+                                                        gOInfo,
+                                                        gMappingTab.getImportSpec(),
+                                                        editNodeURI
+                                                        );
+                dialog.show();
+        });
+    };
+ 
+    
     var launchSNodeItemDialog = function (snodeItem) {
         checkQueryTextUnsavedThen(launchSNodeItemDialog1.bind(this, snodeItem));
     };
@@ -755,6 +787,35 @@
 				dialog.show();
             }
         });
+    };
+
+	/*
+        ModalInvalidItemDialog callback:
+        item = node, propItem, nodeItem
+        target = target snode if nodeItem
+        newURI = new URI
+    */
+    var editNodeURI = function(item, optTarget, newURI, domainOrRange, optSuccessCallback) {
+        require(['sparqlgraph/js/modaliidx',
+                 'sparqlgraph/js/msiclientnodegroupservice',
+                 'sparqlgraph/js/sparqlgraphjson'],
+    	            function (ModalIidx, MsiClientNodeGroupService, SparqlGraphJson) {
+
+            var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
+            var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), false, undefined);
+
+            ngClient.execAsyncChangeItemURI(sgJson, gNodeGroup.buildItemStr(item),  newURI, domainOrRange, editNodeURICallback.bind(this, optSuccessCallback), ModalIidx.alert.bind(this, "NodeGroup Service failure"));
+
+        });
+
+    };
+    
+     var editNodeURICallback = function(optCallback, sgJson) {
+        sgJson.getNodeGroup(gNodeGroup);
+        gMappingTab.load(gNodeGroup, gConn, sgJson.getImportSpecJson());
+
+		var skipSuccessMessage = (gInvalidItems.length == 0);
+        reValidateNodegroup(optCallback, skipSuccessMessage);
     };
 
     /*
@@ -1414,18 +1475,18 @@
         buildQuery();
     };
 
-    var reValidateNodegroup = function(successCallback) {
+    var reValidateNodegroup = function(successCallback, optSkipSuccessDialog) {
         require(['sparqlgraph/js/msiclientnodegroupservice', 'sparqlgraph/js/sparqlgraphjson'],
                 function(MsiClientNodeGroupService, SparqlGraphJson) {
             // inflate and validate the nodegroup
             var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, validateFailure.bind(this));
-            client.execAsyncInflateAndValidate(new SparqlGraphJson(gConn, gNodeGroup), reValidateCallback.bind(this, successCallback), validateFailure);
+            client.execAsyncInflateAndValidate(new SparqlGraphJson(gConn, gNodeGroup), reValidateCallback.bind(this, successCallback, optSkipSuccessDialog), validateFailure);
         });
     };
 
     // callback: successfully determined whether there are modelErrors
     // don't re-display errors.
-    var reValidateCallback = function(callback, nodegroupJson, modelErrors, invalidItemStrings, warnings) {
+    var reValidateCallback = function(callback, optSkipSuccessDialog, nodegroupJson, modelErrors, invalidItemStrings, warnings) {
 
         gInvalidItems = invalidItemStrings;
 
@@ -1435,7 +1496,7 @@
         nodeGroupChanged(true);
         buildQuery();
 
-        if (modelErrors.length == 0) {
+        if (modelErrors.length == 0 && !optSkipSuccessDialog) {
             require(['sparqlgraph/js/modaliidx'], function (ModalIidx) {
                 setStatus("");
                 var msgHtml = "Nodegroup is now valid against ontology.";

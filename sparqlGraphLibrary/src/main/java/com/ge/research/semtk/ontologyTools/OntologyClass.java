@@ -97,6 +97,11 @@ public class OntologyClass extends AnnotatableElement {
 		return this.properties;
 	}
 	
+	/**
+	 * 
+	 * @param propertyName
+	 * @return property, else null
+	 */
 	public OntologyProperty getProperty(String propertyName){
 		OntologyProperty retval = null;
 		// find it, if we can

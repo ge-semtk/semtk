@@ -48,7 +48,9 @@ public class ValidationAssistant {
 			Node incomingNode = ng.getNodeItemParentSNode(nItem);
 			OntologyClass incomingClass = oInfo.getClass(incomingNode.getUri());
 			OntologyProperty nItemOProp = oInfo.getProperty(nItem.getUriConnectBy());
-			if (incomingClass != null) {
+			
+			// if class exists and has the property, then suggest the ranges
+			if (incomingClass != null && incomingClass.getProperty(nItemOProp.getNameStr()) != null) {
 			
 				OntologyRange oRange = nItemOProp.getRange(incomingClass, oInfo);
 		

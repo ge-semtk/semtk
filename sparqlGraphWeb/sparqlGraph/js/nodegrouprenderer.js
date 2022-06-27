@@ -56,6 +56,7 @@ define([	// properly require.config'ed
             this.invalidItemTuples = [];    // NodeGroup entryTuple for each item invalid re the model
             this.propEditorCallback = null;
             this.snodeEditorCallback = null;  //done
+            this.snodeMenuCallback = null;
             this.snodeRemoverCallback = null;
             this.linkBuilderCallback = null;
             this.linkEditorCallback = null;
@@ -215,6 +216,9 @@ define([	// properly require.config'ed
             setSNodeEditorCallback : function (callback) {
                 this.snodeEditorCallback = callback;
             },
+            setSNodeMenuCallback : function (callback) {
+                this.snodeMenuCallback = callback;
+            },
             setSNodeRemoverCallback : function (callback) {
                 this.snodeRemoverCallback = callback;
             },
@@ -259,7 +263,11 @@ define([	// properly require.config'ed
                             // toggle the grabBar (position[0]) expandFlag and redraw
                             this.setExpandFlag(snode, !this.getExpandFlag(snode));
                             this.buildAndUpdateNodeSVG(snode);
-                        }
+                        } else if (x_perc > itemData.x_grab_perc) {
+						   // do nothing: grabbing the middle
+						} else {
+							this.snodeMenuCallback(snode);
+						}
                     }
                 } else if (e.edges.length > 0) {
                     var edge = this.network.body.edges[e.edges[0]];
@@ -622,6 +630,7 @@ define([	// properly require.config'ed
                 }
 
                 // change grab bar special cases to percent
+                myCallbackData[0].x_grab_perc = myCallbackData[0].x_grab / x;
                 myCallbackData[0].x_close_perc = myCallbackData[0].x_close / x;
                 myCallbackData[0].x_expand_perc = myCallbackData[0].x_expand / x;
 
@@ -717,6 +726,8 @@ define([	// properly require.config'ed
                 for (var yy=elementTop; yy <= elementBot; yy += (elementBot - elementTop) / 3) {
                     this.drawLine(svg, x, yy , x+elementSize, yy, 1,NodegroupRenderer.COLOR_FOREGROUND);
                 }
+                
+                callbackData.x_grab = x + elementSize + NodegroupRenderer.INDENT;
 
                 callbackData.y = height;
                 callbackData.type = "header";
