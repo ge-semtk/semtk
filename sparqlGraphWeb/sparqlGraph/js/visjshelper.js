@@ -266,6 +266,34 @@ define([	// properly require.config'ed
         }
     };
 
+	/*
+     * for network n created with VisJsHelper,
+     * get the node ids of an edge: [from_node_id, to_node_id]
+     */
+    VisJsHelper.getNetworkEdgeFromTo = function(n, edgeId) {
+		var edge =  n.body.data.edges._data[edgeId];
+		return [edge.from, edge.to]
+    };
+    
+    /*
+     * for network n created with VisJsHelper,
+     * get the object property URI of an edge.
+     */
+    VisJsHelper.getNetworkEdgeUri = function(n, edgeId) {
+		// .group holds the Uri
+		return n.body.data.edges._data[edgeId].group;
+    };
+    /*
+     * for network n created with VisJsHelper,
+     * get class property of a node.
+     * Returns null for BLANK nodes or DATA nodes
+     */
+    VisJsHelper.getNetworkNodeUri = function(n, nodeId) {
+		// .group holds the Uri
+		var g = n.body.data.nodes._data[nodeId].group;
+		return (g == VisJsHelper.BLANK_NODE || g == VisJsHelper.DATA_NODE) ? null : g;
+    };
+   
     /*
      * create a unique id with base name
      */

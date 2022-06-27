@@ -258,6 +258,12 @@ public class PropertyItem extends Returnable {
 		this.rangeURI = fullURI;
 	}
 	
+	/**
+	 * set is returned IF YOU REALLY KNOW WHAT YOU'RE DOING and low-level.
+	 * Normally, use NodeGroup.setIsReturned(item, val)
+	 * @param b
+	 * @throws Exception
+	 */
 	public void setIsReturned(boolean b) throws Exception {
 		if (b == true && this.getSparqlID().isEmpty()) {
 			throw new Exception("Attempt to return property with no sparqlID");

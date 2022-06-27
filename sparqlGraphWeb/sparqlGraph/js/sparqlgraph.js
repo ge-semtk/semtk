@@ -1219,7 +1219,7 @@
         }
     };
 
-    var doQueryLoadJsonStr = function(jsonStr, optNgName) {
+    var doQueryLoadJsonStr = function(jsonStr, optNgName, optSkipValidation) {
     	require(['sparqlgraph/js/sparqlgraphjson',
                  'sparqlgraph/js/modaliidx'],
                 function(SparqlGraphJson, ModalIidx) {
@@ -1257,16 +1257,16 @@
                 ModalIidx.choose("New Connection",
                                  "Nodegroup is from a different SPARQL connection<br><br>Which one do you want to use?",
                                  ["Cancel",     "Keep Current",                     "From Nodegroup"],
-                                 [function(){}, doQueryLoadFile2.bind(this, sgJson, optNgName), doQueryLoadConn.bind(this, sgJson, conn, optNgName)]
+                                 [function(){}, doQueryLoadFile2.bind(this, sgJson, optNgName, optSkipValidation), doQueryLoadConn.bind(this, sgJson, conn, optNgName, optSkipValidation)]
                                  );
 
             // use the new connection
             } else if (!gConn) {
-                doQueryLoadConn(sgJson, conn, optNgName);
+                doQueryLoadConn(sgJson, conn, optNgName, optSkipValidation);
 
             // keep the old connection
             } else {
-                doQueryLoadFile2(sgJson, optNgName);
+                doQueryLoadFile2(sgJson, optNgName, optSkipValidation);
             }
 
 		});
@@ -1277,7 +1277,7 @@
      * loads connection and makes call to load rest of sgJson
      * part of doQueryLoadJsonStr callback chain
      */
-    var doQueryLoadConn = function(sgJson, conn, optNgName) {
+    var doQueryLoadConn = function(sgJson, conn, optNgName, optSkipValidation) {
     	require(['sparqlgraph/js/sparqlgraphjson',
                  'sparqlgraph/js/modaliidx'],
                 function(SparqlGraphJson, ModalIidx) {
@@ -1286,7 +1286,7 @@
 
             // function pointer for the thing we do next no matter what happens:
             //    doLoadConnection() with doQueryLoadFile2() as the callback
-            var doLoadConnectionCall = doLoadConnection.bind(this, conn, doQueryLoadFile2.bind(this, sgJson, optNgName));
+            var doLoadConnectionCall = doLoadConnection.bind(this, conn, doQueryLoadFile2.bind(this, sgJson, optNgName, optSkipValidation));
 
             if (! existName) {
                 // new connection: ask if user wants to save it locally
@@ -1323,7 +1323,7 @@
      * @param {JSON} grpJson    node group
      * @param {JSON} importJson import spec
      */
-    var doQueryLoadFile2 = function(sgJson, optNgName) {
+    var doQueryLoadFile2 = function(sgJson, optNgName, optSkipValidation) {
     	// by the time this is called, the correct oInfo is loaded.
     	// and the gNodeGroup is empty.
     	require(['sparqlgraph/js/modaliidx', 'sparqlgraph/js/iidxhelper', 'sparqlgraph/js/msiclientnodegroupservice', 'sparqlgraph/js/sparqlgraphjson'],
@@ -1357,9 +1357,15 @@
             guiGraphNonEmpty();
             gMappingTab.load(gNodeGroup, gConn, sgJson.getImportSpecJson());
 
-            // inflate and validate the nodegroup
-            var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, validateFailure.bind(this));
-            client.execAsyncInflateAndValidate(new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec()), validateCallback.bind(this, newNgName), validateFailure)
+			if (optSkipValidation) {
+				nodeGroupChanged(false, newNgName);
+        		saveUndoState();
+        		buildQuery();
+			} else {
+	            // inflate and validate the nodegroup
+	            var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, validateFailure.bind(this));
+	            client.execAsyncInflateAndValidate(new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec()), validateCallback.bind(this, newNgName), validateFailure);
+	        }
         });
     };
     var validateFailure = function(msgHtml) {
@@ -2031,9 +2037,15 @@
             removeButton.disabled = true;
             editDom.appendChild(removeButton);
             IIDXHelper.appendSpace(editDom);
-            var expandButton = IIDXHelper.createIconButton("icon-sitemap", function(){}, ["btn","btn-success"], undefined, "Expand", "Add all connected instance data" );
+            
+            var expandButton = IIDXHelper.createIconButton("icon-sitemap", function(){}, ["btn"], undefined, "Expand", "Add all connected instance data" );
             expandButton.disabled = true;
             editDom.appendChild(expandButton);
+            IIDXHelper.appendSpace(editDom);
+       
+            var buildButton = IIDXHelper.createIconButton("icon-gears", function(){}, ["btn"], undefined, "Build", "Build a new nodegroup from selected item(s)" );
+            buildButton.disabled = true;
+            editDom.appendChild(buildButton);
 
 			// new feature section
 			var NG_BUTTON_FEATURE=false;
@@ -2078,7 +2090,7 @@
 
             var options = VisJsHelper.getDefaultOptions(configDiv);
             options = VisJsHelper.setCustomEditingOptions(options);
-
+			options.interaction.selectConnectedEdges = false;
             var network = new vis.Network(canvasDiv, {nodes: Object.values(nodeDict), edges: edgeList }, options);
 
             // callback: when selection changes, disable/enable buttons
@@ -2096,11 +2108,13 @@
                
                 removeButton.disabled = (nodeCount == 0) && (edgeCount == 0);
                 expandButton.disabled = (nodeCount == 0);
+                buildButton.disabled = (nodeCount == 0);
             }.bind(this, network));
 
             // button callbacks
             network.on('doubleClick', this.constructExpandCallback.bind(this, res, canvasDiv, network));
             expandButton.onclick = this.constructExpandCallback.bind(this, res, canvasDiv, network);
+            buildButton.onclick = this.constructBuildNodegroupCallback.bind(this, network);
             removeButton.onclick = this.constructRemoveCallback.bind(this, network);
 
             // add data
@@ -2125,6 +2139,95 @@
         n.body.data.nodes.remove(nodeList);
         n.body.data.edges.remove(edgeList);
     };
+    
+    var constructBuildNodegroupCallback = function(n) {
+		require(['sparqlgraph/js/modaliidx', 'sparqlgraph/js/msiclientnodegroupservice', 'sparqlgraph/js/visjshelper'
+				    ], function(ModalIidx, MsiClientNodeGroupService, VisJsHelper) {
+	        var formatter = new SparqlFormatter();
+	        var nodeList = n.getSelectedNodes();
+	        var edgeList = n.getSelectedEdges();
+	        var nodesParam = [];
+	        var edgesParam = [];
+	        var DATA = "::data::";
+	        var classNodeCount = 0;
+	        
+	        sparqlIdHash = {};   // sparqlIdHash[ng_sparql_id] = vis_node_id
+	        visIdHash = {};      // visIdHash[vis_node_id]     = ng_sparql_id if classed node, or DATA if data
+	        
+	        // pre-add any nodes that aren't selected but edges are selected
+	        // GUI USER ASSIST 
+	        for (var edgeId of edgeList) {
+				var fromToIds = VisJsHelper.getNetworkEdgeFromTo(n, edgeId);
+				if (nodeList.indexOf(fromToIds[0]) == -1) {
+					nodeList.push(fromToIds[0]);
+				}
+				if (nodeList.indexOf(fromToIds[1]) == -1) {
+					nodeList.push(fromToIds[1]);
+				}
+			}
+	        
+	        // build node inputs: sparqlid and class
+	        for (var visId of nodeList) {
+				var classURI = VisJsHelper.getNetworkNodeUri(n, visId);
+				
+				if (classURI) {
+					// is a class node
+					classNodeCount += 1;
+					
+					// generate a sparqlID and hash it both ways
+					var sparqlId = formatter.genSparqlID(classURI.split("#")[1], sparqlIdHash);
+					sparqlIdHash[sparqlId] = visId;
+					visIdHash[visId] = sparqlId;
+					
+					nodesParam.push({ 'sparqlId': sparqlId, 'classURI':classURI});
+				} else {
+					
+					// data node is ignored by the builder since it isn't a node
+					visIdHash[visId] = DATA;
+					
+					// GUI USER ASSIST: if there is one edge to the data node and it isn't selected
+					// then select it, presuming user forgot it and what else could they have wanted.
+					var connectedEdges = n.getConnectedEdges(visId);
+					var selectedFlag = false;
+					for (var e of connectedEdges) {
+						if (edgeList.indexOf(e) > -1)
+							selectedFlag = true;
+					}
+					
+					if (! selectedFlag) {
+						ModalIidx.alert("Can Not Build", "Can't build nodegroup with disconnected data node.<br>Connect data to a class by selecting an edge.");
+						return;
+					}
+				}
+			}
+			
+			if (classNodeCount == 0) {
+				ModalIidx.alert("Can Not Build", "Can't build nodegroup with only data nodes.  <br>Select at least one class node.");
+				return;
+			}
+			
+			for (var edgeId of edgeList) {
+				var fromToIds = VisJsHelper.getNetworkEdgeFromTo(n, edgeId);
+				var edgeUri = VisJsHelper.getNetworkEdgeUri(n, edgeId);
+				
+				// if both ends are nodes that are selected
+				if (visIdHash[fromToIds[0]] &&  visIdHash[fromToIds[1]]) {
+					// note: objectSparqlId might be DATA.  object SparqlIds of data properties are ignored 
+					edgesParam.push({'subjectSparqlId' : visIdHash[fromToIds[0]], 'objectSparqlId': visIdHash[fromToIds[1]], 'propURI': edgeUri});
+				}
+			}
+			
+			var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, buildQueryFailure.bind(this));
+            client.execBuildNodeGroup(gConn, nodesParam, edgesParam, constructBuildNodeGroupCallback1);
+       });
+
+    };
+    
+    var constructBuildNodeGroupCallback1 = function(sgjson) {
+	 	var name = "constructed";
+	 	var ngJsonStr = JSON.stringify(sgjson.toJson());
+		checkAnythingUnsavedThen(doQueryLoadJsonStr.bind(this, ngJsonStr, name));
+	};
 
     // user clicked to add to CONSTRUCT graph
     var constructExpandCallback = function(origRes, canvasDiv, network) {

@@ -134,7 +134,7 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.msi.postToEndpoint("findAllPaths", data, "application/json", simpleResultsCallback, this.optFailureCallback, this.optTimeout);
             },
 
-            /* this sync call has no "execAsync" Version
+            /* these sync calls has no "execAsync" Version
             */
             execCreateConstructAllConnected : function (conn, classUri, instanceUri, sgjsonCallback) {
                 var data = JSON.stringify ({
@@ -143,9 +143,29 @@ define([	// properly require.config'ed   bootstrap-modal
                       "instanceUri" : instanceUri
 					});
 
-                var cb = this.asyncSgJsonCallback.bind(this, "createConstructAllConnected", sgjsonCallback, this.optFailureCallback);
+                var cb = this.gotSgJsonCallback.bind(this, "createConstructAllConnected", sgjsonCallback, this.optFailureCallback);
 				this.msi.postToEndpoint("createConstructAllConnected", data, "application/json", cb, this.optFailureCallback, this.optTimeout);
             },
+            
+            /**
+                Build a nodegroup with multiple nodes and connections
+                
+            	conn - sparql connection
+            	sparqlIdClassList - [ {'sparqlId' : 'id1', 'classURI', 'http://my#Class'} , 
+            	                      {'sparqlId' : 'id2', 'classURI', 'http://my#Class'}, ...]
+            	subPredObjList = [ {'subjectSparqlId': 'id1', 'propURI': "http://my#prop", 'objectSparqlId': 'id2'}, ...]
+             */
+            execBuildNodeGroup : function (conn, sparqlIdClassList, subPredObjList, sgjsonCallback) {
+                var data = JSON.stringify ({
+					  "conn": JSON.stringify(conn.toJson()),
+                      "nodeList" : sparqlIdClassList,
+                      "connList" : subPredObjList
+					});
+
+                var cb = this.gotSgJsonCallback.bind(this, "buildNodeGroup", sgjsonCallback, this.optFailureCallback);
+				this.msi.postToEndpoint("buildNodeGroup", data, "application/json", cb, this.optFailureCallback, this.optTimeout);
+            },
+            
 
             /*
             **  Asynchronous functions: perform the whole async chain and return a "real" value.  failureCalback on any error.
@@ -184,7 +204,7 @@ define([	// properly require.config'ed   bootstrap-modal
 
             execAsyncSetImportSpecFromReturns : function (sgjson, action, lookupRegex, lookupMode, sgjsonCallback, failureCallback) {
                 this.execSetImportSpecFromReturns(sgjson, action, lookupRegex, lookupMode,
-                                        this.asyncSgJsonCallback.bind(this, "setImportSpecFromReturns", sgjsonCallback, failureCallback));
+                                        this.gotSgJsonCallback.bind(this, "setImportSpecFromReturns", sgjsonCallback, failureCallback));
             },
 
             execAsyncGetSampleIngestionCSV : function (sgjson, format, csvTextCallback, failureCallback) {
@@ -206,12 +226,12 @@ define([	// properly require.config'ed   bootstrap-modal
 
             execAsyncAddSamplePlot : function (sgjson, columnNames, graphType, plotName, plotType, sgjsonCallback, failureCallback) {
                 this.execAddSamplePlot(sgjson, columnNames, graphType, plotName, plotType,
-                                        this.asyncSgJsonCallback.bind(this, "plot/addSamplePlot", sgjsonCallback, failureCallback));
+                                        this.gotSgJsonCallback.bind(this, "plot/addSamplePlot", sgjsonCallback, failureCallback));
             },
 
             execAsyncChangeItemURI : function (sgJson, itemStr, newURI, domainOrRange, sgjsonCallback, failureCallback) {
                 this.execChangeItemURI(sgJson, itemStr, newURI, domainOrRange,
-                                        this.asyncSgJsonCallback.bind(this, "changeItemURI", sgjsonCallback, failureCallback));
+                                        this.gotSgJsonCallback.bind(this, "changeItemURI", sgjsonCallback, failureCallback));
             },
 
             execAsyncFindAllPaths : function (sgJson, newURI, propsInDataFlag, nodegroupInDataFlag, simpleResultsCallback, failureCallback) {
@@ -222,7 +242,7 @@ define([	// properly require.config'ed   bootstrap-modal
             /*
              * @private
              */
-            asyncSgJsonCallback(endpoint, sgjsonCallback, failureCallback, resultSet) {
+            gotSgJsonCallback(endpoint, sgjsonCallback, failureCallback, resultSet) {
                 if (resultSet.isSuccess()) {
                     // get the sgjson
                     var sgJsonJson = resultSet.getSimpleResultField("nodegroup");

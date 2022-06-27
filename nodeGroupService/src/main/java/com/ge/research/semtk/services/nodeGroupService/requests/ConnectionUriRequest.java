@@ -27,13 +27,11 @@ import java.util.ArrayList;
 public class ConnectionUriRequest extends SparqlConnectionRequest {
 
     @Schema(
-    		name = "sparqlID",
             required = false,
             example = "myVarName")
     private String sparqlID;
     
     @Schema(
-    		name = "uri",
             required = true,
             example = "http://path#this")
     private String uri;

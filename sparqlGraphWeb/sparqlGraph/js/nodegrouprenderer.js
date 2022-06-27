@@ -48,6 +48,7 @@ define([	// properly require.config'ed
 		var NodegroupRenderer = function(parentdiv) {
             this.ctx = document.createElement("canvas").getContext("2d");
 			this.parentDiv = parentdiv;
+			this.parentDivParentBorder = this.parentDiv.parentElement.style.border;
 
             this.nodegroup = null;
             this.oInfo = null;
@@ -200,11 +201,11 @@ define([	// properly require.config'ed
 					this.ctx.fillText("fill text", 100,100);
 					this.errorElem.style.display = "none";
 					this.errorElem.innerHTML = "";
-					this.parentDiv.style.border = "1px solid gray";
+					this.parentDiv.parentElement.style.border = this.parentDivParentBorder;
 				} else {
 					this.errorElem.style.display = "";
 					this.errorElem.innerHTML = html;
-					this.parentDiv.style.border = "3px solid " + NodegroupRenderer.COLOR_INVALID_FOREGROUND;
+					this.parentDiv.parentElement.style.border = "3px solid " + NodegroupRenderer.COLOR_INVALID_FOREGROUND;
 				}
 			},
 			

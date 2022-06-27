@@ -303,7 +303,7 @@ public class OntologyInfoServiceRestController {
 	
 	@Operation(
 		    summary= "Get the oInfo JSON",
-		    description= "This is the 'main' endpoint for this service."
+		    description= "This is the 'main' endpoint for this service.  Synchronous result: 'ontologyInfo'"
 		)
 	@CrossOrigin
 	@RequestMapping(value="/getOntologyInfoJson", method=RequestMethod.POST)

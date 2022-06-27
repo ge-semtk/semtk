@@ -1499,35 +1499,33 @@ public class NodeGroup {
 
 	/**
 	 * 
-	 * @param curr
-	 * @param existingNode
-	 * @param linkFromNewUri
-	 * @param linkToNewUri
+	 * @param newNode - node to add
+	 * @param existingNode - existing node, or null if both links are null.
+	 * @param linkFromNewUri - link from curr to existing Node, or null
+	 * @param linkToNewUri - link from newNode to curr, or null
 	 * @param legalizeSparqlIDs - boolean allows override of sparqlID fixing if we're loading a json
 	 * @throws Exception
 	 */
-	public void addOneNode(Node curr, Node existingNode, String linkFromNewUri, String linkToNewUri, boolean legalizeSparqlIDs) throws Exception  {
+	public void addOneNode(Node newNode, Node existingNode, String linkFromNewUri, String linkToNewUri, boolean legalizeSparqlIDs) throws Exception  {
 
 
 		// add the node to the nodegroup control structure..
-		this.nodes.add(curr);
+		this.nodes.add(newNode);
 		
 		if (legalizeSparqlIDs) {
-			this.legalizeSparqlIDs(curr);
+			this.legalizeSparqlIDs(newNode);
 		}
 				
-		this.idToNodeHash.put(curr.getSparqlID(), curr);
-		// set up the connection info so this node participates in the graph
+		this.idToNodeHash.put(newNode.getSparqlID(), newNode);
+		
 		if(linkFromNewUri != null && linkFromNewUri != ""){
-			curr.setConnection(existingNode, linkFromNewUri);
-		}
-		else if(linkToNewUri != null && linkToNewUri != ""){
-			existingNode.setConnection(curr, linkToNewUri);
-		}
-		else{
-			//no op
+			newNode.setConnection(existingNode, linkFromNewUri);
 		}
 		
+		if(linkToNewUri != null && linkToNewUri != ""){
+			existingNode.setConnection(newNode, linkToNewUri);
+		}
+
 	}
 
 	private void legalizeSparqlIDs(Node node) {
