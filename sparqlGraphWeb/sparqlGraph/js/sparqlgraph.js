@@ -2057,11 +2057,11 @@
             linkdom.innerHTML =  "Download json: ";
             linkdom.appendChild(anchor);
 
+            setStatus("");
             displayConstructResults(jsonLdResults, linkdom);
 
             guiUnDisableAll();
             guiResultsNonEmpty();
-            setStatus("");
         });
     };
 
@@ -2073,10 +2073,13 @@
      *    linkdom - standard SPARQLgraph link to download results
      */
     var displayConstructResults = function (res, linkdom) {
+		
         require(['sparqlgraph/js/iidxhelper',
+                 'sparqlgraph/js/modaliidx',
                 'sparqlgraph/js/visjshelper',
                 'visjs/vis.min'],
-                function(IIDXHelper, VisJsHelper, vis) {
+                function(IIDXHelper, ModalIidx, VisJsHelper, vis) {
+	
             var div = document.getElementById("resultsParagraph");
 
             if (! res.isJsonLdResults()) {
@@ -2180,19 +2183,41 @@
 
             // add data
             var jsonLd = res.getGraphResultsJsonArr(true, true, true);
-            for (var i=0; i < jsonLd.length; i++) {
-                VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList);
-                if (i % 20 == 0) {
-                    network.body.data.nodes.update(Object.values(nodeDict));
-                    network.body.data.edges.update(edgeList);
-                }
-            }
-            network.body.data.nodes.update(Object.values(nodeDict));
-            network.body.data.edges.update(edgeList);
-
-            network.startSimulation();
+            jsonLd.slice(0, RESULTS_MAX_ROWS);
+			addDataToNetwork(network, jsonLd, nodeDict, edgeList);
         });
     };
+    
+    //
+    // add data to network one CHUNK_SIZE at a time
+    // use setTimeout to keep UI updates smooth
+    // update progress bar
+    //
+    var addDataToNetwork = function(network, jsonLd, nodeDict, edgeList, optStart) {
+		require(['sparqlgraph/js/modaliidx', 'sparqlgraph/js/msiclientnodegroupservice', 'sparqlgraph/js/visjshelper'
+					    ], function(ModalIidx, MsiClientNodeGroupService, VisJsHelper) {
+			var CHUNK_SIZE = 400;
+			var thisStart = optStart || 0;
+			var nextStart = Math.min(jsonLd.length, thisStart + CHUNK_SIZE);
+			
+			setStatusProgressBar("Rendering results graph", 100 * thisStart/jsonLd.length);
+			for (var i=thisStart; i < nextStart; i++) {
+				VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList);
+			}
+			
+			network.body.data.nodes.update(Object.values(nodeDict));
+	        network.body.data.edges.update(edgeList);
+	        
+	        if (nextStart < jsonLd.length) {
+				// recurse
+	        	setTimeout(addDataToNetwork.bind(this, network, jsonLd, nodeDict, edgeList, nextStart), 1);
+	        } else {
+				// done
+				setStatus("");
+				network.startSimulation();
+			}
+	     });
+	};
 
     var constructRemoveCallback = function(n) {
         var nodeList = n.getSelectedNodes();
