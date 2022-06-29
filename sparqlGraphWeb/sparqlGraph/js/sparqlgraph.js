@@ -2460,6 +2460,8 @@
 			
         guiUpdateGraphRunButton();
 
+		setQueryTypeSelect();
+		
         // check up ORDER BY and GROUP BY
         gNodeGroup.removeInvalidOrderBy();
         gNodeGroup.removeInvalidGroupBy();
@@ -2581,6 +2583,7 @@
     var onchangeQueryType1 = function () {
         var s = document.getElementById("SGQueryType");
         var choice = s.options[s.selectedIndex].value;
+        
         switch (choice) {
             case SemanticNodeGroup.QT_DISTINCT:
             case SemanticNodeGroup.QT_COUNT:
@@ -2589,6 +2592,7 @@
             case SemanticNodeGroup.QT_DELETE:
                 gNodeGroup.setQueryType(choice);
                 gNodeGroup.setReturnTypeOverride(null);
+                saveUndoState();
                 break;
         
             default:
