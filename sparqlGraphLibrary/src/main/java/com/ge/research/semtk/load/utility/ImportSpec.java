@@ -836,6 +836,9 @@ public class ImportSpec {
 		this.getNode(n).put(JKEY_IS_NODE_TYPE, newURI);
 	}
 	
+	public boolean containsNode(String nodeSparqlID) {
+		return (this.getNodeIndex(nodeSparqlID) > -1);
+	}
 	public static String sparqlIDToColname(String sparqlID) {
 		if (sparqlID.startsWith("?"))
 			return sparqlID.substring(1);

@@ -1181,7 +1181,10 @@ public class NodeGroupServiceRestController {
 				// do the work for DOMAIN
 				if (itemStr.getType() == Node.class) {
 					nodegroup.changeItemDomain(itemStr.getSnode(), newURI);
-					importSpec.changeNodeDomain(itemStr.getSnode().getSparqlID(), newURI);
+					String sparqlID = itemStr.getSnode().getSparqlID();
+					if (importSpec.containsNode(sparqlID)) {
+						importSpec.changeNodeDomain(sparqlID, newURI);
+					}
 					
 				} else if (itemStr.getType() == PropertyItem.class) {
 					Node node = itemStr.getSnode();
