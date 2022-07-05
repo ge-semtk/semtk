@@ -24,6 +24,7 @@ import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
+import org.apache.http.conn.HttpHostConnectException;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,12 +109,18 @@ public class NodeGroupStoreRestController {
 		SparqlEndpointInterface modelSei = this.getStoreModelSei();
 		byte owl [] = Utility.getResourceAsBytes(NgStore.class, "/semantics/OwlModels/prefabNodeGroup.owl");
 		
-		try {
-			AuthorizationManager.setSemtkSuper();
-			modelSei.clearPrefix("http://research.ge.com/semtk/prefabNodeGroup");
-			modelSei.uploadOwl(owl);
-		} finally {
-			AuthorizationManager.clearSemtkSuper();
+		int retries = 100;
+		while (retries > 0) {
+			try {
+				AuthorizationManager.setSemtkSuper();
+				modelSei.clearPrefix("http://research.ge.com/semtk/prefabNodeGroup");
+				modelSei.uploadOwl(owl);
+				retries = 0;
+			} catch (HttpHostConnectException e) {
+				retries -= 1;
+			} finally {
+				AuthorizationManager.clearSemtkSuper();
+			}
 		}
 		
 		setupDemo();
