@@ -109,6 +109,7 @@ public class NodeGroupStoreRestController {
 		SparqlEndpointInterface modelSei = this.getStoreModelSei();
 		byte owl [] = Utility.getResourceAsBytes(NgStore.class, "/semantics/OwlModels/prefabNodeGroup.owl");
 		
+		/* try many times / several minutes to reach triplestore */
 		int retries = 100;
 		while (retries > 0) {
 			try {
