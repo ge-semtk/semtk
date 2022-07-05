@@ -2710,6 +2710,7 @@
         if (gNodeGroup.getNodeCount() == 0) {
             document.getElementById('queryText').value = "";
             guiQueryEmpty();
+            gRenderer.setError("");
             return;
         }
 
