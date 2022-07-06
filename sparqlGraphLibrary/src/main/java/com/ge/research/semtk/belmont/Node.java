@@ -164,6 +164,14 @@ public class Node extends Returnable {
 		this.instanceLookedUp = instanceLookedUp;
 	}
 
+	/**
+	 * Inflate and silently ignore all validations.
+	 * @param oInfo
+	 * @throws Exception
+	 */
+	public void inflateNoValidate(OntologyInfo oInfo) throws Exception {
+		this.inflateAndValidate(oInfo, null, new ArrayList<String>(), new ArrayList<NodeGroupItemStr>(), new ArrayList<String>());
+	}
 	
 	/**
 	 * Inflate (add any missing properties) and validate against model

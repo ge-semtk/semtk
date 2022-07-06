@@ -61,7 +61,7 @@ public class ValidationAssistantTest_IT {
 		Node node = ng.getNodeBySparqlID("?Animal");
 		ArrayList<String> suggestions = ValidationAssistant.suggestNodeClass(oInfo, ng, new NodeGroupItemStr(node));
 		String expect = node.getUri();
-		String actual = suggestions.get(0);
+		String actual = ValidationAssistant.getSuggestionClass(suggestions.get(0));
 		assertTrue("Expected first suggestion of to be " + expect + ". Found " + suggestions.toString(), expect.equals(actual));
 		
 		// change #name property to #scaryName and we should get Tiger
@@ -69,7 +69,7 @@ public class ValidationAssistantTest_IT {
 		node = ng.getNodeBySparqlID("?Animal");
 		suggestions = ValidationAssistant.suggestNodeClass(oInfo, ng, new NodeGroupItemStr(node));
 		expect = "http://AnimalSubProps#Tiger";
-		actual = suggestions.get(0);
+		actual = ValidationAssistant.getSuggestionClass(suggestions.get(0));
 		assertTrue("Expected first suggestion of to be " + expect + ". Found " + suggestions.toString(), expect.equals(actual));
 		
 		// try one where incoming nodeItem chooses
@@ -80,7 +80,7 @@ public class ValidationAssistantTest_IT {
 		node = ng.getNodeBySparqlID("?Demon");
 		suggestions = ValidationAssistant.suggestNodeClass(oInfo, ng, new NodeGroupItemStr(node));
 		expect = "http://AnimalSubProps#Animal";
-		actual = suggestions.get(0);
+		actual = ValidationAssistant.getSuggestionClass(suggestions.get(0));
 		assertTrue("Expected first suggestion of to be " + expect + ". Found " + suggestions.toString(), expect.equals(actual));
 	}
 	

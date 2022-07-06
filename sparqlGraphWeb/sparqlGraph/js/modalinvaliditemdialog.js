@@ -69,7 +69,7 @@ define([	// properly require.config'ed
 
             show : function () {
                 if (this.item.getItemType() == "SemanticNode") {
-                    this.ngClient.execAsyncSuggestNodeClass(this.nodegroup, this.conn, this.item, this.show2.bind(this), ModalIidx.alert.bind("Call to suggestNodeClass failed"));
+                    this.ngClient.execAsyncSuggestNodeClass(this.nodegroup, this.conn, this.item, this.show1.bind(this), ModalIidx.alert.bind("Call to suggestNodeClass failed"));
 
                 } else if (this.item.getItemType() == "PropertyItem") {
                     // find all properties for this CLASS
@@ -121,8 +121,20 @@ define([	// properly require.config'ed
                     alert("Not implemented in ModalInvalidItemDialog.show()");
                 }
             },
-
-			show2 : function (domainList) {
+            
+            // split return from REST call into two arrays
+			show1 : function (result_list) {
+				var domainList = [];
+				var errCountList = [];
+				for (var r of result_list) {
+					var pair = r.split(",");
+					domainList.push(pair[0]);
+					errCountList.push(pair[1]);
+				}
+				this.show2(domainList, errCountList);
+			},
+			
+			show2 : function (domainList, optErrCountList) {
 				var dom = document.createElement("fieldset");
 				dom.id = "ModalInvalidItemDialogdom";
 
@@ -149,7 +161,30 @@ define([	// properly require.config'ed
                 fieldset.appendChild(IIDXHelper.buildControlGroup("Current URI: ", s));
 
                 // domain select
-                var selectList = domainList;
+                var selectList = []; 
+                
+                // for semantic nodes, annotate select with superclass/subclass
+                if (this.item.getItemType() == "SemanticNode") {
+					var superNames = this.oInfo.getSuperclassNames(this.item.getURI());
+					var subNames = this.oInfo.getSubclassNames(this.item.getURI());
+					for (var i=0; i < domainList.length; i++) {
+						var d = domainList[i];
+						var eCount = optErrCountList[i];
+						var eFlag = eCount > 0 ? "[Err] ": "";
+						if (superNames.indexOf(d) > -1) {
+							selectList.push([eFlag + d + " (superclass)", d]);
+						} else if (subNames.indexOf(d) > -1) {
+							selectList.push([eFlag + d + " (subclass)", d]);
+						} else {
+							selectList.push([eFlag + d, d]);
+						}
+					}
+				} else {
+					for (var d of domainList) {
+						selectList.push([d,d]);
+					}
+				}
+
                 var selected = domainList.length > 0 ? [domainList[0]] : [];
 
 				var select = IIDXHelper.createSelect("ModalInvalidItemDialog.DomainSelect", selectList, selected, false, "input-xlarge");

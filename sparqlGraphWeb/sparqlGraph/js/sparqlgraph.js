@@ -738,7 +738,7 @@
                   'sparqlgraph/js/msiclientnodegroupservice',
               ], function (ModalItemDialog, ModalInvalidItemDialog, MsiClientNodeGroupService) {
 
-            
+            	// Changing a node's type uses the functionality built for validating an invalid node type
                 var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
 
                 var dialog= new ModalInvalidItemDialog( ngClient,
