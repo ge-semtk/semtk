@@ -1806,7 +1806,7 @@
                     // Results service has trouble protecting the browser memory on CONSTRUCT queries
                     // so use a different strategy of putting a limit on the query
                     var realLimit = gNodeGroup.getLimit();
-                    gNodeGroup.setLimit(RESULTS_MAX_ROWS);
+                    gNodeGroup.setLimit(Math.min(realLimit, RESULTS_MAX_ROWS));
                     client.execAsyncDispatchConstructFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jsonLdCallback, asyncFailureCallback);
                     gNodeGroup.setLimit(realLimit);
                     break;
@@ -2208,10 +2208,13 @@
 			network.body.data.nodes.update(Object.values(nodeDict));
 	        network.body.data.edges.update(edgeList);
 	        
-	        if (nextStart < jsonLd.length) {
+	        if (! gCancelled && nextStart < jsonLd.length) {
 				// recurse
 	        	setTimeout(addDataToNetwork.bind(this, network, jsonLd, nodeDict, edgeList, nextStart), 1);
 	        } else {
+				if (gCancelled) {
+					ModalIidx.alert("Cancelled", "Rendering of network cancelled by user.<br>Network is incomplete.");
+				}
 				// done
 				setStatus("");
 				network.startSimulation();
