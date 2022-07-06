@@ -56,32 +56,38 @@ public class ValidationAssistantTest_IT {
 	
 	@Test
 	public void test() throws Exception {
-		// animal should match itself
+		final String ANIMAL = "http://AnimalSubProps#Animal";
+		final String CAT = "http://AnimalSubProps#Cat";
+		final String DOG = "http://AnimalSubProps#Dog";
+		final String TIGER = "http://AnimalSubProps#Tiger";
+		// animal should match each of the three sub-classes
 		NodeGroup ng = TestGraph.getNodeGroupFromResource(this, "/animalQuery.json");
 		Node node = ng.getNodeBySparqlID("?Animal");
 		ArrayList<String> suggestions = ValidationAssistant.suggestNodeClass(oInfo, ng, new NodeGroupItemStr(node));
-		String expect = node.getUri();
-		String actual = ValidationAssistant.getSuggestionClass(suggestions.get(0));
-		assertTrue("Expected first suggestion of to be " + expect + ". Found " + suggestions.toString(), expect.equals(actual));
+		assertEquals("Wrong number of suggestions: " + suggestions.toString(), suggestions.size(), 3);
+		
+		for (String expect : new String [] {CAT, DOG, TIGER}) {
+			assertTrue("Missing suggestion " + expect + ". Found " + suggestions.toString(), suggestions.contains(expect + ",0"));
+
+		}
 		
 		// change #name property to #scaryName and we should get Tiger
 		ng = this.getNodegroupWithUriReplaced("animalQuery.json", "#name", "#scaryName");
 		node = ng.getNodeBySparqlID("?Animal");
 		suggestions = ValidationAssistant.suggestNodeClass(oInfo, ng, new NodeGroupItemStr(node));
-		expect = "http://AnimalSubProps#Tiger";
-		actual = ValidationAssistant.getSuggestionClass(suggestions.get(0));
-		assertTrue("Expected first suggestion of to be " + expect + ". Found " + suggestions.toString(), expect.equals(actual));
+		
+		String actual = ValidationAssistant.getSuggestionClass(suggestions.get(0));
+		assertTrue("Expected first suggestion of to be " + TIGER + ". Found " + suggestions.toString(), suggestions.get(0).equals(TIGER + ",0"));
 		
 		// try one where incoming nodeItem chooses
-		// HERE
 		ng = this.getNodegroupWithUriReplaced("animalSubPropsCats.json", 
 				"\"fullURIName\": \"http://AnimalSubProps#Animal\"", 
 				"\"fullURIName\": \"http://AnimalSubProps#Invalid\"");     // change the type of the Demon node
 		node = ng.getNodeBySparqlID("?Demon");
 		suggestions = ValidationAssistant.suggestNodeClass(oInfo, ng, new NodeGroupItemStr(node));
-		expect = "http://AnimalSubProps#Animal";
 		actual = ValidationAssistant.getSuggestionClass(suggestions.get(0));
-		assertTrue("Expected first suggestion of to be " + expect + ". Found " + suggestions.toString(), expect.equals(actual));
+		assertEquals("Wrong number of suggestions: " + suggestions.toString(), suggestions.size(), 4);
+		assertTrue("Expected first suggestion of to be " + ANIMAL + ". Found " + suggestions.toString(), suggestions.get(0).equals(ANIMAL + ",0"));
 	}
 	
 	/*
