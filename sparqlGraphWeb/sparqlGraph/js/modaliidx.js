@@ -193,18 +193,55 @@ define([	// properly require.config'ed   bootstrap-modal
         };
 
         // old ModalDialog.listDialog
-        ModalIidx.listDialog = function (headerText, buttonLabel, nameArray, valArray, defaultIndex, callback, optWidthPercent, extraDOM) {
+        ModalIidx.listDialog = function (headerText, buttonLabel, nameArray, valArray, defaultIndex, callback, optWidthPercent, extraDOM, filterFlag) {
 
             var div = document.createElement("div");
-            div.align = "center";
+            //div.align = "center";
 
             // create the select
             var textValArray = [];
             for (var i=0; i < nameArray.length; i++) {
                 textValArray.push([nameArray[i], i.toString()]);
             }
-
             var select = IIDXHelper.createSelect("ModalIidx_showList_sel", textValArray, [nameArray[defaultIndex]]);
+            
+
+			// handle filter
+			if (filterFlag) {
+				var input = document.createElement("input");
+				input.type="text";
+				input.placeholder="Search..";
+				input.style.marginBottom="1px";
+				input.onkeyup=function() {
+					// filter function
+					for (var i=0; i < select.length; i++) {
+						// everything lowercase
+						var pat = input.value.toLowerCase();
+						var item = select[i].text.toLowerCase();
+						var hideFlag;
+						if (pat == "^") {
+							// ignore "^" by itsself
+							hideFlag = false;
+						} else if (pat.startsWith("^")) {
+							// negate "^pattern"
+							pat = pat.slice(1);
+							hideFlag = item.indexOf(pat) > -1;
+						} else {
+							// match "pattern"
+							hideFlag = item.indexOf(pat) == -1;
+						}
+						
+						select[i].hidden = hideFlag;
+					}
+				};
+				div.appendChild(input);
+				IIDXHelper.appendSpace(div);
+				var info = ModalIidx.createInfoButton("Filter with case-insensitive <list><li>matching text</li><li>^non-matching text</li></list>");
+				info.style.marginBottom="1px";
+				div.appendChild(info);
+			}
+			
+			// finish building and adding select
             select.size = "6";
             select.style.width = "100%";
             div.appendChild(select);
@@ -213,7 +250,7 @@ define([	// properly require.config'ed   bootstrap-modal
                 div.appendChild(extraDOM);
             }
 
-            // callbacks
+            // dialog callbacks
             var listDialogSubmit = function (sel, vArr, cback) {
                 cback(vArr[sel.selectedIndex]);
             }.bind(this, select, valArray, callback);

@@ -332,7 +332,7 @@
                         }
                     }
                     // offer a choice, defaulting to the shortest non-disconnected path
-                    ModalIidx.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, 80, extraDOM);
+                    ModalIidx.listDialog("Choose the path", "Submit", pathStrList, valList, 1, dropClassCallback, 80, extraDOM, true);
 
                  });
 
@@ -645,9 +645,9 @@
             if (nItem.getSNodes().indexOf(targetSNodes[i]) == -1) {  // not already connected
                 if ( ALLOW_CIRCULAR_NODEGROUPS ||
                        (mySubgraph.indexOf(targetSNodes[i]) == -1 && targetSNodes[i] != snode ) ){    // not cicular && not self
-                       
-    				unlinkedTargetNames.push(targetSNodes[i].getBindingOrSparqlID());
-    				unlinkedUriOrSNodes.push(targetSNodes[i]);
+                    // "unshift" on to the top of the list
+    				unlinkedTargetNames.unshift(targetSNodes[i].getBindingOrSparqlID());
+    				unlinkedUriOrSNodes.unshift(targetSNodes[i]);
     			}
     		}
     	}
