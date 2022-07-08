@@ -150,22 +150,18 @@ public enum XSDSupportedType {
 	public String buildTypedValueString(String val, String typePrefixOverride) {
 		
 		if (this.isURI()) {
-			// check for angle brackets first
-			if( val.contains("#")){   // the uri given is prefixed.
-				if(val.startsWith("<") && val.endsWith(">")){
-					return val;  // already in brackets so probably will not break.
-				}
-				else {
-					return "<" + val + "> ";  // e.g. VALUES ?TimeSeriesTableType { <timeseries:DataScan> } ... no type information needed for URIs
-				}
-			}
-			else {  // the URI is assumed prefixed since it has no # . Assume the user/caller knows what they want and just use it. 
-				    // PAUL July 2020.  I'm not sure why this shouldn't be checked for <> also.
-			        //                  How could it work otherwise?
-				    //                  I don't really want to mess with it and find out there was a reason.
-				return val;
-			}
+			// SAMPLES
+			// Prefix:myinstance             - no <>
+			// http://hi/there               - needs <>
+			// http://unprefixed#myinstance  - needs <>
 			
+			if (val.contains("://") && ! val.startsWith("<") ) { 
+				return "<" + val + "> "; 
+
+			} else {
+				return val;  
+			}
+				
 		} else if (this == XSDSupportedType.BOOLEAN) {   
 			return val.toLowerCase();
 			
