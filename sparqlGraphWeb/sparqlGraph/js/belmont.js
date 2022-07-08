@@ -208,7 +208,9 @@ SparqlFormatter.prototype = {
         var itemType = item.getValueTypes()[0];
 
         if (itemType == "string") {
-            return "'" + val + "', '" + val + "'^^" + SemanticNodeGroup.XMLSCHEMA_PREFIX + itemType;
+            return "'" + val + "'";
+            // Removed backwards compatibility to Virtuoso ^^String
+            // return "'" + val + "', '" + val + "'^^" + SemanticNodeGroup.XMLSCHEMA_PREFIX + itemType;
         } else if (itemType == "int" || itemType == "long" || itemType == "float" || itemType == "boolean") {
             return val;
         } else if (itemType == "uri") {
