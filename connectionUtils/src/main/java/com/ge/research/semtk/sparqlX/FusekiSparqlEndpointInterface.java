@@ -91,7 +91,7 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 		} else {
 			params.add(new BasicNameValuePair("update", query));
 		}
-		params.add(new BasicNameValuePair("format", this.getContentType(resultType)));
+		//params.add(new BasicNameValuePair("format", this.getContentType(resultType)));
 		
 
 		// timeout 
