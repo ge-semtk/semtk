@@ -214,26 +214,27 @@ define([	// properly require.config'ed   bootstrap-modal
 				input.style.marginBottom="1px";
 				input.onkeyup=function() {
 					// filter function
+					var pat = input.value;
+					var inverse = false;
+					if (pat == "^" || pat == "") {
+						// ignore "^" by itsself
+						pat = ".*";
+					} else if (pat.startsWith("^")) {
+						// negate "^pattern"
+						pat = pat.slice(1);
+						inverse = true;
+					} 
+					var reg = new RegExp(pat, 'i');
+					
 					for (var i=0; i < select.length; i++) {
-						// everything lowercase
-						var pat = input.value.toLowerCase();
-						var item = select[i].text.toLowerCase();
-						var hideFlag;
-						if (pat == "^") {
-							// ignore "^" by itsself
-							hideFlag = false;
-						} else if (pat.startsWith("^")) {
-							// negate "^pattern"
-							pat = pat.slice(1);
-							hideFlag = item.indexOf(pat) > -1;
+						if (inverse) {
+							select[i].hidden =   reg.test(select[i].text);
 						} else {
-							// match "pattern"
-							hideFlag = item.indexOf(pat) == -1;
+							select[i].hidden = ! reg.test(select[i].text);
 						}
-						
-						select[i].hidden = hideFlag;
 					}
 				};
+				
 				div.appendChild(input);
 				IIDXHelper.appendSpace(div);
 				var info = ModalIidx.createInfoButton("Filter with case-insensitive <list><li>matching text</li><li>^non-matching text</li></list>");
