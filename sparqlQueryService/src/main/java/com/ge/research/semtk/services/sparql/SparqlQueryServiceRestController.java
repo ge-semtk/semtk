@@ -408,6 +408,9 @@ public class SparqlQueryServiceRestController {
 	 * get <rdf>....</rdf> dump of a graph
 	 * or <error>message</error>
 	 */
+	@Operation(
+			description="Deprecated previous /downloadOwl. <br> Could fail with large files."
+			)
 	@CrossOrigin
 	@RequestMapping(value={"/downloadOwl"}, method= RequestMethod.POST, produces="rdf/xml")
 	public String downloadOwl(@RequestBody SparqlAuthRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -428,7 +431,37 @@ public class SparqlQueryServiceRestController {
 			HeadersManager.setHeaders(new HttpHeaders());
 		}		
 		
+	}
+
+// TODO: this version is still breaking pipes somewhere
+//	@Operation(
+//			description="Download owl with streaming instead of result set.  Better for large files."
+//			)
+//	@CrossOrigin
+//	@RequestMapping(value={"/downloadOwlStreamed"}, method= RequestMethod.POST, produces="rdf/xml")
+	public void downloadOwlStreamed(@RequestBody SparqlAuthRequestBody requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SparqlEndpointInterface sei = null;
+		LocalLogger.logToStdOut("Sparql Query Service start downloadOwlStreamed");
+		
+		try {			
+			requestBody.validate(); 	// check inputs 		
+			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
+			sei.downloadOwlStreamed(resp.getWriter());
+			
+		} catch (Exception e) {			
+			LocalLogger.printStackTrace(e);
+			try {
+				resp.getWriter().print("<error>\n\t" + e.toString() + "\n</error>");
+			} catch (Exception ee) {
+				LocalLogger.printStackTrace(ee);
+			}
+			
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		}		
 	}	
+	
 	//public JSONObject uploadOwl(@RequestBody SparqlAuthRequestBody requestBody, @RequestParam("owlFile") MultipartFile owlFile){
     // We can't use a @RequestBody with a @RequestParam,
 	// So the SparqlAuthRequestBody is broken into individual string @RequestParams
@@ -445,54 +478,9 @@ public class SparqlQueryServiceRestController {
 								@RequestParam("password") String password, 
 								@RequestParam("owlFile") MultipartFile owlFile, 
 								@RequestHeader HttpHeaders headers) {
-		HeadersManager.setHeaders(headers);
 		
-		SimpleResultSet resultSet = null;
-		JSONObject simpleResultSetJson = null;
-		SparqlEndpointInterface sei = null;
-		LocalLogger.logToStdOut("Sparql Query Service start uploadOwl");
-		
-		
-		try {	
-			if (serverAndPort == null || serverAndPort.trim().isEmpty() ) throw new Exception("serverAndPort is empty.");
-			if (serverType == null || serverType.trim().isEmpty() ) throw new Exception("serverType is empty.");
-			
-			// handle deprecated dataset
-			if (graph == null || graph.trim().isEmpty() ) graph = dataset;
-			if (graph == null || graph.trim().isEmpty() ) throw new Exception("graph is empty.");
-
-
-			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, graph, user, password);
-			
-			if (sei instanceof NeptuneSparqlEndpointInterface) {
-				((NeptuneSparqlEndpointInterface)sei).setS3Config(
-						serviceProps.getS3ClientRegion(),
-						serviceProps.getS3BucketName(), 
-						serviceProps.getAwsIamRoleArn());
-			}
-			
-			if (! sei.isAuth()) { 
-				throw new Exception("Required SPARQL endpoint user/password weren't provided.");
-			}
-			
-			simpleResultSetJson = sei.executeAuthUploadOwl(owlFile.getBytes());
-			SimpleResultSet sResult = SimpleResultSet.fromJson(simpleResultSetJson);
-			if (sResult.getSuccess()) {
-				uncache(sei);
-			}
-			
-		} catch (Exception e) {			
-			LocalLogger.printStackTrace(e);
-			resultSet = new SimpleResultSet();
-			resultSet.setSuccess(false);
-			resultSet.addRationaleMessage(SERVICE_NAME, "uploadOwl", e);
-			return resultSet.toJson();
-		} finally {
-			HeadersManager.setHeaders(new HttpHeaders());
-		}		
-		
-		return simpleResultSetJson;	
-	}	
+		return this.uploadFile("uploadTurtle", serverAndPort, serverType, (dataset!=null)?dataset:graph, user, password, owlFile, headers);
+	}
 	
 	
 	@Operation(
@@ -507,6 +495,17 @@ public class SparqlQueryServiceRestController {
 								@RequestParam(value="password", required=false) String password, 
 								@RequestParam(value="ttlFile", required=true) MultipartFile ttlFile, 
 								@RequestHeader HttpHeaders headers) {
+		return this.uploadFile("uploadTurtle", serverAndPort, serverType, graph, user, password, ttlFile, headers);
+	}	
+	
+	private JSONObject uploadFile(String endpointName,
+								String serverAndPort, 
+								String serverType, 
+								String graph, 
+								String user, 
+								String password, 
+								MultipartFile multiFile, 
+								HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		
 		SimpleResultSet resultSet = null;
@@ -533,7 +532,10 @@ public class SparqlQueryServiceRestController {
 				throw new Exception("Required SPARQL endpoint user/password weren't provided.");
 			}
 			
-			simpleResultSetJson = sei.executeAuthUploadTurtle(ttlFile.getBytes());
+			simpleResultSetJson = sei.executeAuthUploadStreamed(multiFile.getInputStream(), multiFile.getName());
+			// previous non-streaming code:
+			// simpleResultSetJson = sei.executeAuthUploadOwl(ttlFile.getBytes());
+			
 			SimpleResultSet sResult = SimpleResultSet.fromJson(simpleResultSetJson);
 			if (sResult.getSuccess()) {
 				uncache(sei);
@@ -543,7 +545,7 @@ public class SparqlQueryServiceRestController {
 			LocalLogger.printStackTrace(e);
 			resultSet = new SimpleResultSet();
 			resultSet.setSuccess(false);
-			resultSet.addRationaleMessage(SERVICE_NAME, "uploadTurtle", e);
+			resultSet.addRationaleMessage(SERVICE_NAME, endpointName, e);
 			return resultSet.toJson();
 		} finally {
 			HeadersManager.setHeaders(new HttpHeaders());
@@ -551,6 +553,7 @@ public class SparqlQueryServiceRestController {
 		
 		return simpleResultSetJson;	
 	}	
+	
 	@Operation(
 			description="Using graph in owl's rdf:RDF xml:base, clear graph and (re-)import owl" 
 			)
@@ -594,7 +597,9 @@ public class SparqlQueryServiceRestController {
 			
 			// clear the graph, upload owl, uncache the ontology
 			sei.clearGraph();
-			simpleResultSetJson = sei.executeAuthUploadOwl(owlFile.getBytes());
+			simpleResultSetJson = sei.executeAuthUploadStreamed(owlFile.getInputStream(), owlFile.getName());
+			// previous non-streaming code:
+			// simpleResultSetJson = sei.executeAuthUploadOwl(owlFile.getBytes());
 			uncache(sei);
 			
 		} catch (Exception e) {			

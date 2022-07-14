@@ -18,6 +18,9 @@
 
 package com.ge.research.semtk.sparqlX;
 
+import java.io.File;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,6 +32,9 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.FileEntity;
+import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.ByteArrayBody;
 import org.apache.http.entity.mime.content.ContentBody;
@@ -120,7 +126,10 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 		// not recognized by blazegraph: httppost.addHeader("X-Sparql-default-graph", this.graph);
 
 	}
-	
+	protected void addHeaders(HttpURLConnection conn, SparqlResultTypes resultType) throws Exception {
+		conn.setRequestProperty("Accept", this.getContentType(resultType));
+		conn.setRequestProperty("Content-type", "application/x-www-form-urlencoded; charset=UTF-8");
+	}
 	/**
 	 * Get a results content type to be set in the HTTP header.
 	 * 
@@ -175,8 +184,15 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 	}
 	
 	@Override 
+	/** Main entry point from query service **/
 	public JSONObject executeAuthUploadTurtle(byte [] turtle) throws AuthorizationException, Exception {
 		return this.executeUpload(turtle, "file.ttl");
+	}
+	
+	@Override 
+	/** Main entry point from query service **/
+	public JSONObject executeAuthUploadOwl(byte [] turtle) throws AuthorizationException, Exception {
+		return this.executeUpload(turtle, "file.owl");
 	}
 	
 	/**
@@ -206,6 +222,20 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 	}
 	
 	public JSONObject executeUpload(byte[] owl, String filename) throws AuthorizationException, Exception {
+		
+		// NOTE: blazegraph technique is not using multi-part, just straight body
+		HttpEntity entity = new ByteArrayEntity(owl);
+		return executeAuthUpload(entity, filename);
+	}
+	
+	@Override
+	public JSONObject executeAuthUploadStreamed(InputStream is, String filename) throws AuthorizationException, Exception {
+		
+		InputStreamEntity ise = new InputStreamEntity(is);
+		return executeAuthUpload(ise, filename);
+	}
+	
+	private JSONObject executeAuthUpload(HttpEntity entity, String filename) throws AuthorizationException, Exception {
 		this.authorizeUpload();
 		
 		HttpHost targetHost = this.buildHttpHost();
@@ -221,9 +251,6 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 			httppost.addHeader("Content-type", "application/rdf+xml");
 		}
 
-		 
-		// NOTE: blazegraph technique is not using multi-part, just straight body
-		HttpEntity entity = new ByteArrayEntity(owl);
 		httppost.setEntity(entity);
 		
 		executeTestQuery();

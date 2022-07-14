@@ -18,6 +18,7 @@
 
 package com.ge.research.semtk.sparqlX;
 
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.TreeMap;
@@ -456,6 +457,13 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 		
 		// Added for AWS V4 Signing
 		httppost.addHeader("Content-type", "application/x-www-form-urlencoded");
+	}
+	
+	@Override
+	protected void addHeaders(HttpURLConnection conn, SparqlResultTypes resultType) throws Exception {
+		
+		conn.setRequestProperty("Accept", this.getContentType(resultType));
+		conn.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
 	}
 
 	

@@ -18,6 +18,12 @@
 
 package com.ge.research.semtk.sparqlX;
 
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,6 +34,8 @@ import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.ByteArrayBody;
 import org.apache.http.entity.mime.content.ContentBody;
@@ -152,8 +160,15 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 	}
 	
 	@Override 
+	/** Main entry point from query service **/
 	public JSONObject executeAuthUploadTurtle(byte [] turtle) throws AuthorizationException, Exception {
 		return this.executeUpload(turtle, "file.ttl");
+	}
+	
+	@Override 
+	/** Main entry point from query service **/
+	public JSONObject executeAuthUploadOwl(byte [] turtle) throws AuthorizationException, Exception {
+		return this.executeUpload(turtle, "file.owl");
 	}
 	
 	/** 
@@ -164,7 +179,35 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 		return this.executeUpload(owl, "file.owl");
 	}
 	
-	public JSONObject executeUpload(byte[] owl, String filename) throws AuthorizationException, Exception {
+	private JSONObject executeUpload(byte[] owl, String filename) throws AuthorizationException, Exception {
+		
+		MultipartEntityBuilder builder = MultipartEntityBuilder.create();   
+		
+		ContentBody fileBody = new ByteArrayBody(owl, filename);
+		builder.addPart("files[]", fileBody);
+
+		HttpEntity entity = builder.build();
+		return this.executeAuthUpload(entity);
+	}
+	
+	@Override
+	public JSONObject executeAuthUploadStreamed(InputStream is, String filenameUNUSED) throws AuthorizationException, Exception {
+		
+		MultipartEntityBuilder builder = MultipartEntityBuilder.create();   
+		builder.addBinaryBody("files[]", is, ContentType.MULTIPART_FORM_DATA, "something.owl");
+		HttpEntity entity = builder.build();
+		
+		return this.executeAuthUpload(entity);
+	}
+	
+	/**
+	 * Main function for auth uploading
+	 * @param entity 
+	 * @return
+	 * @throws AuthorizationException
+	 * @throws Exception
+	 */
+	private JSONObject executeAuthUpload(HttpEntity entity) throws AuthorizationException, Exception {
 		this.authorizeUpload();
 		
 		HttpHost targetHost = this.buildHttpHost();
@@ -173,16 +216,8 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 		HttpPost httppost = new HttpPost(this.getUploadURL());
 		
 		this.addHeaders(httppost, SparqlResultTypes.HTML);
-		 
-		MultipartEntityBuilder builder = MultipartEntityBuilder.create();   
-		
-		ContentBody fileBody = new ByteArrayBody(owl, filename);
-		builder.addPart("files[]", fileBody);
-
-		
-		HttpEntity entity = builder.build();
+		 		
 		httppost.setEntity(entity);
-		
 		
 		executeTestQuery();
 
@@ -208,7 +243,6 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 		resp_entity.getContent().close();
 		return ret.toJson();
 	}
-	
 	/**
 	 * Handle an empty response
 	 * @throws Exception 

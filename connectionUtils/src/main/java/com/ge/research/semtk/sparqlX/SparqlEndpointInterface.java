@@ -19,11 +19,18 @@
 
 package com.ge.research.semtk.sparqlX;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.PrintWriter;
 import java.net.ConnectException;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.net.URLStreamHandler;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +43,7 @@ import java.util.concurrent.TimeUnit;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
+import javax.net.ssl.HttpsURLConnection;
 
 import java.security.cert.X509Certificate;
 
@@ -822,6 +830,61 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	/**
+	 * Execute a query using POST and streaming results to a PrintWriter
+	 * Adds Auth elements ONLY IF this.userName != null
+	 * See "internal use" note
+	 * ------- Still Experimental ---------
+	 * 			- missing https username password basic auth
+	 * @param query
+	 * @param resultType
+	 * @param writer
+	 * @throws Exception
+	 */
+	public void executeQueryPostStreamed(String query, SparqlResultTypes resultType, PrintWriter writer) throws Exception{
+		AuthorizationManager.authorizeQuery(this, query);
+		
+		URL url = new URL(this.getPostURL(resultType));
+		HttpURLConnection conn;
+		if (this.isAuth()) {
+			conn = (HttpURLConnection) url.openConnection();
+			// MISSING: basic auth logic from this.buildHttpContext(targetHost);
+		} else {
+			conn = (HttpURLConnection) url.openConnection();
+		}
+		conn.setRequestMethod("POST");
+	
+		this.addHeaders(conn, resultType);
+		conn.setDoOutput(true);
+		
+		// This might work for all SPARQL compliant triplestores
+		StringBuilder body = new StringBuilder();
+		if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.GRAPH_JSONLD || resultType == SparqlResultTypes.RDF) { 
+			body.append("query=" + query);
+		} else {
+			body.append("update=" + query);
+		}
+
+		OutputStream os = conn.getOutputStream();
+		byte [] bytes = body.toString().getBytes();
+		os.write(bytes, 0, bytes.length);
+		os.close();
+		
+		if (conn.getResponseCode() != 200) {
+			throw new RuntimeException("Failed : HTTP error code : "
+					+ conn.getResponseCode() + " " + conn.getResponseMessage());
+		}
+
+		BufferedReader br = new BufferedReader(new InputStreamReader((conn.getInputStream())));
+
+		String output;
+		while ((output = br.readLine()) != null) {
+			writer.print(output);
+		}
+
+		conn.disconnect();
+	}
+	
+	/**
 	 * clear the graph
 	 * See "internal use" note
 	 * @throws Exception
@@ -969,6 +1032,12 @@ public abstract class SparqlEndpointInterface {
 		httppost.addHeader("X-Sparql-default-graph", this.graph);
 	}
 	
+	protected void addHeaders(HttpURLConnection conn, SparqlResultTypes resultType) throws Exception {
+		
+		conn.setRequestProperty("Accept", this.getContentType(resultType));
+		conn.setRequestProperty("X-Sparql-default-graph", this.graph);
+	}
+	
 	protected void addParams(HttpPost httppost, String query, SparqlResultTypes resultType) throws Exception {
 		// add params
 		List<NameValuePair> params = new ArrayList<NameValuePair>(3);
@@ -979,7 +1048,6 @@ public abstract class SparqlEndpointInterface {
 		if (this.getTimeoutPostParamName() != null && this.getTimeoutPostParamValue() != null) {
 			params.add(new BasicNameValuePair(this.getTimeoutPostParamName(), this.getTimeoutPostParamValue()));
 			LocalLogger.logToStdErr("Setting timeout to: " + this.getTimeoutPostParamValue());
-
 		}
 
 		// set entity
@@ -1118,11 +1186,31 @@ public abstract class SparqlEndpointInterface {
 		return this.executeUpload(turtle);
 	}
 	
+	/**
+	 * Upload OWL.  Many triplestores treat ttl and owl the same.
+	 * See "internal use" note
+	 * @param turtle
+	 * @return
+	 * @throws AuthorizationException
+	 * @throws Exception
+	 */
+	public JSONObject executeUploadOwl(byte [] owl) throws AuthorizationException, Exception {
+		return this.executeUpload(owl);
+	}
+	
+	/**
+	 * Main entry point from query service: presumes ttl and owl are treated the same
+	 * @param turtle
+	 * @return
+	 * @throws AuthorizationException
+	 * @throws Exception
+	 */
 	public JSONObject executeAuthUploadTurtle(byte [] turtle) throws AuthorizationException, Exception {
 		return this.executeUpload(turtle);
 	}
 	
 	/**
+	 * Main entry point from query service: presumes ttl and owl are treated the same
 	 * Execute an auth query using POST
 	 * See "internal use" note
 	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
@@ -1139,7 +1227,7 @@ public abstract class SparqlEndpointInterface {
 	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
 	 * @throws Exception
 	 */
-	public JSONObject executeAuthUpload(byte[] owl) throws Exception{
+	protected JSONObject executeAuthUpload(byte[] owl) throws Exception{
         return this.executeUpload(owl);
 	}
 
@@ -1149,7 +1237,7 @@ public abstract class SparqlEndpointInterface {
 	 * @return
 	 * @throws Exception
 	 */
-	public abstract JSONObject executeUpload(byte[] owl) throws AuthorizationException, Exception;
+	protected abstract JSONObject executeUpload(byte[] owl) throws AuthorizationException, Exception;
 
 	public void authorizeUpload() throws AuthorizationException {
 		AuthorizationManager.throwExceptionIfNotGraphWriter(this.graph);
@@ -1162,6 +1250,13 @@ public abstract class SparqlEndpointInterface {
 		
 		JSONObject res = this.executeQueryPost(query, SparqlResultTypes.RDF);
 		return (String) res.get(SparqlResultTypes.RDF.toString());
+	}
+	
+	public void downloadOwlStreamed(PrintWriter writer) throws AuthorizationException, Exception {
+		String query = SparqlToXUtils.generateConstructSPOSparql(this, "");
+		AuthorizationManager.authorizeQuery(this, query);
+		
+		this.executeQueryPostStreamed(query, SparqlResultTypes.RDF, writer);
 	}
 	
 	/**
@@ -1709,6 +1804,22 @@ public abstract class SparqlEndpointInterface {
 	@Deprecated
 	public ArrayList<String> getResultsColumnName(){
 		return new ArrayList<String>(Arrays.asList(this.resTable.getColumnNames()));
+	}
+
+	/**
+	 * 
+	 * @param is
+	 * @param filename - used by some triplestores, not others, to determine .ttl or .owl
+	 * @return
+	 * @throws AuthorizationException
+	 * @throws Exception
+	 */
+	public JSONObject executeAuthUploadStreamed(InputStream is, String filename) throws AuthorizationException, Exception {
+		LocalLogger.logToStdErr("Warning: executeAuthUploadStreamed() is not overridden for this triplestore type.  Not streamed.");
+	
+		final byte[] bytes;
+		bytes = is.readAllBytes();
+		return this.executeAuthUpload(bytes);
 	}
 
 }

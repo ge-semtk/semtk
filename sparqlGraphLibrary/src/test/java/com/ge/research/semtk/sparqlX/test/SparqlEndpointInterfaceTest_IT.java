@@ -59,7 +59,7 @@ public class SparqlEndpointInterfaceTest_IT {
 	public void testRoundTrip() throws Exception {
 		TestGraph.clearGraph();
 		String s = Utility.getResourceAsString(this, "/Pet.owl");
-		TestGraph.getSei().executeUpload(s.getBytes());
+		TestGraph.getSei().executeUploadOwl(s.getBytes());
 		
 		OntologyInfo oInfo = new OntologyInfo();
 		oInfo.load(TestGraph.getSei(), false );
@@ -71,7 +71,7 @@ public class SparqlEndpointInterfaceTest_IT {
 		TestGraph.clearGraph();
 		String s = Utility.getResourceAsString(this, "/Pet.owl");
 		SparqlEndpointInterface sei = TestGraph.getSei();
-		sei.executeUpload(s.getBytes());
+		sei.executeUploadOwl(s.getBytes());
 		
 		String sparql = SparqlToXUtils.generateConstructSPOSparql(sei, null) + " LIMIT 1 ";
 		String rdf = sei.executeQueryToRdf(sparql);
