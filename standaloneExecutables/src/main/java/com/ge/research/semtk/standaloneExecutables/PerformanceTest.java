@@ -665,12 +665,12 @@ public class PerformanceTest {
 	public static void uploadOwlFromSGL(SparqlEndpointInterface sei, String filename) throws Exception {
 		File f = Paths.get(resourceFolder + "/" + filename).toFile();
 		byte [] owl =  FileUtils.readFileToByteArray(f);
-		sei.executeAuthUpload(owl);
+		sei.executeAuthUploadOwl(owl);
 	}
 
 	public static void uploadOwlResource(SparqlEndpointInterface sei, String filename) throws Exception {
 		byte [] owl = Utility.getResourceAsBytes(PerformanceTest.class, filename);
-		sei.executeAuthUpload(owl);
+		sei.executeAuthUploadOwl(owl);
 	}
 
 	public static SparqlGraphJson getSGJsonFromSGL(String jsonFilename, SparqlEndpointInterface modelSei, SparqlEndpointInterface dataSei) throws Exception {
