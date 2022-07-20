@@ -75,6 +75,7 @@
                   'sparqlgraph/js/modalstoredialog',
                   'sparqlgraph/js/msiclientnodegroupservice',
                   'sparqlgraph/js/msiclientnodegroupstore',
+                  'sparqlgraph/js/msiclientquery',
                   'sparqlgraph/js/nodegrouprenderer',
                   'sparqlgraph/js/reporttab',
                   'sparqlgraph/js/undomanager',
@@ -85,7 +86,7 @@
 
 	              'local/sparqlgraphlocal'
                 ],
-                function (ExploreTab, MappingTab, ModalIidx, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupService, MsiClientNodeGroupStore, NodegroupRenderer, ReportTab, UndoManager, UploadTab) {
+                function (ExploreTab, MappingTab, ModalIidx, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupService, MsiClientNodeGroupStore, MsiClientQuery, NodegroupRenderer, ReportTab, UndoManager, UploadTab) {
 
 	    	console.log(".ready()");
 
@@ -93,7 +94,7 @@
 
 	    	// create the modal dialogue
             var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
-	    	gLoadDialog = new ModalLoadDialog(document, "gLoadDialog", ngClient);
+	    	gLoadDialog = new ModalLoadDialog(document, "gLoadDialog", ngClient, g.service.sparqlQuery.url);
 
 	    	 // set up the node group
 	        gNodeGroup = new SemanticNodeGroup();

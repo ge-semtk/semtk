@@ -208,6 +208,39 @@ define([	// properly require.config'ed
         return select;
     };
 
+	/*
+		Create a filter input that affects the contents of a select
+	 */
+	IIDXHelper.createSelectFilter = function(select) {
+		var input = document.createElement("input");
+		input.type="text";
+		input.placeholder="Search..";
+		input.style.marginBottom="1px";
+		input.onkeyup= function() {
+			// filter function
+			var pat = input.value;
+			var inverse = false;
+			if (pat == "^" || pat == "") {
+				// ignore "^" by itsself
+				pat = ".*";
+			} else if (pat.startsWith("^")) {
+				// negate "^pattern"
+				pat = pat.slice(1);
+				inverse = true;
+			} 
+			var reg = new RegExp(pat, 'i');
+			
+			for (var i=0; i < select.length; i++) {
+				if (inverse) {
+					select[i].hidden =   reg.test(select[i].text);
+				} else {
+					select[i].hidden = ! reg.test(select[i].text);
+				}
+			}
+		};
+		return input;
+	};
+	
     /*
      * See createSelect for description of addTextValArray
      */

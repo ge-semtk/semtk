@@ -161,7 +161,7 @@ define([	// properly require.config'ed   bootstrap-modal
          *
          * optHideCallback will be called any time the dialog is hidden
          */
-        ModalIidx.multiListDialog = function (headerText, buttonLabel, textValArray, selTextsList, valListCallback, optMultiFlag, optHideCallback, optSize, optWidthPercent) {
+        ModalIidx.multiListDialog = function (headerText, buttonLabel, textValArray, selTextsList, valListCallback, optMultiFlag, optHideCallback, optSize, optWidthPercent, optFilterFlag) {
             var multiFlag = (typeof optMultiFlag != "undefined") ? optMultiFlag          : true;
             var size = (typeof optSize != "undefined") ? optSize                         : "6";
 
@@ -171,6 +171,18 @@ define([	// properly require.config'ed   bootstrap-modal
             var select = IIDXHelper.createSelect("ModalIidx_showList_sel", textValArray, selTextsList, multiFlag);
             select.size = size;
             select.style.width = "100%";
+            
+            // handle filter
+			if (optFilterFlag) {
+				var input = IIDXHelper.createSelectFilter(select);
+				
+				div.appendChild(input);
+				IIDXHelper.appendSpace(div);
+				var info = ModalIidx.createInfoButton("Filter with case-insensitive <list><li>matching text</li><li>^non-matching text</li></list>");
+				info.style.marginBottom="1px";
+				div.appendChild(info);
+			}
+            
             div.appendChild(select);
 
             // callbacks
@@ -192,7 +204,7 @@ define([	// properly require.config'ed   bootstrap-modal
 
         };
 
-        // old ModalDialog.listDialog
+        // orig ModalDialog.listDialog
         ModalIidx.listDialog = function (headerText, buttonLabel, nameArray, valArray, defaultIndex, callback, optWidthPercent, extraDOM, filterFlag) {
 
             var div = document.createElement("div");
@@ -208,32 +220,7 @@ define([	// properly require.config'ed   bootstrap-modal
 
 			// handle filter
 			if (filterFlag) {
-				var input = document.createElement("input");
-				input.type="text";
-				input.placeholder="Search..";
-				input.style.marginBottom="1px";
-				input.onkeyup=function() {
-					// filter function
-					var pat = input.value;
-					var inverse = false;
-					if (pat == "^" || pat == "") {
-						// ignore "^" by itsself
-						pat = ".*";
-					} else if (pat.startsWith("^")) {
-						// negate "^pattern"
-						pat = pat.slice(1);
-						inverse = true;
-					} 
-					var reg = new RegExp(pat, 'i');
-					
-					for (var i=0; i < select.length; i++) {
-						if (inverse) {
-							select[i].hidden =   reg.test(select[i].text);
-						} else {
-							select[i].hidden = ! reg.test(select[i].text);
-						}
-					}
-				};
+				var input = IIDXHelper.createSelectFilter(select);
 				
 				div.appendChild(input);
 				IIDXHelper.appendSpace(div);

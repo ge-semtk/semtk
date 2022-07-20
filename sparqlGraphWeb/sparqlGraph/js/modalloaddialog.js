@@ -37,15 +37,18 @@
 define([	// properly require.config'ed
 
             'sparqlgraph/js/iidxhelper',
-            'sparqlgraph/js/modaliidx',
-
+            'sparqlgraph/js/modalconnwizarddialog',
+			'sparqlgraph/js/modaliidx',
+			'sparqlgraph/js/msiclientquery',
+			
          	'jquery',
             'sparqlgraph/js/cookiemanager',
             'sparqlgraph/js/sparqlconnection',
+    		'sparqlgraph/js/sparqlserverinterface'
 		],
-       function(IIDXHelper, ModalIidx, $) {
+       function(IIDXHelper, ModalConnWizardDialog, ModalIidx, MsiClientQuery, $) {
 
-    var ModalLoadDialog = function(document, varNameOBSOLETE, ngClient) {
+    var ModalLoadDialog = function(document, varNameOBSOLETE, ngClient, queryUrl) {
 
         this.document = document;
         this.div = document.getElementById("modaldialog");
@@ -105,7 +108,7 @@ define([	// properly require.config'ed
                                 %%OPTIONS%%\
                             </select> \
                         </div></div> \
-                        <div class="control-group" style="margin-right: 1ch;"><label class="control-label" id="mdSDS0">Graph:</label><div class="controls"><input type="text" class="input-xlarge" id="mdGraph" list="mdDatalistGraphs" ></div></div>\
+                        <div class="control-group" style="margin-right: 1ch;"><label class="control-label" id="mdSDS0">Graph:</label><div class="controls"><input type="text" class="input-large" id="mdGraph"> <button id="mdButAddGraph" class="btn">>></button></div></div>\
                         <div class="control-group" style="margin-right: 1ch;"><label class="control-label" id="mdSDS1">Usage info:</label><div class="controls"><span class="label" id="mdSeiInfo"></span></div></div>\
                         <div class="form-actions" style="padding-top:1ch; padding-bottom:1ch;"  align="right"> \
                             <button type="button" class="btn" id="mdSeiDelete">Delete</button>\
@@ -128,10 +131,10 @@ define([	// properly require.config'ed
 
         gotServerTypes = function(results) {
             if (results.isSuccess()) {
-                var typeArr = results.getSimpleResultField("serverTypes");
+                this.serverTypeList = results.getSimpleResultField("serverTypes");
                 var html = "";
-                for (var t of typeArr) {
-                    if (t == "virtuoso") {
+                for (var t of  this.serverTypeList) {
+                    if (t == "fuseki") {
                         html += "<option selected>" + t + "</option>";
                     } else {
                         html += "<option>" + t + "</option>";
@@ -144,7 +147,7 @@ define([	// properly require.config'ed
         }.bind(this);
 
         ngClient.execGetServerTypes(gotServerTypes);
-
+		this.queryUrl = queryUrl;
         this.hide();
     };
 
@@ -172,7 +175,8 @@ define([	// properly require.config'ed
             document.getElementById("mdOwlImports").onchange   =this.callbackChangedOwlImports.bind(this);
             document.getElementById("mdServerURL").onchange    =this.callbackChangedServerURL.bind(this);
             document.getElementById("mdSelectSeiType").onchange=this.callbackChangedSelectSeiType.bind(this);
-            document.getElementById("mdGraph").onchange      =this.callbackChangedGraph.bind(this);
+            document.getElementById("mdGraph").onchange        =this.callbackChangedGraph.bind(this);
+            document.getElementById("mdButAddGraph").onclick   =this.callbackAddGraph.bind(this);
 
             document.getElementById("loadDialogForm")  .onsubmit=this.callbackSubmit.bind(this);
             document.getElementById("mdSeiDelete")     .onclick =this.callbackDeleteSei.bind(this);
@@ -188,6 +192,11 @@ define([	// properly require.config'ed
             this.readProfiles(curConn);
 
             this.changed(false);
+            
+            // If there are no profiles, automatically hit the "new" button
+            if (this.document.getElementById("mdSelectProfiles").options.length == 0) {
+				this.callbackNew();
+			}
 
         },
 
@@ -235,7 +244,28 @@ define([	// properly require.config'ed
             this.changed(true);
             return false;
         },
+        
+        callbackAddGraph : function() {
+	
+	  		var serverType = IIDXHelper.getSelectValues(document.getElementById("mdSelectSeiType"))[0];
+            var serverUrl =  this.document.getElementById("mdServerURL").value.trim();
+	
+			var queryClient = new MsiClientQuery(this.queryUrl, new SparqlServerInterface(serverType, serverUrl, "http://any#graph"));
+			queryClient.execQuery("SELECT ?g WHERE { GRAPH ?g { }}", this.callbackAddGraph2.bind(this));
+			return false;
+		},
 
+		callbackAddGraph2 : function(results) {
+			if (!results.isSuccess()) {
+				ModalIidx.alert("Error retrieving graphs", "Server URL and/or type are likely invalid.<hr><b>Message:</b><br>" + results.getStatusMessage());
+				
+			} else {
+				var graphs = results.getColumnStrings(0).sort();
+				var callback = function(item) {document.getElementById("mdGraph").value = item; };
+				ModalIidx.listDialog("Choose graph", "ok", graphs, graphs, 0, callback, undefined, undefined, true);
+			}
+		},
+		
         callbackCopy : function() {
             if (this.conn == null) {
                 this.callbackNew();
@@ -248,14 +278,8 @@ define([	// properly require.config'ed
         },
 
         callbackNew : function() {
-
-            // create a blank profile
-            var conn = new SparqlConnection();
-            conn.setName("-new-");
-            conn.addModelInterface(SparqlConnection.VIRTUOSO_SERVER, "", "");
-            conn.addDataInterface(SparqlConnection.VIRTUOSO_SERVER, "", "");
-            conn.setOwlImportsEnabled(true);
-            this.appendAndSelectProfile(conn);
+			var wiz = new ModalConnWizardDialog(this.conn, this.serverTypeList, this.queryUrl, this.appendAndSelectProfile.bind(this));
+			wiz.launch();
             return false;
         },
 
@@ -436,6 +460,8 @@ define([	// properly require.config'ed
                 document.getElementById("mdSelectSeiType").disabled=false;
                 document.getElementById("mdServerURL").disabled=false;
                 document.getElementById("mdGraph").disabled=false;
+                document.getElementById("mdSeiDelete").disabled=false;
+                document.getElementById("mdButAddGraph").disabled=false;
 
                 var label = document.getElementById("mdSeiInfo");
 
@@ -457,6 +483,8 @@ define([	// properly require.config'ed
                 document.getElementById("mdSelectSeiType").disabled=true;
                 document.getElementById("mdServerURL").disabled=true;
                 document.getElementById("mdGraph").disabled=true;
+                document.getElementById("mdSeiDelete").disabled=true;
+                document.getElementById("mdButAddGraph").disabled=true;
 
                 var label = document.getElementById("mdSeiInfo");
 
