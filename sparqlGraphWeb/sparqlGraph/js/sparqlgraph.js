@@ -198,6 +198,9 @@
                 span.className = "label-warning right";
                 span.innerHTML = "&nbsp" + g.customization.bannerText + "&nbsp";
             }
+            
+            // launch the checkServices dialog if any service pings fail.
+            checkServicesOnce(function(downList) { if (downList.length > 0) { checkServices(); }});
 
 		});
     });
@@ -1695,6 +1698,40 @@
             dialog.launch();
         });
    	};
+
+	// ping all services
+	// send (possibly empty) list of down services to servicesPingCallback(list)
+	var checkServicesOnce = function (servicesPingCallback) {
+        require(['sparqlgraph/js/microserviceinterface',
+                 'sparqlgraph/js/modaliidx'],
+    	         function (MicroServiceInterface, ModalIidx) {
+
+			var urlsDownList = [];
+			var urlsPinged = 0;
+			          
+            var pingCallback = function(url, resultSet_or_html) {
+				urlsPinged += 1;
+                // failure callbacks use a string parameter
+                if (typeof(resultSet_or_html) == "string") {         
+					urlsDownList.push(url);
+                } 
+                
+                if (urlsPinged == Object.keys(g.service).length) {
+					servicesPingCallback(urlsDownList);
+				}
+            };
+          
+            for (var key in g.service) {
+                if (g.service.hasOwnProperty(key)) {
+                    var url = g.service[key].url;
+                    var msi = new MicroServiceInterface(url);
+                    msi.ping(pingCallback.bind(this, url),
+                             pingCallback.bind(this, url),
+                             4000);
+                }
+            }
+        });
+    };
 
 
     var gStopChecking = true;
