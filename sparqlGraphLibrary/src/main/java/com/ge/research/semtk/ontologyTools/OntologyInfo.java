@@ -1325,7 +1325,12 @@ public class OntologyInfo {
 		
 			for (String superPropName : this.getBreadthFirstSuperProps(subPropName)) {
 				OntologyProperty oSuperProp = this.getProperty(superPropName);
-				this.mergeParentRange(oSubProp, oSuperProp);
+				
+				if (oSuperProp == null) {
+					throw new Exception("Can not find property: " + superPropName + " (super prop of: " + subPropName + ") in the ontology");
+				} else {
+					this.mergeParentRange(oSubProp, oSuperProp);
+				}
 			}
 			
 		}
@@ -1824,7 +1829,7 @@ public class OntologyInfo {
 			for (String superClassName : c.getParentNameStrings(false)) {
 				if (!this.classHash.containsKey(superClassName)) {
 					throw new Exception(
-							"Can't find class" + superClassName + " (superclass of " + className + ") in the ontology");
+							"Can't find class: " + superClassName + " (superclass of: " + className + ") in the ontology");
 				}
 			}
 		}
