@@ -200,7 +200,10 @@
             }
             
             // launch the checkServices dialog if any service pings fail.
-            checkServicesOnce(function(downList) { if (downList.length > 0) { checkServices(); }});
+            checkServicesOnce(function(downList) { if (downList.length > 0) { 
+														checkServices("Some services did not respond at start-up. Retrying...<hr>"); 
+												    }
+												 });
 
 		});
     });
@@ -1736,13 +1739,16 @@
 
     var gStopChecking = true;
 
-    var checkServices = function () {
+    var checkServices = function (optMsgHTML) {
         require(['sparqlgraph/js/microserviceinterface',
                  'sparqlgraph/js/modaliidx'],
     	         function (MicroServiceInterface, ModalIidx) {
 
             // build div with all service names and ...
             var div = document.createElement("div");
+            if (optMsgHTML) {
+				div.innerHTML += optMsgHTML;
+			}
             for (var key in g.service) {
                 if (g.service.hasOwnProperty(key)) {
                     div.innerHTML += g.service[key].url + ' is .</br>';
@@ -1750,7 +1756,7 @@
             }
 
             var m = new ModalIidx();
-            m.showOK("Services:  Ping every 5 sec", div,  function(){ gStopChecking = true; });
+            m.showOK("Ping services every 5 sec", div,  function(){ gStopChecking = true; });
 
             // replaces the line with the service url with a result
             var pingCallback = function(div, url, resultSet_or_html) {
