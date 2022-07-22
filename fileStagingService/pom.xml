@@ -15,13 +15,6 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 		
-		<!-- License: Apache 2.0 -->
-		<dependency>
-			<groupId>org.springdoc</groupId>
-     			<artifactId>springdoc-openapi-ui</artifactId>
-     			<version>1.6.9</version>
-		</dependency>
-		
 		<dependency>
 			<groupId>com.ge.research.semtk</groupId>
 			<artifactId>sparqlGraphLibrary</artifactId>

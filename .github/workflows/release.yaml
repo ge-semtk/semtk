@@ -1,65 +1,47 @@
-# Builds SemTK release assets when a release is published:
-#  - Builds SemTK source
-#  - Uploads SemTK dist tarball to GitHub release page
-#  - Uploads SemTK standalone jar to GitHub release page
+# Run when a release is published.
+# Build SemTK with Java and Maven.
+# Upload SemTK dist tarball to GitHub release page
+# Upload SemTK standalone jar to GitHub release page
 
-name: SemTK release build
-
+name: SemTK Release Workflow
 on:
   release:
     types: [ published ]
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        distribution: [ temurin ]
+        java-version: [ 11 ]
+        os: [ ubuntu-20.04 ]
 
     steps:
     - name: Check out SemTK source
       uses: actions/checkout@v3
 
-    - name: Cache local Maven repository
-      uses: actions/cache@v3.0.4
+    - name: Set up Java and Maven
+      uses: actions/setup-java@v3
       with:
-        path: ~/.m2/repository
-        key: maven-${{ hashFiles('**/pom.xml') }}
+        cache: maven
+        distribution: ${{ matrix.distribution }}
+        java-version: ${{ matrix.java-version }}
 
     - name: Build SemTK source
-      run: |
-        mvn -version
-        mvn -B package -DskipTests
-
-# Use 'gh release upload' to avoid https://github.com/actions/upload-release-asset/issues/69
-
-#    - name: Upload SemTK dist tarball
-#      uses: actions/upload-release-asset@v1
-#      env:
-#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#      with:
-#        upload_url: ${{ github.event.release.upload_url }}
-#        asset_path: distribution/target/semtk-opensource-dist.tar.gz
-#        asset_name: semtk-opensource-${{ github.event.release.tag_name }}-dist.tar.gz
-#        asset_content_type: application/gzip
-#
-#    - name: Upload SemTK fat standaloneExecutables jar
-#      uses: actions/upload-release-asset@v1
-#      env:
-#        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-#      with:
-#        upload_url: ${{ github.event.release.upload_url }}
-#        asset_path: standaloneExecutables/target/standaloneExecutables-jar-with-dependencies.jar
-#        asset_name: semtk-opensource-${{ github.event.release.tag_name }}-standaloneExecutables.jar
-#        asset_content_type: application/gzip
+      # Note the tests currently fail in GitHub Actions
+      run: mvn -B package -DskipTests
 
     - name: Upload SemTK dist tarball
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cp distribution/target/semtk-opensource-dist.tar.gz semtk-opensource-${{ github.event.release.tag_name }}-dist.tar.gz
         gh release upload ${{ github.event.release.tag_name }} semtk-opensource-${{ github.event.release.tag_name }}-dist.tar.gz --clobber
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
 
     - name: Upload SemTK fat standaloneExecutables jar
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         cp standaloneExecutables/target/standaloneExecutables-jar-with-dependencies.jar semtk-opensource-${{ github.event.release.tag_name }}-standaloneExecutables.jar
         gh release upload ${{ github.event.release.tag_name }} semtk-opensource-${{ github.event.release.tag_name }}-standaloneExecutables.jar --clobber
+      env:
+        GITHUB_TOKEN: ${{ github.token }}

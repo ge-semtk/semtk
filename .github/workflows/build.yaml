@@ -1,30 +1,47 @@
-# Builds SemTK on every pull request/push (while ignoring tag-only pushes):
+# Run on every pull request or push (except tag-only pushes).
+# Build SemTK with Java and Maven.
+# Cache/restore dependencies to improve execution time.
+# Publish SemTK SNAPSHOT version to GitHub Packages.
+# https://github.com/actions/setup-java/blob/main/docs/advanced-usage.md#apache-maven-with-a-settings-path
 
-name: SemTK continuous build
-
+name: SemTK Integration Workflow
 on:
   pull_request:
-    branches: [ '*' ]
+    types: [ opened, synchronize, reopened ]
   push:
-    branches: [ '*' ]
-    tags-ignore: [ '*' ]
+    branches-ignore: [ 'dependabot/**' ]
+    tags-ignore: [ '**' ]
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    permissions:
+      contents: read
+      packages: write
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        distribution: [ temurin ]
+        java-version: [ 11 ]
+        os: [ ubuntu-20.04 ]
 
     steps:
     - name: Check out SemTK source
       uses: actions/checkout@v3
 
-    - name: Cache local Maven repository
-      uses: actions/cache@v3.0.4
+    - name: Set up Java and Maven
+      uses: actions/setup-java@v3
       with:
-        path: ~/.m2/repository
-        key: maven-${{ hashFiles('**/pom.xml') }}
+        cache: maven
+        distribution: ${{ matrix.distribution }}
+        java-version: ${{ matrix.java-version }}
+        server-id: github
+        settings-path: ${{ github.workspace }}
 
     - name: Build SemTK source
-      # TODO: The tests currently fail in Github Actions
-      run: |
-        mvn -version
-        mvn -B package -DskipTests -pl '!standaloneExecutables,!distribution'
+      # Note the tests currently fail in GitHub Actions
+      run: mvn -B package -DskipTests -pl '!standaloneExecutables,!distribution'
+
+    - name: Publish SemTK SNAPSHOT to GitHub Packages
+      run: mvn -B deploy -pl '!standaloneExecutables,!distribution' -s $GITHUB_WORKSPACE/settings.xml
+      env:
+        GITHUB_TOKEN: ${{ github.token }}

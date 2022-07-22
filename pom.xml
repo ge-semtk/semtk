@@ -42,6 +42,7 @@
   	</scm>
 
 	<distributionManagement>
+                <!-- Maven Central Repository
 		<repository>
 			<id>sonatype</id>
 			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
@@ -49,6 +50,17 @@
 		<snapshotRepository>
 			<id>sonatype</id>
 			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
+		</snapshotRepository>
+                -->
+
+                <!-- GitHub Packages -->
+		<repository>
+			<id>github</id>
+			<url>https://maven.pkg.github.com/ge-semtk/semtk</url>
+		</repository>
+		<snapshotRepository>
+			<id>github</id>
+			<url>https://maven.pkg.github.com/ge-semtk/semtk</url>
 		</snapshotRepository>
 
                 <!-- GE INTERNAL REPOS 
