@@ -42,6 +42,8 @@ jobs:
       run: mvn -B package -DskipTests -pl '!standaloneExecutables,!distribution'
 
     - name: Publish SemTK SNAPSHOT to GitHub Packages
+      # Uncomment after deploy works
+      #if: github.ref == 'refs/heads/master'
       run: mvn -B deploy -pl '!standaloneExecutables,!distribution' -s $GITHUB_WORKSPACE/settings.xml
       env:
         GITHUB_TOKEN: ${{ github.token }}

@@ -27,10 +27,10 @@ echo "=== END MICROSERVICES... ==="
 function multikill {
 	if [ -d /proc ]; then
 		echo windows kill $1...
-		kill -9 `grep -a $1 /proc/*/cmdline | grep -va grep  | cut -f 3 -d \/`
+		kill -9 `grep -i -a $1 /proc/*/cmdline | grep -va grep  | cut -f 3 -d \/`
 	else
-		echo pkill -f $1
-		pkill -f $1
+		echo pkill -i -f $1
+		pkill -i -f $1
 	fi
 }
 

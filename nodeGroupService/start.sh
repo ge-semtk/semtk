@@ -7,4 +7,4 @@ export PORT_NODEGROUP_SERVICE=12059
 echo using port: $PORT_NODEGROUP_SERVICE
 
 
-java -jar ./target/nodeGroupService-*.jar
+java -jar ./target/nodegroupservice-*.jar
