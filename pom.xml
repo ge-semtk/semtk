@@ -44,12 +44,25 @@
 	<distributionManagement>
 		<repository>
 			<id>sonatype</id>
-			<url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+			<url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
 		</repository>
 		<snapshotRepository>
 			<id>sonatype</id>
-			<url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+			<url>https://oss.sonatype.org/content/repositories/snapshots</url>
 		</snapshotRepository>
+
+                <!-- GE INTERNAL REPOS 
+			<repository>
+				<id>semtk</id>
+				<name>build.GE Artifactory-releases</name>
+				<url>https://artifactory.build.ge.com/artifactory/UMKGF</url>
+			</repository>
+			<snapshotRepository>
+				<id>semtk-snapshots</id>
+				<name>build.GE Artifactory-snapshots</name>
+				<url>https://artifactory.build.ge.com/artifactory/UMKGF-SNAPSHOT</url>
+			</snapshotRepository>
+		-->
 
 	</distributionManagement>
 
