@@ -49,7 +49,10 @@ public enum XSDSupportedType {
 	NODE_URI("node_uri", "http://uri#uri"),
 	URI("uri", "http://uri#uri"),
 	ANYURI("anyURI", "http://uri#uri"),
-	CLASS("class", "http://uri#myclass");
+	CLASS("class", "http://uri#myclass"),
+	
+	LIST("list", "http://uri#mylist");  // DANGER: only partially supported 
+	                                    //         because Sadl List is never(?) a class in the model
 	
 	// note: "node_uri" was added for compatibility reasons to the way nodes in a nodegroup spec
 	// when their URI is able to be constrained at runtime.

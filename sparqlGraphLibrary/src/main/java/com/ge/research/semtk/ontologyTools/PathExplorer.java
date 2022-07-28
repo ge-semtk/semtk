@@ -29,6 +29,8 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.NodeItem;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.ValueConstraint;
+import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.sparqlToXLib.SparqlToXLibUtil;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -37,6 +39,17 @@ import com.ge.research.semtk.utility.Utility;
 /**
  * Path and nodegroup builder that checks instance data for path validity
  * @author 200001934
+ *
+ *
+ * Todo:  
+ * 	- add predicate stats so that findAllPaths() can use it
+ *	- decide on approach for finding paths for FDC or equation chaining
+ *		- add to predicate stats?   Also need to incorporate into: this.pathHasInstance()	
+ *		- add a list of crap that this.pathHasInstance can check
+ *		- try with instance data first, then model
+ *		- know we care and go straight to only checking the model
+ *
+ *  - re-understand the path caching
  *
  */
 public class PathExplorer {
@@ -79,7 +92,6 @@ public class PathExplorer {
 	 * Checks cache first
 	 * Splits returns into property or enum (TODO still ignores domainHints)
 	 * Handles special case of one-node nodegroup
-	 * Calls the real buildNgWithData
 	 * 
 	 * @param classInstanceList  - class/instance uri pairs that need to be in ng.  (instances may be null)
 	 * @param returns  - data property or enum classes that need to be returned  (Data property domain must be in classInstanceList) 
@@ -99,6 +111,15 @@ public class PathExplorer {
 		}
 		LocalLogger.logToStdOut("Building new nodegroup");
 		
+		// error-check instances
+		for (PathItemRequest req : requestList) {
+			String uri = req.getInstanceUri();
+			if (uri != null && ! uri.isBlank()) {
+				if (!this.instanceHasClassTriple(uri)) {
+					throw new Exception("Can't find instance of class " + req.getClassUri() + ": " + uri);
+				}
+			}
+		}
 		
 		// handle special simple case: just one class
 		if (requestList.size() == 1) {
@@ -123,7 +144,7 @@ public class PathExplorer {
 		ArrayList<ArrayList<PathItemRequest>> missingTripleHintsLists  = new ArrayList<ArrayList<PathItemRequest>>();
 		
 		int smallest = 9999;
-		final boolean LOG_PATHS = false;
+		final boolean LOG_PATHS = true;
 		for (int i=0; i < requestList.size() - 1; i++) {
 			for (int j=i+1; j < requestList.size(); j++) {
 				PathItemRequest anchorRequest = requestList.get(i);
@@ -157,7 +178,6 @@ public class PathExplorer {
 		// loop through paths with least missing classes first
 		for (int size=smallest; size < requestList.size(); size++) {
 			for (int i = 0; i < pathList.size(); i++) {
-				
 				// loop through paths of length "size"
 				boolean success = true;
 				if (missingClassLists.get(i).size() + missingTripleHintsLists.get(i).size()== size) {
@@ -595,4 +615,15 @@ public class PathExplorer {
 	    return Utility.hashMD5(keyList.toString());
 	}
 
+	/**
+	 * Check if a uri has a triple:  <uri> a ?class
+	 * @param instanceUri
+	 * @return
+	 * @throws Exception
+	 */
+	public boolean instanceHasClassTriple(String instanceUri) throws Exception {
+		String sparql = SparqlToXLibUtil.generateGetInstanceClass(this.conn, this.oInfo, instanceUri);
+		Table targetTab = this.conn.getDefaultQueryInterface().executeQueryToTable(sparql);
+		return (targetTab.getNumRows() > 0);
+	}
 }
