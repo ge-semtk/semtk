@@ -18,6 +18,9 @@
 package com.ge.research.semtk.services.ingestion;
 
 import javax.validation.constraints.NotNull;
+
+import com.ge.research.semtk.springutilib.requests.IngestionFromStringsRequestBody;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 
 /**

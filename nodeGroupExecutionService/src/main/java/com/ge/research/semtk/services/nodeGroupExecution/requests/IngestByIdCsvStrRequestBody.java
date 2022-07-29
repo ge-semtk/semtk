@@ -21,7 +21,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 public class IngestByIdCsvStrRequestBody extends SparqlConnRequestBody {
 
-	private String templateId = "";
+	@Schema(
+			required = true,
+			example = "myNodegroup")
+	private String nodegroupId = "";
+	
+	@Schema(
+			required = true,
+			example = "header1,header2\nval1,val2\nval11,val22\n")
 	private String csvContent = "";
 	
 	@Schema(
@@ -34,12 +41,10 @@ public class IngestByIdCsvStrRequestBody extends SparqlConnRequestBody {
 			example = "$TRACK_KEY  or  http://maries/data")
 	public String overrideBaseURI = null;
 	
-	public String getTemplateId() {
-		return templateId;
+	public String getNodegroupId() {
+		return nodegroupId;
 	}
-	public void setTemplateId(String templateId) {
-		this.templateId = templateId;
-	}
+
 	public String getCsvContent() {
 		return csvContent;
 	}

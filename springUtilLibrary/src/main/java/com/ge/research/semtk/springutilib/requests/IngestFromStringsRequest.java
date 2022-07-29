@@ -16,7 +16,7 @@
  */
 
 
-package com.ge.research.semtk.services.ingestion;
+package com.ge.research.semtk.springutilib.requests;
 
 import javax.validation.constraints.NotNull;
 
@@ -26,7 +26,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 /* contains no template */
 
-public abstract class FromStringsRequestBody {
+public abstract class IngestFromStringsRequest {
 
 	@NotNull
 	@Schema(

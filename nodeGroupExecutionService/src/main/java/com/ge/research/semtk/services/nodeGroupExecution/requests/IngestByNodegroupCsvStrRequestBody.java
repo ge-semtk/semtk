@@ -17,14 +17,24 @@
 
 package com.ge.research.semtk.services.nodeGroupExecution.requests;
 
+import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
 public class IngestByNodegroupCsvStrRequestBody {
 
-	private String template = "";
+	@Schema(
+			required = true,
+			example = "{ semtk-generated nodegroup json string }")
+	private String jsonRenderedNodeGroup = "";
+	@Schema(
+			required = false,
+			example = "{ semtk-generated connection json string }")
 	private String sparqlConnection = "";
+	@Schema(
+			required = true,
+			example = "header1,header2\nval1,val2\nval11,val22\n")
 	private String csvContent = "";
 	
 	@Schema(
@@ -37,13 +47,11 @@ public class IngestByNodegroupCsvStrRequestBody {
 			example = "$TRACK_KEY  or  http://freds/data")
 	public String overrideBaseURI = null;
 	
-	public String getTemplate() {
-		return template;
+	public SparqlGraphJson buildSparqlGraphJson() throws Exception {
+		return new SparqlGraphJson(this.jsonRenderedNodeGroup);
 	}
-	public void setTemplate(String template) {
-		this.template = template;
-	}
-	public SparqlConnection getSparqlConnection() throws Exception {
+
+	public SparqlConnection buildSparqlConnection() throws Exception {
 		return new SparqlConnection(sparqlConnection);
 	}
 	public void setSparqlConnection(String sparqlConnection) {

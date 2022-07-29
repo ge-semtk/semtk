@@ -52,6 +52,7 @@ import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.load.utility.ImportSpecHandler;
+import com.ge.research.semtk.load.utility.IngestionNodegroupBuilder;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
@@ -90,7 +91,10 @@ import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.sparqlX.XSDSupportedType;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
+import com.ge.research.semtk.springutilib.requests.GetClassTemplateRequestBody;
 import com.ge.research.semtk.springutilib.requests.IdRequest;
+import com.ge.research.semtk.springutilib.requests.IngestConstants;
+import com.ge.research.semtk.springutilib.requests.IngestionFromStringsAndClassRequestBody;
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointRequestBody;
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointTrackRequestBody;
 import com.ge.research.semtk.springutilib.requests.TrackQueryRequestBody;
@@ -1223,38 +1227,7 @@ public class NodeGroupExecutionRestController {
 	    }
 
 	}
-	/**
-	 * Perform ingestion using a stored nodegroup ID.
-	 * PEC:  "NewConnection" in name is inconsistent with most other "ById" endpoints.  Others imply it.
-	 */
-	@Operation(
-			summary=	"ingest CSV data given nodegroup id",
-			description=	"deprecated synchronous endpoint"
-			)
-	@CrossOrigin
-	@RequestMapping(value="/ingestFromCsvStringsNewConnection", method=RequestMethod.POST)
-	public JSONObject ingestFromTemplateIdAndCsvStringNewConn(@RequestBody IngestByConnIdCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
-		final String ENDPOINT_NAME="ingestFromCsvStringsNewConnection";
-		HeadersManager.setHeaders(headers);
-		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
-		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "chars", String.valueOf(requestBody.getCsvContent().length()));
-    	try {
-			RecordProcessResults retval = null;
-			try{
-				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
-
-				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
-			}catch(Exception e){
-				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
-				retval = new RecordProcessResults(false);
-				retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStringsNewConnection", e);
-			} 
-			return retval.toJson();
-		    
-		} finally {
-	    	HeadersManager.clearHeaders();
-	    }
-	}
+	
 
 	/**
 	 * Perform ingestion by passing in a nodegroup.
@@ -1265,9 +1238,9 @@ public class NodeGroupExecutionRestController {
 			description=	""
 			)
 	@CrossOrigin
-	@RequestMapping(value="/ingestFromCsvStringsAndTemplateNewConnection", method=RequestMethod.POST)
-	public JSONObject ingestFromTemplateAndCsvString(@RequestBody IngestByNodegroupCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
-		final String ENDPOINT_NAME="ingestFromCsvStringsAndTemplateNewConnection";
+	@RequestMapping(value="/ingestFromCsvStrings", method=RequestMethod.POST)
+	public JSONObject ingestFromCsvStrings(@RequestBody IngestByNodegroupCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="ingestFromCsvStrings";
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "chars", String.valueOf(requestBody.getCsvContent().length()));
@@ -1276,12 +1249,12 @@ public class NodeGroupExecutionRestController {
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
-				SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
-				retval = nodeGroupExecutor.ingestFromTemplateAndCsvString(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
+				SparqlGraphJson sparqlGraphJson = requestBody.buildSparqlGraphJson();
+				retval = nodeGroupExecutor.ingestFromNodegroupAndCsvString(requestBody.buildSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
 				retval = new RecordProcessResults(false);
-				retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStringsAndTemplateNewConnection", e);
+				retval.addRationaleMessage(SERVICE_NAME, "ingestFromCsvStrings", e);
 			} 
 			return retval.toJson();
 		    
@@ -1301,9 +1274,9 @@ public class NodeGroupExecutionRestController {
 					"Failure will have an error table at /getResultsTable. \n"
 			)
 	@CrossOrigin
-	@RequestMapping(value="/ingestFromCsvStringsAndTemplateAsync", method=RequestMethod.POST)
-	public JSONObject ingestFromCsvStringsAndTemplateAsync(@RequestBody IngestByNodegroupCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
-		final String ENDPOINT_NAME="ingestFromCsvStringsAndTemplateAsync";
+	@RequestMapping(value="/ingestFromCsvStringsAsync", method=RequestMethod.POST)
+	public JSONObject ingestFromCsvStringsAsync(@RequestBody IngestByNodegroupCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="ingestFromCsvStringsAsync";
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "chars", String.valueOf(requestBody.getCsvContent().length()));
@@ -1312,8 +1285,8 @@ public class NodeGroupExecutionRestController {
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
-				SparqlGraphJson sparqlGraphJson = new SparqlGraphJson(requestBody.getTemplate());
-				String jobId = nodeGroupExecutor.ingestFromTemplateAndCsvStringAsync(requestBody.getSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
+				SparqlGraphJson sparqlGraphJson = requestBody.buildSparqlGraphJson();
+				String jobId = nodeGroupExecutor.ingestFromNodegroupAndCsvStringAsync(requestBody.buildSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 				retval = new SimpleResultSet(true);
 				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, jobId);
 				JSONArray warnings = nodeGroupExecutor.getWarningsJson();
@@ -1346,13 +1319,13 @@ public class NodeGroupExecutionRestController {
 		final String ENDPOINT_NAME="ingestFromCsvStringsById";
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
-		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getTemplateId(), "chars", String.valueOf(requestBody.getCsvContent().length()));
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodegroupId(), "chars", String.valueOf(requestBody.getCsvContent().length()));
     	try {
 			RecordProcessResults retval = null;
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
-				retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
+				retval = nodeGroupExecutor.ingestFromNodegroupIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getNodegroupId(), requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
 				retval = new RecordProcessResults(false);
@@ -1380,13 +1353,13 @@ public class NodeGroupExecutionRestController {
 		final String ENDPOINT_NAME="ingestFromCsvStringsByIdAsync";
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
-		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getTemplateId(), "chars", String.valueOf(requestBody.getCsvContent().length()));
+		LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME, "nodegroupId", requestBody.getNodegroupId(), "chars", String.valueOf(requestBody.getCsvContent().length()));
     	try {
 			SimpleResultSet retval = null;
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
-				String jobId = nodeGroupExecutor.ingestFromTemplateIdAndCsvStringAsync(requestBody.getSparqlConnection(), requestBody.getTemplateId(), requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
+				String jobId = nodeGroupExecutor.ingestFromNodegroupIdAndCsvStringAsync(requestBody.getSparqlConnection(), requestBody.getNodegroupId(), requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 				retval = new SimpleResultSet(true);
 				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, jobId);
 				JSONArray warnings = nodeGroupExecutor.getWarningsJson();
@@ -1404,6 +1377,72 @@ public class NodeGroupExecutionRestController {
 		} finally {
 	    	HeadersManager.clearHeaders();
 	    }
+	}
+	
+		                      
+	@Operation(
+			summary=	"Ingest a file against the default ingestion template for this class.",
+			description=	IngestConstants.ASYNC_NOTES
+			)
+	@CrossOrigin
+	@RequestMapping(value="/ingestFromCsvStringsByClassTemplateAsync", method= RequestMethod.POST)
+	public JSONObject ingestFromCsvStringsByClassTemplateAsync(@RequestBody IngestionFromStringsAndClassRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="ingestFromCsvStringsByClassTemplateAsync";
+		
+		HeadersManager.setHeaders(headers);
+		try {
+			// pass-through
+			IngestorRestClient iclient = new IngestorRestClient(new IngestorClientConfig(ingest_prop.getProtocol(), ingest_prop.getServer(), ingest_prop.getPort()));
+			String jobId = iclient.execFromCsvUsingClassTemplate(requestBody.getClassURI(), requestBody.getIdRegex(), requestBody.getData(), requestBody.getConnection(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
+			
+			// success: add jobId
+			SimpleResultSet res = new SimpleResultSet(true);
+			res.addJobId(jobId);
+			
+			// add warnings if any
+			ArrayList<String> warnings = iclient.getWarnings();
+			if (warnings != null) {
+				JSONArray wArr = new JSONArray();
+				wArr.addAll(warnings);
+				res.addResult("warnings", wArr);
+			}
+			
+			return res.toJson();
+			
+		}
+		catch (Exception e) {
+			SimpleResultSet err = new SimpleResultSet(false);
+			err.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			LocalLogger.printStackTrace(e);
+			return err.toJson();
+		}
+		
+	}
+	
+	@Operation(
+			summary=	"Get a class' default ingestion template and sample CSV file.",
+			description=	"synchronous.  Returns simpleResult containing 'sgjson' JSON, 'csv' string, and  'csvTypes' string fields."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getClassTemplateAndCsv", method= RequestMethod.POST)
+	public JSONObject getClassTemplateAndCsv(@RequestBody GetClassTemplateRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME="getClassTemplateAndCsv";
+		HeadersManager.setHeaders(headers);
+		
+		try {
+			// pass-through
+			IngestorRestClient iclient = new IngestorRestClient(new IngestorClientConfig(ingest_prop.getProtocol(), ingest_prop.getServer(), ingest_prop.getPort()));
+			return iclient.execGetClassTemplateAndCsv(requestBody.getClassURI(), requestBody.getIdRegex(), requestBody.getConnection());
+			
+		} catch (Exception e) {
+			SimpleResultSet err = new SimpleResultSet(false);
+			err.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			LocalLogger.printStackTrace(e);
+			return err.toJson();
+			
+		} finally {
+			HeadersManager.clearHeaders();
+		}
 	}
 
 	@Operation(

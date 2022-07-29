@@ -85,7 +85,7 @@ public class NodeGroupExecutorTest_IT {
 		assertEquals(123, TestGraph.getNumTriples());	// get count before loading
 		
 		// do the insert (using full nodegroup)
-		RecordProcessResults res = nodeGroupExecutor.ingestFromTemplateAndCsvString(sparqlGraphJson.getSparqlConn(), sparqlGraphJson, DATA); 
+		RecordProcessResults res = nodeGroupExecutor.ingestFromNodegroupAndCsvString(sparqlGraphJson.getSparqlConn(), sparqlGraphJson, DATA); 
 		assertTrue("Ingest failed:" + res.getRationaleAsString(" "), res.getSuccess());
 		assertEquals("Ingest has failures", 0, res.getFailuresEncountered());
 		
@@ -110,7 +110,7 @@ public class NodeGroupExecutorTest_IT {
 		assertEquals(123, TestGraph.getNumTriples());	// get count before loading
 		
 		// do the insert (using nodegroup ID)
-		RecordProcessResults res = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(sparqlGraphJson.getSparqlConn(), ngID, DATA);
+		RecordProcessResults res = nodeGroupExecutor.ingestFromNodegroupIdAndCsvString(sparqlGraphJson.getSparqlConn(), ngID, DATA);
 		
 		assertTrue("Ingest failed", res.getSuccess());
 		assertEquals("Ingest has failures", 0, res.getFailuresEncountered());
@@ -141,7 +141,7 @@ public class NodeGroupExecutorTest_IT {
 		assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
 		
 		// do the insert (using nodegroup ID)
-		RecordProcessResults res = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(NodeGroupExecutor.get_USE_NODEGROUP_CONN(), ngID, DATA);
+		RecordProcessResults res = nodeGroupExecutor.ingestFromNodegroupIdAndCsvString(NodeGroupExecutor.get_USE_NODEGROUP_CONN(), ngID, DATA);
 		assertTrue(res.getSuccess());
 		// check number of triples after insert
 		assertEquals(TestGraph.getNumTriples(),131);	// confirm loaded some triples
@@ -163,7 +163,7 @@ public class NodeGroupExecutorTest_IT {
 		insertNodeGroupToStore(sparqlGraphJson.getJson().toJSONString());
 		
 		// do the insert (using nodegroup ID)
-		RecordProcessResults retval = nodeGroupExecutor.ingestFromTemplateIdAndCsvString(sparqlGraphJson.getSparqlConn(), ngID, data);
+		RecordProcessResults retval = nodeGroupExecutor.ingestFromNodegroupIdAndCsvString(sparqlGraphJson.getSparqlConn(), ngID, data);
 		// check number of triples after insert
 		assertEquals(retval.getFailuresEncountered(), 1);
 		assert(retval.getResultsJSON().containsKey("errorTable"));

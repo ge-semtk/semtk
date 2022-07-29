@@ -52,7 +52,11 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
+import com.ge.research.semtk.springutilib.requests.GetClassTemplateRequestBody;
 import com.ge.research.semtk.springutilib.requests.IdRequest;
+import com.ge.research.semtk.springutilib.requests.IngestConstants;
+import com.ge.research.semtk.springutilib.requests.IngestionFromStringsAndClassRequestBody;
+import com.ge.research.semtk.springutilib.requests.IngestionFromStringsRequestBody;
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointTrackRequestBody;
 import com.ge.research.semtk.springutilib.requests.TrackQueryRequestBody;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
@@ -129,11 +133,6 @@ public class IngestionRestController {
 	
 	static final String SERVICE_NAME = "ingestion";
 	
-	static final String ASYNC_NOTES = "Success returns a jobId.\n" +
-			"* check for that job's status of success with status message" +
-			"* if job's status is failure then fetch a results table with ingestion errors" + 
-			"Failure can return a rationale explaining what prevented the ingestion or precheck from starting.";
-	
 	static LoadTracker tracker = null;
 	static FileSystemConnector trackBucket = null;
 	
@@ -197,7 +196,7 @@ public class IngestionRestController {
 	}
 	@Operation(
 			summary=	"Synchronous load from multipart file, with override connection and no precheck.",
-			description=	ASYNC_NOTES
+			description= IngestConstants.ASYNC_NOTES
 			)
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFileWithNewConnection", method= RequestMethod.POST)
@@ -275,7 +274,7 @@ public class IngestionRestController {
 	
 	@Operation(
 			summary=	"File-based no-override ASYNC endpoint.  With override connection and precheck.",
-			description=	ASYNC_NOTES
+			description= IngestConstants.ASYNC_NOTES
 			)
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvFilePrecheckAsync", method= RequestMethod.POST)
@@ -391,7 +390,7 @@ public class IngestionRestController {
 	
 	@Operation(
 			summary=	"Main ASYNC endpoint.  With override connection and precheck.",
-			description=	ASYNC_NOTES
+			description= IngestConstants.ASYNC_NOTES
 			)
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvWithNewConnectionPrecheckAsync", method= RequestMethod.POST)
@@ -408,7 +407,7 @@ public class IngestionRestController {
 	
 	@Operation(
 			summary=	"Ingest a file against the default ingestion template for this class.",
-			description=	ASYNC_NOTES
+			description= IngestConstants.ASYNC_NOTES
 			)
 	@CrossOrigin
 	@RequestMapping(value="/fromCsvUsingClassTemplate", method= RequestMethod.POST)
@@ -424,6 +423,7 @@ public class IngestionRestController {
 			
 		} catch (Exception e) {
 			HeadersManager.clearHeaders();
+			LocalLogger.printStackTrace(e);
 			return this.buildExceptionReturn(SERVICE_NAME, "fromCsvUsingClassTemplate", e);
 		}
 			
@@ -444,7 +444,7 @@ public class IngestionRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/getClassTemplateAndCsv", method= RequestMethod.POST)
-	public JSONObject getClassTemplateAndCsv(@RequestBody IngestionFromStringsAndClassRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+	public JSONObject getClassTemplateAndCsv(@RequestBody GetClassTemplateRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		
 		try {
@@ -931,7 +931,7 @@ public class IngestionRestController {
 				AsyncLoadTrackThread thread = new AsyncLoadTrackThread(
 						new JobTracker(servicesgraph_prop.buildSei()),
 						jobId, tracker, trackBucket, trackKey, 
-						((MultipartFile)dataFile).getName(), 
+						fromFiles ? ((MultipartFile)dataFile).getName() : "anon.csv", 
 						sgJson.getSparqlConn().getInsertInterface(), 
 						dataFileContent.getBytes());
 				thread.start();

@@ -16,7 +16,7 @@
  */
 
 
-package com.ge.research.semtk.services.ingestion;
+package com.ge.research.semtk.springutilib.requests;
 
 import javax.validation.constraints.NotNull;
 
@@ -25,7 +25,7 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 import io.swagger.v3.oas.annotations.media.Schema;
 
 
-public class IngestionFromStringsAndClassRequestBody extends FromStringsRequestBody {
+public class IngestionFromStringsAndClassRequestBody extends IngestFromStringsRequest {
 	@NotNull
 	@Schema(
 			name = "classURI",

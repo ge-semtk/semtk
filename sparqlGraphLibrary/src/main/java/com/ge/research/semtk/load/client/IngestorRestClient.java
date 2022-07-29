@@ -195,6 +195,66 @@ public class IngestorRestClient extends SharedIngestNgeClient {
 
 		}
 	}
+	
+	/**
+	 * Execute ingestion to jobId
+	 * @param classUri
+	 * @param idRegex - can be null or empty
+	 * @param data
+	 * @param sparqlConnectionOverride
+	 * @param trackFlag
+	 * @param overrideBaseURI
+	 * @return
+	 * @throws ConnectException
+	 * @throws EndpointNotFoundException
+	 * @throws Exception
+	 */
+	public String execFromCsvUsingClassTemplate(String classUri, String idRegex, String data, String sparqlConnection, boolean trackFlag, String overrideBaseURI) throws ConnectException, EndpointNotFoundException, Exception{
+		conf.setServiceEndpoint("ingestion/fromCsvUsingClassTemplate");
+		this.parametersJSON.put("classURI", classUri);
+		if (idRegex != null && ! idRegex.isBlank())
+			this.parametersJSON.put("idRegex", idRegex);
+		this.parametersJSON.put("data", data);
+		this.parametersJSON.put("connection", sparqlConnection);
+		this.parametersJSON.put("trackFlag", trackFlag);
+		this.parametersJSON.put("overrideBaseURI", overrideBaseURI);
+
+		try{
+			return this.executeToJobIdSaveWarnings();
+		} 
+		finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("classURI");
+			this.parametersJSON.remove("connection");
+			this.parametersJSON.remove("idRegex");
+			this.parametersJSON.remove("data");
+			this.parametersJSON.remove("trackFlag");
+			this.parametersJSON.remove("overrideBaseURI");
+		}
+	}
+	
+	
+	public JSONObject execGetClassTemplateAndCsv(String classUri, String idRegex, String sparqlConnection) throws ConnectException, EndpointNotFoundException, Exception{
+		conf.setServiceEndpoint("ingestion/getClassTemplateAndCsv");
+		this.parametersJSON.put("classURI", classUri);
+		if (idRegex != null && ! idRegex.isBlank())
+			this.parametersJSON.put("idRegex", idRegex);
+		this.parametersJSON.put("connection", sparqlConnection);
+		
+
+		try{
+			return this.executeToJson();
+		} 
+		finally {
+			// reset conf and parametersJSON
+			conf.setServiceEndpoint(null);
+			this.parametersJSON.remove("classURI");
+			this.parametersJSON.remove("connection");
+			this.parametersJSON.remove("idRegex");
+		}
+	}
+	
 	/**
 	 * Simpler API with modern naming (not "exec" since it doesn't return a ResultSet)
 	 * Should be the default ingest function

@@ -49,6 +49,7 @@ import java.io.File;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.UUID;
 
 public class NodeGroupExecutionClientTest_IT {
@@ -57,6 +58,9 @@ public class NodeGroupExecutionClientTest_IT {
 		private static NodeGroupStoreRestClient nodeGroupStoreClient = null;
 		private final static String ID = "test" + UUID.randomUUID();
 		private final static String CREATOR = "JUnit NodeGroupExecutorTest_IT";
+		
+		private final static String BATTERY = "http://kdl.ge.com/batterydemo#Battery";
+		private final static String CELL = "http://kdl.ge.com/batterydemo#Cell";
 
 		@BeforeClass
 		public static void setup() throws Exception {
@@ -307,6 +311,47 @@ public class NodeGroupExecutionClientTest_IT {
 				// select back the data post ingest
 				Table tab = nodeGroupExecutionClient.dispatchSelectFromNodeGroup(sgjSelectInsert, null, null, null);
 				assertTrue("Select failed to retrieve ingested data", tab.getNumRows() == 4);
+				
+			} finally {
+				nodeGroupStoreClient.deleteStoredNodeGroupIfExists(ID);
+			}
+		}
+		
+		@Test
+		public void testClassTemplates() throws Exception {	
+			
+			nodeGroupStoreClient.deleteStoredNodeGroupIfExists(ID);
+			SparqlGraphJson sgjSelectInsert = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
+			nodeGroupStoreClient.executeStoreNodeGroup(ID, "sampleBattery_deleteSimple", CREATOR, sgjSelectInsert.toJson());
+				
+			try {
+				TestGraph.clearGraph();
+				TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
+				
+				// ingest cells from template
+				String res = nodeGroupExecutionClient.dispatchIngestFromCsvStringsByClassTemplateSync(CELL, "cellId", "cellId\ncell1a\ncell1b\n", TestGraph.getSparqlConn());
+				ArrayList<String> warnings =  nodeGroupExecutionClient.getWarnings();
+				if (warnings != null && warnings.size() != 0) {
+					assertTrue("Unexpected ingest warnings on CELL: " + warnings, false);
+				}
+				
+				// ingest batteries from template
+				res = nodeGroupExecutionClient.dispatchIngestFromCsvStringsByClassTemplateSync(BATTERY, "name|cellId", "name,cell_cellId,extra\nbattery1,cell1a,extra1\nbattery1,cell1b,extra2\n", TestGraph.getSparqlConn());
+				assertEquals("Missing warnings", 2, nodeGroupExecutionClient.getWarnings().size());
+				
+				// get Battery nodegroup and csvs
+				HashMap<String,String> templateRes= nodeGroupExecutionClient.getClassTemplateAndCsv(BATTERY, "name|cellId", TestGraph.getSparqlConn());
+				String sampleCsv = templateRes.get(NodeGroupExecutionClient.RET_CSV);
+				String csvTypes = templateRes.get(NodeGroupExecutionClient.RET_CSV_TYPES);
+				String sgjsonStr = templateRes.get(NodeGroupExecutionClient.RET_SGJSON);
+				
+				assertTrue("Bad sampleCsv: " + sampleCsv, sampleCsv.contains("birthday") && sampleCsv.contains("name") && sampleCsv.contains("cell_cellId"));
+				assertTrue("Bad csvTypes: " + csvTypes, csvTypes.contains("dateTime") && csvTypes.contains("string"));
+				
+				// execute the retrieved nodegroup
+				SparqlGraphJson sgjson = new SparqlGraphJson(sgjsonStr);
+				Table tab = nodeGroupExecutionClient.dispatchSelectFromNodeGroup(sgjson);
+				assertEquals("Wrong number of rows returned from Select battery template:\n" + tab.toCSVString(5), 2, tab.getNumRows());
 				
 			} finally {
 				nodeGroupStoreClient.deleteStoredNodeGroupIfExists(ID);
