@@ -4277,12 +4277,15 @@ public class NodeGroup {
 	 * current nodegroup by mapping each node in the nodegroup to a common
 	 * leader node for that group.
 	 * 
-	 * @return mapping from node to clique leader
+	 * @return Mapping from node to clique leader
 	 * @throws Exception
 	 */
 	private UnionFind<Node> calcSimpleCliques() throws Exception {
 		UnionFind<Node> result = new UnionFind<>();
 
+		// This builds a partition of the nodes by initially implicitly creating the
+		// finest partition (every node is alone), and this loop fuses partitions as we
+		// witness simple edges between two nodes.
 		for (Node source : nodes) {
 			for (NodeItem ni : source.getNodeItemList()) {
 				if (ni.getConnected()) {
@@ -4309,8 +4312,8 @@ public class NodeGroup {
 	 * The nodes of this graph are clique leaders. The edges of this graph are
 	 * the non-simple edges of the current nodegroup.
 	 * 
-	 * @param cliques Simply connected node cliques
-	 * @return summary of the connections between cliques
+	 * @param cliques Simply-connected node cliques
+	 * @return Summary of the connections between cliques
 	 * @throws Exception
 	 */
 	private SimpleGraph<Node> calcCliqueGraph(UnionFind<Node> cliques) throws Exception
@@ -4324,6 +4327,11 @@ public class NodeGroup {
 			}
 		}
 		
+		// We must inspect all edges of the original graph.  Due to how edges are stored
+		// as items in their source node, we must go through all nodes. However, we are
+		// building a graph where the nodes are the clique leaders, so we must find the
+		// clique leader for the source, the clique leader for the target, and insert an
+		// edge between these leaders as mandated by the original edge. 
 		for (Node source : nodes) {
 			Node sourceLeader = cliques.find(source);
 
@@ -4332,15 +4340,20 @@ public class NodeGroup {
 					
 					int opt = ni.getOptionalMinus(target);
 
-					if (NodeItem.OPTIONAL_REVERSE == opt ||
+					// If it's a special reverse edge, insert backwards
+					if (
+						NodeItem.OPTIONAL_REVERSE == opt ||
                         NodeItem.MINUS_REVERSE == opt ||
-                        this.isReverseUnion(source, ni, target))
-                   	{
+                        this.isReverseUnion(source, ni, target)
+                    ) {
 						Node targetLeader = cliques.find(target);
 						result.addEdge(targetLeader, sourceLeader);
-					} else if (NodeItem.OPTIONAL_FALSE != ni.getOptionalMinus(target) ||
-						null != getUnionKey(source, ni, target))
-					{
+					}
+					// Otherwise, if it's a special direct edge, insert normally
+					else if (
+						NodeItem.OPTIONAL_FALSE != ni.getOptionalMinus(target) ||
+						null != getUnionKey(source, ni, target)
+					) {
 						Node targetLeader = cliques.find(target);
 						result.addEdge(sourceLeader, targetLeader);
 					}
@@ -4351,6 +4364,16 @@ public class NodeGroup {
 		return result;
 	}
 	
+	/**
+	 * Computes the node that should be picked as the head of the next SPARQL
+	 * clause. The candidate should be a node from one of the simple cliques that
+	 * has not been processed yet.
+	 * 
+	 * @param skipNodes Nodes that have already been processed in some previous
+	 *                  sub-clause, to be excluded from being picked here
+	 * @return Selected node
+	 * @throws Exception
+	 */
 	private Node getNextHeadNode(ArrayList<Node> skipNodes) throws Exception  {
 		if (skipNodes.size() == this.nodes.size()) {
 			return null;
@@ -4361,33 +4384,42 @@ public class NodeGroup {
 		SimpleGraph<Node> invertedGraph = graph.invert();
 		HashMap<String,Integer> linkHash = this.calcIncomingLinkHash(skipNodes);
 		
+		// If the graph of non-simple edges between simple cliques is not a forest, then
+		// we don't know how to produce a SPARQL query from it.
 		if (!graph.isForest()) {
 			//throw new NoValidSparqlException("Graph does not reduce to a forest");
 			throw new NoValidSparqlException("Nodegroup contains an ambiguous loop");
 		}
 
+		// Will hold the ID of our current "best" candidate, if any, and the number of
+		// links pointing *to* it. We will favor another candidate if its link count is
+		// lower.  'null' until we find a candidate.
 		String retID = null;
-		int minLinks = 99;
-		
-		// both hashes have same keys: loop through valid snode SparqlID's
+		Integer minLinks = null;
+
 		for (Map.Entry<Node, List<Node>> entry : invertedGraph.entrySet()) {
-			
 			if (!skipNodes.contains(entry.getKey()) &&
 				 skipNodes.containsAll(entry.getValue())) {
 				String id = entry.getKey().getSparqlID();
 
-				// choose node with lowest number of incoming links,
-				// and break tie by comparing ID's, just to get deterministic behavior
-				if (retID == null || 
-						linkHash.get(id) < minLinks ||
-						(linkHash.get(id) == minLinks && retID.compareTo(id) < 0)) {
+				Integer entryLinks = linkHash.get(id);
+				
+				// Choose node with lowest number of incoming links, and break tie by comparing
+				// IDs, just to get deterministic behavior
+				if (
+					retID == null ||
+					minLinks == null || // Note: minLinks cannot be null when retID isn't, but extra safety
+					entryLinks < minLinks ||
+					(entryLinks == minLinks && retID.compareTo(id) < 0)
+				) {
 					retID = id;
-					minLinks = linkHash.get(id);
-					// be efficient
-					if (minLinks == 0) { break; }
+					minLinks = entryLinks;
+					// We won't find something with < 0 links, break if best candidate.
+					if (entryLinks == 0) { break; }
 				}
 			}
 		}
+
 		// throw an error if no nodes have optHash == 0
 		if (retID == null) {
 			throw new Exception("Internal error in NodeGroup.getNextHeadNode(): No head nodes found. Probable cause: no non-optional semantic nodes.");
