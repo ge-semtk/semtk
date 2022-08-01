@@ -18,6 +18,7 @@
 package com.ge.research.semtk.edcquerygen.client.test;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,6 +60,9 @@ public class BinaryFileQueryGenClientTest_IT {
 
 		conf = new QueryGenClientConfig(SERVICE_PROTOCOL,SERVICE_SERVER,SERVICE_PORT,SERVICE_ENDPOINT);
 		client = new BinaryFileQueryGenClient(conf);
+		
+		assumeTrue("No edc query gen service server is configured for JUNIT", ! SERVICE_SERVER.isEmpty());
+
 	}
 
 	@Test

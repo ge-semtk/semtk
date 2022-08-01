@@ -220,6 +220,14 @@ public  class RestClient extends Client implements Runnable {
 		return (JSONObject) this.execute(false);
 	}
 	
+	public boolean testConnectionRefused() {
+		try {
+			this.execute();
+		} catch (Exception e) {
+			return e.getCause().getMessage().toLowerCase().contains("connection refused");
+		}
+		return false;
+	}
 	/**
 	 * Make the service call.  
 	 * Subclasses may override and return a more useful Object.

@@ -23,7 +23,7 @@ public class S3ConnectorTest_IT {
 			LocalLogger.logToStdOut("S3ConnectorTest_IT test with region " + region + ", bucket " + name);
 			s3conn = new S3Connector(region, name);
 		} catch (Exception e) {
-			assumeTrue(e.getMessage(), false);
+			assumeTrue("S3 is not configured: " + e.getMessage(), false);
 			return;
 		}
 				
@@ -33,19 +33,14 @@ public class S3ConnectorTest_IT {
 		byte data[] = origStr.getBytes();
 		
 		// write object to S3
-		try {
-			s3conn.putObject(keyName, data);
-		} catch (Exception e) {
-			assumeFalse(e.getMessage(), e.getMessage().contains("Key Id you provided does not exist"));
-		}
+		s3conn.putObject(keyName, data);
 		
 		// read it back
-	    byte result[] = s3conn.getObject(keyName);
-		
-	    String resStr = new String(result);
-	    assertTrue(
-	    		"returned string did not match: " + resStr, 
-	    		resStr.equals(origStr));
+		byte result[] = s3conn.getObject(keyName);
+		String resStr = new String(result);
+		assertTrue(
+				"returned string did not match: " + resStr, 
+				resStr.equals(origStr));
 	    
 	    // delete it
 		s3conn.deleteObject(keyName);

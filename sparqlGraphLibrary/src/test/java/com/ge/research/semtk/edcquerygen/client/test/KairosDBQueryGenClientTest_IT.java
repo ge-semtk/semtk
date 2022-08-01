@@ -19,6 +19,7 @@ package com.ge.research.semtk.edcquerygen.client.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,6 +54,9 @@ public class KairosDBQueryGenClientTest_IT {
 		SERVICE_PROTOCOL = IntegrationTestUtility.get("protocol");
 		SERVICE_SERVER = IntegrationTestUtility.get("edcquerygenservice.server");
 		SERVICE_PORT = IntegrationTestUtility.getInt("edcquerygenservice.port");
+		
+		assumeTrue("No edc query gen service server is configured for JUNIT", ! SERVICE_SERVER.isEmpty());
+
 	}
 
 	@Test
