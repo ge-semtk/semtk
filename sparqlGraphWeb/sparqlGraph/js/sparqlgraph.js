@@ -666,7 +666,7 @@
             require([ 'sparqlgraph/js/modaliidx',
                              ], function (ModalIidx) {
 
-                       ModalIidx.listDialog("Choose node to connect", "Submit", unlinkedTargetNames, unlinkedUriOrSNodes, 0, buildLink.bind(this, snode, nItem), 75);
+                       ModalIidx.listDialog("Choose node to connect", "Submit", unlinkedTargetNames, unlinkedUriOrSNodes, 0, buildLink.bind(this, snode, nItem), 75, undefined, true);
 
                      });
     	}
