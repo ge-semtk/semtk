@@ -28,6 +28,7 @@ public class IngestByNodegroupCsvStrRequestBody {
 			required = true,
 			example = "{ semtk-generated nodegroup json string }")
 	private String jsonRenderedNodeGroup = "";
+
 	@Schema(
 			required = false,
 			example = "{ semtk-generated connection json string }")
@@ -47,6 +48,13 @@ public class IngestByNodegroupCsvStrRequestBody {
 			example = "$TRACK_KEY  or  http://freds/data")
 	public String overrideBaseURI = null;
 	
+	public String getJsonRenderedNodeGroup() {
+		return jsonRenderedNodeGroup;
+	}
+
+	public void setJsonRenderedNodeGroup(String jsonRenderedNodeGroup) {
+		this.jsonRenderedNodeGroup = jsonRenderedNodeGroup;
+	}
 	public SparqlGraphJson buildSparqlGraphJson() throws Exception {
 		return new SparqlGraphJson(this.jsonRenderedNodeGroup);
 	}
