@@ -1987,7 +1987,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	}
 	
 	public String dispatchIngestFromCsvStringsByClassTemplateSync(String classUri, String idRegex, String csvContentStr, SparqlConnection conn) throws Exception {
-		return this.dispatchIngestFromCsvStringsByClassTemplateSync(classUri, idRegex, csvContentStr, conn, true, null);
+		return this.dispatchIngestFromCsvStringsByClassTemplateSync(classUri, idRegex, csvContentStr, conn, false, null);
 	}
 	
 	public String dispatchIngestFromCsvStringsByClassTemplateSync(String classUri, String idRegex, String csvContentStr) throws Exception {
