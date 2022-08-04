@@ -69,6 +69,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	private static final String JSON_KEY_ID = "id";
 	private static final String JSON_KEY_JOB_ID = "jobID";
 	private static final String JSON_KEY_NODEGROUP_ID = "nodeGroupId";
+	private static final String JSON_KEY_NODEGROUP_ID_PREV = "templateId";  // for compatibility with older versions of SemTK
 	private static final String JSON_KEY_LIMIT_OVERRIDE = "limitOverride";
 	private static final String JSON_KEY_OFFSET_OVERRIDE = "offsetOverride";
 	private static final String JSON_KEY_MAX_WAIT_MSEC = "maxWaitMsec";
@@ -650,6 +651,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchQueryByIdEndpoint);
 		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID_PREV, nodegroupID);
 		this.parametersJSON.put(JSON_KEY_QUERY_TYPE, queryType.toString());
 		this.parametersJSON.put(JSON_KEY_RESULT_TYPE, resultType.toString());
 		this.parametersJSON.put(JSON_KEY_LIMIT_OVERRIDE, limitOverride);
@@ -717,6 +719,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchSelectByIdEndpoint);
 		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID_PREV, nodegroupID);
 		this.parametersJSON.put(JSON_KEY_LIMIT_OVERRIDE, limitOverride);
 		this.parametersJSON.put(JSON_KEY_OFFSET_OVERRIDE, offsetOverride);
 
@@ -770,6 +773,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchSelectByIdSyncEndpoint);
 		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID_PREV, nodegroupID);
 		this.parametersJSON.put(JSON_KEY_LIMIT_OVERRIDE, limitOverride);
 		this.parametersJSON.put(JSON_KEY_OFFSET_OVERRIDE, offsetOverride);
 
@@ -821,6 +825,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchConstructByIdEndpoint);
 		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID_PREV, nodegroupID);
 		this.parametersJSON.put(JSON_KEY_LIMIT_OVERRIDE, limitOverride);
 		this.parametersJSON.put(JSON_KEY_OFFSET_OVERRIDE, offsetOverride);
 
@@ -942,6 +947,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchCountByIdEndpoint);
 		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID_PREV, nodegroupID);
 		this.parametersJSON.put(JSON_KEY_LIMIT_OVERRIDE, limitOverride);
 		this.parametersJSON.put(JSON_KEY_OFFSET_OVERRIDE, offsetOverride);
 
@@ -1059,6 +1065,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 			
 			conf.setServiceEndpoint(mappingPrefix + dispatchFilterByIdEndpoint);
 			this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
+			this.parametersJSON.put(JSON_KEY_NODEGROUP_ID_PREV, nodegroupID);
 			this.parametersJSON.put(JSON_KEY_LIMIT_OVERRIDE, limitOverride);
 			this.parametersJSON.put(JSON_KEY_OFFSET_OVERRIDE, offsetOverride);
 
@@ -1128,6 +1135,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 			
 			conf.setServiceEndpoint(mappingPrefix + dispatchDeleteByIdEndpoint);
 			this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
+			this.parametersJSON.put(JSON_KEY_NODEGROUP_ID_PREV, nodegroupID);
 			this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, overrideConn.toJson().toJSONString());
 			this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
 			this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
@@ -1553,6 +1561,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		
 		conf.setServiceEndpoint(mappingPrefix + getRuntimeConstraintsByNodeGroupID);
 		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID_PREV, nodegroupID);
 		
 		try{
 			retval.readJson((JSONObject) this.execute() );
@@ -1652,6 +1661,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchByIdEndpoint);
 		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID_PREV, nodegroupID);
 		this.parametersJSON.put(JSON_KEY_LIMIT_OVERRIDE, limitOverride);
 		this.parametersJSON.put(JSON_KEY_OFFSET_OVERRIDE, offsetOverride);
 
@@ -1756,7 +1766,8 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		RecordProcessResults retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStringsByIdEndpoint);
-		this.parametersJSON.put("nodegroupId", nodegroupId);
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupId);
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID_PREV, nodegroupId);
 		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, overrideConn.toJson().toJSONString());
 		this.parametersJSON.put("csvContent", csvContentStr);
 	
@@ -1874,6 +1885,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		
 		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStringsByIdAsyncEndpoint);
 		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupId);
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID_PREV, nodegroupId);
 		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, overrideConn.toJson().toJSONString());
 		this.parametersJSON.put("csvContent", csvContentStr);
 	
@@ -1901,6 +1913,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		
 		conf.setServiceEndpoint(mappingPrefix + ingestFromCsvStringsByIdAsyncEndpoint);
 		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupId);
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID_PREV, nodegroupId);
 		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, overrideConn.toJson().toJSONString());
 		this.parametersJSON.put("csvContent", csvContentStr);
 		this.parametersJSON.put("trackFlag", trackFlag);
