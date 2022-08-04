@@ -70,6 +70,11 @@ define([	// properly require.config'ed   bootstrap-modal
 				this.msi.postToEndpoint("queryAuth", myData, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
 
+			execSelectGraphNames : function (successCallback) {
+				var myData = JSON.stringify(this.data);
+				this.msi.postToEndpoint("selectGraphNames", myData, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+			},
+			
 			execDropGraph : function (successCallback) {
 				var myData = JSON.stringify(this.data);
 				this.msi.postToEndpoint("dropGraph", myData, "application/json", successCallback, this.optFailureCallback, this.optTimeout);

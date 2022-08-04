@@ -567,6 +567,48 @@ public class Table {
 	}
 	
 	/**
+	 * Add a row of data to the bottom
+	 * @param newRow
+	 * @throws Exception
+	 */
+	public void addRow(int index, ArrayList<String> newRow) throws Exception{
+		if(newRow.size() != this.columnNames.length){
+			// panic
+			throw new Exception("Incoming row has " + newRow.size() + " columns but " + this.columnNames.length + " were expected.");
+		}
+		this.rows.add(index, newRow);
+	}
+	
+	/** 
+	 * Add a row of data to the bottom
+	 * @param newRow
+	 * @throws Exception
+	 */
+	public void addRow(int index, String [] newRow)  throws Exception {
+		this.addRow(index, new ArrayList<String>(Arrays.asList(newRow)));
+	}
+	
+	/**
+	 * Add a new row of data to the bottom
+	 * @param newRow
+	 * @throws Exception
+	 */
+	public void addRow(int index, Object [] newRow) throws Exception {
+		ArrayList<String> row = new ArrayList<String>();
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+		
+		for (int i=0; i < newRow.length; i++) {
+			
+			if (newRow[i] instanceof Date) {
+				row.add(formatter.format(newRow[i]));
+			} else {
+				row.add(newRow[i].toString());
+			}
+		}
+		this.addRow(index, row);
+	}
+	
+	/**
 	 * Get the index for a given column name, or -1 if does not exist
 	 * @param colName
 	 * @return

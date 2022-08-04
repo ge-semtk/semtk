@@ -250,8 +250,13 @@ define([	// properly require.config'ed
 	  		var serverType = IIDXHelper.getSelectValues(document.getElementById("mdSelectSeiType"))[0];
             var serverUrl =  this.document.getElementById("mdServerURL").value.trim();
 	
-			var queryClient = new MsiClientQuery(this.queryUrl, new SparqlServerInterface(serverType, serverUrl, "http://any#graph"));
-			queryClient.execQuery("SELECT ?g WHERE { GRAPH ?g { }}", this.callbackAddGraph2.bind(this));
+			var failureCallback = function(msg) { ModalIidx.alert("Error querying triplestore", "Error occured querying triplestore for graph names:<br>" + msg);};
+			var queryClient = new MsiClientQuery(
+									this.queryUrl, 
+									new SparqlServerInterface(serverType, serverUrl, "http://any#graph"),
+									failureCallback,
+									10000);
+			queryClient.execSelectGraphNames(this.callbackAddGraph2.bind(this));
 			return false;
 		},
 
@@ -260,7 +265,7 @@ define([	// properly require.config'ed
 				ModalIidx.alert("Error retrieving graphs", "Server URL and/or type are likely invalid.<hr><b>Message:</b><br>" + results.getStatusMessage());
 				
 			} else {
-				var graphs = results.getColumnStrings(0).sort();
+				var graphs = results.getColumnStrings(0);
 				var callback = function(item) {document.getElementById("mdGraph").value = item; };
 				ModalIidx.listDialog("Choose graph", "ok", graphs, graphs, 0, callback, undefined, undefined, true);
 			}

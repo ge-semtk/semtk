@@ -25,7 +25,7 @@ public class IngestByIdCsvStrRequestBody extends SparqlConnRequestBody {
 			required = true,
 			example = "myNodegroup")
 	private String nodegroupId = "";
-	
+
 	@Schema(
 			required = true,
 			example = "header1,header2\nval1,val2\nval11,val22\n")
@@ -40,6 +40,10 @@ public class IngestByIdCsvStrRequestBody extends SparqlConnRequestBody {
 			required = false,
 			example = "$TRACK_KEY  or  http://maries/data")
 	public String overrideBaseURI = null;
+	
+	public void setNodegroupId(String nodegroupId) {
+		this.nodegroupId = nodegroupId;
+	}
 	
 	public String getNodegroupId() {
 		return nodegroupId;

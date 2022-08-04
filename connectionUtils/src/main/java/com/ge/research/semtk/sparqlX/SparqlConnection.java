@@ -355,6 +355,13 @@ public class SparqlConnection {
 		return this.dataInterfaces;
 	}
 	
+	public ArrayList<SparqlEndpointInterface> getAllInterfaces() {
+		ArrayList<SparqlEndpointInterface> ret = new ArrayList<SparqlEndpointInterface>();
+		ret.addAll(this.modelInterfaces);
+		ret.addAll(this.dataInterfaces);
+		return ret;
+	}
+	
 	public SparqlEndpointInterface getDefaultQueryInterface() throws Exception {
 		if (this.dataInterfaces.size() > 0) {
 			return this.dataInterfaces.get(0);

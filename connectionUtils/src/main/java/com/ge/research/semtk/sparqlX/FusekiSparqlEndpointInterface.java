@@ -61,7 +61,7 @@ import com.ge.research.semtk.utility.Utility;
 public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 
 	protected static final String CONTENTTYPE_X_JSON_LD = "application/ld+json";
-	
+
 	public FusekiSparqlEndpointInterface(String server, String graph)	throws Exception {
 		super(server, graph);
 		if (this.endpoint == null) {
@@ -78,6 +78,7 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 
 	public int getInsertQueryMaxSize()    { return 50000; }
 	public int getInsertQueryOptimalSize() { return 5000; }
+	public String getLocalDefaultGraphName() { return  "urn:x-arq:DefaultGraph"; }
 	
 	/* Timeout is not implemented.  Should be "timeout" REST param */
 	public String getTimeoutSparqlPrefix() { return null; }    

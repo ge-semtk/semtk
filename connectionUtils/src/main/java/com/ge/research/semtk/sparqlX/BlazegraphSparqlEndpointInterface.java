@@ -75,6 +75,7 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 
 	public int getInsertQueryMaxSize()    { return 50000; }
 	public int getInsertQueryOptimalSize() { return 5000; }
+	public String getLocalDefaultGraphName() { return null; }   // look this up and add correct value
 	
 	/* Timeout is not implemented.  Should be "timeout" REST param */
 	public String getTimeoutSparqlPrefix() { return null; }    

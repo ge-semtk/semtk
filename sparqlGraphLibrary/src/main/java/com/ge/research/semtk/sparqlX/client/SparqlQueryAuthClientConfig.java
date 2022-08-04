@@ -16,8 +16,9 @@
  */
 
 
-package com.ge.research.semtk.sparqlX.client; 
+package com.ge.research.semtk.sparqlX.client;
 
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 /**
  * Configuration for SparqlQueryClient auth query
@@ -59,6 +60,11 @@ public class SparqlQueryAuthClientConfig extends SparqlQueryClientConfig {
 	
 	public String getSparqlServerPassword(){
 		return sparqlServerPassword;
+	}
+	
+	@Override
+	public SparqlEndpointInterface buildSei() throws Exception {
+		return SparqlEndpointInterface.getInstance(this.getSparqlServerType(), this.getServiceURL(), this.getGraph(), this.getSparqlServerUser(), this.getSparqlServerPassword());
 	}
 	
 	@Override

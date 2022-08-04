@@ -417,5 +417,8 @@ public class SparqlToXUtils {
 		}
 	}
 
-	
+	public static String generateSelectGraphNames() {
+		return "SELECT ?g WHERE { GRAPH ?g { }} ORDER BY ?g";
+	}
+
 }

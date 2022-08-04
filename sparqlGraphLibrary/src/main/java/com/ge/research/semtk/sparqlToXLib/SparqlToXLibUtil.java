@@ -42,10 +42,40 @@ public class SparqlToXLibUtil {
 	 * Generates clauses if this.conn has
 	 *     - exactly 1 serverURL
 	 */		
+	
+	/**
+	 * FROM or USING clause logic
+	 * Generates clauses if this.conn has
+	 *     - exactly 1 serverURL
+	 * 
+	 * @param tab
+	 * @param fromOrUsing
+	 * @param conn
+	 * @param oInfo - may be null if owlImports is false
+	 * @return
+	 * @throws Exception
+	 */
 	public static String generateSparqlFromOrUsing(String tab, String fromOrUsing, SparqlConnection conn, OntologyInfo oInfo) throws Exception {
 		
 		// do nothing if no conn
 		if (conn == null) return "";
+		
+		// check if entire connection is the default graph on one server
+		if (conn.isSingleServerURL()) {
+			boolean onlyDefault = true;
+		
+			for (SparqlEndpointInterface sei : conn.getAllInterfaces()) {
+				if (! sei.isDefaultGraph()) {
+					onlyDefault = false;
+					break;
+				}
+			}
+			if (onlyDefault) {
+				return "";   // no FROM or USING if everything points to default graph
+			}
+		}
+		
+		
 		if (conn.isOwlImportsEnabled() && oInfo == null) {
 			throw new Exception("Internal error: Can't generate SPARQL for owlImport-enabled connection and no OntologyInfo.  Validate or inflate nodegroup first.");
 		}

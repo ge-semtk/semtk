@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -46,12 +47,15 @@ import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.sparql.requests.SparqlAuthRequestBody;
 import com.ge.research.semtk.services.sparql.requests.SparqlParallelQueryRequestBody;
 import com.ge.research.semtk.services.sparql.requests.SparqlPrefixAuthRequestBody;
 import com.ge.research.semtk.services.sparql.requests.SparqlPrefixesAuthRequestBody;
 import com.ge.research.semtk.services.sparql.requests.SparqlQueryAuthRequestBody;
 import com.ge.research.semtk.services.sparql.requests.SparqlQueryRequestBody;
+import com.ge.research.semtk.services.sparql.requests.SparqlRequestBody;
 import com.ge.research.semtk.sparqlX.NeptuneSparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -175,6 +179,48 @@ public class SparqlQueryServiceRestController {
 		
 	}		
 	
+	
+	@CrossOrigin
+	@RequestMapping(value="/selectGraphNames", method= RequestMethod.POST)
+	public JSONObject selectGraphNames(@RequestBody SparqlRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);	
+		final String ENDPOINT_NAME = "/selectGraphNames";
+		GeneralResultSet resultSet = null;
+		SparqlEndpointInterface sei = null;
+		LocalLogger.logToStdOut("Sparql Query Service start query");
+		long startTime = System.nanoTime();
+
+		try{
+		
+			requestBody.printInfo(); 	// print info to console			
+			requestBody.validate(); 	// check inputs 	
+			String query = SparqlToXUtils.generateSelectGraphNames();
+			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph());
+			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+			
+			// add default graph name
+			Table tab = ((TableResultSet) resultSet).getResults();
+			tab.addRow(0, new String [] {sei.getDefaultGraphName()});
+			((TableResultSet) resultSet).addResults(tab);
+			
+			
+		} catch (Exception e) {			
+			LocalLogger.printStackTrace(e);	
+			resultSet = new SimpleResultSet();
+			resultSet.setSuccess(false);
+			resultSet.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+		}  finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		}
+		
+		// print elapsed time
+		long endTime = System.nanoTime();
+		double elapsed = ((endTime - startTime) / 1000000000.0);
+		LocalLogger.logToStdOut(String.format("Query time: %.2f sec", elapsed));
+			
+		return resultSet.toJson();
+		
+	}		
 	
 	/**
 	 * Execute auth query 

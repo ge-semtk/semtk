@@ -55,7 +55,8 @@ public class VirtuosoSparqlEndpointInterface extends SparqlEndpointInterface {
 	
 	public int getInsertQueryMaxSize()    { return 100000; }
 	public int getInsertQueryOptimalSize()  { return 3000; }
-	
+	public String getLocalDefaultGraphName() { return null; }
+
 	/* Timeout is not implemented.  */
 	public String getTimeoutSparqlPrefix() { return null; }    
 	public String getTimeoutSparqlClause() { return null; } 

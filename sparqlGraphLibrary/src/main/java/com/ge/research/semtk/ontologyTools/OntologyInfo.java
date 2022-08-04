@@ -1065,9 +1065,9 @@ public class OntologyInfo {
 	 * returns the sparql for getting the sub and super-class relationships for
 	 * known classes.
 	 **/
-	private static String getOwlImportsQuery(String graphName) {
+	private static String getOwlImportsQuery(SparqlConnection conn) {
 
-		String retval = "select distinct ?importee from <" + graphName + "> where { " + "<" + graphName
+		String retval = "select distinct ?importee from <" + conn.getModelInterface(0).getGraph() + "> where { " + "<" + conn.getModelInterface(0).getGraph()
 				+ "> <http://www.w3.org/2002/07/owl#imports> ?importee. }";
 
 		return retval;
@@ -1153,7 +1153,7 @@ public class OntologyInfo {
 	 * returns the sparql for getting the sub and super-class relationships for
 	 * known classes.
 	 **/
-	private static String getSuperSubClassQuery(String graphName, String domain) {
+	private static String getSuperSubClassQuery(SparqlConnection conn, String domain) throws Exception {
 		// returns a very basic query
 		// domain : something like "caterham.ge.com"
 
@@ -1161,15 +1161,16 @@ public class OntologyInfo {
 		// one evolves.
 		String retval = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
 				+ "PREFIX owl: <http://www.w3.org/2002/07/owl#> " + "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> "
-				+ "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " + "select distinct ?x ?y from <" + graphName
-				+ "> where { " + "?x rdfs:subClassOf ?y " + genDomainFilterStatement("x", domain)
+				+ "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " + "select distinct ?x ?y " 
+				+ SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", conn, null)
+ 				+ " where { " + "?x rdfs:subClassOf ?y " + genDomainFilterStatement("x", domain)
 				+ genDomainFilterStatement("y", domain) + " filter (?x != ?y). } order by ?x";
 
 		return retval;
 	}
 
 	/**
-	 * Query will return ?dataType ?equivType ?r_pred ?r_obj where ?dataType is a
+	 * Query will return ?dataType ?equivType ?r_pred ?r_obj where ?dataType is 
 	 * datatype URI ?equivType is the equivalent data type ?r_pred is a restriction
 	 * ?r_obj is the restriction obj Returns could have multiple ?equivType,
 	 * ?r_pred, ?r_obj for each datatype
@@ -1178,12 +1179,14 @@ public class OntologyInfo {
 	 * @param domain
 	 * @return
 	 */
-	private static String getDatatypeQuery(String graphName, String domain) {
+	private static String getDatatypeQuery(SparqlConnection conn, String domain) throws Exception {
 
 		String retval = "PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n"
 				+ "PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> \n"
 				+ "PREFIX owl:<http://www.w3.org/2002/07/owl#> \n"
-				+ "SELECT DISTINCT ?dataType ?equivType ?r_pred ?r_obj \n" + "		FROM <" + graphName + "> WHERE { \n"
+				+ "SELECT DISTINCT ?dataType ?equivType ?r_pred ?r_obj \n" + "		" 
+				+ SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", conn, null) 
+				+ " WHERE { \n"
 				+ "	?dataType rdf:type rdfs:Datatype . \n" + genDomainFilterStatement("dataType", domain) + "\n"
 				+ "   ?dataType owl:equivalentClass* ?e . \n" +
 				// SADL makes datatypes either owl:onDatatype or a union of objects w/o the
@@ -1247,12 +1250,13 @@ public class OntologyInfo {
 	 * returns the sparql for getting the sub and super-property relationships for
 	 * known classes.
 	 **/
-	private static String getSuperSubPropertyQuery(String graphName, String domain) {
+	private static String getSuperSubPropertyQuery(SparqlConnection conn, String domain) throws Exception {
 
 		String retval = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
 				+ "PREFIX owl: <http://www.w3.org/2002/07/owl#> " + "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> "
-				+ "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " + "select distinct ?subProp ?superProp from <"
-				+ graphName + "> where { " + "?subProp rdfs:subPropertyOf ?superProp "
+				+ "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " + "select distinct ?subProp ?superProp "
+				+ SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", conn, null) 
+				+ " where { " + "?subProp rdfs:subPropertyOf ?superProp "
 				+ genDomainFilterStatement("subProp", domain) + genDomainFilterStatement("superProp", domain)
 				+ " filter (?subProp != ?superProp). } order by ?subProp";
 
@@ -1403,13 +1407,15 @@ public class OntologyInfo {
 	/**
 	 * returns the sparql query used to get all top-level classes of interest. these
 	 * classes do not have meaningful super-classes.
+	 * @throws Exception 
 	 **/
-	private static String getTopLevelClassQuery(String graphName, String domain) {
+	private static String getTopLevelClassQuery(SparqlConnection conn, String domain) throws Exception {
 		// domain : something like "caterham.ge.com"
 		String retval = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
 				+ "PREFIX owl: <http://www.w3.org/2002/07/owl#> " + "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> "
-				+ "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " + "select distinct ?Class from <" + graphName
-				+ "> { " + "?Class rdf:type owl:Class " + genDomainFilterStatement("Class", domain) + ". " + "MINUS "
+				+ "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> " + "select distinct ?Class " 
+				+ SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", conn, null)
+				+ " { " + "?Class rdf:type owl:Class " + genDomainFilterStatement("Class", domain) + ". " + "MINUS "
 				+ "{?Class rdfs:subClassOf ?Sup " + genDomainFilterStatement("Sup", domain)
 				+ "   filter (?Class != ?Sup).} }";
 
@@ -1434,9 +1440,12 @@ public class OntologyInfo {
 	/**
 	 * returns the sparql query to get all of the enumerated values found in the
 	 * model.
+	 * @throws Exception 
 	 **/
-	private static String getEnumQuery(String graphName, String domain) {
-		String retval = "select ?Class ?EnumVal from <" + graphName + "> where { "
+	private static String getEnumQuery(SparqlConnection conn, String domain) throws Exception {
+		String retval = "select ?Class ?EnumVal " 
+				+ SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", conn, null) 
+				+ " where { "
 				+ "  ?Class <http://www.w3.org/2002/07/owl#equivalentClass> ?ec "
 				+ genDomainFilterStatement("Class", domain) + ". " + "  ?ec <http://www.w3.org/2002/07/owl#oneOf> ?c . "
 				+ "  ?c <http://www.w3.org/1999/02/22-rdf-syntax-ns#rest>*/<http://www.w3.org/1999/02/22-rdf-syntax-ns#first> ?EnumVal. "
@@ -1466,7 +1475,7 @@ public class OntologyInfo {
 
 	}
 
-	private static String getAnnotationLabelsQuery(String graphName, String domain) {
+	private static String getAnnotationLabelsQuery(SparqlConnection conn, String domain) throws Exception {
 		// This query will be sub-optimal if there are multiple labels and comments for
 		// many elements
 		// because every combination will be returned
@@ -1475,8 +1484,9 @@ public class OntologyInfo {
 		// It is more efficient to get them in a single query with each element URI only
 		// transmitted once.
 		String retval = "prefix owl:<http://www.w3.org/2002/07/owl#>\n"
-				+ "prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" + "\n" + "select distinct ?Elem ?Label from <"
-				+ graphName + "> where {\n" + " ?Elem a ?p " + genDomainFilterStatement("Elem", domain) + ".\r\n"
+				+ "prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" + "\n" + "select distinct ?Elem ?Label "
+				+ SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", conn, null) 
+				+ " where {\n" + " ?Elem a ?p " + genDomainFilterStatement("Elem", domain) + ".\r\n"
 				+ " VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}.\n"
 				+ "    optional { ?Elem rdfs:label ?Label. }\n" + "}";
 		return retval;
@@ -1498,7 +1508,7 @@ public class OntologyInfo {
 		}
 	}
 
-	private static String getAnnotationCommentsQuery(String graphName, String domain) {
+	private static String getAnnotationCommentsQuery(SparqlConnection conn, String domain) throws Exception {
 		// This query will be sub-optimal if there are multiple labels and comments for
 		// many elements
 		// because every combination will be returned
@@ -1508,7 +1518,9 @@ public class OntologyInfo {
 		// transmitted once.
 		String retval = "prefix owl:<http://www.w3.org/2002/07/owl#>\n"
 				+ "prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#>\n" + "\n"
-				+ "select distinct ?Elem ?Comment from <" + graphName + "> where { \n" + " ?Elem a ?p "
+				+ "select distinct ?Elem ?Comment " 
+				+ SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", conn, null) 
+				+ " where { \n" + " ?Elem a ?p "
 				+ genDomainFilterStatement("Elem", domain) + ". \n"
 				+ " VALUES ?p {owl:Class owl:DatatypeProperty owl:ObjectProperty}. \n"
 				+ "    optional { ?Elem rdfs:comment ?Comment. }\n" + "}";
@@ -1535,15 +1547,16 @@ public class OntologyInfo {
 	 * Query to get all Properties and their range / domain 
 	 *                    via rdfs:range   and rdfs:domain, 
 	 *    or via restrictions rdfs:onClass and rdfs:subClassOf
+	 * @throws Exception 
 	 */
-	private static String getLoadPropertiesQuery(String graphName, String domain) {
+	private static String getLoadPropertiesQuery(SparqlConnection conn, String domain) throws Exception {
 		String retVal = ""
 				+ "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n"
 				+ "PREFIX owl: <http://www.w3.org/2002/07/owl#> \n"
 				+ "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> \n"
 				+ "\n"
-				+ "select distinct ?Property ?Domain ?Range\n"
-				+ "		FROM <" + graphName + ">\n"
+				+ "select distinct ?Property ?Domain ?Range\n" 
+				+ SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", conn, null)
 				+ "		WHERE {  \n"
 				+ "	{\n"
 				+ "        #### Outer UNION: domain and range \n"
@@ -1644,14 +1657,16 @@ public class OntologyInfo {
 	 * Note it returns ?Class and no ?Domain
 	 * It lasted many years (Hail Ravi!) but struggles with missing domain or range
 	 * Ravi launched SemTK with this craziness.
+	 * @throws Exception 
 	 */
-	private static String getLoadPropertiesQuery_a_la_Ravi_Palla(String graphName, String domain) {
+	private static String getLoadPropertiesQuery_a_la_Ravi_Palla(SparqlConnection conn, String domain) throws Exception {
 
 		String retval = "PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
 				+ "PREFIX owl: <http://www.w3.org/2002/07/owl#> " + "PREFIX xsd: <http://www.w3.org/2001/XMLSchema#> "
 				+ "PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#> "
-				+ "PREFIX  list: <http://jena.hpl.hp.com/ARQ/list#> " + "select distinct ?Class ?Property ?Range from <"
-				+ graphName + "> where { " 
+				+ "PREFIX  list: <http://jena.hpl.hp.com/ARQ/list#> " + "select distinct ?Class ?Property ?Range "
+				+ SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", conn, null) 
+				+ " where { " 
 				+ "{" + "?Property rdfs:range ?Range "
 				+ genDomainFilterStatement("Range", domain, "|| regex(str(?Range),'XML')") + ". \n"
 				+ "OPTIONAL { ?Property rdfs:domain ?Class " + genDomainFilterStatement("Class", domain) + ". }\n"
@@ -2606,36 +2621,38 @@ public class OntologyInfo {
 	 */
 	public void load(SparqlEndpointInterface endpoint, String domain, boolean owlImportFlag) throws Exception {
 		Table tab;
+		SparqlConnection conn = new SparqlConnection("OntologyInfo.java:load()", endpoint);
+
 		// find, then recursively load owl imports
 		if (owlImportFlag) {
-			tab = endpoint.executeQueryToTable(OntologyInfo.getOwlImportsQuery(endpoint.getGraph()));
+			tab = endpoint.executeQueryToTable(OntologyInfo.getOwlImportsQuery(conn));
 			this.loadOwlImports(endpoint, tab.getColumn("importee"));
 		}
-
+		
 		// execute each sub-query in order
-		tab = endpoint.executeQueryToTable(OntologyInfo.getSuperSubClassQuery(endpoint.getGraph(), domain));
+		tab = endpoint.executeQueryToTable(OntologyInfo.getSuperSubClassQuery(conn, domain));
 		this.loadSuperSubClasses(tab.getColumn("x"), tab.getColumn("y"));
 
-		tab = endpoint.executeQueryToTable(OntologyInfo.getTopLevelClassQuery(endpoint.getGraph(), domain));
+		tab = endpoint.executeQueryToTable(OntologyInfo.getTopLevelClassQuery(conn, domain));
 		this.loadTopLevelClasses(tab.getColumn("Class"));
 
-		tab = endpoint.executeQueryToTable(OntologyInfo.getDatatypeQuery(endpoint.getGraph(), domain));
+		tab = endpoint.executeQueryToTable(OntologyInfo.getDatatypeQuery(conn, domain));
 		this.loadDatatypes(tab.getColumn("dataType"), tab.getColumn("equivType"), tab.getColumn("?r_pred"),
 				tab.getColumn("?r_obj"));
 
-		tab = endpoint.executeQueryToTable(OntologyInfo.getLoadPropertiesQuery(endpoint.getGraph(), domain));
+		tab = endpoint.executeQueryToTable(OntologyInfo.getLoadPropertiesQuery(conn, domain));
 		this.loadProperties(tab.getColumn("Domain"), tab.getColumn("Property"), tab.getColumn("Range"));
 
-		tab = endpoint.executeQueryToTable(OntologyInfo.getSuperSubPropertyQuery(endpoint.getGraph(), domain));
+		tab = endpoint.executeQueryToTable(OntologyInfo.getSuperSubPropertyQuery(conn, domain));
 		this.loadSuperSubProperties(tab.getColumn("subProp"), tab.getColumn("superProp"));
 
-		tab = endpoint.executeQueryToTable(OntologyInfo.getEnumQuery(endpoint.getGraph(), domain));
+		tab = endpoint.executeQueryToTable(OntologyInfo.getEnumQuery(conn, domain));
 		this.loadEnums(tab.getColumn("Class"), tab.getColumn("EnumVal"));
 
-		tab = endpoint.executeQueryToTable(OntologyInfo.getAnnotationLabelsQuery(endpoint.getGraph(), domain));
+		tab = endpoint.executeQueryToTable(OntologyInfo.getAnnotationLabelsQuery(conn, domain));
 		this.loadAnnotationLabels(tab.getColumn("Elem"), tab.getColumn("Label"));
 
-		tab = endpoint.executeQueryToTable(OntologyInfo.getAnnotationCommentsQuery(endpoint.getGraph(), domain));
+		tab = endpoint.executeQueryToTable(OntologyInfo.getAnnotationCommentsQuery(conn, domain));
 		this.loadAnnotationComments(tab.getColumn("Elem"), tab.getColumn("Comment"));
 
 		this.changeOrphanRangesToClass();
@@ -2655,34 +2672,36 @@ public class OntologyInfo {
 
 	public void load(SparqlQueryClient client, String domain, boolean owlImportFlag) throws Exception {
 		TableResultSet tableRes;
-		String graphName = client.getConfig().getGraph();
-
+		SparqlConnection conn = new SparqlConnection("OntologyInfo.java:load()", client.getConfig().buildSei());
+		
 		if (owlImportFlag) {
-			tableRes = (TableResultSet) client.execute(OntologyInfo.getOwlImportsQuery(graphName),	SparqlResultTypes.TABLE);
+			tableRes = (TableResultSet) client.execute(OntologyInfo.getOwlImportsQuery(conn),	SparqlResultTypes.TABLE);
 			this.loadOwlImports(client, tableRes.getTable().getColumn("importee"));
 		}
 
+		
+
 		// execute each sub-query in order
 
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubClassQuery(graphName, domain),	SparqlResultTypes.TABLE);
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubClassQuery(conn, domain),	SparqlResultTypes.TABLE);
 		this.loadSuperSubClasses(tableRes.getTable().getColumn("x"), tableRes.getTable().getColumn("y"));
 
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getTopLevelClassQuery(graphName, domain),	SparqlResultTypes.TABLE);
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getTopLevelClassQuery(conn, domain),	SparqlResultTypes.TABLE);
 		this.loadTopLevelClasses(tableRes.getTable().getColumn("Class"));
 
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getLoadPropertiesQuery(graphName, domain),	SparqlResultTypes.TABLE);
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getLoadPropertiesQuery(conn, domain),	SparqlResultTypes.TABLE);
 		this.loadProperties(tableRes.getTable().getColumn("Domain"), tableRes.getTable().getColumn("Property"),	tableRes.getTable().getColumn("Range"));
 
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubPropertyQuery(graphName, domain), SparqlResultTypes.TABLE);
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getSuperSubPropertyQuery(conn, domain), SparqlResultTypes.TABLE);
 		this.loadSuperSubProperties(tableRes.getTable().getColumn("subProp"),tableRes.getTable().getColumn("superProp"));
 
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getEnumQuery(graphName, domain), SparqlResultTypes.TABLE);
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getEnumQuery(conn, domain), SparqlResultTypes.TABLE);
 		this.loadEnums(tableRes.getTable().getColumn("Class"), tableRes.getTable().getColumn("EnumVal"));
 
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationLabelsQuery(graphName, domain), SparqlResultTypes.TABLE);
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationLabelsQuery(conn, domain), SparqlResultTypes.TABLE);
 		this.loadAnnotationLabels(tableRes.getTable().getColumn("Elem"), tableRes.getTable().getColumn("Label"));
 
-		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationCommentsQuery(graphName, domain),	SparqlResultTypes.TABLE);
+		tableRes = (TableResultSet) client.execute(OntologyInfo.getAnnotationCommentsQuery(conn, domain),	SparqlResultTypes.TABLE);
 		this.loadAnnotationComments(tableRes.getTable().getColumn("Elem"), tableRes.getTable().getColumn("Comment"));
 
 		this.changeOrphanRangesToClass();

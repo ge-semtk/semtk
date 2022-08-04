@@ -132,8 +132,13 @@ define([	// properly require.config'ed
             },
             
             serverChangedCallback : function() {
-				var queryClient = new MsiClientQuery(this.queryServiceURL, new SparqlServerInterface(this.inputServerType.value, this.inputServerUrl.value, "http://any#graph"));
-				queryClient.execQuery("SELECT ?g WHERE { GRAPH ?g { }}", this.graphQueryCallback.bind(this));
+				var failureCallback = function(msg) { ModalIidx.alert("Error querying triplestore", "Error occured querying triplestore for graph names:<br>" + msg);};
+				var queryClient = new MsiClientQuery(
+										this.queryServiceURL, 
+										new SparqlServerInterface(this.inputServerType.value, this.inputServerUrl.value, "http://any#graph"),
+										failureCallback,
+										10000);
+				queryClient.execSelectGraphNames(this.graphQueryCallback.bind(this));
 			},
 			
 			graphQueryCallback : function(results) {
@@ -146,7 +151,7 @@ define([	// properly require.config'ed
 					}
 					
 				} else {
-					var graphs = results.getColumnStrings(0).sort();
+					var graphs = results.getColumnStrings(0);
 					for (var s of [this.selectGraphModel, this.selectGraphDataIngest, this.selectGraphDataOther]) {
 						IIDXHelper.removeAllOptions(s);
 						IIDXHelper.addOptions(s, graphs, []);

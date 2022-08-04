@@ -89,6 +89,10 @@ public class SparqlQueryClientConfig extends RestClientConfig {
 		return sparqlDataset;
 	}
 	
+	public SparqlEndpointInterface buildSei() throws Exception {
+		return SparqlEndpointInterface.getInstance(this.getSparqlServerType(), this.getServiceURL(), this.getGraph());
+	}
+	
 	/**
 	 * Newer naming convention
 	 * @return

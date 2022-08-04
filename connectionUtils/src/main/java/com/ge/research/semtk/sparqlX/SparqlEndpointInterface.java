@@ -97,11 +97,11 @@ import com.ge.research.semtk.utility.Utility;
  * NOTE: for HTTPS connections, does not validate certificate chain.
  */
 public abstract class SparqlEndpointInterface {
-
+	
 	// NOTE: more than one thread cannot safely share a SparqlEndpointInterface.
 	// this is because of the state maintained for the results vars and connection 
 	// details. doing so may lead to unexpected results
-
+	private final static String SEMTK_DEFAULT_GRAPH_NAME = "uri://DefaultGraph";
 	private final static String QUERY_SERVER = "kdl";
 	public final static String FUSEKI_SERVER = "fuseki";
 	public final static String VIRTUOSO_SERVER = "virtuoso";
@@ -190,6 +190,11 @@ public abstract class SparqlEndpointInterface {
 	public void setTimeout(int seconds) {
 		this.timeout = seconds;
 	}
+	
+	// local default graph name, if any, else null
+	public abstract String getLocalDefaultGraphName();
+	// the global semtk default representation of the default graph
+	public String getDefaultGraphName() { return SEMTK_DEFAULT_GRAPH_NAME; }
 
 	/* all should return null when not in use */
 	/* This will cause a query to throw a QueryTimeoutException */
@@ -213,6 +218,18 @@ public abstract class SparqlEndpointInterface {
 		}
 		return ret;
 	}
+	
+	/**
+	 * Is this a connection to the default graph: either the SEMTK_DEFAULT_GRAPH_NAME or a triplestore-specific local version
+	 * Case-insensitive
+	 * @return
+	 */
+	public boolean isDefaultGraph() {
+		String graphLower = this.graph.toLowerCase();
+		return graphLower.equals(SEMTK_DEFAULT_GRAPH_NAME.toLowerCase()) || 
+				(this.getLocalDefaultGraphName() != null && this.getLocalDefaultGraphName().toLowerCase().equals(graphLower));
+	}
+	
 	
 	/**
 	 * Print query content and execution time to stdout
