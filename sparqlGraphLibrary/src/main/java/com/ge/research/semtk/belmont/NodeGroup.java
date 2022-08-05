@@ -2839,7 +2839,9 @@ public class NodeGroup {
 			return retval;
 		
 		// skip if type isn't returned, not CONSTRUCT, and incoming range gives us the type
-		if (!node.getIsTypeReturned() && 
+		// added hasNonOptionalOutgoing so we don't accidentally have a {} that starts with optional
+		if (node.hasNonOptionalOutgoing() &&
+				!node.getIsTypeReturned() && 
 				clauseType != ClauseTypes.CONSTRUCT_LEADER &&
 				clauseType != ClauseTypes.CONSTRUCT_WHERE &&
 				constrainedByIncoming
