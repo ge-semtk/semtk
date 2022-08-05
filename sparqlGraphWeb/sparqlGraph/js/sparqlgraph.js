@@ -151,8 +151,29 @@
                                     
 
 	        // load last connection
-			var conn = gLoadDialog.getLastConnectionInvisibly();
-
+	        var conn = gLoadDialog.getLastConnectionInvisibly();
+	        
+	        // override with URL parameter if any
+	        var connStr = getUrlParameter("conn");
+	        if (connStr) {
+				try {
+					// parse the URL param into a connection
+					conn = new SparqlConnection(connStr);
+					
+					var existName = gLoadDialog.connectionIsKnown(conn, true);
+					if (!existName) {
+						// add to cookies if it doesn't exist'
+						gLoadDialog.addConnection(conn);
+					} else {
+						// update name to match existing cookie
+						conn.setName(existName);
+					}
+				} catch (e) {
+					ModalIidx.alert("Error loading conn parameter", "Can't load poorly formed 'conn' parameter on URL:<br><br>" + connStr);
+					console.log(e.stack);
+				}
+			}
+	        
             if (conn) {
 				doLoadConnection(conn);
 
@@ -208,6 +229,21 @@
 		});
     });
 
+	var getUrlParameter = function getUrlParameter(sParam) {
+	    var sPageURL = window.location.search.substring(1);
+	    var sURLVariables = sPageURL.split('&');
+	    var sParameterName;
+	
+	    for (var i = 0; i < sURLVariables.length; i++) {
+	        sParameterName = sURLVariables[i].split('=');
+	
+	        if (sParameterName[0] === sParam) {
+	            return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+	        }
+	    }
+	    return false;
+	};
+	
     var onkeyupCanvas = function(e) {
         if (e.ctrlKey) {
             if (e.key == 'z') {
