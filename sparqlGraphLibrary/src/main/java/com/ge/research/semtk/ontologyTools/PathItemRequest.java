@@ -234,4 +234,18 @@ public class PathItemRequest {
 		}
 		return ret;
 	}
+	/**
+	 * Return path or null if no incoming anything
+	 * @return
+	 * @throws PathException
+	 */
+	public OntologyPath getIncomingPath() throws PathException {
+		if (this.getIncomingClassUri() == null || this.getIncomingPropUri() == null) {
+			return null;
+		} else {
+			OntologyPath ret = new OntologyPath(this.getIncomingClassUri());
+			ret.addTriple(this.getIncomingClassUri(), this.getIncomingPropUri(), this.getClassUri());
+			return ret;
+		}
+	}
 }

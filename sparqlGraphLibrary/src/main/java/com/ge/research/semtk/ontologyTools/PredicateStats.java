@@ -137,6 +137,78 @@ public class PredicateStats {
 	 */
 	private void storeStats(Table tab, OntologyInfo oInfo, SparqlConnection conn, JobTracker tracker, String jobId, int startPercent, int endPercent) throws AuthorizationException, Exception {
 		final String STATUS = "calculating stats";
+		
+		// hash start class or endclass to a list of one-hop triples
+		Hashtable<String, HashSet<Triple>> tripleHash = new Hashtable<String, HashSet<Triple>>();
+		
+		double rows = tab.getNumRows();
+		for (int i=0; i < tab.getNumRows(); i++) {
+			if (tracker != null && i % 2000 == 0) {
+				int percent = (int) (startPercent + (endPercent - startPercent) * (i / rows));
+				tracker.setJobPercentComplete(jobId, percent, STATUS);
+			}
+			// extract info from query result row
+			String sclass = tab.getCell(i, 0);
+			String pred = tab.getCell(i, 1);
+			String oclass = tab.getCell(i, 2);
+			long count =  tab.getCellAsInt(i, 3);
+			
+			// build one-hop Triple and add to tripleHash twice: once for subject, once for object
+			// do not include data properties (oclass is empty)
+			if (!oclass.isEmpty()) {
+				Triple t = new Triple(sclass, pred, oclass);
+			
+				if (! tripleHash.containsKey(sclass)) {
+					tripleHash.put(sclass, new HashSet<Triple>());
+				}
+				tripleHash.get(sclass).add(t);
+				if (! tripleHash.containsKey(oclass)) {
+					tripleHash.put(oclass, new HashSet<Triple>());
+				}
+				tripleHash.get(oclass).add(t);
+			}
+			
+			this.addStat(sclass, pred, oclass, count);
+			
+		}
+		
+		
+		if (tracker != null) {
+			tracker.setJobPercentComplete(jobId, endPercent, STATUS);
+		}
+	}
+	
+	/**
+	 * Add new or overwrite a stat
+	 * @param subject
+	 * @param predicate
+	 * @param object
+	 * @param count
+	 * @throws PathException
+	 */
+	public void addStat(String subject, String predicate, String object, long count) throws PathException {
+		OntologyPath p = new OntologyPath(subject);
+		p.addTriple(subject, predicate, object);
+		this.exactHash.put(this.buildKey(p), count);
+	}
+	
+	/**
+	 * For a table of exact results  subj pred obj count
+	 * set statsHash such that hash(s,p,o) gets sum of all triples where:
+	 *         subject_superclass* predicate_superclass* object_superclass*	 * @param t
+	 *         
+	 * If tracker is not null, send job percent complete info.  
+	 * 
+	 * @param oInfo
+	 * @param tracker
+	 * @param jobId
+	 * @param startPercent
+	 * @param endPercent
+	 * @throws AuthorizationException
+	 * @throws Exception
+	 */
+	private void storeStatsTOO_SLOW(Table tab, OntologyInfo oInfo, SparqlConnection conn, JobTracker tracker, String jobId, int startPercent, int endPercent) throws AuthorizationException, Exception {
+		final String STATUS = "calculating stats";
 //		final String W3 = "http://www.w3.org";
 		
 		// hash start class or endclass to a list of one-hop triples
@@ -156,11 +228,7 @@ public class PredicateStats {
 			String pred = tab.getCell(i, 1);
 			String oclass = tab.getCell(i, 2);
 			long count =  tab.getCellAsInt(i, 3);
-			
-//  Need #type for Explore tab, so consider this a failed experiment
-//			if (sclass.startsWith(W3) || pred.startsWith(W3) || oclass.startsWith(W3))
-//				continue;
-			
+
 			// build one-hop Triple and add to tripleHash twice: once for subject, once for object
 			// do not include data properties (oclass is empty)
 			if (!oclass.isEmpty()) {
@@ -197,6 +265,7 @@ public class PredicateStats {
 		// smarter setJobPercentComplete()
 		// needs return only one-hops to SPARQLgraph
 		// MAX_HOPS would be higher, and probably accessible for findExactPaths()
+		
 		final int MAX_HOPS = 1;
 		HashSet<String> lastLenKeys = new HashSet<String>();
 		lastLenKeys.addAll(this.exactHash.keySet());
@@ -235,9 +304,9 @@ public class PredicateStats {
 		
 		
 		///////// DEBUG ///////////
-		//for (OntologyPath p : pathHash.values()) {
-		//	LocalLogger.logToStdOut(p.debugString());
-		//}
+		for (OntologyPath p : pathHash.values()) {
+			LocalLogger.logToStdOut(p.debugString());
+		}
 		///////////////////////////
 		
 		if (tracker != null) {

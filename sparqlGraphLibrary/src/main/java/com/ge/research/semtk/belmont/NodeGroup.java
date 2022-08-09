@@ -3713,20 +3713,16 @@ public class NodeGroup {
 	}
 	
 	/**
-	 * Add a node constrained to a particular instance
-	 * @param classUri
-	 * @param oInfo
-	 * @param instanceURI - can be null or empty
-	 * @return
+	 * Constrain a node to an instance URI, or no-op if instanceURI is null
+	 * @param node
+	 * @param instanceURI - can be null
 	 * @throws Exception
 	 */
-	public Node addNodeInstance(String classUri, OntologyInfo oInfo, String instanceURI) throws Exception {
-		Node node = this.addNode(classUri, oInfo);
+	public void constrainNodeToInstance(Node node, String instanceURI) throws Exception {
 		if (instanceURI != null && ! instanceURI.isEmpty()) {
 			SparqlEndpointInterface sei = (this.conn != null) ? this.conn.getInsertInterface() : null;
 			node.addValueConstraint(ValueConstraint.buildFilterInConstraint(node, instanceURI, sei));
 		}
-		return node;
 	}
 	
 	public Node addNode(String classUri, Node existingNode, String linkFromUri, String linkToUri) throws Exception {

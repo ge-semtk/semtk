@@ -118,7 +118,8 @@ public class PathExplorerTest_IT {
 		String airportUri2 = airportTable.getCell(1, 0);
 		
 		ng = new NodeGroup();
-		ng.addNodeInstance("http://research.ge.com/semtk/fdcSample/test#Airport", oInfo, airportUri1);
+		Node n = ng.addNode("http://research.ge.com/semtk/fdcSample/test#Airport", oInfo);
+		ng.constrainNodeToInstance(n, airportUri1);
 		
 		// Airport -> Aircraft
 		// this should succeed through Distance

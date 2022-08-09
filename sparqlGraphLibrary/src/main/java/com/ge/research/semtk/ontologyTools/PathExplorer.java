@@ -53,13 +53,14 @@ import com.ge.research.semtk.utility.Utility;
  *
  */
 public class PathExplorer {
-	// A NodeGroupCache for each unique cacheSei
+	// A NodeGroupCache for each unique cacheSei in memory 
 	private static HashMap<String, NodeGroupCache> cache = new HashMap<String, NodeGroupCache>();
 	private static String NO_CACHE = "No cache";
 	private OntologyInfo oInfo;
 	private SparqlConnection conn;
 	private NodeGroupExecutionClient ngeClient;
 	private String cacheKey;
+	private PredicateStats predStats;  
 	
 	public PathExplorer(SparqlConnection conn, NodeGroupExecutionClient ngeClient, SparqlEndpointInterface cacheSei) throws Exception {
 		this(new OntologyInfo(conn), conn, ngeClient, cacheSei);
@@ -70,18 +71,32 @@ public class PathExplorer {
 	 * @param oInfo
 	 * @param conn - graphs being explored
 	 * @param ngeClient
-	 * @param cacheSei - location of ng cache, or null 
+	 * @param cacheSei - location of ng cache, or null     WRONG: this is the Cache key.  The sei being explored.
 	 * @throws Exception
 	 */
 	public PathExplorer(OntologyInfo oInfo, SparqlConnection conn, NodeGroupExecutionClient ngeClient, SparqlEndpointInterface cacheSei) throws Exception {
+		this(oInfo, conn, ngeClient, cacheSei, null);
+	}
+	
+	/**
+	 * 
+	 * @param oInfo
+	 * @param conn
+	 * @param ngeClient
+	 * @param cacheSei
+	 * @param predStats - if null path-finding uses this.pathHasInstance(), if non-null search each hop in PredicateStats
+	 * @throws Exception
+	 */
+	public PathExplorer(OntologyInfo oInfo, SparqlConnection conn, NodeGroupExecutionClient ngeClient, SparqlEndpointInterface cacheSei, PredicateStats predStats) throws Exception {
 		this.oInfo = oInfo;
 		this.conn = conn;
 		this.ngeClient = ngeClient;
+		this.predStats = predStats;
 		
 		// generate key for cacheSei, or use NO_CACHE
 		this.cacheKey = cacheSei != null ? Utility.hashMD5(cacheSei.toJson().toJSONString()) : NO_CACHE;
 		
-		// init nodegroup cache from disk if needed
+		// init nodegroup cache
 		if (this.cacheKey != NO_CACHE && ! PathExplorer.cache.containsKey(this.cacheKey)) {
 			PathExplorer.cache.put(cacheKey, new NodeGroupCache(cacheSei, oInfo));
 		}
@@ -121,11 +136,12 @@ public class PathExplorer {
 			}
 		}
 		
-		// handle special simple case: just one class
+		// handle special simple  case: just one class
 		if (requestList.size() == 1) {
 			
 			NodeGroup ng = new NodeGroup();
-			ng.addNodeInstance(requestList.get(0).getClassUri(), this.oInfo, requestList.get(0).getInstanceUri());
+			Node n = ng.addNode(requestList.get(0).getClassUri(), this.oInfo);
+			ng.constrainNodeToInstance(n,  requestList.get(0).getInstanceUri());
 			this.addNodegroupReturns(ng, requestList);
 			
 			LocalLogger.logToStdOut("...succeeded");
@@ -143,38 +159,53 @@ public class PathExplorer {
 		ArrayList<ArrayList<PathItemRequest>> missingClassLists = new ArrayList<ArrayList<PathItemRequest>>();
 		ArrayList<ArrayList<PathItemRequest>> missingTripleHintsLists  = new ArrayList<ArrayList<PathItemRequest>>();
 		
+		// build all paths that might have data
 		int smallest = 9999;
 		final boolean LOG_PATHS = true;
 		for (int i=0; i < requestList.size() - 1; i++) {
+			PathItemRequest anchorRequest = requestList.get(i);
+			OntologyPath anchorRequestPath = anchorRequest.getIncomingPath();
+			
 			for (int j=i+1; j < requestList.size(); j++) {
-				PathItemRequest anchorRequest = requestList.get(i);
+				
 				PathItemRequest endRequest = requestList.get(j);
+				OntologyPath endRequestPath = endRequest.getIncomingPath();
 				
 				if (LOG_PATHS) LocalLogger.logToStdOut(endRequest.getClassUri() + "," + anchorRequest.getClassUri());
-				for (OntologyPath path : this.oInfo.findAllPaths(endRequest.getClassUri() , anchorRequest.getClassUri())) {
-					pathList.add(path);
-					if (LOG_PATHS) LocalLogger.logToStdOut(path.asString());
-					anchorRequestList.add(anchorRequest);
-					endRequestList.add(endRequest);
+				
+				// candidate Paths use predicate stats : only existing data
+				ArrayList<OntologyPath> candidatePaths = this.oInfo.findAllPaths(endRequest.getClassUri() , anchorRequest.getClassUri(), this.predStats);
+				
+				for (OntologyPath path : candidatePaths ) {
 					
-					// calculate missing instances for path
-					ArrayList<PathItemRequest> missingClassList = this.calcMissingClasses(path, requestList);
-					ArrayList<PathItemRequest> missingPathHints = this.calcMissingTripleHints(path, requestList);					
-					
-					missingClassLists.add(missingClassList);
-					missingTripleHintsLists.add(missingPathHints);
-
-					// PEC TODO: this logic is too simple
-					// why would all of these be "weighted" the same
-					// Note that missingClasses could be added below if no linear path finds them all
-					if (missingClassList.size() + missingPathHints.size() < smallest) {
-						smallest = missingClassList.size() + missingPathHints.size();
+					// if either request contains a path (incoming class, incoming predicate) then path must contain it.
+					if ((anchorRequestPath == null || path.containsSubPath(anchorRequestPath)) &&
+							(endRequestPath == null || path.containsSubPath(endRequestPath)) ) {
+						
+						pathList.add(path);
+						if (LOG_PATHS) LocalLogger.logToStdOut(path.asString());
+						anchorRequestList.add(anchorRequest);
+						endRequestList.add(endRequest);
+						
+						// calculate missing instances for path
+						ArrayList<PathItemRequest> missingClassList = this.calcMissingClasses(path, requestList);
+						ArrayList<PathItemRequest> missingPathHints = this.calcMissingTripleHints(path, requestList);					
+						
+						missingClassLists.add(missingClassList);
+						missingTripleHintsLists.add(missingPathHints);
+	
+						// PEC TODO: this logic is too simple
+						// why would all of these be "weighted" the same
+						// Note that missingClasses could be added below if no linear path finds them all
+						if (missingClassList.size() + missingPathHints.size() < smallest) {
+							smallest = missingClassList.size() + missingPathHints.size();
+						}
 					}
 				}
 			}
 		}
 		
-		
+		// choose first good path
 		// loop through paths with least missing classes first
 		for (int size=smallest; size < requestList.size(); size++) {
 			for (int i = 0; i < pathList.size(); i++) {
@@ -190,59 +221,61 @@ public class PathExplorer {
 					PathItemRequest anchorRequest = anchorRequestList.get(i);
 					PathItemRequest endRequest = endRequestList.get(i);
 					
-					if (anchorRequest.getInstanceUri() == null) {
-						anchor = ng.addNode(anchorRequest.getClassUri(), this.oInfo);
-					} else {
-						anchor = ng.addNodeInstance(anchorRequest.getClassUri(), this.oInfo, anchorRequest.getInstanceUri());
-					}
+					anchor = ng.addNode(anchorRequest.getClassUri(), this.oInfo);
+					ng.constrainNodeToInstance(anchor, anchorRequest.getInstanceUri());
 					
-					// continue only iff this path has instances
-					if (this.pathHasInstance(ng, anchor, pathList.get(i), endRequest.getInstanceUri())) {
+					// Two modes of operation:
+					// 1) we're using predStats != null OR 
+					// 2) pathHasInstance()
+					if (this.predStats != null || this.pathHasInstance(ng, anchor, pathList.get(i), endRequest.getInstanceUri())) {
 						
 						// add the path
 						Node added = ng.addPath(pathList.get(i), anchor, oInfo);
-						if (endRequest.getInstanceUri() != null) {
-							added.addValueConstraint(ValueConstraint.buildFilterInConstraint(added, endRequest.getInstanceUri()));
-						}
+						ng.constrainNodeToInstance(added, endRequest.getInstanceUri());
 						
 						// try adding all the missing instances
 						for (PathItemRequest missingClassRequest : missingClassLists.get(i)) {
-							Node addedMissing = this.addClassFirstPath(ng, missingClassRequest.getClassUri(), missingClassRequest.getInstanceUri());
-							if (addedMissing == null) {
-								success = false;
-								LocalLogger.logToStdOut("...failed to add class: " + missingClassRequest.getClassUri());
-								break;
+							if (missingClassRequest.getIncomingClassUri() != null) {
+								// there's a path in the request: add it at desired location
+								try {
+									ArrayList<Node> nList = ng.getNodesByURI(missingClassRequest.getIncomingClassUri());
+									if (nList.size() != 1) throw new Exception("Did not find exactly one place to add: " + missingClassRequest.getClassUri());
+									Node existingNode = nList.get(0);
+									ng.addNode(missingClassRequest.getClassUri(), existingNode, null, missingClassRequest.getIncomingPropUri());
+								
+								} catch (Exception e) {
+									// silently break on any error
+									LocalLogger.logToStdOut(e.getMessage());
+									success = false;
+									break;
+								}
+								
+							} else {
+								// no path in request: addClassFirstPath()
+								Node addedMissing = this.addClassFirstPath(ng, missingClassRequest.getClassUri(), missingClassRequest.getInstanceUri());
+								if (addedMissing == null) {
+									success = false;
+									LocalLogger.logToStdOut("...failed addClassFirstPath: " + missingClassRequest.getClassUri());
+									break;
+								}
 							}
 						}
 						
-						// PEC TODO HERE:  If we added more classes, we need to re-check that missingPathHints is empty
-						//                 This only checks if missingPathHints was empty to begin with.
-						if (missingTripleHintsLists.get(i).size() != 0) {
-							if (missingClassLists.get(i).size() > 0) {
-								// we added classes:  re-check nodegroup
-								// TODO: could this single function have been used all along instead of searching paths for classes and hints
-								if (this.calcMissingClassesAndTripleHints(ng, requestList).size() > 0) {
-									break;
-								}
-							} else {
-								// still missing triple hints
-								break;
+						// if we started off with missing triple hints make sure they're fixed
+						if (success && missingTripleHintsLists.get(i).size() != 0) {
+							// re-check that everything is cleared up
+							if (this.calcMissingClassesAndTripleHints(ng, requestList).size() > 0) {
+								success = false;
 							}
 						}
 						
 						// classes to add but failed
-						if (! success) 
-							break;
-				
-						// make a copy in hopes we can cache this
-						NodeGroup cacheNg = NodeGroup.deepCopy(ng);
-						
-						this.addNodegroupReturns(ng, requestList);
-						
-						LocalLogger.logToStdOut("...succeeded");
-						
-						this.putToCache(cacheNg, requestList);
-						return ng;
+						if (success) {
+							this.putToCache(NodeGroup.deepCopy(ng), requestList);
+							this.addNodegroupReturns(ng, requestList);
+							LocalLogger.logToStdOut("...succeeded");
+							return ng;
+						}
 					}
 				}
 			}
@@ -462,6 +495,7 @@ public class PathExplorer {
 		return this.addClassFirstPath(ng, classUri, null);
 	}
 
+
 	/**
 	 * Starting with all legal paths from oInfo
 	 * Find the first one that would actually have some data in it.
@@ -471,6 +505,8 @@ public class PathExplorer {
 	 * @throws Exception
 	 */
 	public Node addClassFirstPath(NodeGroup ng, String classUri, String instanceUri) throws Exception {
+		
+		
 		ArrayList<Node> nodeList = ng.getNodeList();
 		HashSet<String> classSet = new HashSet<String>();
 		
@@ -482,7 +518,7 @@ public class PathExplorer {
 		// get list of all oInfo model paths from classUri to the ng nodes.
 		HashSet<String> classList = new HashSet<String>();
 		classList.addAll(classSet);
-		ArrayList<OntologyPath> pathList = oInfo.findAllPaths(classUri, classList);
+		ArrayList<OntologyPath> pathList = oInfo.findAllPaths(classUri, classList, this.predStats);
 		
 		// for each possible path
 		for (OntologyPath path : pathList) {
@@ -490,9 +526,14 @@ public class PathExplorer {
 			// for each possible connection point
 			for (Node connectPoint : ng.getNodesByURI(path.getAnchorClassName())) {
 				
-				if (this.pathHasInstance(ng, connectPoint, path, instanceUri)) {
+				// Success requires both: 
+				//    path exists either in predicate stats or pathHasInstance() 
+				//    request path is null or new path contains the request path
+				if (this.predStats != null || this.pathHasInstance(ng, connectPoint, path, instanceUri)) {
 					// first success: modify ng and return true
-					return ng.addPath(path, ng.getNodeBySparqlID(connectPoint.getSparqlID()), this.oInfo);
+					Node n =  ng.addPath(path, ng.getNodeBySparqlID(connectPoint.getSparqlID()), this.oInfo);
+					ng.constrainNodeToInstance(n, instanceUri);
+					return n;
 				} 
 			}
 		}
