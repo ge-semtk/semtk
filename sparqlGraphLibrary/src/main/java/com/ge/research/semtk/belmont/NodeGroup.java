@@ -2839,8 +2839,8 @@ public class NodeGroup {
 			return retval;
 		
 		// skip if type isn't returned, not CONSTRUCT, and incoming range gives us the type
-		// added hasNonOptionalOutgoing so we don't accidentally have a {} that starts with optional
-		if (node.hasNonOptionalOutgoing() &&
+		// added nodeHasOnlyOptionals so we don't accidentally have a {} that starts with optional
+		if (! this.nodeHasOnlyOptionals(node) &&
 				!node.getIsTypeReturned() && 
 				clauseType != ClauseTypes.CONSTRUCT_LEADER &&
 				clauseType != ClauseTypes.CONSTRUCT_WHERE &&
@@ -5223,6 +5223,45 @@ public class NodeGroup {
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Does this node have zero or more optionals and no non-optionals
+	 * @return
+	 * @throws Exception
+	 */
+	private boolean nodeHasOnlyOptionals(Node node) throws Exception{
+		int optionalCount = 0;
+		
+		// outgoing nodes
+		for (NodeItem nodeItem : node.getConnectedNodeItems()) {
+			for (Node n : nodeItem.getNodeList()) {
+				if (nodeItem.getOptionalMinus(n) == NodeItem.OPTIONAL_TRUE) {
+					optionalCount += 1;
+				} else if (nodeItem.getOptionalMinus(n) == NodeItem.OPTIONAL_FALSE) {
+					return false;
+				} 
+			}
+		}
+		
+		// incoming optional reverse
+		for (NodeItem nodeItem : this.getConnectingNodeItems(node)) {
+			if (nodeItem.getOptionalMinus(node) == NodeItem.OPTIONAL_REVERSE) {
+				optionalCount += 1;
+			} 
+		}
+		
+		// prop items
+		for (PropertyItem propItem : node.getPropertyItems()) {
+			if (propItem.getIsReturned()) {
+				if (propItem.getIsOptional()) {
+					optionalCount += 1;
+				} else {
+					return false;
+				}
+			}
+		}
+		return (optionalCount > 0);
 	}
 
 }

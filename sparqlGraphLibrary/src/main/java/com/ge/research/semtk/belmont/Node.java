@@ -1121,24 +1121,4 @@ public class Node extends Returnable {
 		this.nodes.remove(nItem);
 	}
 
-	/**
-	 * Does this node have any outgoing connection that is not optional
-	 * @return
-	 * @throws Exception
-	 */
-	public boolean hasNonOptionalOutgoing() throws Exception{
-		for (NodeItem nodeItem : this.getConnectedNodeItems()) {
-			for (Node n : nodeItem.getNodeList()) {
-				if (nodeItem.getOptionalMinus(n) != NodeItem.OPTIONAL_FALSE) {
-					return true;
-				}
-			}
-		}
-		for (PropertyItem propItem : this.getPropertyItems()) {
-			if (propItem.getIsReturned() && !propItem.getIsOptional()) {
-				return true;
-			}
-		}
-		return false;
-	}
 }
