@@ -84,7 +84,7 @@ define([	// properly require.config'ed
             
             this.rawSchema = {};  // schema from disk with Nodgroup as string with enum: ["--invalid--"]
 
-			this.maxQueryThreads = 1; // could depend on connection type
+			this.maxQueryThreads = 2; // could depend on connection type
         };
 
 		ReportTab.MAX_ROWS = 5000;
@@ -991,7 +991,7 @@ define([	// properly require.config'ed
                         ngExecClient.execAsyncDispatchSelectById(nodegroup, this.conn, null, null, null, null, tableTestRowCountCallback, this.failureCallback.bind(this, ngDiv));
 
                     } catch (e) {
-                        this.failureCallback(div, e)
+                        this.failureCallback(ngDiv, e)
         			}
 
                 } else if (section["count"] != undefined) {
@@ -1014,7 +1014,7 @@ define([	// properly require.config'ed
                         ngExecClient.execAsyncDispatchCountById(nodegroup, this.conn, null, null, null, null, countCallback, this.failureCallback.bind(this, ngDiv));
 
                     } catch (e) {
-                        this.failureCallback(div, e)
+                        this.failureCallback(ngDiv, e)
         			}
                 } else if (section["graph"] != undefined) {
                     var nodegroup = section["graph"]["nodegroup"];
@@ -1336,6 +1336,7 @@ define([	// properly require.config'ed
             },
 
             cardinalityGetTableCallback : function(div, tableRes) {
+	 			this.sectionThreadDone();
                 div.innerHTML="";
 
                 var descDiv = IIDXHelper.createElement("div", "", className="report-desc-div");
@@ -1370,7 +1371,6 @@ define([	// properly require.config'ed
 
                     // print the table
                     this.addTableResult(div, tableRes);
-                    this.sectionThreadDone();
 
                 }
             },
