@@ -3942,29 +3942,34 @@ public class NodeGroup {
 	 * @throws Exception
 	 */
 	public Node addClassFirstPath(String classURI, OntologyInfo oInfo) throws Exception  {
-		return this.addClassFirstPath(classURI, oInfo, false);
+		return this.addClassFirstPath(classURI, oInfo, false, null);
 	}
+	
 	public Node addClassFirstPath(String classURI, OntologyInfo oInfo, Boolean optionalFlag) throws Exception  {
+		return this.addClassFirstPath(classURI, oInfo, optionalFlag, null);
+	}
+	public Node addClassFirstPath(String classURI, OntologyInfo oInfo, Boolean optionalFlag, PredicateStats predStats) throws Exception  {
 		// attach a classURI using the first path found.
-		// Error if less than one path is found.
 		// return the new node
 		// return null if there are no paths
 
 		// get first path from classURI to this nodeGroup
 		this.oInfo = oInfo;
-		ArrayList<OntologyPath> paths = oInfo.findAllPaths(classURI, this.getAllNodeUris());
+		ArrayList<OntologyPath> paths = oInfo.findAllPaths(classURI, this.getAllNodeUris(), predStats);
 		if (paths.size() == 0) {
 			return null;
+			
+		} else {
+			OntologyPath path = paths.get(0);
+			
+			// get first node matching anchor of first path
+			ArrayList<Node> nlist = this.getNodesByURI(paths.get(0).getAnchorClassName());
+			
+			// add sNode
+			Node sNode = this.addPath(path, nlist.get(0), oInfo, false, optionalFlag);
+	
+			return sNode;
 		}
-		OntologyPath path = paths.get(0);
-		
-		// get first node matching anchor of first path
-		ArrayList<Node> nlist = this.getNodesByURI(path.getAnchorClassName());
-		
-		// add sNode
-		Node sNode = this.addPath(path, nlist.get(0), oInfo, false, optionalFlag);
-
-		return sNode;
 	}
     /**
      * Set a property item to be returned, giving it a SparqlID if needed
