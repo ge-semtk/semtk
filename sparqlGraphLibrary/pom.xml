@@ -105,7 +105,7 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-core</artifactId>
-			<version>1.12.272</version>
+			<version>1.12.286</version>
 			<scope>compile</scope>
 		</dependency>
 
@@ -149,7 +149,7 @@
 		<dependency>
 			<groupId>com.amazonaws</groupId>
 			<artifactId>aws-java-sdk-athena</artifactId>
-			<version>1.12.272</version>
+			<version>1.12.287</version>
 		</dependency>
 
 		<!-- License: MIT -->
