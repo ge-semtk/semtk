@@ -1,0 +1,260 @@
+{
+	"version": 3,
+	"sparqlConn": {
+		"name": "Junit fuseki",
+		"domain": "",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 19,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [],
+				"nodeList": [],
+				"fullURIName": "http://kdl.ge.com/batterydemo#Color",
+				"SparqlID": "?Color",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/batterydemo#cellId",
+						"Constraints": "",
+						"SparqlID": "?CellId",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Color"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"range": [
+							"http://kdl.ge.com/batterydemo#Color"
+						],
+						"ConnectBy": "color",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/batterydemo#color"
+					}
+				],
+				"fullURIName": "http://kdl.ge.com/batterydemo#Cell",
+				"SparqlID": "?Cell",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"dateTime"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#dateTime",
+						"UriRelationship": "http://kdl.ge.com/batterydemo#birthday",
+						"Constraints": "",
+						"SparqlID": "",
+						"isReturned": false,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/batterydemo#name",
+						"Constraints": "",
+						"SparqlID": "?Name",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Cell"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"range": [
+							"http://kdl.ge.com/batterydemo#Cell"
+						],
+						"ConnectBy": "cell",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/batterydemo#cell"
+					}
+				],
+				"fullURIName": "http://kdl.ge.com/batterydemo#Battery",
+				"SparqlID": "?Battery",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": [
+			{
+				"sparqlID": "?Name"
+			},
+			{
+				"sparqlID": "?CellId"
+			}
+		],
+		"groupBy": [],
+		"unionHash": {},
+		"columnOrder": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "Battery"
+			},
+			{
+				"colId": "col_1",
+				"colName": "Cell"
+			},
+			{
+				"colId": "col_2",
+				"colName": "birthday"
+			},
+			{
+				"colId": "col_3",
+				"colName": "color"
+			}
+		],
+		"dataValidator": [],
+		"texts": [
+			{
+				"textId": "text_0",
+				"text": "Battery_"
+			},
+			{
+				"textId": "text_1",
+				"text": "Cell_"
+			}
+		],
+		"transforms": [
+			{
+				"transId": "trans_0",
+				"name": "No_space",
+				"transType": "replaceAll",
+				"arg1": "\\s+",
+				"arg2": "_"
+			}
+		],
+		"nodes": [
+			{
+				"sparqlID": "?Battery",
+				"type": "http://kdl.ge.com/batterydemo#Battery",
+				"URILookupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/batterydemo#birthday",
+						"mapping": [
+							{
+								"colId": "col_2"
+							}
+						]
+					},
+					{
+						"URIRelation": "http://kdl.ge.com/batterydemo#name",
+						"URILookup": [
+							"?Battery"
+						],
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Cell",
+				"type": "http://kdl.ge.com/batterydemo#Cell",
+				"URILookupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/batterydemo#cellId",
+						"URILookup": [
+							"?Cell"
+						],
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Color",
+				"type": "http://kdl.ge.com/batterydemo#Color",
+				"mapping": [
+					{
+						"colId": "col_3"
+					}
+				],
+				"props": []
+			}
+		]
+	},
+	"plotSpecs": []
+}

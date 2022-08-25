@@ -41,6 +41,7 @@ import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.ontologyTools.DataDictionaryGenerator;
+import com.ge.research.semtk.ontologyTools.InstanceDictGenerator;
 import com.ge.research.semtk.ontologyTools.RestrictionChecker;
 import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
@@ -53,6 +54,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.ontologyinfo.requests.CardinalityReportRequest;
+import com.ge.research.semtk.services.ontologyinfo.requests.InstanceDictionaryRequest;
 import com.ge.research.semtk.services.ontologyinfo.requests.OntologyInfoClassRequestBody;
 import com.ge.research.semtk.services.ontologyinfo.requests.OntologyInfoRequestBody;
 import com.ge.research.semtk.services.ontologyinfo.requests.SparqlConnectionRequestBody;
@@ -535,5 +537,61 @@ public class OntologyInfoServiceRestController {
 		}
 
 		return retval.toJson();		
+	}
+	
+	/**
+	 * Build a dictionary of identifiers:  GUID, type(s), string
+	 */
+	@Operation(
+			summary="Get table of URIs and string identifiers associated with them.",
+			description="Async.  Returns a jobID."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getInstanceDictionary", method= RequestMethod.POST)
+	public JSONObject getInstanceDictionary(@RequestBody InstanceDictionaryRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "getInstanceDictionary";
+		SimpleResultSet res = new SimpleResultSet(false);
+    	
+		try {	
+			// setup job tracker and results client
+			String jobId = JobTracker.generateJobId();
+			JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
+			tracker.createJob(jobId);
+			ResultsClient rclient = new ResultsClient(new ResultsClientConfig(results_props.getProtocol(), results_props.getServer(), results_props.getPort()));
+			
+			// spin up an async thread
+			new Thread(() -> {
+				try {
+					HeadersManager.setHeaders(headers);
+					
+					SparqlConnection conn = requestBody.buildSparqlConnection();				
+					OntologyInfo oInfo = oInfoCache.get(conn);
+					InstanceDictGenerator generator = new InstanceDictGenerator(conn, oInfo, requestBody.getMaxWords(), requestBody.getSpecificityLimit());
+					Table tab = generator.generate();
+					
+					rclient.execStoreTableResults(jobId, tab);
+					tracker.setJobSuccess(jobId);
+					
+				} catch (Exception e) {
+					try {
+						tracker.setJobFailure(jobId, e.getMessage());
+					} catch (Exception ee) {
+						LocalLogger.logToStdErr(ENDPOINT_NAME + " error accessing job tracker");
+						LocalLogger.printStackTrace(ee);
+					}
+				}
+			}).start();
+			
+			res.addJobId(jobId);
+			res.addResultType(SparqlResultTypes.TABLE);
+			res.setSuccess(true);
+
+		} catch (Exception e) {
+	    	res.setSuccess(false);
+	    	res.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+	    	LocalLogger.printStackTrace(e);
+		}
+		return res.toJson();	
 	}
 }
