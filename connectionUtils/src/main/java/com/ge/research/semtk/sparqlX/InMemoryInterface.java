@@ -43,7 +43,6 @@ public class InMemoryInterface extends SparqlEndpointInterface {
 	public String getTimeoutSparqlClause() { return null; } 
 	public String getTimeoutPostParamName() { return null; }    
 	public String getTimeoutPostParamValue() { return null; } 
-	public String getLocalDefaultGraphName() { return null; }
 
 	public JSONObject executeQueryPost(String query, SparqlResultTypes resultType) throws DontRetryException, Exception {
 		

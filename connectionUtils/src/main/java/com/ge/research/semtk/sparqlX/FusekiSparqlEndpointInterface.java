@@ -306,7 +306,7 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 
 	@Override
 	public String getUploadURL() throws Exception {
-		return String.format("%s:%s/%s/data?graph=%s", this.server, this.port, this.endpoint, this.graph);	
+		return String.format("%s:%s/%s/data?graph=%s", this.server, this.port, this.endpoint, this.getGraph());	
 	}
 
 	@Override

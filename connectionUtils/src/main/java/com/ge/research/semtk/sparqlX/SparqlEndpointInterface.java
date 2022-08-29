@@ -108,6 +108,8 @@ public abstract class SparqlEndpointInterface {
 	public final static String NEPTUNE_SERVER = "neptune";
 	public final static String BLAZEGRAPH_SERVER = "blazegraph";
 	
+	protected static final String TRIPLESTORE_DEFAULT_GRAPH_NAME = "urn:x-arq:DefaultGraph";
+	
 	// results types to request
 	protected static final String CONTENTTYPE_SPARQL_QUERY_RESULT_JSON = "application/sparql-results+json"; 
 	protected static final String CONTENTTYPE_X_JSON_LD = "application/x-json+ld";
@@ -192,10 +194,9 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	// local default graph name, if any, else null
-	public abstract String getLocalDefaultGraphName();
+	public String getLocalDefaultGraphName() { return TRIPLESTORE_DEFAULT_GRAPH_NAME; }
 	// the global semtk default representation of the default graph
 	public String getDefaultGraphName() { return SEMTK_DEFAULT_GRAPH_NAME; }
-
 	/* all should return null when not in use */
 	/* This will cause a query to throw a QueryTimeoutException */
 	public abstract String getTimeoutSparqlPrefix();    // e.g. AWS query hints
@@ -267,7 +268,9 @@ public abstract class SparqlEndpointInterface {
 	}
 
 	public String getGraph() {
-		return this.graph;
+		// translate semtk default into triplestore default
+		// any triplestore that uses a different name will override
+		return this.isDefaultGraph() ? this.getLocalDefaultGraphName() : this.graph;
 	}
 	
 	// deprecated
@@ -1046,13 +1049,13 @@ public abstract class SparqlEndpointInterface {
 	protected void addHeaders(HttpPost httppost, SparqlResultTypes resultType) throws Exception {
 		
 		httppost.addHeader("Accept", this.getContentType(resultType));
-		httppost.addHeader("X-Sparql-default-graph", this.graph);
+		httppost.addHeader("X-Sparql-default-graph", this.getGraph());
 	}
 	
 	protected void addHeaders(HttpURLConnection conn, SparqlResultTypes resultType) throws Exception {
 		
 		conn.setRequestProperty("Accept", this.getContentType(resultType));
-		conn.setRequestProperty("X-Sparql-default-graph", this.graph);
+		conn.setRequestProperty("X-Sparql-default-graph", this.getGraph());
 	}
 	
 	protected void addParams(HttpPost httppost, String query, SparqlResultTypes resultType) throws Exception {
@@ -1060,7 +1063,7 @@ public abstract class SparqlEndpointInterface {
 		List<NameValuePair> params = new ArrayList<NameValuePair>(3);
 		params.add(new BasicNameValuePair("query", query));
 		params.add(new BasicNameValuePair("format", this.getContentType(resultType)));
-		params.add(new BasicNameValuePair("default-graph-uri", this.graph));
+		params.add(new BasicNameValuePair("default-graph-uri", this.getGraph()));
 		
 		if (this.getTimeoutPostParamName() != null && this.getTimeoutPostParamValue() != null) {
 			params.add(new BasicNameValuePair(this.getTimeoutPostParamName(), this.getTimeoutPostParamValue()));
@@ -1257,7 +1260,7 @@ public abstract class SparqlEndpointInterface {
 	protected abstract JSONObject executeUpload(byte[] owl) throws AuthorizationException, Exception;
 
 	public void authorizeUpload() throws AuthorizationException {
-		AuthorizationManager.throwExceptionIfNotGraphWriter(this.graph);
+		AuthorizationManager.throwExceptionIfNotGraphWriter(this.getGraph());
 	}
 	
 

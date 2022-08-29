@@ -89,7 +89,7 @@ import io.swagger.v3.oas.annotations.Operation;
  * {"message":"operations failed.","rationale":"This query must be run using the /queryAuth endpoint","status":"failed"}
  *
  * 
- * TODO add properties file with default serverType
+ *  Note:  all endpoints that change data contact oinfo to clear the cache.
  */
 @RestController
 @RequestMapping("/sparqlQueryService")

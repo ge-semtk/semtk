@@ -121,7 +121,6 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
  
 	public int getInsertQueryMaxSize()    { return 100000; }
 	public int getInsertQueryOptimalSize()  { return 5000; }
-	public String getLocalDefaultGraphName() { return null; }  // look this up and add correct value
 
 	/* Timeout is not implemented. Should be query hint.   */
 	/* https://docs.aws.amazon.com/neptune/latest/userguide/sparql-query-hints-queryTimeout.html */
