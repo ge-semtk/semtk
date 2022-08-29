@@ -173,12 +173,22 @@
 					console.log(e.stack);
 				}
 			}
+			
+			var nodegroupId = getUrlParameter("nodegroupId");
+			var constraintsStr = getUrlParameter("constraints");
+			var runFlagStr = getUrlParameter("runFlag");  // defaults to true, next line
+	        var runFlag = (! runFlagStr) || runFlagStr.toLowerCase() == "true" || runFlagStr.toLowerCase() == "t";
 	        
-            if (conn) {
+	        if (nodegroupId) {
+				// run a nodegroup at startup
+				runQueryFromUrl(conn, connStr, nodegroupId, constraintsStr, runFlag);
+				
+            } else if (conn) {
+				// load last connection (from cookies) or conn param
 				doLoadConnection(conn);
 
 			} else if (g.customization.autoRunDemo.toLowerCase() == "true") {
-
+				// no params or cookies: try the demo
                 ModalIidx.okCancel( "Demo",
                                     "Loading demo nodegroup, and<br>Launching demo documentation pop-up.<br>(You may need to override your pop-up blocker.)<br>",
                                     function() {
@@ -229,6 +239,70 @@
 		});
     });
 
+	/* 
+		URL used to launch SPARQLgraph contains a nodegroupId to run now
+	  
+		@param {SparqlConnection} conn -  the connection from last session OR the connection URL parameter OR null
+		@param {str} connStr - conn URL param, or falsey
+		@param {str} nodegroupId - nodegroup Id
+		@param {str} constraintsStr - constraints string, or falsey
+		@param {boolean} runFlag = should the nodegroup be run
+	*/
+	var runQueryFromUrl = function(conn, connStr, nodegroupId, constraintsStr, runFlag) {
+		if (connStr) {
+			doLoadConnection(conn, runQueryFromUrl1.bind(this, nodegroupId, constraintsStr, runFlag));
+		} else {
+			runQueryFromUrl1(nodegroupId, constraintsStr, runFlag);
+		}
+	};
+	
+	/* 
+		Now that correct or no override conn is loaded,
+		continue running nodegroupId at startup
+
+		@param {str} nodegroupId - nodegroupId
+		@param {str} constraintsStr - constraints string, or falsey
+		@param {boolean} runFlag = should the nodegroup be run
+
+	*/
+	var runQueryFromUrl1= function(nodegroupId, constraintsStr, runFlag) {
+		 require(	[ 'sparqlgraph/js/msiclientnodegroupstore',
+					], function (MsiClientNodeGroupStore) {
+						  
+			var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
+	        mq.getStoredItemByIdToStr(nodegroupId, MsiClientNodeGroupStore.TYPE_NODEGROUP, runQueryFromUrl2.bind(this, nodegroupId, constraintsStr, runFlag));
+		});
+	};
+	
+	/* 
+		Load nodegroup, keeping current connection if any, and run
+
+		@param {str} constraintsStr - constraints string, or falsey
+		@param {str} nodegroupId - nodegroupId
+		@param {boolean} runFlag = should the nodegroup be run
+		@param {str} jsonStr - the nodegroup json as str
+		
+	*/
+	var runQueryFromUrl2= function(nodegroupId, constraintsStr, runFlag, jsonStr) {
+		
+		require(	[ 'sparqlgraph/js/runtimeconstraints',
+					], function (RuntimeConstraints) {
+			var forceKeepCurrent = true;
+			var skipValidation = false;
+			
+			var callbackRunQuery = function () {
+				if (runFlag) {
+					// change from possibly falsey string to possibly-undefined RuntimeConstraints object
+					var optConstraints = constraintsStr ? new RuntimeConstraints(constraintsStr) : undefined;
+					runGraphByQueryType(optConstraints);
+				}
+			};
+			
+			doQueryLoadJsonStr(jsonStr, nodegroupId, skipValidation, forceKeepCurrent, callbackRunQuery);
+		});
+	};
+	
+	
 	var getUrlParameter = function getUrlParameter(sParam) {
 	    var sPageURL = window.location.search.substring(1);
 	    var sURLVariables = sPageURL.split('&');
@@ -1323,7 +1397,14 @@
         }
     };
 
-    var doQueryLoadJsonStr = function(jsonStr, optNgName, optSkipValidation) {
+	// load a nodegroup
+	//
+	// jsonStr - str : sgjson string
+	// optNgName - str : nodegroup name
+	// optSkipValidation - boolean : don't validate
+	// optForceKeepCurrent - boolean : keep current connection if any w/o asking
+	// optCallback - func() : call this when done
+    var doQueryLoadJsonStr = function(jsonStr, optNgName, optSkipValidation, optForceKeepCurrent, optCallback) {
     	require(['sparqlgraph/js/sparqlgraphjson',
                  'sparqlgraph/js/modaliidx'],
                 function(SparqlGraphJson, ModalIidx) {
@@ -1346,8 +1427,19 @@
 				clearNodeGroup();
 			}
 
-            // no conn provided in json
-            if (conn == null) {
+			if (optForceKeepCurrent) {
+				// force use current conn if loaded
+				if (gConn) {
+                    doQueryLoadFile2(sgJson, optNgName, optSkipValidation, optCallback);
+                } else if (conn == null) {
+				    ModalIidx.alert("No connection", "This JSON has no connection information.<br>Load a connection first.");
+				} else {
+                    doQueryLoadConn(sgJson, conn, optNgName, optSkipValidation, optCallback);
+                }
+           
+			} else if (conn == null) {
+            	// no conn provided in json
+            
                 if (!gConn) {
                     ModalIidx.alert("No connection", "This JSON has no connection information.<br>Load a connection first.");
                     clearNodeGroup();
@@ -1381,7 +1473,7 @@
      * loads connection and makes call to load rest of sgJson
      * part of doQueryLoadJsonStr callback chain
      */
-    var doQueryLoadConn = function(sgJson, conn, optNgName, optSkipValidation) {
+    var doQueryLoadConn = function(sgJson, conn, optNgName, optSkipValidation, optCallback) {
     	require(['sparqlgraph/js/sparqlgraphjson',
                  'sparqlgraph/js/modaliidx'],
                 function(SparqlGraphJson, ModalIidx) {
@@ -1390,7 +1482,7 @@
 
             // function pointer for the thing we do next no matter what happens:
             //    doLoadConnection() with doQueryLoadFile2() as the callback
-            var doLoadConnectionCall = doLoadConnection.bind(this, conn, doQueryLoadFile2.bind(this, sgJson, optNgName, optSkipValidation));
+            var doLoadConnectionCall = doLoadConnection.bind(this, conn, doQueryLoadFile2.bind(this, sgJson, optNgName, optSkipValidation, optCallback));
 
             if (! existName) {
                 // new connection: ask if user wants to save it locally
@@ -1398,9 +1490,12 @@
                                  "Connection is not saved locally.<br><br>Do you want to save it?",
                                  ["Cancel",     "Don't Save",                     "Save"],
                                  [function(){},
-                                  doLoadConnectionCall,
-                                  function(){ gLoadDialog.addConnection(conn);
-                                              doLoadConnectionCall();
+                                  function() {
+												doLoadConnectionCall()
+											},
+                                  function(){ 
+												gLoadDialog.addConnection(conn);
+                                              	doLoadConnectionCall();
                                             }
                                  ]
                                 );
@@ -1427,7 +1522,7 @@
      * @param {JSON} grpJson    node group
      * @param {JSON} importJson import spec
      */
-    var doQueryLoadFile2 = function(sgJson, optNgName, optSkipValidation) {
+    var doQueryLoadFile2 = function(sgJson, optNgName, optSkipValidation, optCallback) {
     	// by the time this is called, the correct oInfo is loaded.
     	// and the gNodeGroup is empty.
     	require(['sparqlgraph/js/modaliidx', 'sparqlgraph/js/iidxhelper', 'sparqlgraph/js/msiclientnodegroupservice', 'sparqlgraph/js/sparqlgraphjson'],
@@ -1464,11 +1559,11 @@
 			if (optSkipValidation) {
 				nodeGroupChanged(false, newNgName);
         		saveUndoState();
-        		buildQuery();
+        		buildQuery(optCallback);
 			} else {
 	            // inflate and validate the nodegroup
 	            var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, validateFailure.bind(this));
-	            client.execAsyncInflateAndValidate(new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec()), validateCallback.bind(this, newNgName), validateFailure);
+	            client.execAsyncInflateAndValidate(new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec()), validateCallback.bind(this, newNgName, optCallback), validateFailure);
 	        }
         });
     };
@@ -1482,7 +1577,7 @@
     };
 
     // callback: successfully determined whether there are modelErrors
-    var validateCallback = function(newNgName, nodegroupJson, modelErrors, invalidItemStrings, warnings) {
+    var validateCallback = function(newNgName, optSuccessCallback, nodegroupJson, modelErrors, invalidItemStrings, warnings) {
 
         if (modelErrors.length > 0) {
             // some errors
@@ -1515,7 +1610,7 @@
         gNodeGroup.addJson(nodegroupJson);
         nodeGroupChanged(false, newNgName);
         saveUndoState();
-        buildQuery();
+        buildQuery(optSuccessCallback);
     };
 
     var reValidateNodegroup = function(successCallback, optSkipSuccessDialog) {
@@ -2075,16 +2170,17 @@
             resultsPara.appendChild(headerTable);
             resultsPara.appendChild(resultsDiv);
 
+			var scrollCallback = function() { resultsDiv.scrollIntoViewIfNeeded(); }
             // display results
             var plotter = gPlotSpecsHandler == null ? null : gPlotSpecsHandler.getDefaultPlotter();
             if (plotter != null) {
-                plotter.addPlotToDiv(resultsDiv, tableResults);
+                plotter.addPlotToDiv(resultsDiv, tableResults, undefined, scrollCallback);
                 butColOrder.disabled = true;
             } else {
-                tableResults.putTableResultsDatagridInDiv(resultsDiv, undefined, noSort);
+                tableResults.putTableResultsDatagridInDiv(resultsDiv, scrollCallback, noSort);
                 butColOrder.disabled = false;
             }
-
+			
             guiUnDisableAll();
             guiResultsNonEmpty();
             setStatus("");
@@ -2166,6 +2262,7 @@
                 div.innerHTML =  "<b>Error:</b> Results returned from service are not JSON-LD";
                 return;
             }
+			
 			
 			var rawJsonArr = res.getGraphResultsJsonArr();
 			if (rawJsonArr.length >= RESULTS_MAX_ROWS) {
@@ -2261,6 +2358,8 @@
             buildButton.onclick = this.constructBuildNodegroupCallback.bind(this, network);
             removeButton.onclick = this.constructRemoveCallback.bind(this, network);
 
+			div.scrollIntoViewIfNeeded();
+			
             // add data
             var jsonLd = res.getGraphResultsJsonArr(true, true, true);
             jsonLd.slice(0, RESULTS_MAX_ROWS);
@@ -2788,7 +2887,7 @@
         status.appendChild(table);
 	};
 
-    var buildQuery = function() {
+    var buildQuery = function(optSuccessCallback) {
 
         if (gNodeGroup.getNodeCount() == 0) {
             document.getElementById('queryText').value = "";
@@ -2797,6 +2896,8 @@
             return;
         }
 
+		var successCallback = optSuccessCallback ? optSuccessCallback : function(){};
+		
         require(['sparqlgraph/js/msiclientnodegroupservice',
 			    	        ], function(MsiClientNodeGroupService) {
 
@@ -2805,19 +2906,19 @@
             var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, buildQueryFailure.bind(this));
             switch (gNodeGroup.getQueryType()) {
             case SemanticNodeGroup.QT_DISTINCT:
-                client.execAsyncGenerateSelect(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
+                client.execAsyncGenerateSelect(gNodeGroup, gConn, buildQuerySuccess.bind(this, successCallback), buildQueryFailure.bind(this));
                 break;
             case SemanticNodeGroup.QT_COUNT:
-                client.execAsyncGenerateCountAll(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
+                client.execAsyncGenerateCountAll(gNodeGroup, gConn, buildQuerySuccess.bind(this, successCallback), buildQueryFailure.bind(this));
                 break;
             case SemanticNodeGroup.QT_ASK:
-                client.execAsyncGenerateAsk(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
+                client.execAsyncGenerateAsk(gNodeGroup, gConn, buildQuerySuccess.bind(this, successCallback), buildQueryFailure.bind(this));
                 break;
             case SemanticNodeGroup.QT_CONSTRUCT:
-                client.execAsyncGenerateConstruct(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
+                client.execAsyncGenerateConstruct(gNodeGroup, gConn, buildQuerySuccess.bind(this, successCallback), buildQueryFailure.bind(this));
                 break;
             case SemanticNodeGroup.QT_DELETE:
-                client.execAsyncGenerateDelete(gNodeGroup, gConn, buildQuerySuccess.bind(this), buildQueryFailure.bind(this));
+                client.execAsyncGenerateDelete(gNodeGroup, gConn, buildQuerySuccess.bind(this, successCallback), buildQueryFailure.bind(this));
                 break;
             default:
                 throw new Error("Internal error: Unknown query type.");
@@ -2825,7 +2926,7 @@
         });
     };
 
-    var buildQuerySuccess = function (sparql, optMsg) {
+    var buildQuerySuccess = function (successCallback, sparql, optMsg) {
         document.getElementById('queryText').value = sparql;
         if (optMsg) {
             setStatus(optMsg, true);
@@ -2839,6 +2940,8 @@
         } else {
             guiQueryEmpty();
         }
+		
+		successCallback();
 
     };
 

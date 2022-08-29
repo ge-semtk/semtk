@@ -59,13 +59,13 @@ define([	// properly require.config'ed   bootstrap-modal
                 this.spec.spec = specJson;
             },
 
-            addPlotToDiv : function(div, tableRes, optImgElem) {
+            addPlotToDiv : function(div, tableRes, optImgElem, optCallback) {
 
                 var utilityClient = new MsiClientUtility(g.service.utility.url);
-                utilityClient.execProcessPlotSpec(this.spec, tableRes.getTable(), this.processSpecSuccess.bind(this, div, optImgElem));
+                utilityClient.execProcessPlotSpec(this.spec, tableRes.getTable(), this.processSpecSuccess.bind(this, div, optImgElem, optCallback));
             },
 
-            processSpecSuccess : function(div, optImgElem, msiRes) {
+            processSpecSuccess : function(div, optImgElem, optCallback, msiRes) {
                 var data = msiRes.getSimpleResultField("plot").spec.data;
                 var layout = msiRes.getSimpleResultField("plot").spec.layout;
                 var config = msiRes.getSimpleResultField("plot").spec.config;
@@ -89,6 +89,8 @@ define([	// properly require.config'ed   bootstrap-modal
 
                 //Plotly.newPlot( plotDiv, [ {    x: [0,1,2,3,1,1,6],type: 'histogram',}]);
                 div.appendChild(plotDiv);
+                if (optCallback)
+                	optCallback();
             },
 
             adjustLayoutDimensions : function(layout, div) {

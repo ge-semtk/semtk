@@ -43,8 +43,17 @@ define([	// properly require.config'ed
 		/**
 		 * Runtime constraints object
 		 */
-		var RuntimeConstraints = function () {
-            this.constraintsJson = [];  // a list of jsons, each for a single constraint
+		var RuntimeConstraints = function (optJsonString) {
+			try {
+            	this.constraintsJson = optJsonString ? JSON.parse(optJsonString) : [];  
+            } catch (err) {
+                throw new Error("Invalid constraints json: " + optJsonString + "\n" + err);
+            }
+            
+            // silently clean up error where a single constraint is given instead of a list
+            if (!Array.isArray(this.constraintsJson)) {
+				this.constraintsJson = [this.constraintsJson];
+			}
 		};
 
 		RuntimeConstraints.prototype = {
