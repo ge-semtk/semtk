@@ -17,8 +17,15 @@
 
 package com.ge.research.semtk.services.nodeGroupExecution;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 
@@ -84,6 +91,7 @@ import com.ge.research.semtk.services.nodeGroupExecution.requests.StatusRequestB
 import com.ge.research.semtk.services.nodeGroupExecution.requests.TypedDispatchByIdRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.TypedDispatchFromNodeGroupRequestBody;
 import com.ge.research.semtk.sparqlToXLib.SparqlToXLibUtil;
+import com.ge.research.semtk.sparqlX.NeptuneSparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
@@ -97,6 +105,7 @@ import com.ge.research.semtk.springutilib.requests.IngestConstants;
 import com.ge.research.semtk.springutilib.requests.IngestionFromStringsAndClassRequestBody;
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointRequestBody;
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointTrackRequestBody;
+import com.ge.research.semtk.springutilib.requests.SparqlEndpointsRequestBody;
 import com.ge.research.semtk.springutilib.requests.TrackQueryRequestBody;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
@@ -140,6 +149,8 @@ public class NodeGroupExecutionRestController {
 	NodegroupExecutionStatusProperties status_prop;
 	@Autowired
 	NodegroupExecutionIngestProperties ingest_prop;
+	@Autowired
+	private NgeUploadNeptuneProperties neptune_prop; 
 	
 	@PostConstruct
     public void init() {
@@ -152,6 +163,7 @@ public class NodeGroupExecutionRestController {
 		results_prop.validateWithExit();
 		status_prop.validateWithExit();
 		ingest_prop.validateWithExit();
+		neptune_prop.validateWithExit();
 
 		servicesgraph_props.validateWithExit();
 		log_prop.validateWithExit();
@@ -1586,6 +1598,85 @@ public class NodeGroupExecutionRestController {
 		}
 	}
 	
+	/**
+	 *  This is in the NodeGroupExecution service instead of the QueryService because:
+	 *  It needs to be async because it saves a potentially large graph to disk
+	 *  and reads it back, uploading to another potentially large graph.
+	 *  Since these are going to disk instead to the REST caller,
+	 *  there is nothing to keep the connection open, so it could time out.
+	 *  It also reads AND writes in one step, so more likely to time out.
+	 *  SparqlQueryService is not capable of async.
+	 */
+	@Operation(
+			description="Insert copy of graph into another graph.  Async gives JobId."
+			)
+	@CrossOrigin
+	@RequestMapping(value={"/copyGraph"}, method= RequestMethod.POST)
+	public JSONObject copyGraph(@RequestBody SparqlEndpointsRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME = "copyGraph";
+		HeadersManager.setHeaders(headers);
+	
+		LocalLogger.logToStdOut("Sparql Query Service start downloadOwlFile");
+		
+		try {
+			String jobId = JobTracker.generateJobId();
+			JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
+			tracker.createJob(jobId);
+			
+			new Thread(() -> { 
+				File tempFile = null;
+				try {
+					// setup
+					tracker.setJobPercentComplete(jobId, 10);
+					HeadersManager.setHeaders(headers);
+					SparqlEndpointInterface fromSei = requestBody.buildFromSei();
+					
+					// fromGraph to temp file
+					String filename = UUID.randomUUID().toString();
+					File tempDir = new File(System.getProperty("java.io.tmpdir"));
+				    tempFile = File.createTempFile(filename, ".owl", tempDir);
+				    OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(tempFile), StandardCharsets.UTF_8);
+				    LocalLogger.logToStdOut(tempFile.getAbsolutePath());
+					fromSei.downloadOwlStreamed(writer);
+					writer.close();
+					tracker.setJobPercentComplete(jobId, 60);
+					
+					// temp file to toGraph
+					SparqlEndpointInterface toSei = requestBody.buildToSei();
+					InputStream fis = new FileInputStream(tempFile);
+					try  {
+						this.uploadFile(toSei, fis, "temp.owl"); 
+					} finally {
+						fis.close();
+					}
+					tracker.setJobSuccess(jobId, "Successfully copied " + fromSei.getGraph() + " into " + toSei.getGraph());
+					
+				} catch (Exception e) {
+					try {
+						tracker.setJobFailure(jobId, e.getMessage());
+					} catch (Exception ee) {
+						LocalLogger.logToStdErr(ENDPOINT_NAME + " error accessing job tracker");
+						LocalLogger.printStackTrace(ee);
+					}
+				} finally {
+					try {
+						tempFile.delete();
+					} catch (Exception ee) {}
+				}
+			}).start();
+			
+			SimpleResultSet res = new SimpleResultSet();
+			res.addJobId(jobId);
+			res.setSuccess(true);
+			return res.toJson();
+			
+		} catch (Exception e) {			
+			LocalLogger.printStackTrace(e);
+			SimpleResultSet res = new SimpleResultSet(false, e.getMessage());
+			return res.toJson();
+		} 
+	}	
+	
 	@Operation(
 			summary=	"Run a query of tracked events."
 			)
@@ -1711,7 +1802,29 @@ public class NodeGroupExecutionRestController {
 		
 		return retval;
 	}
-
+	/**
+	 * Upload an inputstream to an sei
+	 * @param sei
+	 * @param is
+	 * @param filename - some triplestores need to see the .owl or .ttl on this otherwise-random filename
+	 * @throws - exception on any error
+	 */
+	private void uploadFile(SparqlEndpointInterface sei, InputStream is, String filename) throws Exception {
+		
+		if (sei instanceof NeptuneSparqlEndpointInterface) {
+			((NeptuneSparqlEndpointInterface)sei).setS3Config(
+					neptune_prop.getS3ClientRegion(),
+					neptune_prop.getS3BucketName(), 
+					neptune_prop.getAwsIamRoleArn());
+		}
+		
+		JSONObject simpleResultSetJson = sei.executeAuthUploadStreamed(is, filename);
+		SimpleResultSet sResult = SimpleResultSet.fromJson(simpleResultSetJson);
+		sResult.throwExceptionIfUnsuccessful();
+		
+		oinfo_props.getClient().uncacheChangedConn(sei);
+	}
+	
 	private SparqlGraphJson getNodegroupById(String id) throws Exception {
 		NodeGroupStoreConfig ngcConf = new NodeGroupStoreConfig(ngstore_prop.getProtocol(), ngstore_prop.getServer(), ngstore_prop.getPort());
 		NodeGroupStoreRestClient nodegroupstoreclient = new NodeGroupStoreRestClient(ngcConf);

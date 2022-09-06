@@ -193,7 +193,6 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 	
 	@Override
 	public JSONObject executeAuthUploadStreamed(InputStream is, String filenameUNUSED) throws AuthorizationException, Exception {
-		
 		MultipartEntityBuilder builder = MultipartEntityBuilder.create();   
 		builder.addBinaryBody("files[]", is, ContentType.MULTIPART_FORM_DATA, "something.owl");
 		HttpEntity entity = builder.build();
@@ -229,13 +228,13 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 
 		SimpleResultSet ret = new SimpleResultSet();
 		
-		Long count = 0L;
+		Long count = -1L;
 		try {
 			JSONObject jObj = (JSONObject) new JSONParser().parse(responseTxt);
 			count = (Long) jObj.get("count");
 		} catch (Exception e) {}
 		
-		if(count > 0){
+		if(count >= 0){
 			ret.setSuccess(true);
 		} else {
 			ret.setSuccess(false);

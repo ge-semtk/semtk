@@ -24,7 +24,9 @@ import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -860,7 +862,7 @@ public abstract class SparqlEndpointInterface {
 	 * @param writer
 	 * @throws Exception
 	 */
-	public void executeQueryPostStreamed(String query, SparqlResultTypes resultType, PrintWriter writer) throws Exception{
+	public void executeQueryPostStreamed(String query, SparqlResultTypes resultType, Writer writer) throws Exception{
 		AuthorizationManager.authorizeQuery(this, query);
 		
 		URL url = new URL(this.getPostURL(resultType));
@@ -898,7 +900,7 @@ public abstract class SparqlEndpointInterface {
 
 		String output;
 		while ((output = br.readLine()) != null) {
-			writer.print(output);
+			writer.write(output);
 		}
 
 		conn.disconnect();
@@ -1272,7 +1274,7 @@ public abstract class SparqlEndpointInterface {
 		return (String) res.get(SparqlResultTypes.RDF.toString());
 	}
 	
-	public void downloadOwlStreamed(PrintWriter writer) throws AuthorizationException, Exception {
+	public void downloadOwlStreamed(Writer writer) throws AuthorizationException, Exception {
 		String query = SparqlToXUtils.generateConstructSPOSparql(this, "");
 		AuthorizationManager.authorizeQuery(this, query);
 		

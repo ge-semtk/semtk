@@ -33,7 +33,13 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
-
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,6 +49,7 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
+import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
@@ -62,9 +69,12 @@ import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.sparqlX.parallel.SparqlParallelQueries;
+import com.ge.research.semtk.springutilib.requests.SparqlEndpointRequestBody;
+import com.ge.research.semtk.springutilib.requests.SparqlEndpointsRequestBody;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -479,19 +489,20 @@ public class SparqlQueryServiceRestController {
 		
 	}
 
-// TODO: this version is still breaking pipes somewhere
-//	@Operation(
-//			description="Download owl with streaming instead of result set.  Better for large files."
-//			)
-//	@CrossOrigin
-//	@RequestMapping(value={"/downloadOwlStreamed"}, method= RequestMethod.POST, produces="rdf/xml")
+	@Operation(
+			description="Download owl with streaming a file instead of result set.  Better for large files."
+			)
+	@CrossOrigin
+	@RequestMapping(value={"/downloadOwlFile"}, method= RequestMethod.POST, produces="rdf/xml")
 	public void downloadOwlStreamed(@RequestBody SparqlAuthRequestBody requestBody, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		SparqlEndpointInterface sei = null;
-		LocalLogger.logToStdOut("Sparql Query Service start downloadOwlStreamed");
+		LocalLogger.logToStdOut("Sparql Query Service start downloadOwlFile");
 		
 		try {			
-			requestBody.validate(); 	// check inputs 		
+			requestBody.validate(); 	// check inputs 
+			resp.setHeader("Content-Disposition", "attachment; filename=download.owl");
+			resp.setCharacterEncoding("UTF_8");
 			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
 			sei.downloadOwlStreamed(resp.getWriter());
 			
@@ -507,6 +518,7 @@ public class SparqlQueryServiceRestController {
 			HeadersManager.setHeaders(new HttpHeaders());
 		}		
 	}	
+	
 	
 	//public JSONObject uploadOwl(@RequestBody SparqlAuthRequestBody requestBody, @RequestParam("owlFile") MultipartFile owlFile){
     // We can't use a @RequestBody with a @RequestParam,
@@ -566,26 +578,8 @@ public class SparqlQueryServiceRestController {
 
 			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, graph, user, password);
 			
-			if (sei instanceof NeptuneSparqlEndpointInterface) {
-				// S3 bucket is option.  It can be filled with blanks and nulls
-				((NeptuneSparqlEndpointInterface)sei).setS3Config(
-						serviceProps.getS3ClientRegion(),
-						serviceProps.getS3BucketName(), 
-						serviceProps.getAwsIamRoleArn());
-			}
-			
-			if (! sei.isAuth()) { 
-				throw new Exception("Required SPARQL endpoint user/password weren't provided.");
-			}
-			
-			simpleResultSetJson = sei.executeAuthUploadStreamed(multiFile.getInputStream(), multiFile.getName());
-			// previous non-streaming code:
-			// simpleResultSetJson = sei.executeAuthUploadOwl(ttlFile.getBytes());
-			
-			SimpleResultSet sResult = SimpleResultSet.fromJson(simpleResultSetJson);
-			if (sResult.getSuccess()) {
-				uncache(sei);
-			}
+			SimpleResultSet sResult = this.uploadFile(sei, multiFile.getInputStream(), multiFile.getName());
+			return sResult.toJson();
 			
 		} catch (Exception e) {			
 			LocalLogger.printStackTrace(e);
@@ -597,8 +591,37 @@ public class SparqlQueryServiceRestController {
 			HeadersManager.setHeaders(new HttpHeaders());
 		}		
 		
-		return simpleResultSetJson;	
 	}	
+	
+	/**
+	 * Upload an inputstream to an sei
+	 * @param sei
+	 * @param is
+	 * @param filename - some triplestores need to see the .owl or .ttl on this otherwise-random filename
+	 * @return - SimpleResultSet possibly containing failure
+	 */
+	private SimpleResultSet uploadFile(SparqlEndpointInterface sei, InputStream is, String filename) throws Exception {
+		
+		if (sei instanceof NeptuneSparqlEndpointInterface) {
+			((NeptuneSparqlEndpointInterface)sei).setS3Config(
+					serviceProps.getS3ClientRegion(),
+					serviceProps.getS3BucketName(), 
+					serviceProps.getAwsIamRoleArn());
+		}
+		
+		if (! sei.isAuth()) { 
+			throw new Exception("Required SPARQL endpoint user/password weren't provided.");
+		}
+		
+		JSONObject simpleResultSetJson = sei.executeAuthUploadStreamed(is, filename);
+
+		SimpleResultSet sResult = SimpleResultSet.fromJson(simpleResultSetJson);
+		if (sResult.getSuccess()) {
+			uncache(sei);
+		}
+		
+		return sResult;
+	}
 	
 	@Operation(
 			description="Using graph in owl's rdf:RDF xml:base, clear graph and (re-)import owl" 

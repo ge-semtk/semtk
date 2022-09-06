@@ -1,4 +1,4 @@
-package com.ge.research.semtk.services.sparql;
+package com.ge.research.semtk.springutillib.properties;
 
 import com.ge.research.semtk.properties.Properties;
 

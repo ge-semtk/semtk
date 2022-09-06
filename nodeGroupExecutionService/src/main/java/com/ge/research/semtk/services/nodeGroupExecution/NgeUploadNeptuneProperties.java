@@ -15,7 +15,7 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.sparql;
+package com.ge.research.semtk.services.nodeGroupExecution;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
@@ -24,9 +24,9 @@ import com.ge.research.semtk.springutillib.properties.NeptuneS3Properties;
 
 @Configuration
 @ConfigurationProperties(prefix="query.neptuneupload", ignoreUnknownFields = true)
-public class QueryUploadNeptuneProperties extends NeptuneS3Properties {
+public class NgeUploadNeptuneProperties extends NeptuneS3Properties {
 	public void validate() throws Exception {
-		this.setPrefix("query.neptuneupload");
+		this.setPrefix("node-group-execution.neptuneupload");
 		super.validate();
 	}
 }
