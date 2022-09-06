@@ -48,7 +48,7 @@ public class DataLoadBatchHandler {
 		this.oInfo = sgJson.getOntologyInfo();
 		this.importSpec = sgJson.getImportSpecHandler();
 		this.importSpec.initEndpoint(endpoint);
-		
+		this.warnings = importSpec.getWarnings();
 		if (sgJson.getImportSpecJson() == null) {
 			throw new Exception("The data transformation import spec is null.");
 		}
@@ -69,7 +69,7 @@ public class DataLoadBatchHandler {
 	}
 	
 	/**
-	 * Possibly null or empty list of column warnings (missing or extra)
+	 * Possibly null or empty list of column warnings (missing or extra) and uri Lookup warnings
 	 * @return
 	 */
 	public ArrayList<String> getWarnings() {
@@ -104,10 +104,22 @@ public class DataLoadBatchHandler {
 			this.failuresEncountered = new Table(failureColsArray, failureColTypesArray, null);
 			
 			// get warnings about missing/extra columns
-			this.warnings = this.importSpec.generateColumnWarnings(ds.getColumnNamesinOrder());
+			this.addWarnings( this.importSpec.generateColumnWarnings(ds.getColumnNamesinOrder()) );
 		}
 		else{
 			throw new Exception("dataset cannot be null");
+		}
+	}
+	
+	/**
+	 * Add new warnings
+	 * @param newWarnings - may be null
+	 */
+	private void addWarnings(ArrayList<String> newWarnings) {
+		if (newWarnings != null) {
+			if (this.warnings == null)
+				this.warnings = new ArrayList<String>();
+			this.warnings.addAll(newWarnings);
 		}
 	}
 	

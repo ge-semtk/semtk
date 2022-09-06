@@ -97,6 +97,7 @@ public class ImportSpecHandler {
 	DataValidator dataValidator = null;
 
 	HashMap<String, UriLookupPerfMonitor> lookupPerfMonitors = new HashMap<String, UriLookupPerfMonitor>();
+	private ArrayList<String> warnings = null;
 
 	public ImportSpecHandler(JSONObject importSpecJson, JSONObject ngJson, SparqlConnection lookupConn,
 			OntologyInfo oInfo) throws Exception {
@@ -514,13 +515,28 @@ public class ImportSpecHandler {
 				String classUri = lookupNode.getFullUriName();
 				if (classToMD5Hash.containsKey(classUri)) {
 					if (!classToMD5Hash.get(classUri).equals(ngMD5)) {
-						throw new Exception(String.format("Class %s is 'create if missing' in multiple columns with URI lookup using different criteria.\nThis may result in duplicates.\nFix: split into multiple ingestion templates and steps.", lookupNode.getUri(true)));
+						//throw new Exception(String.format("Class %s is 'create if missing' in multiple columns with URI lookup using different criteria.\nThis may result in duplicates.\nFix: split into multiple ingestion templates and steps.", lookupNode.getUri(true)));
+						this.addWarning(String.format("Class %s at node %s is 'create if missing' in multiple columns with URI lookup using different criteria.\nThis may result in duplicates.\nFix: split into multiple ingestion templates and steps.", lookupNode.getUri(true), importNodeId));
 					}
 				} else {
 					classToMD5Hash.put(classUri, ngMD5);
 				}
 			}
 		}
+	}
+	
+	/**
+	 * Return possibly null ArrayList<String> of warnings
+	 * @return
+	 */
+	public ArrayList<String> getWarnings() {
+		return this.warnings;
+	}
+	
+	private void addWarning(String warnTxt) {
+		if (this.warnings == null)
+			this.warnings = new ArrayList<String>();
+		this.warnings.add(warnTxt);
 	}
 
 	/**
