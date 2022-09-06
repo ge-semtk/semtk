@@ -24,6 +24,7 @@ import static org.junit.Assume.assumeTrue;
 
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.StringUtils;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -1604,14 +1605,10 @@ public class DataLoaderTest_IT {
 		// both are createIfMissing
 		// this is illegal
 		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "chain_multi_lookups_createifmissing.json");
-		try {
-			dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
-			assertTrue("Missing expected exception createIfmissing same class in multiple columns with different lookups", false);
-		} catch (Exception e) {
-			assertTrue("Exception doesn't contain 'create if missing'", e.getMessage().contains("create if missing"));
-		}
+		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		String warnings =  StringUtils.join(dl.getWarnings(), ";").toLowerCase();
 		
-		
+		assertTrue("Missing warning for possible duplicates", warnings.contains("create if missing"));
 		
 	}
 	/**
