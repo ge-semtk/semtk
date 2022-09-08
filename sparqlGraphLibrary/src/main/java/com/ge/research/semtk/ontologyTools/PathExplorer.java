@@ -33,6 +33,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlToXLib.SparqlToXLibUtil;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.sparqlX.XSDSupportedType;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -151,7 +152,8 @@ public class PathExplorer {
 			NodeGroup ng = new NodeGroup();		
 			PathItemRequest anchorRequest = requestList.get(perm.get(0));
 			Node anchorNode = ng.addNode(anchorRequest.getClassUri(), this.oInfo);
-			ng.constrainNodeToInstance(anchorNode, anchorRequest.getInstanceUri());
+			
+			this.constrainNode(ng, anchorNode, anchorRequest);
 			
 			// add incoming path, if any
 			OntologyPath anchorPath = anchorRequest.getIncomingPath();
@@ -187,7 +189,7 @@ public class PathExplorer {
 				}
 				
 				// constrain the node with instance URI if any
-				ng.constrainNodeToInstance(n,  newRequest.getInstanceUri());
+				this.constrainNode(ng, n, newRequest);
 			}	
 			
 			// save if it looks best so far
@@ -206,6 +208,24 @@ public class PathExplorer {
 		}
 		
 		return retNg;
+	}
+	
+	/**
+	 * Constrain a node by label and property if they exist, or instanceUri if it exists, or no-op
+	 * @param ng
+	 * @param node
+	 * @param request
+	 * @throws Exception
+	 */
+	private void constrainNode(NodeGroup ng, Node node, PathItemRequest request) throws Exception {
+		if (request.getLabelStr() != null) {
+			// constrain by the label and property if they exist
+			XSDSupportedType str = XSDSupportedType.STRING;
+			node.addValueConstraint(node.getBindingOrSparqlID() + " <" + request.getPropertyUri() + "> " + XSDSupportedType.STRING.buildRDF11ValueString(request.getLabelStr()));
+		} else {
+			// constrain by the instanceUri if there is one
+			ng.constrainNodeToInstance(node,  request.getInstanceUri());
+		}
 	}
 
 	/**
@@ -233,7 +253,7 @@ public class PathExplorer {
 	private NodeGroup buildSingleNodeNg(ArrayList<PathItemRequest> requestList) throws Exception{
 		NodeGroup ng = new NodeGroup();
 		Node n = ng.addNode(requestList.get(0).getClassUri(), this.oInfo);
-		ng.constrainNodeToInstance(n,  requestList.get(0).getInstanceUri());
+		this.constrainNode(ng, n,  requestList.get(0));
 		this.addNodegroupReturns(ng, requestList);
 		
 		LocalLogger.logToStdOut("...succeeded");
@@ -565,7 +585,8 @@ public class PathExplorer {
 					PathItemRequest endRequest = endRequestList.get(i);
 					
 					anchor = ng.addNode(anchorRequest.getClassUri(), this.oInfo);
-					ng.constrainNodeToInstance(anchor, anchorRequest.getInstanceUri());
+					this.constrainNode(ng, anchor,  anchorRequest);
+
 					
 					// Two modes of operation:
 					// 1) we're using predStats != null OR 
@@ -574,7 +595,8 @@ public class PathExplorer {
 						
 						// add the path
 						Node added = ng.addPath(pathList.get(i), anchor, oInfo);
-						ng.constrainNodeToInstance(added, endRequest.getInstanceUri());
+						this.constrainNode(ng, added,  endRequest);
+
 						
 						// try adding all the missing instances
 						for (PathItemRequest missingClassRequest : missingClassLists.get(i)) {
@@ -762,7 +784,9 @@ public class PathExplorer {
 				if (this.predStats != null || this.pathHasInstance(ng, connectPoint, path, instanceUri)) {
 					// first success: modify ng and return true
 					Node n =  ng.addPath(path, ng.getNodeBySparqlID(connectPoint.getSparqlID()), this.oInfo);
+					
 					ng.constrainNodeToInstance(n, instanceUri);
+					
 					return n;
 				} 
 			}

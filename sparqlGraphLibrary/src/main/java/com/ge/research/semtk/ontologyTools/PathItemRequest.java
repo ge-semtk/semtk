@@ -5,12 +5,17 @@ import java.util.HashSet;
 
 public class PathItemRequest {
 	// things that hlep define the classUri
-	private String instanceUri = null;  
-	private String incomingClassUri = null;
-	private String incomingPropUri = null;
+	private String instanceUri = null;      // the uri of the instance
+	
+	// constraint
+	private String labelStr = null;         // a label that uniquely defines the instance
+	private String propertyUri = null;      // property used with the label to uniquely define the instance
+	
+	private String incomingClassUri = null;  // The instance must be connected to this class
+	private String incomingPropUri = null;   // The instance must be connected using this prop
 	
 	// node that must be added to path
-	private String classUri = null;
+	private String classUri = null;        // 	class of this instance
 	
 	// parallel arrays
 	private ArrayList<String> propUriList = null;
@@ -68,6 +73,14 @@ public class PathItemRequest {
 
 	public void setPropUriList(ArrayList<String> propUriList) {
 		this.propUriList = propUriList;
+	}
+	
+	public String getLabelStr() {
+		return labelStr;
+	}
+
+	public String getPropertyUri() {
+		return propertyUri;
 	}
 
 	/**
@@ -247,5 +260,12 @@ public class PathItemRequest {
 			ret.addTriple(this.getIncomingClassUri(), this.getIncomingPropUri(), this.getClassUri());
 			return ret;
 		}
+	}
+
+	public void setLabelStr(String labelStr) {
+		this.labelStr = labelStr;
+	}
+	public void setPropertyUri(String propertyUri) {
+		this.propertyUri = propertyUri;
 	}
 }
