@@ -9,7 +9,7 @@ public class PathItemRequest {
 	
 	// constraint
 	private String labelStr = null;         // a label that uniquely defines the instance
-	private String propertyUri = null;      // property used with the label to uniquely define the instance
+	private String labelPropUri = null;      // property used with the label to uniquely define the instance
 	
 	private String incomingClassUri = null;  // The instance must be connected to this class
 	private String incomingPropUri = null;   // The instance must be connected using this prop
@@ -79,8 +79,8 @@ public class PathItemRequest {
 		return labelStr;
 	}
 
-	public String getPropertyUri() {
-		return propertyUri;
+	public String getLabelPropUri() {
+		return labelPropUri;
 	}
 
 	/**
@@ -265,7 +265,7 @@ public class PathItemRequest {
 	public void setLabelStr(String labelStr) {
 		this.labelStr = labelStr;
 	}
-	public void setPropertyUri(String propertyUri) {
-		this.propertyUri = propertyUri;
+	public void setLabelPropUri(String propertyUri) {
+		this.labelPropUri = propertyUri;
 	}
 }

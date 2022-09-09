@@ -169,7 +169,7 @@ public class PathExplorer {
 				String addFirstUri = (incomingPath != null) ? incomingPath.getTriple(0).getSubject() : newRequest.getClassUri();
 				
 				// find the request uri or incoming path uri
-				ArrayList<Node> existsList = ng.getNodesByURI(addFirstUri);
+				ArrayList<Node> existsList = ng.getNodesBySuperclassURI(addFirstUri, this.oInfo);
 				Node n = existsList.size() > 0 ? existsList.get(0) : null;
 				
 				// if not found, add the request uri or incoming path uri
@@ -221,7 +221,7 @@ public class PathExplorer {
 		if (request.getLabelStr() != null) {
 			// constrain by the label and property if they exist
 			XSDSupportedType str = XSDSupportedType.STRING;
-			node.addValueConstraint(node.getBindingOrSparqlID() + " <" + request.getPropertyUri() + "> " + XSDSupportedType.STRING.buildRDF11ValueString(request.getLabelStr()));
+			node.addValueConstraint(node.getBindingOrSparqlID() + " <" + request.getLabelPropUri() + "> " + XSDSupportedType.STRING.buildRDF11ValueString(request.getLabelStr()));
 		} else {
 			// constrain by the instanceUri if there is one
 			ng.constrainNodeToInstance(node,  request.getInstanceUri());
@@ -303,7 +303,7 @@ public class PathExplorer {
 	 * @throws Exception
 	 */
 	public Node findNodeMatchingRequest(NodeGroup ng, PathItemRequest request, boolean matchInstance) throws Exception {
-		for (Node n : ng.getNodesByURI(request.getClassUri())) {
+		for (Node n : ng.getNodesBySuperclassURI(request.getClassUri(), this.oInfo)) {
 			// match node because request has instance and node has a value constraint
 			if ( matchInstance && request.getInstanceUri() != null && n.getValueConstraint() != null && n.getValueConstraintStr().contains(request.getInstanceUri())) {
 				return n;
