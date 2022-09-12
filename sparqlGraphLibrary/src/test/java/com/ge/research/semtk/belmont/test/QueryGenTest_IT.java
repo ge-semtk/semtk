@@ -627,6 +627,7 @@ public class QueryGenTest_IT {
 		SparqlEndpointInterface sei = sgJsonBattery.getSparqlConn().getDefaultQueryInterface();
 		
 		String query = ng.generateSparqlConstruct();
+		query = IntegrationTestUtility.replaceGeneratedPrefix(query);
 		
 		JSONObject responseJson = sei.executeQuery(query, SparqlResultTypes.GRAPH_JSONLD);
 		JSONArray graph = (JSONArray)responseJson.get("@graph");

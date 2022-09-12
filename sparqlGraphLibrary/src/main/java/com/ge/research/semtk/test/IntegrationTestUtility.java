@@ -282,6 +282,15 @@ public class IntegrationTestUtility{
 		}
 	}
 	
+	/**
+	 * Replace "http://semtk.research.ge.com/generated# with UriResolver.DEFAULT_URI_PREFIX
+	 * @param str
+	 * @return new string
+	 */
+	public static String replaceGeneratedPrefix(String str) {
+		return str.replace("http://semtk.research.ge.com/generated#", UriResolver.DEFAULT_URI_PREFIX);
+
+	}
 	public static void compareResults(String actual, Object caller, String expectedResourceName) throws Exception {
 		String expected = null;
 		
@@ -291,7 +300,7 @@ public class IntegrationTestUtility{
 			throw new Exception ("Error retrieving file: " + expectedResourceName, e);
 		}
 		
-		expected = expected.replace("http://semtk.research.ge.com/generated#", UriResolver.DEFAULT_URI_PREFIX);
+		expected = replaceGeneratedPrefix(expected);
 		
 		String actualLines[] = actual.split("\\r?\\n");
 		String expectedLines[] = expected.split("\\r?\\n");
