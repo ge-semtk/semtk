@@ -50,6 +50,7 @@ import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.load.utility.UriResolver;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -1236,7 +1237,7 @@ public class DataLoaderTest_IT {
 		Dataset ds = new CSVDataset(
 							"batteryId,Cell\n"
 							+ "created1,myCell\n"
-							+ "created2,http://semtk.research.ge.com/generated#myCell", 
+							+ "created2," + UriResolver.DEFAULT_URI_PREFIX + "myCell", 
 							true);
 		
 		// import

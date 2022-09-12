@@ -33,7 +33,7 @@ public class UriResolver {
 	// in any case, it would be nice to have a one-stop location for this sort of task.
 
 	// default uri 
-	public final static String DEFAULT_URI_PREFIX = "urn://semtk#";  //"http://semtk.research.ge.com/generated#";
+	public final static String DEFAULT_URI_PREFIX = "uri://semtk#";  //"http://semtk.research.ge.com/generated#";
 	
 	private String userUriPrefix = "";
 	private OntologyInfo oInfo = null;

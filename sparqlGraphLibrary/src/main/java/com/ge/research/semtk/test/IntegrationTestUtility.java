@@ -48,6 +48,7 @@ import com.ge.research.semtk.fdc.FdcClientConfig;
 import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.load.utility.UriResolver;
 import com.ge.research.semtk.logging.easyLogger.LoggerClientConfig;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
@@ -289,6 +290,8 @@ public class IntegrationTestUtility{
 		} catch (Exception e) {
 			throw new Exception ("Error retrieving file: " + expectedResourceName, e);
 		}
+		
+		expected = expected.replace("http://semtk.research.ge.com/generated#", UriResolver.DEFAULT_URI_PREFIX);
 		
 		String actualLines[] = actual.split("\\r?\\n");
 		String expectedLines[] = expected.split("\\r?\\n");
