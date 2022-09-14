@@ -573,6 +573,7 @@ define([	// properly require.config'ed
             setReport : function(reportJsonStr) {
                 var json = JSON.parse(reportJsonStr);
                 this.editor.setValue(json);
+                var block = this.editor.getValue();
                 this.expandOrCollapseAll(false);
                 this.setReportAsUnchanged();
             },

@@ -61,7 +61,7 @@ define([	// properly require.config'ed   bootstrap-modal
                         var nodegroupArr = resultSet.getStringResultsColumn("item");
 
                         if (nodegroupArr.length < 1) {
-                             this.msi.userFailureCallback("<b>Failure retrieving nodegroup.</b><br>Nodegroup was not found: " + ngId);
+                             this.msi.userFailureCallback("<b>Failure retrieving from store.</b><br>" + itemType + " was not found: " + ngId);
                         } else {
                             jsCallback(nodegroupArr[0], id);
                         }

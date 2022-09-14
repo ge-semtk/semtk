@@ -57,7 +57,8 @@
 
     // READY FUNCTION
     $('document').ready(function(){
-
+		setupTabs();
+		
     	setTabButton("upload-tab-but", true);
     	setTabButton("mapping-tab-but", true);
         setTabButton("explore-tab-but", true);
@@ -175,15 +176,24 @@
 			}
 			
 			var nodegroupId = getUrlParameter("nodegroupId");
+			var reportId = getUrlParameter("reportId");
 			var constraintsStr = getUrlParameter("constraints");
 			var runFlagStr = getUrlParameter("runFlag");  // defaults to true, next line
 	        var runFlag = (! runFlagStr) || runFlagStr.toLowerCase() == "true" || runFlagStr.toLowerCase() == "t";
 	        
 	        if (nodegroupId) {
+				// give error if both nodegroup and report are specified.
+				if (reportId) {
+					ModalIidx.alert("Ignoring reportId param", "Both nodegroupId and reportId URL parameters were specified.<br>Ignoring the report.");
+				}
+					
 				// run a nodegroup at startup
 				runQueryFromUrl(conn, connStr, nodegroupId, constraintsStr, runFlag);
 				
-            } else if (conn) {
+            } else if (reportId) {
+				runReportFromUrl(conn, connStr, reportId, runFlag);
+				
+			} else if (conn) {
 				// load last connection (from cookies) or conn param
 				doLoadConnection(conn);
 
@@ -300,6 +310,61 @@
 			
 			doQueryLoadJsonStr(jsonStr, nodegroupId, skipValidation, forceKeepCurrent, callbackRunQuery);
 		});
+	};
+	
+	/* 
+		URL used to launch SPARQLgraph contains a nodegroupId to run now
+	  
+		@param {SparqlConnection} conn -  the connection from last session OR the connection URL parameter OR null
+		@param {str} connStr - conn URL param, or falsey
+		@param {str} reportId - reportId Id
+		@param {boolean} runFlag = should the nodegroup be run
+	*/
+	var runReportFromUrl = function(conn, connStr, reportId, runFlag) {
+		if (connStr) {
+			doLoadConnection(conn, runReportFromUrl1.bind(this, reportId, runFlag));
+		} else {
+			runReportFromUrl1(reportId, runFlag);
+		}
+	};
+	
+	/* 
+		Now that correct or no override conn is loaded,
+		continue running reportId at startup
+
+		@param {str} reportId - nodegroupId
+		@param {boolean} runFlag = should the nodegroup be run
+
+	*/
+	var runReportFromUrl1= function(reportId, runFlag) {
+		 require(	[ 'sparqlgraph/js/msiclientnodegroupstore',
+					], function (MsiClientNodeGroupStore) {
+						  
+			var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
+	        mq.getStoredItemByIdToStr(reportId, MsiClientNodeGroupStore.TYPE_REPORT, runReportFromUrl2.bind(this, reportId, runFlag));
+		});
+	};
+	
+	/* 
+		Load report, keeping current connection if any, and run
+
+		@param {str} constraintsStr - constraints string, or falsey
+		@param {str} nodegroupId - nodegroupId
+		@param {boolean} runFlag = should the nodegroup be run
+		@param {str} jsonStr - the nodegroup json as str
+		
+	*/
+	var runReportFromUrl2= function(reportId, runFlag, jsonStr) {
+		//$("#tabs").tabs();  // make sure they're initialized
+		setupTabs();
+		selectTab(4);
+		tabReportActivated();
+		gReportTab.setReport(jsonStr);
+		
+		if (runFlag) {
+			gReportTab.drawReport(JSON.parse(jsonStr));
+		}
+
 	};
 	
 	
@@ -3227,11 +3292,14 @@
     };
 
 	// ===  Tabs ====
-	$(function() {
+	var setupTabs = function() {
 		$( "#tabs" ).tabs({
 		    activate: function(event) {
 		        // Enable / disable buttons on the navigation bar
-		        if (event.currentTarget.id == "anchorTab1") {
+		        if (!event.currentTarget) {
+					return;  // this happens in selectTab
+					
+				} else if (event.currentTarget.id == "anchorTab1") {
 		        	tabSparqlGraphActivated();
 
 			    } else if (event.currentTarget.id == "anchorTab2") {
@@ -3248,7 +3316,12 @@
 		        }
 		    }
 		});
-	});
+	};
+	
+	var selectTab = function(index) {
+		$("#tabs").tabs("option", "active", index); 
+	};
+		
 
     var setTabButton = function(id, onTabFlag) {
         var but = this.document.getElementById(id);
