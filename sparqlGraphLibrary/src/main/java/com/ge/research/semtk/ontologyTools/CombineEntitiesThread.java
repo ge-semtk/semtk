@@ -13,16 +13,16 @@ import com.ge.research.semtk.sparqlToXLib.SparqlToXLibUtil;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.utility.LocalLogger;
 
+/**
+ * Thread for combining two entities, a target and a duplicate.
+ * All properties are combined unless specified.
+ * @author 200001934
+ *
+ */
 public class CombineEntitiesThread extends Thread {
 	private JobTracker tracker;
 	private String jobId;
-	private OntologyInfo oInfo;
-	private SparqlConnection conn;
-	private String targetUri;
-	private String duplicateUri;
-	private String duplicateClassUri;
-	private ArrayList<String> deletePredicatesFromTarget;
-	private ArrayList<String> deletePredicatesFromDuplicate;
+	private CombineEntitiesWorker worker;
 	
 	/**
 	 * 
@@ -31,24 +31,18 @@ public class CombineEntitiesThread extends Thread {
 	 * @param oInfo
 	 * @param conn
 	 * @param classUri
-	 * @param targetUri
-	 * @param duplicateUri
-	 * @param deletePredicatesFromTarget
-	 * @param deletePredicatesFromDuplicate
+	 * @param primaryUri
+	 * @param secondaryUri
+	 * @param deletePredicatesFromPrimary
+	 * @param deletePredicatesFromSecondary
 	 * @throws Exception
 	 */
 	public CombineEntitiesThread(JobTracker tracker, String jobId, OntologyInfo oInfo, SparqlConnection conn,
-			String targetUri, String duplicateUri, 
-			ArrayList<String> deletePredicatesFromTarget, ArrayList<String> deletePredicatesFromDuplicate) throws Exception {
+			String primaryUri, String secondaryUri, 
+			ArrayList<String> deletePredicatesFromPrimary, ArrayList<String> deletePredicatesFromSecondary) throws Exception {
 		this.tracker = tracker;
 		this.jobId = jobId;
-		this.oInfo = oInfo;
-		this.conn = conn;
-		this.targetUri = targetUri;
-		this.duplicateUri = duplicateUri;
-		this.deletePredicatesFromTarget = deletePredicatesFromTarget != null ? deletePredicatesFromTarget : new ArrayList<String>();
-		this.deletePredicatesFromDuplicate = deletePredicatesFromDuplicate != null ? deletePredicatesFromDuplicate : new ArrayList<String>();
-		
+		this.worker = new CombineEntitiesWorker(oInfo, conn, primaryUri, secondaryUri, deletePredicatesFromPrimary, deletePredicatesFromSecondary);
 		
 		// get the job started
 		this.tracker.createJob(this.jobId);
@@ -57,16 +51,16 @@ public class CombineEntitiesThread extends Thread {
 	public void run() {
 		try {
 			this.tracker.setJobPercentComplete(this.jobId, 5, "Confirming instances and their classes");
-			this.confirmInstances();
+			this.worker.preCheck();
 			
 			this.tracker.setJobPercentComplete(this.jobId, 25, "Deleting skipped properties");
-			this.deleteSkippedProperties();
+			this.worker.deleteSkippedProperties();
 			
 			this.tracker.setJobPercentComplete(this.jobId, 50, "Combining entities");
-			this.combineEntities();
+			this.worker.combineEntities();
 			
 			this.tracker.setJobPercentComplete(this.jobId, 75, "Deleting duplicate");
-			this.deleteDuplicate();
+			this.worker.deleteSecondary();
 			
 			this.tracker.setJobSuccess(this.jobId);
 			
@@ -81,119 +75,5 @@ public class CombineEntitiesThread extends Thread {
 				LocalLogger.printStackTrace(ee);
 			}
 		}
-	}
-
-	/**
-	 * Check existance of and instances, and that duplicate is a superclass* of target
-	 * @param instanceUri
-	 * @param classUri
-	 * @throws Exception - not found
-	 */
-	private void confirmInstances() throws Exception {
-		NodeGroup ng = new NodeGroup();
-		ng.noInflateNorValidate(this.oInfo);
-		SparqlConnection connect = SparqlConnection.deepCopy(this.conn);
-		
-		// check only the data connection
-		connect.clearModelInterfaces();
-		connect.addModelInterface(connect.getDataInterface(0));
-		ng.setSparqlConnection(connect);
-		
-		String sparql = SparqlToXLibUtil.generateGetInstanceClass(connect, this.oInfo, this.targetUri);
-		Table targetTab = connect.getDefaultQueryInterface().executeQueryToTable(sparql);
-		
-		sparql = SparqlToXLibUtil.generateGetInstanceClass(connect, this.oInfo, this.duplicateUri);
-		Table duplicateTab = connect.getDefaultQueryInterface().executeQueryToTable(sparql);
-		
-		// Make sure target exists with class
-		if (targetTab.getNumRows() == 0) {
-			sparql = SparqlToXLibUtil.generateAskInstanceExists(connect, this.oInfo, this.targetUri);
-			Table tExists = connect.getDefaultQueryInterface().executeQueryToTable(sparql);
-			if (tExists.getCellAsBoolean(0, 0)) 
-				throw new Exception(String.format("Target uri <%s> has no class in the triplestore.", this.targetUri));
-			else
-				throw new Exception(String.format("Target uri <%s> does not exist in the triplestore.", this.targetUri));
-		}
-		
-		// Make sure duplicate exists with class
-		if (duplicateTab.getNumRows() == 0) {
-			sparql = SparqlToXLibUtil.generateAskInstanceExists(connect, this.oInfo, this.duplicateUri);
-			Table tExists = connect.getDefaultQueryInterface().executeQueryToTable(sparql);
-			if (tExists.getCellAsBoolean(0, 0)) 
-				throw new Exception(String.format("Duplicate uri <%s> has no class in the triplestore.", this.duplicateUri));
-			else
-				throw new Exception(String.format("Duplicate uri <%s> does not exist in the triplestore.", this.duplicateUri));
-		}
-		
-		// Make sure duplicate's classes are each superclass* of one of target's class
-		for (String dupClassName : duplicateTab.getRow(0)) {
-			this.duplicateClassUri = dupClassName;
-			OntologyClass duplicateClass = this.oInfo.getClass(dupClassName);
-			if (duplicateClass == null) {
-				throw new Exception(String.format("Duplicate uri <%s> is a %s in the triplestore.  Class isn't found in the ontology.", this.duplicateUri, dupClassName));
-			}
-			boolean okFlag = false;
-			for (String targetClassName : targetTab.getRow(0)) {
-				OntologyClass targetClass = this.oInfo.getClass(targetClassName);
-				if (targetClass == null) {
-					throw new Exception(String.format("Target uri <%s> is a %s in the triplestore.  Class isn't found in the ontology.", this.targetUri, targetClassName));
-				}
-				if (this.oInfo.classIsA(targetClass, duplicateClass)) {
-					okFlag = true;
-					break;
-				}
-			}
-			if (!okFlag) {
-				throw new Exception(String.format("Duplicate Uri's class %s is not a superClass* of target uri's class: %s", dupClassName, String.join(",", targetTab.getRow(0))));
-			}
-		}
-		
-	}
-	
-	/**
-	 * Build nodegroup to delete duplicatePredicatesToSkip
-	 * @throws Exception
-	 */
-	private void deleteSkippedProperties() throws Exception {
-		// build one-node nodegroup constrained to this.duplicateUri
-
-		if (deletePredicatesFromTarget.size() > 0) {
-			String sparql = SparqlToXLibUtil.generateDeleteExactProps(this.conn, this.targetUri, this.deletePredicatesFromTarget);
-			this.conn.getDefaultQueryInterface().executeQueryAndConfirm(sparql);
-		}
-		
-		if (this.deletePredicatesFromDuplicate.size() > 0) {
-			String sparql = SparqlToXLibUtil.generateDeleteExactProps(this.conn, this.duplicateUri, this.deletePredicatesFromDuplicate);
-			this.conn.getDefaultQueryInterface().executeQueryAndConfirm(sparql);
-		}
-	}
-	
-	/**
-	 * Build nodegroup to delete the duplicate
-	 * @throws Exception
-	 */
-	private void combineEntities() throws Exception {
-		// build one-node nodegroup constrained to this.duplicateUri
-		String sparql = SparqlToXLibUtil.generateCombineEntitiesInsertOutgoing(this.conn, this.targetUri, this.duplicateUri);
-		this.conn.getDefaultQueryInterface().executeQueryAndConfirm(sparql);
-		
-		sparql = SparqlToXLibUtil.generateCombineEntitiesInsertIncoming(this.conn, this.targetUri, this.duplicateUri);
-		this.conn.getDefaultQueryInterface().executeQueryAndConfirm(sparql);
-	}
-	
-	/**
-	 * Build nodegroup to delete the duplicate
-	 * @throws Exception
-	 */
-	private void deleteDuplicate() throws Exception {
-		// build one-node nodegroup constrained to this.duplicateUri
-		NodeGroup ng = new NodeGroup();
-		ng.setSparqlConnection(conn);
-		Node n = ng.addNode(this.duplicateClassUri, oInfo);
-		n.addValueConstraint(ValueConstraint.buildFilterConstraint(n, "=", this.duplicateUri));
-		n.setDeletionMode(NodeDeletionTypes.FULL_DELETE);
-		
-		// run the query synchronously
-		this.conn.getDefaultQueryInterface().executeQueryAndConfirm(ng.generateSparqlDelete());
 	}
 }

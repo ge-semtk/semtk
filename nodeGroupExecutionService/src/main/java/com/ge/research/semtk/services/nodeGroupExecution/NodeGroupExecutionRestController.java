@@ -1784,6 +1784,37 @@ public class NodeGroupExecutionRestController {
 		}
 	}
 	
+	@Operation(
+			summary=	"Combine table full of pairs of entity information"
+			)
+	@CrossOrigin
+	@RequestMapping(value="/dispatchCombineEntitiesTable", method= RequestMethod.POST)
+	public JSONObject dispatchCombineEntitiesTable(@RequestBody CombineEntitiesRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		try {
+			SimpleResultSet res = new SimpleResultSet(true);
+			JobTracker tracker = this.getJobTracker();
+			String jobId = JobTracker.generateJobId();
+			
+			SparqlConnection conn = requestBody.buildSparqlConnection();
+			
+			new CombineEntitiesThread(
+					tracker, jobId, this.retrieveOInfo(conn), conn, 
+					requestBody.getTargetUri(), requestBody.getDuplicateUri(), 
+					requestBody.getDeletePredicatesFromTarget(), requestBody.getDeletePredicatesFromDuplicate()
+					).start();
+			
+			res.addJobId(jobId);
+			return res.toJson();
+		}
+		catch (Exception e) {
+			SimpleResultSet err = new SimpleResultSet(false);
+			err.addRationaleMessage(SERVICE_NAME, "dispatchCombineEntities", e);
+			LocalLogger.printStackTrace(e);
+			return err.toJson();
+		}
+	}
+	
 	// get the runtime constraints, if any.
 	private JSONArray getRuntimeConstraintsAsJsonArray(String potentialConstraints) throws Exception{
 		JSONArray retval = null;

@@ -21,10 +21,12 @@ package com.ge.research.semtk.sparqlToXLib;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Hashtable;
 
 import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyPath;
+import com.ge.research.semtk.ontologyTools.OntologyProperty;
 import com.ge.research.semtk.ontologyTools.Triple;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -36,6 +38,7 @@ import com.ge.research.semtk.sparqlX.XSDSupportedType;
  * Split from SparqlToXUtils - functions requiring Ontology and other advance sparqlGraphLibrary imports
  */
 public class SparqlToXLibUtil {
+	public static final String TYPE_PROP = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 	private static final String BLANK_NODE_REGEX = "^(nodeID://|_:)";
 	/**
 	 * FROM or USING clause logic
@@ -285,6 +288,74 @@ public class SparqlToXLibUtil {
 		sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
 		sparql.append(String.format("WHERE { <%s> a ?class . } \n", instanceUri));
 
+		return sparql.toString();
+	}
+	
+	/**
+	 * Generate query to get values of ?uri and group_concat of types
+	 * 
+	 * Generating the value: use as-is if it is enclosed in "" or <> 
+	 * 		or contains ^^
+	 * 		or if the property has a complicated range
+	 *      or if property is unknown
+	 * else make an RDF1.1 string 
+	 * @param conn
+	 * @param oInfo
+	 * @param propValHash - hash property to value.  
+	 * @return
+	 * @throws Exception
+	 */
+	public static String generateSelectInstance(SparqlConnection conn, OntologyInfo oInfo, Hashtable<String,String> propValHash) throws Exception {
+		StringBuilder sparql = new StringBuilder();
+		
+		// select FROM WHERE
+		sparql.append("SELECT ?uri  (GROUP_CONCAT(?t) as ?type_list) \n");
+		sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
+		sparql.append("WHERE { \n");
+		
+		for (String prop : propValHash.keySet()) {
+			String val = (String) propValHash.get(prop);
+			
+			if (!val.startsWith("\"") && !val.startsWith("<") && !val.contains("^^")) {
+				OntologyProperty oProp = oInfo.getProperty(prop);
+				if (oProp != null) {
+					HashSet<String> rangeUriSet = oProp.getAllRangeUris();
+					if (rangeUriSet.size() == 1) {
+						val = XSDSupportedType.getMatchingValue((String)(rangeUriSet.toArray()[0])).buildRDF11ValueString(val);
+					}
+				} else if (prop.endsWith("#type")) {
+					// treat #type like it is "known"
+					val = XSDSupportedType.URI.buildRDF11ValueString(val);
+				} 
+			}
+			sparql.append(String.format("  ?uri %s %s . \n", XSDSupportedType.URI.buildRDF11ValueString(prop), val));
+			
+			
+		}
+		sparql.append("   optional { ?uri a ?t } . \n");
+		sparql.append("} GROUP BY ?uri \n");
+
+		return sparql.toString();
+	}
+	
+	/**
+	 * Get all outgoing props from a given URI
+	 * @param conn
+	 * @param oInfo
+	 * @param uri
+	 * @return
+	 * @throws Exception
+	 */
+	public static String generateSelectOutgoingProps(SparqlConnection conn, OntologyInfo oInfo, String uri) throws Exception {
+		StringBuilder sparql = new StringBuilder();
+		
+		// select FROM WHERE
+		sparql.append("SELECT ?prop \n");
+		sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
+		sparql.append("WHERE { \n");
+		sparql.append(String.format("    %s ?prop ?o .", XSDSupportedType.URI.buildRDF11ValueString(uri)));
+		sparql.append("}");
+		
 		return sparql.toString();
 	}
 	
