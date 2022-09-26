@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>2.7.3</version>
+		<version>2.7.4</version>
 	</parent>
 	<properties>
 		<swagger.version>3.0.0</swagger.version>
@@ -154,7 +154,7 @@
 			<dependency>
 				<groupId>org.apache.logging.log4j</groupId>
 				<artifactId>log4j-to-slf4j</artifactId>
-				<version>2.18.0</version>
+				<version>2.19.0</version>
 			</dependency>
 
 			<!-- License: Apache 2.0 -->
