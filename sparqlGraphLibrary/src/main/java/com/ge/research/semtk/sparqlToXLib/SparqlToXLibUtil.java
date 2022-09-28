@@ -337,7 +337,7 @@ public class SparqlToXLibUtil {
 
 		return sparql.toString();
 	}
-	
+
 	/**
 	 * Get all outgoing props from a given URI
 	 * @param conn
@@ -651,6 +651,26 @@ public class SparqlToXLibUtil {
 		ret.append(String.format("        %s . \n", 
 				ValueConstraint.buildBestListConstraint("?pred", exactPropURIs, XSDSupportedType.asSet(XSDSupportedType.URI), conn.getDeleteInterface()))
 				);
+		ret.append("} \n");
+		return ret.toString();
+	}
+	
+	public static String generateDeleteUri(SparqlConnection conn, String itemURI) throws Exception {
+		ArrayList<String> uriAsList = new ArrayList<String>();
+		uriAsList.add(itemURI);
+		StringBuilder ret = new StringBuilder();
+		ret.append("DELETE { \n");
+		ret.append(generateGraphClause(conn.getInsertInterface(), "  ") + "{");
+		ret.append("      ?s ?p ?o . \n");
+		ret.append("  }\n");
+		ret.append("} \n");
+		ret.append(generateUsingDatagraphsClause(conn, ""));
+		ret.append("WHERE { \n");
+		ret.append("  {\n");
+		ret.append("    ?s ?p ?o . " + ValueConstraint.buildBestListConstraint("?s", uriAsList, XSDSupportedType.asSet(XSDSupportedType.URI), conn.getDeleteInterface()));
+		ret.append("  } UNION {\n");
+		ret.append("    ?s ?p ?o . " + ValueConstraint.buildBestListConstraint("?o", uriAsList, XSDSupportedType.asSet(XSDSupportedType.URI), conn.getDeleteInterface()));
+		ret.append("  } \n");
 		ret.append("} \n");
 		return ret.toString();
 	}

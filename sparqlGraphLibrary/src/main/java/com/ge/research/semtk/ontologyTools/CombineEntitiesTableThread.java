@@ -23,8 +23,8 @@ public class CombineEntitiesTableThread extends Thread {
 	private CombineEntitiesInputTable table;
 	private OntologyInfo oInfo;
 	private SparqlConnection conn;
-	private ArrayList<String> deletePredicatesFromPrimary;
-	private ArrayList<String> deletePredicatesFromSecondary;
+	private ArrayList<String> deletePredicatesFromTarget;
+	private ArrayList<String> deletePredicatesFromDuplicate;
 	private Table errorTab;
 	
 
@@ -35,38 +35,42 @@ public class CombineEntitiesTableThread extends Thread {
 	 * @param jobId
 	 * @param oInfo
 	 * @param conn
-	 * @param deletePredicatesFromPrimary - list of predicates to delete from primary before merging
-	 * @param deletePredicatesFromSecondary - list of predicates to delete from secondary 
+	 * @param deletePredicatesFromTarget - list of predicates to delete from target before merging
+	 * @param deletePredicatesFromDuplicate - list of predicates to delete from duplicate 
 	 * @param table - CombineEntitiesInputTable - explains what work is to be done 
-	 * @throws Exception
+	 * @throws SemtkUserException - data problem for user
+	 * @throws Exception - catch all
 	 */
 	public CombineEntitiesTableThread(JobTracker tracker, ResultsClient resultsClient, String jobId, 
 			OntologyInfo oInfo, SparqlConnection conn,
-			ArrayList<String> deletePredicatesFromPrimary,
-			ArrayList<String> deletePredicatesFromSecondary,
-			CombineEntitiesInputTable table) throws Exception {
+			ArrayList<String> deletePredicatesFromTarget,
+			ArrayList<String> deletePredicatesFromDuplicate,
+			CombineEntitiesInputTable table) throws SemtkUserException, Exception {
 		this.tracker = tracker;
 		this.resultsClient = resultsClient;
 		this.jobId = jobId;
 		this.tracker.createJob(this.jobId);
 		this.oInfo = oInfo;
 		this.conn = conn;
-		this.deletePredicatesFromPrimary = deletePredicatesFromPrimary;
-		this.deletePredicatesFromSecondary = deletePredicatesFromSecondary;
+		this.deletePredicatesFromTarget = deletePredicatesFromTarget;
+		this.deletePredicatesFromDuplicate = deletePredicatesFromDuplicate;
 		this.table = table;
 		
 		this.errorTab = new Table(new String [] { "row", "error" });
 		
+		CombineEntitiesWorker.replacePropertyAbbrev(this.deletePredicatesFromTarget);
+		CombineEntitiesWorker.replacePropertyAbbrev(this.deletePredicatesFromDuplicate);
+		
 		// Check the properties in the table to make sure they're legal
-		for (String p : this.table.getPrimaryPropNames()) {
+		for (String p : this.table.getTargetPropNames()) {
 			if (this.oInfo.getProperty(p) == null && !p.equals(SparqlToXLibUtil.TYPE_PROP)) {
-				throw new Exception("Unknown primary property: " + p);
+				throw new SemtkUserException("Unknown target property: " + p);
 			}
 		}
 		
-		for (String p : this.table.getSecondaryPropNames()) {
+		for (String p : this.table.getDuplicatePropNames()) {
 			if (this.oInfo.getProperty(p) == null && !p.equals(SparqlToXLibUtil.TYPE_PROP)) {
-				throw new Exception("Unknown secondary property: " + p);
+				throw new SemtkUserException("Unknown duplicate property: " + p);
 			}
 		}
 
@@ -82,12 +86,12 @@ public class CombineEntitiesTableThread extends Thread {
 			
 			// create all the workers and precheck in the process
 			for (int i=0; i < this.table.getNumRows(); i++) {
-				Hashtable<String, String> primaryHash = this.table.getPrimaryPropValHash(i);
-				Hashtable<String, String> secondaryHash = this.table.getSecondaryPropValHash(i);
+				Hashtable<String, String> targetHash = this.table.getTargetPropValHash(i);
+				Hashtable<String, String> duplicateHash = this.table.getDuplicatePropValHash(i);
 				
 				// do the work
 				try {
-					CombineEntitiesWorker w =  new CombineEntitiesWorker(this.oInfo, this.conn, primaryHash, secondaryHash, this.deletePredicatesFromPrimary, this.deletePredicatesFromSecondary);
+					CombineEntitiesWorker w =  new CombineEntitiesWorker(this.oInfo, this.conn, targetHash, duplicateHash, this.deletePredicatesFromTarget, this.deletePredicatesFromDuplicate);
 					w.preCheck();
 					workerList.add(w);
 					
@@ -130,7 +134,7 @@ public class CombineEntitiesTableThread extends Thread {
 				w.combine();
 			}
 			
-			this.tracker.setJobSuccess(this.jobId);
+			this.tracker.setJobSuccess(this.jobId, String.format("Combined %d rows of entities.", this.table.getNumRows()));
 			
 		} catch (Exception e) {
 			// TODO fix this

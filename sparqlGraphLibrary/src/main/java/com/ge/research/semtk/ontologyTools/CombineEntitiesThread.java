@@ -31,18 +31,18 @@ public class CombineEntitiesThread extends Thread {
 	 * @param oInfo
 	 * @param conn
 	 * @param classUri
-	 * @param primaryUri
-	 * @param secondaryUri
-	 * @param deletePredicatesFromPrimary
-	 * @param deletePredicatesFromSecondary
+	 * @param targetUri
+	 * @param duplicateUri
+	 * @param deletePredicatesFromTarget
+	 * @param deletePredicatesFromDuplicate
 	 * @throws Exception
 	 */
 	public CombineEntitiesThread(JobTracker tracker, String jobId, OntologyInfo oInfo, SparqlConnection conn,
-			String primaryUri, String secondaryUri, 
-			ArrayList<String> deletePredicatesFromPrimary, ArrayList<String> deletePredicatesFromSecondary) throws Exception {
+			String targetUri, String duplicateUri, 
+			ArrayList<String> deletePredicatesFromTarget, ArrayList<String> deletePredicatesFromDuplicate) throws Exception {
 		this.tracker = tracker;
 		this.jobId = jobId;
-		this.worker = new CombineEntitiesWorker(oInfo, conn, primaryUri, secondaryUri, deletePredicatesFromPrimary, deletePredicatesFromSecondary);
+		this.worker = new CombineEntitiesWorker(oInfo, conn, targetUri, duplicateUri, deletePredicatesFromTarget, deletePredicatesFromDuplicate);
 		
 		// get the job started
 		this.tracker.createJob(this.jobId);
@@ -60,7 +60,7 @@ public class CombineEntitiesThread extends Thread {
 			this.worker.combineEntities();
 			
 			this.tracker.setJobPercentComplete(this.jobId, 75, "Deleting duplicate");
-			this.worker.deleteSecondary();
+			this.worker.deleteDuplicate();
 			
 			this.tracker.setJobSuccess(this.jobId);
 			

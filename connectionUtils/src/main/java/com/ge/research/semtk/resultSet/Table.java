@@ -21,6 +21,7 @@ package com.ge.research.semtk.resultSet;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
+import java.io.StringReader;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -161,29 +162,59 @@ public class Table {
 	 * @throws Exception
 	 */
 	public static Table fromCsvFile(String filename) throws Exception {
+		return Table.fromReader(new FileReader(filename));
+	}
+	
+	/**
+	 * Create from a csv file
+	 * @param data
+	 * @return
+	 * @throws Exception
+	 */
+	public static Table fromCsvData(String data) throws Exception {
+		return Table.fromReader(new StringReader(data));
+	}
+	
+	/**
+	 * Read a table using EXCEL format.
+	 * In addition: skip blank rows, strip leading/trailing whitespace from cells.
+	 * @param in
+	 * @return
+	 * @throws Exception
+	 */
+	public static Table fromReader(Reader in) throws Exception {
 		String [] colnames = null;
 		String [] coltypes = null;
 		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
 		
-		Reader in = new FileReader(filename);
-	    Iterable<CSVRecord> records = CSVFormat.DEFAULT.parse(in);
+	    Iterable<CSVRecord> records = CSVFormat.EXCEL.parse(in);
 	    
 	    for (CSVRecord record : records) {
 	    	if (colnames == null) {
+	    		if (record.size() < 1) {
+	    			throw new Exception("Table header row is empty");
+	    		}
 	    		colnames = new String[record.size()];
 	    		coltypes = new String[record.size()];
 	    		int i=0;
 		        for (String cell : record) {
-		        	colnames[i] = cell;
+		        	colnames[i] = cell.strip();
 		        	coltypes[i] = "unknown";
 		        	i++;
 		        }
 	    	} else {
 	    		ArrayList<String> row = new ArrayList<String>();
 	    		for (String cell : record) {
-	    			row.add(cell);
+	    			row.add(cell.strip());
 		        }
-	    		rows.add(row);
+	    		if (row.size() == colnames.length) { 
+	    			rows.add(row);
+	    		} else if (row.size() == 0 || 
+	    				(row.size() == 1 && row.get(0).isBlank()) ) {
+	    			// skip empty
+	    		} else {
+	    			throw new Exception("Table row has wrong number of columns: " + String.join(",", row));
+	    		}
 	    	}
 	    }
 	    return new Table(colnames, coltypes, rows);

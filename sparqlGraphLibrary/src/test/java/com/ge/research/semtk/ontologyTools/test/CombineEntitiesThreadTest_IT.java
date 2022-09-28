@@ -185,26 +185,26 @@ public class CombineEntitiesThreadTest_IT {
 		ResultsClient resClient = IntegrationTestUtility.getResultsClient();
 		
 		final String NAME_PROP = "http://AnimalSubProps#name";
-		final String PRIMARY_NAME_COL = "primary_name";
-		final String SECONDARY_NAME_COL = "secondary_name";
+		final String PRIMARY_NAME_COL = "target_name";
+		final String SECONDARY_NAME_COL = "duplicate_name";
 		
-		Hashtable<String, String> primaryHash = new Hashtable<String,String>();
-		primaryHash.put(PRIMARY_NAME_COL, NAME_PROP);
+		Hashtable<String, String> targetHash = new Hashtable<String,String>();
+		targetHash.put(PRIMARY_NAME_COL, NAME_PROP);
 		
-		Hashtable<String, String> secondaryHash = new Hashtable<String,String>();
-		secondaryHash.put(SECONDARY_NAME_COL, NAME_PROP);
+		Hashtable<String, String> duplicateHash = new Hashtable<String,String>();
+		duplicateHash.put(SECONDARY_NAME_COL, NAME_PROP);
 		
 		Table inputTable = new Table(new String [] {PRIMARY_NAME_COL, SECONDARY_NAME_COL});
 		inputTable.addRow(new String [] {"auntyEm", "AUNTY_EM"});
 		
-		CombineEntitiesInputTable tab = new CombineEntitiesInputTable(primaryHash, secondaryHash, inputTable);
+		CombineEntitiesInputTable tab = new CombineEntitiesInputTable(targetHash, duplicateHash, inputTable);
 		CombineEntitiesTableThread thread = new CombineEntitiesTableThread(tracker, resClient, jobId, 
 				TestGraph.getOInfo(), TestGraph.getSparqlAuthConn(), 
 				null, null,
 				tab);
 		thread.run();
 		
-		// TODO: test for empty primary or secondary hash
+		// TODO: test for empty target or duplicate hash
 		try {
 			tracker.waitForSuccess(jobId, 300 * 1000);
 		} catch (Exception e) {
@@ -240,22 +240,22 @@ public class CombineEntitiesThreadTest_IT {
 		ResultsClient resClient = IntegrationTestUtility.getResultsClient();
 		
 		final String NAME_PROP = "http://AnimalSubProps#name";
-		final String PRIMARY_NAME_COL = "primary_name";
-		final String SECONDARY_NAME_COL = "secondary_name";
+		final String PRIMARY_NAME_COL = "target_name";
+		final String SECONDARY_NAME_COL = "duplicate_name";
 		final String TYPE_PROP = "#type";
-		final String SECONDARY_TYPE_COL = "secondary_type";
+		final String SECONDARY_TYPE_COL = "duplicate_type";
 		
-		Hashtable<String, String> primaryHash = new Hashtable<String,String>();
-		primaryHash.put(PRIMARY_NAME_COL, NAME_PROP);
+		Hashtable<String, String> targetHash = new Hashtable<String,String>();
+		targetHash.put(PRIMARY_NAME_COL, NAME_PROP);
 		
-		Hashtable<String, String> secondaryHash = new Hashtable<String,String>();
-		secondaryHash.put(SECONDARY_NAME_COL, NAME_PROP);
-		secondaryHash.put(SECONDARY_TYPE_COL, TYPE_PROP);
+		Hashtable<String, String> duplicateHash = new Hashtable<String,String>();
+		duplicateHash.put(SECONDARY_NAME_COL, NAME_PROP);
+		duplicateHash.put(SECONDARY_TYPE_COL, TYPE_PROP);
 		
 		Table inputTable = new Table(new String [] {PRIMARY_NAME_COL, SECONDARY_NAME_COL, SECONDARY_TYPE_COL});
 		inputTable.addRow(new String [] {"auntyEm", "AUNTY_EM", "http://AnimalSubProps#Tiger"});
 		
-		CombineEntitiesInputTable tab = new CombineEntitiesInputTable(primaryHash, secondaryHash, inputTable);
+		CombineEntitiesInputTable tab = new CombineEntitiesInputTable(targetHash, duplicateHash, inputTable);
 		CombineEntitiesTableThread thread = new CombineEntitiesTableThread(tracker, resClient, jobId, 
 				TestGraph.getOInfo(), TestGraph.getSparqlAuthConn(), 
 				null, null,
@@ -297,30 +297,35 @@ public class CombineEntitiesThreadTest_IT {
 		
 		final String NAME_PROP = "http://AnimalSubProps#name";
 		final String SCARY_NAME_PROP = "http://AnimalSubProps#scaryName";
-		final String PRIMARY_NAME_COL = "primary_name";
-		final String SECONDARY_NAME_COL = "secondary_name";
+		final String PRIMARY_NAME_COL = "target_name";
+		final String SECONDARY_NAME_COL = "duplicate_name";
 		final String TYPE_PROP = "#type";
-		final String SECONDARY_TYPE_COL = "secondary_type";
+		final String SECONDARY_TYPE_COL = "duplicate_type";
 		
-		Hashtable<String, String> primaryHash = new Hashtable<String,String>();
-		primaryHash.put(PRIMARY_NAME_COL, NAME_PROP);
+		Hashtable<String, String> targetHash = new Hashtable<String,String>();
+		targetHash.put(PRIMARY_NAME_COL, NAME_PROP);
 		
-		Hashtable<String, String> secondaryHash = new Hashtable<String,String>();
-		secondaryHash.put(SECONDARY_NAME_COL, NAME_PROP);
-		secondaryHash.put(SECONDARY_TYPE_COL, TYPE_PROP);
+		Hashtable<String, String> duplicateHash = new Hashtable<String,String>();
+		duplicateHash.put(SECONDARY_NAME_COL, NAME_PROP);
+		duplicateHash.put(SECONDARY_TYPE_COL, TYPE_PROP);
 		
-		ArrayList<String> deleteFromPrimary = new ArrayList<String>();
-		deleteFromPrimary.add(NAME_PROP);
-		ArrayList<String> deleteFromSecondary = new ArrayList<String>();
-		deleteFromSecondary.add(SCARY_NAME_PROP);
+		// use the name from the duplicate
+		ArrayList<String> deleteFromTarget = new ArrayList<String>();
+		deleteFromTarget.add(NAME_PROP);
+		// remove the scaryName and type from the duplicate
+		ArrayList<String> deleteFromDuplicate = new ArrayList<String>();
+		deleteFromDuplicate.add(SCARY_NAME_PROP);
+		deleteFromDuplicate.add(TYPE_PROP);
 		
+		// combine these pairs, looking up duplicate by name and type
 		Table inputTable = new Table(new String [] {PRIMARY_NAME_COL, SECONDARY_NAME_COL, SECONDARY_TYPE_COL});
 		inputTable.addRow(new String [] {"auntyEm", "AUNTY_EM", "http://AnimalSubProps#Tiger"});
+		inputTable.addRow(new String [] {"Michaela", "Animal", "http://AnimalSubProps#Animal"});
 		
-		CombineEntitiesInputTable tab = new CombineEntitiesInputTable(primaryHash, secondaryHash, inputTable);
+		CombineEntitiesInputTable tab = new CombineEntitiesInputTable(targetHash, duplicateHash, inputTable);
 		CombineEntitiesTableThread thread = new CombineEntitiesTableThread(tracker, resClient, jobId, 
 				TestGraph.getOInfo(), TestGraph.getSparqlAuthConn(), 
-				deleteFromPrimary, deleteFromSecondary,
+				deleteFromTarget, deleteFromDuplicate,
 				tab);
 		thread.run();
 		
@@ -334,7 +339,7 @@ public class CombineEntitiesThreadTest_IT {
 		
 		/** 
 		 * Should combine AuntyEmDuplicate with AuntyEm.  
-		 * 		Use the name AUNTY_EM (from secondary)
+		 * 		Use the name AUNTY_EM (from duplicate)
 		 * 		Remove the scaryName from AuntyEmDuplicate
 		 * In table form, the name and scaryName combinatorials make it hard to read, but easier to check then JSON-LD results
 		 */

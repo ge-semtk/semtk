@@ -96,7 +96,13 @@ public abstract class GeneralResultSet {
 		
 		this.rationale.add(String.format("%s threw %s %s", source, e.getClass().getName(), msg));
 	}
-	
+	/**
+	 * Error is intended for user, not developer
+	 * @param e
+	 */
+	public void addOnlyRationaleMessage(Exception e) {
+		this.rationale.add(e.getMessage());
+	}
 	
 	public String getRationaleAsString(String delimiter){
 		String retval = "";

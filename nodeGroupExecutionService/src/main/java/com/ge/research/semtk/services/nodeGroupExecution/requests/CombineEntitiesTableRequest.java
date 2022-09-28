@@ -17,9 +17,12 @@
 
 package com.ge.research.semtk.services.nodeGroupExecution.requests;
 import java.util.ArrayList;
+import java.util.Hashtable;
 
 import org.json.simple.JSONObject;
 
+import com.ge.research.semtk.ontologyTools.CombineEntitiesInputTable;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -34,27 +37,61 @@ public class CombineEntitiesTableRequest extends SparqlConnectionRequest {
     private String csvString;
 	
 	@Schema(
-            required = true,
-            example = "{ 'name1': 'uri://namespace#name' }")
-    private JSONObject primaryColHash ;
+			description = "list of column names used to lookup target entity",
+			required = false,
+			example = "[[\"target_name\", \"target_type\"]]")
+	private ArrayList<String> targetColNames = null;
 	
 	@Schema(
-            required = true,
-            example = "{ 'name1': 'uri://namespace#name' }")
-    private JSONObject secondaryColHash ;
+			description = "list of properties for target columns",
+			required = false,
+			example = "[[\"uri://namespace#name\", \"#type\"]]")
+	private ArrayList<String> targetColProperties = null;
 	
 	@Schema(
-			description = "list of predicates to delete from duplicate before merge",
+			description = "list of column names used to lookup duplicate entity",
+			required = false,
+			example = "[[\"duplicate_name\", \"duplicate_type\"]]")
+	private ArrayList<String> duplicateColNames = null;
+	
+	@Schema(
+			description = "list of properties for duplicate columns",
+			required = false,
+			example = "[[\"uri://namespace#name\", \"#type\"]]")
+	private ArrayList<String> duplicateColProperties = null;
+	
+	@Schema(
+			description = "list of predicates to delete from duplicate instance before merge",
 			required = false,
 			example = "[[\"http:/namespace#class1\", \"http:/namespace#predicate\"]]")
 	private ArrayList<String> deletePredicatesFromDuplicate = null;
 	
 	@Schema(
-			description = "list of predicates to delete from target before merge",
+			description = "list of predicates to delete from target instance before merge",
 			required = false,
 			example = "[[\"http:/namespace#class1\", \"http:/namespace#predicate\"]]")
 	private ArrayList<String> deletePredicatesFromTarget = null;
 
+
+	public String getCsvString() {
+		return csvString;
+	}
+
+	public ArrayList<String> getTargetColNames() {
+		return targetColNames;
+	}
+
+	public ArrayList<String> getTargetColProperties() {
+		return targetColProperties;
+	}
+
+	public ArrayList<String> getDuplicateColNames() {
+		return duplicateColNames;
+	}
+
+	public ArrayList<String> getDuplicateColProperties() {
+		return duplicateColProperties;
+	}
 
 	/**
 	 * 
@@ -72,16 +109,25 @@ public class CombineEntitiesTableRequest extends SparqlConnectionRequest {
 		return deletePredicatesFromTarget;
 	}
 
-
-	public String getTargetUri() {
-		return targetUri;
+	private Hashtable<String,String> buildTargetColumnHash() {
+		Hashtable<String,String> ret = new Hashtable<String,String>();
+		for (int i=0; i < this.targetColNames.size(); i++) {
+			ret.put(this.targetColNames.get(i), this.targetColProperties.get(i));
+		}
+		return ret;
+	}
+	
+	private Hashtable<String,String> buildDuplicateColumnHash() {
+		Hashtable<String,String> ret = new Hashtable<String,String>();
+		for (int i=0; i < this.duplicateColNames.size(); i++) {
+			ret.put(this.duplicateColNames.get(i), this.duplicateColProperties.get(i));
+		}
+		return ret;
 	}
 
-
-	public String getDuplicateUri() {
-		return duplicateUri;
+	public CombineEntitiesInputTable buildTable() throws Exception {
+		return new CombineEntitiesInputTable(this.buildTargetColumnHash(), this.buildDuplicateColumnHash(), Table.fromCsvData(this.csvString));
 	}
-    
- 
+	
 
 }

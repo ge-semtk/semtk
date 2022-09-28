@@ -64,9 +64,11 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
+import com.ge.research.semtk.ontologyTools.CombineEntitiesTableThread;
 import com.ge.research.semtk.ontologyTools.CombineEntitiesThread;
 import com.ge.research.semtk.ontologyTools.ConnectedDataConstructor;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.ontologyTools.SemtkUserException;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
@@ -74,6 +76,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.CombineEntitiesRequest;
+import com.ge.research.semtk.services.nodeGroupExecution.requests.CombineEntitiesTableRequest;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.ConstraintsFromIdRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.ConstructConnectedDataRequest;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.DispatchByIdRequestBody;
@@ -1789,7 +1792,7 @@ public class NodeGroupExecutionRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/dispatchCombineEntitiesTable", method= RequestMethod.POST)
-	public JSONObject dispatchCombineEntitiesTable(@RequestBody CombineEntitiesRequest requestBody, @RequestHeader HttpHeaders headers) {
+	public JSONObject dispatchCombineEntitiesTable(@RequestBody CombineEntitiesTableRequest requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
 			SimpleResultSet res = new SimpleResultSet(true);
@@ -1798,14 +1801,20 @@ public class NodeGroupExecutionRestController {
 			
 			SparqlConnection conn = requestBody.buildSparqlConnection();
 			
-			new CombineEntitiesThread(
-					tracker, jobId, this.retrieveOInfo(conn), conn, 
-					requestBody.getTargetUri(), requestBody.getDuplicateUri(), 
-					requestBody.getDeletePredicatesFromTarget(), requestBody.getDeletePredicatesFromDuplicate()
+			new CombineEntitiesTableThread(
+					tracker, this.getResultsClient(), jobId, this.retrieveOInfo(conn), conn, 
+					requestBody.getDeletePredicatesFromTarget(), requestBody.getDeletePredicatesFromDuplicate(),
+					requestBody.buildTable()
 					).start();
 			
 			res.addJobId(jobId);
 			return res.toJson();
+		}
+		catch (SemtkUserException e) {
+			// user exception: no stack trace
+			SimpleResultSet err = new SimpleResultSet(false);
+			err.addOnlyRationaleMessage(e);
+			return err.toJson();
 		}
 		catch (Exception e) {
 			SimpleResultSet err = new SimpleResultSet(false);
