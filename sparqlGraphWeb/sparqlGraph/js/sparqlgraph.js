@@ -827,9 +827,17 @@
             if (nItem.getSNodes().indexOf(targetSNodes[i]) == -1) {  // not already connected
                 if ( ALLOW_CIRCULAR_NODEGROUPS ||
                        (mySubgraph.indexOf(targetSNodes[i]) == -1 && targetSNodes[i] != snode ) ){    // not cicular && not self
-                    // "unshift" on to the top of the list
-    				unlinkedTargetNames.unshift(targetSNodes[i].getBindingOrSparqlID());
-    				unlinkedUriOrSNodes.unshift(targetSNodes[i]);
+                    
+                    // Insert after "New" alphabetically by bindingOrSparqlID
+                    var insertAt = 0;
+                    var newName = targetSNodes[i].getBindingOrSparqlID();
+                    while (insertAt < unlinkedTargetNames.length && 
+                    	(unlinkedTargetNames[insertAt].startsWith("New") || newName > unlinkedTargetNames[insertAt] )) {
+						insertAt += 1;
+					}
+					
+    				unlinkedTargetNames.splice(insertAt, 0, newName);
+    				unlinkedUriOrSNodes.splice(insertAt, 0, targetSNodes[i]);
     			}
     		}
     	}
