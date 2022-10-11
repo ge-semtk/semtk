@@ -2243,7 +2243,7 @@
             resultsPara.appendChild(headerTable);
             resultsPara.appendChild(resultsDiv);
 
-			var scrollCallback = function() { resultsDiv.scrollIntoViewIfNeeded(); }
+			var scrollCallback = function() { myScrollIntoViewIfNeeded(resultsDiv); }
             // display results
             var plotter = gPlotSpecsHandler == null ? null : gPlotSpecsHandler.getDefaultPlotter();
             if (plotter != null) {
@@ -2431,7 +2431,7 @@
             buildButton.onclick = this.constructBuildNodegroupCallback.bind(this, network);
             removeButton.onclick = this.constructRemoveCallback.bind(this, network);
 
-			div.scrollIntoViewIfNeeded();
+			myScrollIntoViewIfNeeded(div);
 			
             // add data
             var jsonLd = res.getGraphResultsJsonArr(true, true, true);
@@ -2440,6 +2440,15 @@
         });
     };
     
+    // scroll into view if the top isn't already showing
+    var myScrollIntoViewIfNeeded = function (el) {
+		var r = el.getBoundingClientRect();
+		
+		if (r.top <= 0 || r.top > window.innerHeight) {
+			el.scrollIntoView();
+		}
+	};
+	
     //
     // add data to network one CHUNK_SIZE at a time
     // use setTimeout to keep UI updates smooth
