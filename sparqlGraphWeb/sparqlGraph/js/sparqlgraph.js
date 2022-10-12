@@ -2444,10 +2444,32 @@
     var myScrollIntoViewIfNeeded = function (el) {
 		var r = el.getBoundingClientRect();
 		
-		if (r.top <= 0 || r.top > window.innerHeight) {
-			el.scrollIntoView();
+		if (r.top > window.pageYOffset + window.innerHeight * .9) {
+			// scroll down until top of element is mid-window
+			smoothScrollTo(r.top - window.innerHeight / 2);
+		} else if (r.top < window.pageYOffset ) {
+			// scroll up until top of element shows
+			smoothScrollTo(r.top);
 		}
 	};
+	
+	var smoothScrollTo = function(posY) {
+		var CHUNK = Math.max(10, window.innerHeight / 25);
+		var TIME_INTERVAL = 50;
+		var diff = window.pageYOffset - posY;
+		diff = Math.max(-CHUNK, -diff);
+		diff = Math.min(CHUNK, diff);
+		
+		console.log("posY: " + posY + " scrollY: " + window.pageYOffset + " diff: " + diff);
+		var oldScrollY = window.pageYOffset;
+		window.scrollBy(0, diff);
+		
+		// if scrolling had an effect and there is at least CHUNK more to go...
+		if (window.scrollY != oldScrollY && (diff == CHUNK || diff == -CHUNK)) {
+			setTimeout(smoothScrollTo.bind(this, posY), TIME_INTERVAL);
+		} 
+		
+	}
 	
     //
     // add data to network one CHUNK_SIZE at a time

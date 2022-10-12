@@ -89,8 +89,9 @@ define([	// properly require.config'ed   bootstrap-modal
 
                 //Plotly.newPlot( plotDiv, [ {    x: [0,1,2,3,1,1,6],type: 'histogram',}]);
                 div.appendChild(plotDiv);
+                
                 if (optCallback)
-                	optCallback();
+                	setTimeout(optCallback, 10);   // hope to draw first
             },
 
             adjustLayoutDimensions : function(layout, div) {
