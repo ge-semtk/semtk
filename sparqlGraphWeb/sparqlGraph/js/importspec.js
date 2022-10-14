@@ -49,8 +49,9 @@ define([// properly require.config'ed
 			this.colList = [];    // lists of these objects
 			this.textList = [];
 			this.transformList = [];
+			
 		};
-
+		ImportSpec.ID_CRASH_SUFFIX="D0nTCr@$h"
 		ImportSpec.prototype = {
 
 			addColumn : function (iCol) {
@@ -289,6 +290,11 @@ define([// properly require.config'ed
 					// find node row and fill it in
 					var n = this.getMapping(jObj.nodes[i].sparqlID, null);
 					n.fromJsonNode(jObj.nodes[i], idHash, this.nodegroup);
+					
+					var nt = this.getMapping(jObj.nodes[i].sparqlID, ImportMapping.TYPE_URI);
+					if (jObj.nodes[i].hasOwnProperty("type_restriction")) {
+						nt.fromJsonNode(jObj.nodes[i].type_restriction, idHash, this.nodegroup, n.getNode());
+					}
 
 					for (var j=0; j < jObj.nodes[i].props.length; j++) {
 						if (! jObj.nodes[i].props[j].hasOwnProperty("URIRelation")) { kdlLogAndThrow("Internal error in ImportSpec.fromJson().  Prop has no URIRelation in node: " + jObj.nodes[i].sparqlID );}
@@ -351,10 +357,16 @@ define([// properly require.config'ed
 						lastNodeObj = map.toJson(idHash);
 						lastNodeObj.props = [];
 						ret.nodes.push(lastNodeObj);
-
-					// if row is property and has items
+						
+ 					} else if (map.getPropItem().getURI() == ImportMapping.TYPE_URI) {
+						// the _type is stored as a propertyItem only by this importspec while it is displaying
+						// change it to node.type_restriction in the json
+						if (map.getItemList().length > 0) {
+							lastNodeObj.type_restriction = map.toJson(idHash);
+						}
+					
 					} else if (map.getItemList().length > 0 || map.getUriLookupNodes().length > 0) {
-
+						// if row is property and has items
 				        lastNodeObj.props.push(map.toJson(idHash));
 					}
 				}
@@ -385,7 +397,7 @@ define([// properly require.config'ed
 
                 for (var map of this.mapList) {
                     var prop = map.getPropItem();
-                    if (map.getNode().getSparqlID() == snode.getSparqlID() && prop != null && map.getItemList().length > 0) {
+                    if (map.getNode().getSparqlID() == snode.getSparqlID() && prop != null && prop != ImportMapping.TYPE_URI && map.getItemList().length > 0) {
                         ret.push(prop.getURI());
                     }
                 }
@@ -427,6 +439,22 @@ define([// properly require.config'ed
 					}
 
 					this.addRow(map);
+					
+					// Build a ImportMapping for the node TYPE
+					// The ImportMapping object needs a "fake" propertyItem
+					var prop = new PropertyItem("uri", "class", ImportMapping.TYPE_URI);
+					prop.setSparqlID(node.getSparqlID() + "_type" + ImportSpec.ID_CRASH_SUFFIX);
+
+					var map = new ImportMapping(node, prop);
+					var key = map.genUniqueKey();
+					if (key in oldRowHash) {
+						map.itemList = oldRowHash[key].itemList.slice();
+                        map.setUriLookupMode(oldRowHash[key].getUriLookupMode());
+                        map.setUriLookupNodes(oldRowHash[key].getUriLookupNodes());
+						oldRowHash[key] = null;
+					}
+
+					this.addRow(map);
 
 					// Build a ImportMapping for each property
 					var propItemList = nodeList[i].propList;
@@ -445,13 +473,6 @@ define([// properly require.config'ed
 						}
 					}
 				}
-
-				//for (var key in oldRowHash) {
-				//	if (oldRowHash[key] !== null) {
-				//		this.alert("Threw out some mapping items that no longer exist in the query.  e.g.:  " + key);
-				//		break;
-				//	};
-				//}
 			},
 
 			/**

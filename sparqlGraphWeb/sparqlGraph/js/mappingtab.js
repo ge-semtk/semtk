@@ -447,6 +447,10 @@ define([	// properly require.config'ed
 				cell = row.insertCell(-1);
                 if (iMapping.isNode()) {
 					cell.innerHTML = "<b>" + IIDXHelper.htmlSafe(iMapping.getName()) + "</b>";
+				} else if (iMapping.isTypeRestriction()) {
+					// strip off the CRASH_SUFFIX
+					cell.innerHTML = "<i>" + IIDXHelper.htmlSafe(iMapping.getName().slice(0, -1 * ImportSpec.ID_CRASH_SUFFIX.length)) + "</i>";
+					
 				} else {
 					cell.innerHTML = IIDXHelper.htmlSafe(iMapping.getName());
 				}
@@ -508,14 +512,14 @@ define([	// properly require.config'ed
 
                 // return if this isn't a URI (node) row
                 var mapping = this.iSpecHash[rowCell.id];
-                if (!(mapping instanceof ImportMapping) || ! mapping.isNode()) {
+                if (!(mapping instanceof ImportMapping) || ( !mapping.isNode() && !mapping.isTypeRestriction())) {
                     return;
                 }
 
                 // add help-block to any empty row
                 if (rowCell.childElementCount == 0) {
                     var s = document.createElement("span");
-                    s.innerHTML = "--Generate UUID--";
+                    s.innerHTML = mapping.isNode() ? "--Generate UUID--" : "  --" + mapping.getNode().getURI(true) + "--";
                     s.classList.add("help-block");
                     rowCell.appendChild(s);
 
