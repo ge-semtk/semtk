@@ -1835,17 +1835,21 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		SimpleResultSet ret = SimpleResultSet.fromJson((JSONObject)super.execute());
 		ret.throwExceptionIfUnsuccessful("Ingestion error");
 		
+		this.saveWarnings(ret);
+		
+		return ret.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
+	}
+	
+	private void saveWarnings(SimpleResultSet res) {
+		this.warnings = null;
 		try {
-			// check for warnings
-			this.warnings = null;
-			JSONArray jArr = ret.getResultJSONArray(SimpleResultSet.WARNINGS_RESULT_KEY);
+			
+			JSONArray jArr = res.getResultJSONArray(SimpleResultSet.WARNINGS_RESULT_KEY);
 			this.warnings = new ArrayList<String>();
 			this.warnings.addAll(jArr);
 		} catch (Exception e) {
 			// leave warnings null
 		}
-		
-		return ret.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
 	}
 	
 	public JSONObject execGetClassTemplateAndCsv(String classUri, String idRegex, String sparqlConnection) throws ConnectException, EndpointNotFoundException, Exception{
@@ -1921,9 +1925,10 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		
 		try{
 			JSONObject jobj = (JSONObject) this.execute();
-			SimpleResultSet retval = SimpleResultSet.fromJson(jobj);
-			retval.throwExceptionIfUnsuccessful();
-			return retval.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
+			SimpleResultSet res = SimpleResultSet.fromJson(jobj);
+			this.saveWarnings(res);
+			res.throwExceptionIfUnsuccessful();
+			return res.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
 		}
 		finally{
 			this.reset();
@@ -1947,9 +1952,10 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		
 		try{
 			JSONObject jobj = (JSONObject) this.execute();
-			SimpleResultSet retval = SimpleResultSet.fromJson(jobj);
-			retval.throwExceptionIfUnsuccessful();
-			return retval.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
+			SimpleResultSet res = SimpleResultSet.fromJson(jobj);
+			this.saveWarnings(res);
+			res.throwExceptionIfUnsuccessful();
+			return res.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
 		}
 		finally{
 			this.reset();
@@ -1971,9 +1977,10 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	
 		try{
 			JSONObject jobj = (JSONObject) this.execute();
-			SimpleResultSet retval = SimpleResultSet.fromJson(jobj);
-			retval.throwExceptionIfUnsuccessful();
-			return retval.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
+			SimpleResultSet res = SimpleResultSet.fromJson(jobj);
+			this.saveWarnings(res);
+			res.throwExceptionIfUnsuccessful();
+			return res.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
 		}
 		finally{
 			this.reset();
