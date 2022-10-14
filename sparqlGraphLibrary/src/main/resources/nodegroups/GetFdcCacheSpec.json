@@ -1,65 +1,69 @@
 {
-	"version": 2,
+	"version": 3,
 	"sparqlConn": {
-		"name": "SemTK Services",
-		"domain": "http://",
+		"name": "Semtk services laptop",
+		"domain": "",
+		"enableOwlImports": true,
 		"model": [
 			{
-				"type": "virtuoso",
-				"url": "http://server:port",
-				"dataset": "DATASET"
+				"type": "fuseki",
+				"url": "http://localhost:3030/RACK",
+				"graph": "http://research.ge.com/semtk/services"
 			}
 		],
 		"data": [
 			{
-				"type": "virtuoso",
-				"url": "http://server:port",
-				"dataset": "DATASET"
+				"type": "fuseki",
+				"url": "http://localhost:3030/RACK",
+				"graph": "http://research.ge.com/semtk/services"
 			}
 		]
 	},
 	"sNodeGroup": {
-		"version": 9,
+		"version": 19,
 		"limit": 0,
 		"offset": 0,
 		"sNodeList": [
 			{
 				"propList": [
 					{
-						"KeyName": "ingestNodeGroupId",
-						"ValueType": "string",
-						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
 						"UriRelationship": "http://research.ge.com/semtk/fdcCacheSpec#ingestNodeGroupId",
 						"Constraints": "",
-						"fullURIName": "",
 						"SparqlID": "?ingestNodeGroupId",
-						"isReturned": true,
+						"isReturned": false,
 						"optMinus": 0,
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
-						"isMarkedForDeletion": false
+						"isMarkedForDeletion": false,
+						"functions": [
+							"GROUP_CONCAT"
+						]
 					},
 					{
-						"KeyName": "inputNodegroupId",
-						"ValueType": "string",
-						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
 						"UriRelationship": "http://research.ge.com/semtk/fdcCacheSpec#inputNodegroupId",
 						"Constraints": "",
-						"fullURIName": "",
 						"SparqlID": "?inputNodegroupId",
 						"isReturned": true,
-						"optMinus": 0,
+						"optMinus": 1,
 						"isRuntimeConstrained": false,
 						"instanceValues": [],
 						"isMarkedForDeletion": false
 					},
 					{
-						"KeyName": "serviceURL",
-						"ValueType": "string",
-						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
 						"UriRelationship": "http://research.ge.com/semtk/fdcCacheSpec#serviceURL",
 						"Constraints": "",
-						"fullURIName": "",
 						"SparqlID": "?serviceURL",
 						"isReturned": true,
 						"optMinus": 0,
@@ -69,9 +73,7 @@
 					}
 				],
 				"nodeList": [],
-				"NodeName": "Retrieval",
 				"fullURIName": "http://research.ge.com/semtk/fdcCacheSpec#Retrieval",
-				"subClassNames": [],
 				"SparqlID": "?Retrieval",
 				"isReturned": false,
 				"isRuntimeConstrained": false,
@@ -82,9 +84,7 @@
 			{
 				"propList": [],
 				"nodeList": [],
-				"NodeName": "Inference",
 				"fullURIName": "http://research.ge.com/semtk/fdcCacheSpec#Inference",
-				"subClassNames": [],
 				"SparqlID": "?Inference",
 				"isReturned": false,
 				"isRuntimeConstrained": false,
@@ -95,12 +95,12 @@
 			{
 				"propList": [
 					{
-						"KeyName": "sequence",
-						"ValueType": "int",
-						"relationship": "http://www.w3.org/2001/XMLSchema#int",
+						"valueTypes": [
+							"int"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#int",
 						"UriRelationship": "http://research.ge.com/semtk/fdcCacheSpec#sequence",
 						"Constraints": "",
-						"fullURIName": "",
 						"SparqlID": "?sequence",
 						"isReturned": true,
 						"optMinus": 0,
@@ -115,7 +115,7 @@
 							"?Inference"
 						],
 						"OptionalMinus": [
-							"1"
+							1
 						],
 						"Qualifiers": [
 							""
@@ -123,9 +123,9 @@
 						"DeletionMarkers": [
 							false
 						],
-						"KeyName": "inference",
-						"ValueType": "Inference",
-						"UriValueType": "http://research.ge.com/semtk/fdcCacheSpec#Inference",
+						"range": [
+							"http://research.ge.com/semtk/fdcCacheSpec#Inference"
+						],
 						"ConnectBy": "inference",
 						"Connected": true,
 						"UriConnectBy": "http://research.ge.com/semtk/fdcCacheSpec#inference"
@@ -135,7 +135,7 @@
 							"?Retrieval"
 						],
 						"OptionalMinus": [
-							"1"
+							1
 						],
 						"Qualifiers": [
 							""
@@ -143,17 +143,15 @@
 						"DeletionMarkers": [
 							false
 						],
-						"KeyName": "retrieval",
-						"ValueType": "Retrieval",
-						"UriValueType": "http://research.ge.com/semtk/fdcCacheSpec#Retrieval",
+						"range": [
+							"http://research.ge.com/semtk/fdcCacheSpec#Retrieval"
+						],
 						"ConnectBy": "retrieval",
 						"Connected": true,
 						"UriConnectBy": "http://research.ge.com/semtk/fdcCacheSpec#retrieval"
 					}
 				],
-				"NodeName": "FdcCacheStep",
 				"fullURIName": "http://research.ge.com/semtk/fdcCacheSpec#FdcCacheStep",
-				"subClassNames": [],
 				"SparqlID": "?FdcCacheStep",
 				"isReturned": false,
 				"isRuntimeConstrained": false,
@@ -164,12 +162,12 @@
 			{
 				"propList": [
 					{
-						"KeyName": "id",
-						"ValueType": "string",
-						"relationship": "http://www.w3.org/2001/XMLSchema#string",
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
 						"UriRelationship": "http://research.ge.com/semtk/fdcCacheSpec#id",
 						"Constraints": "",
-						"fullURIName": "",
 						"SparqlID": "?id",
 						"isReturned": true,
 						"optMinus": 0,
@@ -192,17 +190,15 @@
 						"DeletionMarkers": [
 							false
 						],
-						"KeyName": "step",
-						"ValueType": "FdcCacheStep",
-						"UriValueType": "http://research.ge.com/semtk/fdcCacheSpec#FdcCacheStep",
+						"range": [
+							"http://research.ge.com/semtk/fdcCacheSpec#FdcCacheStep"
+						],
 						"ConnectBy": "step",
 						"Connected": true,
 						"UriConnectBy": "http://research.ge.com/semtk/fdcCacheSpec#step"
 					}
 				],
-				"NodeName": "FdcCacheSpec",
 				"fullURIName": "http://research.ge.com/semtk/fdcCacheSpec#FdcCacheSpec",
-				"subClassNames": [],
 				"SparqlID": "?FdcCacheSpec",
 				"isReturned": false,
 				"isRuntimeConstrained": false,
@@ -215,12 +211,21 @@
 			{
 				"sparqlID": "?sequence"
 			}
-		]
+		],
+		"groupBy": [
+			"?id",
+			"?sequence",
+			"?inputNodegroupId",
+			"?serviceURL"
+		],
+		"unionHash": {},
+		"columnOrder": []
 	},
 	"importSpec": {
 		"version": "1",
 		"baseURI": "",
 		"columns": [],
+		"dataValidator": [],
 		"texts": [],
 		"transforms": [],
 		"nodes": [
@@ -249,5 +254,6 @@
 				"props": []
 			}
 		]
-	}
+	},
+	"plotSpecs": []
 }

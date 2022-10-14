@@ -19,8 +19,10 @@ package com.ge.research.semtk.fdccache;
 
 import java.io.InputStream;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 
+import org.apache.commons.lang.StringUtils;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
@@ -141,12 +143,15 @@ public class FdcCacheSpecRunner extends Thread {
 		return this.specTable.getCell(this.curStep, "serviceURL");
 	}
 	
-	private String getStepIngestNgId() throws Exception {
-		return this.specTable.getCell(this.curStep, "ingestNodeGroupId");
+	private String[] getStepIngestNgIds() throws Exception {
+		return this.specTable.getCell(this.curStep, "ingestNodeGroupId_GROUP_CONCAT").split(" ");
 	}
 	
 	private FdcClient getStepFdcClient(Table t) throws Exception {
 		String endpoint = this.getStepServiceUrl();
+		if (endpoint.isBlank()) {
+			throw new Exception("FDC step has no service URL.  Row: " + this.specTable.getRowAsCSVString(this.curStep));
+		}
 		HashMap<String,Table> tableHashMap = new HashMap<String,Table>();
 		tableHashMap.put("1", t);
 		return new FdcClient(FdcClientConfig.fromFullEndpoint(endpoint, tableHashMap));
@@ -313,22 +318,29 @@ public class FdcCacheSpecRunner extends Thread {
 				
 				//----- ingest results -----
 				if (res.getTable().getNumRows() > 0) {
-					String ingestId = this.getStepIngestNgId();
-					tracker.setJobPercentComplete(jobId, percentComplete, "ingest nodegroup = " + ingestId);
-					
-					// try retrieving nodegroup from fdcClient first, failures will be silent
-					FdcClient fdcGetNgClient = new FdcClient(FdcClientConfig.buildGetNodegroup(this.getStepServiceUrl(), ingestId));
-					SparqlGraphJson sgjson = fdcGetNgClient.executeGetNodegroup();
-					if (sgjson != null) {
-						// run nodegroup from fdcClient
-						sgjson.setSparqlConn(this.conn);
-						this.ngExecClient.dispatchIngestFromCsvStringsSync(sgjson, res.getTableCSVString());
-					} else {
-						// else run nodegroup from store by id
-						this.ngExecClient.dispatchIngestFromCsvStringsByIdSync(
-								this.getStepIngestNgId(), 
-								res.getTableCSVString(), 
-								this.conn);
+					// for each of possibly multiple unordered ingestion ng
+					String [] ingestIds = this.getStepIngestNgIds();
+					for (String ingestId : ingestIds) {
+						tracker.setJobPercentComplete(jobId, percentComplete, "ingest nodegroup = " + ingestId);
+						
+						// try retrieving nodegroup from fdcClient first, failures will be silent
+						FdcClient fdcGetNgClient = new FdcClient(FdcClientConfig.buildGetNodegroup(this.getStepServiceUrl(), ingestId));
+						SparqlGraphJson sgjson = fdcGetNgClient.executeGetNodegroup();
+						if (sgjson != null) {
+							// run nodegroup from fdcClient
+							sgjson.setSparqlConn(this.conn);
+							this.ngExecClient.dispatchIngestFromCsvStringsSync(sgjson, res.getTableCSVString());
+							ArrayList<String> warnings = this.ngExecClient.getWarnings();
+							if (warnings != null) {
+								LocalLogger.logToStdErr(StringUtils.join(warnings.toArray(), "\n"));
+							}
+						} else {
+							// else run nodegroup from store by id
+							this.ngExecClient.dispatchIngestFromCsvStringsByIdSync(
+									ingestId, 
+									res.getTableCSVString(), 
+									this.conn);
+						}
 					}
 				}
 				percentComplete += percentStep/3;
