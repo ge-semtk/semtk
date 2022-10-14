@@ -39,6 +39,8 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,6 +51,8 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
+import com.ge.research.semtk.demo.DemoSetupThread;
+import com.ge.research.semtk.demo.JavaApiDemo;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
@@ -69,12 +73,14 @@ import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.sparqlX.parallel.SparqlParallelQueries;
+import com.ge.research.semtk.springutilib.requests.GraphNameRequestBody;
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointRequestBody;
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointsRequestBody;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
+import com.ge.research.semtk.springutillib.properties.StoreProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -118,11 +124,15 @@ public class SparqlQueryServiceRestController {
 	@Autowired
 	OInfoServiceProperties oinfo_props;
 	@Autowired
-	private QueryUploadNeptuneProperties serviceProps; 
+	private QueryUploadNeptuneProperties upload_neptune_props; 
 	@Autowired
 	private AuthProperties auth_prop; 
 	@Autowired 
 	private ApplicationContext appContext;
+	@Autowired
+	ServicesGraphProperties servicesgraph_prop;
+	@Autowired
+	StoreProperties store_prop;
 	
 	@PostConstruct
     public void init() {
@@ -130,8 +140,9 @@ public class SparqlQueryServiceRestController {
 		env_prop.validateWithExit();
 		
 		oinfo_props.validateWithExit();
-		serviceProps.validateWithExit();
+		upload_neptune_props.validateWithExit();
 		auth_prop.validateWithExit();
+		servicesgraph_prop.validateWithExit();
 		
 		AuthorizationManager.authorizeWithExit(auth_prop);
 
@@ -192,7 +203,7 @@ public class SparqlQueryServiceRestController {
 	
 	@CrossOrigin
 	@RequestMapping(value="/selectGraphNames", method= RequestMethod.POST)
-	public JSONObject selectGraphNames(@RequestBody SparqlRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+	public JSONObject selectGraphNames(@RequestBody GraphNameRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);	
 		final String ENDPOINT_NAME = "/selectGraphNames";
 		GeneralResultSet resultSet = null;
@@ -201,18 +212,33 @@ public class SparqlQueryServiceRestController {
 		long startTime = System.nanoTime();
 
 		try{
-		
-			requestBody.printInfo(); 	// print info to console			
-			requestBody.validate(); 	// check inputs 	
+			
 			String query = SparqlToXUtils.generateSelectGraphNames();
-			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph());
+			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), "");
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 			
 			// add default graph name
 			Table tab = ((TableResultSet) resultSet).getResults();
 			tab.addRow(0, new String [] {sei.getDefaultGraphName()});
-			((TableResultSet) resultSet).addResults(tab);
 			
+			if (requestBody.getSkipSemtkGraphs()) {
+				// get list of graphs, then remove the semtk graphs
+				ArrayList<String> graphNames = new ArrayList<String>(Arrays.asList(tab.getColumn(0)));
+				graphNames.remove(servicesgraph_prop.getEndpointDataset());
+				graphNames.remove(store_prop.getSparqlConnDataDataset());
+				graphNames.remove(store_prop.getSparqlConnModelDataset());
+				graphNames.remove(JavaApiDemo.CONN_GRAPH);
+				graphNames.remove(DemoSetupThread.GRAPH);
+				
+				// build a new table with updated graph names
+				Table tabSmaller = new Table(tab.getColumnNames(), tab.getColumnTypes());
+				for (String g : graphNames) {
+					tabSmaller.addRow( new String [] { g });
+				}
+				((TableResultSet) resultSet).addResults(tabSmaller);
+			} else {
+				((TableResultSet) resultSet).addResults(tab);
+			}
 			
 		} catch (Exception e) {			
 			LocalLogger.printStackTrace(e);	
@@ -604,9 +630,9 @@ public class SparqlQueryServiceRestController {
 		
 		if (sei instanceof NeptuneSparqlEndpointInterface) {
 			((NeptuneSparqlEndpointInterface)sei).setS3Config(
-					serviceProps.getS3ClientRegion(),
-					serviceProps.getS3BucketName(), 
-					serviceProps.getAwsIamRoleArn());
+					upload_neptune_props.getS3ClientRegion(),
+					upload_neptune_props.getS3BucketName(), 
+					upload_neptune_props.getAwsIamRoleArn());
 		}
 		
 		if (! sei.isAuth()) { 
@@ -655,9 +681,9 @@ public class SparqlQueryServiceRestController {
 			if (sei instanceof NeptuneSparqlEndpointInterface) {
 
 				((NeptuneSparqlEndpointInterface)sei).setS3Config(
-						serviceProps.getS3ClientRegion(),
-						serviceProps.getS3BucketName(), 
-						serviceProps.getAwsIamRoleArn());
+						upload_neptune_props.getS3ClientRegion(),
+						upload_neptune_props.getS3BucketName(), 
+						upload_neptune_props.getAwsIamRoleArn());
 			}
 			
 			if (! sei.isAuth()) { 

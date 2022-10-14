@@ -56,7 +56,7 @@ public class JavaApiDemo {
 	// set up a triplestore connection
 	static String CONN_TYPE = "virtuoso";                        // "fuseki", "neptune"
 	static String CONN_URL = "http://localhost:8890";            // "http://localhost:3030/DATASET";
-	static String CONN_GRAPH = "http://semtk/demo";
+	public static String CONN_GRAPH = "http://semtk/demo";
 	// virtuoso requires password
 	static String USER = "dba";
 	static String PASSWORD = "dba";

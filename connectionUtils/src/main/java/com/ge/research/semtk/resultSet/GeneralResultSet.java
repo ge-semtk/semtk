@@ -195,7 +195,12 @@ public abstract class GeneralResultSet {
 			this.success = false;
 			
 		} else {
-			String s = jsonObj.get("status").toString();
+			String s;
+			try {
+				s = jsonObj.get("status").toString();
+			} catch (Exception e) {
+				s = "";
+			}
 			if (s.equals(GeneralResultSet.SUCCESS) || s.equals(GeneralResultSet.FAILURE)) {
 				success = s.equals(GeneralResultSet.SUCCESS);
 				// subclass has set resultsBlockName

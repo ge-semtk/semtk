@@ -20,13 +20,13 @@ import com.ge.research.semtk.utility.Utility;
 public class DemoSetupThread extends Thread {
 	private SparqlEndpointInterface demoSei = null;
 	private SparqlEndpointInterface storeSei = null;
-	
+	public static String GRAPH = "http://semtk/demo";
 	
 
 	public DemoSetupThread(SparqlEndpointInterface storeSei, SparqlEndpointInterface servicesSei) {
 		this.storeSei = storeSei;
 		this.demoSei = servicesSei;
-		this.demoSei.setGraph("http://semtk/demo");
+		this.demoSei.setGraph(GRAPH);
 	}
 	
 	public void run() {
