@@ -175,7 +175,7 @@ public abstract class Returnable {
 	}
 
 	public String getTypeSparqlID() {
-        return this.sparqlID + "_type";
+        return this.getBindingOrSparqlID() + "_type";
     }
 	
 	public HashSet<String> getFunctionSparqlIDs() {

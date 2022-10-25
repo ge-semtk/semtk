@@ -27,6 +27,7 @@ import java.util.ArrayList;
  */
 public class ImportMapping {
 	public static String NO_PROPERTY = "";
+    public static String TYPE_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
 	private String nodeSparqlID = null;
 	private String propURI = NO_PROPERTY;   
 	private ArrayList<MappingItem> itemList = new ArrayList<MappingItem>();
@@ -67,9 +68,12 @@ public class ImportMapping {
 		return this.isEnum;
 	}
 	public boolean isProperty() {
-		return !this.propURI.equals(NO_PROPERTY);
+		return !this.propURI.equals(NO_PROPERTY) && !this.isTypeRestriction();
 	}
-	
+    public boolean isTypeRestriction() {
+        return this.propURI.equals(ImportMapping.TYPE_URI);
+    }
+    
 	public boolean isNode() {
 		return this.propURI.equals(NO_PROPERTY);
 	}

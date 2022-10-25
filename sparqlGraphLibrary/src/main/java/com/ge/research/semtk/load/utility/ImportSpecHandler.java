@@ -43,6 +43,7 @@ import com.ge.research.semtk.load.DataValidator;
 import com.ge.research.semtk.load.transform.Transform;
 import com.ge.research.semtk.load.transform.TransformInfo;
 import com.ge.research.semtk.load.utility.UriLookupPerfMonitor.READY;
+import com.ge.research.semtk.ontologyTools.OntologyClass;
 import com.ge.research.semtk.ontologyTools.OntologyDatatype;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
@@ -223,6 +224,7 @@ public class ImportSpecHandler {
 			newNameToIndexHash.put(name, counter);
 			// build a translation hash
 			translateHash.put(oldNameToIndexHash.get(name), counter);
+			
 			counter += 1;
 		}
 
@@ -373,7 +375,7 @@ public class ImportSpecHandler {
 				}
 			}
 
-			// build mapping if it isn't empty AND it isn't a URILookup
+			// build mapping if it isn't empty 
 			if (this.importspec.getNodeNumMappings(n) > 0) {
 
 				mapping = new ImportMapping();
@@ -396,38 +398,17 @@ public class ImportSpecHandler {
 						mapping, tmpImportNg);
 			}
 
-			// ---- Properties ----
-			int numProps = this.importspec.getNodeNumProperties(n);
-			if (numProps > 0) {
-				Node snode = tmpImportNg.getNode(nodeIndex);
-
-				for (int p = 0; p < numProps; p++) {
-
-					mapping = null;
-					// build mapping if it isn't empty
-					if (this.importspec.getNodePropNumMappings(n, p) > 0) {
-
-						mapping = new ImportMapping();
-
-						// populate the mapping
-						mapping.setNodeSparqlID(this.importspec.getNodeSparqlID(n));
-						mapping.setPropURI(this.importspec.getNodePropUriRel(n, p));
-						setupMappingItemList(n, p, mapping);
-
-						// add non-lookup mappings to mapping list
-						if (this.importspec.getNodePropNumURILookups(n, p) == 0) {
-							mappingsList.add(mapping);
-						}
-
-					}
-
-					// handle URILookup, even if mapping was missing or blank
-					if (this.importspec.getNodePropNumURILookups(n, p) > 0) {
-						this.setupUriLookup(this.importspec.getNodePropUriRel(n, p),
-								this.importspec.getNodePropURILookupList(n, p), mapping, tmpImportNg);
-					}
-				}
+			// ---- Type restriction ----//
+			if (this.importspec.getNodeHasTypeRestriction(n)) {
+				int p = ImportSpec.TYPE_RESTRICTION_PROP;
+				this.setupMappingAndLookup(n, p, tmpImportNg, mappingsList);
 			}
+			
+			// ---- Properties ----
+			for (int p = 0; p < this.importspec.getNodeNumProperties(n); p++) {
+				this.setupMappingAndLookup(n, p, tmpImportNg, mappingsList);
+			}
+			
 		}
 
 		// create some final efficient arrays
@@ -437,6 +418,45 @@ public class ImportSpecHandler {
 		this.setupLookupNodegroups();
 	}
 
+	/**
+	 * Set up property mapping and lookups.  Add mapping to mappingsList
+	 * @param n
+	 * @param p
+	 * @param tmpImportNg
+	 * @param mappingsList
+	 * @throws Exception
+	 */
+	private void setupMappingAndLookup(int n, int p, NodeGroup tmpImportNg, ArrayList<ImportMapping> mappingsList) throws Exception {
+		ImportMapping mapping = null;
+		// build mapping if it isn't empty
+		if (this.importspec.getNodePropNumMappings(n, p) > 0) {
+
+			mapping = new ImportMapping();
+
+			// populate the mapping
+			mapping.setNodeSparqlID(this.importspec.getNodeSparqlID(n));
+			mapping.setPropURI(this.importspec.getNodePropUriRel(n, p));
+			setupMappingItemList(n, p, mapping);
+
+			// add non-lookup mappings to mapping list
+			// WTF 
+			if (this.importspec.getNodePropNumURILookups(n, p) == 0) {
+				mappingsList.add(mapping);
+			}
+
+		}
+
+		// handle URILookup, even if mapping was missing or blank
+		if (this.importspec.getNodePropNumURILookups(n, p) > 0) {
+			this.setupUriLookup(
+					this.importspec.getNodePropUriRel(n, p),
+					this.importspec.getNodePropURILookupList(n, p), 
+					mapping, 
+					tmpImportNg
+					);
+		}
+	}
+	
 	private void errorCheckImportSpec() throws Exception {
 
 		// empty right now
@@ -460,12 +480,16 @@ public class ImportSpecHandler {
 		for (String importNodeId : this.lookupMappings.keySet()) {
 			// initialize to "normal"
 			NodeGroup lookupNg = NodeGroup.getInstanceFromJson(this.nodegroupJson);
-
+			lookupNg.unsetAllReturns();
+			lookupNg.unsetAllConstraints();
+			
 			// add a sample value for each
 			for (ImportMapping map : this.lookupMappings.get(importNodeId)) {
 				Node node = lookupNg.getNodeBySparqlID(map.getNodeSparqlID());
 
 				if (map.isNode()) {
+					node.setValueConstraint(this.buildBestConstraint(node, sample));
+				} else if (map.isTypeRestriction()) {
 					node.setValueConstraint(this.buildBestConstraint(node, sample));
 				} else {
 					PropertyItem propItem = node.getPropertyByURIRelation(map.getPropURI());
@@ -557,7 +581,8 @@ public class ImportSpecHandler {
 	 * Add a lookup ImportMapping to this.lookupMappings in the right place(s). For
 	 * any node this is looking up.
 	 * 
-	 * @param uriLookupJsonArr
+	 * @param name
+	 * @param uriLookupList
 	 * @param mapping          - mapping of the node or property which owns this URI
 	 *                         lookup, or null if none
 	 * @param tmpNodegroup     - example nodegroup
@@ -800,7 +825,21 @@ public class ImportSpecHandler {
 		Node node = importNodegroup.getNodeBySparqlID(mapping.getNodeSparqlID());
 		PropertyItem propItem = null;
 
-		if (mapping.isProperty()) {
+		if (mapping.isTypeRestriction()) {
+			if (builtString.length() > 0) {
+				
+				// expand class and remove any suffix (e.g. "!")
+				String classURI = this.getTypeRestrictionClassURI(builtString, node.getUri());
+				
+				if (!skipValidation) {
+					if (!classURI.equals(node.getUri()) && !oInfo.isSubclassOf(classURI, node.getUri())) {
+						throw new Exception("Invalid type restriction: " + classURI + " is not a subclass* of " + node.getUri());
+					};
+				}
+
+				node.setFullURIname(classURI);
+			}
+		} else if (mapping.isProperty()) {
 			// ---- property ----
 			if (builtString.length() > 0) {
 				propItem = node.getPropertyByURIRelation(mapping.getPropURI());
@@ -842,6 +881,7 @@ public class ImportSpecHandler {
 			}
 		}
 	}
+	
 
 	/**
 	 * lookup each URI for a nodegroup
@@ -893,7 +933,7 @@ public class ImportSpecHandler {
 			mappedStrings.add(mappedStr);
 		}
 
-		this.expandMappedStrings(nodeID, mappedStrings);
+		this.expandNodeMappedStrings(nodeID, mappedStrings);
 
 		// return quickly if answer is already cached
 		String cachedUri = this.uriCache.getUri(this.lookupNodegroupMD5.get(nodeID), mappedStrings);
@@ -904,7 +944,7 @@ public class ImportSpecHandler {
 			
 			if (cachedUri.equals(UriCache.DUPLICATE)) {
 				// uri pre-cache found multiple values.
-				NodeGroup lookupNodegroup = this.getLookupNodegroup(nodeID);
+				NodeGroup lookupNodegroup = NodeGroup.getInstanceFromJson(this.lookupNodegroupsJson.get(nodeID));
 				String lookup = lookupNodegroup.getReturnedSparqlIDs().toString();
 				throw new Exception("URI lookup on " + lookup + " found multiple URI's that match: "
 						+ String.join(",", mappedStrings));
@@ -953,11 +993,13 @@ public class ImportSpecHandler {
 			} else {
 				// Run the query
 				long startTime = System.nanoTime();
-				lookupNodegroup = this.getLookupNodegroup(nodeID);
+				
 				// make this thread-safe
 				SparqlEndpointInterface safeEndpoint = this.nonThreadSafeEndpoint.copy();
 				
-				String query = this.getLookupQuery(lookupNodegroup, nodeID, mappedStrings);
+				lookupNodegroup = this.buildLookupNodegroup(nodeID, mappedStrings);
+				String query = lookupNodegroup.generateSparql(AutoGeneratedQueryTypes.SELECT_DISTINCT, false, 0, null);
+
 				TableResultSet res = (TableResultSet) safeEndpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 				res.throwExceptionIfUnsuccessful();
 				tab = res.getTable();
@@ -977,7 +1019,7 @@ public class ImportSpecHandler {
 					// this is the only spot where we didn't run query but need lookupNodegroup for
 					// error msg
 					if (lookupNodegroup == null) {
-						lookupNodegroup = this.getLookupNodegroup(nodeID);
+						lookupNodegroup = NodeGroup.getInstanceFromJson(this.lookupNodegroupsJson.get(nodeID));
 					}
 					String lookup = lookupNodegroup.getReturnedSparqlIDs().toString();
 					throw new Exception("URI lookup on " + lookup + " failed on: " + String.join(",", mappedStrings));
@@ -1016,41 +1058,79 @@ public class ImportSpecHandler {
 	}
 	
 	
-
-	private String getLookupQuery(NodeGroup lookupNodegroup, String nodeID, ArrayList<String> mappedStrings)
+	/** 
+	 * Build a lookup nodegroup with mapped Strings
+	 * @param nodeID
+	 * @param mappedStrings
+	 * @return
+	 * @throws Exception
+	 */
+	private NodeGroup buildLookupNodegroup(String nodeID, ArrayList<String> mappedStrings)
 			throws Exception {
 
+		NodeGroup lookupNodegroup = this.getLookupNodegroup(nodeID);
+		
+		// pass 1: Clear node value constraints
+		//         since they are used by the URI and URI type.
+		//         This allows use of addValueConstraint instead of setValueConstraint
+		//         in case both are used on the same node.
+		for (ImportMapping mapping : this.lookupMappings.get(nodeID)) {
+			Node node = lookupNodegroup.getNodeBySparqlID(mapping.getNodeSparqlID());
+
+			if (mapping.isTypeRestriction() || mapping.isNode()) {
+				node.setValueConstraint(null);
+			}
+		}
+		
 		// loop through lookupMappings and add constraints to the lookupNodegroup
 		int i = 0;
 		for (ImportMapping mapping : this.lookupMappings.get(nodeID)) {
-			// short-hand for:
-			// String builtStr = mapping.buildString(record);
+			
 			String mappedStr = mappedStrings.get(i++);
-
 			Node node = lookupNodegroup.getNodeBySparqlID(mapping.getNodeSparqlID());
 
-			if (mapping.isNode()) {
-
-				node.setValueConstraint(this.buildBestConstraint(node, mappedStr));
+			if (mapping.isTypeRestriction()) {
+				boolean exactFlag = this.getTypeRestrictionStringSuffix(mappedStr).equals("!");
+				
+				String classURI = this.getTypeRestrictionClassURI(mappedStr, node.getUri());
+				
+				// subClassURIs or stay empty, depending on "!"
+				ArrayList<String> subClassURIs = new ArrayList<String>();
+				if (!exactFlag) {
+					// lookup by subclasses too.
+					subClassURIs.addAll(this.oInfo.getSubclassNames(classURI));
+				}
+				
+				String vc = ValueConstraint.buildBestSubclassConstraint(
+						node.getTypeSparqlID(), 
+						classURI,
+						subClassURIs, 
+						this.lookupConn.getInsertInterface());
+				
+				node.addValueConstraint(vc);
+				
+			} else if (mapping.isNode()) {
+				node.addValueConstraint(this.buildBestConstraint(node, mappedStr).toString());
 
 			} else {
 				PropertyItem prop = node.getPropertyByURIRelation(mapping.getPropURI());
 				prop.setValueConstraint(this.buildBestConstraint(prop, mappedStr));
 			}
+			
 		}
 
-		return lookupNodegroup.generateSparql(AutoGeneratedQueryTypes.SELECT_DISTINCT, false, 0, null);
+		return lookupNodegroup;
 	}
 
 	/**
-	 * Expand mappedStrings if incomplete enumeration or short-hand generated Uri
+	 * Expand mappedStrings if incomplete enumeration
 	 * 
 	 * @param nodeID
 	 * @param nodeUri
 	 * @param mappedStrings
 	 * @throws Exception
 	 */
-	private void expandMappedStrings(String nodeID, ArrayList<String> mappedStrings) throws Exception {
+	private void expandNodeMappedStrings(String nodeID, ArrayList<String> mappedStrings) throws Exception {
 
 		ArrayList<ImportMapping> mappings = this.lookupMappings.get(nodeID);
 		for (int i = 0; i < mappings.size(); i++) {
@@ -1066,11 +1146,32 @@ public class ImportSpecHandler {
 					String nodeUri = this.ng.getNodeBySparqlID(nodeID).getUri();
 					mappedStrings.set(i, this.uriResolver.getInstanceUriWithPrefix(nodeUri, builtString));
 				}
-			}
+			} 
 		}
-
 	}
 
+	private String getTypeRestrictionClassURI(String mappedStr, String enforceSuperclass) throws Exception {
+		String className = mappedStr.endsWith("!") ? mappedStr.substring(0, mappedStr.length() -1) : mappedStr;
+		OntologyClass c = this.oInfo.lookupClass(className);
+		if (c == null)
+			throw new Exception("Invalid class in type restriction: " + className);
+		
+		String classURI = c.getName();
+		if (enforceSuperclass != null && 
+				!classURI.equals(enforceSuperclass) &&
+				!this.oInfo.isSubclassOf(classURI, enforceSuperclass)) {
+			throw new Exception ("Type restriction class " + classURI + " is not a subclass* of " + enforceSuperclass);
+		}
+		return classURI;
+	}
+	
+	private String getTypeRestrictionStringSuffix(String mappedStr) {
+		if (mappedStr.endsWith("!")) 
+			return "!";
+		else
+			return "";
+	}
+	
 	/**
 	 * Try prefetching some URI Lookups with an unconstrained lookup nodegroup
 	 * 
@@ -1249,7 +1350,7 @@ public class ImportSpecHandler {
 		for (ImportMapping mapping : this.lookupMappings.get(nodeID)) {
 			Node node = lookupNodegroup.getNodeBySparqlID(mapping.getNodeSparqlID());
 
-			if (mapping.isNode()) {
+			if (mapping.isNode() || mapping.isTypeRestriction()) {
 				node.setValueConstraint(null);
 
 			} else {

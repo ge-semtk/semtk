@@ -448,9 +448,7 @@ define([	// properly require.config'ed
                 if (iMapping.isNode()) {
 					cell.innerHTML = "<b>" + IIDXHelper.htmlSafe(iMapping.getName()) + "</b>";
 				} else if (iMapping.isTypeRestriction()) {
-					// strip off the CRASH_SUFFIX
-					cell.innerHTML = "<i>" + IIDXHelper.htmlSafe(iMapping.getName().slice(0, -1 * ImportSpec.ID_CRASH_SUFFIX.length)) + "</i>";
-					
+					cell.innerHTML = "<i>" + IIDXHelper.htmlSafe(iMapping.getName()) + "</i>";	
 				} else {
 					cell.innerHTML = IIDXHelper.htmlSafe(iMapping.getName());
 				}

@@ -56,6 +56,7 @@ public class ImportSpec {
 	public static final String JKEY_IS_TRANS_TYPE = "transType";
 	public static final String JKEY_IS_TRANS_ARG1 = "arg1";
 	public static final String JKEY_IS_TRANS_ARG2 = "arg2";
+	public static final String JKEY_IS_TYPE_RESTRICTION = "type_restriction";
 	public static final String JKEY_IS_NODES = "nodes";
 	public static final String JKEY_IS_NODE_SPARQL_ID = "sparqlID";
 	public static final String JKEY_IS_NODE_TYPE = "type";
@@ -70,6 +71,8 @@ public class ImportSpec {
 	public static final String JKEY_IS_PROPS = "props";
 	public static final String JKEY_IS_MAPPING_PROPS_URI_REL = "URIRelation";
 	
+    public static final int TYPE_RESTRICTION_PROP = -1;
+
 	JSONObject json = new JSONObject();
 
 	public ImportSpec() {
@@ -276,17 +279,42 @@ public class ImportSpec {
 		JSONArray arr = (JSONArray) this.getNodeMapping(nodeIndex, mappingIndex).get(JKEY_IS_MAPPING_TRANSFORM_LIST);
 		return toStringList(arr);
 	}
+	
+	public boolean getNodeHasTypeRestriction(int nodeIndex) {
+		return this.getNodeProp(nodeIndex, TYPE_RESTRICTION_PROP) != null;
+	}
+	
+	/**
+	 * Count number of normal properties (does not include special type_restriction)
+	 * @param index
+	 * @return
+	 */
 	public int getNodeNumProperties(int index) {
 		JSONArray arr = (JSONArray) this.getNode(index).get(JKEY_IS_PROPS);
 		return arr == null ? 0 : arr.size();
 	}
+	
+	/**
+	 * Get property: where there are special property constants beyond the normal [0,n]
+	 * @param n - node index
+	 * @param p - prop index or special prop constant (TYPE_RESTRICTION_PROP)
+	 * @return
+	 */
 	private JSONObject getNodeProp(int n, int p) {
-		JSONArray arr = (JSONArray) this.getNode(n).get(JKEY_IS_PROPS);
-		return (JSONObject) arr.get(p);
+		if (p == TYPE_RESTRICTION_PROP) {
+			return (JSONObject) this.getNode(n).get(JKEY_IS_TYPE_RESTRICTION);
+		} else {
+			JSONArray arr = (JSONArray) this.getNode(n).get(JKEY_IS_PROPS);
+			return (JSONObject) arr.get(p);
+		}
 	}
 	
 	public String getNodePropUriRel(int n, int p) {
-		return (String) this.getNodeProp(n, p).get(JKEY_IS_MAPPING_PROPS_URI_REL);
+		if (p == TYPE_RESTRICTION_PROP) {
+			return ImportMapping.TYPE_URI;
+		} else {
+			return (String) this.getNodeProp(n, p).get(JKEY_IS_MAPPING_PROPS_URI_REL);
+		}
 	}
 
 	
@@ -437,6 +465,7 @@ public class ImportSpec {
 	private JSONObject findProp(String nodeSparqlId, String propUri) throws Exception {
 		
 		JSONObject node = this.findNode(nodeSparqlId);
+		
 		JSONArray props = (JSONArray) node.get(JKEY_IS_PROPS);
 		if (props != null) {
 			for (Object o : props) {
@@ -447,6 +476,7 @@ public class ImportSpec {
 			}
 		}
 		throw new Exception("Can't find property in importSpec: " + propUri + " in node " + nodeSparqlId);
+		
 	}
 	
 	/**
@@ -703,6 +733,27 @@ public class ImportSpec {
 				// node not returned so make sure mapping is empty
 				nObj.put(JKEY_IS_MAPPING, new JSONArray());
 			}
+			
+			// if node is returned in nodegroup
+			if (node.getIsTypeReturned()) {
+				
+				// find or create type restriction
+				JSONObject trObj = (JSONObject) nObj.get(JKEY_IS_TYPE_RESTRICTION);
+				if (trObj == null) {
+					trObj = new JSONObject();
+					nObj.put(JKEY_IS_TYPE_RESTRICTION, trObj);
+				}
+				
+				String colName = ImportSpec.sparqlIDToColname(node.getBindingOrSparqlID() + "_type");
+				JSONArray mapArr = new JSONArray();
+				mapArr.add( this.buildMappingWithCol(colName));
+				trObj.put(JKEY_IS_MAPPING, mapArr);
+				
+			} else {
+				// remove if no longer returned
+				nObj.remove(JKEY_IS_TYPE_RESTRICTION);
+			}
+			
 			
 			// loop through properties that are returned
 			for (PropertyItem prop : node.getPropertyItems()) {

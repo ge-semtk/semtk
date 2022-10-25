@@ -41,6 +41,8 @@ define([	// properly require.config'ed
 			this.itemList = [];
 		};
 
+        ImportMapping.ID_TYPE_SUFFIX="_Typ30nLy";
+		
    		ImportMapping.TYPE_URI = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
    		
 		// Every Json key needs to have a constant like in the java
@@ -120,8 +122,6 @@ define([	// properly require.config'ed
 
 				var node = optTypeParentNode || ng.getNodeBySparqlID(jNode.sparqlID);
 				if (!node) { kdlLogAndThrow("ImportMapping.fromJsonNode() can't find node in nodegroup: " + jNode.sparqlID); }
-				this.node = node;
-				this.propItem = null;
 
 				if (!jNode.hasOwnProperty("mapping")) {
 					kdlLogAndThrow("Internal error in ImportMapping.fromJsonNode().  No mapping field.");
@@ -236,12 +236,15 @@ define([	// properly require.config'ed
 
 			// get the display name
 			// e.g. bindings are displayed where available
+			// Strips ID_TYPE_SUFFIX. 
 			getName: function() {
+				ret = "";
 				if (this.isNode()) {
-					return this.node.getBindingOrSparqlID();
+					ret = this.node.getBindingOrSparqlID();
 				} else {
-					return this.propItem.getBindingOrSparqlID() || this.propItem.getKeyName();
+					ret = this.propItem.getBindingOrSparqlID() || this.propItem.getKeyName();
 				}
+				return ret.endsWith(ImportMapping.ID_TYPE_SUFFIX) ? ret.slice(0, -1 * ImportMapping.ID_TYPE_SUFFIX.length) : ret;
 			},
 
 			isProperty: function() {

@@ -1,0 +1,106 @@
+{
+	"version": 3,
+	"sparqlConn": {
+		"name": "Junit fuseki",
+		"domain": "",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 20,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/junit/linkable#id",
+						"Constraints": "",
+						"SparqlID": "?id",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"fullURIName": "http://kdl.ge.com/junit/linkable#Linkable",
+				"SparqlID": "?Linkable",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE",
+				"isTypeReturned": true
+			}
+		],
+		"orderBy": [
+			{
+				"sparqlID": "?id"
+			}
+		],
+		"groupBy": [],
+		"unionHash": {},
+		"columnOrder": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "LinkableSubFrom_type"
+			},
+			{
+				"colId": "col_1",
+				"colName": "LinkableSubFrom"
+			},
+			{
+				"colId": "col_2",
+				"colName": "idFrom"
+			},
+			{
+				"colId": "col_3",
+				"colName": "LinkableSubTo_type"
+			},
+			{
+				"colId": "col_4",
+				"colName": "LinkableSubTo"
+			},
+			{
+				"colId": "col_5",
+				"colName": "idTo"
+			}
+		],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Linkable",
+				"type": "http://kdl.ge.com/junit/linkable#Linkable",
+				"mapping": [],
+				"props": []
+			}
+		]
+	},
+	"plotSpecs": []
+}

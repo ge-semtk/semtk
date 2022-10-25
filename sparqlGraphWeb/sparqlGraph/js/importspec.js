@@ -51,7 +51,6 @@ define([// properly require.config'ed
 			this.transformList = [];
 			
 		};
-		ImportSpec.ID_CRASH_SUFFIX="D0nTCr@$h"
 		ImportSpec.prototype = {
 
 			addColumn : function (iCol) {
@@ -440,21 +439,23 @@ define([// properly require.config'ed
 
 					this.addRow(map);
 					
-					// Build a ImportMapping for the node TYPE
-					// The ImportMapping object needs a "fake" propertyItem
-					var prop = new PropertyItem("uri", "class", ImportMapping.TYPE_URI);
-					prop.setSparqlID(node.getSparqlID() + "_type" + ImportSpec.ID_CRASH_SUFFIX);
-
-					var map = new ImportMapping(node, prop);
-					var key = map.genUniqueKey();
-					if (key in oldRowHash) {
-						map.itemList = oldRowHash[key].itemList.slice();
-                        map.setUriLookupMode(oldRowHash[key].getUriLookupMode());
-                        map.setUriLookupNodes(oldRowHash[key].getUriLookupNodes());
-						oldRowHash[key] = null;
+					if (gOInfo.getSubclassNames(node.getURI()).length > 0) {
+						// Build a ImportMapping for the node TYPE
+						// The ImportMapping object needs a "fake" propertyItem
+						var prop = new PropertyItem("uri", "class", ImportMapping.TYPE_URI);
+						prop.setSparqlID(node.getBindingOrSparqlID() + "_type" + ImportMapping.ID_TYPE_SUFFIX);
+	
+						var map = new ImportMapping(node, prop);
+						var key = map.genUniqueKey();
+						if (key in oldRowHash) {
+							map.itemList = oldRowHash[key].itemList.slice();
+	                        map.setUriLookupMode(oldRowHash[key].getUriLookupMode());
+	                        map.setUriLookupNodes(oldRowHash[key].getUriLookupNodes());
+							oldRowHash[key] = null;
+						}
+	
+						this.addRow(map);
 					}
-
-					this.addRow(map);
 
 					// Build a ImportMapping for each property
 					var propItemList = nodeList[i].propList;

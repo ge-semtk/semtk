@@ -1,0 +1,6 @@
+LinkableSubFrom,LinkableSubFrom_type,idFrom,LinkableSubTo,LinkableSubTo_type,idTo
+,LinkableSub,ls1,,LinkableSub,ls10
+,LinkableSub,ls1,,LinkableSub,ls11
+,LinkableSub,ls1,,LinkableSubSub,lss10
+,LinkableSub,ls1,,LinkableSubSub,lss11
+,LinkableSubSub,lss10,,LinkableSubSub,lss11
