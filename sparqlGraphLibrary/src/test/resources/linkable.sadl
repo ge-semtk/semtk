@@ -1,0 +1,16 @@
+uri "http://kdl.ge.com/junit/linkable" alias linkable version "$Revision:$ Last modified on   $Date:$".
+
+// Class that links to itsself and has some subclasses with their own properties
+// for junit
+Linkable is a class,
+	described by id with a single value of type string,
+	described by linkTo with values of type Linkable.
+	
+LinkableSub is a type of Linkable,
+	described by subLinkTo with values of type Linkable.
+
+LinkableSubSub is a type of LinkableSub,
+	described by subSubLinkTo with values of type Linkable.
+
+LinkableSubSubSub is a type of LinkableSubSub,
+	described by subSubSubLinkTo with values of type Linkable.

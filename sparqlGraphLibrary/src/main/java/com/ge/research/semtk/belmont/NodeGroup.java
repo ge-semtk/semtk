@@ -87,7 +87,8 @@ public class NodeGroup {
 	// version 17: property item valueTypes, domainURI, rangeURI
 	// version 18: complex ranges
 	// version 19 - fixed buggy wrong name propertyItem.domainURI back to old propertyItem.UriRelationship
-	private static final int VERSION = 19;
+	// version 20 - ingestion with subtypes
+	private static final int VERSION = 20;
 	
 	// actually used to keep track of our nodes and the nomenclature in use. 
 	private ArrayList<Node> nodes = new ArrayList<Node>();

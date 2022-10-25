@@ -1,0 +1,5 @@
+Battery,Battery_type,batteryDesc,batteryId
+uri://semtk#2bef0933-bbf7-4ee3-9da1-fcb163a0e4a3,http://kdl.ge.com/durabattery#Battery,,id1
+uri://semtk#868c513b-42d5-486f-8957-10b634189fff,http://kdl.ge.com/durabattery#Battery,,id2
+uri://semtk#d8d530b5-9b7b-41d0-8e7d-92015de52905,http://kdl.ge.com/durabattery#DuraBattery,,id1
+uri://semtk#5c739245-f056-4cd7-9298-ddc853042c51,http://kdl.ge.com/durabattery#DuraBattery,,id2

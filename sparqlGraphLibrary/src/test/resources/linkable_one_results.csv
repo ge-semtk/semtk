@@ -1,0 +1,6 @@
+LinkableSubFrom_type,LinkableSubFrom,idFrom,LinkableSubTo_type,LinkableSubTo,idTo
+http://kdl.ge.com/junit/linkable#LinkableSub,uri://semtk#b15aa409-14fe-4a5e-844d-38a6d072b76d,ls1,http://kdl.ge.com/junit/linkable#LinkableSub,uri://semtk#9c04c607-63a7-43c1-a781-51635676c905,ls10
+http://kdl.ge.com/junit/linkable#LinkableSub,uri://semtk#b15aa409-14fe-4a5e-844d-38a6d072b76d,ls1,http://kdl.ge.com/junit/linkable#LinkableSub,uri://semtk#174bfba7-72f6-4b4f-9606-30e809e830c2,ls11
+http://kdl.ge.com/junit/linkable#LinkableSub,uri://semtk#b15aa409-14fe-4a5e-844d-38a6d072b76d,ls1,http://kdl.ge.com/junit/linkable#LinkableSubSub,uri://semtk#815cb2f7-ee4a-4ed3-8d0a-f7cc58476731,lss10
+http://kdl.ge.com/junit/linkable#LinkableSub,uri://semtk#b15aa409-14fe-4a5e-844d-38a6d072b76d,ls1,http://kdl.ge.com/junit/linkable#LinkableSubSub,uri://semtk#5a3244c7-911c-47bd-bf36-554d6cab3286,lss11
+http://kdl.ge.com/junit/linkable#LinkableSubSub,uri://semtk#40f0cbc3-3bb6-4639-8cd6-df4351fcbd8f,lss10,http://kdl.ge.com/junit/linkable#LinkableSubSub,uri://semtk#5a3244c7-911c-47bd-bf36-554d6cab3286,lss11

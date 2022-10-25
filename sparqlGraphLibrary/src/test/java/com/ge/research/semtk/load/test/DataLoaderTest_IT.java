@@ -52,6 +52,7 @@ import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.load.utility.UriResolver;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.ontologyTools.PredicateStats;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
@@ -2146,6 +2147,220 @@ public class DataLoaderTest_IT {
 		TestGraph.queryAndCheckResults(sgJson, this, csvFileRes);
 		
 
+	}
+	
+	@Test
+	public void testSubtype() throws Exception {
+		// Basic test creates two Batteries and two DuraBatteries sharing ids: "id1" "id2"
+		// Then add a description to one of them.
+		
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBatterySubtype.json");
+
+		// Load two rows each of Battery and Durabattery, with pairs sharing the batteryIds id1, id2
+		Dataset ds;
+		DataLoader dl;
+		Table err;
+		Table res;
+		
+		ds = new CSVDataset("src/test/resources/loadTestDuraBatterySubtype.csv", false);
+		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		TestGraph.queryAndCheckResults(sgJson, this, "/loadTestDuraBatterySubtypeResults.csv");
+
+		res = TestGraph.execTableSelect(sgJson);
+		assertEquals("Wrong number of rows ingested", 4, res.getNumRows());
+		
+		//
+		// add a description to one battery
+		//
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBatterySubtype.json");
+		String csv = "subtype,id,desc\n"
+				+ "DuraBattery,id1,DuraBattery1 desc\n";
+		ds = new CSVDataset(csv, true);
+		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+
+		// make sure battery description was added to #Battery with id "id1"
+		res = TestGraph.execTableSelect(sgJson);
+		assertEquals("Wrong number of rows ingested", 4, res.getNumRows());
+		int descCount = 0;
+		for (int r = 0; r < res.getNumRows(); r++) {
+			if (!res.getCell(r, "batteryDesc").isBlank()) {
+				descCount++;
+				assertEquals("Description was ingested multiple times", 1, descCount);
+				assertEquals("Battery with desc is wrong type", "http://kdl.ge.com/durabattery#DuraBattery", res.getCell(r,  "Battery_type"));
+				assertEquals("Battery with desc has wrong id", "id1", res.getCell(r, "batteryId"));
+			}
+		}	
+		assertTrue("Battery description was not ingested", descCount != 0);
+	}
+	
+	@Test
+	public void testSubtypeExactLookup() throws Exception {
+		// Like testSubtype except adding a description to the Battery, which has a subtype Durabattery
+		// So we must use ! in the data to say EXACTLY Battery for the lookup.
+		
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBatterySubtype.json");
+
+		// Load two rows each of Battery and Durabattery, with pairs sharing the batteryIds id1, id2
+		Dataset ds;
+		DataLoader dl;
+		Table err;
+		Table res;
+		
+		ds = new CSVDataset("src/test/resources/loadTestDuraBatterySubtype.csv", false);
+		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		TestGraph.queryAndCheckResults(sgJson, this, "/loadTestDuraBatterySubtypeResults.csv");
+
+		res = TestGraph.execTableSelect(sgJson);
+		assertEquals("Wrong number of rows ingested", 4, res.getNumRows());
+		
+		//
+		// add a description to one battery
+		//
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBatterySubtype.json");
+		String csv = "subtype,id,desc\n"
+				+ "Battery!,id1,DuraBattery1 desc\n";
+		ds = new CSVDataset(csv, true);
+		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+
+		// make sure battery description was added to #Battery with id "id1"
+		res = TestGraph.execTableSelect(sgJson);
+		assertEquals("Wrong number of rows ingested", 4, res.getNumRows());
+		int descCount = 0;
+		for (int r = 0; r < res.getNumRows(); r++) {
+			if (!res.getCell(r, "batteryDesc").isBlank()) {
+				descCount++;
+				assertEquals("Description was ingested multiple times", 1, descCount);
+				assertEquals("Battery with desc is wrong type", "http://kdl.ge.com/durabattery#Battery", res.getCell(r,  "Battery_type"));
+				assertEquals("Battery with desc has wrong id", "id1", res.getCell(r, "batteryId"));
+			}
+		}	
+		assertTrue("Battery description was not ingested", descCount != 0);
+	}
+	
+	@Test
+	public void testSubtypeErrors() throws Exception {
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/loadTestDuraBattery.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBatterySubtype.json");
+
+		// Load two rows each of Battery and Durabattery, with pairs sharing the batteryIds id1, id2
+		Dataset ds;
+		DataLoader dl;
+		Table err;
+		Table res;
+		
+		ds = new CSVDataset("src/test/resources/loadTestDuraBatterySubtype.csv", false);
+		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		TestGraph.queryAndCheckResults(sgJson, this, "/loadTestDuraBatterySubtypeResults.csv");
+
+		res = TestGraph.execTableSelect(sgJson);
+		assertEquals("Wrong number of rows ingested", 4, res.getNumRows());
+		
+		//
+		// Error: Without the "!", Battery lookup will match 2 instances
+		//
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBatterySubtype.json");
+		String csv = "subtype,id,desc\n"
+				+ "Battery,id1,DuraBattery1 desc\n";
+		ds = new CSVDataset(csv, true);
+		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		String errStr = err.toCSVString();
+		assertEquals("Did not get one error from ambiguous lookup class", 1, err.getNumRows());
+		assertTrue("Expecting ambiguous lookup error, got:\n" + errStr, errStr.contains("found multiple URI's matching: Battery"));
+
+		//
+		// Error: bad class name Schmattery
+		//
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBatterySubtype.json");
+		csv = "subtype,id,desc\n"
+				+ "Schmattery,id1,DuraBattery1 desc\n";
+		ds = new CSVDataset(csv, true);
+		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		assertEquals("Did not get one error from bad type restriction class name", 1, err.getNumRows());
+		errStr = err.toCSVString();
+		assertTrue("Expecting invalid subtype class error, got:\n" + errStr, errStr.contains("Invalid class") && errStr.contains("Schmattery"));
+		
+		//
+		// Error: class is not a subclass: Cell
+		//
+		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBatterySubtype.json");
+		csv = "subtype,id,desc\n"
+				+ "Cell,id1,DuraBattery1 desc\n";
+		ds = new CSVDataset(csv, true);
+		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		err = dl.getLoadingErrorReport();
+		assertEquals("Did not get one error for invalid subclass in type restriction", 1, err.getNumRows());
+		errStr = err.toCSVString();
+		assertTrue("Expecting non-subtype class error, got:\n" + errStr, errStr.contains("is not a subclass") && errStr.contains("Cell"));
+	}
+	
+	@Test
+	public void testSubtypeLinks1() throws Exception {
+		// link a bunch of createIfMissing Linkables by subtype and id
+		// createIfMissing in both "from" and "to" columns
+		
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/linkable.owl");
+		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/linkable.json");
+		
+		Dataset ds = new CSVDataset("src/test/resources/linkable_one.csv", false);
+		DataLoader dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
+		dl.importData(true);
+		Table err = dl.getLoadingErrorReport();
+		if (err.getNumRows() > 0) {
+			LocalLogger.logToStdErr(err.toCSVString());
+			fail();
+		}
+		
+		// Check that links and types look ok
+		TestGraph.queryAndCheckResults(sgJson, this, "/linkable_one_results.csv");
+		
+		// Additional check that no duplicate URIs were created
+		Table res = TestGraph.execSelectFromResource(this, "/linkable_get.json");
+		assertEquals("Wrong number of linkables created\n: " + res.toCSVString(), 5, res.getNumRows());
 	}
 	
 	public void doTypesAndConstraintsViaBook(boolean cacheFlag) throws Exception {  

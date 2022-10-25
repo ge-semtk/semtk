@@ -1,0 +1,5 @@
+subtype,id
+Battery,id1
+DuraBattery,id1
+http://kdl.ge.com/durabattery#Battery,id2
+http://kdl.ge.com/durabattery#DuraBattery,id2

@@ -776,6 +776,32 @@ public class OntologyInfo {
 		}
 		return retval;
 	}
+	
+	/**
+	 * Lookup a class by short name.  
+	 * @param name
+	 * @return
+	 * @throws Exception - if there are more than one matching 
+	 *                         (e.g. uri://namespace1#Target  and uri://namespace2#Target )
+	 */
+	public OntologyClass lookupClass(String name) throws Exception {
+		OntologyClass ret = this.getClass(name);
+		if (ret != null) 
+			return ret;
+		
+		String suffix = name.startsWith("#") ? name : ("#" + name);
+		for (String k : this.classHash.keySet()) {
+			if (k.endsWith(suffix)) {
+				if (ret == null) {
+					ret = this.classHash.get(k);
+				} else {
+					throw new Exception("Ambiguous class lookup " + name + ".  Found " + ret.getName() + " and " + k);
+				}
+			}
+		}
+		return ret;
+	}
+	
 
 	/**
 	 * Returns an instance of OntologyDatatype for a given URI. if the OntologyInfo

@@ -1788,7 +1788,8 @@ var SemanticNodeGroup = function() {
                                     // where parent is one of the items in tmpUnionMemberHash[key]
 };
 
-SemanticNodeGroup.JSON_VERSION = 19;
+SemanticNodeGroup.JSON_VERSION = 20;
+// version 20 - ingest with subtypes
 // version 19 - fixed buggy wrong name propertyItem.domainURI back to old propertyItem.UriRelationship
 // version 18 - complex ranges
 // version 17 - propertyItem domainURI, rangeURI, valueTypes (plural)

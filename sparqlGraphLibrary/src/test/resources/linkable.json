@@ -1,0 +1,213 @@
+{
+	"version": 3,
+	"sparqlConn": {
+		"name": "Junit fuseki",
+		"domain": "",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 20,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/junit/linkable#id",
+						"Constraints": "",
+						"SparqlID": "?idTo",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"fullURIName": "http://kdl.ge.com/junit/linkable#LinkableSub",
+				"SparqlID": "?LinkableSub_0",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE",
+				"isTypeReturned": true,
+				"binding": "?LinkableSubTo",
+				"isBindingReturned": true
+			},
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://kdl.ge.com/junit/linkable#id",
+						"Constraints": "",
+						"SparqlID": "?idFrom",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?LinkableSub_0"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"range": [
+							"http://kdl.ge.com/junit/linkable#Linkable"
+						],
+						"ConnectBy": "subLinkTo",
+						"Connected": true,
+						"UriConnectBy": "http://kdl.ge.com/junit/linkable#subLinkTo"
+					}
+				],
+				"fullURIName": "http://kdl.ge.com/junit/linkable#LinkableSub",
+				"SparqlID": "?LinkableSub",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE",
+				"isTypeReturned": true,
+				"binding": "?LinkableSubFrom",
+				"isBindingReturned": true
+			}
+		],
+		"orderBy": [
+			{
+				"sparqlID": "?idFrom"
+			},
+			{
+				"sparqlID": "?idTo"
+			}
+		],
+		"groupBy": [],
+		"unionHash": {},
+		"columnOrder": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "LinkableSubFrom_type"
+			},
+			{
+				"colId": "col_1",
+				"colName": "LinkableSubFrom"
+			},
+			{
+				"colId": "col_2",
+				"colName": "idFrom"
+			},
+			{
+				"colId": "col_3",
+				"colName": "LinkableSubTo_type"
+			},
+			{
+				"colId": "col_4",
+				"colName": "LinkableSubTo"
+			},
+			{
+				"colId": "col_5",
+				"colName": "idTo"
+			}
+		],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?LinkableSub",
+				"type": "http://kdl.ge.com/junit/linkable#LinkableSub",
+				"URILookupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/junit/linkable#id",
+						"URILookup": [
+							"?LinkableSub"
+						],
+						"mapping": [
+							{
+								"colId": "col_2"
+							}
+						]
+					}
+				],
+				"type_restriction": {
+					"URILookup": [
+						"?LinkableSub"
+					],
+					"mapping": [
+						{
+							"colId": "col_0"
+						}
+					]
+				}
+			},
+			{
+				"sparqlID": "?LinkableSub_0",
+				"type": "http://kdl.ge.com/junit/linkable#LinkableSub",
+				"URILookupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://kdl.ge.com/junit/linkable#id",
+						"URILookup": [
+							"?LinkableSub_0"
+						],
+						"mapping": [
+							{
+								"colId": "col_5"
+							}
+						]
+					}
+				],
+				"type_restriction": {
+					"URILookup": [
+						"?LinkableSub_0"
+					],
+					"mapping": [
+						{
+							"colId": "col_3"
+						}
+					]
+				}
+			}
+		]
+	},
+	"plotSpecs": []
+}
