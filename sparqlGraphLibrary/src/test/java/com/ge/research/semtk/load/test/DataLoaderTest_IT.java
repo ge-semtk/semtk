@@ -2242,7 +2242,7 @@ public class DataLoaderTest_IT {
 		//
 		sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/loadTestDuraBatterySubtype.json");
 		String csv = "subtype,id,desc\n"
-				+ "Battery!,id1,DuraBattery1 desc\n";
+				+ "Battery!,id1,DuraBattery1 desc!\n";
 		ds = new CSVDataset(csv, true);
 		dl = new DataLoader(sgJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		dl.importData(true);
@@ -2262,6 +2262,7 @@ public class DataLoaderTest_IT {
 				assertEquals("Description was ingested multiple times", 1, descCount);
 				assertEquals("Battery with desc is wrong type", "http://kdl.ge.com/durabattery#Battery", res.getCell(r,  "Battery_type"));
 				assertEquals("Battery with desc has wrong id", "id1", res.getCell(r, "batteryId"));
+				assertEquals("Description with ! was not ingested properly", "DuraBattery1 desc!", res.getCell(r, "batteryDesc"));
 			}
 		}	
 		assertTrue("Battery description was not ingested", descCount != 0);
