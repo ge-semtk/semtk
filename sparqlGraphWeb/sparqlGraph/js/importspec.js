@@ -290,9 +290,12 @@ define([// properly require.config'ed
 					var n = this.getMapping(jObj.nodes[i].sparqlID, null);
 					n.fromJsonNode(jObj.nodes[i], idHash, this.nodegroup);
 					
-					var nt = this.getMapping(jObj.nodes[i].sparqlID, ImportMapping.TYPE_URI);
-					if (jObj.nodes[i].hasOwnProperty("type_restriction")) {
-						nt.fromJsonNode(jObj.nodes[i].type_restriction, idHash, this.nodegroup, n.getNode());
+					// if node type has subclasses, then there is a sub-type row
+					if (gOInfo.getSubclassNames(n.getNode().getURI()).length > 0) {
+						var nt = this.getMapping(jObj.nodes[i].sparqlID, ImportMapping.TYPE_URI);
+						if (jObj.nodes[i].hasOwnProperty("type_restriction")) {
+							nt.fromJsonNode(jObj.nodes[i].type_restriction, idHash, this.nodegroup, n.getNode());
+						}
 					}
 
 					for (var j=0; j < jObj.nodes[i].props.length; j++) {
