@@ -119,6 +119,45 @@ public class FdcCacheServiceRestController {
 	}
 	
 	@Operation(
+			summary="Start a cache process with list of values if cache hasn't been run recently enough.",
+			description="Data graph[0] may be cleared and re-populated.  Other graphs are read-only."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/cacheUsingBootstrapList", method= RequestMethod.POST)
+	public JSONObject cacheUsingValueList(@RequestBody ListBootstrapRequest request,  @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);		
+		final String ENDPOINT_NAME = "cacheUsingBootstrapList";
+		
+		SimpleResultSet results = new SimpleResultSet();
+		try {
+			Table bootstrapTable = new Table(new String [] { request.getValueName() } );
+			for (String v : request.getValueList()) {
+				bootstrapTable.addRow(new String [] {v});
+			}
+			FdcCacheSpecRunner runner = new FdcCacheSpecRunner(
+					request.getSpecId(), 
+					request.buildSparqlConnection(), 
+					request.getRecacheAfterSec(),
+					servicesgraph_prop.buildSei(), 
+					oinfo_prop.getClient(), 
+					ngexec_prop.getClient(), 
+					ngstore_prop.getClient());
+			runner.setBootstrapTable(bootstrapTable);
+			runner.start();
+			results.setSuccess(true);
+			results.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, runner.getJobId());
+			return results.toJson();
+			
+		} catch(Exception e){
+	    	SimpleResultSet res = new SimpleResultSet();
+	    	res.setSuccess(false);
+	    	res.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+		    LocalLogger.printStackTrace(e);
+		    return res.toJson();
+		}  
+	}
+	
+	@Operation(
 			summary="Start a cache process with the first query.",
 			description="Data graph[0] will be appended.  Other graphs are read-only."
 			)
