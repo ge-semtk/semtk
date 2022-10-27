@@ -43,8 +43,9 @@ define([	// properly require.config'ed
             for (uri of classNames) {
 				textVals.push([uri.split("/").at(-1), uri]);
 			}
-			textVals.sort(function(a,b){return a[1].localeCompare(b[1]);})
+			textVals.sort(function(a,b){return a[0].localeCompare(b[0]);})
 			this.classSelect = IIDXHelper.createSelect(noId, textVals, [], false, "input-xlarge");
+			this.classSelect.size = 4;
 			this.idRegexInput = IIDXHelper.createTextInput(noId, "input-xlarge");	
 			this.okCallback = function(){throw new Error("this.okCallback is not set");};
 		};
@@ -88,8 +89,10 @@ define([	// properly require.config'ed
 				
 				form = IIDXHelper.buildHorizontalForm()
     			fieldset = IIDXHelper.addFieldset(form)
-    			
+				input = IIDXHelper.createSelectFilter(this.classSelect);
+ 				fieldset.appendChild(IIDXHelper.buildControlGroup(" ", input, ""));
  				fieldset.appendChild(IIDXHelper.buildControlGroup("class: ", this.classSelect, "Retrieve this class' template nodegroup"));
+ 				fieldset.appendChild(document.createElement("br"));
  				fieldset.appendChild(IIDXHelper.buildControlGroup("id regex: ", this.idRegexInput, "Regex to identify unique id properties"));
  				
      			div.appendChild(form);
