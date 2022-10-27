@@ -116,11 +116,25 @@ public class IngestionNodegroupBuilder {
 		NodeGroup nodegroup = new NodeGroup();
 		nodegroup.addNode(this.className, this.oInfo);
 		
+		// build a rm_null transform
+		String transformId = ispecBuilder.addTransform("rm_null", "replaceAll", "^(null|Null|NULL)$", "");
+				
 		Node node = nodegroup.getNode(0);
 		ispecBuilder.addNode(node.getSparqlID(), node.getUri(), null);
 		
-		// build a rm_null transform
-		String transformId = ispecBuilder.addTransform("rm_null", "replaceAll", "^(null|Null|NULL)$", "");
+		// if there are sub-types then add that
+		if (this.oInfo.getSubclassNames(node.getUri()).size() > 0) {
+			String colName = node.getTypeSparqlID().substring(1);  // type sparqlID without ?
+			node.setIsTypeReturned(true);
+			ispecBuilder.addTypeRestriction(node.getSparqlID());
+			ispecBuilder.addColumn(colName);
+			ispecBuilder.addMappingToTypeRestriction(node.getSparqlID(), ispecBuilder.buildMappingWithCol(colName, new String [] {transformId}));
+			if (this.idRegex != null &&  Pattern.compile(this.idRegex).matcher(colName).find()) {
+				ispecBuilder.addURILookupToTypeRestriction(node.getSparqlID(), node.getSparqlID());
+				ispecBuilder.addLookupMode(node.getSparqlID(), ImportSpec.LOOKUP_MODE_CREATE_IF_MISSING);
+			}
+		}
+		
 		
 		// set all data properties to returned, ensuring they get sparqlIDs
 		for (PropertyItem pItem : node.getPropertyItems()) {

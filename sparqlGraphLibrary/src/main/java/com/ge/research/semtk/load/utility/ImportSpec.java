@@ -526,6 +526,23 @@ public class ImportSpec {
 	}
 	
 	/**
+	 * Add type restriction to a node in the importspec
+	 * Props only need to exist if they are mapped
+	 * @param nodeSparqlId
+	 * @param relationUri
+	 * @throws Exception
+	 */
+	public JSONObject addTypeRestriction(String nodeSparqlId) throws Exception {
+		JSONObject node = this.findNode(nodeSparqlId);
+		
+		JSONObject typeRestriction = new JSONObject();
+		node.put(JKEY_IS_TYPE_RESTRICTION, typeRestriction);
+		typeRestriction.put(JKEY_IS_MAPPING, new JSONArray());
+		
+		return typeRestriction;
+	}
+	
+	/**
 	 * Create simple mapping with just one column name
 	 * @param colName
 	 * @return
@@ -566,6 +583,14 @@ public class ImportSpec {
 		prop.put(JKEY_IS_MAPPING, mapArr);
 	}
 	
+	public void addMappingToTypeRestriction(String nodeSparqlId, JSONObject mapping) throws Exception {
+		JSONObject node = this.findNode(nodeSparqlId);
+		JSONObject tr = (JSONObject) node.get(JKEY_IS_TYPE_RESTRICTION);
+		JSONArray mapArr = new JSONArray();
+		mapArr.add(mapping);
+		tr.put(JKEY_IS_MAPPING, mapArr);
+	}
+	
 	public boolean isUsed(String nodeSparqlId) throws Exception {
 		return this.hasMapping(nodeSparqlId);
 	}
@@ -594,6 +619,14 @@ public class ImportSpec {
 		JSONArray lookupArr = new JSONArray();
 		lookupArr.add(lookupSparqlId);
 		prop.put(JKEY_IS_URI_LOOKUP, lookupArr);
+	}
+	
+	public void addURILookupToTypeRestriction(String nodeSparqlId, String lookupSparqlId) throws Exception {
+		JSONObject node = this.findNode(nodeSparqlId);
+		JSONObject tr = (JSONObject) node.get(JKEY_IS_TYPE_RESTRICTION);
+		JSONArray lookupArr = new JSONArray();
+		lookupArr.add(lookupSparqlId);
+		tr.put(JKEY_IS_URI_LOOKUP, lookupArr);
 	}
 	
 	public static ImportSpec createEmptySpec(NodeGroup ng) {
