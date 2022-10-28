@@ -27,4 +27,8 @@ public class IngestConstants {
 			"* if job's status is failure then fetch a results table with ingestion errors" + 
 			"Failure can return a rationale explaining what prevented the ingestion or precheck from starting.";
 	
+	public static final String SYNC_NOTES = "Danger: Synchronous.   Deprecated.\n" +
+			"* this will fail if the job takes longer than the network timeout" +
+			"* use an Async endpoint instead";
+	
 }
