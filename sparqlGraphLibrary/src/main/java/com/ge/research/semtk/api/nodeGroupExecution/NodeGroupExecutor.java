@@ -503,9 +503,14 @@ public class NodeGroupExecutor {
 	 */
 	public String ingestFromNodegroupIdAndCsvStringAsync(SparqlConnection conn, String storedNodeGroupId, String csvContents, boolean trackFlag, String overrideBaseURI) throws Exception{
 		
+		return this.ingestFromNodegroupIdAndCsvStringAsync(conn, storedNodeGroupId, csvContents, false, false, trackFlag, overrideBaseURI);
+	}
+	
+	public String ingestFromNodegroupIdAndCsvStringAsync(SparqlConnection conn, String storedNodeGroupId, String csvContents, boolean skipPrecheck, boolean skipIngest, boolean trackFlag, String overrideBaseURI) throws Exception{
+		
 		SparqlGraphJson sparqlGraphJson = this.getSparqlGraphJson(storedNodeGroupId);
 			
-		return ingestFromNodegroupAndCsvStringAsync(conn, sparqlGraphJson, csvContents, trackFlag, overrideBaseURI);
+		return ingestFromNodegroupAndCsvStringAsync(conn, sparqlGraphJson, csvContents, skipPrecheck, skipIngest, trackFlag, overrideBaseURI);
 	}
 	
 	private SparqlGraphJson getSparqlGraphJson(String storedNodeGroupId) throws Exception {
@@ -555,6 +560,10 @@ public class NodeGroupExecutor {
 		return retval;
 	}
 	
+	public String ingestFromNodegroupAndCsvStringAsync(SparqlConnection conn, SparqlGraphJson sparqlGraphJson, String csvContents, boolean trackFlag, String overrideBaseURI) throws Exception{
+		return this.ingestFromNodegroupAndCsvStringAsync(conn, sparqlGraphJson, csvContents, false, false, trackFlag, overrideBaseURI);
+	}
+	
 	/**
 	 * Ingest CSV, given a nodegroup object
 	 * Warnings are available immediately via getWarnings()
@@ -564,7 +573,7 @@ public class NodeGroupExecutor {
 	 * @return jobId
 	 * @throws Exception
 	 */
-	public String ingestFromNodegroupAndCsvStringAsync(SparqlConnection conn, SparqlGraphJson sparqlGraphJson, String csvContents, boolean trackFlag, String overrideBaseURI) throws Exception{
+	public String ingestFromNodegroupAndCsvStringAsync(SparqlConnection conn, SparqlGraphJson sparqlGraphJson, String csvContents, boolean skipPrecheck, boolean skipIngest, boolean trackFlag, String overrideBaseURI) throws Exception{
 				
 		// check to make sure there is an importspec attached. how to do this?
 		if(sparqlGraphJson.getJson().get("importSpec") == null){
@@ -575,7 +584,7 @@ public class NodeGroupExecutor {
 		String sgjStr = sparqlGraphJson.getJson().toJSONString();
 		String connStr = this.getOverrideConnJson(conn, sparqlGraphJson).toJSONString();
 		
-		return this.ingestClient.execIngestionFromCsvAsync(sgjStr, csvContents, connStr, trackFlag, overrideBaseURI);
+		return this.ingestClient.execIngestionFromCsvAsync(sgjStr, csvContents, connStr, skipPrecheck, skipIngest, trackFlag, overrideBaseURI);
 	}
 	
 	/**

@@ -34,7 +34,7 @@ public class IngestByIdCsvStrRequestBody extends SparqlConnRequestBody {
 	@Schema(
 			required = false,
 			example = "true")
-	public Boolean trackFlag = false;
+	public boolean trackFlag = false;
 
 	@Schema(
 			required = false,
@@ -55,7 +55,7 @@ public class IngestByIdCsvStrRequestBody extends SparqlConnRequestBody {
 	public void setCsvContent(String csvContent) {
 		this.csvContent = csvContent;
 	}
-	public Boolean getTrackFlag() {
+	public boolean getTrackFlag() {
 		return trackFlag;
 	}
 

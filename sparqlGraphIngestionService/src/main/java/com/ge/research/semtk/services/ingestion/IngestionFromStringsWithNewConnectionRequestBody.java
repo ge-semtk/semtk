@@ -35,6 +35,19 @@ public class IngestionFromStringsWithNewConnectionRequestBody extends IngestionF
 	   example = "{ connection json }")
 	private String connectionOverride;
 	
+	@Schema(
+			   required = false,
+			   example = "true")
+	private boolean skipPrecheck = false;
+	@Schema(
+			   required = false,
+			   example = "true")
+	private boolean skipIngest = false;
+	
+	
+	public boolean getSkipPrecheck() { return this.skipPrecheck; }
+	public boolean getSkipIngest() { return this.skipIngest; }
+	
 	public String getConnectionOverride(){
 		return this.connectionOverride;
 	}

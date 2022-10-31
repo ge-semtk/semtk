@@ -174,10 +174,30 @@ public class IngestorRestClient extends SharedIngestNgeClient {
 	 * @throws Exception
 	 */
 	public String execIngestionFromCsvAsync(String template, String data, String sparqlConnectionOverride, boolean trackFlag, String overrideBaseURI) throws ConnectException, EndpointNotFoundException, Exception{
-		conf.setServiceEndpoint("ingestion/fromCsvWithNewConnectionPrecheckAsync");
+		return this.execIngestionFromCsvAsync(template, data, sparqlConnectionOverride, false, false, trackFlag, overrideBaseURI);
+	}
+	
+	/**
+	 * Fullest functioning Async endpoint
+	 * @param template
+	 * @param data
+	 * @param sparqlConnectionOverride
+	 * @param skipPrecheck
+	 * @param skipIngest
+	 * @param trackFlag
+	 * @param overrideBaseURI
+	 * @return
+	 * @throws ConnectException
+	 * @throws EndpointNotFoundException
+	 * @throws Exception
+	 */
+	public String execIngestionFromCsvAsync(String template, String data, String sparqlConnectionOverride, boolean skipPrecheck, boolean skipIngest, boolean trackFlag, String overrideBaseURI) throws ConnectException, EndpointNotFoundException, Exception{
+		conf.setServiceEndpoint("ingestion/fromCsvAsync");
 		this.parametersJSON.put("template", template);
 		this.parametersJSON.put("data", data);
 		this.parametersJSON.put("connectionOverride", sparqlConnectionOverride);
+		this.parametersJSON.put("skipPrecheck", skipPrecheck);
+		this.parametersJSON.put("skipIngest", skipIngest);
 		this.parametersJSON.put("trackFlag", trackFlag);
 		this.parametersJSON.put("overrideBaseURI", overrideBaseURI);
 
@@ -190,9 +210,10 @@ public class IngestorRestClient extends SharedIngestNgeClient {
 			this.parametersJSON.remove("template");
 			this.parametersJSON.remove("data");
 			this.parametersJSON.remove("connectionOverride");
+			this.parametersJSON.remove("skipPrecheck");
+			this.parametersJSON.remove("skipIngest");
 			this.parametersJSON.remove("trackFlag");
 			this.parametersJSON.remove("overrideBaseURI");
-
 		}
 	}
 	
@@ -279,21 +300,7 @@ public class IngestorRestClient extends SharedIngestNgeClient {
 	 * @return jobId
 	 */
 	public String execIngestionFromCsvAsync(String template, String data, String sparqlConnectionOverride) throws ConnectException, EndpointNotFoundException, Exception{
-		conf.setServiceEndpoint("ingestion/fromCsvWithNewConnectionPrecheckAsync");
-		this.parametersJSON.put("template", template);
-		this.parametersJSON.put("data", data);
-		this.parametersJSON.put("connectionOverride", sparqlConnectionOverride);
-		
-		try{
-			return this.executeToJobIdSaveWarnings();
-		} 
-		finally {
-			// reset conf and parametersJSON
-			conf.setServiceEndpoint(null);
-			this.parametersJSON.remove("template");
-			this.parametersJSON.remove("data");
-			this.parametersJSON.remove("connectionOverride");
-		}
+		return this.execIngestionFromCsvAsync(template, data, sparqlConnectionOverride, false, false, false, null);
 	}
 	
 	/**

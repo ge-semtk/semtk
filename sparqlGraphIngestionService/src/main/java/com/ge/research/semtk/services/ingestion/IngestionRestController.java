@@ -182,11 +182,15 @@ public class IngestionRestController {
 			description= IngestConstants.ASYNC_NOTES
 			)
 	@CrossOrigin
-	@RequestMapping(value="/fromCsvWithNewConnectionPrecheckAsync", method= RequestMethod.POST)
+	@RequestMapping(value={"/fromCsvWithNewConnectionPrecheckAsync", "/fromCsvAsync"}, method= RequestMethod.POST)
 	public JSONObject fromCsvPrecheckAsync(@RequestBody IngestionFromStringsWithNewConnectionRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			SimpleResultSet res = this.fromAnyCsvAsync(requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, true, false, requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
+			SimpleResultSet res = this.fromAnyCsvAsync(
+					requestBody.getTemplate(), requestBody.getData(), requestBody.getConnectionOverride(), false, 
+					!requestBody.getSkipPrecheck(),  // skipPrecheck param dafaults to false.  Equiv to NOT precheck param
+					requestBody.getSkipIngest(),     // skipIngest param defaults to false.  Equiv to skipIngest param
+					requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 			return res.toJson();
 		    
 		} finally {

@@ -85,7 +85,9 @@ import com.ge.research.semtk.services.nodeGroupExecution.requests.DispatchRawSpa
 import com.ge.research.semtk.services.nodeGroupExecution.requests.FilterDispatchByIdRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.FilterDispatchFromNodeGroupRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.IngestByConnIdCsvStrRequestBody;
+import com.ge.research.semtk.services.nodeGroupExecution.requests.IngestByIdCsvStrAsyncBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.IngestByIdCsvStrRequestBody;
+import com.ge.research.semtk.services.nodeGroupExecution.requests.IngestByNodegroupCsvStrAsyncBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.IngestByNodegroupCsvStrRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.InstanceDataClassesRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.InstanceDataPredicatesRequestBody;
@@ -1250,7 +1252,7 @@ public class NodeGroupExecutionRestController {
 	 */
 	@Operation(
 			summary=	"ingest CSV data given nodegroup json",
-			description=	""
+			description=	IngestConstants.SYNC_NOTES
 			)
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStrings", method=RequestMethod.POST)
@@ -1290,7 +1292,7 @@ public class NodeGroupExecutionRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsAsync", method=RequestMethod.POST)
-	public JSONObject ingestFromCsvStringsAsync(@RequestBody IngestByNodegroupCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+	public JSONObject ingestFromCsvStringsAsync(@RequestBody IngestByNodegroupCsvStrAsyncBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="ingestFromCsvStringsAsync";
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
@@ -1301,7 +1303,14 @@ public class NodeGroupExecutionRestController {
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
 				SparqlGraphJson sparqlGraphJson = requestBody.buildSparqlGraphJson();
-				String jobId = nodeGroupExecutor.ingestFromNodegroupAndCsvStringAsync(requestBody.buildSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
+				String jobId = nodeGroupExecutor.ingestFromNodegroupAndCsvStringAsync(
+						requestBody.buildSparqlConnection(), 
+						sparqlGraphJson, 
+						requestBody.getCsvContent(), 
+						requestBody.getSkipPrecheck(), 
+						requestBody.getSkipIngest(),
+						requestBody.getTrackFlag(), 
+						requestBody.getOverrideBaseURI());
 				retval = new SimpleResultSet(true);
 				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, jobId);
 				JSONArray warnings = nodeGroupExecutor.getWarningsJson();
@@ -1326,7 +1335,7 @@ public class NodeGroupExecutionRestController {
 	 */
 	@Operation(
 			summary=	"ingest CSV data given nodegroup id",
-			description=	""
+			description=	IngestConstants.SYNC_NOTES
 			)
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsById", method=RequestMethod.POST)
@@ -1364,7 +1373,7 @@ public class NodeGroupExecutionRestController {
 			)
 	@CrossOrigin
 	@RequestMapping(value="/ingestFromCsvStringsByIdAsync", method=RequestMethod.POST)
-	public JSONObject ingestFromCsvStringsByIdAsync(@RequestBody IngestByIdCsvStrRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+	public JSONObject ingestFromCsvStringsByIdAsync(@RequestBody IngestByIdCsvStrAsyncBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME="ingestFromCsvStringsByIdAsync";
 		HeadersManager.setHeaders(headers);
 		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
@@ -1374,7 +1383,14 @@ public class NodeGroupExecutionRestController {
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
-				String jobId = nodeGroupExecutor.ingestFromNodegroupIdAndCsvStringAsync(requestBody.getSparqlConnection(), requestBody.getNodegroupId(), requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
+				String jobId = nodeGroupExecutor.ingestFromNodegroupIdAndCsvStringAsync(
+						requestBody.getSparqlConnection(), 
+						requestBody.getNodegroupId(), 
+						requestBody.getCsvContent(), 
+						requestBody.getSkipPrecheck(),
+						requestBody.getSkipIngest(),
+						requestBody.getTrackFlag(), 
+						requestBody.getOverrideBaseURI());
 				retval = new SimpleResultSet(true);
 				retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, jobId);
 				JSONArray warnings = nodeGroupExecutor.getWarningsJson();
