@@ -13,20 +13,24 @@ public class GraphNameRequestBody {
 	public String serverType;		// e.g. virtuoso
 	
 	@Schema(required = false)
-	public boolean skipSemtkGraphs = false;	        
+	public boolean skipSemtkGraphs = false;
 	
+	@Schema(required = false)
+	public boolean graphNamesOnly = true;
 
 	public String getServerAndPort() {
 		return serverAndPort;
 	}
 
-
 	public String getServerType() {
 		return serverType;
 	}
 
-
 	public boolean getSkipSemtkGraphs() {
 		return this.skipSemtkGraphs;
+	}
+
+	public boolean getGraphNamesOnly() {
+		return this.graphNamesOnly;
 	}
 }
