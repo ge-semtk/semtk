@@ -417,8 +417,26 @@ public class SparqlToXUtils {
 		}
 	}
 
+	/**
+	 * Returns a query to get graph names.
+	 * @return the query
+	 */
 	public static String generateSelectGraphNames() {
 		return "SELECT ?g WHERE { GRAPH ?g { }} ORDER BY ?g";
+	}
+
+	/**
+	 * Returns a query to get graph info (names and triple counts)
+	 * @param sei the SPARQL endpoint interface
+	 * @param defaultGraphOnly true to only return info about the default graph
+	 * @return the query
+	 */
+	public static String generateSelectGraphInfo(SparqlEndpointInterface sei, boolean defaultGraphOnly) {
+		if(!defaultGraphOnly) {
+			return "SELECT DISTINCT ?graph (COUNT(?s) AS ?triples) { GRAPH ?graph { ?s ?p ?o } } GROUP BY ?graph ORDER BY ?graph";
+		}else {
+			return "SELECT (\"" + sei.getDefaultGraphName() + "\" AS ?graph) (COUNT(?s) AS ?triples) {GRAPH <" + sei.getLocalDefaultGraphName() + "> { ?s ?p ?o } }";
+		}
 	}
 
 }

@@ -41,6 +41,8 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -200,7 +202,15 @@ public class SparqlQueryServiceRestController {
 		
 	}		
 	
-	
+	/**
+	 * Gets names (and optionally triple counts) of graphs in the triple store.
+	 * Returns a table result set with either 1) graph names or 2) graph names and triple counts
+	 *
+	 * skipSemtkGraphs		true to omit the SemTK utility graphs
+	 * graphNamesOnly		true to only return graph names (e.g. no counts)
+	 *
+	 * For graphNamesOnly, could use simpler query if performance turns out to be an issue
+	 */
 	@CrossOrigin
 	@RequestMapping(value="/selectGraphNames", method= RequestMethod.POST)
 	public JSONObject selectGraphNames(@RequestBody GraphNameRequestBody requestBody, @RequestHeader HttpHeaders headers) {
@@ -213,33 +223,47 @@ public class SparqlQueryServiceRestController {
 
 		try{
 			
-			String query = SparqlToXUtils.generateSelectGraphNames();
 			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), "");
+
+			// get info for graphs
+			String query = SparqlToXUtils.generateSelectGraphInfo(sei, false);
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
-			
-			// add default graph name
-			Table tab = ((TableResultSet) resultSet).getResults();
-			tab.addRow(0, new String [] {sei.getDefaultGraphName()});
-			
+			Table table = ((TableResultSet) resultSet).getResults();
+
+			// get info for default graph, append it
+			query = SparqlToXUtils.generateSelectGraphInfo(sei, true);
+			GeneralResultSet resultSet2 = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+			table.append(((TableResultSet) resultSet2).getResults());
+
+			// optionally exclude SemTK graphs
 			if (requestBody.getSkipSemtkGraphs()) {
-				// get list of graphs, then remove the semtk graphs
-				ArrayList<String> graphNames = new ArrayList<String>(Arrays.asList(tab.getColumn(0)));
-				graphNames.remove(servicesgraph_prop.getEndpointDataset());
-				graphNames.remove(store_prop.getSparqlConnDataDataset());
-				graphNames.remove(store_prop.getSparqlConnModelDataset());
-				graphNames.remove(JavaApiDemo.CONN_GRAPH);
-				graphNames.remove(DemoSetupThread.GRAPH);
-				
-				// build a new table with updated graph names
-				Table tabSmaller = new Table(tab.getColumnNames(), tab.getColumnTypes());
-				for (String g : graphNames) {
-					tabSmaller.addRow( new String [] { g });
+
+				final Set<String> SEMTK_GRAPHS = new HashSet<>(Arrays.asList(
+																servicesgraph_prop.getEndpointDataset(),
+																store_prop.getSparqlConnDataDataset(),
+																store_prop.getSparqlConnModelDataset(),
+																JavaApiDemo.CONN_GRAPH,
+																DemoSetupThread.GRAPH));
+
+				// build a new table excluding the SemTK graphs
+				Table tableSubset = new Table(table.getColumnNames(), table.getColumnTypes());
+				for (int i = 0; i < table.getNumRows(); i++) {
+					if(!SEMTK_GRAPHS.contains(table.getCell(i,  0))){
+						tableSubset.addRow(table.getRow(i));
+					}
 				}
-				((TableResultSet) resultSet).addResults(tabSmaller);
-			} else {
-				((TableResultSet) resultSet).addResults(tab);
+				table = tableSubset;
 			}
-			
+
+			// optionally return only the graph names
+			if (requestBody.getGraphNamesOnly()) {
+				String[] colList = new String[1];
+				colList[0] = table.getColumnNames()[0]; // assumes first column is the graph name
+				table.toSubTable(colList);
+			}
+
+			((TableResultSet) resultSet).addResults(table);
+
 		} catch (Exception e) {			
 			LocalLogger.printStackTrace(e);	
 			resultSet = new SimpleResultSet();
