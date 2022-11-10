@@ -1611,7 +1611,7 @@
                 sgJson.getNodeGroup(gNodeGroup);
                 gNodeGroup.setSparqlConnection(gConn);
                 gPlotSpecsHandler = sgJson.getPlotSpecsHandler();
-
+				gMappingTab.load(gNodeGroup, gConn, sgJson.getImportSpecJson());
                 setQueryTypeSelect();
             } catch (e) {
                 // real non-model error loading the nodegroup
@@ -1625,10 +1625,9 @@
                 return;
             }
 
-            // get ready to draw, and set mapping tab
+            // get ready to draw
             guiGraphNonEmpty();
-            gMappingTab.load(gNodeGroup, gConn, sgJson.getImportSpecJson());
-
+            
 			if (optSkipValidation) {
 				nodeGroupChanged(false, newNgName);
         		saveUndoState();

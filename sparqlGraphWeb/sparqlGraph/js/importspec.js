@@ -453,7 +453,7 @@ define([// properly require.config'ed
 						if (key in oldRowHash) {
 							map.itemList = oldRowHash[key].itemList.slice();
 	                        map.setUriLookupMode(oldRowHash[key].getUriLookupMode());
-	                        map.setUriLookupNodes(oldRowHash[key].getUriLookupNodes());
+	                        map.setUriLookupNodes(this.removeMissingNodes(nodegroup, oldRowHash[key].getUriLookupNodes()));
 							oldRowHash[key] = null;
 						}
 	
@@ -469,7 +469,7 @@ define([// properly require.config'ed
 							var keyP = map.genUniqueKey();
 							if (keyP in oldRowHash) {
 								map.itemList = oldRowHash[keyP].itemList.slice();
-                                map.setUriLookupNodes(oldRowHash[keyP].getUriLookupNodes());
+                                map.setUriLookupNodes(this.removeMissingNodes(nodegroup, oldRowHash[keyP].getUriLookupNodes()));
 								oldRowHash[keyP] = null;
 							}
 
@@ -477,6 +477,19 @@ define([// properly require.config'ed
 						}
 					}
 				}
+			},
+			
+			/**
+			Return a list of all members of nodeList whose sparqlID is a node in nodegroup
+			 */
+			removeMissingNodes : function(nodegroup, nodeList) {
+				var ret = [];
+				for (n of nodeList) {
+					if (nodegroup.getNodeBySparqlID(n.getSparqlID()) != null) {
+						ret.push(n);
+					}
+				}
+				return ret;
 			},
 
 			/**
