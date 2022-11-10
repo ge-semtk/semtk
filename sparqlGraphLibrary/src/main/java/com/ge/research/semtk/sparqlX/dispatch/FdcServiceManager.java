@@ -175,91 +175,102 @@ public class FdcServiceManager {
 		
 		// loop through param sets
 		String inputList [] = thisConfigCache.getColumnUniqueValues("inputIndex");
-		for (String inputIndex : inputList) {
-			HashMap<String,String> origIdHash = new HashMap<String,String>();
-			// make a nodegroup for this set
-			NodeGroup ng = NodeGroup.deepCopy(this.nodegroup);
-			Node fdcNodeCopy = ng.getNodeBySparqlID(fdcNode.getSparqlID());
-			ng.unsetAllReturns();
-			ng.setLimit(0);
-			ng.clearOrderBy();
-	
-			// make a do-not-prune list
-			ArrayList<Node> dontPruneList = new ArrayList<Node>();
-			
-			// get cache of only this input
-			Table inputCache = thisConfigCache.getSubsetWhereMatches("inputIndex", inputIndex);
-			
-			// build link to subgraph
-			String subjectClass = inputCache.getCell(0, "subjectClass");
-			String predicateProp = inputCache.getCell(0, "predicateProp");
-			String objectClass = inputCache.getCell(0, "objectClass");
-			OntologyPath path = new OntologyPath(fdcNodeCopy.getFullUriName());
-			path.addTriple(subjectClass,  predicateProp,  objectClass);   
-
-
-			// get input subgraph head node
-			Node inputHeadNode = ng.followPathToNode(fdcNodeCopy, path);
-			this.paramHeadNodes.get(fdcNode.getSparqlID()).put(inputIndex, inputHeadNode);
-
-			// shrink nodegroup to only the subgraph needed for this input
-			ng.deleteSubGraph(fdcNodeCopy, inputHeadNode);
-
-
-			// loop through params in set
-			for (int i=0; i < inputCache.getNumRows(); i++) {
-
-				String classURI = inputCache.getCell(i, "classURI");
-				String propertyURI = inputCache.getCell(i, "propertyURI");
-				String columnName = inputCache.getCell(i, "columnName");
-
-				// get or add node
-				Node paramNode = ng.getClosestOrAddNode(inputHeadNode, classURI, this.oInfo, true);
-				if (paramNode == null) {
-					throw new FdcConfigException("Error trying to add node " + classURI + " to input set " + inputIndex + " nodegroup");
-				}
-
-				Returnable paramItem = null;
-
-				if (propertyURI.isEmpty()) {
-					paramItem = paramNode;
-				} else {
-					paramItem = paramNode.getPropertyByURIRelation(propertyURI);
-				}
-
-				// set param item returned to true and set paramName
-				ng.setIsReturned(paramItem, true);
-				String suggestedId = (columnName.startsWith("?") ? "" : "?") + columnName;
-				String oldId = paramItem.getSparqlID();
-				String newId = ng.changeSparqlID(paramItem, suggestedId);
-				if (! newId.equals(suggestedId)) {
-					throw new FdcConfigException("Duplicate sparqlID problem in param retrieval nodegroup.  SparqlID: " + suggestedId);
-				}
-
-				origIdHash.put(newId, oldId);
-
-				// add node to dont prune list
-				if (!dontPruneList.contains(paramNode)) {
-					dontPruneList.add(paramNode);
-				}
-			}
-
-			// done adding params
-			// now delete fdcNode and subgraph connections to/from it that have no input/params	
-			ng.deleteSubGraph(fdcNodeCopy, dontPruneList);
-
-			// put each FDC node in this paramNodegroup into fdcNodeCopies
-			for (Node subFdcNode : ng.getNodesBySuperclassURI(FDC_DATA_SUPERCLASS, this.oInfo)) {
-				String subFdcNodeOrigId = subFdcNode.getSparqlID();
-				if (origIdHash.containsKey(subFdcNodeOrigId)) {
-					subFdcNodeOrigId = origIdHash.get(subFdcNodeOrigId);
-				}
-				this.fdcNodeCopies.get(subFdcNodeOrigId).add(subFdcNode);
-			}
-			
-			paramSetToNgHash.put(inputIndex, ng);
-		}
 		
+		if (inputList.length == 1 && inputList[0].isEmpty()) {
+			// this FdcConfig has no inputs (legal)
+			// do nothing
+		} else {
+			for (String inputIndex : inputList) {
+				HashMap<String,String> origIdHash = new HashMap<String,String>();
+				// make a nodegroup for this set
+				NodeGroup ng = NodeGroup.deepCopy(this.nodegroup);
+				Node fdcNodeCopy = ng.getNodeBySparqlID(fdcNode.getSparqlID());
+				ng.unsetAllReturns();
+				ng.setLimit(0);
+				ng.clearOrderBy();
+		
+				// make a do-not-prune list
+				ArrayList<Node> dontPruneList = new ArrayList<Node>();
+				
+				// get cache of only this input
+				Table inputCache = thisConfigCache.getSubsetWhereMatches("inputIndex", inputIndex);
+				Node inputHeadNode = null;
+				try {
+					// build link to subgraph
+					String subjectClass = inputCache.getCell(0, "subjectClass");
+					String predicateProp = inputCache.getCell(0, "predicateProp");
+					String objectClass = inputCache.getCell(0, "objectClass");
+					OntologyPath path = new OntologyPath(fdcNodeCopy.getFullUriName());
+					path.addTriple(subjectClass,  predicateProp,  objectClass);   
+		
+		
+					// get input subgraph head node
+					inputHeadNode = ng.followPathToNode(fdcNodeCopy, path);
+					this.paramHeadNodes.get(fdcNode.getSparqlID()).put(inputIndex, inputHeadNode);
+		
+					// shrink nodegroup to only the subgraph needed for this input
+					ng.deleteSubGraph(fdcNodeCopy, inputHeadNode);
+					
+				} catch (Exception e) {
+					LocalLogger.printStackTrace(e);
+					throw new FdcConfigException("FDC Error while processing inputs.  (Details in dispatch service log).");
+				}
+	
+				// loop through params in set
+				for (int i=0; i < inputCache.getNumRows(); i++) {
+	
+					String classURI = inputCache.getCell(i, "classURI");
+					String propertyURI = inputCache.getCell(i, "propertyURI");
+					String columnName = inputCache.getCell(i, "columnName");
+	
+					// get or add node
+					Node paramNode = ng.getClosestOrAddNode(inputHeadNode, classURI, this.oInfo, true);
+					if (paramNode == null) {
+						throw new FdcConfigException("Error trying to add node " + classURI + " to input set " + inputIndex + " nodegroup");
+					}
+	
+					Returnable paramItem = null;
+	
+					if (propertyURI.isEmpty()) {
+						paramItem = paramNode;
+					} else {
+						paramItem = paramNode.getPropertyByURIRelation(propertyURI);
+					}
+	
+					// set param item returned to true and set paramName
+					ng.setIsReturned(paramItem, true);
+					String suggestedId = (columnName.startsWith("?") ? "" : "?") + columnName;
+					String oldId = paramItem.getSparqlID();
+					String newId = ng.changeSparqlID(paramItem, suggestedId);
+					if (! newId.equals(suggestedId)) {
+						throw new FdcConfigException("Duplicate sparqlID problem in param retrieval nodegroup.  SparqlID: " + suggestedId);
+					}
+	
+					origIdHash.put(newId, oldId);
+	
+					// add node to dont prune list
+					if (!dontPruneList.contains(paramNode)) {
+						dontPruneList.add(paramNode);
+					}
+				}
+	
+				// done adding params
+				// now delete fdcNode and subgraph connections to/from it that have no input/params	
+				ng.deleteSubGraph(fdcNodeCopy, dontPruneList);
+	
+				// put each FDC node in this paramNodegroup into fdcNodeCopies
+				for (Node subFdcNode : ng.getNodesBySuperclassURI(FDC_DATA_SUPERCLASS, this.oInfo)) {
+					String subFdcNodeOrigId = subFdcNode.getSparqlID();
+					if (origIdHash.containsKey(subFdcNodeOrigId)) {
+						subFdcNodeOrigId = origIdHash.get(subFdcNodeOrigId);
+					}
+					this.fdcNodeCopies.get(subFdcNodeOrigId).add(subFdcNode);
+				}
+				
+				paramSetToNgHash.put(inputIndex, ng);
+			}
+		}
+			
 		this.paramNodegroups.put(fdcNode.getSparqlID(), paramSetToNgHash);
 
 	}

@@ -20,4 +20,8 @@ public class FdcConfigException extends Exception {
 	public FdcConfigException(String message){
 		super(message);
 	}
+	
+	public FdcConfigException(String message, Exception e){
+		super(message, e);
+	}
 }
