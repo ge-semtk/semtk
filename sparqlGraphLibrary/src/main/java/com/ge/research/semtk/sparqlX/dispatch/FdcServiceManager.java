@@ -194,27 +194,23 @@ public class FdcServiceManager {
 				
 				// get cache of only this input
 				Table inputCache = thisConfigCache.getSubsetWhereMatches("inputIndex", inputIndex);
-				Node inputHeadNode = null;
-				try {
-					// build link to subgraph
-					String subjectClass = inputCache.getCell(0, "subjectClass");
-					String predicateProp = inputCache.getCell(0, "predicateProp");
-					String objectClass = inputCache.getCell(0, "objectClass");
-					OntologyPath path = new OntologyPath(fdcNodeCopy.getFullUriName());
-					path.addTriple(subjectClass,  predicateProp,  objectClass);   
-		
-		
-					// get input subgraph head node
-					inputHeadNode = ng.followPathToNode(fdcNodeCopy, path);
-					this.paramHeadNodes.get(fdcNode.getSparqlID()).put(inputIndex, inputHeadNode);
-		
-					// shrink nodegroup to only the subgraph needed for this input
-					ng.deleteSubGraph(fdcNodeCopy, inputHeadNode);
+				
+				// build link to subgraph
+				String subjectClass = inputCache.getCell(0, "subjectClass");
+				String predicateProp = inputCache.getCell(0, "predicateProp");
+				String objectClass = inputCache.getCell(0, "objectClass");
+				OntologyPath path = new OntologyPath(fdcNodeCopy.getFullUriName());
+				path.addTriple(subjectClass,  predicateProp,  objectClass);   
+	
+	
+				// get input subgraph head node
+				Node inputHeadNode = ng.followPathToNode(fdcNodeCopy, path);
+				this.paramHeadNodes.get(fdcNode.getSparqlID()).put(inputIndex, inputHeadNode);
+	
+				// shrink nodegroup to only the subgraph needed for this input
+				ng.deleteSubGraph(fdcNodeCopy, inputHeadNode);
 					
-				} catch (Exception e) {
-					LocalLogger.printStackTrace(e);
-					throw new FdcConfigException("FDC Error while processing inputs.  (Details in dispatch service log).");
-				}
+				
 	
 				// loop through params in set
 				for (int i=0; i < inputCache.getNumRows(); i++) {
