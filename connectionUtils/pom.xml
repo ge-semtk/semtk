@@ -124,7 +124,7 @@
 		<dependency>
 			<groupId>software.amazon.awssdk</groupId>
 			<artifactId>s3</artifactId>
-			<version>2.18.11</version>
+			<version>2.18.16</version>
 		</dependency>
 
 		<!-- License: Apache 2.0 -->
