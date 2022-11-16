@@ -23,17 +23,14 @@ fi
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd -P)"
 cd "${DIR}"
 
-# If SERVER_ADDRESS is not set, then set SERVER_ADDRESS to localhost (if running
-# in Docker) or the host's IP address before sourcing .env
-if [ -f /.dockerenv -o -f /run/.containerenv ]; then
-    export SERVER_ADDRESS="${SERVER_ADDRESS:-localhost}"
-else
-    export SERVER_ADDRESS="${SERVER_ADDRESS:-$(hostname -I | tr ' ' '\n' | head -1)}"
-fi
+# If SERVER_ADDRESS is not set, then set SERVER_ADDRESS to localhost
+# before we source .env
+export SERVER_ADDRESS="${SERVER_ADDRESS:-localhost}"
 source .env
 
-# Create an environment file containing the environment variables used in services' application.properties
-# This file is used at service startup (via service.unit)
+# Create an environment file containing the environment variables used
+# in services' application.properties (this file is used at service
+# startup via service.unit)
 cat ./*Service/BOOT-INF/classes/application.properties | grep "{" | sed -e 's/^.*{\(.*\)}/\1=${\1}/' | sort | uniq | envsubst > environment
 
 # Replace the js configuration files for the SemTK webapps
