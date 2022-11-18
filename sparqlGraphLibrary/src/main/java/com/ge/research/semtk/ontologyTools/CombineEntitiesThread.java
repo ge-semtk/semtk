@@ -57,16 +57,10 @@ public class CombineEntitiesThread extends Thread {
 		try {
 			this.tracker.setJobPercentComplete(this.jobId, 5, "Confirming instances and their classes");
 			this.worker.preCheck();
-			
-			this.tracker.setJobPercentComplete(this.jobId, 25, "Deleting skipped properties");
-			this.worker.deleteUnwantedProperties();
-			
-			this.tracker.setJobPercentComplete(this.jobId, 50, "Combining entities");
-			this.worker.combineEntities();
-			
-			this.tracker.setJobPercentComplete(this.jobId, 75, "Deleting duplicate");
-			this.worker.deleteDuplicate();
-			
+
+			this.tracker.setJobPercentComplete(this.jobId, 30, "Combining entities");
+			this.worker.combine();
+
 			this.tracker.setJobSuccess(this.jobId);
 			
 		} catch (Exception e) {

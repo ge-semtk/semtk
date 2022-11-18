@@ -1,5 +1,6 @@
 package com.ge.research.semtk.ontologyTools;
 
+import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -157,20 +158,7 @@ public class CombineEntitiesInConnThread extends Thread {
 					
 					if (insertTriples.size() > TRIPLE_BATCH || deleteTriples.size() > TRIPLE_BATCH) {
 						// perform queries when there are enough triples
-						this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
-								SparqlToXLibUtil.generateInsertTriples(this.conn, insertTriples)
-								);
-						insertTriples.clear();
-						
-						this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
-								SparqlToXLibUtil.generateDeleteTriples(this.conn, deleteTriples)
-								);
-						deleteTriples.clear();
-						
-						this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
-								SparqlToXLibUtil.generateDeleteUris(this.conn, sameAsUriList)
-								);
-						sameAsUriList.clear();
+						this.runQueriesAndClearInputs(insertTriples, deleteTriples, sameAsUriList);
 						
 						int percent = Math.min(99, 50 + 50 * recordsProcessed / numSameAs);
 						this.tracker.setJobPercentComplete(this.jobId, percent);
@@ -178,20 +166,9 @@ public class CombineEntitiesInConnThread extends Thread {
 				}
 				
 				// perform queries for left overs
-				this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
-						SparqlToXLibUtil.generateInsertTriples(this.conn, insertTriples)
-						);
-				insertTriples.clear();
 				
-				this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
-						SparqlToXLibUtil.generateDeleteTriples(this.conn, deleteTriples)
-						);
-				deleteTriples.clear();
-				
-				this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
-						SparqlToXLibUtil.generateDeleteUris(this.conn, sameAsUriList)
-						);
-				sameAsUriList.clear();		
+				this.runQueriesAndClearInputs(insertTriples, deleteTriples, sameAsUriList);
+					
 				
 			} while (batchTable.getNumRows() > 0);
 
@@ -229,6 +206,20 @@ public class CombineEntitiesInConnThread extends Thread {
 		}
 	}
 
+	private void runQueriesAndClearInputs(AbstractCollection<Triple> insertTriples, AbstractCollection<Triple> deleteTriples, AbstractCollection<String> sameAsUriList) throws Exception {
+		this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
+				SparqlToXLibUtil.generateInsertTriples(this.conn, insertTriples)
+				);
+		this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
+				SparqlToXLibUtil.generateDeleteTriples(this.conn, deleteTriples)
+				);
+		this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
+				SparqlToXLibUtil.generateDeleteUris(this.conn, sameAsUriList)
+				);
+		insertTriples.clear();
+		deleteTriples.clear();
+		sameAsUriList.clear();		
+	}
 	/**
 	 * Run all pre-checking. 
 	 * Group pre-checks:
