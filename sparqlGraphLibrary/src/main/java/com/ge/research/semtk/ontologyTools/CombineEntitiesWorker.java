@@ -2,6 +2,7 @@ package com.ge.research.semtk.ontologyTools;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 
@@ -12,6 +13,7 @@ import com.ge.research.semtk.belmont.ValueConstraint;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlToXLib.SparqlToXLibUtil;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.XSDSupportedType;
 
 public class CombineEntitiesWorker extends Thread {
 
@@ -26,6 +28,9 @@ public class CombineEntitiesWorker extends Thread {
 	private RestrictionChecker checker = null;
 	private String targetTypeUris[] = null;
 	private String duplicateTypeUris[] = null;
+	
+	private HashSet<Triple> deleteTriples = new HashSet<Triple>();
+	private HashSet<Triple> insertTriples = new HashSet<Triple>();
 	
 	/**
 	 * Initialize a worker by proposing the target and duplicate Uris, and full list of predicates to delete
@@ -136,9 +141,119 @@ public class CombineEntitiesWorker extends Thread {
 	 */
 	public void combine() throws Exception {
 
-		this.deleteUnwantedProperties();
-		this.combineEntities();
-		this.deleteDuplicate();
+		this.generateCombineTriples();
+		
+		this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
+				SparqlToXLibUtil.generateInsertTriples(this.conn, this.insertTriples)
+				);
+		this.insertTriples.clear();
+		
+		this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
+				SparqlToXLibUtil.generateDeleteTriples(this.conn, deleteTriples)
+				);
+		this.deleteTriples.clear();
+	}
+	
+	/**
+	 * Same as combine(), but doesn't run the queries.  Allows for more efficient batches.
+	 * @returns void = use getInsertTriples() and getDeleteTriples()
+	 * @throws Exception
+	 */
+	public void generateCombineTriples() throws Exception {
+		HashSet<String> bothUris = new HashSet<String>();
+		bothUris.add(this.targetUri);
+		bothUris.add(this.duplicateUri);
+		Table tripleTab = this.conn.getDefaultQueryInterface().executeToTable(
+				SparqlToXLibUtil.generateTriplesIncomingOrOutgoing(this.conn, this.oInfo, bothUris)
+				);
+		
+		// build total cardinality hash: ignoring if set for delete
+		HashMap<String, Integer> totalCardinality = new HashMap<String, Integer>();
+		for (int i=0; i < tripleTab.getNumRows(); i++) {
+			String sub = tripleTab.getCell(i,  0);
+			String pred = tripleTab.getCell(i, 1);
+			if (sub.equals(this.targetUri) || sub.equals(this.duplicateUri) ) {
+				if (!totalCardinality.containsKey(pred)) {
+					totalCardinality.put(pred,  0);
+				}
+				if (sub.equals(this.targetUri) && !this.deletePredicatesFromTarget.contains(pred)) {
+					totalCardinality.put(pred,  totalCardinality.get(pred) + 1);
+				}
+				if (sub.equals(this.duplicateUri) && !this.deletePredicatesFromDuplicate.contains(pred)) {
+					totalCardinality.put(pred,  totalCardinality.get(pred) + 1);
+				}
+				
+			}
+		}
+		
+		// decide what to do with each triple
+		for (int i=0; i < tripleTab.getNumRows(); i++) {
+			String sub =  tripleTab.getCell(i, 0);
+			String pred = tripleTab.getCell(i, 1);
+			String obj =  tripleTab.getCell(i, 2);
+			
+			if (sub.equals(this.duplicateUri)) {
+				//=== duplicate outgoing ===//
+				// delete always
+				deleteTriples.add(this.createTriple(sub, pred, obj));
+				
+				// if not marked for deletion && doesn't violate cardinality && not type
+				if (!this.deletePredicatesFromDuplicate.contains(pred) && 
+						checker.satisfiesCardinality(this.targetTypeUris, pred, totalCardinality.get(pred)) &&
+						!pred.equals(SparqlToXLibUtil.TYPE_PROP)) {
+					// move to target
+					insertTriples.add(this.createTriple(this.targetUri, pred, obj));
+				}
+			} else if (obj.equals(this.duplicateUri)) {
+				//=== duplicate incoming ===//
+				// move from duplicate to target
+				deleteTriples.add(this.createTriple(sub, pred, this.duplicateUri));
+				insertTriples.add(this.createTriple(sub, pred, this.targetUri));
+				
+			} else if (sub.equals(this.targetUri) && deletePredicatesFromTarget.contains(pred)) {
+				deleteTriples.add(this.createTriple(sub, pred, obj));
+			}
+		}
+	}
+	
+	/**
+	 * Formats triple for SPARQL 
+	 * @param sub
+	 * @param pred
+	 * @param obj
+	 * @return
+	 * @throws Exception
+	 */
+	private Triple createTriple(String sub, String pred, String obj) throws Exception {
+		String typedObj = "<"+obj+">";
+		if (obj.equals(this.duplicateUri) || obj.equals(this.targetUri) || pred.equals(SparqlToXLibUtil.TYPE_PROP)) {
+			// default
+		} else if (sub.equals(this.targetUri)) {
+			OntologyProperty oProp = oInfo.getProperty(pred);
+			OntologyClass domainClass = oInfo.getClass(this.targetTypeUris[0]);
+			OntologyRange oRange = oProp.getRange(domainClass, this.oInfo);
+			for (XSDSupportedType t : oInfo.getPropertyRangeXSDTypes(oRange)) {
+				typedObj = t.buildRDF11ValueString(obj);
+				break;
+			}
+		} else if (sub.equals(this.duplicateUri)) {
+			OntologyProperty oProp = oInfo.getProperty(pred);
+			OntologyClass domainClass = oInfo.getClass(this.duplicateTypeUris[0]);
+			OntologyRange oRange = oProp.getRange(domainClass, this.oInfo);
+			for (XSDSupportedType t : oInfo.getPropertyRangeXSDTypes(oRange)) {
+				typedObj = t.buildRDF11ValueString(obj);
+				break;
+			}
+		} 
+		return new Triple("<"+sub+">", "<"+pred+">", typedObj);
+	}
+
+	public HashSet<Triple> getDeleteTriples() {
+		return deleteTriples;
+	}
+
+	public HashSet<Triple> getInsertTriples() {
+		return insertTriples;
 	}
 
 	/**
@@ -195,92 +310,7 @@ public class CombineEntitiesWorker extends Thread {
 		}
 	}
 	
-	
-	/**
-	 * Delete deletePredicatesFromTarget, deletePredicatesFromDuplicate, duplicate's type(s), anything that would violate cardinality
-	 * @throws Exception
-	 */
-	public void deleteUnwantedProperties() throws Exception {
-		
-		// always delete this.deletePredicatesFromTarget properties from the target
-		if (deletePredicatesFromTarget.size() > 0) {
-			String sparql = SparqlToXLibUtil.generateDeleteExactProps(this.conn, this.targetUri, this.deletePredicatesFromTarget);
-			this.conn.getDefaultQueryInterface().executeQueryAndConfirm(sparql);
-		}
-		
-		// check do cardinality restrictions exist on any duplicate properties:
-		Table dupPropCountTab = this.conn.getDefaultQueryInterface().executeQueryToTable(
-				SparqlToXLibUtil.generateCountInstanceProperties(conn, oInfo, duplicateUri)
-				);
-		boolean restrictionsExist = false;
-		for (int i=0; i < dupPropCountTab.getNumRows(); i++) {
-			if (checker.hasCardinalityRestriction(this.targetTypeUris, dupPropCountTab.getCell(i, "prop"))) {
-				restrictionsExist = true;
-				break;
-			}
-		}
-		
-		// initialize properties to be deleted: 
-		// always delete the duplicate's type 
-		// (already checked that it/they are superclass* of target)
-		HashSet<String> deleteFromDup = new HashSet<String>(this.deletePredicatesFromDuplicate);
-		deleteFromDup.add(SparqlToXLibUtil.TYPE_PROP);
-		
-		// if needed, delete things that would violate cardinality
-		if (restrictionsExist) {
-			// get target properties' cardinality counts
-			Table targetPropCountTab = this.conn.getDefaultQueryInterface().executeQueryToTable(
-					SparqlToXLibUtil.generateCountInstanceProperties(conn, oInfo, targetUri)
-					);
-			
-			// loop through all properties not already being delete from duplicate
-			for (int i=0; i < dupPropCountTab.getNumRows(); i++) {
-				String prop = dupPropCountTab.getCell(i, "prop");
-				if (!deleteFromDup.contains(prop)) {
-					
-					// get total cardinality for duplicate prop after combining
-					int targetRow = targetPropCountTab.getFirstMatchingRowNum("prop", prop);
-					int total = dupPropCountTab.getCellAsInt(i, "count");
-					total += (targetRow >= 0) ? targetPropCountTab.getCellAsInt(targetRow, "count") : 0;
-					
-					// prepare to delete from duplicate any prop where combining would violate cardinality
-					// (regardless of whether it is already violated in target)
-					if (!checker.satisfiesCardinality(this.targetTypeUris, prop, total)) {
-						deleteFromDup.add(prop);
-					}
-				}
-			}
-		}
-        
-        // delete properties from the duplicate
-		this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
-				SparqlToXLibUtil.generateDeleteExactProps(this.conn, this.duplicateUri, new ArrayList<String>(deleteFromDup))
-				);
-		
-	}
-	
-	/**
-	 * Copy all outgoing and incoming props on duplicate to the target
-	 * @throws Exception
-	 */
-	public void combineEntities() throws Exception {
-		// build one-node nodegroup constrained to this.duplicateUri
-		String sparql = SparqlToXLibUtil.generateCombineEntitiesInsertOutgoing(this.conn, this.targetUri, this.duplicateUri);
-		this.conn.getDefaultQueryInterface().executeQueryAndConfirm(sparql);
-		
-		sparql = SparqlToXLibUtil.generateCombineEntitiesInsertIncoming(this.conn, this.targetUri, this.duplicateUri);
-		this.conn.getDefaultQueryInterface().executeQueryAndConfirm(sparql);
-	}
-	
-	/**
-	 * Delete the duplicate
-	 * @throws Exception
-	 */
-	public void deleteDuplicate() throws Exception {
-		String sparql = SparqlToXLibUtil.generateDeleteUri(this.conn, this.duplicateUri);
-		this.conn.getDefaultQueryInterface().executeQueryAndConfirm(sparql);
-	}
-	
+
 	/**
 	 * Lookup uri and type list given lookupHash
 	 * @param lookupHash - hash property to val

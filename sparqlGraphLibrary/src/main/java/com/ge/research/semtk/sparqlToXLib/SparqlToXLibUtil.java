@@ -19,6 +19,7 @@
 package com.ge.research.semtk.sparqlToXLib;
 
 
+import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
@@ -660,6 +661,11 @@ public class SparqlToXLibUtil {
 	public static String generateDeleteUri(SparqlConnection conn, String itemURI) throws Exception {
 		ArrayList<String> uriAsList = new ArrayList<String>();
 		uriAsList.add(itemURI);
+		return generateDeleteUris(conn, uriAsList);
+	}
+
+	public static String generateDeleteUris(SparqlConnection conn, AbstractCollection<String> itemURIs) throws Exception {
+		
 		StringBuilder ret = new StringBuilder();
 		ret.append("DELETE { \n");
 		ret.append(generateGraphClause(conn.getInsertInterface(), "  ") + "{");
@@ -669,10 +675,48 @@ public class SparqlToXLibUtil {
 		ret.append(generateUsingDatagraphsClause(conn, ""));
 		ret.append("WHERE { \n");
 		ret.append("  {\n");
-		ret.append("    ?s ?p ?o . " + ValueConstraint.buildBestListConstraint("?s", uriAsList, XSDSupportedType.asSet(XSDSupportedType.URI), conn.getDeleteInterface()));
+		ret.append("    ?s ?p ?o . " + ValueConstraint.buildBestListConstraint("?s", itemURIs, XSDSupportedType.asSet(XSDSupportedType.URI), conn.getDeleteInterface()));
 		ret.append("  } UNION {\n");
-		ret.append("    ?s ?p ?o . " + ValueConstraint.buildBestListConstraint("?o", uriAsList, XSDSupportedType.asSet(XSDSupportedType.URI), conn.getDeleteInterface()));
+		ret.append("    ?s ?p ?o . " + ValueConstraint.buildBestListConstraint("?o", itemURIs, XSDSupportedType.asSet(XSDSupportedType.URI), conn.getDeleteInterface()));
 		ret.append("  } \n");
+		ret.append("} \n");
+		return ret.toString();
+	}
+	
+	/**
+	 * 
+	 * @param conn
+	 * @param triples - need to be typed
+	 * @return
+	 * @throws Exception
+	 */
+	public static String generateInsertTriples(SparqlConnection conn, AbstractCollection<Triple> triples) throws Exception {
+		StringBuilder ret = new StringBuilder();
+		ret.append("INSERT DATA { \n");
+		ret.append("  " + generateGraphClause(conn.getInsertInterface(), "  ") + "{\n");
+		for (Triple t : triples) {
+			ret.append("    " + t.getSubject() + " " + t.getPredicate() + " " + t.getObject() + "  . \n" );
+		}
+		ret.append("  }\n");
+		ret.append("} \n");
+		return ret.toString();
+	}
+	
+	/**
+	 * 
+	 * @param conn
+	 * @param triples - need to be typed
+	 * @return
+	 * @throws Exception
+	 */
+	public static String generateDeleteTriples(SparqlConnection conn, AbstractCollection<Triple> triples) throws Exception {
+		StringBuilder ret = new StringBuilder();
+		ret.append("DELETE DATA { \n");
+		ret.append("  " + generateGraphClause(conn.getInsertInterface(), "  ") + "{\n");
+		for (Triple t : triples) {
+			ret.append("    " + t.getSubject() + " " + t.getPredicate() + " " + t.getObject() + "  . \n" );
+		}
+		ret.append("  }\n");
 		ret.append("} \n");
 		return ret.toString();
 	}
@@ -686,6 +730,21 @@ public class SparqlToXLibUtil {
 				+ "\n"
 				+ "} group by ?prop\n";
 				
+	}
+	
+	public static String generateTriplesIncomingOrOutgoing(SparqlConnection conn, OntologyInfo oInfo, AbstractCollection<String> itemURIs) throws Exception {
+		
+		StringBuilder ret = new StringBuilder();
+		ret.append("SELECT DISTINCT ?subject ?predicate ?object  \n");
+		ret.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
+		ret.append("WHERE { \n");
+		ret.append("  {\n");
+		ret.append("    ?subject ?predicate ?object . " + ValueConstraint.buildBestListConstraint("?subject", itemURIs, XSDSupportedType.asSet(XSDSupportedType.URI), conn.getDefaultQueryInterface()));
+		ret.append("  } UNION {\n");
+		ret.append("    ?subject ?predicate ?object . " + ValueConstraint.buildBestListConstraint("?object", itemURIs, XSDSupportedType.asSet(XSDSupportedType.URI), conn.getDefaultQueryInterface()));
+		ret.append("  } \n");
+		ret.append("} \n");
+		return ret.toString();
 	}
 	
 	public static String generateGraphClause(SparqlEndpointInterface sei, String tab) {

@@ -18,6 +18,7 @@
 
 package com.ge.research.semtk.belmont;
 
+import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
@@ -118,7 +119,7 @@ public class ValueConstraint {
 		}
 	}
 	
-	public static String buildBestListConstraint(String sparqlId, ArrayList<String> valList, HashSet<XSDSupportedType> valTypes, SparqlEndpointInterface sei) throws Exception {
+	public static String buildBestListConstraint(String sparqlId, AbstractCollection<String> valList, AbstractCollection<XSDSupportedType> valTypes, SparqlEndpointInterface sei) throws Exception {
 		switch (sei.getServerType()) {
 		case SparqlEndpointInterface.NEPTUNE_SERVER:
 			return buildFilterInConstraint(sparqlId, valList, valTypes, sei);
@@ -297,7 +298,7 @@ public class ValueConstraint {
 		return buildValuesConstraint(sparqlId, valList, valTypes, null);
 	}
 
-	public static String buildValuesConstraint(String sparqlId, ArrayList<String> valList, HashSet<XSDSupportedType> valTypes, SparqlEndpointInterface sei) throws Exception{
+	public static String buildValuesConstraint(String sparqlId, AbstractCollection<String> valList, AbstractCollection<XSDSupportedType> valTypes, SparqlEndpointInterface sei) throws Exception{
 		
 		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
 		
@@ -371,7 +372,7 @@ public class ValueConstraint {
 		return buildFilterInConstraint(sparqlId, valList, valTypes, null);
 	}
 
-	public static String buildFilterInConstraint(String sparqlId, ArrayList<String> valList, HashSet<XSDSupportedType> valTypes, SparqlEndpointInterface sei) throws Exception{
+	public static String buildFilterInConstraint(String sparqlId, AbstractCollection<String> valList, AbstractCollection<XSDSupportedType> valTypes, SparqlEndpointInterface sei) throws Exception{
 		sparqlId = BelmontUtil.legalizeSparqlID(sparqlId);
 		
 		

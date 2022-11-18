@@ -2,6 +2,7 @@ package com.ge.research.semtk.ontologyTools;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Hashtable;
 
 import com.ge.research.semtk.auth.HeaderTable;
@@ -129,6 +130,10 @@ public class CombineEntitiesInConnThread extends Thread {
 			int recordsProcessed = 0;
 			Table batchTable = null;
 			
+			HashSet<Triple> insertTriples = new HashSet<Triple>();
+			HashSet<Triple> deleteTriples = new HashSet<Triple>();
+			int TRIPLE_BATCH = 50;
+			
 			// preform the combining in batches so that order is correct
 			do {
 				batchTable = this.conn.getDefaultQueryInterface().executeQueryToTable(nextBatchQuery);
@@ -143,24 +148,50 @@ public class CombineEntitiesInConnThread extends Thread {
 							this.deletePredicatesFromTarget, this.deletePredicatesFromDuplicate,
 							checker
 							);
-					w.combine();
+					w.generateCombineTriples();
+					insertTriples.addAll(w.getInsertTriples());
+					deleteTriples.addAll(w.getDeleteTriples());
 					sameAsUriList.add(batchTable.getCell(i, "same_as"));
 					recordsProcessed += 1;
 					
-					// set percent complete
-					if (i % 25 == 0) {
-						this.deleteSameAs(sameAsUriList);
+					
+					if (insertTriples.size() > TRIPLE_BATCH || deleteTriples.size() > TRIPLE_BATCH) {
+						// perform queries when there are enough triples
+						this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
+								SparqlToXLibUtil.generateInsertTriples(this.conn, insertTriples)
+								);
+						insertTriples.clear();
+						
+						this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
+								SparqlToXLibUtil.generateDeleteTriples(this.conn, deleteTriples)
+								);
+						deleteTriples.clear();
+						
+						this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
+								SparqlToXLibUtil.generateDeleteUris(this.conn, sameAsUriList)
+								);
 						sameAsUriList.clear();
+						
 						int percent = Math.min(99, 50 + 50 * recordsProcessed / numSameAs);
 						this.tracker.setJobPercentComplete(this.jobId, percent);
 					}
-					
 				}
 				
-				// delete the batch
-				if (sameAsUriList.size() > 0) {
-					this.deleteSameAs(sameAsUriList);
-				}
+				// perform queries for left overs
+				this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
+						SparqlToXLibUtil.generateInsertTriples(this.conn, insertTriples)
+						);
+				insertTriples.clear();
+				
+				this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
+						SparqlToXLibUtil.generateDeleteTriples(this.conn, deleteTriples)
+						);
+				deleteTriples.clear();
+				
+				this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
+						SparqlToXLibUtil.generateDeleteUris(this.conn, sameAsUriList)
+						);
+				sameAsUriList.clear();		
 				
 			} while (batchTable.getNumRows() > 0);
 
@@ -169,7 +200,7 @@ public class CombineEntitiesInConnThread extends Thread {
 				this.tracker.setJobSuccess(this.jobId, String.format("Combined %d pairs of entities.", recordsProcessed));
 			} else {
 				
-				// leftover junk
+				// query leftover SameAs and fail
 				Table t = this.conn.getDefaultQueryInterface().executeQueryToTable(
 						this.generateGetAllSameAsSparql());
 				if (t.getNumRows() != 0) {
@@ -290,24 +321,6 @@ public class CombineEntitiesInConnThread extends Thread {
 		return this.conn.getDefaultQueryInterface().executeToTable(sparql).getCellAsInt(0, 0);
 	}
 	
-	/**
-	 * Perform full delete of a list of sameAs instances
-	 * @param uriList
-	 * @throws Exception
-	 */
-	private void deleteSameAs(ArrayList<String> uriList) throws Exception {
-		// TODO: consider using SparqlToXLibUtil deleteEntityQuery
-		
-		NodeGroup ng = new NodeGroup();
-		ng.setSparqlConnection(this.conn);
-		
-		Node n = ng.addNode(this.sameAsTypeUri, this.oInfo);
-		n.setDeletionMode(NodeDeletionTypes.FULL_DELETE);
-		n.addValueConstraint(ValueConstraint.buildBestListConstraint(n, uriList, this.conn.getDefaultQueryInterface()));
-		
-		String sparql = ng.generateSparqlDelete();
-		this.conn.getDefaultQueryInterface().executeQueryAndConfirm(sparql);
-	}
 	
 	// TODO move queries to SparqlToXLibUtils
 	
