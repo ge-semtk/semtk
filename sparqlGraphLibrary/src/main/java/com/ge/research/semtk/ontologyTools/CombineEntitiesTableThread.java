@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Hashtable;
 
+import com.ge.research.semtk.auth.HeaderTable;
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.resultSet.Table;
@@ -26,7 +28,9 @@ public class CombineEntitiesTableThread extends Thread {
 	private ArrayList<String> deletePredicatesFromTarget;
 	private ArrayList<String> deletePredicatesFromDuplicate;
 	private Table errorTab;
-	
+	private HeaderTable headerTable = null;
+	private RestrictionChecker checker = null;
+
 
 	/**
 	 * Create a thread for combining entities based on lookup properties
@@ -55,9 +59,10 @@ public class CombineEntitiesTableThread extends Thread {
 		this.deletePredicatesFromTarget = deletePredicatesFromTarget;
 		this.deletePredicatesFromDuplicate = deletePredicatesFromDuplicate;
 		this.table = table;
-		
+		this.headerTable = ThreadAuthenticator.getThreadHeaderTable();
+
 		this.errorTab = new Table(new String [] { "row", "error" });
-		
+		this.checker = new RestrictionChecker(conn, oInfo);
 		CombineEntitiesWorker.replacePropertyAbbrev(this.deletePredicatesFromTarget);
 		CombineEntitiesWorker.replacePropertyAbbrev(this.deletePredicatesFromDuplicate);
 		
@@ -78,6 +83,8 @@ public class CombineEntitiesTableThread extends Thread {
 	
 	
 	public void run() {
+		ThreadAuthenticator.authenticateThisThread(this.headerTable);
+
 		ArrayList<CombineEntitiesWorker> workerList = new ArrayList<CombineEntitiesWorker>();
 		
 		try {
@@ -91,7 +98,11 @@ public class CombineEntitiesTableThread extends Thread {
 				
 				// do the work
 				try {
-					CombineEntitiesWorker w =  new CombineEntitiesWorker(this.oInfo, this.conn, targetHash, duplicateHash, this.deletePredicatesFromTarget, this.deletePredicatesFromDuplicate);
+					CombineEntitiesWorker w =  new CombineEntitiesWorker(
+							this.oInfo, this.conn, 
+							targetHash, duplicateHash, 
+							this.deletePredicatesFromTarget, this.deletePredicatesFromDuplicate,
+							this.checker);
 					w.preCheck();
 					workerList.add(w);
 					
@@ -126,6 +137,7 @@ public class CombineEntitiesTableThread extends Thread {
 			return;
 		}
 		
+		this.setJobPercentComplete(50);
 		
 		try {
 			
@@ -137,7 +149,6 @@ public class CombineEntitiesTableThread extends Thread {
 			this.tracker.setJobSuccess(this.jobId, String.format("Combined %d rows of entities.", this.table.getNumRows()));
 			
 		} catch (Exception e) {
-			// TODO fix this
 			LocalLogger.printStackTrace(e);
 			try {
 				// Exceptions are reported via the async job status mechanism
@@ -149,6 +160,16 @@ public class CombineEntitiesTableThread extends Thread {
 				LocalLogger.printStackTrace(ee);
 			}
 		}
+	}
+	
+	/**
+	 * setJobPercentComplete and eat errors
+	 * @param percent
+	 */
+	private void setJobPercentComplete(int percent) {
+		try {
+			this.tracker.setJobPercentComplete(this.jobId, percent);
+		} catch (Exception e) {}
 	}
 
 }

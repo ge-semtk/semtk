@@ -1198,6 +1198,19 @@ public class Table {
 		return ret;
 	}	
 	
+	public int getFirstMatchingRowNum(String matchColName, String matchColValue) throws Exception {
+		// add rows to the table
+		int matchColIndex = getColumnIndex(matchColName);  // get the index of the column we need to match
+		if (matchColIndex < 0) {
+			throw new Exception("Can't find column in table: " + matchColName);
+		}
+		for(int i=0; i < this.getNumRows(); i++){
+			if(this.getCell(i, matchColIndex).equals(matchColValue)){  // met the match condition
+				return i;
+			}
+		}
+		return -1;
+	}
 	/**
 	 * Retrieve a table containing the subset of rows by matching on multiple columns.  
 	 * Matching is determined by case-insensitive substring.

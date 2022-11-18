@@ -20,6 +20,7 @@ package com.ge.research.semtk.ontologyTools;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Hashtable;
 
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.resultSet.Table;
@@ -38,6 +39,10 @@ public class RestrictionChecker {
 	private String jobId = null;
 	private int startPercent = 0;
 	private int endPercent = 100;
+	
+	private Hashtable<String,Integer> maxHash = new Hashtable<String,Integer>();
+	private Hashtable<String,Integer> minHash = new Hashtable<String,Integer>();
+	private Hashtable<String,Integer> exactHash = new Hashtable<String,Integer>();
 
 	/**
 	 * This class checks restrictions outside of query and ingestion process.
@@ -73,6 +78,12 @@ public class RestrictionChecker {
 		
 		this.oInfo = oInfo;
 	}
+	
+	/**
+	 * Generate a table of cardinaltiy violations
+	 * @return
+	 * @throws Exception
+	 */
 	public Table checkCardinality() throws Exception {
 		return this.checkCardinality(0);
 	}
@@ -85,6 +96,7 @@ public class RestrictionChecker {
 			this.tracker.setJobPercentComplete("Querying cardinality restrictions", percent);
 			percent += (this.endPercent - percent) / 10;
 		}
+		
 		this.queryCardinalityRestrictions();
 		
 		
@@ -105,11 +117,11 @@ public class RestrictionChecker {
 			int limit = this.cardinalityTable.getCellAsInt(i, 3);
 			
 			String negOp = null;
-			if (restriction.equals("maxcardinality") || restriction.endsWith("maxqualifiedcardinality")) 
+			if (this.isMax(restriction)) 
 				negOp = ">";
-			else if (restriction.endsWith("mincardinality") || restriction.endsWith("minqualifiedcardinality")) 
+			else if (this.isMin(restriction)) 
 				negOp = "<";
-			else if (restriction.endsWith("cardinality") || restriction.endsWith("qualifiedcardinality")) 
+			else if (this.isExact(restriction)) 
 				negOp = "!=";
 			else {
 				LocalLogger.logToStdOut("ModelRestrictions.java warning: model contains unrecognized cardinality restriction: " + restriction);
@@ -132,6 +144,15 @@ public class RestrictionChecker {
 		return retTable;
 	}
 	
+	private boolean isMax(String restriction) {
+		return restriction.equals("maxcardinality") || restriction.endsWith("maxqualifiedcardinality");
+	}
+	private boolean isMin(String restriction) {
+		return restriction.endsWith("mincardinality") || restriction.endsWith("minqualifiedcardinality");
+	}
+	private boolean isExact(String restriction) {
+		return restriction.endsWith("cardinality") || restriction.endsWith("qualifiedcardinality");
+	}
 	/**
 	 * Populate cardinalityTable with all cardinality restrictions in the model connection
 	 * @throws Exception
@@ -140,5 +161,112 @@ public class RestrictionChecker {
 		String query = SparqlToXLibUtil.generateGetCardinalityRestrictions(this.modelConn, this.oInfo);
 		SparqlEndpointInterface sei = this.modelConn.getDefaultQueryInterface();
 		this.cardinalityTable = sei.executeToTable(query);
+	}
+	
+	/**
+	 * Would n instances of property propUri satisfy all existing cardinality rules for classUris
+	 * @param classUris - array of one or more classes to which a particular instance belongs
+	 * @param propUri
+	 * @param n
+	 * @return
+	 * @throws Exception
+	 */
+	public boolean satisfiesCardinality(String[] classUris, String propUri, int n) throws Exception {
+		for (String c : classUris) {
+			if (! this.satisfiesCardinality(c, propUri, n))
+				return false;
+		}
+		return true;
+	}
+
+		
+	public boolean satisfiesCardinality(String classUri, String propUri, int n) throws Exception {
+		if (this.cardinalityTable == null)
+			this.queryAndBuildCardinalityHashes();
+		
+		String key = this.buildKey(classUri, propUri);
+		
+		Integer min = this.minHash.get(key);
+		if (min != null && n < min) return false;
+		
+		Integer max = this.maxHash.get(key);
+		if (max != null && n > max) return false;
+		
+		Integer exact = this.exactHash.get(key);
+		if (exact != null && n != exact) return false;
+		
+		return true;
+	}
+	
+	/**
+	 * Does a cardinality restriction apply
+	 * @param classUris - array of one or more classes to which a particular instance belongs
+	 * @param propUri
+	 * @return
+	 * @throws Exception
+	 */
+	public boolean hasCardinalityRestriction(String[] classUris, String propUri) throws Exception {
+		for (String c : classUris) {
+			if (this.hasCardinalityRestriction(c, propUri))
+				return true;
+		}
+		if (classUris.length == 0) throw new Exception("Internal error: classUris is empty");
+		return false;
+	}
+
+	public boolean hasCardinalityRestriction(String classUri, String propUri) throws Exception {
+		if (this.cardinalityTable == null)
+			this.queryAndBuildCardinalityHashes();
+		
+		String key = this.buildKey(classUri, propUri);
+		
+		return this.minHash.containsKey(key) || this.maxHash.containsKey(key) || this.exactHash.containsKey(key);
+	}
+	
+	
+	private void queryAndBuildCardinalityHashes() throws Exception {
+		this.queryCardinalityRestrictions();
+		
+		// run a query to check each restriction
+		for (int i=0; i < this.cardinalityTable.getNumRows(); i++) {
+		
+			String className = this.cardinalityTable.getCell(i, 0);
+			String propName = this.cardinalityTable.getCell(i, 1);
+			String restriction = new OntologyName(this.cardinalityTable.getCell(i, 2).toLowerCase()).getLocalName();
+	
+			int limit = this.cardinalityTable.getCellAsInt(i, 3);
+			HashSet<String> classNames = this.oInfo.getSubclassNames(className);
+			classNames.add(className);
+			
+			// build hashes for all restrictions.
+			// for retrieval efficiency, enter all the subclasses too
+			// when restrictions overlap for (sub)classes, save the tightest one
+			if (this.isMax(restriction)) {
+				for (String c : classNames) {
+					String key = this.buildKey(c, propName);
+					if (!this.maxHash.contains(key) || this.maxHash.get(key) > limit)
+						this.maxHash.put(key, limit);
+				}
+			} else if (this.isMin(restriction)) {
+				for (String c : classNames) {
+					String key = this.buildKey(c, propName);
+					if (!this.minHash.contains(key) || this.minHash.get(key) < limit)
+						this.minHash.put(key, limit);
+				}
+			} else if (this.isExact(restriction)) {
+				for (String c : classNames) {
+					String key = this.buildKey(c, propName);
+					if (!this.exactHash.contains(key) || this.exactHash.get(key) != limit)
+						this.exactHash.put(key, limit);
+				}
+			} else {
+				LocalLogger.logToStdOut("ModelRestrictions.java warning: model contains unrecognized cardinality restriction: " + restriction);
+				continue;
+			}
+		}
+	}
+	
+	private String buildKey(String className, String propName) {
+		return className + ":" + propName;
 	}
 }

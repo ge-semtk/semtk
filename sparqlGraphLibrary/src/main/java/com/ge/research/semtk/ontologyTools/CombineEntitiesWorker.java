@@ -2,6 +2,7 @@ package com.ge.research.semtk.ontologyTools;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Hashtable;
 
 import com.ge.research.semtk.belmont.Node;
@@ -18,11 +19,13 @@ public class CombineEntitiesWorker extends Thread {
 	private SparqlConnection conn = null;
 	private String targetUri = null;
 	private String duplicateUri = null;
-	private String duplicateClassUri = null;
 	private ArrayList<String> deletePredicatesFromTarget = null;
 	private ArrayList<String> deletePredicatesFromDuplicate = null;
 	private Hashtable<String,String> targetLookup = null;
 	private Hashtable<String,String> duplicateLookup = null;
+	private RestrictionChecker checker = null;
+	private String targetTypeUris[] = null;
+	private String duplicateTypeUris[] = null;
 	
 	/**
 	 * Initialize a worker by proposing the target and duplicate Uris, and full list of predicates to delete
@@ -37,7 +40,8 @@ public class CombineEntitiesWorker extends Thread {
 	 */
 	public CombineEntitiesWorker(OntologyInfo oInfo, SparqlConnection conn,
 			String targetUri, String duplicateUri, 
-			ArrayList<String> deletePredicatesFromTarget, ArrayList<String> deletePredicatesFromDuplicate) throws Exception {
+			ArrayList<String> deletePredicatesFromTarget, ArrayList<String> deletePredicatesFromDuplicate,
+			RestrictionChecker checker) throws Exception {
 
 		this.oInfo = oInfo;
 		this.conn = this.buildConn(conn);
@@ -45,6 +49,37 @@ public class CombineEntitiesWorker extends Thread {
 		this.duplicateUri = duplicateUri;
 		this.deletePredicatesFromTarget = deletePredicatesFromTarget != null ? deletePredicatesFromTarget : new ArrayList<String>();
 		this.deletePredicatesFromDuplicate = deletePredicatesFromDuplicate != null ? deletePredicatesFromDuplicate : new ArrayList<String>();
+		this.checker = checker;
+	}
+	
+	/**
+	 * Initialize a worker by proposing the target and duplicate Uris, their types, and full list of predicates to delete
+	 * @param oInfo
+	 * @param conn
+	 * @param classUri
+	 * @param targetUri
+	 * @param duplicateUri
+	 * @param targetTypeNames = non-empty string[] of classes
+	 * @param duplicateTypeNames = "
+	 * @param duplicateUri* @param deletePredicatesFromTarget
+	 * @param deletePredicatesFromDuplicate
+	 * @throws Exception 
+	 */
+	public CombineEntitiesWorker(OntologyInfo oInfo, SparqlConnection conn,
+			String targetUri, String duplicateUri, 
+			String [] targetTypeNames, String [] duplicateTypeNames,
+			ArrayList<String> deletePredicatesFromTarget, ArrayList<String> deletePredicatesFromDuplicate,
+			RestrictionChecker checker) throws Exception {
+
+		this.oInfo = oInfo;
+		this.conn = this.buildConn(conn);
+		this.targetUri = targetUri;
+		this.duplicateUri = duplicateUri;
+		this.targetTypeUris = targetTypeNames;
+		this.duplicateTypeUris = duplicateTypeNames;
+		this.deletePredicatesFromTarget = deletePredicatesFromTarget != null ? deletePredicatesFromTarget : new ArrayList<String>();
+		this.deletePredicatesFromDuplicate = deletePredicatesFromDuplicate != null ? deletePredicatesFromDuplicate : new ArrayList<String>();
+		this.checker = checker;
 	}
 	
 	/**
@@ -59,7 +94,9 @@ public class CombineEntitiesWorker extends Thread {
 	public CombineEntitiesWorker(OntologyInfo oInfo, SparqlConnection conn,
 			Hashtable<String,String> targetLookup, Hashtable<String,String> duplicateLookup, 
 			ArrayList<String> deletePredicatesFromTarget,
-			ArrayList<String> deletePredicatesFromDuplicate) throws Exception {
+			ArrayList<String> deletePredicatesFromDuplicate,
+			RestrictionChecker checker) throws Exception {
+
 
 		this.oInfo = oInfo;
 		this.conn = this.buildConn(conn);
@@ -67,6 +104,7 @@ public class CombineEntitiesWorker extends Thread {
 		this.duplicateLookup = duplicateLookup;
 		this.deletePredicatesFromTarget = deletePredicatesFromTarget != null ? deletePredicatesFromTarget : new ArrayList<String>();
 		this.deletePredicatesFromDuplicate = deletePredicatesFromDuplicate != null ? deletePredicatesFromDuplicate : new ArrayList<String>();
+		this.checker = checker;
 		
 	}
 	
@@ -98,48 +136,50 @@ public class CombineEntitiesWorker extends Thread {
 	 */
 	public void combine() throws Exception {
 
-		this.deleteSkippedProperties();
+		this.deleteUnwantedProperties();
 		this.combineEntities();
 		this.deleteDuplicate();
 	}
 
 	/**
-	 * This must be run before the combine() operations
+	 * If they're not already uris, check that target and duplicate exist
+	 * Check that target and duplicate types are compatible
+	 * 
 	 * @throws Exception - unexpected problem
 	 * @throws SemtkUserException - problem with inputs intended for user
 	 */
 	public void preCheck() throws SemtkUserException, Exception {
 		
-		String targetTypes = null;
-		String duplicateTypes = null;
-		
 		// lookup targetUri and type, throwing exception if either is missing
 		if (this.targetUri != null) {
-			targetTypes = this.confirmUriGetType(this.targetUri, "Target");
+			if (this.targetTypeUris == null) {
+				this.targetTypeUris = this.confirmUriGetType(this.targetUri, "Target").split(" ");
+			}
 		} else {
 			String [] res = this.queryUriAndType(this.targetLookup, "Target");
 			this.targetUri = res[0];
-			targetTypes = res[1];
+			this.targetTypeUris = res[1].split(" ");
 		}
 		
 		// lookup duplicateUri and type, throwing exception if either is missing
 		if (this.duplicateUri != null) {
-			duplicateTypes = this.confirmUriGetType(this.duplicateUri, "Duplicate");
+			if (this.duplicateTypeUris == null) {
+				this.duplicateTypeUris = this.confirmUriGetType(this.duplicateUri, "Duplicate").split(" ");
+			}
 		} else {
 			String [] res = this.queryUriAndType(this.duplicateLookup, "Duplicate");
 			this.duplicateUri = res[0];
-			duplicateTypes = res[1];
+			this.duplicateTypeUris = res[1].split(" ");
 		}
 		
 		// Make sure duplicate's classes are each superclass* of one of target's class
-		for (String duplicateTypeName : duplicateTypes.split(" ")) {
-			this.duplicateClassUri = duplicateTypeName;
+		for (String duplicateTypeName : this.duplicateTypeUris) {
 			OntologyClass duplicateClass = this.oInfo.getClass(duplicateTypeName);
 			if (duplicateClass == null) {
 				throw new SemtkUserException(String.format("Duplicate uri <%s> is a %s in the triplestore.  Class isn't found in the ontology.", this.duplicateUri, duplicateTypeName));
 			}
 			boolean okFlag = false;
-			for (String targetTypeName : targetTypes.split(" ")) {
+			for (String targetTypeName : this.targetTypeUris) {
 				OntologyClass targetClass = this.oInfo.getClass(targetTypeName);
 				if (targetClass == null) {
 					throw new SemtkUserException(String.format("Target uri <%s> is a %s in the triplestore.  Class isn't found in the ontology.", this.targetUri, targetTypeName));
@@ -150,42 +190,77 @@ public class CombineEntitiesWorker extends Thread {
 				}
 			}
 			if (!okFlag) {
-				throw new SemtkUserException(String.format("Duplicate Uri's class %s is not a superClass* of target uri's class: %s", duplicateTypeName, targetTypes));
+				throw new SemtkUserException(String.format("Duplicate Uri's class %s is not a superClass* of target uri's class: %s", duplicateTypeName, targetTypeUris));
 			}
 		}
-		
-        // find actual primary props and delete from secondary (unless it's slated for delete-from-primary)
-        String primaryPropsQuery =  SparqlToXLibUtil.generateSelectOutgoingProps(this.conn, this.oInfo, targetUri);
-        Table primaryPropsTab = this.conn.getDefaultQueryInterface().executeQueryToTable(primaryPropsQuery);
-        for (String primaryPropFound : primaryPropsTab.getColumn(0)) {
-            if (! this.deletePredicatesFromTarget.contains(primaryPropFound)) {
-                // delete from secondary unless it is already slated for deletion from primary
-                this.deletePredicatesFromDuplicate.add(primaryPropFound);
-            }
-        }
 	}
 	
 	
 	/**
-	 * Build nodegroup to delete duplicatePredicatesToSkip
+	 * Delete deletePredicatesFromTarget, deletePredicatesFromDuplicate, duplicate's type(s), anything that would violate cardinality
 	 * @throws Exception
 	 */
-	public void deleteSkippedProperties() throws Exception {
-		// build one-node nodegroup constrained to this.duplicateUri
-
+	public void deleteUnwantedProperties() throws Exception {
+		
+		// always delete this.deletePredicatesFromTarget properties from the target
 		if (deletePredicatesFromTarget.size() > 0) {
 			String sparql = SparqlToXLibUtil.generateDeleteExactProps(this.conn, this.targetUri, this.deletePredicatesFromTarget);
 			this.conn.getDefaultQueryInterface().executeQueryAndConfirm(sparql);
 		}
 		
-		if (this.deletePredicatesFromDuplicate.size() > 0) {
-			String sparql = SparqlToXLibUtil.generateDeleteExactProps(this.conn, this.duplicateUri, this.deletePredicatesFromDuplicate);
-			this.conn.getDefaultQueryInterface().executeQueryAndConfirm(sparql);
+		// check do cardinality restrictions exist on any duplicate properties:
+		Table dupPropCountTab = this.conn.getDefaultQueryInterface().executeQueryToTable(
+				SparqlToXLibUtil.generateCountInstanceProperties(conn, oInfo, duplicateUri)
+				);
+		boolean restrictionsExist = false;
+		for (int i=0; i < dupPropCountTab.getNumRows(); i++) {
+			if (checker.hasCardinalityRestriction(this.targetTypeUris, dupPropCountTab.getCell(i, "prop"))) {
+				restrictionsExist = true;
+				break;
+			}
 		}
+		
+		// initialize properties to be deleted: 
+		// always delete the duplicate's type 
+		// (already checked that it/they are superclass* of target)
+		HashSet<String> deleteFromDup = new HashSet<String>(this.deletePredicatesFromDuplicate);
+		deleteFromDup.add(SparqlToXLibUtil.TYPE_PROP);
+		
+		// if needed, delete things that would violate cardinality
+		if (restrictionsExist) {
+			// get target properties' cardinality counts
+			Table targetPropCountTab = this.conn.getDefaultQueryInterface().executeQueryToTable(
+					SparqlToXLibUtil.generateCountInstanceProperties(conn, oInfo, targetUri)
+					);
+			
+			// loop through all properties not already being delete from duplicate
+			for (int i=0; i < dupPropCountTab.getNumRows(); i++) {
+				String prop = dupPropCountTab.getCell(i, "prop");
+				if (!deleteFromDup.contains(prop)) {
+					
+					// get total cardinality for duplicate prop after combining
+					int targetRow = targetPropCountTab.getFirstMatchingRowNum("prop", prop);
+					int total = dupPropCountTab.getCellAsInt(i, "count");
+					total += (targetRow >= 0) ? targetPropCountTab.getCellAsInt(targetRow, "count") : 0;
+					
+					// prepare to delete from duplicate any prop where combining would violate cardinality
+					// (regardless of whether it is already violated in target)
+					if (!checker.satisfiesCardinality(this.targetTypeUris, prop, total)) {
+						deleteFromDup.add(prop);
+					}
+				}
+			}
+		}
+        
+        // delete properties from the duplicate
+		this.conn.getDefaultQueryInterface().executeQueryAndConfirm(
+				SparqlToXLibUtil.generateDeleteExactProps(this.conn, this.duplicateUri, new ArrayList<String>(deleteFromDup))
+				);
+		
 	}
 	
 	/**
-	 * Build nodegroup to delete the duplicate
+	 * Copy all outgoing and incoming props on duplicate to the target
 	 * @throws Exception
 	 */
 	public void combineEntities() throws Exception {
@@ -198,7 +273,7 @@ public class CombineEntitiesWorker extends Thread {
 	}
 	
 	/**
-	 * Build nodegroup to delete the duplicate
+	 * Delete the duplicate
 	 * @throws Exception
 	 */
 	public void deleteDuplicate() throws Exception {

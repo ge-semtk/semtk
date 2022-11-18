@@ -59,22 +59,22 @@ import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.load.utility.ImportSpecHandler;
-import com.ge.research.semtk.load.utility.IngestionNodegroupBuilder;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
+import com.ge.research.semtk.ontologyTools.CombineEntitiesInConnThread;
 import com.ge.research.semtk.ontologyTools.CombineEntitiesTableThread;
 import com.ge.research.semtk.ontologyTools.CombineEntitiesThread;
 import com.ge.research.semtk.ontologyTools.ConnectedDataConstructor;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.SemtkUserException;
-import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.NodeGroupResultSet;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.services.nodeGroupExecution.requests.CombineEntitiesInConnRequest;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.CombineEntitiesRequest;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.CombineEntitiesTableRequest;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.ConstraintsFromIdRequestBody;
@@ -84,7 +84,6 @@ import com.ge.research.semtk.services.nodeGroupExecution.requests.DispatchFromNo
 import com.ge.research.semtk.services.nodeGroupExecution.requests.DispatchRawSparqlRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.FilterDispatchByIdRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.FilterDispatchFromNodeGroupRequestBody;
-import com.ge.research.semtk.services.nodeGroupExecution.requests.IngestByConnIdCsvStrRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.IngestByIdCsvStrAsyncBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.IngestByIdCsvStrRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.IngestByNodegroupCsvStrAsyncBody;
@@ -101,7 +100,6 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
-import com.ge.research.semtk.sparqlX.XSDSupportedType;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 import com.ge.research.semtk.springutilib.requests.GetClassTemplateRequestBody;
@@ -116,7 +114,6 @@ import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
-import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.LocalLogger;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -1834,12 +1831,49 @@ public class NodeGroupExecutionRestController {
 		}
 		catch (Exception e) {
 			SimpleResultSet err = new SimpleResultSet(false);
-			err.addRationaleMessage(SERVICE_NAME, "dispatchCombineEntities", e);
+			err.addRationaleMessage(SERVICE_NAME, "dispatchCombineEntitiesTable", e);
 			LocalLogger.printStackTrace(e);
 			return err.toJson();
 		}
 	}
 	
+	@Operation(
+			summary=	"Query from conn entities to be combined and combine them."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/dispatchCombineEntitiesInConn", method= RequestMethod.POST)
+	public JSONObject dispatchCombineEntitiesInConn(@RequestBody CombineEntitiesInConnRequest requestBody, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		try {
+			SimpleResultSet res = new SimpleResultSet(true);
+			JobTracker tracker = this.getJobTracker();
+			String jobId = JobTracker.generateJobId();
+			
+			SparqlConnection conn = requestBody.buildSparqlConnection();
+			
+
+			new CombineEntitiesInConnThread(
+					tracker, this.getResultsClient(), jobId, this.retrieveOInfo(conn), conn, 
+					requestBody.getSameAsClassURI(), requestBody.getTargetPropURI(), requestBody.getDuplicatePropURI(),
+					requestBody.getDeletePredicatesFromTarget(), requestBody.getDeletePredicatesFromDuplicate()
+					).start();
+			
+			res.addJobId(jobId);
+			return res.toJson();
+		}
+		catch (SemtkUserException e) {
+			// user exception: no stack trace
+			SimpleResultSet err = new SimpleResultSet(false);
+			err.addOnlyRationaleMessage(e);
+			return err.toJson();
+		}
+		catch (Exception e) {
+			SimpleResultSet err = new SimpleResultSet(false);
+			err.addRationaleMessage(SERVICE_NAME, "dispatchCombineEntitiesInConn", e);
+			LocalLogger.printStackTrace(e);
+			return err.toJson();
+		}
+	}
 	// get the runtime constraints, if any.
 	private JSONArray getRuntimeConstraintsAsJsonArray(String potentialConstraints) throws Exception{
 		JSONArray retval = null;

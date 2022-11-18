@@ -42,7 +42,12 @@ public class CombineEntitiesThread extends Thread {
 			ArrayList<String> deletePredicatesFromTarget, ArrayList<String> deletePredicatesFromDuplicate) throws Exception {
 		this.tracker = tracker;
 		this.jobId = jobId;
-		this.worker = new CombineEntitiesWorker(oInfo, conn, targetUri, duplicateUri, deletePredicatesFromTarget, deletePredicatesFromDuplicate);
+		this.worker = new CombineEntitiesWorker(
+				oInfo, conn, 
+				targetUri, duplicateUri, 
+				deletePredicatesFromTarget, deletePredicatesFromDuplicate, 
+				new RestrictionChecker(conn, oInfo)
+				);
 		
 		// get the job started
 		this.tracker.createJob(this.jobId);
@@ -54,7 +59,7 @@ public class CombineEntitiesThread extends Thread {
 			this.worker.preCheck();
 			
 			this.tracker.setJobPercentComplete(this.jobId, 25, "Deleting skipped properties");
-			this.worker.deleteSkippedProperties();
+			this.worker.deleteUnwantedProperties();
 			
 			this.tracker.setJobPercentComplete(this.jobId, 50, "Combining entities");
 			this.worker.combineEntities();

@@ -339,21 +339,23 @@ public class SparqlToXLibUtil {
 	}
 
 	/**
-	 * Get all outgoing props from a given URI
+	 * Get all props that are shared by subject1 and subject2
 	 * @param conn
 	 * @param oInfo
-	 * @param uri
+	 * @param subject1
+	 * @param subject2
 	 * @return
 	 * @throws Exception
 	 */
-	public static String generateSelectOutgoingProps(SparqlConnection conn, OntologyInfo oInfo, String uri) throws Exception {
+	public static String generateSelectDuplicateProps(SparqlConnection conn, OntologyInfo oInfo, String subject1, String subject2) throws Exception {
 		StringBuilder sparql = new StringBuilder();
 		
 		// select FROM WHERE
 		sparql.append("SELECT ?prop \n");
 		sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
 		sparql.append("WHERE { \n");
-		sparql.append(String.format("    %s ?prop ?o .", XSDSupportedType.URI.buildRDF11ValueString(uri)));
+		sparql.append(String.format("    %s ?prop ?o1 . \n", XSDSupportedType.URI.buildRDF11ValueString(subject1)));
+		sparql.append(String.format("    %s ?prop ?o2 . \n", XSDSupportedType.URI.buildRDF11ValueString(subject2)));
 		sparql.append("}");
 		
 		return sparql.toString();
@@ -673,6 +675,17 @@ public class SparqlToXLibUtil {
 		ret.append("  } \n");
 		ret.append("} \n");
 		return ret.toString();
+	}
+	
+	public static String generateCountInstanceProperties(SparqlConnection conn, OntologyInfo oInfo, String itemURI) throws Exception {
+		return "select distinct ?prop (count (?obj) as ?count)  \n"
+				+ generateSparqlFromOrUsing("", "FROM", conn, oInfo)
+				+ " where {\n"
+				+ "\n"
+				+ "	 <" + itemURI + "> ?prop ?obj.\n"
+				+ "\n"
+				+ "} group by ?prop\n";
+				
 	}
 	
 	public static String generateGraphClause(SparqlEndpointInterface sei, String tab) {
