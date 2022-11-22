@@ -26,23 +26,22 @@ public class CombineEntitiesInConnRequest extends SparqlConnectionRequest {
 
 	
 	@Schema(
-			description = "URI of class that connects entities to be combined",
-			required = true,
-			example = "uri://myModel#SameAs")
-	private String sameAsClassURI = null;
+			description = "Override URI of class that connects entities to be combined",
+			required = false,
+			example = "http://research.ge.com/semtk/EntityResolution#SameAs")
+	private String sameAsClassURI = "http://research.ge.com/semtk/EntityResolution#SameAs";
 	
 	@Schema(
-			description = "URI of property connecting sameAsClass instance to target entity to be combined",
-			required = true,
-			example = "uri://myModel#SameAs")
-	private String targetPropURI = null;
+			description = "Override URI of property connecting sameAsClass instance to target entity to be combined",
+			required = false,
+			example = "http://research.ge.com/semtk/EntityResolution#target")
+	private String targetPropURI = "http://research.ge.com/semtk/EntityResolution#target";
 	
 	@Schema(
-			description = "URI of property connecting sameAsClass instance to duplicate entity to be combined",
-			required = true,
-			example = "uri://myModel#SameAs")
-	private String duplicatePropURI = null;
-	
+			description = "Override URI of property connecting sameAsClass instance to duplicate entity to be combined",
+			required = false,
+			example = "http://research.ge.com/semtk/EntityResolution#duplicate")
+	private String duplicatePropURI = "http://research.ge.com/semtk/EntityResolution#duplicate";
 	
 	@Schema(
 			description = "list of predicates to delete from duplicate instance before merge",

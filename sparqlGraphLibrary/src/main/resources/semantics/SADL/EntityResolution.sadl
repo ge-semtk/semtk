@@ -1,0 +1,30 @@
+uri "http://research.ge.com/semtk/EntityResolution" alias EntityResolution.
+
+
+SameAs is a top-level class,
+	described by target with a single value of type class,
+	described by duplicate with a single value of type class.
+
+
+
+// -- range for examples	
+// THING is a class.		
+	
+
+// -- simple example of subclassing SameAs with your own type(SAME_AS1) and range (THING)	
+//
+//  SAME_AS1 is a type of SameAs.
+//  target of SAME_AS1 only has values of type THING.
+//  duplicate of SAME_AS1 only has values of type THING.
+
+
+// -- example of subclassing SameAs with your own type (SAME_AS2)
+//    and changing the names of the properties to 'primary' and 'secondary'
+//    and setting the range to THING
+//
+//  SAME_AS2 is a type of SameAs,
+// 	   described by primary with a single value of type THING,
+// 	   described by secondary with a single value of type THING.
+// 
+//  primary is a type of target.
+//  secondary is a type of duplicate.

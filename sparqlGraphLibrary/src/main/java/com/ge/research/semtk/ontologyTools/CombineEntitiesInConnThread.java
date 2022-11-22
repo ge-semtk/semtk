@@ -27,6 +27,10 @@ import com.ge.research.semtk.utility.LocalLogger;
  *
  */
 public class CombineEntitiesInConnThread extends Thread {
+	
+	private static int BATCH_SIZE = 2000;
+	private static int ERROR_LIMIT = 100;
+	
 	private JobTracker tracker;
 	private ResultsClient resultsClient;
 	private String jobId;
@@ -125,7 +129,7 @@ public class CombineEntitiesInConnThread extends Thread {
 		
 		
 		try {
-			String nextBatchQuery = this.generateGetNextSameAsBatchSparql();
+			String nextBatchQuery = this.generateGetNextSameAsBatchSparql(BATCH_SIZE);
 			int numSameAs = this.countSameAs();
 			ArrayList<String> sameAsUriList = new ArrayList<String>();
 			int recordsProcessed = 0;
@@ -173,13 +177,17 @@ public class CombineEntitiesInConnThread extends Thread {
 			} while (batchTable.getNumRows() > 0);
 
 			if (recordsProcessed == numSameAs) {
-				// success
-				this.tracker.setJobSuccess(this.jobId, String.format("Combined %d pairs of entities.", recordsProcessed));
+				
+				if (recordsProcessed > 0) 
+					this.tracker.setJobSuccess(this.jobId, String.format("Combined %d pairs of entities.", recordsProcessed));
+				else
+					this.tracker.setJobFailure(this.jobId, "Nothing to combine.");
+			
 			} else {
 				
 				// query leftover SameAs and fail
 				Table t = this.conn.getDefaultQueryInterface().executeQueryToTable(
-						this.generateGetAllSameAsSparql());
+						this.generateGetAllSameAsSparql(ERROR_LIMIT));
 				if (t.getNumRows() != 0) {
 					for (int i=0; i < t.getNumRows(); i++) {
 						this.errorTab.addRow(new String [] {
@@ -240,7 +248,7 @@ public class CombineEntitiesInConnThread extends Thread {
 		
 		// precheck no object is duplicate to 2 different sameAs
 		t = this.conn.getDefaultQueryInterface().executeQueryToTable(
-				this.generateGetBadSameAsDuplicates());
+				this.generateGetBadSameAsDuplicates(ERROR_LIMIT));
 		if (t.getNumRows() != 0) {
 			for (int i=0; i < t.getNumRows(); i++) {
 				this.errorTab.addRow(new String [] {
@@ -252,7 +260,7 @@ public class CombineEntitiesInConnThread extends Thread {
 		
 		// precheck no object is target==duplicate
 		t = this.conn.getDefaultQueryInterface().executeQueryToTable(
-				this.generateGetBadSameAsDupEqTarget());
+				this.generateGetBadSameAsDupEqTarget(ERROR_LIMIT));
 		if (t.getNumRows() != 0) {
 			for (int i=0; i < t.getNumRows(); i++) {
 				this.errorTab.addRow(new String [] {
@@ -264,7 +272,7 @@ public class CombineEntitiesInConnThread extends Thread {
 		
 		// precheck no missing or multiple target or duplicate
 		t = this.conn.getDefaultQueryInterface().executeQueryToTable(
-				this.generateGetBadSameCardinalityErr());
+				this.generateGetBadSameCardinalityErr(ERROR_LIMIT));
 		if (t.getNumRows() != 0) {
 			for (int i=0; i < t.getNumRows(); i++) {
 				this.errorTab.addRow(new String [] {
@@ -274,20 +282,26 @@ public class CombineEntitiesInConnThread extends Thread {
 		}
 		this.tracker.setJobPercentComplete(this.jobId, 3 / 8);
 		
-		// Worker checks individual things like type
-		t = this.conn.getDefaultQueryInterface().executeQueryToTable(this.generateGetCombiningDiffTypes());
-	
-		for (int i=0; i < t.getNumRows(); i++) {
-			CombineEntitiesWorker worker = new CombineEntitiesWorker(oInfo, conn, 
-					t.getCell(i, "target"), t.getCell(i, "duplicate"), 
-					this.deletePredicatesFromTarget, this.deletePredicatesFromDuplicate,
-					checker);
-			try {
-				worker.preCheck();
-			} catch (SemtkUserException e) {
-				this.errorTab.addRow(new String [] {e.getMessage()});
+	    // run preCheck BATCH_SIZE at a time
+		int offset = 0;
+		do {
+			// check type
+			t = this.conn.getDefaultQueryInterface().executeQueryToTable(this.generateGetCombiningDiffTypes(BATCH_SIZE, offset));
+		
+			for (int i=0; i < t.getNumRows(); i++) {
+				CombineEntitiesWorker worker = new CombineEntitiesWorker(oInfo, conn, 
+						t.getCell(i, "target"), t.getCell(i, "duplicate"), 
+						this.deletePredicatesFromTarget, this.deletePredicatesFromDuplicate,
+						checker);
+				try {
+					worker.preCheck();
+				} catch (SemtkUserException e) {
+					this.errorTab.addRow(new String [] {e.getMessage()});
+				}
 			}
-		}
+			offset += BATCH_SIZE;
+		} while (t.getNumRows() == BATCH_SIZE);
+		
 		this.tracker.setJobPercentComplete(this.jobId, 4 / 8);
 	}
 	
@@ -315,6 +329,25 @@ public class CombineEntitiesInConnThread extends Thread {
 	
 	// TODO move queries to SparqlToXLibUtils
 	
+	private String importClause() {
+		return "prefix rdfs:<http://www.w3.org/2000/01/rdf-schema#> \n";
+	}
+	
+	private String sameAsClause(String var) {
+		String typeName = var + "_type";
+		return    "    " + typeName + " rdfs:subClassOf* <" + this.sameAsTypeUri + "> . " + var + " a " + typeName + " . \n";
+	}
+	
+	private String targetClause(String subject, String object) {
+		String propName = subject + "_" + object.substring(1) +  "_prop";
+		return    "    " + propName + " rdfs:subPropertyOf* <" + this.targetPropUri + "> . " + subject + " " + propName + " " + object + ". \n";
+	}
+	
+	private String duplicateClause(String subject, String object) {
+		String propName = subject + "_" + object.substring(1) +  "_prop";
+		return    "    " + propName + " rdfs:subPropertyOf* <" + this.duplicatePropUri + "> . " + subject + " " + propName + " " + object + ". \n";
+	}
+	
 	/**
 	 * Get SameAs that can be processed in next batch because duplicate has no other incoming
 	 * Current SPARQL generation and nodegroups are not powerful enough to do this because:
@@ -324,124 +357,136 @@ public class CombineEntitiesInConnThread extends Thread {
 	 * @return
 	 * @throws Exception
 	 */
-	private String generateGetNextSameAsBatchSparql() throws Exception {
+	private String generateGetNextSameAsBatchSparql(int limit) throws Exception {
 
 		String query =  
+				this.importClause() +
 				"select distinct ?same_as ?target ?duplicate (GROUP_CONCAT (?target_type ) as ?target_types)  (GROUP_CONCAT (?duplicate_type ) as ?duplicate_types)\n"
 				+ SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", this.conn, this.oInfo) + "\n"
 				+ " where {\n"
-				+ "     ?same_as a <" + this.sameAsTypeUri + "> .\n"
-				+ "	    ?same_as <" + this.targetPropUri + "> ?target .\n"
-				+ "     ?same_as <" + this.duplicatePropUri + "> ?duplicate.\n"
-				+ "     ?target a ?target_type.\n"
-				+ "     ?duplicate a ?duplicate_type.\n"
+				+ "     " + this.sameAsClause("?same_as")
+				+ "     " + this.targetClause("?same_as", "?target") 
+				+ "     " + this.duplicateClause("?same_as", "?duplicate") 
 				+ "     filter not exists {\n"
-				+ "	        ?other1 <" + this.targetPropUri + "> ?duplicate.\n"
+				+ "         " + this.targetClause("?other1", "?duplicate")
 				+ "	        FILTER (?other1 != ?same_as) . \n"
 				+ "	    }\n"
  				+ "     filter not exists {\n"
-				+ "		    ?other2 <" + this.duplicatePropUri + "> ?duplicate.\n"
+				+ "         " + this.duplicateClause("?other1", "?duplicate")
 				+ "		    FILTER (?other2 != ?same_as) . \n"
 				+ "	    }\n"
+				+ "     ?target a ?target_type. \n"
+				+ "     ?duplicate a ?duplicate_type. \n"
 				+ "}\n"
-				+ "GROUP BY ?same_as ?target ?duplicate";
+				+ "GROUP BY ?same_as ?target ?duplicate \n" 
+				+ "LIMIT " + String.valueOf(limit);
 			
 		return query;
 	}
 	
-	private String generateGetAllSameAsSparql() throws Exception {
+	private String generateGetAllSameAsSparql(int limit) throws Exception {
 
-		String query =  String.format(
-				"select distinct ?same_as ?target ?duplicate\n"
-				+ "%s\n"
+		String query =  
+				this.importClause()
+				+ "select distinct ?same_as ?target ?duplicate\n"
+				+ SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", this.conn, this.oInfo) + "\n"
 				+ " where {\n"
-				+ "     ?same_as a <%s> .\n"
-				+ "	    ?same_as <%s> ?target .\n"
-				+ "     ?same_as <%s> ?duplicate.\n"
-				+ "}\n"
-				+ "",
-				SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", this.conn, this.oInfo),
-				this.sameAsTypeUri,
-				this.targetPropUri, 
-				this.duplicatePropUri
-				);
+				+ "     " + this.targetClause("?same_as", "?target") 
+				+ "     " + this.duplicateClause("?same_as", "?duplicate") 
+				+ "     " + this.sameAsClause("?same_as")
+				+ "}\n";
 				
 		return query;
 	}
 	
-	private String generateGetCombiningDiffTypes() throws Exception {
+	private String generateGetCombiningDiffTypes(int limit, int offset) throws Exception {
 
 		String query = 
-				"select distinct ?same_as ?target ?duplicate\n"
+				this.importClause()
+				+ "select distinct ?same_as ?target ?duplicate\n"
 				+ SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", this.conn, this.oInfo) + "\n"
 				+ " where {\n"
-				+ "	    ?same_as1 <" + this.targetPropUri + "> ?target .\n"
-				+ "     ?same_as1 <" + this.duplicatePropUri + "> ?duplicate.\n"
+				+ "     " + this.targetClause("?same_as", "?target")
+				+ "     " + this.duplicateClause("?same_as", "?duplicate")
 				+ "     ?target a ?t1. \n"
-				+ "     ?duplicate a ?t2. \n"
-				+ "     filter (?t1 != ?t2).\n"
-				+ "     ?same_as1 a <" + this.sameAsTypeUri + "> .\n"
+				+ "     filter not exists { ?duplicate a ?t1 } . \n"
+				+ "     " + this.sameAsClause("?same_as")
 				+ "}\n"
+				+ "limit " + String.valueOf(limit) + " \n"
+				+ "offset " + String.valueOf(offset) + " \n"
 				;
 		
 				
 		return query;
 	}
 	
-	private String generateGetBadSameAsDuplicates() throws Exception {
+	/** 
+	 * two different sameAs have the same dupicate
+	 * @return
+	 * @throws Exception
+	 */
+	private String generateGetBadSameAsDuplicates(int limit) throws Exception {
 
 		String query = 
-				"select distinct ?same_as1 ?same_as2 ?duplicate\n"
+				this.importClause()
+				+ "select distinct ?same_as1 ?same_as2 ?duplicate\n"
 				+ SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", this.conn, this.oInfo) + "\n"
 				+ " where {\n"
-				+ "	    ?same_as1 <" + this.duplicatePropUri + "> ?duplicate .\n"
-				+ "     ?same_as2 <" + this.duplicatePropUri + "> ?duplicate.\n"
+				+ "     " + this.duplicateClause("?same_as1", "?duplicate")
+				+ "     " + this.duplicateClause("?same_as2", "?duplicate")
 				+ "     filter (?same_as2 != ?same_as1).\n"
-				+ "     ?same_as1 a <" + this.sameAsTypeUri + "> .\n"
-				+ "     ?same_as2 a <" + this.sameAsTypeUri + "> .\n"
+				+ "     " + this.sameAsClause("?same_as1")
+				+ "     " + this.sameAsClause("?same_as2")
 				+ "}\n"
 				;
 				
 		return query;
 	}
 	
-	private String generateGetBadSameAsDupEqTarget() throws Exception {
+	/**
+	 * Target and duplicate point to same instance
+	 * @return
+	 * @throws Exception
+	 */
+	private String generateGetBadSameAsDupEqTarget(int limit) throws Exception {
 
 		String query = 
-				"select distinct ?same_as1 ?object\n"
+				this.importClause()
+				+ "select distinct ?same_as1 ?object\n"
 				+ SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", this.conn, this.oInfo) + "\n"
 				+ " where {\n"
-				+ "	    ?same_as1 <" + this.targetPropUri    + "> ?object .\n"
-				+ "     ?same_as1 <" + this.duplicatePropUri + "> ?object.\n"
-				+ "     ?same_as1 a <" + this.sameAsTypeUri + "> .\n"
+				+ "     " + this.targetClause("?same_as", "?object")
+				+ "     " + this.duplicateClause("?same_as", "?object")
+				+ "     " + this.sameAsClause("?same_as")
 				+ "}\n"
 				;
 				
 		return query;
 	}
 	
-	private String generateGetBadSameCardinalityErr() throws Exception {
+	private String generateGetBadSameCardinalityErr(int limit) throws Exception {
 
 		String query = 
-				"select distinct ?same_as \n"
+				this.importClause()
+				+ "select distinct ?same_as \n"
 				+ SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", this.conn, this.oInfo) + "\n"
 				+ " where {\n"
 				+ "     { \n"
-				+ "	    	?same_as <" + this.targetPropUri    + "> ?object1 .\n"
-				+ "	    	?same_as <" + this.targetPropUri    + "> ?object2 .\n"
+				+ "         " + this.targetClause("?same_as", "?object1")
+				+ "         " + this.targetClause("?same_as", "?object2")
 				+ "         FILTER (?object1 != ?object2) ."
-				+ "         ?same_as a <" + this.sameAsTypeUri + "> .\n"
+				+ "         " + this.sameAsClause("?same_as")
 				+ "     } UNION { \n"
-				+ "	    	?same_as <" + this.duplicatePropUri    + "> ?object1 .\n"
-				+ "	    	?same_as <" + this.duplicatePropUri    + "> ?object2 .\n"
+				+ "         " + this.duplicateClause("?same_as", "?object1")
+				+ "         " + this.duplicateClause("?same_as", "?object2")
 				+ "         FILTER (?object1 != ?object2) ."
-				+ "         ?same_as a <" + this.sameAsTypeUri + "> .\n"
+				+ "         " + this.sameAsClause("?same_as")
 				+ "     } UNION { \n"
-				+ "         ?same_as a <" + this.sameAsTypeUri + "> .\n"
-				+ "         FILTER NOT EXISTS { ?same_as <" + this.targetPropUri + "> ?object } .\n"
+				+ "         " + this.sameAsClause("?same_as")
+				+ "         FILTER NOT EXISTS { " + this.targetClause("?same_as", "?object")+ " } .\n"
 				+ "     } UNION { \n"
-				+ "         ?same_as a <" + this.sameAsTypeUri + "> .\n"
-				+ "         FILTER NOT EXISTS { ?same_as <" + this.duplicatePropUri + "> ?object } .\n"
+				+ "         " + this.sameAsClause("?same_as")
+				+ "         FILTER NOT EXISTS { " + this.duplicateClause("?same_as", "?object")+ " } .\n"
 				+ "     }\n"
 				+ "}\n"
 				;
