@@ -2412,10 +2412,12 @@ public class NodeGroup {
 	
 	private String generateSparqlSubgraphClausesNode(ClauseTypes clauseType, Node snode, Returnable targetObj, ArrayList<Node> doneNodes, ArrayList<Integer> doneUnions, String tab) throws Exception  {
 		StringBuilder sparql = new StringBuilder();
+		StringBuilder optionals = new StringBuilder();
+		String clause = null;
 		
 		// check to see if this node has already been processed. 
 		if (doneNodes.contains(snode)) {
-			return sparql.toString();
+			return "";
 		} else {
 			doneNodes.add(snode);
 		}
@@ -2443,7 +2445,11 @@ public class NodeGroup {
 				Integer unionKey = this.getUnionKey(snode, prop);
 				
 				if (unionKey == null || clauseType == ClauseTypes.CONSTRUCT_LEADER) {
-					sparql.append( this.generateSparqlSubgraphClausesPropItem(clauseType, snode, prop, targetObj, tab) );
+					clause = this.generateSparqlSubgraphClausesPropItem(clauseType, snode, prop, targetObj, tab);
+					if (prop.getOptMinus() == PropertyItem.OPT_MINUS_OPTIONAL) 
+						optionals.append(clause);
+					else
+						sparql.append(clause);
 				} else if (! doneUnions.contains(unionKey)) {
 					sparql.append( this.generateSparqlSubgraphClausesUnion(clauseType, unionKey, targetObj, doneNodes, doneUnions, tab) );
 				}
@@ -2470,7 +2476,11 @@ public class NodeGroup {
 				if (myDone <= targetDone) { // less-then-equal-to to catch self edges
 					Integer unionKey = this.getUnionKey(snode, nItem, targetNode);
 					if (unionKey == null || clauseType == ClauseTypes.CONSTRUCT_LEADER) {
-						sparql.append(this.generateSparqlSubgraphClausesNodeItem(clauseType, false, snode, nItem, targetNode, targetObj, doneNodes, doneUnions, tab));
+						clause = this.generateSparqlSubgraphClausesNodeItem(clauseType, false, snode, nItem, targetNode, targetObj, doneNodes, doneUnions, tab);
+						if (nItem.getOptionalMinus(targetNode) == NodeItem.OPTIONAL_TRUE || nItem.getOptionalMinus(targetNode) == NodeItem.OPTIONAL_REVERSE )
+							optionals.append(clause);
+						else
+							sparql.append(clause);
 					} else if (unionKey >= 0) {
 						sparql.append(this.generateSparqlSubgraphClausesUnion(clauseType, unionKey, targetObj, doneNodes, doneUnions, tab));
 					} else {
@@ -2490,9 +2500,11 @@ public class NodeGroup {
 			if (myDone < sourceDone) { // less-than to avoid self-edges
 				Integer unionKey = this.getUnionKey(incomingSNode, nItem, snode);
 				if (unionKey == null || clauseType == ClauseTypes.CONSTRUCT_LEADER) {
-					sparql.append(
-							this.generateSparqlSubgraphClausesNodeItem(clauseType, true, incomingSNode, nItem, snode, targetObj, doneNodes, doneUnions, tab )
-							);
+					clause = this.generateSparqlSubgraphClausesNodeItem(clauseType, true, incomingSNode, nItem, snode, targetObj, doneNodes, doneUnions, tab );
+					if (nItem.getOptionalMinus(snode) == NodeItem.OPTIONAL_TRUE || nItem.getOptionalMinus(snode) == NodeItem.OPTIONAL_REVERSE )
+						optionals.append(clause);
+					else
+						sparql.append(clause);
 				} else if (unionKey >= 0) {		
 					//throw new Exception("SPARQL-generation is confused at non-reversed UNION nodeItem ...
 				} else {
@@ -2500,7 +2512,9 @@ public class NodeGroup {
 				}
 			}
 		}
-		
+
+		// put optionals last
+		sparql.append(optionals.toString());
 		return sparql.toString();
 	}
 
@@ -2831,49 +2845,58 @@ public class NodeGroup {
 	private String generateSparqlTypeClause(Node node, String tab, ClauseTypes clauseType) throws Exception  {
 		String retval = "";
 		
-		// Get range which is union of ranges of all incoming properties
-		ArrayList<String> constrainedTypes = this.getConnectingRange(node);
-		boolean constrainedByIncoming = (constrainedTypes.size() == 1 && constrainedTypes.get(0).equals(node.getFullUriName()));
+		// Do incoming and outgoing properties define the type of this Node
+		boolean constrainedByIncoming = false;
+		if (this.oInfo != null) {
+			// OLD
+			// Set<String> constrainedTypes = new HashSet<String>();  
+			// constrainedTypes.addAll(this.getConnectingRange(node));
+			
+			// NEW - messing up nodeHasOnlyOptionals()   test:  QueryGenTest_IT.optionalProp()
+			Set<String> constrainedTypes = this.getNodeTypesFromConnections(node);  
+			constrainedByIncoming = (constrainedTypes.size() == 1 && constrainedTypes.iterator().next().equals(node.getFullUriName()));
+		}
 		
 		// skip SADL lists for now, in order to get something that gracefully declines to handle them correctly
 		if (node.getFullUriName().equals("http://sadl.org/sadllistmodel#List")) 
-			return retval;
+			return "";
 		
-		// skip if type isn't returned, not CONSTRUCT, and incoming range gives us the type
-		// added nodeHasOnlyOptionals so we don't accidentally have a {} that starts with optional
-		if (! this.nodeHasOnlyOptionals(node) &&
-				!node.getIsTypeReturned() && 
-				clauseType != ClauseTypes.CONSTRUCT_LEADER &&
-				clauseType != ClauseTypes.CONSTRUCT_WHERE &&
-				constrainedByIncoming
-				)
-			return retval;
-		
-		
-		// Determine subclasses:  unknown, empty list, or list
-		ArrayList<String> subClassNames = null;
-		if (this.oInfo != null) {
-			subClassNames = new ArrayList<String>();
-			subClassNames.addAll(this.oInfo.getSubclassNames(node.getFullUriName()));
+		if (clauseType == ClauseTypes.CONSTRUCT_LEADER) {
+			return tab + node.getBindingOrSparqlID()  + " a " + node.getTypeSparqlID() + " .\n";
 		}
 		
-		// only construct leader uses the binding, rest use sparqlID
-		String nodeId = (clauseType == ClauseTypes.CONSTRUCT_LEADER) ? node.getBindingOrSparqlID() : node.getSparqlID();
-		
 		// "?Node a ?Node_type"  (usually needed)
-		String typeSparqlIdClause = tab + nodeId + " a " + node.getTypeSparqlID() + " .\n";
-
-		if (clauseType == ClauseTypes.CONSTRUCT_LEADER) {
-			// CONSTRUCT_LEADER is always just "?Node a ?Node_type"
-			retval = typeSparqlIdClause;
-			
-		} else if (subClassNames == null) {
+		String typeSparqlIdClause = tab + node.getSparqlID() + " a " + node.getTypeSparqlID() + " .\n";
+				
+		// skip if type isn't returned, not CONSTRUCT, and incoming range gives us the type
+		// added nodeHasOnlyOptionals so we don't accidentally have a {} that starts with optional
+		if (constrainedByIncoming && 
+				!this.nodeHasOnlyOptionals(node) &&
+				!node.getIsTypeReturned()) {
+			if (clauseType == ClauseTypes.CONSTRUCT_WHERE)  {
+				// CONSTRUCT_WHERE needs type clause always
+				return typeSparqlIdClause;
+			}  else {
+				return "";
+			}
+		}
+		
+		// bail with basic clause if no oInfo
+		if (this.oInfo == null) {
 			// no oinfo
 			// ?Node_type  rdfs:subClassOf*  http://prefix#SomeType
 			retval += typeSparqlIdClause;
 			retval += tab + node.getTypeSparqlID() +  "  rdfs:subClassOf* " + this.applyPrefixing(node.getFullUriName()) + " .\n";
+			return retval;
+		}
+		
+		
+		// Determine subclasses:  unknown, empty list, or list
+		ArrayList<String> subClassNames =  new ArrayList<String>();
+		subClassNames.addAll(this.oInfo.getSubclassNames(node.getFullUriName()));
+	
 
-		} else if (subClassNames.size() == 0) {
+		if (subClassNames.size() == 0) {
 			// Only one possible class
 			
 			if (node.getIsTypeReturned() || clauseType == ClauseTypes.CONSTRUCT_WHERE ) {
@@ -2882,7 +2905,7 @@ public class NodeGroup {
 				retval += typeSparqlIdClause;
 			}
 			// ?Node a <http://prefix#Class>
-			retval += tab + nodeId + " a " + this.applyPrefixing(node.getFullUriName()) + " .\n";
+			retval += tab + node.getSparqlID() + " a " + this.applyPrefixing(node.getFullUriName()) + " .\n";
 
 			
 		} else {
@@ -4499,6 +4522,108 @@ public class NodeGroup {
 		return ret;
 	}
 	
+	/**
+	 * What classes could a node be, based only on incoming and outgoing object and data props (not rdf:type)
+	 * @param node
+	 * @return set of classes 
+	 * @throws Exception
+	 */
+	private HashSet<String> getNodeTypesFromConnections(Node node) throws Exception {
+		HashSet<String> ret = new HashSet<String>();
+		
+		if (this.oInfo == null)
+			throw new Exception("Internal error: oInfo is null.  Function unavailable");
+		
+		// collect all data and object properties
+		HashSet<OntologyProperty> oPropSet = new HashSet<OntologyProperty>();
+		for (PropertyItem p : node.getReturnedPropertyItems()) {
+			if (p.getOptMinus() == PropertyItem.OPT_MINUS_NONE) {
+				// add non-optional properties
+				oPropSet.add(this.oInfo.getProperty(p.getUriRelationship()));
+			}
+		}
+		for (NodeItem n : node.getConnectedNodeItems()) {
+			for (Node obj : n.getNodeList()) {
+				if (n.getOptionalMinus(obj) == NodeItem.OPTIONAL_FALSE) {
+					// add if no form of OPTIONAL or MINUS or REVERSE
+					// since all could potentially match nothing and wouldn't constrain
+					oPropSet.add(this.oInfo.getProperty(n.getUriConnectBy()));
+				}
+			}
+		}
+		
+		// loop through outgoing props
+		for (OntologyProperty oProp : oPropSet) {			
+			if (ret.size() == 0) {
+				ret.addAll(this.removeSubclassNames(oProp.getRangeDomains()));
+			} else {
+				HashSet<String> newRet = new HashSet<String>();
+
+				// keep in ret only the subclass(es) that intersect(s) the domain
+				for (String domain : this.removeSubclassNames(oProp.getRangeDomains())) {
+					for (String r : ret) {
+						if (domain.equals(r) || this.oInfo.isSubclassOf(r, domain)) {
+							newRet.add(r);
+						} else if (this.oInfo.isSubclassOf(domain, r)) {
+							newRet.add(domain);
+						}
+					}
+				}
+				if (newRet.size() == 0) {
+					throw new Exception("Inconsistent props on " + node.getBindingOrSparqlID() + " prop " + oProp.getNameStr());
+				} else {
+					ret = newRet;
+				}
+			}
+		}
+		
+		// repeat logic with ranges of incoming object properties
+		for (NodeItem ni : this.getConnectingNodeItems(node)) {
+			if (ni.getOptionalMinus(node) == NodeItem.OPTIONAL_FALSE) {
+				
+				if (ret.size() == 0) {
+					ret.addAll( this.removeSubclassNames(ni.getRangeUris()));
+				} else {
+					HashSet<String> newRet = new HashSet<String>();
+
+					// keep in ret only the subclass(es) that intersect(s) the range
+					for (String range : this.removeSubclassNames(ni.getRangeUris())) {
+						for (String r : ret) {
+							if (range.equals(r) || this.oInfo.isSubclassOf(r, range)) {
+								newRet.add(r);
+							} else if (this.oInfo.isSubclassOf(range, r)) {
+								newRet.add(range);
+							}
+						}
+					}
+					if (newRet.size() == 0) {
+						throw new Exception("Inconsistent incoming connn " + node.getBindingOrSparqlID() + " prop " + ni.getKeyName());
+					} else {
+						ret = newRet;
+					}
+				}
+			}
+		}
+		
+		return ret;
+	}
+	
+	private HashSet<String> removeSubclassNames(Set<String> in) {
+		HashSet<String> ret = new HashSet<String>();
+
+		for (String i : in) {
+			boolean add = true;
+			for (String j : in) {
+				if (!j.equals(i) && this.oInfo.isSubclassOf(i, j)) {
+					add= false;
+					break;
+				}
+			}
+			if (add)
+				ret.add(i);
+		}
+		return ret;
+	}
 
 	public String generateSparqlDelete() throws Exception {
 		this.buildPrefixHash();

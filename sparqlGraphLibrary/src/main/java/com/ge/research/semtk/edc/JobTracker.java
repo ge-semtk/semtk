@@ -86,6 +86,16 @@ public class JobTracker {
 		}
 	}
 	
+	public static void uploadOwlModel(JobTracker tracker) throws Exception {
+		String key = tracker.sei.getServerAndPort() + tracker.sei.getGraph();
+		checkedOwl.add(key);
+		SparqlEndpointInterface sei = tracker.createSuperuserEndpoint();
+		InputStream owlStream = JobTracker.class.getResourceAsStream("/semantics/OwlModels/serviceJob.owl");
+		sei.clearPrefix("http://research.ge.com/semtk/services/job");
+		sei.uploadOwl(owlStream.readAllBytes());
+		owlStream.close();
+	}
+	
 	/**
 	 * If needed, upload serviceJob.owl to given tracker's triplestore server/graph
 	 * @param tracker
@@ -298,7 +308,8 @@ public class JobTracker {
 	        "INSERT { " +
 	        "   ?Job job:percentComplete %d . \n" +
 	        "   ?Job job:status job:InProgress . \n" +
-	        "   ?Job job:statusMessage '%s' ." +
+	        "   job:InProgress a job:Status . \n " +
+	        "   ?Job job:statusMessage '%s' . \n" +
 	        "} \n" +
 	        "WHERE {\n" +
 	        "   ?Job job:id '%s' . \n" +
@@ -341,6 +352,7 @@ public class JobTracker {
 			"   ?Job job:percentComplete 100 .  \n" +
 	        "   ?Job job:statusMessage '%s' . \n" +
 	        "   ?Job job:status job:Failure . \n" +
+	        "   job:Failure a job:Status . \n " +
 	        "} \n" +
 	        "WHERE { \n" +
 	        "   ?Job job:id '%s' . \n" +
@@ -528,6 +540,7 @@ public class JobTracker {
 				"   ?Job job:percentComplete 100 .  \n" +
 				"   ?Job job:statusMessage '%s' . \n" +
 				"   ?Job job:status job:Success. \n" +
+				"   job:Success a job:Status . \n" +
 				"} \n" +
 		        "WHERE { \n" +
 				"   ?Job job:id '%s' . \n" +
@@ -570,14 +583,18 @@ public class JobTracker {
 		        "WITH <" + this.sei.getGraph() + "> " +
 		        "DELETE { " +
 		        "   ?Job job:fullResultsURL ?fullURI. \n" +
+		        "   ?fullURI a job:URL . \n" +
 		        "   ?fullURI job:full ?fullURL .  \n" +
 		        "   ?Job job:sampleResultsURL ?sampleURI. \n" +
 		        "   ?sampleURI job:full ?sampleURL . \n" +
+		        "   ?sampleURI a job:URL . \n" +
 		        "} \n" +
 		        "INSERT { " +
 		        "   ?Job job:fullResultsURL <%s>. \n" +
+		        "   <%s> a job:URL . \n " + 
 		        "   <%s> job:full '%s' .  \n" +
 		        "   ?Job job:sampleResultsURL <%s>. \n" +
+		        "   <%s> a job:URL . \n " +
 		        "   <%s> job:full '%s' . \n" +
 		        "} \n" +
 		        "WHERE {\n" +
@@ -589,9 +606,11 @@ public class JobTracker {
 		        "}",
 		        uriFullURL, 
 		        uriFullURL, 
+		        uriFullURL, 
 		        SparqlToXUtils.safeSparqlString(fullResultsURL.toString()), 
 		        uriSampleURL, 
 		        uriSampleURL, 
+		        uriSampleURL,
 		        ((sampleResultsURL != null) ? SparqlToXUtils.safeSparqlString(sampleResultsURL.toString()) : ""), 
 		        SparqlToXUtils.safeSparqlString(jobId));
 		// LocalLogger.logToStdErr(query);
@@ -733,9 +752,7 @@ public class JobTracker {
 	        " \n" +
 	        "WITH <" + this.sei.getGraph() + "> " +
 	        "DELETE { " +
-            "?job job:creationTime ?x. \n" +
-	        "?job job:percentComplete ?y. \n" +
-	        "?job job:status ?w. \n" +
+            "?job ?pred ?obj . \n " +
 	        "} \n" +
 	        "INSERT { " +
 	        "?job a job:Job. \n" + 
@@ -744,6 +761,7 @@ public class JobTracker {
 	        "?job job:percentComplete 0 . \n" +
 	        "?job job:userName '%s' . \n" +
 	        "?job job:status job:InProgress. \n" +
+			"job:InProgress a job:Status. \n" +
 	        "}\n" +
 	        "WHERE {\n" +
 	        "BIND (<%s> AS ?job)\n" +

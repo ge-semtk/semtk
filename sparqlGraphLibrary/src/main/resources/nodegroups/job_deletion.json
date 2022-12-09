@@ -34,7 +34,7 @@
 				"isRuntimeConstrained": false,
 				"valueConstraint": "",
 				"instanceValue": null,
-				"deletionMode": "FULL_DELETE"
+				"deletionMode": "NO_DELETE"
 			},
 			{
 				"propList": [],

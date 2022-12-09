@@ -251,9 +251,9 @@ public class JobTrackerTest_IT {
 		assertTrue(tracker.getJobStatus(jobId).equals(JobTracker.STATUS_SUCCESS));
 		
 		// delete job and make sure table results files disappear too
-		tracker.deleteJob(jobId, this.trstore);
-		assertTrue(tempFolder.list().length == 0);
-		assertTrue(! tracker.jobExists(jobId));
+		tracker.deleteJob(jobId, trstore);
+		assertTrue("temp files were not deleted ", tempFolder.list().length == 0);
+		assertTrue("job was not deleted ", ! tracker.jobExists(jobId));
 
 		
 	}

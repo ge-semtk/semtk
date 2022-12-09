@@ -147,6 +147,7 @@
 				"subClassNames": [],
 				"SparqlID": "?Job",
 				"isReturned": false,
+				"optMinus": 1,
 				"isRuntimeConstrained": false,
 				"valueConstraint": "",
 				"instanceValue": null,

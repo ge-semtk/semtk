@@ -74,7 +74,7 @@ public class StatusServiceRestController {
 	
 	
 	@PostConstruct
-    public void init() {
+    public void init() throws Exception {
 		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
 		env_prop.validateWithExit();
 		
@@ -84,6 +84,9 @@ public class StatusServiceRestController {
 		
 		auth_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);
+		
+		// always clear and upload latest owl
+		JobTracker.uploadOwlModel(getTracker());
 
 	}
 	@RequestMapping(value="/headers", method=RequestMethod.GET)
