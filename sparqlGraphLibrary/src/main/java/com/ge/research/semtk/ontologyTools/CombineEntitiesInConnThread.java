@@ -27,6 +27,9 @@ import com.ge.research.semtk.utility.LocalLogger;
  *
  */
 public class CombineEntitiesInConnThread extends Thread {
+	public static String SAME_AS_CLASS_URI = "http://research.ge.com/semtk/EntityResolution#SameAs";
+	public static String TARGET_PROP_URI = "http://research.ge.com/semtk/EntityResolution#target";
+	public static String DUPLICATE_PROP_URI = "http://research.ge.com/semtk/EntityResolution#duplicate";
 	
 	private static int BATCH_SIZE = 2000;
 	private static int ERROR_LIMIT = 100;
@@ -46,6 +49,29 @@ public class CombineEntitiesInConnThread extends Thread {
 	private RestrictionChecker checker = null;
 
 
+	/** 
+	 * "Normal" preferred use.  Other one might be deprecated soon.
+	 * @param tracker
+	 * @param resultsClient
+	 * @param jobId
+	 * @param oInfo
+	 * @param conn
+	 * @throws Exception
+	 */
+	public CombineEntitiesInConnThread(JobTracker tracker, ResultsClient resultsClient, String jobId,
+			OntologyInfo oInfo, SparqlConnection conn) throws Exception {
+		this(
+				tracker,
+				resultsClient,
+				jobId,
+				oInfo,
+				conn,
+				SAME_AS_CLASS_URI,
+				TARGET_PROP_URI,
+				DUPLICATE_PROP_URI,
+				null,
+				null);
+	}
 	/**
 	 * Create a thread for combining entities by querying instances of sameAsTypeUri
 	 * which has properties targetPropUri and duplicatePropUri
@@ -252,7 +278,7 @@ public class CombineEntitiesInConnThread extends Thread {
 		if (t.getNumRows() != 0) {
 			for (int i=0; i < t.getNumRows(); i++) {
 				this.errorTab.addRow(new String [] {
-						String.format("Object is duplicate to to different targets: %s", t.getCell(i, "duplicate"))
+						String.format("Object is duplicate to multiple targets: %s", t.getCell(i, "duplicate"))
 					});
 			}
 		}
@@ -276,7 +302,7 @@ public class CombineEntitiesInConnThread extends Thread {
 		if (t.getNumRows() != 0) {
 			for (int i=0; i < t.getNumRows(); i++) {
 				this.errorTab.addRow(new String [] {
-						String.format("SameAs does not have exactly 1 target and 1 duplicate: %s", t.getCell(i, "same_as1"))
+						String.format("SameAs does not have exactly 1 target and 1 duplicate: %s", t.getCell(i, "same_as"))
 				});
 			}
 		}
@@ -455,8 +481,9 @@ public class CombineEntitiesInConnThread extends Thread {
 				+ "select distinct ?same_as1 ?object\n"
 				+ SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", this.conn, this.oInfo) + "\n"
 				+ " where {\n"
-				+ "     " + this.targetClause("?same_as", "?object")
-				+ "     " + this.duplicateClause("?same_as", "?object")
+				// can't use targetClause() for this outlier case where objects are equal
+				+ "     ?same_as_target_prop rdfs:subPropertyOf*    <http://research.ge.com/semtk/EntityResolution#target> .    ?same_as ?same_as_target_prop    ?object. \n"
+				+ "     ?same_as_duplicate_prop rdfs:subPropertyOf* <http://research.ge.com/semtk/EntityResolution#duplicate> . ?same_as ?same_as_duplicate_prop ?object. \n"
 				+ "     " + this.sameAsClause("?same_as")
 				+ "}\n"
 				;

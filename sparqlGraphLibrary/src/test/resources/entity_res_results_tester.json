@@ -1,0 +1,178 @@
+{
+	"version": 3,
+	"sparqlConn": {
+		"name": "Junit fuseki",
+		"domain": "",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 20,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/EntityResolutionTest#identifier",
+						"Constraints": "",
+						"SparqlID": "?relatedTo",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"valueTypes": [
+							"int"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#int",
+						"UriRelationship": "http://research.ge.com/semtk/EntityResolutionTest#val",
+						"Constraints": "",
+						"SparqlID": "?val_related",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"fullURIName": "http://research.ge.com/semtk/EntityResolutionTest#Item",
+				"SparqlID": "?Item_0",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE",
+				"isTypeReturned": true
+			},
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/EntityResolutionTest#identifier",
+						"Constraints": "",
+						"SparqlID": "?identifier",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					},
+					{
+						"valueTypes": [
+							"int"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#int",
+						"UriRelationship": "http://research.ge.com/semtk/EntityResolutionTest#val",
+						"Constraints": "",
+						"SparqlID": "?val",
+						"isReturned": true,
+						"optMinus": 1,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Item_0"
+						],
+						"OptionalMinus": [
+							1
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"range": [
+							"http://research.ge.com/semtk/EntityResolutionTest#Item"
+						],
+						"ConnectBy": "relatedTo",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/EntityResolutionTest#relatedTo"
+					}
+				],
+				"fullURIName": "http://research.ge.com/semtk/EntityResolutionTest#Item",
+				"SparqlID": "?Item",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE",
+				"isTypeReturned": true
+			}
+		],
+		"orderBy": [
+			{
+				"sparqlID": "?Item"
+			},
+			{
+				"sparqlID": "?identifier"
+			},
+			{
+				"sparqlID": "?val"
+			},
+			{
+				"sparqlID": "?Item_0"
+			},
+			{
+				"sparqlID": "?relatedTo"
+			},
+			{
+				"sparqlID": "?val_related"
+			}
+		],
+		"groupBy": [],
+		"unionHash": {},
+		"columnOrder": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Item",
+				"type": "http://research.ge.com/semtk/EntityResolutionTest#Item",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Item_0",
+				"type": "http://research.ge.com/semtk/EntityResolutionTest#Item",
+				"mapping": [],
+				"props": []
+			}
+		]
+	},
+	"plotSpecs": null
+}

@@ -381,6 +381,7 @@ public class TestGraph {
 		if (!resultSet.getSuccess()) {
 			throw new Exception(resultSet.getRationaleAsString(" "));
 		}
+		IntegrationTestUtility.getOntologyInfoClient().uncacheChangedConn(sei);
 	}
 	
 	public static void uploadTurtleString(String turtleData) throws Exception {
@@ -391,6 +392,8 @@ public class TestGraph {
 		if (!resultSet.getSuccess()) {
 			throw new Exception(resultSet.getRationaleAsString(" "));
 		}
+		IntegrationTestUtility.getOntologyInfoClient().uncacheChangedConn(sei);
+
 	}
 	/**
 	 * Upload an owl string to the test graph

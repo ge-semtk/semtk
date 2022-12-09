@@ -1,0 +1,201 @@
+{
+	"version": 3,
+	"sparqlConn": {
+		"name": "Junit fuseki",
+		"domain": "",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/GG2NQYY2E/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 20,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/EntityResolutionTest#identifier",
+						"Constraints": "",
+						"SparqlID": "?target_id",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"fullURIName": "http://research.ge.com/semtk/EntityResolutionTest#Item",
+				"SparqlID": "?Item_0",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://research.ge.com/semtk/EntityResolutionTest#identifier",
+						"Constraints": "",
+						"SparqlID": "?duplicate_id",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"fullURIName": "http://research.ge.com/semtk/EntityResolutionTest#Item",
+				"SparqlID": "?Item",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Item"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"range": [
+							"http://research.ge.com/semtk/EntityResolutionTest#Item"
+						],
+						"ConnectBy": "duplicate",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/EntityResolution#duplicate"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Item_0"
+						],
+						"OptionalMinus": [
+							0
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"range": [
+							"http://research.ge.com/semtk/EntityResolutionTest#Item"
+						],
+						"ConnectBy": "target",
+						"Connected": true,
+						"UriConnectBy": "http://research.ge.com/semtk/EntityResolution#target"
+					}
+				],
+				"fullURIName": "http://research.ge.com/semtk/EntityResolutionTest#SameAsItem",
+				"SparqlID": "?SameAsItem",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": [],
+		"groupBy": [],
+		"unionHash": {},
+		"columnOrder": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "duplicate_id"
+			},
+			{
+				"colId": "col_1",
+				"colName": "target_id"
+			}
+		],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?SameAsItem",
+				"type": "http://research.ge.com/semtk/EntityResolutionTest#SameAsItem",
+				"mapping": [],
+				"props": []
+			},
+			{
+				"sparqlID": "?Item",
+				"type": "http://research.ge.com/semtk/EntityResolutionTest#Item",
+				"URILookupMode": "noCreate",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/semtk/EntityResolutionTest#identifier",
+						"URILookup": [
+							"?Item"
+						],
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Item_0",
+				"type": "http://research.ge.com/semtk/EntityResolutionTest#Item",
+				"URILookupMode": "noCreate",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://research.ge.com/semtk/EntityResolutionTest#identifier",
+						"URILookup": [
+							"?Item_0"
+						],
+						"mapping": [
+							{
+								"colId": "col_1"
+							}
+						]
+					}
+				]
+			}
+		]
+	},
+	"plotSpecs": null
+}

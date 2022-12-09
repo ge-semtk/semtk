@@ -1,0 +1,48 @@
+uri "http://research.ge.com/semtk/EntityResolutionTest" alias ERTest.
+
+import "http://research.ge.com/semtk/EntityResolution".
+
+
+SameAsItem is a type of SameAs.
+target of SameAsItem only has values of type Item.
+duplicate of SameAsItem only has values of type Item.
+
+Item is a top-level class,
+	described by identifier with a single value of type string,
+	described by val with values of type int,
+	described by relatedTo with values of type Item.
+	
+SubItem is a type of Item.
+SubSubItem is a type of SubItem.
+NotAnItem is a top-level class,
+	described by identifier with values of type string.
+	
+// C --relatedTo--> B --relatedTo--> A
+
+SubItemA is a SubItem,
+	with identifier "sub_item_a",
+	with val 1.
+	
+SubItemB is a SubItem,
+	with identifier "sub_item_b",
+	with val 1.
+	
+ItemB is an Item,
+	with identifier "item b",
+	with val 10,
+	with relatedTo SubItemA.
+	
+SubItemB2 is a SubItem,
+	with identifier "Sub Item B",
+	with val 100.
+	
+SubSubItemC is a SubSubItem,
+	with identifier "sub_sub_item_c",
+	with relatedTo ItemB.
+	
+SubItemD is a SubItem,
+	with identifier "sub_item_d",
+	with relatedTo SubItemB.
+	
+	
+	

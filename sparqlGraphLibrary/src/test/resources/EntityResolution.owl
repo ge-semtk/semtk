@@ -1,0 +1,43 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions#"
+    xmlns:EntityResolution="http://research.ge.com/semtk/EntityResolution#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xml:base="http://research.ge.com/semtk/EntityResolution">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'EntityResolution.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:ID="SameAs">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="duplicate"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:cardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:cardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="target"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="#duplicate">
+    <rdfs:domain rdf:resource="#SameAs"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="#target">
+    <rdfs:domain rdf:resource="#SameAs"/>
+  </owl:ObjectProperty>
+</rdf:RDF>

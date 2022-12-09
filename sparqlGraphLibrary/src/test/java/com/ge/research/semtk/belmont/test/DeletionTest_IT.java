@@ -49,13 +49,12 @@ public class DeletionTest_IT {
 	}
 	
 	public void setupTest() throws Exception{
-		// load the dataset we want to use.
-		
-		ng = TestGraph.getNodeGroupFromResource(this, jsonNodegroupFile);
-		
+
 		// flush and reload graph.
 		TestGraph.clearGraph();
 		TestGraph.uploadTurtle(ttlGraphContentsPath);
+		
+		ng = TestGraph.getNodeGroupFromResource(this, jsonNodegroupFile);
 	}
 
 	

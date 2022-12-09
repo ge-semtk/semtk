@@ -17,6 +17,8 @@
 
 package com.ge.research.semtk.services.nodeGroupExecution.requests;
 import java.util.ArrayList;
+
+import com.ge.research.semtk.ontologyTools.CombineEntitiesInConnThread;
 import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -29,19 +31,19 @@ public class CombineEntitiesInConnRequest extends SparqlConnectionRequest {
 			description = "Override URI of class that connects entities to be combined",
 			required = false,
 			example = "http://research.ge.com/semtk/EntityResolution#SameAs")
-	private String sameAsClassURI = "http://research.ge.com/semtk/EntityResolution#SameAs";
+	private String sameAsClassURI = CombineEntitiesInConnThread.SAME_AS_CLASS_URI;
 	
 	@Schema(
 			description = "Override URI of property connecting sameAsClass instance to target entity to be combined",
 			required = false,
 			example = "http://research.ge.com/semtk/EntityResolution#target")
-	private String targetPropURI = "http://research.ge.com/semtk/EntityResolution#target";
+	private String targetPropURI = CombineEntitiesInConnThread.TARGET_PROP_URI;
 	
 	@Schema(
 			description = "Override URI of property connecting sameAsClass instance to duplicate entity to be combined",
 			required = false,
 			example = "http://research.ge.com/semtk/EntityResolution#duplicate")
-	private String duplicatePropURI = "http://research.ge.com/semtk/EntityResolution#duplicate";
+	private String duplicatePropURI = CombineEntitiesInConnThread.DUPLICATE_PROP_URI;
 	
 	@Schema(
 			description = "list of predicates to delete from duplicate instance before merge",
