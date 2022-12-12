@@ -292,7 +292,7 @@ OntologyTree.prototype = {
 
         // find or create a new node under each parentNode
         for (var i=0; i < parentNodes.length; i++) {
-            list = this.getNodesByURIAndParent(className, parentNodes[i].data.value);
+            list = this.getNodesByURIAndParent(className, parentNodes[i]);
             if (list.length == 0) {
         		newNode = null;
         	} else if (list.length > 1) {
@@ -596,15 +596,17 @@ OntologyTree.prototype = {
 		return ret;
     },
 
-    getNodesByURIAndParent: function(uri, parentUri) {
+    getNodesByURIAndParent: function(uri, parentNode) {
 		// uri can be a class or property
 		// find all tree nodes that match
 		var ret = [];
-		this.tree.getRoot().visit(function(node){
-			if (node.data.value == uri && node.getParent().data.value == parentUri) {
-				ret.push(node);
+		if (parentNode.childList != null) {
+			for (node of parentNode.childList) {
+				if (node.data.value == uri) {
+					ret.push(node);
+				}
 			}
-		});
+		}
 		return ret;
 	},
 
