@@ -298,6 +298,8 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 				throw new DontRetryException("SPARQL lexical error: " + responseTxt);
 			} else if (responseTxt.contains("Parse ")) {
 				throw new DontRetryException("SPARQL parse error: " + responseTxt);
+			} else if (responseTxt.contains("heap space") || responseTxt.contains("emory")) {
+				throw new DontRetryException("Memory troubles: " + responseTxt);
 			}
 			throw new Exception("Fuseki unsupported non-HTML response: " + responseTxt);
 		}
