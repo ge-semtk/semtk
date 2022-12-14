@@ -80,7 +80,7 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 	public String getTimeoutSparqlPrefix() { return null; }    
 	public String getTimeoutSparqlClause() { return null; } 
 	public String getTimeoutPostParamName() { return "timeout"; }    
-	public String getTimeoutPostParamValue() { return this.timeout == 0 ? null : String.valueOf(this.timeout); } 
+	public String getTimeoutPostParamValue() { return this.sparqlTimeout == 0 ? null : String.valueOf(this.sparqlTimeout); } 
 	
 	/**
 	 * Fuseki uses different param names for "auth" queries, which Fuseki calls "update"
@@ -310,7 +310,7 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 			
 		} else {
 			if (responseTxt.contains("TimeoutException")) {
-				throw new QueryTimeoutException("Timed out after " + String.valueOf(this.timeout) + " sec");
+				throw new QueryTimeoutException("Timed out after " + String.valueOf(this.sparqlTimeout) + " sec");
 				
 			} else if (responseTxt.contains("Error 400")) {
 				throw new DontRetryException(responseTxt);

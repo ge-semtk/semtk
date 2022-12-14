@@ -60,6 +60,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.AuthCache;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -143,7 +144,8 @@ public abstract class SparqlEndpointInterface {
 	protected boolean logPerformance = false;
 	
 	protected int retries = 0;
-	protected int timeout = 0;
+	protected int sparqlTimeout = 0;
+	protected int httpTimeout = 0;
 	
 	private static HttpClientConnectionManager manager = buildConnectionManager();
 	
@@ -184,15 +186,37 @@ public abstract class SparqlEndpointInterface {
 	public abstract int getInsertQueryOptimalSize();
 	
 	/**
-	 * Timeout msec sent along with query
+	 * Set an HTTP timeout.  
+	 * This should be longer than sparqlTimeout or only used for queries that expect very quick returns.
+	 * Causes a xxxTimeoutException if triplestore doesn't respond.
+	 * @param seconds
 	 * @return
 	 */
-	public int getTimeout() {
-		return timeout;
+	public SparqlEndpointInterface addHttpTimeout(int seconds) {
+		this.httpTimeout = seconds;
+		return this;
+	}
+	/**
+	 *  @deprecated as there are different types of timeouts, use getSparqlTimeout() 
+	 */
+	@Deprecated
+	public int getTimeout() { return this.getSparqlTimeout(); }
+	/**
+	 *  @deprecated as there are different types of timeouts, use setSparqlTimeout() 
+	 */
+	@Deprecated
+	public void setTimeout(int seconds) {this.setSparqlTimeout(seconds); }
+	
+	/**
+	 * Timeout msec sent along with query.  Tells triplestore to abort if it takes too long.
+	 * @return
+	 */
+	public int getSparqlTimeout() {
+		return sparqlTimeout;
 	}
 
-	public void setTimeout(int seconds) {
-		this.timeout = seconds;
+	public void setSparqlTimeout(int seconds) {
+		this.sparqlTimeout = seconds;
 	}
 	
 	// local default graph name, if any, else null
@@ -1006,7 +1030,14 @@ public abstract class SparqlEndpointInterface {
 			clientBuilder.setSSLContext(getTrustingSSLContext());
 		}
 		
-		return clientBuilder.build();
+		if (this.httpTimeout > 0) {
+			// add timeout parameter
+			RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(this.httpTimeout * 1000).build();
+			return clientBuilder.setDefaultRequestConfig(requestConfig).build();
+		} else {
+			// no parameters
+			return clientBuilder.build();
+		}
 	}
 	
 	

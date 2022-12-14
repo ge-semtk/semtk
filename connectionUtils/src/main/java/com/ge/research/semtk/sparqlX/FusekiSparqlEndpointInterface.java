@@ -84,7 +84,7 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 	public String getTimeoutSparqlPrefix() { return null; }    
 	public String getTimeoutSparqlClause() { return null; } 
 	public String getTimeoutPostParamName() { return "timeout"; }    
-	public String getTimeoutPostParamValue() { return this.timeout == 0 ? null : String.valueOf(this.timeout); } 
+	public String getTimeoutPostParamValue() { return this.sparqlTimeout == 0 ? null : String.valueOf(this.sparqlTimeout); } 
 	
 	/**
 	 * Fuseki uses different param names for "auth" queries, which Fuseki calls "update"
@@ -286,8 +286,8 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 					ret.setMessage(responseTxt);
 					return ret.getResultsJSON();
 				}
-			}else if (this.timeout > 0 && responseTxt.contains("503")) {
-				throw new QueryTimeoutException("Timed out after " + String.valueOf(this.timeout) + " sec");
+			}else if (this.sparqlTimeout > 0 && responseTxt.contains("503")) {
+				throw new QueryTimeoutException("Timed out after " + String.valueOf(this.sparqlTimeout) + " sec");
 			} else if (responseTxt.contains("Error 400")) {
 				throw new DontRetryException(responseTxt);
 			} else if (responseTxt.contains("Error 404")) {
