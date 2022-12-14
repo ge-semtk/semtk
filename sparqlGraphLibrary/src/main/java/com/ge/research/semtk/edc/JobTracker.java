@@ -69,6 +69,13 @@ public class JobTracker {
 	public static String STATUS_IN_PROGRESS = "InProgress";
 	public static String STATUS_FAILURE = "Failure";
 	
+	// Can't figure out how to test this feature, so it is OFF.
+	// if set to 20 it would cause "simple" job tracker queries to 
+	// throw a better error if the triplestore is locked up
+	// instead of causing the top-level REST call to time out.
+	// value < 1 is a no-op.
+	private final static int HTTP_TIMEOUT = -1;
+	
 	private static HashSet<String> checkedOwl = new HashSet<String>();
 
 	public JobTracker (SparqlEndpointInterface jobSei) throws Exception {
@@ -86,6 +93,32 @@ public class JobTracker {
 		}
 	}
 	
+	/**
+	 * clear an upload the OWL model, with a retry 
+	 * @param tracker
+	 * @param retrySec
+	 * @throws Exception
+	 */
+	public static void uploadOwlModel(JobTracker tracker, int retrySec) throws Exception {
+		long timeout = System.currentTimeMillis() + (retrySec * 1000);
+		
+		while (true) {
+			try {
+				JobTracker.uploadOwlModel(tracker);
+				return;
+			} catch (Exception e) {
+				if (System.currentTimeMillis() > timeout) {
+					throw new Exception("Error uploading jobs owl model", e);
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Clear prefix and upload OWL
+	 * @param tracker
+	 * @throws Exception
+	 */
 	public static void uploadOwlModel(JobTracker tracker) throws Exception {
 		String key = tracker.sei.getServerAndPort() + tracker.sei.getGraph();
 		checkedOwl.add(key);
@@ -232,7 +265,7 @@ public class JobTracker {
 	    	"	}",
 	    	SparqlToXUtils.safeSparqlString(jobId));
 
-	    SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
+	    SparqlEndpointInterface endpoint = this.createSuperuserEndpoint().addHttpTimeout(HTTP_TIMEOUT);
 	    TableResultSet res = (TableResultSet) endpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 	    res.throwExceptionIfUnsuccessful();
 	    Table tab = res.getTable();
@@ -320,7 +353,7 @@ public class JobTracker {
 	    	percentComplete, SparqlToXUtils.safeSparqlString(message), SparqlToXUtils.safeSparqlString(jobId));
 	 	// LocalLogger.logToStdErr(query);
 	    try {
-		    this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+		    this.createSuperuserEndpoint().addHttpTimeout(HTTP_TIMEOUT).executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
 	    }
@@ -364,7 +397,7 @@ public class JobTracker {
 	        SparqlToXUtils.safeSparqlString(statusMessage), SparqlToXUtils.safeSparqlString(jobId));
 	 	// LocalLogger.logToStdErr(query);
 	    try {
-	    	this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+	    	this.createSuperuserEndpoint().addHttpTimeout(HTTP_TIMEOUT).executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
 	    }
@@ -394,7 +427,7 @@ public class JobTracker {
 				"	}",
 				SparqlToXUtils.safeSparqlString(jobId));
 
-		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
+		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint().addHttpTimeout(HTTP_TIMEOUT);
 	    TableResultSet res = (TableResultSet) endpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 	    res.throwExceptionIfUnsuccessful();
 	    Table tab = res.getTable();
@@ -438,7 +471,7 @@ public class JobTracker {
 		    	"	}",
 				SparqlToXUtils.safeSparqlString(jobId));
 
-		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
+		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint().addHttpTimeout(HTTP_TIMEOUT);
 	    
 	    TableResultSet res = (TableResultSet) endpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 	    res.throwExceptionIfUnsuccessful();
@@ -485,7 +518,7 @@ public class JobTracker {
 		    	"	}",
 				SparqlToXUtils.safeSparqlString(jobId));
 
-		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
+		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint().addHttpTimeout(HTTP_TIMEOUT);
 	    
 	    TableResultSet res = (TableResultSet) endpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 	    res.throwExceptionIfUnsuccessful();
@@ -552,7 +585,9 @@ public class JobTracker {
 				SparqlToXUtils.safeSparqlString(statusMessage), SparqlToXUtils.safeSparqlString(jobId));
 		// LocalLogger.logToStdErr(query);
 		try {
-			this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+			this.createSuperuserEndpoint()
+				.addHttpTimeout(HTTP_TIMEOUT)
+				.executeQuery(query, SparqlResultTypes.CONFIRM);
 		} catch (Exception e) {
 			throw new Exception(e.getMessage());
 		}
@@ -615,7 +650,9 @@ public class JobTracker {
 		        SparqlToXUtils.safeSparqlString(jobId));
 		// LocalLogger.logToStdErr(query);
 		try {
-			this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+			this.createSuperuserEndpoint()
+				.addHttpTimeout(HTTP_TIMEOUT)
+				.executeQuery(query, SparqlResultTypes.CONFIRM);
 		} catch (Exception e) {
 			throw new Exception(e.getMessage());
 		}
@@ -645,7 +682,9 @@ public class JobTracker {
 	    	SparqlToXUtils.safeSparqlString(jobId));
 
 		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
-	    TableResultSet res = (TableResultSet) endpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+	    TableResultSet res = (TableResultSet) endpoint
+				.addHttpTimeout(HTTP_TIMEOUT)
+				.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 	    res.throwExceptionIfUnsuccessful();
 	    Table tab = res.getTable();
 	    
@@ -701,7 +740,9 @@ public class JobTracker {
 	    	SparqlToXUtils.safeSparqlString(jobId));
 
 		SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
-	    TableResultSet res = (TableResultSet) endpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
+	    TableResultSet res = (TableResultSet) endpoint
+				.addHttpTimeout(HTTP_TIMEOUT)
+				.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 	    res.throwExceptionIfUnsuccessful();
 	    Table tab = res.getTable();
 		
@@ -773,7 +814,9 @@ public class JobTracker {
 	        jobUri);
 	    // LocalLogger.logToStdErr(query);
 	    try {
-	    	this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
+	    	this.createSuperuserEndpoint()
+				.addHttpTimeout(HTTP_TIMEOUT)
+				.executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
 	    	throw new Exception(e.getMessage());
 	    }

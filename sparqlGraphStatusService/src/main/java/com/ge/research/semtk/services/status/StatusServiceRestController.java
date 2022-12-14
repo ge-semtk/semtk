@@ -85,8 +85,8 @@ public class StatusServiceRestController {
 		auth_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);
 		
-		// always clear and upload latest owl
-		JobTracker.uploadOwlModel(getTracker());
+		// clear and upload latest owl
+		JobTracker.uploadOwlModel(getTracker(), 90);
 
 	}
 	@RequestMapping(value="/headers", method=RequestMethod.GET)
