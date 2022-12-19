@@ -41,7 +41,7 @@
 			<groupId>org.apache.httpcomponents</groupId>
 			<artifactId>httpcore</artifactId>
 			<!-- version is forced to fix AWS incompatibility. see https://github.com/aws/aws-sdk-java-v2/issues/652 -->
-			<version>4.4.15</version>
+			<version>4.4.16</version>
 		</dependency>
 		
 		<!-- License: Apache 2.0 -->
