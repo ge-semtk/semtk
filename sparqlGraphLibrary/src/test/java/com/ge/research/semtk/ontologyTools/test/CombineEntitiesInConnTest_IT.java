@@ -2,20 +2,14 @@ package com.ge.research.semtk.ontologyTools.test;
 
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
-import java.util.Hashtable;
 
-import org.json.simple.JSONObject;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ge.research.semtk.edc.JobTracker;
-import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.ontologyTools.CombineEntitiesInConnThread;
-import com.ge.research.semtk.ontologyTools.CombineEntitiesInputTable;
-import com.ge.research.semtk.ontologyTools.CombineEntitiesTableThread;
-import com.ge.research.semtk.ontologyTools.CombineEntitiesThread;
-import com.ge.research.semtk.resultSet.Table;
+
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
@@ -47,7 +41,7 @@ public class CombineEntitiesInConnTest_IT {
 			// failure
 			csvErrStr = IntegrationTestUtility.getResultsClient().getTableResultsJson(jobId, 100).toCSVString();
 			if (matchErrTab == null)
-				fail("Unexpected error during combining:\n" + csvErrStr);
+				fail("Unexpected error during combining: " + e.getMessage() + "\n" + csvErrStr);
 		}
 			
 		// check for any expected errors
@@ -92,6 +86,10 @@ public class CombineEntitiesInConnTest_IT {
 				"sub_item_b,\"Sub Item B\" \n");
 
 		combineAndCheck("entity_res_results1.csv", null);
+		
+		// second attempt throws error "Nothing to combine
+		combineAndCheck("entity_res_results1.csv", new String [] {"No SameAs instances found"});
+		
 	}
 	
 	@Test

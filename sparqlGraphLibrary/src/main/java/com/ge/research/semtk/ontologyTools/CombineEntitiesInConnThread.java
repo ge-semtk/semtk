@@ -111,7 +111,7 @@ public class CombineEntitiesInConnThread extends Thread {
 		this.headerTable = ThreadAuthenticator.getThreadHeaderTable();
 		this.checker = new RestrictionChecker(conn, oInfo);
 
-		this.errorTab = new Table(new String [] { "error" });
+		this.errorTab = new Table(new String [] { "Error Description" });
 		
 		CombineEntitiesWorker.replacePropertyAbbrev(this.deletePredicatesFromTarget);
 		CombineEntitiesWorker.replacePropertyAbbrev(this.deletePredicatesFromDuplicate);
@@ -206,8 +206,11 @@ public class CombineEntitiesInConnThread extends Thread {
 				
 				if (recordsProcessed > 0) 
 					this.tracker.setJobSuccess(this.jobId, String.format("Combined %d pairs of entities.", recordsProcessed));
-				else
+				else {
+					this.errorTab.addRow(new String [] {"No SameAs instances found."});
+					this.resultsClient.execStoreTableResults(this.jobId, this.errorTab);
 					this.tracker.setJobFailure(this.jobId, "Nothing to combine.");
+				}
 			
 			} else {
 				
@@ -230,6 +233,8 @@ public class CombineEntitiesInConnThread extends Thread {
 			LocalLogger.printStackTrace(e);
 			try {
 				// Exceptions are reported via the async job status mechanism
+				this.errorTab.addRow(new String [] {"Internal error has occurred in Java back-end"});
+				this.resultsClient.execStoreTableResults(this.jobId, this.errorTab);
 				this.tracker.setJobFailure(this.jobId, "Error during merge.  Incomplete merge occurred. \n" + e.getMessage());
 
 			} catch (Exception ee) {
