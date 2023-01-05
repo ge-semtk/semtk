@@ -265,7 +265,7 @@ public class NodeGroupServiceClientTest_IT {
 				
 				// test result
 				assertEquals("Wrong number of columns", t.getNumColumns(), 1);
-				assertTrue("Wrong column name", t.getColumnNames()[0].equals("?Name"));
+				assertTrue("Wrong column name", t.getColumnNames()[0].equals("Name"));
 				
 			} finally {
 				storeClient.deleteStoredNodeGroupIfExists(ngId);
