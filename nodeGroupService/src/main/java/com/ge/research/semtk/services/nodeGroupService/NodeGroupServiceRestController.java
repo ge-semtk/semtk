@@ -522,7 +522,7 @@ public class NodeGroupServiceRestController {
 				if (item == null) {
 					throw new Exception("sparqlId was not found: " + tuple.getSparqlId());
 				}
-				item.setIsReturned(tuple.isReturned());
+				ng.setIsReturned(item, tuple.isReturned());
 			}
 			
 			// put modified nodegroup back into sgJson and return

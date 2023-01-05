@@ -1722,6 +1722,8 @@ public class NodeGroup {
 				item.setFunctions(new HashSet<String>());
 			}
 		}
+		
+		this.removeInvalidSparqlIds();
 	}
 	
 	/**
@@ -3814,7 +3816,9 @@ public class NodeGroup {
 			ret = this.changeSparqlID(pItem, pItem.getKeyName());
 		} 
 		pItem.setIsReturned(val);
-		
+		if (val == false)
+			this.removeInvalidSparqlIds();
+
 		return  ret;
 	}
 	
@@ -3830,6 +3834,8 @@ public class NodeGroup {
 			ret = this.changeSparqlID(node, node.getUri(true));
 		}
 		node.setIsReturned(val);
+		if (val == false)
+			this.removeInvalidSparqlIds();
 		
 		return  ret;
 	}
@@ -3845,6 +3851,18 @@ public class NodeGroup {
 			this.setIsReturned(pItem, isRet);
 			pItem.setOptMinus(optMinus);
 		}
+	}
+	
+	/**
+	 * Check these for no-longer valid and returned sparqlIds:
+	 * 	column order
+	 *  group by
+	 *  order by
+	 */
+	private void removeInvalidSparqlIds() {
+		this.removeInvalidColumnOrder();
+		this.removeInvalidGroupBy();
+		this.removeInvalidOrderBy();
 	}
 	
 	/**

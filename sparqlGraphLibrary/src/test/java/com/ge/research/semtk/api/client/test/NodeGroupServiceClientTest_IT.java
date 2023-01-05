@@ -22,6 +22,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
@@ -29,6 +30,7 @@ import com.ge.research.semtk.nodeGroupService.SparqlIdReturnedTuple;
 import com.ge.research.semtk.nodeGroupService.SparqlIdTuple;
 import com.ge.research.semtk.nodeGroupService.client.NodeGroupServiceConfig;
 import com.ge.research.semtk.nodeGroupService.client.NodeGroupServiceRestClient;
+import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
@@ -38,6 +40,7 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.UUID;
 
 public class NodeGroupServiceClientTest_IT {
 		
@@ -228,6 +231,45 @@ public class NodeGroupServiceClientTest_IT {
 			assertTrue(ng2.getItemBySparqlID("CellId").getIsReturned());
 
 			
+		}
+		
+		@Test
+		public void testRunNodegroupWithFewerReturns() throws Exception {
+			// set up clients
+			NodeGroupStoreRestClient storeClient = IntegrationTestUtility.getNodeGroupStoreRestClient();
+			NodeGroupExecutionClient execClient = IntegrationTestUtility.getNodeGroupExecutionRestClient();
+			NodeGroupServiceRestClient ngClient = IntegrationTestUtility.getNodeGroupServiceRestClient();
+			
+			// set up nodegroup in store and ngId
+			SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
+			String ngId = "test_" + UUID.randomUUID().toString();
+			storeClient.deleteStoredNodeGroupIfExists(ngId);
+			storeClient.executeStoreNodeGroup(ngId, "junit", "junit", sgJson.toJson());
+			
+			try {
+				// retrieve the nodegroup
+				sgJson = storeClient.executeGetNodeGroupByIdToSGJson(ngId);
+				
+				// print out the sparqlIDs that are returned
+				String [] sparqlIDs = ngClient.execGetReturnedSparqlIds(sgJson);
+				System.out.println(sparqlIDs[0] + ", " + sparqlIDs[1]);
+				
+				// decide which sparqlIDs we want returned
+				ArrayList<SparqlIdReturnedTuple> tuples = new ArrayList<SparqlIdReturnedTuple>();
+				tuples.add(new SparqlIdReturnedTuple("?Name", true));
+				tuples.add(new SparqlIdReturnedTuple("?CellId", false));
+				sgJson = ngClient.execSetIsReturned(sgJson, tuples);
+				
+				// run the new query
+				Table t = execClient.dispatchSelectFromNodeGroup(sgJson);
+				
+				// test result
+				assertEquals("Wrong number of columns", t.getNumColumns(), 1);
+				assertTrue("Wrong column name", t.getColumnNames()[0].equals("?Name"));
+				
+			} finally {
+				storeClient.deleteStoredNodeGroupIfExists(ngId);
+			}
 		}
 		
 		/**

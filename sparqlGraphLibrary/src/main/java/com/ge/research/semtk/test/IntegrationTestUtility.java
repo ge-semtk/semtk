@@ -51,6 +51,8 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.load.utility.UriResolver;
 import com.ge.research.semtk.logging.easyLogger.LoggerClientConfig;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
+import com.ge.research.semtk.nodeGroupService.client.NodeGroupServiceConfig;
+import com.ge.research.semtk.nodeGroupService.client.NodeGroupServiceRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.properties.EndpointProperties;
@@ -207,6 +209,9 @@ public class IntegrationTestUtility{
 		return new NodeGroupStoreRestClient(new NodeGroupStoreConfig(get("protocol"), get("nodegroupstoreservice.server"),  getInt("nodegroupstoreservice.port")));
 	}
 	
+	public static NodeGroupServiceRestClient getNodeGroupServiceRestClient() throws Exception{
+		return new NodeGroupServiceRestClient(new NodeGroupServiceConfig(get("protocol"), get("nodegroupservice.server"),  getInt("nodegroupservice.port")));
+	}
 	public static String getNodeGroupStoreFullURL() throws Exception {
 		return get("protocol") + "://" + get("nodegroupstoreservice.server") + ":" + get("nodegroupstoreservice.port");
 	}
@@ -446,4 +451,5 @@ public class IntegrationTestUtility{
 		}
 		return count;
 	}
+	
 }
