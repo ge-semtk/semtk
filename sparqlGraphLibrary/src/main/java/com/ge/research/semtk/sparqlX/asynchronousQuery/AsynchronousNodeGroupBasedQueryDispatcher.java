@@ -47,6 +47,7 @@ import com.ge.research.semtk.utility.LocalLogger;
  * Base class for dispatchers.
  */
 public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
+	private String pruneToColumn;
 	
 	protected NodeGroup queryNodeGroup;
 	protected OntologyInfoClient oInfoClient;
@@ -128,6 +129,25 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			}
 			resTable.replaceColumnNames(modColnames);
 			
+			// special rare feature prune To uniquified column
+			if (this.pruneToColumn != null) {
+				if (resTable.getColumnIndex(this.pruneToColumn) == -1) {
+					throw new Exception ("PruneToColumn can not find column named: " + this.pruneToColumn);
+				}
+				for (String c : resTable.getColumnNames()) {
+					if (!c.equals(this.pruneToColumn)) {
+						resTable.removeColumn(c);
+					}
+				}
+				resTable.uniquify(new String [] {this.pruneToColumn});
+			} 
+		} catch(Exception e){
+			this.jobTracker.setJobFailure(this.jobID, "Failure preparing results table: " + e.getMessage());
+			LocalLogger.printStackTrace(e);
+			throw new Exception(e);
+		}
+			
+		try {	
 			(new ResultsClient(this.resConfig)).execStoreTableResults(this.jobID, resTable);
 		}
 		catch(Exception e){
@@ -313,6 +333,11 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	
 	public JobTracker getJobTracker() {
 		return this.jobTracker;
+	}
+
+	public void addPruneToColumn(String pruneToColumn) {
+		this.pruneToColumn = pruneToColumn;
+		
 	}
 
 }

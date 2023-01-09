@@ -535,13 +535,15 @@ public class NodeGroupExecutionRestController {
 			}
 			
 			// dispatch the job. 
+			// ERROR thought I was calling version on line 342
 			ngExecutor.dispatchJob(qt, rt, connection, requestBody.getNodeGroupId(), 
 					requestBody.getExternalDataConnectionConstraintsJson(), 
 					requestBody.getFlags(),
 					requestBody.getRuntimeConstraints(), 
 					requestBody.getLimitOverride(),
 					requestBody.getOffsetOverride(),
-					targetId);
+					targetId,
+					requestBody.getPruneToColumn());
 			
 			retval.setSuccess(true);
 			retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, ngExecutor.getJobID()); 

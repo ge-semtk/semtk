@@ -326,6 +326,7 @@ public class DispatcherServiceRestController {
 		try {
 			dsp = getDispatcher(props, jobId, (NodegroupRequestBody) requestBody, useAuth, true);
 			dsp.getJobTracker().incrementPercentComplete(dsp.getJobId(), 1, 10);
+			dsp.addPruneToColumn(requestBody.getPruneToColumn());
 
 			WorkThread thread = new WorkThread(dsp, requestBody.getExternalConstraints(), requestBody.getFlags(), qt, rt);
 			
