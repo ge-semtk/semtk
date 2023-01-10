@@ -31,16 +31,9 @@ public class QueryRequestBody extends NodegroupRequestBody {
 	@Schema(required = false,  example = "[{\"SparqlID\":\"?name\",\"Operator\":\"MATCHES\",\"Operands\":[\"Fred\"]}]")
 	private String constraintSet;	
 	
-	@Schema(required = false,  example = "[\"UNOPTIONALIZE_CONSTRAINED\"]")
+	@Schema(required = false,  example = "[\"UNOPTIONALIZE_CONSTRAINED\", \"PRUNE_TO_COLUMN:myCol\"]")
 	private String flags;			// a string parseable to a JSONArray
 	
-	// This is custom optional field only available through straight REST
-	// for Saqib @ collins
-	@Schema(
-			description = "Prune select table return down to one column and uniquify.",
-			required = false,
-			example = "favorite_column")
-	private String pruneToColumn = null;
 	
 	public void setConstraintSet(String constraintSet){
 		this.constraintSet = constraintSet;
@@ -65,13 +58,6 @@ public class QueryRequestBody extends NodegroupRequestBody {
 			return null;
 		}
 		return new QueryFlags(Utility.getJsonArrayFromString(this.flags));
-	}
-	
-	public void setPruneToColumn(String val) {
-		this.pruneToColumn = val;
-	}
-	public String getPruneToColumn() {
-		return this.pruneToColumn;
 	}
 	
 }

@@ -47,7 +47,7 @@ import com.ge.research.semtk.utility.LocalLogger;
  * Base class for dispatchers.
  */
 public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
-	private String pruneToColumn;
+	private String pruneToColumn = null;
 	
 	protected NodeGroup queryNodeGroup;
 	protected OntologyInfoClient oInfoClient;
@@ -335,6 +335,10 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		return this.jobTracker;
 	}
 
+	/**
+	 * Add column name for prune feature (prune table to single unique column)
+	 * @param pruneToColumn - column name or null
+	 */
 	public void addPruneToColumn(String pruneToColumn) {
 		this.pruneToColumn = pruneToColumn;
 		

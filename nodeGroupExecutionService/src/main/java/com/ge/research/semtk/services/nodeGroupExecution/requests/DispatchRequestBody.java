@@ -28,19 +28,19 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class DispatchRequestBody extends SparqlConnRequestBody {
 	@Schema(
 			description = "EDC query constraints json",
-			required = false,
+			requiredMode = Schema.RequiredMode.NOT_REQUIRED,
 			example = "{ optional complex json }")
 	private String externalDataConnectionConstraints;
 	
 	@Schema(
 			description = "Query flags array",
-			required = false,
-			example = "[\"FLAG1\", \"FLAG2\"]")
+			requiredMode = Schema.RequiredMode.NOT_REQUIRED,
+			example = "[\"PRUNE_TO_COLUMN:myCol\", \"UNOPTIONALIZE_CONSTRAINED\"]")
 	private String flags; // json array
 	
 	@Schema(
 			description = "Runtime constraints json",
-			required = false,
+			requiredMode = Schema.RequiredMode.NOT_REQUIRED,
 			example = "\"[{\"SparqlID\":\"?id\",\"Operator\":\"MATCHES\",\"Operands\":[\"98243-T\"]}]\"")
 	private String runtimeConstraints;
 

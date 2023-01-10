@@ -38,14 +38,6 @@ public class DispatchByIdRequestBody extends DispatchRequestBody {
 			example = "-1")
 	private int offsetOverride = -1;
 	
-	// This is custom optional field only available through straight REST
-	// for Saqib @ collins
-	@Schema(
-			description = "Prune select table return down to one column and uniquify.",
-			required = false,
-			example = "favorite_column")
-	private String pruneToColumn = null;
-	
 	public int getLimitOverride() {
 		return limitOverride;
 	}
@@ -64,13 +56,6 @@ public class DispatchByIdRequestBody extends DispatchRequestBody {
 	public String getNodeGroupId(){
 		return this.nodeGroupId;
 	}	
-	
-	public void setPruneToColumn(String val) {
-		this.pruneToColumn = val;
-	}
-	public String getPruneToColumn() {
-		return this.pruneToColumn;
-	}
 	
 	/**
 	 * Validate request contents.  Throws an exception if validation fails.

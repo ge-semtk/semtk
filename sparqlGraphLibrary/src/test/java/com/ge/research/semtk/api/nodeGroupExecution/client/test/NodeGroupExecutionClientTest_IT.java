@@ -39,6 +39,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+import com.ge.research.semtk.sparqlX.dispatch.QueryFlags;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
@@ -181,13 +182,15 @@ public class NodeGroupExecutionClientTest_IT {
 			assertEquals("Select returned wrong number of rows", 4, tab.getNumRows());
 			
 			// test with pruneToColumn
-			tab = nodeGroupExecutionClient.execDispatchByIdToTable(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null, null, -1, -1, "CellId");
+			JSONArray flags = (new QueryFlags(QueryFlags.PRUNE_TO_COL, "CellId")).toJson();
+			tab = nodeGroupExecutionClient.execDispatchByIdToTable(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, flags, null, -1, -1);
 			assertEquals("More than one column returned", 1, tab.getNumColumns());
 			assertTrue("Wrong column returned: " + tab.getColumnNames()[0], tab.getColumnNames()[0].equals("CellId"));
 			
 			// test with pruneToColumn
 			try {
-				tab = nodeGroupExecutionClient.execDispatchByIdToTable(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, null, null, -1, -1, "BAD_COL");
+				flags = (new QueryFlags(QueryFlags.PRUNE_TO_COL, "BAD_COL")).toJson();
+				tab = nodeGroupExecutionClient.execDispatchByIdToTable(ID, NodeGroupExecutor.get_USE_NODEGROUP_CONN(), null, flags, null, -1, -1);
 				fail("Missing exception on bad pruneToColumn column name");
 			} catch (Exception e) {
 				assertTrue("Wrong exception on bad pruneToColumn name" + e.getMessage(), e.getMessage().contains("BAD_COL"));

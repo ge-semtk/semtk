@@ -62,6 +62,7 @@ import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.AsynchronousNodeGroupBasedQueryDispatcher;
+import com.ge.research.semtk.sparqlX.dispatch.QueryFlags;
 
 @RestController
 @RequestMapping("/dispatcher")
@@ -326,7 +327,11 @@ public class DispatcherServiceRestController {
 		try {
 			dsp = getDispatcher(props, jobId, (NodegroupRequestBody) requestBody, useAuth, true);
 			dsp.getJobTracker().incrementPercentComplete(dsp.getJobId(), 1, 10);
-			dsp.addPruneToColumn(requestBody.getPruneToColumn());
+			
+			QueryFlags flags = requestBody.getFlags();
+			if (flags != null) {
+				dsp.addPruneToColumn(flags.get(QueryFlags.PRUNE_TO_COL));
+			}
 
 			WorkThread thread = new WorkThread(dsp, requestBody.getExternalConstraints(), requestBody.getFlags(), qt, rt);
 			

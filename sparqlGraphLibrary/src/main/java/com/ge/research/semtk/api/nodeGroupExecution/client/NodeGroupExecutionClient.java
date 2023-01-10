@@ -82,7 +82,6 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	private static final String JSON_KEY_RUNTIME_CONSTRAINTS = "runtimeConstraints";
 	private static final String JSON_KEY_EDC_CONSTRAINTS = "externalDataConnectionConstraints";
 	private static final String JSON_KEY_FLAGS = "flags";
-	private static final String JSON_KEY_PRUNE_TO_COLUMN = "pruneToColumn";
 	
 	// service mapping
 	private static final String mappingPrefix = "/nodeGroupExecution";
@@ -518,13 +517,12 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	 * @param runtimeConstraintsJson
 	 * @param limitOverride
 	 * @param offsetOverride
-	 * @param pruneToColumn
 	 * @return
 	 * @throws Exception
 	 */
-	public Table execDispatchByIdToTable(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, JSONArray flagsJson, JSONArray runtimeConstraintsJson, int limitOverride, int offsetOverride, String pruneToColumn) throws Exception{
+	public Table execDispatchByIdToTable(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, JSONArray flagsJson, JSONArray runtimeConstraintsJson, int limitOverride, int offsetOverride) throws Exception{
 		// dispatch the job
-		String jobId = this.dispatchByIdToJobId(nodegroupID, overrideConn, edcConstraintsJson, flagsJson, runtimeConstraintsJson, limitOverride, offsetOverride, pruneToColumn);
+		String jobId = this.dispatchByIdToJobId(nodegroupID, overrideConn, edcConstraintsJson, flagsJson, runtimeConstraintsJson, limitOverride, offsetOverride);
 
 		try {
 			return this.waitForJobAndGetTable(jobId);
@@ -1638,12 +1636,11 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	 * @param runtimeConstraintsJson
 	 * @param limitOverride
 	 * @param offsetOverride
-	 * @param pruneToColumn
 	 * @return String jobId
 	 * @throws Exception
 	 */
-	public String dispatchByIdToJobId(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, JSONArray flagsJson, JSONArray runtimeConstraintsJson, int limitOverride, int offsetOverride, String pruneToColumn) throws Exception{
-		SimpleResultSet ret =  this.execDispatchById(nodegroupID, overrideConn, edcConstraintsJson, flagsJson, runtimeConstraintsJson, limitOverride, offsetOverride, pruneToColumn);
+	public String dispatchByIdToJobId(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, JSONArray flagsJson, JSONArray runtimeConstraintsJson, int limitOverride, int offsetOverride) throws Exception{
+		SimpleResultSet ret =  this.execDispatchById(nodegroupID, overrideConn, edcConstraintsJson, flagsJson, runtimeConstraintsJson, limitOverride, offsetOverride);
 		return ret.getResult("JobId");
 	}
 	
@@ -1663,7 +1660,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	}
 	
 	/**
-	 * Raw call to launch a select query:  version without query flags or pruneToColumn
+	 * Raw call to launch a select query:  version without query flags 
 	 * @param nodegroupID
 	 * @param overrideConn
 	 * @param edcConstraintsJson
@@ -1672,22 +1669,10 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	 * @throws Exception
 	 */
 	public SimpleResultSet execDispatchById(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, JSONArray runtimeConstraintsJson) throws Exception{
-		return this.execDispatchById(nodegroupID, overrideConn, edcConstraintsJson, null, runtimeConstraintsJson, -1, -1, null);
+		return this.execDispatchById(nodegroupID, overrideConn, edcConstraintsJson, null, runtimeConstraintsJson, -1, -1);
 	}
 	
-	/**
-	 * Raw call to launch a select query:  version without pruneToColumn
-	 * @param nodegroupID
-	 * @param overrideConn
-	 * @param edcConstraintsJson
-	 * @param flagsJson
-	 * @param runtimeConstraintsJson
-	 * @return
-	 * @throws Exception
-	 */
-	public SimpleResultSet execDispatchById(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, JSONArray flagsJson, JSONArray runtimeConstraintsJson, int limitOverride, int offsetOverride) throws Exception{
-		return this.execDispatchById(nodegroupID, overrideConn, edcConstraintsJson, flagsJson, runtimeConstraintsJson, limitOverride, offsetOverride, null);
-	}
+	
 	
 	/**
 	 * Raw call to launch a select query
@@ -1698,12 +1683,11 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	 * @param runtimeConstraintsJson
 	 * @param limitOverride
 	 * @param offsetOverride
-	 * @param pruneToColumn
 	 * @return SimpleResultSet containing "JobId"
 	 * @throws Exception
 	 */
 	@SuppressWarnings("unchecked")
-	public SimpleResultSet execDispatchById(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, JSONArray flagsJson, JSONArray runtimeConstraintsJson, int limitOverride, int offsetOverride, String pruneToColumn) throws Exception{
+	public SimpleResultSet execDispatchById(String nodegroupID, SparqlConnection overrideConn, JSONObject edcConstraintsJson, JSONArray flagsJson, JSONArray runtimeConstraintsJson, int limitOverride, int offsetOverride) throws Exception{
 		SimpleResultSet retval = null;
 		
 		conf.setServiceEndpoint(mappingPrefix + dispatchByIdEndpoint);
@@ -1716,8 +1700,6 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
 		this.parametersJSON.put(JSON_KEY_FLAGS, flagsJson == null ? null : flagsJson.toJSONString());
 		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS,            runtimeConstraintsJson == null ? null : runtimeConstraintsJson.toJSONString());		
-		if (pruneToColumn != null)
-			this.parametersJSON.put(JSON_KEY_PRUNE_TO_COLUMN, pruneToColumn);
 		
 		try{
 			LocalLogger.logToStdErr("sending executeDispatchById request");

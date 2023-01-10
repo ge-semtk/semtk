@@ -542,8 +542,7 @@ public class NodeGroupExecutionRestController {
 					requestBody.getRuntimeConstraints(), 
 					requestBody.getLimitOverride(),
 					requestBody.getOffsetOverride(),
-					targetId,
-					requestBody.getPruneToColumn());
+					targetId);
 			
 			retval.setSuccess(true);
 			retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, ngExecutor.getJobID()); 
