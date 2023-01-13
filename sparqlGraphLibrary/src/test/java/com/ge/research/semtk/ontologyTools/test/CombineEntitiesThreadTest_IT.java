@@ -32,18 +32,18 @@ public class CombineEntitiesThreadTest_IT {
 	public void test1() throws Exception {
 		// load test data
 		TestGraph.clearGraph();
-		TestGraph.uploadOwlResource(this, "AnimalSubProps.owl");
 		TestGraph.uploadOwlResource(this, "AnimalsToCombineData.owl");	
+		TestGraph.uploadOwlResource(this, "AnimalSubProps.owl");
 		
 		JobTracker tracker = new JobTracker(TestGraph.getSei());
 		String jobId = JobTracker.generateJobId();
-		ArrayList<String> skipProps = new ArrayList<String>();
-		skipProps.add("http://AnimalSubProps#name");
+		ArrayList<String> propsToSkip = new ArrayList<String>();
+		propsToSkip.add("http://AnimalSubProps#name");
 		CombineEntitiesThread combiner = new CombineEntitiesThread(
 				tracker, jobId, 
 				TestGraph.getOInfo(), TestGraph.getSparqlConn(), 
 				"http://AnimalsToCombineData#auntyEm", "http://AnimalsToCombineData#auntyEmDuplicate", 
-				null, skipProps
+				null, propsToSkip
 				);
 		combiner.start();
 		tracker.waitForSuccess(jobId, 300 * 1000);
@@ -98,8 +98,8 @@ public class CombineEntitiesThreadTest_IT {
 	public void testErrors() throws Exception {
 		// load test data
 		TestGraph.clearGraph();
-		TestGraph.uploadOwlResource(this, "AnimalSubProps.owl");
 		TestGraph.uploadOwlResource(this, "AnimalsToCombineData.owl");	
+		TestGraph.uploadOwlResource(this, "AnimalSubProps.owl");
 		
 		JobTracker tracker = new JobTracker(TestGraph.getSei());
 		
@@ -168,6 +168,63 @@ public class CombineEntitiesThreadTest_IT {
 		
 	}
 	
+	
+	/**
+	 * TableThread version
+	 * Combine by name and type 
+	 * @throws Exception
+	 */
+	@Test
+	public void testTableNameAndType() throws Exception {
+		// load test data
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "AnimalSubProps.owl");
+		TestGraph.uploadOwlResource(this, "AnimalsToCombineData.owl");	
+		
+		JobTracker tracker = new JobTracker(TestGraph.getSei());
+		String jobId = JobTracker.generateJobId();
+		ResultsClient resClient = IntegrationTestUtility.getResultsClient();
+		
+		final String NAME_PROP = "http://AnimalSubProps#name";
+		final String PRIMARY_NAME_COL = "target_name";
+		final String SECONDARY_NAME_COL = "duplicate_name";
+		final String TYPE_PROP = "#type";
+		final String SECONDARY_TYPE_COL = "duplicate_type";
+		
+		Hashtable<String, String> targetHash = new Hashtable<String,String>();
+		targetHash.put(PRIMARY_NAME_COL, NAME_PROP);
+		
+		Hashtable<String, String> duplicateHash = new Hashtable<String,String>();
+		duplicateHash.put(SECONDARY_NAME_COL, NAME_PROP);
+		duplicateHash.put(SECONDARY_TYPE_COL, TYPE_PROP);
+		
+		Table inputTable = new Table(new String [] {PRIMARY_NAME_COL, SECONDARY_NAME_COL, SECONDARY_TYPE_COL});
+		inputTable.addRow(new String [] {"auntyEm", "AUNTY_EM", "http://AnimalSubProps#Tiger"});
+		
+		CombineEntitiesInputTable tab = new CombineEntitiesInputTable(targetHash, duplicateHash, inputTable);
+		CombineEntitiesTableThread thread = new CombineEntitiesTableThread(tracker, resClient, jobId, 
+				TestGraph.getOInfo(), TestGraph.getSparqlAuthConn(), 
+				null, null,
+				tab);
+		thread.run();
+		
+		try {
+			tracker.waitForSuccess(jobId, 300 * 1000);
+		} catch (Exception e) {
+			
+			System.err.print(IntegrationTestUtility.getResultsClient().getTableResultsJson(jobId, 10).toCSVString());
+			throw(e);
+		}
+		
+		/** 
+		 * Should combine AuntyEmDuplicate with AuntyEm
+		 * Remove the name from AuntyEmDuplicate
+		 * In table form, the name and scaryName combinatorials make it hard to read, but easier to check then JSON-LD results
+		 */
+		TestGraph.queryAndCheckResults(this, "animalsToCombineTigerTree.json", "animalsToCombineTigerTree_results1.csv");
+
+	}
+	
 	/**
 	 * TableThread version
 	 * Combine by name.
@@ -229,62 +286,6 @@ public class CombineEntitiesThreadTest_IT {
 	 * @throws Exception
 	 */
 	@Test
-	public void testTableNameAndType() throws Exception {
-		// load test data
-		TestGraph.clearGraph();
-		TestGraph.uploadOwlResource(this, "AnimalSubProps.owl");
-		TestGraph.uploadOwlResource(this, "AnimalsToCombineData.owl");	
-		
-		JobTracker tracker = new JobTracker(TestGraph.getSei());
-		String jobId = JobTracker.generateJobId();
-		ResultsClient resClient = IntegrationTestUtility.getResultsClient();
-		
-		final String NAME_PROP = "http://AnimalSubProps#name";
-		final String PRIMARY_NAME_COL = "target_name";
-		final String SECONDARY_NAME_COL = "duplicate_name";
-		final String TYPE_PROP = "#type";
-		final String SECONDARY_TYPE_COL = "duplicate_type";
-		
-		Hashtable<String, String> targetHash = new Hashtable<String,String>();
-		targetHash.put(PRIMARY_NAME_COL, NAME_PROP);
-		
-		Hashtable<String, String> duplicateHash = new Hashtable<String,String>();
-		duplicateHash.put(SECONDARY_NAME_COL, NAME_PROP);
-		duplicateHash.put(SECONDARY_TYPE_COL, TYPE_PROP);
-		
-		Table inputTable = new Table(new String [] {PRIMARY_NAME_COL, SECONDARY_NAME_COL, SECONDARY_TYPE_COL});
-		inputTable.addRow(new String [] {"auntyEm", "AUNTY_EM", "http://AnimalSubProps#Tiger"});
-		
-		CombineEntitiesInputTable tab = new CombineEntitiesInputTable(targetHash, duplicateHash, inputTable);
-		CombineEntitiesTableThread thread = new CombineEntitiesTableThread(tracker, resClient, jobId, 
-				TestGraph.getOInfo(), TestGraph.getSparqlAuthConn(), 
-				null, null,
-				tab);
-		thread.run();
-		
-		try {
-			tracker.waitForSuccess(jobId, 300 * 1000);
-		} catch (Exception e) {
-			
-			System.err.print(IntegrationTestUtility.getResultsClient().getTableResultsJson(jobId, 10).toCSVString());
-			throw(e);
-		}
-		
-		/** 
-		 * Should combine AuntyEmDuplicate with AuntyEm
-		 * Remove the name from AuntyEmDuplicate
-		 * In table form, the name and scaryName combinatorials make it hard to read, but easier to check then JSON-LD results
-		 */
-		TestGraph.queryAndCheckResults(this, "animalsToCombineTigerTree.json", "animalsToCombineTigerTree_results1.csv");
-
-	}
-	
-	/**
-	 * TableThread version
-	 * Combine by name and type 
-	 * @throws Exception
-	 */
-	@Test
 	public void testTableNameAndTypeAndDeletes() throws Exception {
 		// load test data
 		TestGraph.clearGraph();
@@ -310,22 +311,22 @@ public class CombineEntitiesThreadTest_IT {
 		duplicateHash.put(SECONDARY_TYPE_COL, TYPE_PROP);
 		
 		// use the name from the duplicate
-		ArrayList<String> deleteFromTarget = new ArrayList<String>();
-		deleteFromTarget.add(NAME_PROP);
+		ArrayList<String> delTarget = new ArrayList<String>();
+		delTarget.add(NAME_PROP);
 		// remove the scaryName and type from the duplicate
-		ArrayList<String> deleteFromDuplicate = new ArrayList<String>();
-		deleteFromDuplicate.add(SCARY_NAME_PROP);
-		deleteFromDuplicate.add(TYPE_PROP);
+		ArrayList<String> delDuplicate = new ArrayList<String>();
+		delDuplicate.add(SCARY_NAME_PROP);
+		delDuplicate.add(TYPE_PROP);
 		
 		// combine these pairs, looking up duplicate by name and type
-		Table inputTable = new Table(new String [] {PRIMARY_NAME_COL, SECONDARY_NAME_COL, SECONDARY_TYPE_COL});
-		inputTable.addRow(new String [] {"auntyEm", "AUNTY_EM", "http://AnimalSubProps#Tiger"});
-		inputTable.addRow(new String [] {"Michaela", "Animal", "http://AnimalSubProps#Animal"});
+		Table inTab = new Table(new String [] {PRIMARY_NAME_COL, SECONDARY_NAME_COL, SECONDARY_TYPE_COL});
+		inTab.addRow(new String [] {"auntyEm", "AUNTY_EM", "http://AnimalSubProps#Tiger"});
+		inTab.addRow(new String [] {"Michaela", "Animal", "http://AnimalSubProps#Animal"});
 		
-		CombineEntitiesInputTable tab = new CombineEntitiesInputTable(targetHash, duplicateHash, inputTable);
+		CombineEntitiesInputTable tab = new CombineEntitiesInputTable(targetHash, duplicateHash, inTab);
 		CombineEntitiesTableThread thread = new CombineEntitiesTableThread(tracker, resClient, jobId, 
 				TestGraph.getOInfo(), TestGraph.getSparqlAuthConn(), 
-				deleteFromTarget, deleteFromDuplicate,
+				delTarget, delDuplicate,
 				tab);
 		thread.run();
 		
