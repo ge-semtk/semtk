@@ -31,7 +31,7 @@ public class QueryRequestBody extends NodegroupRequestBody {
 	@Schema(required = false,  example = "[{\"SparqlID\":\"?name\",\"Operator\":\"MATCHES\",\"Operands\":[\"Fred\"]}]")
 	private String constraintSet;	
 	
-	@Schema(required = false,  example = "[\"UNOPTIONALIZE_CONSTRAINED\", \"PRUNE_TO_COLUMN:myCol\"]")
+	@Schema(required = false,  example = "[\"UNOPTIONALIZE_CONSTRAINED\", \"PRUNE_TO_COL:myCol\"]")
 	private String flags;			// a string parseable to a JSONArray
 	
 	

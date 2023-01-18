@@ -35,7 +35,7 @@ public class DispatchRequestBody extends SparqlConnRequestBody {
 	@Schema(
 			description = "Query flags array",
 			requiredMode = Schema.RequiredMode.NOT_REQUIRED,
-			example = "[\"PRUNE_TO_COLUMN:myCol\", \"UNOPTIONALIZE_CONSTRAINED\"]")
+			example = "[\"PRUNE_TO_COL:myCol\", \"UNOPTIONALIZE_CONSTRAINED\"]")
 	private String flags; // json array
 	
 	@Schema(
