@@ -40,6 +40,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
@@ -60,6 +61,8 @@ import java.util.zip.Deflater;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import java.util.zip.Inflater;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.parsers.DocumentBuilder;
@@ -944,5 +947,63 @@ public abstract class Utility {
 	 */
 	public static String getSecondsSince(long timeMillis) {
 		return String.format("%.3f", (System.currentTimeMillis() - timeMillis) / 1000.0);
+	}
+
+
+	/**
+	 * Extract contents from a zip file input stream. Modified from https://www.baeldung.com/java-compress-and-uncompress
+	 * @param zis a zip file input stream
+	 * @throws Exception
+	 *
+	 * TODO unit tests
+	 */
+	public static void unzip(ZipInputStream zis, File destDir) throws Exception {
+		byte[] buffer = new byte[1024];
+		ZipEntry zipEntry = zis.getNextEntry();
+		if (zipEntry == null) {
+			throw new Exception("No zipped contents"); // e.g. if file is not a zip file
+		}
+		while (zipEntry != null) {
+			File newFile = new File(destDir, zipEntry.getName());
+
+			// guard against Zip Slip vulnerability
+			String destDirPath = destDir.getCanonicalPath();
+			String destFilePath = newFile.getCanonicalPath();
+			if (!destFilePath.startsWith(destDirPath + File.separator)) {
+				throw new IOException("Cannot unzip to destination outside of target dir: " + zipEntry.getName());
+			}
+
+			// perform the unzip
+			if (zipEntry.isDirectory()) {
+				if (!newFile.isDirectory() && !newFile.mkdirs()) {
+					throw new IOException("Failed to create directory " + newFile);
+				}
+			} else {
+				// fix for Windows-created archives
+				File parent = newFile.getParentFile();
+				if (!parent.isDirectory() && !parent.mkdirs()) {
+					throw new IOException("Failed to create directory " + parent);
+				}
+
+				// write file content
+				FileOutputStream fos = new FileOutputStream(newFile);
+				int len;
+				while ((len = zis.read(buffer)) > 0) {
+					fos.write(buffer, 0, len);
+				}
+				fos.close();
+			}
+			zipEntry = zis.getNextEntry();
+		}
+		zis.closeEntry();
+		zis.close();
+	}
+
+	/**
+	 * Create a temporary subdirectory within the system default temp directory
+	 * e.g. C:\Users\Smith\AppData\Local\Temp\semtk.1121781605078154101
+	 */
+	public static File createTempDirectory() throws IOException {
+		return Files.createTempDirectory("semtk.", new FileAttribute<?>[] { }).toFile();
 	}
 }

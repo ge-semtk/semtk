@@ -4,14 +4,13 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import com.ge.research.semtk.connutil.DirectoryConnector;
-import com.google.common.io.Files;
+import com.ge.research.semtk.utility.Utility;
 
 public class DirectoryConnectorTest {
 
@@ -19,7 +18,7 @@ public class DirectoryConnectorTest {
 	public void test() throws Exception, IOException {
 		// make a temp dir and set up
 		
-		File tempDir = Files.createTempDir();
+		File tempDir = Utility.createTempDirectory();
 		String dirPath = tempDir.getAbsolutePath();
 		DirectoryConnector dirconn = new DirectoryConnector(dirPath);
 				
