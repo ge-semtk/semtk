@@ -17,8 +17,10 @@
 
 package com.ge.research.semtk.services.utility;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.zip.ZipInputStream;
 
 import javax.annotation.PostConstruct;
 
@@ -26,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -132,12 +135,12 @@ public class UtilityServiceRestController {
 		
 		return res.toJson();	
 	}	
-	
-	
+
+
 	@Operation(description="Insert an EDC mnemonic")
 	@CrossOrigin
-	@RequestMapping(value="/edc/insertEdcMnemonic", method= RequestMethod.POST)
-	public JSONObject insertEdcMnemonic(@RequestParam("data") MultipartFile dataFile){	
+	@RequestMapping(value="/edc/insertEdcMnemonic", method=RequestMethod.POST, consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
+	public JSONObject insertEdcMnemonic(@RequestParam("data") MultipartFile dataFile){
 		
 		RecordProcessResults retVal = new RecordProcessResults();
 		try {
@@ -345,6 +348,43 @@ public class UtilityServiceRestController {
 	}	
 	
 	
+	/**
+	 * Load content to triplestore as specified in a manifest.
+	 * Manifest and content to load are contained in an archive (.zip) file
+	 */
+	@Operation(description="Load content to triplestore as specified in a manifest")
+	@CrossOrigin
+	@RequestMapping(value="/loadManifest", method=RequestMethod.POST, consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
+	public JSONObject loadManifest(@RequestParam("archiveFile") MultipartFile archiveFile){
+
+		final String ENDPOINT_NAME = "loadManifest";
+		LocalLogger.logToStdOut(SERVICE_NAME + " " + ENDPOINT_NAME);
+
+		SimpleResultSet res;
+		try {
+
+			// unzip the file
+			if(!archiveFile.getOriginalFilename().endsWith(".zip")) {
+				throw new Exception("This endpoint only accepts zip archive files");
+			}
+			File tempDir = Utility.createTempDirectory();
+			Utility.unzip(new ZipInputStream(archiveFile.getInputStream()), tempDir);
+			LocalLogger.logToStdOut("Unzipped " + archiveFile.getOriginalFilename() + " to " + tempDir.toString());
+
+			// TODO load the contents of the zip file
+
+			res = new SimpleResultSet(true);
+
+		} catch (Exception e) {
+			res = new SimpleResultSet(false);
+			res.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			LocalLogger.printStackTrace(e);
+		}
+		// TODO finally delete the temp dir
+		return res.toJson();
+	}
+
+
 	/**
 	 * Determine if an EDC mnemonic exists in the services config
 	 */
