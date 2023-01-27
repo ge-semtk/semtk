@@ -349,23 +349,27 @@ public class UtilityServiceRestController {
 	
 	
 	/**
-	 * Load models, data, and nodegroups from a zip file
+	 * Load content to triplestore as specified in a manifest.
+	 * Manifest and content to load are contained in an archive (.zip) file
 	 */
-	@Operation(description="Load models, data, and nodegroups from a zip file")
+	@Operation(description="Load content to triplestore as specified in a manifest")
 	@CrossOrigin
-	@RequestMapping(value="/loadFromZip", method=RequestMethod.POST, consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
-	public JSONObject loadFromZip(@RequestParam("data") MultipartFile zipFile){
+	@RequestMapping(value="/loadManifest", method=RequestMethod.POST, consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
+	public JSONObject loadManifest(@RequestParam("archiveFile") MultipartFile archiveFile){
+
+		final String ENDPOINT_NAME = "loadManifest";
+		LocalLogger.logToStdOut(SERVICE_NAME + " " + ENDPOINT_NAME);
 
 		SimpleResultSet res;
 		try {
 
-			// unzip the file to a temp dir
-			if(!zipFile.getOriginalFilename().endsWith(".zip")) {
-				throw new Exception("This endpoint only accepts zip files");
+			// unzip the file
+			if(!archiveFile.getOriginalFilename().endsWith(".zip")) {
+				throw new Exception("This endpoint only accepts zip archive files");
 			}
 			File tempDir = Utility.createTempDirectory();
-			Utility.unzip(new ZipInputStream(zipFile.getInputStream()), tempDir);
-			LocalLogger.logToStdOut("Unzipped " + zipFile.getOriginalFilename() + " to " + tempDir.toString());
+			Utility.unzip(new ZipInputStream(archiveFile.getInputStream()), tempDir);
+			LocalLogger.logToStdOut("Unzipped " + archiveFile.getOriginalFilename() + " to " + tempDir.toString());
 
 			// TODO load the contents of the zip file
 
@@ -373,9 +377,10 @@ public class UtilityServiceRestController {
 
 		} catch (Exception e) {
 			res = new SimpleResultSet(false);
-			res.addRationaleMessage(SERVICE_NAME, "loadFromZip", e);
+			res.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
 			LocalLogger.printStackTrace(e);
 		}
+		// TODO finally delete the temp dir
 		return res.toJson();
 	}
 
