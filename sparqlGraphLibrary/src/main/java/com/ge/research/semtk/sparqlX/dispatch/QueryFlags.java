@@ -13,6 +13,7 @@ public class QueryFlags {
 	public static final String FLAG_UNOPTIONALIZE_CONSTRAINED = "UNOPTIONALIZE_CONSTRAINED";
 	public static final String PRUNE_TO_COL = "PRUNE_TO_COL";
 	private static final String DELIM = ":";
+	private static final String RDB_QUERYGEN_PREFIX = "RDB_QUERYGEN";  // prefix for rdb experiment
 	
 	HashSet<String> flags = new HashSet<String>();
 	
@@ -43,6 +44,7 @@ public class QueryFlags {
 	
 	private void verifyFlag(String f) throws Exception {
 		if (! f.equals(FLAG_UNOPTIONALIZE_CONSTRAINED)  &&
+				! f.startsWith(RDB_QUERYGEN_PREFIX)  &&
 				! f.startsWith(PRUNE_TO_COL + DELIM)
 				) {
 			throw new Exception("Invalid query flag: " + f);
