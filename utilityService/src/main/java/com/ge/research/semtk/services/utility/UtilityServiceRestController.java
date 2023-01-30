@@ -18,11 +18,13 @@
 package com.ge.research.semtk.services.utility;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.zip.ZipInputStream;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -235,11 +237,8 @@ public class UtilityServiceRestController {
 		}
 		
 		return res.toJson();	
-	}	
-	
-	
-	// TODO add insertFDCCacheSpec endpoint
-	
+	}
+
 	
 	@Operation(description="Delete an FDC cache specification")
 	@CrossOrigin
@@ -321,9 +320,7 @@ public class UtilityServiceRestController {
 							
 			requestBody.validate();
 			JSONObject plotSpecJson = requestBody.getPlotSpecJson();	// the plot spec with placeholders e.g. x: "SEMTK_TABLE.col[col_name]"
-			LocalLogger.logToStdOut(plotSpecJson.toJSONString());	// TODO REMOVE
 			Table table = Table.fromJson(requestBody.getTableJson());	// the data table
-			LocalLogger.logToStdOut(table.toCSVString());  // TODO REMOVE
 			
 			if(!plotSpecJson.containsKey("type")){
 				throw new Exception("Plot type not specified");
@@ -351,16 +348,19 @@ public class UtilityServiceRestController {
 	/**
 	 * Load content to triplestore as specified in a manifest.
 	 * Manifest and content to load are contained in an archive (.zip) file
+	 *
+	 * TODO implementation in progress
 	 */
 	@Operation(description="Load content to triplestore as specified in a manifest")
 	@CrossOrigin
 	@RequestMapping(value="/loadManifest", method=RequestMethod.POST, consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
-	public JSONObject loadManifest(@RequestParam("archiveFile") MultipartFile archiveFile){
+	public void loadManifest(@RequestParam("archiveFile") MultipartFile archiveFile, HttpServletResponse resp){
 
 		final String ENDPOINT_NAME = "loadManifest";
 		LocalLogger.logToStdOut(SERVICE_NAME + " " + ENDPOINT_NAME);
 
-		SimpleResultSet res;
+		resp.addHeader("content-type", "text/plain; charset=utf-8");
+		PrintWriter printWriter = null;
 		try {
 
 			// unzip the file
@@ -371,17 +371,35 @@ public class UtilityServiceRestController {
 			Utility.unzip(new ZipInputStream(archiveFile.getInputStream()), tempDir);
 			LocalLogger.logToStdOut("Unzipped " + archiveFile.getOriginalFilename() + " to " + tempDir.toString());
 
-			// TODO load the contents of the zip file
+			resp.flushBuffer();  // added this
+			printWriter = resp.getWriter();
 
-			res = new SimpleResultSet(true);
+			// load the contents of the zip file  TODO implement
+			printWriter.println("Loading manifest...\n");
+			printWriter.flush();
+			Thread.sleep(5*1000);
+			printWriter.println("Loaded ontologies (not implemented yet)");
+			printWriter.flush();
+			Thread.sleep(5*1000);
+			printWriter.println("Loaded nodegroups (not implemented yet)");
+			printWriter.flush();
+			Thread.sleep(5*1000);
+			printWriter.println("Loaded instance data (not implemented yet)");
+			printWriter.flush();
+			Thread.sleep(5*1000);
+			printWriter.println("Load complete");
+			printWriter.flush();
 
-		} catch (Exception e) {
-			res = new SimpleResultSet(false);
-			res.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			LocalLogger.logToStdOut(SERVICE_NAME + " " + ENDPOINT_NAME + " completed");
+
+		} catch (Exception e){
 			LocalLogger.printStackTrace(e);
+		}finally {
+			if(printWriter != null) {
+				printWriter.close();
+			}
+			// TODO delete the temp dir
 		}
-		// TODO finally delete the temp dir
-		return res.toJson();
 	}
 
 
