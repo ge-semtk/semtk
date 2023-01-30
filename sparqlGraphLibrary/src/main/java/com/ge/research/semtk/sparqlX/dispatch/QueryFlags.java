@@ -13,6 +13,7 @@ public class QueryFlags {
 	public static final String FLAG_UNOPTIONALIZE_CONSTRAINED = "UNOPTIONALIZE_CONSTRAINED";
 	public static final String PRUNE_TO_COL = "PRUNE_TO_COL";
 	private static final String DELIM = ":";
+	private static final String RDB_QUERYGEN_PREFIX = "RDB_QUERYGEN";  // prefix for rdb experiment
 	
 	HashSet<String> flags = new HashSet<String>();
 	
@@ -41,11 +42,20 @@ public class QueryFlags {
 		}
 	}
 	
-	private void addFlags(JSONArray jsonArr) {
+	private void verifyFlag(String f) throws Exception {
+		if (! f.equals(FLAG_UNOPTIONALIZE_CONSTRAINED)  &&
+				! f.startsWith(RDB_QUERYGEN_PREFIX)  &&
+				! f.startsWith(PRUNE_TO_COL + DELIM)
+				) {
+			throw new Exception("Invalid query flag: " + f);
+		}
+	}
+	
+	private void addFlags(JSONArray jsonArr) throws Exception {
 		if (jsonArr != null) {
 			for (int i=0; i < jsonArr.size(); i++) {
 				String f = (String) jsonArr.get(i);
-				this.flags.add(f);
+				this.set(f);
 			}
 		}
 	}
@@ -54,12 +64,15 @@ public class QueryFlags {
 		return this.flags.isEmpty();
 	}
 	
-	public void set(String flagVal) {
+	public void set(String flagVal) throws Exception {
+		this.verifyFlag(flagVal);
 		this.flags.add(flagVal);
 	}
 	
-	public void set(String flagVal, String param) {
-		this.flags.add(flagVal + DELIM + URLEncoder.encode(param, Charset.defaultCharset()));
+	public void set(String flagVal, String param) throws Exception {
+		String f = flagVal + DELIM + URLEncoder.encode(param, Charset.defaultCharset());
+		verifyFlag(f);
+		this.flags.add(f);
 	}
 	
 	public boolean isSet(String flagVal) {
