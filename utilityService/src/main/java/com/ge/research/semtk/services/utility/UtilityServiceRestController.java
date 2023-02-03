@@ -346,17 +346,14 @@ public class UtilityServiceRestController {
 	
 	
 	/**
-	 * Load content to triplestore as specified in a manifest.
-	 * Manifest and content to load are contained in an archive (.zip) file
-	 *
-	 * TODO implementation in progress
+	 * Load content from an ingestion package (zip file) to triplestore.
 	 */
-	@Operation(description="Load content to triplestore as specified in a manifest")
+	@Operation(description="Load content from an ingestion package to the triplestore")
 	@CrossOrigin
-	@RequestMapping(value="/loadManifest", method=RequestMethod.POST, consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
-	public void loadManifest(@RequestParam("archiveFile") MultipartFile archiveFile, HttpServletResponse resp){
+	@RequestMapping(value="/loadIngestionPackage", method=RequestMethod.POST, consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
+	public void loadIngestionPackage(@RequestParam("file") MultipartFile ingestionPackageZipFile, HttpServletResponse resp){
 
-		final String ENDPOINT_NAME = "loadManifest";
+		final String ENDPOINT_NAME = "loadIngestionPackage";
 		LocalLogger.logToStdOut(SERVICE_NAME + " " + ENDPOINT_NAME);
 
 		resp.addHeader("content-type", "text/plain; charset=utf-8");
@@ -364,18 +361,19 @@ public class UtilityServiceRestController {
 		try {
 
 			// unzip the file
-			if(!archiveFile.getOriginalFilename().endsWith(".zip")) {
-				throw new Exception("This endpoint only accepts zip archive files");
+			if(!ingestionPackageZipFile.getOriginalFilename().endsWith(".zip")) {
+				throw new Exception("This endpoint only accepts ingestion packages in zip file format");
 			}
 			File tempDir = Utility.createTempDirectory();
-			Utility.unzip(new ZipInputStream(archiveFile.getInputStream()), tempDir);
-			LocalLogger.logToStdOut("Unzipped " + archiveFile.getOriginalFilename() + " to " + tempDir.toString());
+			Utility.unzip(new ZipInputStream(ingestionPackageZipFile.getInputStream()), tempDir);
+			LocalLogger.logToStdOut("Unzipped " + ingestionPackageZipFile.getOriginalFilename() + " to " + tempDir.toString());
 
-			resp.flushBuffer();  // added this
+			resp.flushBuffer();
 			printWriter = resp.getWriter();
 
-			// load the contents of the zip file  TODO implement
-			printWriter.println("Loading manifest...\n");
+			// load the contents of the ingestion package
+			// TODO implement
+			printWriter.println("Loading ingestion package...");
 			printWriter.flush();
 			Thread.sleep(5*1000);
 			printWriter.println("Loaded ontologies (not implemented yet)");
