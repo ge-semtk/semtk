@@ -962,6 +962,7 @@ public abstract class Utility {
 	/**
 	 * Extract contents from a zip file input stream. Modified from https://www.baeldung.com/java-compress-and-uncompress
 	 * @param zis a zip file input stream
+	 * @param destDir the destination directory
 	 * @throws Exception
 	 */
 	public static void unzip(ZipInputStream zis, File destDir) throws Exception {

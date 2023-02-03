@@ -207,13 +207,12 @@ public class UtilityTest {
 
 		// confirm successful unzip
 		try {
-			File zipFile = Utility.getResourceAsFile(this, "Animals.zip");  // TODO replace Animals.zip with a realistic ingestion package when available
+			File zipFile = Utility.getResourceAsFile(this, "IngestionPackage.zip");
 			tempDir = Utility.createTempDirectory();
 			Utility.unzip(new ZipInputStream(new FileInputStream(zipFile)), tempDir);
-			assertTrue((new File(tempDir.getAbsolutePath() + File.separator + "Animals").exists()));
-			assertTrue((new File(tempDir.getAbsolutePath() + File.separator + "Animals" + File.separator + "manifest.yaml").exists()));
-			assertTrue((new File(tempDir.getAbsolutePath() + File.separator + "Animals" + File.separator + "owl" + File.separator + "AnimalsToCombineData.owl").exists()));
-			assertTrue((new File(tempDir.getAbsolutePath() + File.separator + "Animals" + File.separator + "owl" + File.separator + "AnimalSubProps.owl").exists()));
+			assertTrue((new File(tempDir.getAbsolutePath() + File.separator + "manifest.yaml").exists()));
+			assertTrue((new File(tempDir.getAbsolutePath() + File.separator + "manifests" + File.separator + "rack.yaml").exists()));
+			assertTrue((new File(tempDir.getAbsolutePath() + File.separator + "nodegroups" + File.separator + "queries" + File.separator + "GetDataInsertedByFromGuid.json").exists()));
 		}catch(Exception e) {
 			throw e;
 		}finally{
