@@ -20,14 +20,16 @@ package com.ge.research.semtk.utility.test;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.math.BigInteger;
 import java.net.URL;
-import java.nio.charset.Charset;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.zip.ZipInputStream;
 import java.util.HashSet;
 import java.util.Random;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import com.ge.research.semtk.utility.Utility;
@@ -198,4 +200,37 @@ public class UtilityTest {
 			file.delete();
 		}
 	}
+
+	@Test
+	public void testUnzip() throws Exception{
+		File tempDir = null;
+
+		// confirm successful unzip
+		try {
+			File zipFile = Utility.getResourceAsFile(this, "Animals.zip");  // TODO replace Animals.zip with a realistic ingestion package when available
+			tempDir = Utility.createTempDirectory();
+			Utility.unzip(new ZipInputStream(new FileInputStream(zipFile)), tempDir);
+			assertTrue((new File(tempDir.getAbsolutePath() + File.separator + "Animals").exists()));
+			assertTrue((new File(tempDir.getAbsolutePath() + File.separator + "Animals" + File.separator + "manifest.yaml").exists()));
+			assertTrue((new File(tempDir.getAbsolutePath() + File.separator + "Animals" + File.separator + "owl" + File.separator + "AnimalsToCombineData.owl").exists()));
+			assertTrue((new File(tempDir.getAbsolutePath() + File.separator + "Animals" + File.separator + "owl" + File.separator + "AnimalSubProps.owl").exists()));
+		}catch(Exception e) {
+			throw e;
+		}finally{
+			FileUtils.deleteDirectory(tempDir);
+		}
+
+		// confirm error if try to unzip a file other than a zip file
+		try {
+			File nonZipFile = Utility.getResourceAsFile(this, "animalQuery.json");
+			tempDir = Utility.createTempDirectory();
+			Utility.unzip(new ZipInputStream(new FileInputStream(nonZipFile)), tempDir);
+			fail(); 	// should not get here
+		}catch(Exception e) {
+			assertTrue(e.getMessage().contains("No zipped contents"));
+		}finally{
+			FileUtils.deleteDirectory(tempDir);
+		}
+	}
+
 }

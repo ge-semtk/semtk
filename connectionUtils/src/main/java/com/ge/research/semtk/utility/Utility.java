@@ -954,8 +954,6 @@ public abstract class Utility {
 	 * Extract contents from a zip file input stream. Modified from https://www.baeldung.com/java-compress-and-uncompress
 	 * @param zis a zip file input stream
 	 * @throws Exception
-	 *
-	 * TODO unit tests
 	 */
 	public static void unzip(ZipInputStream zis, File destDir) throws Exception {
 		byte[] buffer = new byte[1024];
