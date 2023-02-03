@@ -1003,8 +1003,6 @@ public abstract class Utility {
 			}
 			zipEntry = zis.getNextEntry();
 		}
-		zis.closeEntry();
-		zis.close();
 	}
 
 	/**

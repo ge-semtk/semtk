@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
@@ -346,57 +347,75 @@ public class UtilityServiceRestController {
 	
 	
 	/**
-	 * Load content from an ingestion package (zip file) to triplestore.
+	 * Load content from an ingestion package (zip file) to triplestore
 	 */
-	@Operation(description="Load content from an ingestion package to the triplestore")
+	@Operation(description="Load content from an ingestion package")
 	@CrossOrigin
 	@RequestMapping(value="/loadIngestionPackage", method=RequestMethod.POST, consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
 	public void loadIngestionPackage(@RequestParam("file") MultipartFile ingestionPackageZipFile, HttpServletResponse resp){
 
 		final String ENDPOINT_NAME = "loadIngestionPackage";
 		LocalLogger.logToStdOut(SERVICE_NAME + " " + ENDPOINT_NAME);
+		PrintWriter responseWriter = null;
 
-		resp.addHeader("content-type", "text/plain; charset=utf-8");
-		PrintWriter printWriter = null;
+		// set up
 		try {
+			resp.addHeader("content-type", "text/plain; charset=utf-8");
+			resp.flushBuffer();
+			responseWriter = resp.getWriter();
+		}catch(Exception e) {
+			LocalLogger.printStackTrace(e);
+		}
 
+		ZipInputStream zipInputStream = null;
+		File tempDir = null;
+		try {
 			// unzip the file
 			if(!ingestionPackageZipFile.getOriginalFilename().endsWith(".zip")) {
 				throw new Exception("This endpoint only accepts ingestion packages in zip file format");
 			}
-			File tempDir = Utility.createTempDirectory();
-			Utility.unzip(new ZipInputStream(ingestionPackageZipFile.getInputStream()), tempDir);
+			zipInputStream = new ZipInputStream(ingestionPackageZipFile.getInputStream());
+			tempDir = Utility.createTempDirectory();
+			Utility.unzip(zipInputStream, tempDir);
 			LocalLogger.logToStdOut("Unzipped " + ingestionPackageZipFile.getOriginalFilename() + " to " + tempDir.toString());
-
-			resp.flushBuffer();
-			printWriter = resp.getWriter();
 
 			// load the contents of the ingestion package
 			// TODO implement
-			printWriter.println("Loading ingestion package...");
-			printWriter.flush();
+			responseWriter.println("Loading ingestion package...");
+			responseWriter.flush();
 			Thread.sleep(5*1000);
-			printWriter.println("Loaded ontologies (not implemented yet)");
-			printWriter.flush();
+			responseWriter.println("Loaded ontologies (not implemented yet)");
+			responseWriter.flush();
 			Thread.sleep(5*1000);
-			printWriter.println("Loaded nodegroups (not implemented yet)");
-			printWriter.flush();
+			responseWriter.println("Loaded nodegroups (not implemented yet)");
+			responseWriter.flush();
 			Thread.sleep(5*1000);
-			printWriter.println("Loaded instance data (not implemented yet)");
-			printWriter.flush();
+			responseWriter.println("Loaded instance data (not implemented yet)");
+			responseWriter.flush();
 			Thread.sleep(5*1000);
-			printWriter.println("Load complete");
-			printWriter.flush();
+			responseWriter.println("Load complete");
+			responseWriter.flush();
 
 			LocalLogger.logToStdOut(SERVICE_NAME + " " + ENDPOINT_NAME + " completed");
 
 		} catch (Exception e){
+			responseWriter.println("Error: " + e.getMessage());
+			responseWriter.flush();
 			LocalLogger.printStackTrace(e);
 		}finally {
-			if(printWriter != null) {
-				printWriter.close();
+			try {
+				if(responseWriter != null) {
+					responseWriter.close();
+				}
+				if(zipInputStream != null) {
+					zipInputStream.close();
+				}
+				if(tempDir != null) {
+					FileUtils.deleteDirectory(tempDir);
+				}
+			}catch(Exception e) {
+				LocalLogger.printStackTrace(e);
 			}
-			// TODO delete the temp dir
 		}
 	}
 
