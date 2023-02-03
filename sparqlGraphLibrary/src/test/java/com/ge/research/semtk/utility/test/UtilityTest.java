@@ -233,4 +233,32 @@ public class UtilityTest {
 		}
 	}
 
+	@Test
+	public void testValidateYaml() throws Exception{
+		String schema = Utility.getResourceAsString(this, "manifest_schema.json");
+
+		// this YAML should pass validation
+		String yaml = Utility.readFile("src/test/resources/manifest_animals.yaml");
+		Utility.validateYaml(yaml, schema);
+
+		// this YAML should fail validation
+		try {
+			yaml = Utility.readFile("src/test/resources/manifest_animals_badformat.yaml");
+			Utility.validateYaml(yaml, schema);
+			fail();  // should not get here
+		}catch(Exception e) {
+			assertTrue(e.getMessage().contains("$.footprint.nodegroups: string found, array expected"));
+		}
+
+		// this YAML should fail validation
+		try {
+			yaml = Utility.readFile("src/test/resources/manifest_animals_fail.yaml");
+			Utility.validateYaml(yaml, schema);
+			fail();  // should not get here
+		}catch(Exception e) {
+			assertTrue(e.getMessage().contains("$.name: is missing but it is required"));
+			assertTrue(e.getMessage().contains("$.fooootprint: is not defined in the schema and the schema does not allow additional properties"));
+		}
+	}
+
 }

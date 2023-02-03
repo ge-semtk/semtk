@@ -1,0 +1,12 @@
+name: 'Animals'
+description: 'Load information about animals'
+
+footprint:
+  model-graphs:
+    - http://animals/model
+  data-graphs:
+    - http://animals/data
+    - http://animals/data2
+  nodegroups: 
+    animals/nodegroups  # the bad formatting is here, expect an error
+

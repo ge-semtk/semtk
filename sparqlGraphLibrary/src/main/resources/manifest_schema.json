@@ -1,0 +1,82 @@
+{
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["name"],
+    "properties": {
+        "name": {"type": "string"},
+        "description": {"type": "string"},
+        
+        "copy-to-default-graph":            {"type": "boolean"},
+    	"perform-entity-resolution":        {"type": "boolean"},
+    	"perform-triplestore-optimization": {"type": "boolean"},
+
+	    "footprint": {
+	        "type": "object",
+	        "additionalProperties": false,
+	        "required": [],
+	        "properties": {
+	            "model-graphs": {"type": "array", "items": {"type": "string"}},
+	            "data-graphs": {"type": "array", "items": {"type": "string"}},
+	            "nodegroups": {"type": "array", "items": {"type": "string"}}
+	        }
+	    },
+    
+	    "steps": {
+	        "type": "array",
+	        "items": {
+	            "oneOf": [
+	                {
+	                    "type": "object",
+	                    "additionalProperties": false,
+	                    "required": ["data"],
+	                    "properties": {
+	                        "data": {"type": "string"}
+	                    }
+	                },
+	                {
+	                    "type": "object",
+	                    "additionalProperties": false,
+	                    "required": ["model"],
+	                    "properties": {
+	                        "model": {"type": "string"}
+	                    }
+	                },
+	                {
+	                    "type": "object",
+	                    "additionalProperties": false,
+	                    "required": ["nodegroups"],
+	                    "properties": {
+	                        "nodegroups": {"type": "string"}
+	                    }
+	                },
+	                {
+	                    "type": "object",
+	                    "additionalProperties": false,
+	                    "required": ["manifest"],
+	                    "properties": {
+	                        "manifest": {"type": "string"}
+	                    }
+	                },
+	                {
+	                    "type": "object",
+	                    "additionalProperties": false,
+	                    "required": ["copygraph"],
+	                    "properties": {
+	                        "copygraph": {
+	                            "type": "object",
+	                            "additionalProperties": false,
+	                            "required": ["from-graph", "to-graph"],
+	                            "properties": {
+	                                "from-graph": {"type": "string"},
+	                                "to-graph": {"type": "string"}
+	                            }
+	                        }
+	                    }
+	                }
+	            ]
+	        }
+	    }    
+    
+	}
+   
+}

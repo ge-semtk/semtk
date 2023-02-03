@@ -1,0 +1,29 @@
+name: 'Animals'
+description: 'Load information about animals'
+
+copy-to-default-graph: true
+perform-entity-resolution: true
+perform-triplestore-optimization: false
+
+footprint:
+  model-graphs:
+    - http://animals/model
+  data-graphs:
+    - http://animals/data1
+    - http://animals/data2
+  nodegroups:
+    - animals/nodegroups
+
+steps:
+  - model: animals/import.yaml
+  - manifest: animals.yaml
+
+  - nodegroups: animals/nodegroups
+
+  - data: animals/mammals/import.yaml
+  - data: animals/reptiles/import.yaml
+  - data: animals/amphibians/import.yaml
+
+  - copygraph:
+      from-graph: http://animals/domestic
+      to-graph: http://animals/wild

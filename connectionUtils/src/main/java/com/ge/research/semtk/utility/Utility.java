@@ -55,6 +55,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Properties;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.zip.Deflater;
@@ -81,6 +82,14 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion;
+import com.networknt.schema.ValidationMessage;
 
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -1003,5 +1012,33 @@ public abstract class Utility {
 	 */
 	public static File createTempDirectory() throws IOException {
 		return Files.createTempDirectory("semtk.", new FileAttribute<?>[] { }).toFile();
+	}
+
+	/**
+	 * Validate YAML against a schema
+	 * @param yamlStr the YAML to validate
+	 * @param jsonSchemaStr a JSON schema
+	 * @throws Exception if validation fails
+	 */
+	public static void validateYaml(String yamlStr, String jsonSchemaStr) throws Exception {
+
+		// read yaml into JSON tree
+		JsonNode yamlToValidate = (new ObjectMapper(new YAMLFactory())).readTree(yamlStr);
+
+		// get schema
+		JsonSchemaFactory schemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
+		JsonSchema schema = schemaFactory.getSchema(jsonSchemaStr);
+
+		// validate
+		Set<ValidationMessage> messages = schema.validate(yamlToValidate);
+		String exceptionString = "";
+		for (ValidationMessage msg: messages) {
+			exceptionString += msg.toString() + ", ";
+		}
+
+		// throw exception if failed validation
+		if (!messages.isEmpty()){
+			throw new Exception("Failed schema validation: " + exceptionString);
+		}
 	}
 }

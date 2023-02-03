@@ -1,0 +1,21 @@
+# name property is missing, expect error
+
+copy-to-default-graph: true
+perform-entity-resolution: true
+perform-triplestore-optimization: false
+
+fooootprint: # there is a typo here, expect error
+  model-graphs:
+    - http://animals/model
+  data-graphs:
+    - http://animals/data
+    - http://animals/data2
+
+steps:
+  - manifest: animals.yaml
+
+  - nodegroups: animals/nodegroups
+
+  - data: animals/mammals/import.yaml
+  - data: animals/reptiles/import.yaml
+  - data: animals/amphibians/import.yaml
