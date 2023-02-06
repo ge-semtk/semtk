@@ -18,19 +18,19 @@
 package com.ge.research.semtk.services.client;
 
 import java.io.File;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.ConnectException;
 import java.net.URLEncoder;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -41,6 +41,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.entity.mime.content.StringBody;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
@@ -54,15 +55,17 @@ import com.ge.research.semtk.connutil.EndpointNotFoundException;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClientConfig.Methods;
-import com.ge.research.semtk.servlet.utility.Utility;
 import com.ge.research.semtk.utility.LocalLogger;
 
 /**
- * An  class containing code for a REST client.
+ * A REST client.
  */
 @SuppressWarnings("deprecation")
 public  class RestClient extends Client implements Runnable {
 	
+	// 3 possible modes for returning response
+	private enum ExecResponseMode{ JSON, TEXT, STREAM };
+
 	protected RestClientConfig conf;	
 	Object runRes = null;
 	protected JSONObject parametersJSON = new JSONObject();
@@ -72,7 +75,10 @@ public  class RestClient extends Client implements Runnable {
 	protected File fileParameter = null;
 	protected String fileParameterName = "file";
 	protected HttpResponse httpResponse = null;
-	
+
+	private CloseableHttpClient streamHttpClient;	// used when streaming response
+	private CloseableHttpResponse streamResponse;	// used when streaming response
+
 	/** 
 	 * Get default headers
 	 */
@@ -175,7 +181,7 @@ public  class RestClient extends Client implements Runnable {
 	/**
 	 * Abstract method to set up service parameters available upon instantiation
 	 */
-	public  void buildParametersJSON() throws Exception {};
+	public void buildParametersJSON() throws Exception {};
 	
 	/**
 	 * Abstract method to handle an empty response from the service
@@ -207,34 +213,55 @@ public  class RestClient extends Client implements Runnable {
 	}
 	
 	/**
-	 * Make the service call. 
+	 * Execute
 	 * Subclasses may override and return a more useful Object. 
 	 * Returns the response parsed into JSON. 
-	 * @return an Object that can be cast to a JSONObject.    
+	 * @return an Object that can be cast to a JSONObject
 	 */
 	public Object execute() throws ConnectException, Exception {
-		return execute(false);
+		return execute(ExecResponseMode.JSON);
 	}
 	
-	public JSONObject executeToJson() throws Exception {
-		return (JSONObject) this.execute(false);
-	}
-	
-	public boolean testConnectionRefused() {
-		try {
-			this.execute();
-		} catch (Exception e) {
-			return e.getCause().getMessage().toLowerCase().contains("connection refused");
-		}
-		return false;
-	}
 	/**
-	 * Make the service call.  
-	 * Subclasses may override and return a more useful Object.
-	 * @param returnRawResponse True to return raw response.  False to return response parsed into JSON.
-	 * @return the raw response string (if returnRawResponse is true), or an Object that can be cast to a JSONObject (if returnRawResponse is false).     
+	 * Execute and return the response as JSON
+	 * @return a JSONObject
 	 */
+	public JSONObject executeToJson() throws Exception {
+		return (JSONObject) this.execute(ExecResponseMode.JSON);
+	}
+
+	/**
+	 * Execute and return the response as text
+	 * @return a String
+	 */
+	public String executeToText() throws Exception {
+		return (String) this.execute(ExecResponseMode.TEXT);
+	}
+	
+	/**
+	 * Execute and return the response as a stream
+	 * @return an InputStream
+	 */
+	public InputStream executeToStream() throws Exception {
+		return (InputStream) execute(ExecResponseMode.STREAM);
+	}
+
+	/**
+	 * Execute
+	 * @param returnRawResponse True to return raw response text, False to return response as JSON
+	 * @return an Object that can be cast to a JSONObject or String
+	 */
+	@Deprecated
 	public Object execute(boolean returnRawResponse) throws ConnectException, Exception {
+		return execute(returnRawResponse ? ExecResponseMode.TEXT : ExecResponseMode.JSON);
+	}
+
+	/**
+	 * Make the service call.
+	 * @param responseMode specify whether to return response as JSON, text, or stream
+	 * @return an Object that can be cast to JSONObject, String, or InputStream
+	 */
+	private Object execute(ExecResponseMode responseMode) throws ConnectException, Exception {
 		
 		// set all parameters available upon instantiation
 		buildParametersJSON();  
@@ -290,11 +317,9 @@ public  class RestClient extends Client implements Runnable {
 				httpput.setEntity(entity);
 			}
 			httpreq = httpput;
-			
 		} else if (conf.method == RestClientConfig.Methods.DELETE) {
 			HttpDelete httpdelete = new HttpDelete(this.conf.getServiceURL());
 			httpreq = httpdelete;
-			
 		} else {
 			HttpPost httppost = new HttpPost(this.conf.getServiceURL());
 			httppost.setEntity(entity);
@@ -308,64 +333,87 @@ public  class RestClient extends Client implements Runnable {
 		for (BasicHeader header : this.getDefaultHeaders()) {
 			httpreq.addHeader(header);
 		}
-		
-		// execute
-		HttpHost targetHost = new HttpHost(this.conf.getServiceServer(), this.conf.getServicePort(), this.conf.getServiceProtocol());		
-		this.httpResponse = null;
-		try {
-			HttpClient httpclient = HttpClients.custom().build();
-			//HttpClient httpclient = HttpClients.custom().setDefaultHeaders(RestClient.getDefaultHeaders()).build();
-			LocalLogger.logToStdOut("Connecting to: " + this.conf.getServiceURL());
-			this.httpResponse = httpclient.execute(targetHost, httpreq);
-		} catch (Exception e) {
-			throw new Exception(String.format("Error connecting to %s", this.conf.getServiceURL()), e);
-		}
-		
-		// handle the output			
-		String responseTxt = null;
-		HttpEntity responseEntity = this.httpResponse.getEntity();
-		if (responseEntity != null) {
-			responseTxt = EntityUtils.toString(responseEntity, "UTF-8");		
-		}
-		
-		// Null response for GET or post is Exception
-		if(responseTxt == null && (this.conf.method == Methods.GET || this.conf.method == Methods.POST)){ 
-			throw new Exception("Received null response text"); 
-			
-		// Handle other null or empty responses with implementation-specific behavior
-		}else if(responseTxt == null || responseTxt.trim().isEmpty()){
-			handleEmptyResponse();
-		}
-		
-		if(returnRawResponse){
-			// check raw response for HTTP errors, which should be json with status!=200
+
+		HttpHost targetHost = new HttpHost(this.conf.getServiceServer(), this.conf.getServicePort(), this.conf.getServiceProtocol());
+
+		// now execute the request 
+
+		if(responseMode == ExecResponseMode.STREAM) {
+
+			streamHttpClient = null;
+			streamResponse = null;
 			try {
-				JSONObject responseParsed = (JSONObject) JSONValue.parse(responseTxt);
-				if (responseParsed.containsKey("status") && (long)responseParsed.get("status") != 200) {
-					throw new Exception(responseTxt);
-				}
-			} catch (NullPointerException e) {
-			} catch (ClassCastException e) {
-			} catch (ParseException e) {
+				streamHttpClient = HttpClients.custom().build();
+				streamResponse = streamHttpClient.execute(targetHost, httpreq);
+				return streamResponse.getEntity().getContent();
+			}catch(Exception e) {
+				e.printStackTrace();
+				throw new Exception(e.getMessage());
 			}
-			return responseTxt;		// return the raw string
+
+		} else {
+
+			this.httpResponse = null;
+			try {
+				HttpClient httpclient = HttpClients.custom().build();
+				//HttpClient httpclient = HttpClients.custom().setDefaultHeaders(RestClient.getDefaultHeaders()).build();
+				LocalLogger.logToStdOut("Connecting to: " + this.conf.getServiceURL());
+				this.httpResponse = httpclient.execute(targetHost, httpreq);
+			} catch (Exception e) {
+				throw new Exception(String.format("Error connecting to %s", this.conf.getServiceURL()), e);
+			}
 			
-		}else{
-			// return empty response (legal and common for PUT)
-			if (responseTxt == null || responseTxt.isEmpty()) {
-				return new JSONObject();
-				
-			} else {
-				// parse response into JSON or throw an error
-				JSONObject responseParsed = (JSONObject) JSONValue.parse(responseTxt);
-				if (responseParsed == null) {
-						throw new Exception(responseTxt);
-				}
-				return responseParsed;	// return the response parsed into JSON
+			// handle the output			
+			String responseTxt = null;
+			HttpEntity responseEntity = this.httpResponse.getEntity();
+			if (responseEntity != null) {
+				responseTxt = EntityUtils.toString(responseEntity, "UTF-8");		
 			}
+			
+			// Null response for GET or post is Exception
+			if(responseTxt == null && (this.conf.method == Methods.GET || this.conf.method == Methods.POST)){ 
+				throw new Exception("Received null response text"); 
+				
+			// Handle other null or empty responses with implementation-specific behavior
+			}else if(responseTxt == null || responseTxt.trim().isEmpty()){
+				handleEmptyResponse();
+			}
+			
+			if(responseMode == ExecResponseMode.TEXT){
+
+				// check raw response for HTTP errors, which should be json with status!=200
+				try {
+					JSONObject responseParsed = (JSONObject) JSONValue.parse(responseTxt);
+					if (responseParsed.containsKey("status") && (long)responseParsed.get("status") != 200) {
+						throw new Exception(responseTxt);
+					}
+				} catch (NullPointerException e) {
+				} catch (ClassCastException e) {
+				} catch (ParseException e) {
+				}
+				return responseTxt;		// return the raw string
+				
+			} else if (responseMode == ExecResponseMode.JSON){
+
+				// return empty response (legal and common for PUT)
+				if (responseTxt == null || responseTxt.isEmpty()) {
+					return new JSONObject();
+					
+				} else {
+					// parse response into JSON or throw an error
+					JSONObject responseParsed = (JSONObject) JSONValue.parse(responseTxt);
+					if (responseParsed == null) {
+						throw new Exception(responseTxt);
+					}
+					return responseParsed;	// return the response parsed into JSON
+				}
+			} else {
+				throw new Exception("Unrecognized response mode"); // should never get here
+			}
+
 		}
 	}
-	
+
 	/**
 	 * Get the last run result as a SimpleResultSet.
 	 */
@@ -400,5 +448,15 @@ public  class RestClient extends Client implements Runnable {
 		
 		return ret;
 	}
-	
+
+
+	public boolean testConnectionRefused() {
+		try {
+			this.execute();
+		} catch (Exception e) {
+			return e.getCause().getMessage().toLowerCase().contains("connection refused");
+		}
+		return false;
+	}
+
 }

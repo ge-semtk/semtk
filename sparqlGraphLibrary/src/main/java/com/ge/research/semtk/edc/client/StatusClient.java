@@ -118,7 +118,7 @@ public class StatusClient extends RestClient {
 		this.conf.setServiceEndpoint("status/getJobsInfo");
 		this.conf.setMethod(RestClientConfig.Methods.POST);
 		try {
-			JSONObject jObj = (JSONObject) this.execute(false);
+			JSONObject jObj = this.executeToJson();
 			TableResultSet res = new TableResultSet(jObj);
 			res.throwExceptionIfUnsuccessful();
 			return res;

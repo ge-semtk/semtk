@@ -81,7 +81,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.parametersJSON.put("jsonRenderedHeader", "{ \"NO_LONGER_USED\": 1 }");
 
 		try {
-			JSONObject res = (JSONObject)execute(false);
+			JSONObject res = executeToJson();
 			SimpleResultSet simpleRes = SimpleResultSet.fromJson(res);
 			simpleRes.throwExceptionIfUnsuccessful();
 		} finally {
@@ -97,7 +97,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.parametersJSON.put("appendDownloadHeaders", false);
 
 		try {
-			String s = (String) super.execute(true);  // true to return raw response (not parseable into JSON)
+			String s = super.executeToText();  // return raw response (not parseable into JSON)
 			
 			JSONParser jParse = new JSONParser();
 			JSONObject retval = (JSONObject) jParse.parse(s);
@@ -119,7 +119,7 @@ public class ResultsClient extends RestClient implements Runnable {
 			this.parametersJSON.put("jobId", jobID);
 			this.parametersJSON.put("jsonBlobString", resJson.toJSONString());
 	
-			JSONObject res = (JSONObject)execute(false);
+			JSONObject res = executeToJson();
 			SimpleResultSet simpleRes = SimpleResultSet.fromJson(res);
 			simpleRes.throwExceptionIfUnsuccessful();
 			
@@ -149,7 +149,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.parametersJSON.put("jobId", jobID);
 		this.conf.setMethod(RestClientConfig.Methods.POST);
 		try {
-			JSONObject res = (JSONObject)execute(false);
+			JSONObject res = executeToJson();
 			SimpleResultSet simpleRes = SimpleResultSet.fromJson(res);
 			simpleRes.throwExceptionIfUnsuccessful();
 			return simpleRes;
@@ -175,7 +175,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.conf.setServiceEndpoint("results/storeBinaryFilePath");
 		this.conf.setMethod(RestClientConfig.Methods.POST);
 		try {
-			JSONObject res = (JSONObject) this.execute(false);
+			JSONObject res = this.executeToJson();
 			SimpleResultSet simpleRes = SimpleResultSet.fromJson(res);
 			simpleRes.throwExceptionIfUnsuccessful();
 			return simpleRes;
@@ -199,7 +199,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.conf.setServiceEndpoint("results/getResultsFiles");
 		this.conf.setMethod(RestClientConfig.Methods.POST);
 		try {
-			JSONObject jObj = (JSONObject) this.execute(false);
+			JSONObject jObj = this.executeToJson();
 			TableResultSet res = new TableResultSet(jObj);
 			res.throwExceptionIfUnsuccessful();
 			return res;
@@ -231,7 +231,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.conf.setServiceEndpoint("results/getBinaryFile/"+fileId);
 		this.conf.setMethod(RestClientConfig.Methods.GET);
 		try {
-			String res = (String) execute(true);
+			String res = executeToText();
 			
 			if (res.startsWith("<html><body>AuthorizationException")) {
 				throw new AuthorizationException(res.replaceAll("<[^>]+>", ""));
@@ -254,7 +254,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.parametersJSON.put("appendDownloadHeaders", false);
 
 		try {
-			String s = (String) super.execute(true);  // true to return raw response (not parseable into JSON)
+			String s = super.executeToText();  // return raw response (not parseable into JSON)
 			
 			JSONParser jParse = new JSONParser();
 			JSONObject retval = (JSONObject) jParse.parse(s);
@@ -488,7 +488,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		this.parametersJSON.put("appendDownloadHeaders", false);
 
 		try {
-			String s = (String) super.execute(true);  // true to return raw response (not parseable into JSON)
+			String s = super.executeToText();  // return raw response (not parseable into JSON)
 			CSVDataset dataset = new CSVDataset(s, true);
 			if (dataset.getColumnNamesinOrder().get(0).contains("authorizationexception")) {
 				throw new AuthorizationException(dataset.getNextRecords(1).get(0).get(0));
