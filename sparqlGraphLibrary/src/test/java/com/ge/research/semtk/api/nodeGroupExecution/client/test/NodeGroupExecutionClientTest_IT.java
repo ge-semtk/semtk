@@ -38,6 +38,7 @@ import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.dispatch.QueryFlags;
 import com.ge.research.semtk.test.IntegrationTestUtility;
@@ -62,6 +63,8 @@ public class NodeGroupExecutionClientTest_IT {
 		
 		private final static String BATTERY = "http://kdl.ge.com/batterydemo#Battery";
 		private final static String CELL = "http://kdl.ge.com/batterydemo#Cell";
+		
+		private static SparqlEndpointInterface resultSei;
 
 		@BeforeClass
 		public static void setup() throws Exception {
@@ -69,7 +72,7 @@ public class NodeGroupExecutionClientTest_IT {
 			// instantiate a client
 			nodeGroupExecutionClient = new NodeGroupExecutionClient(new NodeGroupExecutionClientConfig(IntegrationTestUtility.get("protocol"), IntegrationTestUtility.get("nodegroupexecution.server"), IntegrationTestUtility.getInt("nodegroupexecution.port")));
 			nodeGroupStoreClient = IntegrationTestUtility.getNodeGroupStoreRestClient(); // instantiate client, with configurations from properties file
-			
+			resultSei = TestGraph.getSei(TestGraph.generateGraphName("result"));
 			
 			IntegrationTestUtility.cleanupNodegroupStore(nodeGroupStoreClient, CREATOR);
 		}
@@ -531,5 +534,57 @@ public class NodeGroupExecutionClientTest_IT {
 			}
 		}
 		
+		@Test
+		public void testConstructToGraphById() throws Exception {
+			resultSei.clearGraph();
+			TestGraph.clearGraph();
+			TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
+			
+			// get ingestion and result nodegroup
+			SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
+						
+			// ingest data 
+			String csvStr = Utility.readFile("src/test/resources/sampleBattery.csv");
+			nodeGroupExecutionClient.execIngestionFromCsvStr(sgjson, csvStr);
+					
+			// store a nodegroup (modified with the test graph)
+			JSONObject ngJson = sgjson.getJson();
+			try {
+				nodeGroupStoreClient.deleteStoredNodeGroupIfExists(ID);
+			} catch (Exception e) {
+			}
+			nodeGroupStoreClient.executeStoreNodeGroup(ID, "testConstructToGraphFromNodegroup", CREATOR, ngJson);
+			
+			nodeGroupExecutionClient.dispatchConstructToGraphById(
+					ID, 
+					TestGraph.getSparqlAuthConn(), 
+					resultSei);
+			
+			String query = sgjson.getNodeGroup(TestGraph.getOInfo()).generateSparqlSelect();
+			Table t = resultSei.executeQueryToTable(query);
+			assertEquals("Wrong number of rows returned from constructed graph", 4, t.getNumRows());
+		}
+		
+		@Test
+		public void testConstructToGraphFromNodegroup() throws Exception {
+			resultSei.clearGraph();
+			TestGraph.clearGraph();
+			TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
+			
+			// get ingestion and result nodegroup
+			SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
+						
+			String csvStr = Utility.readFile("src/test/resources/sampleBattery.csv");
+			nodeGroupExecutionClient.execIngestionFromCsvStr(sgjson, csvStr);
+					
+			nodeGroupExecutionClient.dispatchConstructToGraphFromNodeGroup(
+					sgjson.getNodeGroup(), 
+					TestGraph.getSparqlAuthConn(), 
+					resultSei);
+			
+			String query = sgjson.getNodeGroup(TestGraph.getOInfo()).generateSparqlSelect();
+			Table t = resultSei.executeQueryToTable(query);
+			assertEquals("Wrong number of rows returned from constructed graph", 4, t.getNumRows());
+		}
 	}
 

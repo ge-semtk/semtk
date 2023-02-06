@@ -304,7 +304,7 @@ public class NodeGroupExecutor {
 	
 	
 	/**
-	 * 
+	 * Dispatch by nodegroup
 	 * @param qt
 	 * @param rt
 	 * @param sc
@@ -371,6 +371,7 @@ public class NodeGroupExecutor {
 	}
 	
 	/**
+	 * Get nodegroup by ID then dispatchJob with the nodegroup
 	 * Version without queryFlags
 	 * @param qt
 	 * @param rt
@@ -386,7 +387,7 @@ public class NodeGroupExecutor {
 	}
 	
 	/**
-	 * 
+	 * Get nodegroup by ID then dispatchJob with the nodegroup
 	 * @param qt
 	 * @param sc - if null, fill from the stored nodegroup
 	 * @param storedNodeGroupId

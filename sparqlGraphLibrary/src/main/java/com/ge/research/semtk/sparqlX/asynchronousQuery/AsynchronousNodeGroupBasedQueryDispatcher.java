@@ -234,7 +234,8 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			
 			if(	resType == SparqlResultTypes.GRAPH_JSONLD ||
 					resType == SparqlResultTypes.CONFIRM ||
-					resType == SparqlResultTypes.TABLE) {
+					resType == SparqlResultTypes.TABLE ||
+					resType == SparqlResultTypes.RDF) {
 				
 				genResult = this.querySei.executeQueryAndBuildResultSet(sparqlQuery, resType);
 			} else {
@@ -255,8 +256,11 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 				if (resType == SparqlResultTypes.GRAPH_JSONLD) {
 					LocalLogger.logToStdErr("Query returned JSON-LD");
 					this.sendResultsToService(genResult.getResultsJSON());
-				}
-				else if(resType == SparqlResultTypes.TABLE) {
+				} else if(resType == SparqlResultTypes.RDF) {
+					// RDF results store as json blobs with { "RDF": "<OWL>...</OWL>" }
+					this.sendResultsToService(genResult.getResultsJSON());
+					
+				} else if(resType == SparqlResultTypes.TABLE) {
 					// all other types
 					Table tab = ((TableResultSet)genResult).getTable();
 					LocalLogger.logToStdErr("Query returned " + tab.getNumRows() + " results.");

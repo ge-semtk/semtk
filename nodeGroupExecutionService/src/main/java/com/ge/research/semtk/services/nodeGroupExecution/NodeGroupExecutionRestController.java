@@ -82,6 +82,8 @@ import com.ge.research.semtk.services.nodeGroupExecution.requests.ConstructConne
 import com.ge.research.semtk.services.nodeGroupExecution.requests.DispatchByIdRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.DispatchFromNodegroupRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.DispatchRawSparqlRequestBody;
+import com.ge.research.semtk.services.nodeGroupExecution.requests.DispatchConstructToGraphByIdRequestBody;
+import com.ge.research.semtk.services.nodeGroupExecution.requests.DispatchConstructToGraphFromNgRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.FilterDispatchByIdRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.FilterDispatchFromNodeGroupRequestBody;
 import com.ge.research.semtk.services.nodeGroupExecution.requests.IngestByIdCsvStrAsyncBody;
@@ -106,6 +108,7 @@ import com.ge.research.semtk.springutilib.requests.GetClassTemplateRequestBody;
 import com.ge.research.semtk.springutilib.requests.IdRequest;
 import com.ge.research.semtk.springutilib.requests.IngestConstants;
 import com.ge.research.semtk.springutilib.requests.IngestionFromStringsAndClassRequestBody;
+import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointRequestBody;
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointTrackRequestBody;
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointsRequestBody;
@@ -524,7 +527,7 @@ public class NodeGroupExecutionRestController {
 			
 			NodeGroupExecutor ngExecutor = this.getExecutor(null );
 			
-			SparqlConnection connection = requestBody.getSparqlConnection();			
+			SparqlConnection connection = requestBody.buildSparqlConnection();			
 			// create a json object from the external data constraints. 
 			
 			// check if this is actually for a filter query
@@ -535,9 +538,8 @@ public class NodeGroupExecutionRestController {
 			}
 			
 			// dispatch the job. 
-			// ERROR thought I was calling version on line 342
 			ngExecutor.dispatchJob(qt, rt, connection, requestBody.getNodeGroupId(), 
-					requestBody.getExternalDataConnectionConstraintsJson(), 
+					requestBody.buildExternalDataConnectionConstraintsJson(), 
 					requestBody.getFlags(),
 					requestBody.getRuntimeConstraints(), 
 					requestBody.getLimitOverride(),
@@ -571,11 +573,11 @@ public class NodeGroupExecutionRestController {
 			NodeGroupExecutor ngExecutor = this.getExecutor(null );
 
 			// try to create a sparql connection
-			SparqlConnection connection = requestBody.getSparqlConnection();			
+			SparqlConnection connection = requestBody.buildSparqlConnection();			
 			// create a json object from the external data constraints. 
 			
 			// decode the endcodedNodeGroup
-			SparqlGraphJson sgJson = new SparqlGraphJson(requestBody.getJsonNodeGroup());
+			SparqlGraphJson sgJson = new SparqlGraphJson(requestBody.buildJsonNodeGroup());
 			
 			// swap in the connection if requested
 			// "connection == null" is included for legacy.  Not sure this is correct -Paul 6/2018
@@ -592,7 +594,7 @@ public class NodeGroupExecutionRestController {
 			NodeGroup ng = sgJson.getNodeGroup();
 			// dispatch the job. 
 			ngExecutor.dispatchJob(qt, rt, connection, ng, 
-					requestBody.getExternalDataConnectionConstraintsJson(), 
+					requestBody.buildExternalDataConnectionConstraintsJson(), 
 					requestBody.getFlags(),
 					requestBody.getRuntimeConstraints(), 
 					-1,
@@ -1114,7 +1116,7 @@ public class NodeGroupExecutionRestController {
 				NodeGroupExecutor ngExecutor = this.getExecutor(null );
 
 				// try to create a sparql connection
-				SparqlConnection connection = requestBody.getSparqlConnection();			
+				SparqlConnection connection = requestBody.buildSparqlConnection();			
 	
 				// dispatch the job. 
 				ngExecutor.dispatchRawSparql(connection, requestBody.getSparql(), requestBody.getResultType());
@@ -1158,7 +1160,7 @@ public class NodeGroupExecutionRestController {
 				// create a new StoredQueryExecutor
 				NodeGroupExecutor ngExecutor = this.getExecutor(null );
 				// try to create a sparql connection
-				SparqlConnection connection = requestBody.getSparqlConnection();			
+				SparqlConnection connection = requestBody.buildSparqlConnection();			
 	
 				// dispatch the job. 
 				ngExecutor.dispatchRawSparqlUpdate(connection, requestBody.getSparql());
@@ -1347,7 +1349,7 @@ public class NodeGroupExecutionRestController {
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
-				retval = nodeGroupExecutor.ingestFromNodegroupIdAndCsvString(requestBody.getSparqlConnection(), requestBody.getNodegroupId(), requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
+				retval = nodeGroupExecutor.ingestFromNodegroupIdAndCsvString(requestBody.buildSparqlConnection(), requestBody.getNodegroupId(), requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
 				retval = new RecordProcessResults(false);
@@ -1382,7 +1384,7 @@ public class NodeGroupExecutionRestController {
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
 				String jobId = nodeGroupExecutor.ingestFromNodegroupIdAndCsvStringAsync(
-						requestBody.getSparqlConnection(), 
+						requestBody.buildSparqlConnection(), 
 						requestBody.getNodegroupId(), 
 						requestBody.getCsvContent(), 
 						requestBody.getSkipPrecheck(),
@@ -1637,7 +1639,7 @@ public class NodeGroupExecutionRestController {
 		
 		try {
 			String jobId = JobTracker.generateJobId();
-			JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
+			JobTracker tracker = this.getJobTracker();
 			tracker.createJob(jobId);
 			
 			new Thread(() -> { 
@@ -1693,6 +1695,100 @@ public class NodeGroupExecutionRestController {
 			return res.toJson();
 		} 
 	}	
+	
+	
+	@Operation(
+			description="Execute query putting results into another graph.  Async gives JobId."
+			)
+	@CrossOrigin
+	@RequestMapping(value={"/dispatchConstructToGraphById"}, method= RequestMethod.POST)
+	public JSONObject dispatchConstructToGraphById(@RequestBody DispatchConstructToGraphByIdRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME = "dispatchConstructToGraphById";
+		HeadersManager.setHeaders(headers);
+	
+		try {
+			
+			String jobId = JobTracker.generateJobId();
+			JobTracker tracker = this.getJobTracker();
+			tracker.createJob(jobId);
+			
+			new Thread(() -> {
+				try {
+					// dispatch
+					JSONObject simpleResJson =  dispatchAnyJobById(requestBody, AutoGeneratedQueryTypes.CONSTRUCT, SparqlResultTypes.RDF);
+					waitThenStoreRdfToSei(jobId, (new SimpleResultSet(simpleResJson)).getJobId(), requestBody.buildResultsSei());
+					
+				} catch (Exception e) {
+					try {
+						tracker.setJobFailure(jobId, e.getMessage());
+					} catch (Exception ee) {
+						LocalLogger.logToStdErr(ENDPOINT_NAME + " error accessing job tracker");
+						LocalLogger.printStackTrace(ee);
+					}
+				}
+			
+			}).start();
+				
+			SimpleResultSet res = new SimpleResultSet(true);
+			res.addJobId(jobId);
+			return res.toJson();
+			
+		} catch (Exception e) {			
+			LocalLogger.printStackTrace(e);
+			SimpleResultSet res = new SimpleResultSet(false, e.getMessage());
+			return res.toJson();
+		} finally {
+			HeadersManager.clearHeaders();
+		}
+		
+	}
+	
+	
+	@Operation(
+			description="Execute query putting results into another graph.  Async gives JobId."
+			)
+	@CrossOrigin
+	@RequestMapping(value={"/dispatchConstructToGraphFromNodegroup"}, method= RequestMethod.POST)
+	public JSONObject dispatchConstructToGraphFromNodegroup(@RequestBody DispatchConstructToGraphFromNgRequestBody requestBody, @RequestHeader HttpHeaders headers) {
+		final String ENDPOINT_NAME = "dispatchConstructToGraphFromNodegroup";
+		HeadersManager.setHeaders(headers);
+	
+		try {
+			
+			String jobId = JobTracker.generateJobId();
+			JobTracker tracker = this.getJobTracker();
+			tracker.createJob(jobId);
+			
+			new Thread(() -> {
+				try {
+					// dispatch
+					JSONObject simpleResJson =  dispatchAnyJobFromNodegroup(requestBody, AutoGeneratedQueryTypes.CONSTRUCT, SparqlResultTypes.RDF);
+					waitThenStoreRdfToSei(jobId, (new SimpleResultSet(simpleResJson)).getJobId(), requestBody.buildResultsSei());
+					
+				} catch (Exception e) {
+					try {
+						tracker.setJobFailure(jobId, e.getMessage());
+					} catch (Exception ee) {
+						LocalLogger.logToStdErr(ENDPOINT_NAME + " error accessing job tracker");
+						LocalLogger.printStackTrace(ee);
+					}
+				}
+			
+			}).start();
+				
+			SimpleResultSet res = new SimpleResultSet(true);
+			res.addJobId(jobId);
+			return res.toJson();
+			
+		} catch (Exception e) {			
+			LocalLogger.printStackTrace(e);
+			SimpleResultSet res = new SimpleResultSet(false, e.getMessage());
+			return res.toJson();
+		} finally {
+			HeadersManager.clearHeaders();
+		}
+		
+	}
 	
 	@Operation(
 			summary=	"Run a query of tracked events."
@@ -1875,6 +1971,27 @@ public class NodeGroupExecutionRestController {
 			return err.toJson();
 		}
 	}
+	
+	/**
+	 * Wait for query to complete, get RDF results, upload to Sei
+	 * @param jobId
+	 * @param queryJobId
+	 * @param resultsSei
+	 * @throws Exception
+	 */
+	private void waitThenStoreRdfToSei(String jobId, String queryJobId, SparqlEndpointInterface resultsSei) throws Exception {
+		JobTracker tracker = this.getJobTracker();
+		// wait
+		tracker.waitTilCompleteUpdatingParent(queryJobId, jobId, "Running query to RDF", 10000, 10, 80);
+		
+		// store results to 
+		tracker.setJobPercentComplete(jobId, 81, "uploading RDF to graph");
+		JSONObject jObj = getResultsClient().execGetBlobResult(queryJobId);
+		String owl = (String) jObj.get("RDF");
+		this.uploadOwl(resultsSei, owl.getBytes());
+		tracker.setJobSuccess(jobId);
+		
+	}
 	// get the runtime constraints, if any.
 	private JSONArray getRuntimeConstraintsAsJsonArray(String potentialConstraints) throws Exception{
 		JSONArray retval = null;
@@ -1910,6 +2027,23 @@ public class NodeGroupExecutionRestController {
 		}
 		
 		JSONObject simpleResultSetJson = sei.executeAuthUploadStreamed(is, filename);
+		SimpleResultSet sResult = SimpleResultSet.fromJson(simpleResultSetJson);
+		sResult.throwExceptionIfUnsuccessful();
+		
+		oinfo_props.getClient().uncacheChangedConn(sei);
+	}
+	
+	
+	private void uploadOwl(SparqlEndpointInterface sei, byte[] owl) throws Exception {
+		
+		if (sei instanceof NeptuneSparqlEndpointInterface) {
+			((NeptuneSparqlEndpointInterface)sei).setS3Config(
+					neptune_prop.getS3ClientRegion(),
+					neptune_prop.getS3BucketName(), 
+					neptune_prop.getAwsIamRoleArn());
+		}
+		
+		JSONObject simpleResultSetJson = sei.executeAuthUploadOwl(owl);
 		SimpleResultSet sResult = SimpleResultSet.fromJson(simpleResultSetJson);
 		sResult.throwExceptionIfUnsuccessful();
 		

@@ -19,6 +19,7 @@
 package com.ge.research.semtk.edc.client;
 
 import java.io.File;
+import java.io.InputStream;
 import java.net.ConnectException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -260,6 +261,22 @@ public class ResultsClient extends RestClient implements Runnable {
 			JSONObject retval = (JSONObject) jParse.parse(s);
 			
 			return retval;
+		} finally {
+			this.cleanUp();
+		}
+	}	
+	
+	public InputStream execStreamJsonBobResult(String jobId) throws ConnectException, EndpointNotFoundException, Exception {
+		this.parametersJSON.clear();
+				
+		this.conf.setServiceEndpoint("results/getJsonBlobResults");
+		this.conf.setMethod(RestClientConfig.Methods.POST);
+		this.parametersJSON.put("jobId", jobId);
+		this.parametersJSON.put("appendDownloadHeaders", false);
+
+		try {
+			return super.executeToStream();  // return raw response (not parseable into JSON)
+			
 		} finally {
 			this.cleanUp();
 		}

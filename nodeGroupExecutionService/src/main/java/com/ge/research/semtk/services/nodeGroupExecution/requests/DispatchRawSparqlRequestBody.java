@@ -29,7 +29,7 @@ public class DispatchRawSparqlRequestBody {
 	private String sparql;
 	private SparqlResultTypes resultType = SparqlResultTypes.TABLE;
 	
-	public SparqlConnection getSparqlConnection() throws Exception {
+	public SparqlConnection buildSparqlConnection() throws Exception {
 		return new SparqlConnection(sparqlConnection);
 	}
 	public void setSparqlConnection(String sparqlConnection) {

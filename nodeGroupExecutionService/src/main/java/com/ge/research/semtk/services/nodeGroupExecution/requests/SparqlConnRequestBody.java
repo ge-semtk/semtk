@@ -31,7 +31,10 @@ public class SparqlConnRequestBody {
 			example = "NODEGROUP_DEFAULT")
 	private String sparqlConnection;
 	
-	public SparqlConnection getSparqlConnection() throws Exception {
+	public String getSparqlConnection() {
+		return this.sparqlConnection;
+	}
+	public SparqlConnection buildSparqlConnection() throws Exception {
 		if (sparqlConnection.equals(NodeGroupExecutor.USE_NODEGROUP_CONN_STR_SHORT)) {
 			return NodeGroupExecutor.get_USE_NODEGROUP_CONN();
 		} else {

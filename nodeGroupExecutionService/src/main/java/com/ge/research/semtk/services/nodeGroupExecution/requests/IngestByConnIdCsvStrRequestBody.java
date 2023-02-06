@@ -23,7 +23,10 @@ public class IngestByConnIdCsvStrRequestBody  extends IngestByIdCsvStrRequestBod
 
 	private String sparqlConnection = "";
 	
-	public SparqlConnection getSparqlConnection() throws Exception {
+	public String getSparqlConnection() {
+		return sparqlConnection;
+	}
+	public SparqlConnection buildSparqlConnection() throws Exception {
 		return new SparqlConnection(sparqlConnection);
 	}
 	public void setSparqlConnection(String sparqlConnection) {

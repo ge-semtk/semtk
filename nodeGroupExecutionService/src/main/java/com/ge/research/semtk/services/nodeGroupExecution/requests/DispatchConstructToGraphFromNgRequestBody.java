@@ -19,38 +19,37 @@ package com.ge.research.semtk.services.nodeGroupExecution.requests;
 
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
-import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 
-public class DispatchFromNodegroupRequestBody extends DispatchRequestBody {
+public class DispatchConstructToGraphFromNgRequestBody extends DispatchFromNodegroupRequestBody {
 
 	@Schema(
-	   required = true,
-	   example = "\"{ \"version\": 2,\"sparqlConn\":{...},\"sNodeGroup\": {}... }\""
-	   )
-	private String jsonRenderedNodeGroup;
+			description = "Send results as rdf this endpoint",
+			requiredMode = Schema.RequiredMode.REQUIRED,
+			example = "{\"type\":\"fuseki\",\"url\":\"http://localhost:3030/EXAMPLE\",\"graph\":\"http://example\"}")
+	private String resultsEndpoint;
 	
-	public String getJsonRenderedNodeGroup() {
-		return jsonRenderedNodeGroup;
+	
+	public String getResultsEndpoint() {
+		return this.resultsEndpoint;
 	}
+	public SparqlEndpointInterface buildResultsSei() throws Exception {
+		return SparqlEndpointInterface.getInstance((JSONObject)(new JSONParser().parse(this.resultsEndpoint)));
+	}
+	
+	public void setResultsEndpoint(String s) {
+		this.resultsEndpoint = s;
+	}
+	
+	/**
+	 * Validate request contents.  Deprecated with @Schema
+	 */
+	public void validate() throws Exception{
+		super.validate();
 
-	public void setJsonRenderedNodeGroup(String jsonRenderedNodeGroup) {
-		this.jsonRenderedNodeGroup = jsonRenderedNodeGroup;
-	}
-	
-	public JSONObject buildJsonNodeGroup(){
-		JSONParser prsr = new JSONParser();
-		JSONObject retval = null;
-		try {
-			retval = (JSONObject) prsr.parse(this.jsonRenderedNodeGroup);
-		} catch (ParseException e) {
-			// TODO Auto-generated catch block
-			LocalLogger.printStackTrace(e);
-		}
-		return retval;
 	}
 
 }

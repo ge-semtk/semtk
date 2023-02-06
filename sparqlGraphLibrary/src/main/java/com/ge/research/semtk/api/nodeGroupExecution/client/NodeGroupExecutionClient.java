@@ -20,7 +20,6 @@ package com.ge.research.semtk.api.nodeGroupExecution.client;
 import java.net.ConnectException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -38,6 +37,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.dispatch.QueryFlags;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -77,6 +77,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	private static final String JSON_KEY_PERCENT_COMPLETE  = "percentComplete";
 	private static final String JSON_KEY_QUERY_TYPE = "queryType";
 	private static final String JSON_KEY_RESULT_TYPE = "resultType";
+	private static final String JSON_KEY_RESULTS_ENDPOINT = "resultsEndpoint";
 	private static final String JSON_KEY_SPARQL_CONNECTION = "sparqlConnection";
 	private static final String JSON_KEY_SPARQL = "sparql";
 	private static final String JSON_KEY_RUNTIME_CONSTRAINTS = "runtimeConstraints";
@@ -111,6 +112,8 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	private static final String dispatchSelectByIdSyncEndpoint = "/dispatchSelectByIdSync";
 	private static final String dispatchSelectFromNodegroupEndpoint = "/dispatchSelectFromNodegroup";
 	private static final String dispatchQueryFromNodegroupEndpoint = "/dispatchQueryFromNodegroup";
+	private static final String dispatchConstructToGraphByIdEndpoint = "/dispatchConstructToGraphById";
+	private static final String dispatchConstructToGraphFromNodegroupEndpoint = "/dispatchConstructToGraphFromNodegroup";
 	private static final String dispatchCountByIdEndpoint = "/dispatchCountById";
 	private static final String dispatchCountFromNodegroupEndpoint = "/dispatchCountFromNodegroup";
 	private static final String dispatchFilterByIdEndpoint = "/dispatchFilterById";
@@ -769,6 +772,58 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		return retval;
 	}
 	
+	@SuppressWarnings("unchecked")
+	public SimpleResultSet execDispatchConstructToGraphById(String nodegroupID, SparqlConnection overrideConn, SparqlEndpointInterface resultsSei, JSONObject edcConstraintsJson, RuntimeConstraintManager runtimeConstraints, int limitOverride, int offsetOverride, QueryFlags flags) throws Exception{
+		SimpleResultSet retval = null;
+		
+		conf.setServiceEndpoint(mappingPrefix + dispatchConstructToGraphByIdEndpoint);
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID, nodegroupID);
+		this.parametersJSON.put(JSON_KEY_NODEGROUP_ID_PREV, nodegroupID);
+		this.parametersJSON.put(JSON_KEY_RESULTS_ENDPOINT, resultsSei.toJson().toJSONString());
+		this.parametersJSON.put(JSON_KEY_LIMIT_OVERRIDE, limitOverride);
+		this.parametersJSON.put(JSON_KEY_OFFSET_OVERRIDE, offsetOverride);
+
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION, overrideConn.toJson().toJSONString());
+		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS, edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
+		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS, runtimeConstraints == null ? null : runtimeConstraints.toJSONString());
+		this.parametersJSON.put(JSON_KEY_FLAGS, flags == null ? null : flags.toJSONString());		
+
+		
+		try{
+			LocalLogger.logToStdErr("sending executeDispatchSelectById request");
+			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
+			retval.throwExceptionIfUnsuccessful(String.format("Error running SELECT on nodegroup id='%s'", nodegroupID));
+		}
+		finally{
+			this.reset();
+		}
+		LocalLogger.logToStdErr("executeDispatchSelectById request finished without exception");
+		return retval;
+	}
+	
+	 @SuppressWarnings("unchecked") 
+	 public SimpleResultSet execDispatchConstructToGraphFromNodeGroup(NodeGroup ng, SparqlConnection conn, SparqlEndpointInterface resultsSei, JSONObject edcConstraintsJson, RuntimeConstraintManager runtimeConstraints, QueryFlags flags) throws Exception{
+	
+		SimpleResultSet retval = null;
+		
+		conf.setServiceEndpoint(mappingPrefix + dispatchConstructToGraphFromNodegroupEndpoint);
+		this.parametersJSON.put(JSON_KEY_NODEGROUP,           ng.toJson().toJSONString());
+		this.parametersJSON.put(JSON_KEY_SPARQL_CONNECTION,   conn.toJson().toJSONString());
+		this.parametersJSON.put(JSON_KEY_RESULTS_ENDPOINT,    resultsSei.toJson().toJSONString());
+		this.parametersJSON.put(JSON_KEY_EDC_CONSTRAINTS,     edcConstraintsJson == null ? null : edcConstraintsJson.toJSONString());	
+		this.parametersJSON.put(JSON_KEY_RUNTIME_CONSTRAINTS, runtimeConstraints == null ? null : runtimeConstraints.toJSONString());		
+		this.parametersJSON.put(JSON_KEY_FLAGS,               flags == null ? null : flags.toJSONString());		
+		
+		try{
+			retval = SimpleResultSet.fromJson((JSONObject) this.execute() );
+			retval.throwExceptionIfUnsuccessful("Error at " + mappingPrefix + dispatchSelectFromNodegroupEndpoint);
+		}
+		finally{
+			this.reset();
+		}
+		
+		return retval;
+	}
 	/**
 	 * Run synchronous Select.   Warning HTTP protocols could break the connection before it completes.
 	 * @param nodegroupID
@@ -1239,8 +1294,9 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	 * @param flags
 	 * @return SimpleResultSet with "JobId" field
 	 * @throws Exception
-	 */
-	public SimpleResultSet execDispatchSelectFromNodeGroup(NodeGroup ng, SparqlConnection conn, JSONObject edcConstraintsJson, RuntimeConstraintManager runtimeConstraints, QueryFlags flags) throws Exception{
+	 */ 
+	 @SuppressWarnings("unchecked") 
+	 public SimpleResultSet execDispatchSelectFromNodeGroup(NodeGroup ng, SparqlConnection conn, JSONObject edcConstraintsJson, RuntimeConstraintManager runtimeConstraints, QueryFlags flags) throws Exception{
 	
 		SimpleResultSet retval = null;
 		
@@ -1261,6 +1317,8 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		
 		return retval;
 	}
+	
+	
 	
 	/**
 	 * launch a construct query from a a nodegroup
@@ -1355,6 +1413,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		return this.waitForJobAndGetTable(ret.getResult("JobId"));
 	}
 	
+	
 	/**
 	 * Run a select query given a nodegroup and wait for results Table
 	 * @param sgjson
@@ -1369,6 +1428,26 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	
 	public Table dispatchSelectFromNodeGroup(SparqlGraphJson sgjson) throws Exception{
 		return this.dispatchSelectFromNodeGroup(sgjson.getNodeGroup(), sgjson.getSparqlConn(), null, null, null);
+	}
+	
+	public void dispatchConstructToGraphFromNodeGroup(NodeGroup ng, SparqlConnection conn, SparqlEndpointInterface resultsSei) throws Exception {
+		this.dispatchConstructToGraphFromNodeGroup(ng, conn, resultsSei, null, null, null);
+	}
+
+	public void dispatchConstructToGraphFromNodeGroup(NodeGroup ng, SparqlConnection conn, SparqlEndpointInterface resultsSei, JSONObject edcConstraintsJson, RuntimeConstraintManager runtimeConstraints, QueryFlags flags) throws Exception{
+		
+		SimpleResultSet res = this.execDispatchConstructToGraphFromNodeGroup(ng, conn, resultsSei, edcConstraintsJson, runtimeConstraints, flags);
+		this.waitForSuccessfulCompletion(res.getJobId());
+	}
+	
+	public void dispatchConstructToGraphById(String nodegroupID, SparqlConnection overrideConn, SparqlEndpointInterface resultsSei) throws Exception {
+		this.dispatchConstructToGraphById(nodegroupID, overrideConn, resultsSei, null, null, 0, 0, null);
+	}
+
+	public void dispatchConstructToGraphById(String nodegroupID, SparqlConnection overrideConn, SparqlEndpointInterface resultsSei, JSONObject edcConstraintsJson, RuntimeConstraintManager runtimeConstraints, int limitOverride, int offsetOverride, QueryFlags flags) throws Exception {
+		
+		SimpleResultSet res = this.execDispatchConstructToGraphById(nodegroupID, overrideConn, resultsSei, edcConstraintsJson, runtimeConstraints, limitOverride, offsetOverride, flags);
+		this.waitForSuccessfulCompletion(res.getJobId());
 	}
 	
 	/**

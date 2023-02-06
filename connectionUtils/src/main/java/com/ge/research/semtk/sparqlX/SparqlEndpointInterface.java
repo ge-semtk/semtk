@@ -111,6 +111,13 @@ public abstract class SparqlEndpointInterface {
 	public final static String NEPTUNE_SERVER = "neptune";
 	public final static String BLAZEGRAPH_SERVER = "blazegraph";
 	
+	public final static String JSON_KEY_TYPE = "type";
+	public final static String JSON_KEY_URL = "url";
+	public final static String JSON_KEY_GRAPH = "graph";
+	public final static String JSON_KEY_DEPRECATED_DATASET = "dataset";
+	public final static String JSON_KEY_USERNAME = "username";   // not supported 
+	public final static String JSON_KEY_PASSWORD = "password";   // not supported
+	
 	protected static final String TRIPLESTORE_DEFAULT_GRAPH_NAME = "urn:x-arq:DefaultGraph";
 	
 	// results types to request
@@ -444,29 +451,29 @@ public abstract class SparqlEndpointInterface {
 	 * @throws Exception
 	 */
 	public static SparqlEndpointInterface getInstance(JSONObject jObj) throws Exception {
-		for (String key : new String[] {"type", "url"}) {
+		for (String key : new String[] {JSON_KEY_TYPE, JSON_KEY_URL}) {
 			if (!jObj.containsKey(key)) {
 				throw new Exception("Invalid SparqlEndpointInterface JSON does not contain " + key + ": " + jObj.toJSONString());
 			}
 		}
-		if (jObj.containsKey("graph")) {
-			return SparqlEndpointInterface.getInstance((String)jObj.get("type"), (String)jObj.get("url"), (String)jObj.get("graph"));
-		} else if (jObj.containsKey("dataset")) {
-			return SparqlEndpointInterface.getInstance((String)jObj.get("type"), (String)jObj.get("url"), (String)jObj.get("dataset"));
+		if (jObj.containsKey(JSON_KEY_GRAPH)) {
+			return SparqlEndpointInterface.getInstance((String)jObj.get(JSON_KEY_TYPE), (String)jObj.get(JSON_KEY_URL), (String)jObj.get(JSON_KEY_GRAPH));
+		} else if (jObj.containsKey(JSON_KEY_DEPRECATED_DATASET)) {
+			return SparqlEndpointInterface.getInstance((String)jObj.get(JSON_KEY_TYPE), (String)jObj.get(JSON_KEY_URL), (String)jObj.get(JSON_KEY_DEPRECATED_DATASET));
 		} else {
 			throw new Exception("Invalid SparqlEndpointInterface JSON does not contain 'graph' or 'dataset': " + jObj.toJSONString());
 		}
 	}
 	/**
-	 * Write json
+	 * Write json but not username/password
 	 * @return
 	 */
 	public JSONObject toJson() {
 		JSONObject ret = new JSONObject();
 		
-		ret.put("type", this.getServerType());
-		ret.put("url", this.getServerAndPort());
-		ret.put("graph", this.getGraph());
+		ret.put(JSON_KEY_TYPE, this.getServerType());
+		ret.put(JSON_KEY_URL, this.getServerAndPort());
+		ret.put(JSON_KEY_GRAPH, this.getGraph());
 		
 		return ret;
 	}
@@ -1653,7 +1660,7 @@ public abstract class SparqlEndpointInterface {
 					
 				} else {
 					valueValue = (String) jsonCell.get("value");	
-					valueType =  (String) jsonCell.get("type");
+					valueType =  (String) jsonCell.get(JSON_KEY_TYPE);
 					if (valueType.endsWith("literal") && jsonCell.containsKey("datatype") ) {
 						valueDataType = (String) jsonCell.get("datatype");
 

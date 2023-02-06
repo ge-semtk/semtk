@@ -45,7 +45,7 @@ public class DispatchRequestBody extends SparqlConnRequestBody {
 	private String runtimeConstraints;
 
 	
-	public JSONObject getExternalDataConnectionConstraintsJson() throws Exception {
+	public JSONObject buildExternalDataConnectionConstraintsJson() throws Exception {
 		if(this.externalDataConnectionConstraints == null || this.externalDataConnectionConstraints.trim().isEmpty()){
 			return null;
 		}
