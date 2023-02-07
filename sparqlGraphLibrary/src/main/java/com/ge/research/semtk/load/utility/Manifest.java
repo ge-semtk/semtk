@@ -16,6 +16,7 @@
  */
 package com.ge.research.semtk.load.utility;
 
+import java.io.File;
 import java.net.URL;
 import java.util.LinkedList;
 
@@ -42,6 +43,8 @@ public class Manifest {
 	private LinkedList<URL> datagraphsFootprint = new LinkedList<URL>();
 	private LinkedList<String> nodegroupsFootprint = new LinkedList<String>();
 	private LinkedList<Step> steps = new LinkedList<Step>();
+
+	public static String DEFAULT_FILE_NAME = "manifest.yaml";	// the default manifest file name
 
 	/**
 	 * Constructor
@@ -146,7 +149,17 @@ public class Manifest {
 	}
 
 	/**
-	 * Instantiate a manifest from a YAML file
+	 * Instantiate a manifest from YAML
+	 * @param yamlFile a YAML file
+	 * @return the manifest object
+	 * @throws Exception e.g. if fails validation
+	 */
+	public static Manifest fromYaml(File yamlFile) throws Exception{
+		return fromYaml(Utility.getStringFromFilePath(yamlFile.getAbsolutePath()));
+	}
+
+	/**
+	 * Instantiate a manifest from YAML
 	 * @param yamlStr a YAML string
 	 * @return the manifest object
 	 * @throws Exception e.g. if fails validation
@@ -172,14 +185,24 @@ public class Manifest {
 		// footprint
 		JsonNode footprintJsonNode = manifestJsonNode.get("footprint");
 		if(footprintJsonNode != null) {
-			for(JsonNode node : footprintJsonNode.get("model-graphs")){
-				manifest.addModelgraphFootprint(new URL(node.asText()));
+			JsonNode nodes;
+			nodes = footprintJsonNode.get("model-graphs");
+			if(nodes != null) {
+				for(JsonNode node : nodes){
+					manifest.addModelgraphFootprint(new URL(node.asText()));
+				}
 			}
-			for(JsonNode node : footprintJsonNode.get("data-graphs")){
-				manifest.addDatagraphFootprint(new URL(node.asText()));
+			nodes = footprintJsonNode.get("data-graphs");
+			if(nodes != null) {
+				for(JsonNode node : nodes){
+					manifest.addDatagraphFootprint(new URL(node.asText()));
+				}
 			}
-			for(JsonNode node : footprintJsonNode.get("nodegroups")){
-				manifest.addNodegroupFootprint(new String(node.asText()));
+			nodes = footprintJsonNode.get("nodegroups");
+			if(nodes != null) {
+				for(JsonNode node : nodes){
+					manifest.addNodegroupFootprint(new String(node.asText()));
+				}
 			}
 		}
 

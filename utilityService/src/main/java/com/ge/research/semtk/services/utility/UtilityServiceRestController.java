@@ -48,6 +48,7 @@ import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
+import com.ge.research.semtk.load.utility.Manifest;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.plotting.PlotlyPlotSpec;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
@@ -352,8 +353,9 @@ public class UtilityServiceRestController {
 	@Operation(description="Load content from an ingestion package")
 	@CrossOrigin
 	@RequestMapping(value="/loadIngestionPackage", method=RequestMethod.POST, consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
-	public void loadIngestionPackage(@RequestParam("file") MultipartFile ingestionPackageZipFile, HttpServletResponse resp){
+	public void loadIngestionPackage(@RequestParam("file") MultipartFile ingestionPackageZipFile, @RequestHeader HttpHeaders headers, HttpServletResponse resp){
 
+		HeadersManager.setHeaders(headers);
 		final String ENDPOINT_NAME = "loadIngestionPackage";
 		LocalLogger.logToStdOut(SERVICE_NAME + " " + ENDPOINT_NAME);
 		PrintWriter responseWriter = null;
@@ -370,6 +372,7 @@ public class UtilityServiceRestController {
 		ZipInputStream zipInputStream = null;
 		File tempDir = null;
 		try {
+
 			// unzip the file
 			if(!ingestionPackageZipFile.getOriginalFilename().endsWith(".zip")) {
 				throw new Exception("This endpoint only accepts ingestion packages in zip file format");
@@ -379,9 +382,16 @@ public class UtilityServiceRestController {
 			Utility.unzip(zipInputStream, tempDir);
 			LocalLogger.logToStdOut("Unzipped " + ingestionPackageZipFile.getOriginalFilename() + " to " + tempDir.toString());
 
+			// load the manifest
+			File manifestFile = new File(tempDir + File.separator + Manifest.DEFAULT_FILE_NAME);
+			if(!manifestFile.exists()) {
+				throw new Exception(ingestionPackageZipFile.getOriginalFilename() + " does not contain a top-level " + Manifest.DEFAULT_FILE_NAME);
+			}
+			Manifest manifest = Manifest.fromYaml(manifestFile);
+
 			// load the contents of the ingestion package
 			// TODO implement
-			responseWriter.println("Loading ingestion package...");
+			responseWriter.println("Loading '" + manifest.getName() + "'...");
 			responseWriter.flush();
 			Thread.sleep(5*1000);
 			responseWriter.println("Loaded ontologies (not implemented yet)");

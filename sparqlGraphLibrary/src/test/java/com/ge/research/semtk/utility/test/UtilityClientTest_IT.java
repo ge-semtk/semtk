@@ -25,6 +25,7 @@ import org.junit.Test;
 import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.services.client.UtilityClient;
 import com.ge.research.semtk.test.IntegrationTestUtility;
+import com.ge.research.semtk.utility.LocalLogger;
 
 public class UtilityClientTest_IT {
 
@@ -44,31 +45,37 @@ public class UtilityClientTest_IT {
 
 	@Test
 	public void testLoadIngestionPackage() throws Exception {
-		BufferedReader reader = client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackage.zip"));
-		StringBuffer statusBuffer = new StringBuffer();
-		String s;
-		while ((s = reader.readLine()) != null) {
-			statusBuffer.append(s);
-			System.out.println(s);
-			// TODO confirm that status updates are arriving in real time
-		}
-		reader.close();
-		assert(statusBuffer.toString().contains("Load complete"));
+		String response = readAll(client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackage.zip")));
+		assert(response.contains("Load complete"));
 		// TODO when implemented, confirm that content loaded to triplestore as expected
 	}
 
-
-	// Test sending something other than an ingestion package, confirm get useful error message
+	// Test error conditions
 	@Test
-	public void testLoadIngestionPackage_nonZip() throws Exception {
-		BufferedReader reader = client.execLoadIngestionPackage(new File("src/test/resources/animalQuery.json"));
-		StringBuffer statusBuffer = new StringBuffer();
+	public void testLoadIngestionPackage_errorConditions() throws Exception {
+
+		String response;
+
+		// not a zip file
+		response = readAll(client.execLoadIngestionPackage(new File("src/test/resources/animalQuery.json")));
+		assert(response.contains("Error: This endpoint only accepts ingestion packages in zip file format"));
+
+		// contains no top-level manifest.yaml
+		response = readAll(client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackageNoManifest.zip")));
+		assert(response.contains("Error: IngestionPackageNoManifest.zip does not contain a top-level manifest.yaml"));
+	}
+
+
+	// convenience function to read client response into a String
+	private String readAll(BufferedReader reader) throws Exception {
+		StringBuffer buffer = new StringBuffer();
 		String s;
 		while ((s = reader.readLine()) != null) {
-			statusBuffer.append(s);
+			buffer.append(s);
+			LocalLogger.logToStdOut(s);
 		}
 		reader.close();
-		assert(statusBuffer.toString().contains("Error: This endpoint only accepts ingestion packages in zip file format"));
+		return buffer.toString();
 	}
 
 }

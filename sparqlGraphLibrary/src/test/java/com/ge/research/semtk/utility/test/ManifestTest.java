@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.net.URL;
 import java.util.LinkedList;
 
@@ -101,10 +102,12 @@ public class ManifestTest {
 
 		/**
 		 * Test that bare bones manifest does not error
+		 * Test signature with file parameter
 		 */
 		@Test
-		public void testMinimalManifest() throws Exception{
-			Manifest manifest = Manifest.fromYaml(Utility.readFile("src/test/resources/manifest_animals_minimal.yaml"));
+		public void testMinimalManifest_andFromFile() throws Exception{
+			File file = new File("src/test/resources/manifest_animals_minimal.yaml");
+			Manifest manifest = Manifest.fromYaml(file);
 			assertEquals(manifest.getName(), "Animals");
 		}
 
