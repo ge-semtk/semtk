@@ -383,28 +383,19 @@ public class UtilityServiceRestController {
 			LocalLogger.logToStdOut("Unzipped " + ingestionPackageZipFile.getOriginalFilename() + " to " + tempDir.toString());
 
 			// load the manifest
-			File manifestFile = new File(tempDir + File.separator + Manifest.DEFAULT_FILE_NAME);
-			if(!manifestFile.exists()) {
-				throw new Exception(ingestionPackageZipFile.getOriginalFilename() + " does not contain a top-level " + Manifest.DEFAULT_FILE_NAME);
+			File manifestFile = null;
+			try {
+				manifestFile = Manifest.getTopLevelManifestFile(tempDir);
+			}catch(Exception e) {
+				throw new Exception("Cannot find a top-level manifest in " + ingestionPackageZipFile.getOriginalFilename());
 			}
 			Manifest manifest = Manifest.fromYaml(manifestFile);
+			manifest.load(manifestFile.getParent(), responseWriter);
 
-			// load the contents of the ingestion package
-			// TODO implement
-			responseWriter.println("Loading '" + manifest.getName() + "'...");
-			responseWriter.flush();
-			Thread.sleep(5*1000);
-			responseWriter.println("Loaded ontologies (not implemented yet)");
-			responseWriter.flush();
-			Thread.sleep(5*1000);
-			responseWriter.println("Loaded nodegroups (not implemented yet)");
-			responseWriter.flush();
-			Thread.sleep(5*1000);
-			responseWriter.println("Loaded instance data (not implemented yet)");
-			responseWriter.flush();
-			Thread.sleep(5*1000);
 			responseWriter.println("Load complete");
 			responseWriter.flush();
+
+			// TODO implement more options that are present in the Python code (e.g. "clear")
 
 			LocalLogger.logToStdOut(SERVICE_NAME + " " + ENDPOINT_NAME + " completed");
 

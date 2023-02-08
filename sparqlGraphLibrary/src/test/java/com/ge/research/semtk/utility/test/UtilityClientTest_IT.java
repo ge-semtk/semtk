@@ -61,7 +61,7 @@ public class UtilityClientTest_IT {
 
 		// contains no top-level manifest.yaml
 		response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackageNoManifest.zip")));
-		assert(response.contains("Error: IngestionPackageNoManifest.zip does not contain a top-level manifest.yaml"));
+		assert(response.contains("Error: Cannot find a top-level manifest in IngestionPackageNoManifest.zip"));
 	}
 
 }

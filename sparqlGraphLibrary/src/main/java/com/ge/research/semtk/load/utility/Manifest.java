@@ -17,6 +17,7 @@
 package com.ge.research.semtk.load.utility;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.util.LinkedList;
 
@@ -44,7 +45,7 @@ public class Manifest {
 	private LinkedList<String> nodegroupsFootprint = new LinkedList<String>();
 	private LinkedList<Step> steps = new LinkedList<Step>();
 
-	public static String DEFAULT_FILE_NAME = "manifest.yaml";	// the default manifest file name
+	private static String DEFAULT_FILE_NAME = "manifest.yaml";	// the default manifest file name
 
 	/**
 	 * Constructor
@@ -146,6 +147,64 @@ public class Manifest {
 		conn.addModelInterface(SparqlEndpointInterface.getInstance(serverTypeString, server, SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME));
 		conn.addDataInterface(SparqlEndpointInterface.getInstance(serverTypeString, server, SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME));
 		return conn;
+	}
+
+	/**
+	 * Load the contents specified in the manifest
+	 */
+	public void load(String basePath, PrintWriter progressWriter) throws Exception {  // TODO change basePath to Path?
+		progressWriter.println("Loading '" + getName() + "'...");
+		for(Step step : getSteps()) {
+			StepType type = step.getType();
+			Object value = step.getValue();
+
+			switch(type) {
+				case MANIFEST:
+					File subManifestFile = new File(basePath, (String)step.getValue());
+					progressWriter.println("Load manifest " + subManifestFile.getAbsolutePath());
+					Manifest subManifest = Manifest.fromYaml(subManifestFile);
+					subManifest.load(subManifestFile.getParent(), progressWriter);
+					// TODO implement and test
+					break;
+				case DATA:
+					File dataFile = new File(basePath, (String)step.getValue());
+					progressWriter.println("Load data " + dataFile.getAbsolutePath());
+					// TODO implement and test
+					break;
+				case MODEL:
+					File modelFile = new File(basePath, (String)step.getValue());
+					progressWriter.println("Load model " + modelFile.getAbsolutePath());
+					// TODO implement and test
+					break;
+				case NODEGROUPS:
+					File nodegroupsPath = new File(basePath, (String)step.getValue());
+					progressWriter.println("Load nodegroups " + nodegroupsPath.getAbsolutePath());
+					// TODO implement and test
+					break;
+				case COPYGRAPH:
+					progressWriter.println("Copy graph X to Y");
+					// TODO implement and test
+					break;
+				default:
+					throw new Exception("Unrecognized manifest step: " + type);
+			}
+			Thread.sleep(3*1000); // TODO REMOVE
+			progressWriter.flush();
+		}
+	}
+
+	/**
+	 * Gets the default top-level manifest file in an unzipped ingestion package
+	 * @param baseDir the directory of the unzipped ingestion package
+	 * @return the file, if it exists
+	 * @throws Exception if the file is not found
+	 */
+	public static File getTopLevelManifestFile(File baseDir) throws Exception {
+		File manifestFile = new File(baseDir.getAbsoluteFile() + File.separator + Manifest.DEFAULT_FILE_NAME);
+		if(!manifestFile.exists()) {
+			throw new Exception(Manifest.DEFAULT_FILE_NAME + " does not exist in " + baseDir);
+		}
+		return manifestFile;
 	}
 
 	/**
