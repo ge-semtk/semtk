@@ -143,8 +143,8 @@ public class Manifest {
 	public SparqlConnection getDefaultGraphConnection(String server, String serverTypeString) throws Exception {
 		SparqlConnection conn = new SparqlConnection();
 		conn.setName("Default Graph");
-		conn.addModelInterface(SparqlEndpointInterface.getInstance(serverTypeString, server, "uri://DefaultGraph"));
-		conn.addDataInterface(SparqlEndpointInterface.getInstance(serverTypeString, server, "uri://DefaultGraph"));
+		conn.addModelInterface(SparqlEndpointInterface.getInstance(serverTypeString, server, SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME));
+		conn.addDataInterface(SparqlEndpointInterface.getInstance(serverTypeString, server, SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME));
 		return conn;
 	}
 

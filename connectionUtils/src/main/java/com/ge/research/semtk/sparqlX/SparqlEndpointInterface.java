@@ -104,7 +104,7 @@ public abstract class SparqlEndpointInterface {
 	// NOTE: more than one thread cannot safely share a SparqlEndpointInterface.
 	// this is because of the state maintained for the results vars and connection 
 	// details. doing so may lead to unexpected results
-	private final static String SEMTK_DEFAULT_GRAPH_NAME = "uri://DefaultGraph";
+	public final static String SEMTK_DEFAULT_GRAPH_NAME = "uri://DefaultGraph";
 	private final static String QUERY_SERVER = "kdl";
 	public final static String FUSEKI_SERVER = "fuseki";
 	public final static String VIRTUOSO_SERVER = "virtuoso";

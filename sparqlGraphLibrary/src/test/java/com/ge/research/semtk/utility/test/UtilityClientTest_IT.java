@@ -16,7 +16,6 @@
  */
 package com.ge.research.semtk.utility.test;
 
-import java.io.BufferedReader;
 import java.io.File;
 
 import org.junit.BeforeClass;
@@ -25,7 +24,7 @@ import org.junit.Test;
 import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.services.client.UtilityClient;
 import com.ge.research.semtk.test.IntegrationTestUtility;
-import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Utility;
 
 public class UtilityClientTest_IT {
 
@@ -45,7 +44,7 @@ public class UtilityClientTest_IT {
 
 	@Test
 	public void testLoadIngestionPackage() throws Exception {
-		String response = readAll(client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackage.zip")));
+		String response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackage.zip")));
 		assert(response.contains("Load complete"));
 		// TODO when implemented, confirm that content loaded to triplestore as expected
 	}
@@ -57,25 +56,12 @@ public class UtilityClientTest_IT {
 		String response;
 
 		// not a zip file
-		response = readAll(client.execLoadIngestionPackage(new File("src/test/resources/animalQuery.json")));
+		response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/animalQuery.json")));
 		assert(response.contains("Error: This endpoint only accepts ingestion packages in zip file format"));
 
 		// contains no top-level manifest.yaml
-		response = readAll(client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackageNoManifest.zip")));
+		response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackageNoManifest.zip")));
 		assert(response.contains("Error: IngestionPackageNoManifest.zip does not contain a top-level manifest.yaml"));
-	}
-
-
-	// convenience function to read client response into a String
-	private String readAll(BufferedReader reader) throws Exception {
-		StringBuffer buffer = new StringBuffer();
-		String s;
-		while ((s = reader.readLine()) != null) {
-			buffer.append(s);
-			LocalLogger.logToStdOut(s);
-		}
-		reader.close();
-		return buffer.toString();
 	}
 
 }

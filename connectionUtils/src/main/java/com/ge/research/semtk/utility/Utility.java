@@ -248,6 +248,22 @@ public abstract class Utility {
 	}
 	
 	/**
+	 * Read contents of a BufferedReader to a String
+	 */
+	public static String readToString(BufferedReader reader) throws Exception {
+		if (reader == null) {
+			return null;
+		}
+		StringBuffer buffer = new StringBuffer();
+		String s;
+		while ((s = reader.readLine()) != null) {
+			buffer.append(s);
+		}
+		reader.close();
+		return buffer.toString();
+	}
+
+	/**
 	 * Built a ping result
 	 * @return
 	 */
