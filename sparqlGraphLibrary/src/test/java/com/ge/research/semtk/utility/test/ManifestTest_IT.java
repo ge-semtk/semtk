@@ -26,6 +26,7 @@ import java.util.zip.ZipInputStream;
 import org.junit.Test;
 
 import com.ge.research.semtk.load.utility.Manifest;
+import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 
 
@@ -47,7 +48,7 @@ public class ManifestTest_IT {
 			Manifest manifest = Manifest.fromYaml(manifestFile);
 			assertEquals(manifest.getName(), "Entity Resolution");
 
-			manifest.load(tempDir.toString(), new PrintWriter(System.out));
+			manifest.load(tempDir.toString(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, true, new PrintWriter(System.out));
 			
 			// TODO more asserts
 			

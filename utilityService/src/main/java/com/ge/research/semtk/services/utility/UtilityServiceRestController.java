@@ -390,7 +390,9 @@ public class UtilityServiceRestController {
 				throw new Exception("Cannot find a top-level manifest in " + ingestionPackageZipFile.getOriginalFilename());
 			}
 			Manifest manifest = Manifest.fromYaml(manifestFile);
-			manifest.load(manifestFile.getParent(), responseWriter);
+			String server = "http://localhost:3030/JUNIT";  	// TODO make this an endpoint parameter
+			String serverType = "fuseki"; 						// TODO make this an endpoint parameter
+			manifest.load(manifestFile.getParent(), server, serverType, false, false, true, responseWriter);
 
 			responseWriter.println("Load complete");
 			responseWriter.flush();

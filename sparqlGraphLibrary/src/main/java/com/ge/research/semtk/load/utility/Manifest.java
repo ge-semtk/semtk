@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.util.LinkedList;
+import java.util.List;
 
 import org.apache.commons.math3.util.Pair;
 
@@ -28,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 /**
@@ -151,9 +153,22 @@ public class Manifest {
 
 	/**
 	 * Load the contents specified in the manifest
+	 * @param basePath the directory containing the unzipped ingestion package
+	 * @param server the triple store location (e.g. "http://localhost:3030/DATASET")
+	 * @param serverTypeString the triple store type (e.g. "fuseki")
+	 * @param clear if true, clears the footprint graphs (before loading)
+	 * @param defaultGraph if true, loads everything to the default graph instead of the target graphs
+	 * @param topLevel true if this is a top-level manifest, false for recursively calling sub-manifests
+	 * @param progressWriter writer for reporting progress
 	 */
-	public void load(String basePath, PrintWriter progressWriter) throws Exception {  // TODO change basePath to Path?
+	public void load(String basePath, String server, String serverTypeString, boolean clear, boolean defaultGraph, boolean topLevel, PrintWriter progressWriter) throws Exception {
 		progressWriter.println("Loading '" + getName() + "'...");
+
+		// clear graphs first, if wanted
+		if(clear) {
+			// TODO
+		}
+
 		for(Step step : getSteps()) {
 			StepType type = step.getType();
 			Object value = step.getValue();
@@ -163,7 +178,7 @@ public class Manifest {
 					File subManifestFile = new File(basePath, (String)step.getValue());
 					progressWriter.println("Load manifest " + subManifestFile.getAbsolutePath());
 					Manifest subManifest = Manifest.fromYaml(subManifestFile);
-					subManifest.load(subManifestFile.getParent(), progressWriter);
+					subManifest.load(subManifestFile.getParent(), server, serverTypeString, clear, defaultGraph, false, progressWriter);
 					// TODO implement and test
 					break;
 				case DATA:
@@ -172,8 +187,13 @@ public class Manifest {
 					// TODO implement and test
 					break;
 				case MODEL:
-					File modelFile = new File(basePath, (String)step.getValue());
-					progressWriter.println("Load model " + modelFile.getAbsolutePath());
+					File modelStepYamlFile = new File(basePath, (String)step.getValue());
+					progressWriter.println("Load model " + modelStepYamlFile.getAbsolutePath());
+					IngestOwlConfig ingestOwlConfig = IngestOwlConfig.fromYaml(modelStepYamlFile);  // read list of files from yaml file
+					for(String fileStr : ingestOwlConfig.getFiles()) {
+						File file = new File(modelStepYamlFile.getParent(), fileStr);
+						progressWriter.println("Load file " + file.getAbsolutePath());
+					}
 					// TODO implement and test
 					break;
 				case NODEGROUPS:
@@ -222,6 +242,8 @@ public class Manifest {
 	 * @param yamlStr a YAML string
 	 * @return the manifest object
 	 * @throws Exception e.g. if fails validation
+	 *
+	 * TODO could instead use ObjectMapper.readValue to auto-populate a Manifest
 	 */
 	public static Manifest fromYaml(String yamlStr) throws Exception {
 
@@ -319,4 +341,39 @@ public class Manifest {
 		}
 	}
 	
+	/**
+	 * Configuration for loading a set of OWL files
+	 * TODO porting from Python which also has a model-graphs entry - add this
+	 * TODO add unit tests
+	 */
+	public static class IngestOwlConfig{
+
+		private List<String> files;
+
+		public List<String> getFiles() {
+			return files;
+		}
+		public void setFiles(List<String> files) {
+			this.files = files;
+		}
+
+		/**
+		 * Get an instance from YAML
+		 */
+		public static IngestOwlConfig fromYaml(File yamlFile) throws Exception {
+			try {
+				// TODO validate against schema
+				//String schema = Utility.getResourceAsString(Manifest.class, "ingest_owl_schema.json");
+				//Utility.validateYaml(Files.readString(yamlFile), schema);
+
+				ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+				mapper.findAndRegisterModules();
+				return mapper.readValue(yamlFile, IngestOwlConfig.class); // populates IngestOwlConfig instance using YAML
+			}catch(Exception e) {
+				LocalLogger.printStackTrace(e);
+				throw new Exception("Error populating IngestOwlConfig from " + yamlFile.getName() + ": " + e.getMessage());
+			}
+		}
+	}
+
 }
