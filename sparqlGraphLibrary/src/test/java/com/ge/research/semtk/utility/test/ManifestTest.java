@@ -19,6 +19,7 @@ package com.ge.research.semtk.utility.test;
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
@@ -28,6 +29,7 @@ import java.util.LinkedList;
 import org.apache.commons.math3.util.Pair;
 
 import com.ge.research.semtk.load.utility.Manifest;
+import com.ge.research.semtk.load.utility.Manifest.IngestOwlConfig;
 import com.ge.research.semtk.load.utility.Manifest.Step;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -43,7 +45,6 @@ public class ManifestTest {
 			assertEquals(manifest.getDescription(), "Load information about animals");
 			assertTrue(manifest.getCopyToDefaultGraph());
 			assertTrue(manifest.getPerformEntityResolution());
-			assertFalse(manifest.getPerformOptimization());
 
 			// test footprint
 			assertEquals(manifest.getModelgraphsFootprint().size(), 1);
@@ -109,6 +110,28 @@ public class ManifestTest {
 			File file = new File("src/test/resources/manifest_animals_minimal.yaml");
 			Manifest manifest = Manifest.fromYaml(file);
 			assertEquals(manifest.getName(), "Animals");
+		}
+
+		/**
+		 * Test populating an IngestOwlConfig instance from a YAML file
+		 */
+		@Test
+		public void testIngestOwlConfig() throws Exception{
+			// this config has owl files only
+			File file = new File("src/test/resources/import_animals.yaml");
+			IngestOwlConfig config = IngestOwlConfig.fromYaml(file);
+			assertEquals(config.getFiles().size(), 3);
+			assertNull(config.getModelgraphs());
+
+			// this config has owl files and model graphs (as array)
+			file = new File("src/test/resources/import_animals_2.yaml");
+			config = IngestOwlConfig.fromYaml(file);
+			assertEquals(config.getFiles().size(), 3);
+			assertEquals(config.getFiles().get(0),"woodchuck.owl");
+			assertEquals(config.getFiles().get(1),"hedgehog.owl");
+			assertEquals(config.getFiles().get(2),"raccoon.owl");
+			assertEquals(config.getModelgraphs().size(), 1);
+			assertEquals(config.getModelgraphs().get(0),"http://animals/model");
 		}
 
 }

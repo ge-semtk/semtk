@@ -24,6 +24,7 @@ import java.util.List;
 
 import org.apache.commons.math3.util.Pair;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -41,7 +42,6 @@ public class Manifest {
 	private String description;
 	private boolean copyToDefaultGraph = false;
 	private boolean performEntityResolution = false;
-	private boolean performOptimization = false;
 	private LinkedList<URL> modelgraphsFootprint = new LinkedList<URL>();
 	private LinkedList<URL> datagraphsFootprint = new LinkedList<URL>();
 	private LinkedList<String> nodegroupsFootprint = new LinkedList<String>();
@@ -76,10 +76,6 @@ public class Manifest {
 	public boolean getPerformEntityResolution() {
 		return performEntityResolution;
 	}
-	/* Returns true when this manifest file prescribes running the triplestore optimizer */
-	public boolean getPerformOptimization() {
-		return performOptimization;
-	}
 	public LinkedList<URL> getModelgraphsFootprint() {
 		return modelgraphsFootprint;
 	}
@@ -102,9 +98,6 @@ public class Manifest {
 	}
 	public void setPerformEntityResolution(boolean b) {
 		this.performEntityResolution = b;
-	}
-	public void setPerformOptimization(boolean b) {
-		this.performOptimization = b;
 	}
 	public void addModelgraphFootprint(URL url) {
 		this.modelgraphsFootprint.add(url);
@@ -169,47 +162,79 @@ public class Manifest {
 			// TODO
 		}
 
+		// if loading to default graph, then set targetGraph
+		String[] targetGraph = null;
+		if(defaultGraph) {
+			targetGraph = new String[]{SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME};
+		}
+
 		for(Step step : getSteps()) {
 			StepType type = step.getType();
-			Object value = step.getValue();
 
-			switch(type) {
-				case MANIFEST:
-					File subManifestFile = new File(basePath, (String)step.getValue());
-					progressWriter.println("Load manifest " + subManifestFile.getAbsolutePath());
-					Manifest subManifest = Manifest.fromYaml(subManifestFile);
-					subManifest.load(subManifestFile.getParent(), server, serverTypeString, clear, defaultGraph, false, progressWriter);
-					// TODO implement and test
-					break;
-				case DATA:
-					File dataFile = new File(basePath, (String)step.getValue());
-					progressWriter.println("Load data " + dataFile.getAbsolutePath());
-					// TODO implement and test
-					break;
-				case MODEL:
-					File modelStepYamlFile = new File(basePath, (String)step.getValue());
-					progressWriter.println("Load model " + modelStepYamlFile.getAbsolutePath());
-					IngestOwlConfig ingestOwlConfig = IngestOwlConfig.fromYaml(modelStepYamlFile);  // read list of files from yaml file
-					for(String fileStr : ingestOwlConfig.getFiles()) {
-						File file = new File(modelStepYamlFile.getParent(), fileStr);
-						progressWriter.println("Load file " + file.getAbsolutePath());
-					}
-					// TODO implement and test
-					break;
-				case NODEGROUPS:
-					File nodegroupsPath = new File(basePath, (String)step.getValue());
-					progressWriter.println("Load nodegroups " + nodegroupsPath.getAbsolutePath());
-					// TODO implement and test
-					break;
-				case COPYGRAPH:
-					progressWriter.println("Copy graph X to Y");
-					// TODO implement and test
-					break;
-				default:
-					throw new Exception("Unrecognized manifest step: " + type);
+			if(type == StepType.DATA) {
+				File stepFile = new File(basePath, (String)step.getValue());
+				progressWriter.println("Load data " + stepFile.getAbsolutePath());
+				// TODO implement and test
+
+			}else if(type == StepType.MODEL) {
+				File stepFile = new File(basePath, (String)step.getValue());
+				progressWriter.println("Load model " + stepFile.getAbsolutePath());
+				ingestOwl(stepFile, targetGraph, server, serverTypeString, clear, progressWriter);
+				// TODO implement and test
+
+			}else if(type == StepType.NODEGROUPS) {
+				File stepFile = new File(basePath, (String)step.getValue());
+				progressWriter.println("Load nodegroups " + stepFile.getAbsolutePath());
+				// TODO implement and test
+
+			}else if(type == StepType.MANIFEST) {
+				File stepFile = new File(basePath, (String)step.getValue());
+				progressWriter.println("Load manifest " + stepFile.getAbsolutePath());
+				Manifest subManifest = Manifest.fromYaml(stepFile);
+				subManifest.load(stepFile.getParent(), server, serverTypeString, clear, defaultGraph, false, progressWriter);
+
+			}else if(type == StepType.COPYGRAPH) {
+				progressWriter.println("Copy graph X to Y");
+				// TODO implement and test
+
+			}else {
+				throw new Exception("Unrecognized manifest step: " + type);
 			}
-			Thread.sleep(3*1000); // TODO REMOVE
+			Thread.sleep(2*1000); // TODO REMOVE
 			progressWriter.flush();
+		}
+
+		// actions to be performed on top-level manifests only: copy to default graph, entity resolution
+		if(topLevel) {
+			if(this.getCopyToDefaultGraph()) {
+				if(clear) {
+					// TODO clear default graph
+				}
+				// TODO copy each model graph to default graph
+				// TODO copy each data graph to default graph
+			}
+			if(this.getPerformEntityResolution()) {
+				// TODO entity resolution
+			}
+		}
+	}
+
+	/**
+	 * Use an import.yaml file to ingest multiple OWL files into the model graph
+	 * TODO test
+	 */
+	private void ingestOwl(File configFile, String[] modelGraphs, String server, String serverType, boolean clear, PrintWriter progressWriter) throws Exception {
+		try {
+			IngestOwlConfig ingestOwlConfig = IngestOwlConfig.fromYaml(configFile);  // read list of files from yaml file
+			for(String fileStr : ingestOwlConfig.getFiles()) {
+				File file = new File(configFile.getParent(), fileStr);
+				progressWriter.println("Load file " + file.getAbsolutePath());
+			}
+			// TODO if modelGraphs parameter given, then load to that...else parse model-graphs from the config and use that
+			// TODO load the owl
+		}catch(Exception e) {
+			LocalLogger.printStackTrace(e);
+			throw new Exception("Error loading OWL: " + e.getMessage());
 		}
 	}
 
@@ -261,7 +286,6 @@ public class Manifest {
 		// 3 optional boolean properties
 		if(manifestJsonNode.get("copy-to-default-graph") != null) { manifest.setCopyToDefaultGraph(manifestJsonNode.get("copy-to-default-graph").booleanValue()); }
 		if(manifestJsonNode.get("perform-entity-resolution") != null) { manifest.setPerformEntityResolution(manifestJsonNode.get("perform-entity-resolution").booleanValue()); }
-		if(manifestJsonNode.get("perform-triplestore-optimization") != null) { manifest.setPerformOptimization(manifestJsonNode.get("perform-triplestore-optimization").booleanValue()); }
 
 		// footprint
 		JsonNode footprintJsonNode = manifestJsonNode.get("footprint");
@@ -343,12 +367,14 @@ public class Manifest {
 	
 	/**
 	 * Configuration for loading a set of OWL files
-	 * TODO porting from Python which also has a model-graphs entry - add this
-	 * TODO add unit tests
 	 */
 	public static class IngestOwlConfig{
 
 		private List<String> files;
+
+		// TODO the python schema allows model-graphs to be a string or an array.  We support array here - make it support both
+		@JsonProperty("model-graphs")
+		private List<String> modelgraphs;
 
 		public List<String> getFiles() {
 			return files;
@@ -356,19 +382,21 @@ public class Manifest {
 		public void setFiles(List<String> files) {
 			this.files = files;
 		}
+		public List<String> getModelgraphs() {
+			return modelgraphs;
+		}
+		public void setModelgraphs(List<String> modelgraphs) {
+			this.modelgraphs = modelgraphs;
+		}
 
 		/**
 		 * Get an instance from YAML
 		 */
 		public static IngestOwlConfig fromYaml(File yamlFile) throws Exception {
 			try {
-				// TODO validate against schema
-				//String schema = Utility.getResourceAsString(Manifest.class, "ingest_owl_schema.json");
-				//Utility.validateYaml(Files.readString(yamlFile), schema);
-
 				ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 				mapper.findAndRegisterModules();
-				return mapper.readValue(yamlFile, IngestOwlConfig.class); // populates IngestOwlConfig instance using YAML
+				return mapper.readValue(yamlFile, IngestOwlConfig.class); // validates/populates IngestOwlConfig instance using YAML
 			}catch(Exception e) {
 				LocalLogger.printStackTrace(e);
 				throw new Exception("Error populating IngestOwlConfig from " + yamlFile.getName() + ": " + e.getMessage());
