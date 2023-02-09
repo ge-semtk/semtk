@@ -349,11 +349,17 @@ public class UtilityServiceRestController {
 	
 	/**
 	 * Load content from an ingestion package (zip file) to triplestore
+	 *
+	 * Not using @RequestBody because can't use with @RequestParam
 	 */
 	@Operation(description="Load content from an ingestion package")
 	@CrossOrigin
 	@RequestMapping(value="/loadIngestionPackage", method=RequestMethod.POST, consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
-	public void loadIngestionPackage(@RequestParam("file") MultipartFile ingestionPackageZipFile, @RequestHeader HttpHeaders headers, HttpServletResponse resp){
+	public void loadIngestionPackage(	@RequestParam("serverAndPort") String serverAndPort, // e.g. http://localhost:3030/JUNIT for fuseki, http://localhost:2420 for virtuoso
+										@RequestParam("serverType") String serverType,// e.g. "fuseki"
+										@RequestParam("file") MultipartFile ingestionPackageZipFile,
+										@RequestHeader HttpHeaders headers,
+										HttpServletResponse resp){
 
 		HeadersManager.setHeaders(headers);
 		final String ENDPOINT_NAME = "loadIngestionPackage";
@@ -390,9 +396,7 @@ public class UtilityServiceRestController {
 				throw new Exception("Cannot find a top-level manifest in " + ingestionPackageZipFile.getOriginalFilename());
 			}
 			Manifest manifest = Manifest.fromYaml(manifestFile);
-			String server = "http://localhost:3030/JUNIT";  	// TODO make this an endpoint parameter
-			String serverType = "fuseki"; 						// TODO make this an endpoint parameter
-			manifest.load(manifestFile.getParent(), server, serverType, false, false, true, responseWriter);
+			manifest.load(manifestFile.getParent(), serverAndPort, serverType, false, false, true, responseWriter);
 
 			responseWriter.println("Load complete");
 			responseWriter.flush();

@@ -27,12 +27,35 @@ import com.ge.research.semtk.connutil.EndpointNotFoundException;
  * Client for UtilityService
  */
 public class UtilityClient extends RestClient {
-	
+
 	/**
 	 * Constructor
 	 */
-	public UtilityClient (RestClientConfig config) {
+	public UtilityClient (UtilityClientConfig config) {
 		this.conf = config;
+	}
+
+	@Override
+	public UtilityClientConfig getConfig() {
+		return (UtilityClientConfig) this.conf;
+	}
+
+	/**
+	 * Create a params JSON object
+	 */
+	@SuppressWarnings("unchecked")
+	@Override
+	public void buildParametersJSON() throws Exception {
+
+		if(! (this.conf instanceof UtilityClientConfig)){
+			throw new Exception("Unrecognized config for UtilityClient");
+		}
+
+		if(this.conf.getServiceEndpoint().endsWith("loadIngestionPackage")){ 
+			// only need these for some UtilityService endpoints.  See SparqlQueryClient for more examples
+			parametersJSON.put("serverAndPort", ((UtilityClientConfig)this.conf).getSparqlServerAndPort());
+			parametersJSON.put("serverType", ((UtilityClientConfig)this.conf).getSparqlServerType());
+		}
 	}
 
 	private void cleanUp() {
