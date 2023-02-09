@@ -46,9 +46,8 @@ public class ManifestTest_IT {
 			File manifestFile = Manifest.getTopLevelManifestFile(tempDir);
 			Manifest manifest = Manifest.fromYaml(manifestFile);
 			assertEquals(manifest.getName(), "Entity Resolution");
-			
-			PrintWriter writer = new PrintWriter(System.out);
-			manifest.load(tempDir.toString(), writer);
+
+			manifest.load(tempDir.toString(), new PrintWriter(System.out));
 			
 			// TODO more asserts
 			

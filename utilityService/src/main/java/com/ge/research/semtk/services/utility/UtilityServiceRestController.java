@@ -394,9 +394,6 @@ public class UtilityServiceRestController {
 
 			responseWriter.println("Load complete");
 			responseWriter.flush();
-
-			// TODO implement more options that are present in the Python code (e.g. "clear")
-
 			LocalLogger.logToStdOut(SERVICE_NAME + " " + ENDPOINT_NAME + " completed");
 
 		} catch (Exception e){

@@ -232,7 +232,7 @@ public class Manifest {
 		// populate the manifest
 
 		JsonNode manifestJsonNode = (new ObjectMapper(new YAMLFactory())).readTree(yamlStr);
-		String name = manifestJsonNode.get("name").asText();
+		String name = manifestJsonNode.get("name").asText();  // required
 		String description = manifestJsonNode.get("description") != null ? manifestJsonNode.get("description").asText() : null; // optional
 		Manifest manifest = new Manifest(name, description);
 

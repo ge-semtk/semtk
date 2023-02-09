@@ -45,8 +45,18 @@ public class UtilityClientTest_IT {
 	@Test
 	public void testLoadIngestionPackage() throws Exception {
 		String response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackage.zip")));
+		// check the response stream
+		assert(response.contains("Loading 'Entity Resolution'..."));
+		assert(response.matches("(.*)Load manifest (.*)manifests(.*)rack.yaml(.*)"));
+		assert(response.contains("Loading 'RACK ontology'..."));
+		assert(response.matches("(.*)Load model (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)import.yaml(.*)"));
+		assert(response.matches("(.*)Load nodegroups (.*)manifests(.*)nodegroups(.*)queries(.*)"));
+		assert(response.matches("(.*)Load data (.*)TestData(.*)Package-1(.*)import.yaml(.*)"));
+		assert(response.matches("(.*)Load data (.*)TestData(.*)Package-2(.*)import.yaml(.*)"));
+		assert(response.matches("(.*)Load data (.*)TestData(.*)Package-3(.*)import.yaml(.*)"));
+		assert(response.matches("(.*)Load data (.*)TestData(.*)Resolutions-1(.*)import.yaml(.*)"));
+		assert(response.matches("(.*)Load data (.*)TestData(.*)Resolutions-1(.*)import.yaml(.*)"));
 		assert(response.contains("Load complete"));
-		// TODO when implemented, confirm that content loaded to triplestore as expected
 	}
 
 	// Test error conditions
