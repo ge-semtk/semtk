@@ -142,7 +142,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 				resTable.uniquify(new String [] {this.pruneToColumn});
 			} 
 		} catch(Exception e){
-			this.jobTracker.setJobFailure(this.jobID, "Failure preparing results table: " + e.toString());
+			this.jobTracker.setJobFailure(this.jobID, "Failure preparing results table: " + e.getMessage());
 			LocalLogger.printStackTrace(e);
 			throw new Exception(e);
 		}
@@ -151,7 +151,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			(new ResultsClient(this.resConfig)).execStoreTableResults(this.jobID, resTable);
 		}
 		catch(Exception e){
-			this.jobTracker.setJobFailure(this.jobID, "Failed to write results: " + e.toString());
+			this.jobTracker.setJobFailure(this.jobID, "Failed to write results: " + e.getMessage());
 			LocalLogger.printStackTrace(e);
 			throw new Exception("Unable to write results", e);
 		}
@@ -163,7 +163,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			(new ResultsClient(this.resConfig)).execStoreGraphResults(this.jobID, resJSON);
 		}
 		catch(Exception e){
-			this.jobTracker.setJobFailure(this.jobID, "Failed to write results: " + e.toString());
+			this.jobTracker.setJobFailure(this.jobID, "Failed to write results: " + e.getMessage());
 			LocalLogger.printStackTrace(e);
 			throw new Exception("Unable to write results", e);
 		}
@@ -184,7 +184,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			}
 			
 		} catch (Exception e) {
-			throw new UnableToSetStatusException(e.toString());
+			throw new UnableToSetStatusException(e.getMessage());
 		}
 	}
 	
@@ -193,7 +193,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		try {
 			this.jobTracker.incrementPercentComplete(this.jobID, increment, max);
 		} catch (Exception e) {
-			throw new UnableToSetStatusException(e.toString());
+			throw new UnableToSetStatusException(e.getMessage());
 		}
 	}
 	
@@ -290,9 +290,9 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 
 		}
 		catch(Exception e){
-			this.updateStatusToFailed(e.toString());
+			this.updateStatusToFailed(e.getMessage());
 			LocalLogger.printStackTrace(e);
-			throw new Exception("Query failed: " + e.toString() );
+			throw new Exception("Query failed: " + e.getMessage() );
 		}
 	}
 

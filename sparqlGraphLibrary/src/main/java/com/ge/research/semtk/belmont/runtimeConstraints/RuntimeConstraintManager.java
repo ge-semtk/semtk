@@ -208,7 +208,7 @@ public class RuntimeConstraintManager {
 				}
 			} catch(Exception eee){
 				// we were passed a bad value that could not be cast to the suggested type.
-				throw new Exception("Runtime constraint value for " + sparqlId + " type " + XSDSupportedType.buildTypeListString(operandTypes) + ": " + eee.toString());
+				throw new Exception("Runtime constraint value for " + sparqlId + " type " + XSDSupportedType.buildTypeListString(operandTypes) + ": " + eee.getMessage());
 			}
 			
 			SupportedOperations operationValue = null;

@@ -226,7 +226,7 @@ public class FdcDispatcher extends EdcDispatcher {
 		} catch (Exception e) {
 			LocalLogger.printStackTrace(e);
 			try {
-				this.updateStatusToFailed("Internal FDC error " + errorHeader + ": " + e.toString());
+				this.updateStatusToFailed("Internal FDC error " + errorHeader + ": " + e.getMessage());
 			} catch (Exception ee) {}
 			
 		} finally {

@@ -353,7 +353,7 @@ public class FdcCacheSpecRunner extends Thread {
 			// finish job on any exception
 			try {
 				LocalLogger.printStackTrace(e);
-				this.tracker.setJobFailure(this.jobId, e.toString() == null ? "null" : e.toString());
+				this.tracker.setJobFailure(this.jobId, e.getMessage() == null ? "null" : e.getMessage());
 			} catch (Exception ee) {
 				LocalLogger.printStackTrace(ee);
 			}

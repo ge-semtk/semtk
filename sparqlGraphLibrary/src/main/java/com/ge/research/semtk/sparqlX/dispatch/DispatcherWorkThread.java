@@ -94,7 +94,7 @@ public class DispatcherWorkThread extends Thread {
     		
     		// dump to log.
     		LocalLogger.logToStdErr("Work thread failed for query " + this.query);
-    		LocalLogger.logToStdErr(e.toString());
+    		LocalLogger.logToStdErr(e.getMessage());
     		LocalLogger.printStackTrace(e);
     		
     		this.exceptionArr[this.myEntryNumber] = e;

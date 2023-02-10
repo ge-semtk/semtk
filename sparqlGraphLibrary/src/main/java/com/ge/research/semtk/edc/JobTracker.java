@@ -355,7 +355,7 @@ public class JobTracker {
 	    try {
 		    this.createSuperuserEndpoint().addHttpTimeout(HTTP_TIMEOUT).executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
-	    	throw new Exception(e.toString());
+	    	throw new Exception(e.getMessage());
 	    }
 	}
 	
@@ -394,12 +394,12 @@ public class JobTracker {
 	        "   optional {?Job job:status ?status .} \n" +
 	        "}",
 	        
-	        SparqlToXUtils.safeSparqlString(statusMessage==null?"":statusMessage), SparqlToXUtils.safeSparqlString(jobId));
+	        SparqlToXUtils.safeSparqlString(statusMessage), SparqlToXUtils.safeSparqlString(jobId));
 	 	// LocalLogger.logToStdErr(query);
 	    try {
 	    	this.createSuperuserEndpoint().addHttpTimeout(HTTP_TIMEOUT).executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
-	    	throw new Exception(e.toString());
+	    	throw new Exception(e.getMessage());
 	    }
 	}
 	
@@ -589,7 +589,7 @@ public class JobTracker {
 				.addHttpTimeout(HTTP_TIMEOUT)
 				.executeQuery(query, SparqlResultTypes.CONFIRM);
 		} catch (Exception e) {
-			throw new Exception(e.toString());
+			throw new Exception(e.getMessage());
 		}
 	}
 
@@ -654,7 +654,7 @@ public class JobTracker {
 				.addHttpTimeout(HTTP_TIMEOUT)
 				.executeQuery(query, SparqlResultTypes.CONFIRM);
 		} catch (Exception e) {
-			throw new Exception(e.toString());
+			throw new Exception(e.getMessage());
 		}
 	}
 
@@ -818,7 +818,7 @@ public class JobTracker {
 				.addHttpTimeout(HTTP_TIMEOUT)
 				.executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
-	    	throw new Exception(e.toString());
+	    	throw new Exception(e.getMessage());
 	    }
 	}
 
@@ -850,7 +850,7 @@ public class JobTracker {
 	    try {
 	    	this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
-	    	throw new Exception(e.toString());
+	    	throw new Exception(e.getMessage());
 	    }
 
 	}
@@ -889,7 +889,7 @@ public class JobTracker {
 	    try {
 	    	this.createSuperuserEndpoint().executeQuery(query, SparqlResultTypes.CONFIRM);
 	    } catch (Exception e) {
-	    	throw new Exception(e.toString());
+	    	throw new Exception(e.getMessage());
 	    }
 	}
 	
@@ -921,7 +921,7 @@ public class JobTracker {
 			SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 		    res = (TableResultSet) endpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 	    } catch (Exception e) {
-	    	throw new Exception(e.toString());
+	    	throw new Exception(e.getMessage());
 	    }
 		Table table = res.getTable();
 		if (table.getNumRows() < 1) { throw new Exception("Could not find file: " + fileId); }
@@ -968,7 +968,7 @@ public class JobTracker {
 			SparqlEndpointInterface endpoint = this.createSuperuserEndpoint();
 		    res = (TableResultSet) endpoint.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 	    } catch (Exception e) {
-	    	throw new Exception(e.toString());
+	    	throw new Exception(e.getMessage());
 	    }
 		Table table = res.getTable();
 		

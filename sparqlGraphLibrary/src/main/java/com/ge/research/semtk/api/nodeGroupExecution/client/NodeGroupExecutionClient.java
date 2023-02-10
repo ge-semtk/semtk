@@ -531,7 +531,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 			return this.waitForJobAndGetTable(jobId);
 		} catch (Exception e) {
 			// Add nodegroupID and "SELECT" to the error message
-			throw new Exception(String.format("Error executing SELECT on nodegroup id='%s': %s", nodegroupID, e.toString()));
+			throw new Exception(String.format("Error executing SELECT on nodegroup id='%s': %s", nodegroupID, e.getMessage()));
 		}
 	}
 	

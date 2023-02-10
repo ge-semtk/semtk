@@ -216,7 +216,7 @@ public class NodeGroupServiceRestController {
 					
 				} catch (Exception e) {
 					try {
-						tracker.setJobFailure(jobId, e.toString());
+						tracker.setJobFailure(jobId, e.getMessage());
 						LocalLogger.printStackTrace(e);
 					} catch (Exception ee) {
 						LocalLogger.logToStdErr(ENDPOINT_NAME + " error accessing job tracker");
@@ -268,7 +268,7 @@ public class NodeGroupServiceRestController {
 		}
 		catch(NoValidSparqlException ise) {
 			// Handle known sparql generation errors
-			retval = this.generateNoValidSparqlOutput("generateSelect", ise.toString());
+			retval = this.generateNoValidSparqlOutput("generateSelect", ise.getMessage());
 		}
 		catch(Exception eee){
 			// Unexpected errors
@@ -299,7 +299,7 @@ public class NodeGroupServiceRestController {
 			
 		}
 		catch(NoValidSparqlException ise) {
-			retval = this.generateNoValidSparqlOutput("generateCountAll", ise.toString());
+			retval = this.generateNoValidSparqlOutput("generateCountAll", ise.getMessage());
 		}
 		catch(Exception eee){
 			retval = new SimpleResultSet(false);
@@ -329,7 +329,7 @@ public class NodeGroupServiceRestController {
 			
 		}
 		catch(NoValidSparqlException ise) {
-			retval = this.generateNoValidSparqlOutput("generateDelete", ise.toString());
+			retval = this.generateNoValidSparqlOutput("generateDelete", ise.getMessage());
 		}
 		catch(Exception eee){
 			retval = new SimpleResultSet(false);
@@ -364,7 +364,7 @@ public class NodeGroupServiceRestController {
 			
 		}
 		catch(NoValidSparqlException ise) {
-			retval = this.generateNoValidSparqlOutput("generateFilter", ise.toString());
+			retval = this.generateNoValidSparqlOutput("generateFilter", ise.getMessage());
 		}
 		catch(Exception eee){
 			retval = new SimpleResultSet(false);
@@ -394,7 +394,7 @@ public class NodeGroupServiceRestController {
 			
 		}
 		catch(NoValidSparqlException ise) {
-			retval = this.generateNoValidSparqlOutput("generateAsk", ise.toString());
+			retval = this.generateNoValidSparqlOutput("generateAsk", ise.getMessage());
 		}
 		catch(Exception eee){
 			retval = new SimpleResultSet(false);
@@ -421,7 +421,7 @@ public class NodeGroupServiceRestController {
 			
 		}
 		catch(NoValidSparqlException ise) {
-			retval = this.generateNoValidSparqlOutput("generateConstruct", ise.toString());
+			retval = this.generateNoValidSparqlOutput("generateConstruct", ise.getMessage());
 		}
 		catch(Exception eee){
 			retval = new SimpleResultSet(false);
