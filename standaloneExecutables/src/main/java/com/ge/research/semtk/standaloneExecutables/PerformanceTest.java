@@ -220,7 +220,7 @@ public class PerformanceTest {
 			resourceFolder = cmd.getOptionValue(resourcesArg);
 			whatToTest = cmd.getOptionValue(testArg);
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
+			System.out.println(e.toString());
 			(new HelpFormatter()).printHelp("PerformanceTest", options);
 			System.exit(1);
 		}
@@ -302,7 +302,7 @@ public class PerformanceTest {
 				// Passes receive 1-based pass number
 				pass.apply(i + 1);
 			} catch (Exception e) {
-				System.out.println(e.getMessage());
+				System.out.println(e.toString());
 				System.exit(1);
 			}
 		});

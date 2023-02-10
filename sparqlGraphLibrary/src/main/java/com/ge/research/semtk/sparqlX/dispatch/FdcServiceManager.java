@@ -146,7 +146,7 @@ public class FdcServiceManager {
 			} catch (FdcConfigException f) {
 				throw f;
 			} catch (Exception e) {
-				LocalLogger.logToStdOut("Can't process FDC node " + n.getSparqlID() + ": " + e.getMessage() );
+				LocalLogger.logToStdOut("Can't process FDC node " + n.getSparqlID() + ": " + e.toString() );
 				LocalLogger.printStackTrace(e);
 			}
 		}

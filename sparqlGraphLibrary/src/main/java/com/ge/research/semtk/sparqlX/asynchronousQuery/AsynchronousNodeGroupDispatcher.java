@@ -84,7 +84,7 @@ public class AsynchronousNodeGroupDispatcher extends AsynchronousNodeGroupBasedQ
 		}
 		catch(Exception e){
 			// something went awry. set the job to failure. 
-			this.updateStatusToFailed(e.getMessage());
+			this.updateStatusToFailed(e.toString());
 			LocalLogger.printStackTrace(e);
 		}
 	}

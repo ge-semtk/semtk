@@ -77,7 +77,7 @@ public class ODBCDataCleanerRunner {
 			try{
 				dataset = new ODBCDataset(dbDriver, dbUrl, dbUser, dbPassword, dbQuery);
 			}catch(Exception e){
-				throw new Exception("Could not instantiate ODBC dataset: " + e.getMessage());
+				throw new Exception("Could not instantiate ODBC dataset: " + e.toString());
 			}
 			
 			// load the cleaning spec 
@@ -86,7 +86,7 @@ public class ODBCDataCleanerRunner {
 				cleaningSpecJson = Utility.getJSONObjectFromFilePath(cleaningSpecJsonFilePath);
 				LocalLogger.logToStdOut("Cleaning spec JSON:" + cleaningSpecJson.toString());
 			}catch(Exception e){
-				throw new Exception("Could not load cleaning spec: " + e.getMessage());
+				throw new Exception("Could not load cleaning spec: " + e.toString());
 			}
 					
 			// clean the data
@@ -96,13 +96,13 @@ public class ODBCDataCleanerRunner {
 				LocalLogger.logToStdOut("Wrote " + numCleanRecordsProduced + " cleaned records to " + outputCsvFilePath);				
 			}catch(Exception e){
 				LocalLogger.printStackTrace(e);
-				throw new Exception("Could not clean data: " + e.getMessage());
+				throw new Exception("Could not clean data: " + e.toString());
 			}	
 			
 			System.exit(0);  // need this to prevent "thread(s) did not finish despite being asked to  via interruption"
 	
 		}catch(Exception e){
-			LocalLogger.logToStdOut(e.getMessage());
+			LocalLogger.logToStdOut(e.toString());
 			LocalLogger.printStackTrace(e);
 			System.exit(1);  // need this to catch errors in the calling script
 		}

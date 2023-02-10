@@ -108,7 +108,7 @@ public class EdcDispatcher extends AsynchronousNodeGroupBasedQueryDispatcher {
 		}
 		catch(Exception e){
 			// something went awry. set the job to failure. 
-			this.updateStatusToFailed(e.getMessage());
+			this.updateStatusToFailed(e.toString());
 			LocalLogger.printStackTrace(e);
 		}
 	}
@@ -219,7 +219,7 @@ public class EdcDispatcher extends AsynchronousNodeGroupBasedQueryDispatcher {
 
 		}catch(Exception e){
 				// something went awry. set the job to failure. 
-				this.updateStatusToFailed(e.getMessage());
+				this.updateStatusToFailed(e.toString());
 				throw e;
 		}
 		
@@ -274,7 +274,7 @@ public class EdcDispatcher extends AsynchronousNodeGroupBasedQueryDispatcher {
 							if(finished >= numQueries){break;}
 						} catch (Exception e) {
 							LocalLogger.printStackTrace(e);
-							throw new IOException("(Join failure in dispatch threading : joined value was "+ joined + ":: " + e.getClass().toString() + " : "+ e.getMessage() + ")");
+							throw new IOException("(Join failure in dispatch threading : joined value was "+ joined + ":: " + e.getClass().toString() + " : "+ e.toString() + ")");
 						}
 					}
 					if(currentReq%threadLimit == 0){ iteration += 1;}
@@ -308,7 +308,7 @@ public class EdcDispatcher extends AsynchronousNodeGroupBasedQueryDispatcher {
 							LocalLogger.logToStdErr("Starting EDC thread " + currentReq + " of a total of " + numQueries);
 							spunup[currentReq].start();
 						} catch (Exception EEE) {
-							throw new Exception("spin up of query thread failed. reported:" + EEE.getMessage());
+							throw new Exception("spin up of query thread failed. reported:" + EEE.toString());
 						}
 						// update the counters
 						running += 1;
@@ -325,12 +325,12 @@ public class EdcDispatcher extends AsynchronousNodeGroupBasedQueryDispatcher {
 					continue;
 				} catch (Exception e) {
 					LocalLogger.printStackTrace(e);
-					throw new Exception("(Join failure in dispatch threading : joined value was "+ joined + ":: " + e.getClass().toString() + " : "+ e.getMessage() + ")");
+					throw new Exception("(Join failure in dispatch threading : joined value was "+ joined + ":: " + e.getClass().toString() + " : "+ e.toString() + ")");
 				}
 			}
 		}
 		catch(Exception e){
-			throw new Exception("Dispatcher threading failure: " + e.getMessage());
+			throw new Exception("Dispatcher threading failure: " + e.toString());
 		}
 		
 		// determine if any threads failed 
@@ -339,7 +339,7 @@ public class EdcDispatcher extends AsynchronousNodeGroupBasedQueryDispatcher {
 				numberThreadsCompletedSuccessfully += 1; 
 			} else {
 				// at least one thread failed - throw a new Exception based on the first failure
-				String message = e.getMessage();
+				String message = e.toString();
 				int MAX_MESSAGE_LENGTH = 500;  	// this message will get displayed in a dialog, so limit its length
 				if(message != null && message.length() > MAX_MESSAGE_LENGTH){  
 					message = message.substring(0, MAX_MESSAGE_LENGTH) + "...";

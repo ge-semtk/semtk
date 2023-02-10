@@ -145,7 +145,7 @@ public class QueryGroupFusionWorkerThread extends Thread {
 								if(finished >= attemptSentinel){break;}
 							} catch (Exception e) {
 								LocalLogger.printStackTrace(e);
-								throw new IOException("(Join failure in fusion threading : joined value was "+ joined + ":: " + e.getClass().toString() + " : "+ e.getMessage() + ")");
+								throw new IOException("(Join failure in fusion threading : joined value was "+ joined + ":: " + e.getClass().toString() + " : "+ e.toString() + ")");
 							}
 						}
 						if(currentReq%threadLimit == 0){ iteration += 1;}
@@ -161,7 +161,7 @@ public class QueryGroupFusionWorkerThread extends Thread {
 								outputOffset += (int)this.MAX_ROWS_PER_DEEP_WORKER;
 								
 							} catch (Exception EEE) {
-								throw new Exception("spin up of fusion thread failed. reported:" + EEE.getMessage());
+								throw new Exception("spin up of fusion thread failed. reported:" + EEE.toString());
 							}
 							// update the counters
 							running += 1;
@@ -177,14 +177,14 @@ public class QueryGroupFusionWorkerThread extends Thread {
 						continue;
 					} catch (Exception e) {
 						LocalLogger.printStackTrace(e);
-						throw new Exception("(Join failure in fusion threading : joined value was "+ joined + ":: " + e.getClass().toString() + " : "+ e.getMessage() + ")");
+						throw new Exception("(Join failure in fusion threading : joined value was "+ joined + ":: " + e.getClass().toString() + " : "+ e.toString() + ")");
 					}
 				}
 
 			
 			}
 			catch(Exception e){
-					LocalLogger.logToStdOut("Fusion threading failure: " + e.getMessage());
+					LocalLogger.logToStdOut("Fusion threading failure: " + e.toString());
 			}
 		}
 	}

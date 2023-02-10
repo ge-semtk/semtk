@@ -427,7 +427,7 @@ public class OntologyInfoServiceRestController {
 						
 					} catch (Exception e) {
 						try {
-							tracker.setJobFailure(jobId, e.getMessage());
+							tracker.setJobFailure(jobId, e.toString());
 						} catch (Exception ee) {
 							LocalLogger.logToStdErr(ENDPOINT_NAME + " error accessing job tracker");
 							LocalLogger.printStackTrace(ee);
@@ -480,7 +480,7 @@ public class OntologyInfoServiceRestController {
 					
 				} catch (Exception e) {
 					try {
-						tracker.setJobFailure(jobId, e.getMessage());
+						tracker.setJobFailure(jobId, e.toString());
 					} catch (Exception ee) {
 						LocalLogger.logToStdErr(ENDPOINT_NAME + " error accessing job tracker");
 						LocalLogger.printStackTrace(ee);
@@ -575,7 +575,7 @@ public class OntologyInfoServiceRestController {
 					
 				} catch (Exception e) {
 					try {
-						tracker.setJobFailure(jobId, e.getMessage());
+						tracker.setJobFailure(jobId, e.toString());
 					} catch (Exception ee) {
 						LocalLogger.logToStdErr(ENDPOINT_NAME + " error accessing job tracker");
 						LocalLogger.printStackTrace(ee);

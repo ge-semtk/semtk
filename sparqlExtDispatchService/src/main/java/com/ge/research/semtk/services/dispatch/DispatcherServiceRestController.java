@@ -294,7 +294,7 @@ public class DispatcherServiceRestController {
 			
 			try {
 				JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
-				tracker.setJobFailure(jobId, e.getMessage());
+				tracker.setJobFailure(jobId, e.toString());
 			} catch (Exception ee) {
 				LocalLogger.printStackTrace(ee);
 			}
@@ -351,7 +351,7 @@ public class DispatcherServiceRestController {
 			
 			try {
 				JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
-				tracker.setJobFailure(jobId, e.getMessage());
+				tracker.setJobFailure(jobId, e.toString());
 			} catch (Exception ee) {
 				LocalLogger.printStackTrace(ee);
 			}
@@ -382,7 +382,7 @@ public class DispatcherServiceRestController {
 			} catch (BadQueryException bqe) {
 				// handle this exception by showing the user the simplified message.
 				retval.setSuccess(false);
-				retval.addRationaleMessage(bqe.getMessage());
+				retval.addRationaleMessage(bqe.toString());
 			}
 			catch (Exception e) {
 				LocalLogger.printStackTrace(e);

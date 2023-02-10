@@ -125,7 +125,7 @@ public class IngestTemplateGenerator {
 			DELETE_FROM_FILENAMES = cmd.getOptionValue(delFromFilenames, delFromFilenamesDefault);
 			
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
+			System.out.println(e.toString());
 			(new HelpFormatter()).printHelp("IngestTemplateGenerator", options);
 			System.exit(1);
 		}
