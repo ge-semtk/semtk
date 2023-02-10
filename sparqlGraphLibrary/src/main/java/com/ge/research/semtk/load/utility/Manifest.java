@@ -19,6 +19,7 @@ package com.ge.research.semtk.load.utility;
 import java.io.File;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -146,14 +147,15 @@ public class Manifest {
 
 	/**
 	 * Load the contents specified in the manifest
-	 * @param basePath the directory containing the unzipped ingestion package
-	 * @param server the triple store location (e.g. "http://localhost:3030/DATASET")
-	 * @param serverTypeString the triple store type (e.g. "fuseki")
-	 * @param clear if true, clears the footprint graphs (before loading)
-	 * @param defaultGraph if true, loads everything to the default graph instead of the target graphs
-	 * @param topLevel true if this is a top-level manifest, false for recursively calling sub-manifests
-	 * @param progressWriter writer for reporting progress
+	 * @param basePath 			the directory containing the unzipped ingestion package
+	 * @param server 			the triple store location (e.g. "http://localhost:3030/DATASET")
+	 * @param serverTypeString 	the triple store type (e.g. "fuseki")
+	 * @param clear 			if true, clears the footprint graphs (before loading)
+	 * @param defaultGraph 		if true, loads everything to the default graph instead of the target graphs
+	 * @param topLevel 			true if this is a top-level manifest, false for recursively calling sub-manifests
+	 * @param progressWriter 	writer for reporting progress
 	 */
+	// TODO consider setting basePath in the constructor
 	public void load(String basePath, String server, String serverTypeString, boolean clear, boolean defaultGraph, boolean topLevel, PrintWriter progressWriter) throws Exception {
 		progressWriter.println("Loading '" + getName() + "'...");
 
@@ -179,8 +181,8 @@ public class Manifest {
 			}else if(type == StepType.MODEL) {
 				File stepFile = new File(basePath, (String)step.getValue());
 				progressWriter.println("Load model " + stepFile.getAbsolutePath());
-				ingestOwl(stepFile, targetGraph, server, serverTypeString, clear, progressWriter);
-				// TODO implement and test
+				IngestOwlConfig config = IngestOwlConfig.fromYaml(stepFile);  // read the config YAML file
+				config.ingest(targetGraph, server, serverTypeString, progressWriter);
 
 			}else if(type == StepType.NODEGROUPS) {
 				File stepFile = new File(basePath, (String)step.getValue());
@@ -200,7 +202,6 @@ public class Manifest {
 			}else {
 				throw new Exception("Unrecognized manifest step: " + type);
 			}
-			Thread.sleep(2*1000); // TODO REMOVE
 			progressWriter.flush();
 		}
 
@@ -210,31 +211,11 @@ public class Manifest {
 				if(clear) {
 					// TODO clear default graph
 				}
-				// TODO copy each model graph to default graph
-				// TODO copy each data graph to default graph
+				// TODO copy each model/data graph to default graph
 			}
 			if(this.getPerformEntityResolution()) {
 				// TODO entity resolution
 			}
-		}
-	}
-
-	/**
-	 * Use an import.yaml file to ingest multiple OWL files into the model graph
-	 * TODO test
-	 */
-	private void ingestOwl(File configFile, String[] modelGraphs, String server, String serverType, boolean clear, PrintWriter progressWriter) throws Exception {
-		try {
-			IngestOwlConfig ingestOwlConfig = IngestOwlConfig.fromYaml(configFile);  // read list of files from yaml file
-			for(String fileStr : ingestOwlConfig.getFiles()) {
-				File file = new File(configFile.getParent(), fileStr);
-				progressWriter.println("Load file " + file.getAbsolutePath());
-			}
-			// TODO if modelGraphs parameter given, then load to that...else parse model-graphs from the config and use that
-			// TODO load the owl
-		}catch(Exception e) {
-			LocalLogger.printStackTrace(e);
-			throw new Exception("Error loading OWL: " + e.getMessage());
 		}
 	}
 
@@ -267,8 +248,6 @@ public class Manifest {
 	 * @param yamlStr a YAML string
 	 * @return the manifest object
 	 * @throws Exception e.g. if fails validation
-	 *
-	 * TODO could instead use ObjectMapper.readValue to auto-populate a Manifest
 	 */
 	public static Manifest fromYaml(String yamlStr) throws Exception {
 
@@ -370,6 +349,7 @@ public class Manifest {
 	 */
 	public static class IngestOwlConfig{
 
+		private String baseDir;
 		private List<String> files;
 
 		// TODO the python schema allows model-graphs to be a string or an array.  We support array here - make it support both
@@ -388,6 +368,9 @@ public class Manifest {
 		public void setModelgraphs(List<String> modelgraphs) {
 			this.modelgraphs = modelgraphs;
 		}
+		public void setBaseDir(String baseDir) {
+			this.baseDir = baseDir;
+		}
 
 		/**
 		 * Get an instance from YAML
@@ -396,10 +379,49 @@ public class Manifest {
 			try {
 				ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 				mapper.findAndRegisterModules();
-				return mapper.readValue(yamlFile, IngestOwlConfig.class); // validates/populates IngestOwlConfig instance using YAML
+				IngestOwlConfig config = mapper.readValue(yamlFile, IngestOwlConfig.class); // validates/populates IngestOwlConfig instance using YAML
+				config.setBaseDir(yamlFile.getParent());
+				return config;
 			}catch(Exception e) {
 				LocalLogger.printStackTrace(e);
 				throw new Exception("Error populating IngestOwlConfig from " + yamlFile.getName() + ": " + e.getMessage());
+			}
+		}
+
+		/**
+		 * Ingest the OWL files
+		 * @param modelGraphs		a set of model graphs (optional - if present, loads to these instead of the model graphs in the config file)
+		 * @param server 			triple store location
+		 * @param serverTypeString 	triple store type
+		 * @param progressWriter 	writer for reporting progress
+		 */
+		public void ingest(String[] modelGraphs, String server, String serverType, PrintWriter progressWriter) throws Exception {
+			try {
+				// if modelGraphs parameter not given, then use model graphs from the config file
+				if(modelGraphs == null || modelGraphs.length == 0) {
+					if(this.getModelgraphs() != null) {
+						modelGraphs = this.getModelgraphs().toArray(new String[0]);
+					}
+				}
+				// error if no model graphs found
+				if(modelGraphs == null || modelGraphs.length == 0) {
+					throw new Exception("No model graphs provided for OWL ingestion");
+				}
+
+				// upload each OWL file to each model graph
+				for(String fileStr : this.getFiles()) {
+					File file = new File(this.baseDir, fileStr);
+					for(String graph : modelGraphs) {
+						progressWriter.println("Load file " + file.getAbsolutePath() + " to " + graph + " in " + server);
+						progressWriter.flush();
+						SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(serverType, server, graph);
+						sei.uploadOwl(Files.readAllBytes(file.toPath()));
+					}
+				}
+
+			}catch(Exception e) {
+				LocalLogger.printStackTrace(e);
+				throw new Exception("Error ingesting OWL: " + e.getMessage());
 			}
 		}
 	}

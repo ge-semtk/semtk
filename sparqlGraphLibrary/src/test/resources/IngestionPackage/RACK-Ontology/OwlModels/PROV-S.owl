@@ -1,0 +1,221 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:provs="http://arcos.rack/PROV-S#"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xml:base="http://arcos.rack/PROV-S">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <rdfs:comment xml:lang="en">a basic Implementation of PROV Data Model standard in SADL based on table https://www.w3.org/TR/prov-dm/#relations-at-a-glance</rdfs:comment>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'PROV-S.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:ID="COLLECTION">
+    <rdfs:comment xml:lang="en">A collection is an entity that provides a structure to some constituents, which are themselves entities. These constituents are said to be member of the collections.</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Class rdf:ID="ENTITY"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:ID="NODE"/>
+  <owl:Class rdf:ID="AGENT">
+    <rdfs:comment xml:lang="en">An agent is something that bears some form of responsibility for an activity taking place, for the existence of an entity, or for another agent's activity.</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Class rdf:ID="THING"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="#ENTITY">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="invalidatedAtTime"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="generatedAtTime"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="wasGeneratedBy"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment xml:lang="en">An entity is a physical, digital, conceptual, or other kind of thing with some fixed aspects; entities may be real or imaginary.</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Class rdf:about="#THING"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="#THING">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="description"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="title"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="identifier"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment xml:lang="en">A piece of data stored in RACK</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="#NODE"/>
+  </owl:Class>
+  <owl:Class rdf:ID="ACTIVITY">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="endedAtTime"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="startedAtTime"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment xml:lang="en">An activity is something that occurs over a period of time and acts upon or with entities; it may include consuming, processing, transforming, modifying, relocating, using, or generating entities.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="#THING"/>
+  </owl:Class>
+  <owl:ObjectProperty rdf:ID="wasImpactedBy">
+    <rdfs:subPropertyOf>
+      <owl:ObjectProperty rdf:ID="wasDerivedFrom"/>
+    </rdfs:subPropertyOf>
+    <rdfs:comment xml:lang="en">Indicates that an entity materially affected another entity, and changing the latter might affect or invalidate the former.</rdfs:comment>
+    <rdfs:range rdf:resource="#ENTITY"/>
+    <rdfs:domain rdf:resource="#ENTITY"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="#wasGeneratedBy">
+    <rdfs:comment xml:lang="en">Generation is the completion of production of a new entity by an activity. This entity did not exist before generation and becomes available for usage after this generation.</rdfs:comment>
+    <rdfs:range rdf:resource="#ACTIVITY"/>
+    <rdfs:domain rdf:resource="#ENTITY"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="wasInformedBy">
+    <rdfs:comment xml:lang="en">a Communication, the exchange of some unspecified entity by two activities, one activity using some entity generated by the other.</rdfs:comment>
+    <rdfs:range rdf:resource="#ACTIVITY"/>
+    <rdfs:domain rdf:resource="#ACTIVITY"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="wasAttributedTo">
+    <rdfs:comment xml:lang="en">Attribution is the ascribing of an entity to an agent. https://www.w3.org/TR/prov-dm/#concept-attribution</rdfs:comment>
+    <rdfs:range rdf:resource="#AGENT"/>
+    <rdfs:domain rdf:resource="#ENTITY"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="dataInsertedBy">
+    <rdfs:comment xml:lang="en">The activity that caused this data to be added to RACK</rdfs:comment>
+    <rdfs:range rdf:resource="#ACTIVITY"/>
+    <rdfs:domain rdf:resource="#NODE"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="#wasDerivedFrom">
+    <rdfs:comment xml:lang="en">A derivation is a transformation of an entity into another, an update of an entity resulting in a new one, or the construction of a new entity based on a pre-existing entity.</rdfs:comment>
+    <rdfs:range rdf:resource="#ENTITY"/>
+    <rdfs:domain rdf:resource="#ENTITY"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="wasRevisionOf">
+    <rdfs:subPropertyOf rdf:resource="#wasDerivedFrom"/>
+    <rdfs:comment xml:lang="en">Indicates a direct line of primary descendancy from one entity to a derivative entity.</rdfs:comment>
+    <rdfs:range rdf:resource="#ENTITY"/>
+    <rdfs:domain rdf:resource="#ENTITY"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="wasAssociatedWith">
+    <rdfs:comment xml:lang="en">An activity association is an assignment of responsibility to an agent for an activity, indicating that the agent had a role in the activity.</rdfs:comment>
+    <rdfs:range rdf:resource="#AGENT"/>
+    <rdfs:domain rdf:resource="#ACTIVITY"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="goal">
+    <rdfs:comment xml:lang="en">Purpose of the ACTIVITY</rdfs:comment>
+    <rdfs:range rdf:resource="#ENTITY"/>
+    <rdfs:domain rdf:resource="#ACTIVITY"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="content">
+    <rdfs:comment xml:lang="en">An entity in a collection.</rdfs:comment>
+    <rdfs:range rdf:resource="#ENTITY"/>
+    <rdfs:domain rdf:resource="#COLLECTION"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="actedOnBehalfOf">
+    <rdfs:comment xml:lang="en">Delegation is the assignment of authority and responsibility to an agent (by itself or by another agent) to carry out a specific activity as a delegate or representative, while the agent it acts on behalf of retains some responsibility for the outcome of the delegated work.</rdfs:comment>
+    <rdfs:range rdf:resource="#AGENT"/>
+    <rdfs:domain rdf:resource="#AGENT"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="used">
+    <rdfs:comment xml:lang="en">Usage is the beginning of utilizing an entity by an activity. Before usage, the activity had not begun to utilize this entity and could not have been affected by the entity. (Note: This definition is formulated for a given usage; it is permitted for an activity to have used a same entity multiple times.)</rdfs:comment>
+    <rdfs:range rdf:resource="#ENTITY"/>
+    <rdfs:domain rdf:resource="#ACTIVITY"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="#identifier">
+    <rdfs:comment xml:lang="en">identifier is any data item that is used to associate items on when loading into the data store.</rdfs:comment>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    <rdfs:domain rdf:resource="#THING"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="#endedAtTime">
+    <rdfs:comment xml:lang="en">The time an activity was ended</rdfs:comment>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+    <rdfs:domain rdf:resource="#ACTIVITY"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:ID="entityURL">
+    <rdfs:comment xml:lang="en">Location where entity can be found outside of RACK</rdfs:comment>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    <rdfs:domain rdf:resource="#ENTITY"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="#title">
+    <rdfs:comment xml:lang="en">A short, human-readable identifying label.</rdfs:comment>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    <rdfs:domain rdf:resource="#THING"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="#description">
+    <rdfs:comment xml:lang="en">A free-form, multi-line, human-readable explanation of this data element.</rdfs:comment>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    <rdfs:domain rdf:resource="#THING"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="#generatedAtTime">
+    <rdfs:comment xml:lang="en">The time this entity was created and available for use</rdfs:comment>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+    <rdfs:domain rdf:resource="#ENTITY"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="#startedAtTime">
+    <rdfs:comment xml:lang="en">The time an activity was started</rdfs:comment>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+    <rdfs:domain rdf:resource="#ACTIVITY"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="#invalidatedAtTime">
+    <rdfs:comment xml:lang="en">The time at which this entity was no longer usable</rdfs:comment>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#dateTime"/>
+    <rdfs:domain rdf:resource="#ENTITY"/>
+  </owl:DatatypeProperty>
+</rdf:RDF>

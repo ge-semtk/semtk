@@ -1,0 +1,23 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:provs="http://arcos.rack/PROV-S#"
+    xmlns:baseline="http://arcos.rack/BASELINE#"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xml:base="http://arcos.rack/BASELINE">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="PROV-S"/>
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'BASELINE.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:ID="BASELINE">
+    <rdfs:comment xml:lang="en">A collection of entities constituting a named release</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="PROV-S#COLLECTION"/>
+  </owl:Class>
+</rdf:RDF>

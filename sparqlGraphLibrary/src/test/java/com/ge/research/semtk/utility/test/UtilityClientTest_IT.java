@@ -43,6 +43,7 @@ public class UtilityClientTest_IT {
 		client = new UtilityClient(new UtilityClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, "fake", TestGraph.getSparqlServer(), TestGraph.getSparqlServerType()));
 	}
 
+	// TODO this will fail until we resolve what to do about the CLI's rack001 default graphs (import.yaml does not specify model graph)
 	@Test
 	public void testLoadIngestionPackage() throws Exception {
 		String response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackage.zip")));

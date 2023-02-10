@@ -1,0 +1,83 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:provs="http://arcos.rack/PROV-S#"
+    xmlns:Ag="http://arcos.rack/AGENTS#"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xml:base="http://arcos.rack/AGENTS">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="PROV-S"/>
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'AGENTS.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:ID="TOOL">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="toolVersion"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="toolInstallationConfiguration"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment xml:lang="en">An aid (software, hardware, etc) that automates the performance of an activity.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="PROV-S#AGENT"/>
+  </owl:Class>
+  <owl:Class rdf:ID="ORGANIZATION">
+    <rdfs:comment xml:lang="en">An organization is a social or legal institution such as a company, society, etc.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="PROV-S#AGENT"/>
+  </owl:Class>
+  <owl:Class rdf:ID="PERSON">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass rdf:resource="PROV-S#AGENT"/>
+        <owl:maxQualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#long"
+        >1</owl:maxQualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="employedBy"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment xml:lang="en">Person agents are people - alias for User</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="PROV-S#AGENT"/>
+  </owl:Class>
+  <owl:ObjectProperty rdf:about="#toolInstallationConfiguration">
+    <rdfs:range rdf:resource="PROV-S#ENTITY"/>
+    <rdfs:domain rdf:resource="#TOOL"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="wasQualifiedBy">
+    <rdfs:range rdf:resource="PROV-S#ENTITY"/>
+    <rdfs:domain rdf:resource="#TOOL"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="#employedBy">
+    <rdfs:subPropertyOf rdf:resource="PROV-S#actedOnBehalfOf"/>
+    <rdfs:comment xml:lang="en">Relates people to the company they were acting on behalf of.</rdfs:comment>
+    <rdfs:range rdf:resource="PROV-S#AGENT"/>
+    <rdfs:domain rdf:resource="#PERSON"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:ID="emailAddress">
+    <rdfs:comment xml:lang="en">Email address of person</rdfs:comment>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    <rdfs:domain rdf:resource="#PERSON"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="#toolVersion">
+    <rdfs:comment xml:lang="en">The release version of the tool</rdfs:comment>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    <rdfs:domain rdf:resource="#TOOL"/>
+  </owl:DatatypeProperty>
+</rdf:RDF>

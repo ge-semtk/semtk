@@ -33,6 +33,7 @@ import com.ge.research.semtk.load.utility.Manifest.IngestOwlConfig;
 import com.ge.research.semtk.load.utility.Manifest.Step;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 
 public class ManifestTest {
@@ -70,8 +71,8 @@ public class ManifestTest {
 			assertEquals(steps.get(6).getValue(), new Pair<URL, URL>(new URL("http://animals/domestic"), new URL("http://animals/wild")));
 
 			// test connections
-			final String SERVER = "http://localhost:3030/DATASET";
-			final String SERVER_TYPE = SparqlEndpointInterface.FUSEKI_SERVER;
+			final String SERVER = TestGraph.getSparqlServer();
+			final String SERVER_TYPE = TestGraph.getSparqlServerType();
 			// test regular connection
 			SparqlConnection conn = manifest.getConnection(SERVER, SERVER_TYPE);
 			assertEquals(conn.getName(), "Animals");
