@@ -89,7 +89,7 @@ public class ManifestTest_IT {
 			assertEquals(manifest.getName(), "Entity Resolution");
 
 			// TODO this will fail until we resolve what to do about the CLI's rack001 default graphs (import.yaml does not specify model graph)
-			manifest.load(tempDir.toString(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, true, new PrintWriter(System.out));
+			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, true, new PrintWriter(System.out));
 
 			// TODO asserts
 

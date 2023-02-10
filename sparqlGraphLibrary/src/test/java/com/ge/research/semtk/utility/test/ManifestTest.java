@@ -18,7 +18,6 @@ package com.ge.research.semtk.utility.test;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -32,15 +31,13 @@ import com.ge.research.semtk.load.utility.Manifest;
 import com.ge.research.semtk.load.utility.Manifest.IngestOwlConfig;
 import com.ge.research.semtk.load.utility.Manifest.Step;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.TestGraph;
-import com.ge.research.semtk.utility.Utility;
 
 public class ManifestTest {
 
 		@Test
 		public void test() throws Exception{
-			Manifest manifest = Manifest.fromYaml(Utility.readFile("src/test/resources/manifest_animals.yaml"));
+			Manifest manifest = Manifest.fromYaml(new File("src/test/resources/manifest_animals.yaml"));
 
 			assertEquals(manifest.getName(), "Animals");
 			assertEquals(manifest.getDescription(), "Load information about animals");

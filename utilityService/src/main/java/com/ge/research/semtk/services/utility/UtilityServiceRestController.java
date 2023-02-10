@@ -396,7 +396,7 @@ public class UtilityServiceRestController {
 				throw new Exception("Cannot find a top-level manifest in " + ingestionPackageZipFile.getOriginalFilename());
 			}
 			Manifest manifest = Manifest.fromYaml(manifestFile);
-			manifest.load(manifestFile.getParent(), serverAndPort, serverType, false, false, true, responseWriter);
+			manifest.load(serverAndPort, serverType, false, false, true, responseWriter);
 
 			responseWriter.println("Load complete");
 			responseWriter.flush();

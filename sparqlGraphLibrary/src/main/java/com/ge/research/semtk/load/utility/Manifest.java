@@ -39,6 +39,7 @@ import com.ge.research.semtk.utility.Utility;
  */
 public class Manifest {
 
+	private String baseDir;
 	private String name;
 	private String description;
 	private boolean copyToDefaultGraph = false;
@@ -94,6 +95,9 @@ public class Manifest {
 	/**
 	 * Set methods
 	 */
+	private void setBaseDir(String baseDir) {
+		this.baseDir = baseDir;
+	}
 	public void setCopyToDefaultGraph(boolean b) {
 		this.copyToDefaultGraph = b;
 	}
@@ -147,7 +151,6 @@ public class Manifest {
 
 	/**
 	 * Load the contents specified in the manifest
-	 * @param basePath 			the directory containing the unzipped ingestion package
 	 * @param server 			the triple store location (e.g. "http://localhost:3030/DATASET")
 	 * @param serverTypeString 	the triple store type (e.g. "fuseki")
 	 * @param clear 			if true, clears the footprint graphs (before loading)
@@ -155,8 +158,7 @@ public class Manifest {
 	 * @param topLevel 			true if this is a top-level manifest, false for recursively calling sub-manifests
 	 * @param progressWriter 	writer for reporting progress
 	 */
-	// TODO consider setting basePath in the constructor
-	public void load(String basePath, String server, String serverTypeString, boolean clear, boolean defaultGraph, boolean topLevel, PrintWriter progressWriter) throws Exception {
+	public void load(String server, String serverTypeString, boolean clear, boolean defaultGraph, boolean topLevel, PrintWriter progressWriter) throws Exception {
 		progressWriter.println("Loading '" + getName() + "'...");
 
 		// clear graphs first, if wanted
@@ -174,26 +176,26 @@ public class Manifest {
 			StepType type = step.getType();
 
 			if(type == StepType.DATA) {
-				File stepFile = new File(basePath, (String)step.getValue());
+				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load data " + stepFile.getAbsolutePath());
 				// TODO implement and test
 
 			}else if(type == StepType.MODEL) {
-				File stepFile = new File(basePath, (String)step.getValue());
+				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load model " + stepFile.getAbsolutePath());
 				IngestOwlConfig config = IngestOwlConfig.fromYaml(stepFile);  // read the config YAML file
 				config.ingest(targetGraph, server, serverTypeString, progressWriter);
 
 			}else if(type == StepType.NODEGROUPS) {
-				File stepFile = new File(basePath, (String)step.getValue());
+				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load nodegroups " + stepFile.getAbsolutePath());
 				// TODO implement and test
 
 			}else if(type == StepType.MANIFEST) {
-				File stepFile = new File(basePath, (String)step.getValue());
+				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load manifest " + stepFile.getAbsolutePath());
 				Manifest subManifest = Manifest.fromYaml(stepFile);
-				subManifest.load(stepFile.getParent(), server, serverTypeString, clear, defaultGraph, false, progressWriter);
+				subManifest.load(server, serverTypeString, clear, defaultGraph, false, progressWriter);
 
 			}else if(type == StepType.COPYGRAPH) {
 				progressWriter.println("Copy graph X to Y");
@@ -240,16 +242,8 @@ public class Manifest {
 	 * @throws Exception e.g. if fails validation
 	 */
 	public static Manifest fromYaml(File yamlFile) throws Exception{
-		return fromYaml(Utility.getStringFromFilePath(yamlFile.getAbsolutePath()));
-	}
 
-	/**
-	 * Instantiate a manifest from YAML
-	 * @param yamlStr a YAML string
-	 * @return the manifest object
-	 * @throws Exception e.g. if fails validation
-	 */
-	public static Manifest fromYaml(String yamlStr) throws Exception {
+		String yamlStr = Utility.getStringFromFilePath(yamlFile.getAbsolutePath());
 
 		// validate manifest YAML against schema
 		String manifestSchema = Utility.getResourceAsString(Manifest.class, "manifest_schema.json");
@@ -261,6 +255,7 @@ public class Manifest {
 		String name = manifestJsonNode.get("name").asText();  // required
 		String description = manifestJsonNode.get("description") != null ? manifestJsonNode.get("description").asText() : null; // optional
 		Manifest manifest = new Manifest(name, description);
+		manifest.setBaseDir(yamlFile.getParent());
 
 		// 3 optional boolean properties
 		if(manifestJsonNode.get("copy-to-default-graph") != null) { manifest.setCopyToDefaultGraph(manifestJsonNode.get("copy-to-default-graph").booleanValue()); }
@@ -314,6 +309,7 @@ public class Manifest {
 
 		return manifest;
 	}
+
 
 	/**
 	 * Enumeration for manifest step types, with String values corresponding to the manifest YAML
