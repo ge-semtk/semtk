@@ -49,10 +49,10 @@ public class ManifestTest {
 
 			// test footprint
 			assertEquals(manifest.getModelgraphsFootprint().size(), 1);
-			assertEquals(manifest.getModelgraphsFootprint().get(0), new URL("http://animals/model"));
+			assertEquals(manifest.getModelgraphsFootprint().get(0), new URL("http://junit/animals/model"));
 			assertEquals(manifest.getDatagraphsFootprint().size(), 2);
-			assertEquals(manifest.getDatagraphsFootprint().get(0), new URL("http://animals/data1"));
-			assertEquals(manifest.getDatagraphsFootprint().get(1), new URL("http://animals/data2"));
+			assertEquals(manifest.getDatagraphsFootprint().get(0), new URL("http://junit/animals/data1"));
+			assertEquals(manifest.getDatagraphsFootprint().get(1), new URL("http://junit/animals/data2"));
 			assertEquals(manifest.getNodegroupsFootprint().size(), 1);
 			assertEquals(manifest.getNodegroupsFootprint().get(0), "animals/nodegroups");
 
@@ -68,7 +68,7 @@ public class ManifestTest {
 			assertEquals(steps.get(3).getType(), Manifest.StepType.DATA );
 			assertEquals(steps.get(3).getValue(), "animals/mammals/import.yaml" );
 			assertEquals(steps.get(6).getType(), Manifest.StepType.COPYGRAPH );
-			assertEquals(steps.get(6).getValue(), new Pair<URL, URL>(new URL("http://animals/domestic"), new URL("http://animals/wild")));
+			assertEquals(steps.get(6).getValue(), new Pair<URL, URL>(new URL("http://junit/animals/domestic"), new URL("http://junit/animals/wild")));
 
 			// test connections
 			final String SERVER = TestGraph.getSparqlServer();
@@ -77,14 +77,14 @@ public class ManifestTest {
 			SparqlConnection conn = manifest.getConnection(SERVER, SERVER_TYPE);
 			assertEquals(conn.getName(), "Animals");
 			assertEquals(conn.getModelInterfaces().size(), 1);
-			assertEquals(conn.getModelInterface(0).getGraph(), "http://animals/model");
+			assertEquals(conn.getModelInterface(0).getGraph(), "http://junit/animals/model");
 			assertEquals(conn.getModelInterface(0).getServerAndPort(), SERVER);
 			assertEquals(conn.getModelInterface(0).getServerType(), SERVER_TYPE);
 			assertEquals(conn.getDataInterfaces().size(), 2);
-			assertEquals(conn.getDataInterface(0).getGraph(), "http://animals/data1");
+			assertEquals(conn.getDataInterface(0).getGraph(), "http://junit/animals/data1");
 			assertEquals(conn.getDataInterface(0).getServerAndPort(), SERVER);
 			assertEquals(conn.getDataInterface(0).getServerType(), SERVER_TYPE);
-			assertEquals(conn.getDataInterface(1).getGraph(), "http://animals/data2");
+			assertEquals(conn.getDataInterface(1).getGraph(), "http://junit/animals/data2");
 			assertEquals(conn.getDataInterface(1).getServerAndPort(), SERVER);
 			assertEquals(conn.getDataInterface(1).getServerType(), SERVER_TYPE);
 			// test default connection
@@ -132,7 +132,7 @@ public class ManifestTest {
 			assertEquals(config.getFiles().get(1),"hedgehog.owl");
 			assertEquals(config.getFiles().get(2),"raccoon.owl");
 			assertEquals(config.getModelgraphs().size(), 1);
-			assertEquals(config.getModelgraphs().get(0),"http://animals/model");
+			assertEquals(config.getModelgraphs().get(0),"http://junit/animals/model");
 		}
 
 }

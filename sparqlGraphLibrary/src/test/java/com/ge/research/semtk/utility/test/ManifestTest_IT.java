@@ -36,6 +36,9 @@ import com.ge.research.semtk.utility.Utility;
 
 public class ManifestTest_IT {
 
+	/**
+	 * Test loading a set of OWL files via YAML (e.g. import.yaml)
+	 */
 	@Test
 	public void testIngestOwl() throws Exception{
 
@@ -68,7 +71,7 @@ public class ManifestTest_IT {
 	}
 
 	/**
-	 * Test loading a manifest
+	 * Test loading a manifest via YAML
 	 */
 	@Test
 	public void testLoadManifest() throws Exception{

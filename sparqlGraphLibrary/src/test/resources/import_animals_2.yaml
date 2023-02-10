@@ -3,4 +3,4 @@ files:
 - hedgehog.owl
 - raccoon.owl
 model-graphs:
-- http://animals/model
+- http://junit/animals/model

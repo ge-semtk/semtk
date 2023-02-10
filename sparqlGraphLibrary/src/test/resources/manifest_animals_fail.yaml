@@ -6,10 +6,10 @@ perform-triplestore-optimization: false
 
 fooootprint: # there is a typo here, expect error
   model-graphs:
-    - http://animals/model
+    - http://junit/animals/model
   data-graphs:
-    - http://animals/data
-    - http://animals/data2
+    - http://junit/animals/data
+    - http://junit/animals/data2
 
 steps:
   - manifest: animals.yaml
