@@ -258,6 +258,17 @@ public class UtilityTest {
 			assertTrue(e.getMessage().contains("$.name: is missing but it is required"));
 			assertTrue(e.getMessage().contains("$.fooootprint: is not defined in the schema and the schema does not allow additional properties"));
 		}
+
+		// TODO this YAML should fail validation (typo in array item) but it's currently not.  When figure it out, combine with fail.yaml and remove manifest_animals_fail2 from repo
+		try {
+			yaml = Utility.readFile("src/test/resources/manifest_animals_fail2.yaml");
+			Utility.validateYaml(yaml, schema);
+			fail();  // should not get here
+		}catch(Exception e) {
+			System.out.println(e.getMessage());
+			assertTrue(e.getMessage().contains("$.manifestttt:"));  // TODO should complain about this
+		}
+
 	}
 
 }
