@@ -45,8 +45,7 @@ public class ManifestTest_IT {
 
 		// provide a valid model graph
 		TestGraph.clearGraph();
-		String[] modelGraphs = {TestGraph.getDataset()};
-		config.ingest(modelGraphs, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
+		config.ingest(TestGraph.getDataset(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
 		assertEquals(TestGraph.getNumTriples(), 1439);
 
 		// ------------------ test that model gets loaded to fallback model graph if no model graph is provided ----------------
@@ -60,7 +59,7 @@ public class ManifestTest_IT {
 
 		// model graphs empty (none are specified in YAML either)
 		seiFallback.clearGraph();
-		config.ingest(new String[]{}, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
+		config.ingest(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
 		assertEquals(seiFallback.getNumTriples(), 1439);
 	}
 

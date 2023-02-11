@@ -1,0 +1,5 @@
+files:
+- woodchuck.owl
+- hedgehog.owl
+- raccoon.owl
+model-graphs: http://junit/animals/model

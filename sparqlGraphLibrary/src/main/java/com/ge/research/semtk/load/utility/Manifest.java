@@ -25,9 +25,9 @@ import java.util.List;
 
 import org.apache.commons.math3.util.Pair;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -185,9 +185,9 @@ public class Manifest {
 		}
 
 		// if loading to default graph, then set targetGraph
-		String[] targetGraph = null;
+		String targetGraph = null;
 		if(defaultGraph) {
-			targetGraph = new String[]{SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME};
+			targetGraph = SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME;
 		}
 
 		for(Step step : getSteps()) {
@@ -364,17 +364,13 @@ public class Manifest {
 	
 	/**
 	 * Configuration for loading a set of OWL files
-	 *
-	 * // TODO the python schema allows model-graphs to be a string or an array.  We support array here - make it support both
 	 */
 	public static class IngestOwlConfig{
 
 		private String baseDir;
 		private String fallbackModelGraph;
-
-		@JsonProperty("model-graphs")
-		private List<String> modelgraphs;
-		private List<String> files;
+		private String modelgraph;   // schema supports multiple model graphs, but functionality not needed
+		private LinkedList<String> files = new LinkedList<String>();
 
 		/**
 		 * Get methods
@@ -385,8 +381,8 @@ public class Manifest {
 		public String getFallbackModelGraph() {
 			return fallbackModelGraph;
 		}
-		public List<String> getModelgraphs() {
-			return modelgraphs;
+		public String getModelgraph() {
+			return modelgraph;
 		}
 		public List<String> getFiles() {
 			return files;
@@ -401,11 +397,11 @@ public class Manifest {
 		public void setFallbackModelGraph(String fallbackModelGraph) {
 			this.fallbackModelGraph = fallbackModelGraph;
 		}
-		public void setModelgraphs(List<String> modelgraphs) {
-			this.modelgraphs = modelgraphs;
+		public void setModelgraph(String modelgraph) {
+			this.modelgraph = modelgraph;
 		}
-		public void setFiles(List<String> files) {
-			this.files = files;
+		public void addFile(String file) {
+			this.files.add(file);
 		}
 
 		/**
@@ -416,11 +412,39 @@ public class Manifest {
 		 */
 		public static IngestOwlConfig fromYaml(File yamlFile, String fallbackModelGraph) throws Exception {
 			try {
-				ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-				mapper.findAndRegisterModules();
-				IngestOwlConfig config = mapper.readValue(yamlFile, IngestOwlConfig.class); // validates/populates IngestOwlConfig instance using YAML
+				String yamlStr = Utility.getStringFromFilePath(yamlFile.getAbsolutePath());
+
+				// validate YAML against schema
+				String configSchema = Utility.getResourceAsString(Manifest.class, "ingest_owl_config_schema.json");
+				Utility.validateYaml(yamlStr, configSchema);
+
+				// populate the config item
+				IngestOwlConfig config = new IngestOwlConfig();
 				config.setBaseDir(yamlFile.getParent());
 				config.setFallbackModelGraph(fallbackModelGraph);
+
+				JsonNode configJsonNode = (new ObjectMapper(new YAMLFactory())).readTree(yamlStr);
+				// add files
+				JsonNode filesNode = configJsonNode.get("files");
+				if(filesNode != null) {
+					for(JsonNode fileNode : filesNode){
+						config.addFile(fileNode.asText());
+					}
+				}
+				// add model graph (may be either String or array size 1 to support pre-existing schema)
+				JsonNode modelGraphNode = configJsonNode.get("model-graphs");
+				if(modelGraphNode != null) {
+					if(modelGraphNode.isTextual()) {
+						config.setModelgraph(modelGraphNode.asText());
+					}else if(modelGraphNode.isArray()){
+						ArrayNode array = (ArrayNode)modelGraphNode;
+						if(array.size() > 1) {
+							throw new Exception("Not currently supporting multiple model graphs");
+						}
+						config.setModelgraph(array.get(0).asText());
+					}
+				}
+
 				return config;
 			}catch(Exception e) {
 				LocalLogger.printStackTrace(e);
@@ -430,33 +454,29 @@ public class Manifest {
 
 		/**
 		 * Ingest the OWL files
-		 * @param modelGraphs		a set of model graphs (optional - if present, loads to these instead of the model graphs in the config file)
+		 * @param modelGraph		a model graph (optional - overrides if present)
 		 * @param server 			triple store location
 		 * @param serverTypeString 	triple store type
 		 * @param progressWriter 	writer for reporting progress
 		 */
-		public void ingest(String[] modelGraphs, String server, String serverType, PrintWriter progressWriter) throws Exception {
+		public void ingest(String modelGraph, String server, String serverType, PrintWriter progressWriter) throws Exception {
 			try {
-				// if modelGraphs parameter not given, then use model graphs from the config file
-				if(modelGraphs == null || modelGraphs.length == 0) {
-					if(this.getModelgraphs() != null) {
-						modelGraphs = this.getModelgraphs().toArray(new String[0]);
+				// use modelGraph from method parameter if present.  Else use from config YAML if present.  Else use fallback.
+				if(modelGraph == null) {
+					if(this.getModelgraph() != null) {
+						modelGraph = this.getModelgraph();		// use from config
+					}else{
+						modelGraph = this.fallbackModelGraph;	// use the fallback
 					}
-				}
-				// if no model graphs found, use the fallback
-				if(modelGraphs == null || modelGraphs.length == 0) {
-					modelGraphs = new String[]{ this.fallbackModelGraph };
 				}
 
-				// upload each OWL file to each model graph
+				// upload each OWL file to model graph
 				for(String fileStr : this.getFiles()) {
 					File file = new File(this.baseDir, fileStr);
-					for(String graph : modelGraphs) {
-						progressWriter.println("Load file " + file.getAbsolutePath() + " to " + graph + " in " + server);
-						progressWriter.flush();
-						SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(serverType, server, graph);
-						sei.uploadOwl(Files.readAllBytes(file.toPath()));
-					}
+					progressWriter.println("Load file " + file.getAbsolutePath() + " to " + modelGraph + " in " + server);
+					progressWriter.flush();
+					SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(serverType, server, modelGraph);
+					sei.uploadOwl(Files.readAllBytes(file.toPath()));
 				}
 
 			}catch(Exception e) {
