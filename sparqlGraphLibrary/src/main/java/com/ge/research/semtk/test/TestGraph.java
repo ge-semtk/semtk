@@ -292,9 +292,7 @@ public class TestGraph {
 	 * Get the number of triples in the test graph.
 	 */
 	public static int getNumTriples() throws Exception {
-		String sparql = SparqlToXUtils.generateCountTriplesSparql(getSei());
-		Table table = TestGraph.execTableSelect(sparql); 
-		return (new Integer(table.getCell(0, 0))).intValue(); // this cell contains the count
+		return getSei().getNumTriples();
 	}
 
 	/**

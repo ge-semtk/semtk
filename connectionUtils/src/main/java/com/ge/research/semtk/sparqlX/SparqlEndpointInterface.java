@@ -477,6 +477,15 @@ public abstract class SparqlEndpointInterface {
 		
 		return ret;
 	}
+
+	/**
+	 * Get triple count
+	 * @return the number of triples
+	 * @throws Exception
+	 */
+	public int getNumTriples() throws Exception {
+		return this.executeToTable(SparqlToXUtils.generateCountTriplesSparql(this)).getCellAsInt(0, 0);
+	}
 	
 	/**
 	 * Create a SPARQLEndpointInterface and execute a query
@@ -770,7 +779,7 @@ public abstract class SparqlEndpointInterface {
 		
 		while (true) {
 			// count all triples
-			count = this.executeToTable(SparqlToXUtils.generateCountTriplesSparql(this)).getCellAsInt(0, 0);
+			count = getNumTriples();
 			
 			if (count == 0) 
 				return;

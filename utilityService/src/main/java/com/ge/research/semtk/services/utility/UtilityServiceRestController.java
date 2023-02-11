@@ -358,6 +358,8 @@ public class UtilityServiceRestController {
 	public void loadIngestionPackage(	@RequestParam("serverAndPort") String serverAndPort, // e.g. http://localhost:3030/JUNIT for fuseki, http://localhost:2420 for virtuoso
 										@RequestParam("serverType") String serverType,// e.g. "fuseki"
 										@RequestParam("file") MultipartFile ingestionPackageZipFile,
+										@RequestParam("defaultModelGraph") String defaultModelGraph,
+										@RequestParam("defaultDataGraph") String defaultDataGraph,
 										@RequestHeader HttpHeaders headers,
 										HttpServletResponse resp){
 
@@ -395,7 +397,7 @@ public class UtilityServiceRestController {
 			}catch(Exception e) {
 				throw new Exception("Cannot find a top-level manifest in " + ingestionPackageZipFile.getOriginalFilename());
 			}
-			Manifest manifest = Manifest.fromYaml(manifestFile);
+			Manifest manifest = Manifest.fromYaml(manifestFile, defaultModelGraph, defaultDataGraph);
 			manifest.load(serverAndPort, serverType, false, false, true, responseWriter);
 
 			responseWriter.println("Load complete");

@@ -16,13 +16,14 @@
  */
 package com.ge.research.semtk.utility.test;
 
+import java.io.BufferedReader;
 import java.io.File;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.services.client.UtilityClient;
-import com.ge.research.semtk.services.client.UtilityClientConfig;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
@@ -34,19 +35,23 @@ public class UtilityClientTest_IT {
 	private static int SERVICE_PORT;
 	private static UtilityClient client = null;
 
+	private String DEFAULT_MODEL_GRAPH = "http://junit/UtilityClientTest_IT/model";
+	private String DEFAULT_DATA_GRAPH = "http://junit/UtilityClientTest_IT/data";
+
 	@BeforeClass
 	public static void setup() throws Exception {
 		IntegrationTestUtility.authenticateJunit();
 		SERVICE_PROTOCOL = IntegrationTestUtility.get("protocol");
 		SERVICE_SERVER = IntegrationTestUtility.get("utilityservice.server");
 		SERVICE_PORT = IntegrationTestUtility.getInt("utilityservice.port");
-		client = new UtilityClient(new UtilityClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, "fake", TestGraph.getSparqlServer(), TestGraph.getSparqlServerType()));
+		client = new UtilityClient(new RestClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, "fake"));
 	}
 
-	// TODO this will fail until we resolve what to do about the CLI's rack001 default graphs (import.yaml does not specify model graph)
 	@Test
 	public void testLoadIngestionPackage() throws Exception {
-		String response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackage.zip")));
+
+		BufferedReader reader = client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), DEFAULT_MODEL_GRAPH, DEFAULT_DATA_GRAPH);
+		String response = Utility.readToString(reader);
 		// check the response stream
 		assert(response.contains("Loading 'Entity Resolution'..."));
 		assert(response.matches("(.*)Load manifest (.*)manifests(.*)rack.yaml(.*)"));
@@ -66,15 +71,14 @@ public class UtilityClientTest_IT {
 	// Test error conditions
 	@Test
 	public void testLoadIngestionPackage_errorConditions() throws Exception {
-
 		String response;
 
 		// not a zip file
-		response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/animalQuery.json")));
+		response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/animalQuery.json"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), DEFAULT_MODEL_GRAPH, DEFAULT_DATA_GRAPH));
 		assert(response.contains("Error: This endpoint only accepts ingestion packages in zip file format"));
 
 		// contains no top-level manifest.yaml
-		response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackageNoManifest.zip")));
+		response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), DEFAULT_MODEL_GRAPH, DEFAULT_DATA_GRAPH));
 		assert(response.contains("Error: Cannot find a top-level manifest in IngestionPackageNoManifest.zip"));
 	}
 

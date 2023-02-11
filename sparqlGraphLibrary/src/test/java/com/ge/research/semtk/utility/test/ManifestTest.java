@@ -35,9 +35,15 @@ import com.ge.research.semtk.test.TestGraph;
 
 public class ManifestTest {
 
+		public final static String FALLBACK_MODEL_GRAPH = "http://junit/ManifestTest/fallback/model";
+		public final static String FALLBACK_DATA_GRAPH = "http://junit/ManifestTest/fallback/data";
+
 		@Test
 		public void test() throws Exception{
-			Manifest manifest = Manifest.fromYaml(new File("src/test/resources/manifest_animals.yaml"));
+			Manifest manifest = Manifest.fromYaml(new File("src/test/resources/manifest_animals.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
+			assertTrue(manifest.getBaseDir().matches("src(.*)test(.*)resources"));
+			assertEquals(manifest.getFallbackModelGraph(),ManifestTest.FALLBACK_MODEL_GRAPH);
+			assertEquals(manifest.getFallbackDataGraph(),ManifestTest.FALLBACK_DATA_GRAPH);
 
 			assertEquals(manifest.getName(), "Animals");
 			assertEquals(manifest.getDescription(), "Load information about animals");
@@ -106,7 +112,7 @@ public class ManifestTest {
 		@Test
 		public void testMinimalManifest_andFromFile() throws Exception{
 			File file = new File("src/test/resources/manifest_animals_minimal.yaml");
-			Manifest manifest = Manifest.fromYaml(file);
+			Manifest manifest = Manifest.fromYaml(file, FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
 			assertEquals(manifest.getName(), "Animals");
 		}
 
@@ -117,13 +123,15 @@ public class ManifestTest {
 		public void testIngestOwlConfig() throws Exception{
 			// this config has owl files only
 			File file = new File("src/test/resources/import_animals.yaml");
-			IngestOwlConfig config = IngestOwlConfig.fromYaml(file);
+			IngestOwlConfig config = IngestOwlConfig.fromYaml(file, ManifestTest.FALLBACK_MODEL_GRAPH);
 			assertEquals(config.getFiles().size(), 3);
 			assertNull(config.getModelgraphs());
 
 			// this config has owl files and model graphs (as array)
 			file = new File("src/test/resources/import_animals_2.yaml");
-			config = IngestOwlConfig.fromYaml(file);
+			config = IngestOwlConfig.fromYaml(file, ManifestTest.FALLBACK_MODEL_GRAPH);
+			assertTrue(config.getBaseDir().matches("src(.*)test(.*)resources"));
+			assertEquals(config.getFallbackModelGraph(),ManifestTest.FALLBACK_MODEL_GRAPH);
 			assertEquals(config.getFiles().size(), 3);
 			assertEquals(config.getFiles().get(0),"woodchuck.owl");
 			assertEquals(config.getFiles().get(1),"hedgehog.owl");

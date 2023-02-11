@@ -31,31 +31,8 @@ public class UtilityClient extends RestClient {
 	/**
 	 * Constructor
 	 */
-	public UtilityClient (UtilityClientConfig config) {
+	public UtilityClient (RestClientConfig config) {
 		this.conf = config;
-	}
-
-	@Override
-	public UtilityClientConfig getConfig() {
-		return (UtilityClientConfig) this.conf;
-	}
-
-	/**
-	 * Create a params JSON object
-	 */
-	@SuppressWarnings("unchecked")
-	@Override
-	public void buildParametersJSON() throws Exception {
-
-		if(! (this.conf instanceof UtilityClientConfig)){
-			throw new Exception("Unrecognized config for UtilityClient");
-		}
-
-		if(this.conf.getServiceEndpoint().endsWith("loadIngestionPackage")){ 
-			// only need these for some UtilityService endpoints.  See SparqlQueryClient for more examples
-			parametersJSON.put("serverAndPort", ((UtilityClientConfig)this.conf).getSparqlServerAndPort());
-			parametersJSON.put("serverType", ((UtilityClientConfig)this.conf).getSparqlServerType());
-		}
 	}
 
 	private void cleanUp() {
@@ -66,16 +43,24 @@ public class UtilityClient extends RestClient {
 
 	/**
 	 * Load an ingestion package
-	 * @param ingestionPackageFile the ingestion package (zip file)
-	 * @return a BufferedReader providing updates while the load is running
+	 * @param ingestionPackageFile 	the ingestion package (zip file)
+	 * @param serverAndPort			server, e.g. http://host:port (or http://host:port/DATASET for fuseki)
+	 * @param serverType			server type, e.g. fuseki
+	 * @param defaultModelGraph		use where no model graph specified
+	 * @param defaultDataGraph		use where no data graph specified
+	 * @return 						a BufferedReader providing updates while the load is running
 	 */
-	public BufferedReader execLoadIngestionPackage(File ingestionPackageFile) throws ConnectException, EndpointNotFoundException, Exception {
+	public BufferedReader execLoadIngestionPackage(File ingestionPackageFile, String serverAndPort, String serverType, String defaultModelGraph, String defaultDataGraph) throws ConnectException, EndpointNotFoundException, Exception {
 		
 		if(!ingestionPackageFile.exists()) {
 			throw new Exception("File does not exist: " + ingestionPackageFile.getAbsolutePath());
 		}
 
 		this.parametersJSON.clear();
+		parametersJSON.put("serverAndPort", serverAndPort);
+		parametersJSON.put("serverType", serverType);
+		parametersJSON.put("defaultModelGraph", defaultModelGraph);
+		parametersJSON.put("defaultDataGraph", defaultDataGraph);
 		this.fileParameter = ingestionPackageFile;  // send a file as part of request
 				
 		this.conf.setServiceEndpoint("utility/loadIngestionPackage");

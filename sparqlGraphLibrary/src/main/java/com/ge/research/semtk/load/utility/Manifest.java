@@ -40,6 +40,9 @@ import com.ge.research.semtk.utility.Utility;
 public class Manifest {
 
 	private String baseDir;
+	private String fallbackModelGraph;
+	private String fallbackDataGraph;
+
 	private String name;
 	private String description;
 	private boolean copyToDefaultGraph = false;
@@ -62,6 +65,15 @@ public class Manifest {
 	/**
 	 * Get methods
 	 */
+	public String getBaseDir() {
+		return baseDir;
+	}
+	public String getFallbackModelGraph() {
+		return fallbackModelGraph;
+	}
+	public String getFallbackDataGraph() {
+		return fallbackDataGraph;
+	}
 	/* Returns the name specified in the manifest */
 	public String getName() {
 		return name;
@@ -97,6 +109,12 @@ public class Manifest {
 	 */
 	private void setBaseDir(String baseDir) {
 		this.baseDir = baseDir;
+	}
+	public void setFallbackModelGraph(String fallbackModelGraph) {
+		this.fallbackModelGraph = fallbackModelGraph;
+	}
+	public void setFallbackDataGraph(String fallbackDataGraph) {
+		this.fallbackDataGraph = fallbackDataGraph;
 	}
 	public void setCopyToDefaultGraph(boolean b) {
 		this.copyToDefaultGraph = b;
@@ -183,7 +201,7 @@ public class Manifest {
 			}else if(type == StepType.MODEL) {
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load model " + stepFile.getAbsolutePath());
-				IngestOwlConfig config = IngestOwlConfig.fromYaml(stepFile);  // read the config YAML file
+				IngestOwlConfig config = IngestOwlConfig.fromYaml(stepFile, this.fallbackModelGraph);  // read the config YAML file
 				config.ingest(targetGraph, server, serverTypeString, progressWriter);
 
 			}else if(type == StepType.NODEGROUPS) {
@@ -194,7 +212,7 @@ public class Manifest {
 			}else if(type == StepType.MANIFEST) {
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load manifest " + stepFile.getAbsolutePath());
-				Manifest subManifest = Manifest.fromYaml(stepFile);
+				Manifest subManifest = Manifest.fromYaml(stepFile, fallbackModelGraph, fallbackDataGraph);
 				subManifest.load(server, serverTypeString, clear, defaultGraph, false, progressWriter);
 
 			}else if(type == StepType.COPYGRAPH) {
@@ -237,11 +255,13 @@ public class Manifest {
 
 	/**
 	 * Instantiate a manifest from YAML
-	 * @param yamlFile a YAML file
-	 * @return the manifest object
-	 * @throws Exception e.g. if fails validation
+	 * @param yamlFile 				a YAML file
+	 * @param fallbackModelGraph 	use this model graph if not specified anywhere else
+	 * @param fallbackDataGraph 	use this data graph if not specified anywhere else
+	 * @return 						the manifest object
+	 * @throws Exception 			e.g. if fails validation
 	 */
-	public static Manifest fromYaml(File yamlFile) throws Exception{
+	public static Manifest fromYaml(File yamlFile, String fallbackModelGraph, String fallbackDataGraph) throws Exception{
 
 		String yamlStr = Utility.getStringFromFilePath(yamlFile.getAbsolutePath());
 
@@ -256,6 +276,8 @@ public class Manifest {
 		String description = manifestJsonNode.get("description") != null ? manifestJsonNode.get("description").asText() : null; // optional
 		Manifest manifest = new Manifest(name, description);
 		manifest.setBaseDir(yamlFile.getParent());
+		manifest.setFallbackModelGraph(fallbackModelGraph);
+		manifest.setFallbackDataGraph(fallbackDataGraph);
 
 		// 3 optional boolean properties
 		if(manifestJsonNode.get("copy-to-default-graph") != null) { manifest.setCopyToDefaultGraph(manifestJsonNode.get("copy-to-default-graph").booleanValue()); }
@@ -342,41 +364,63 @@ public class Manifest {
 	
 	/**
 	 * Configuration for loading a set of OWL files
+	 *
+	 * // TODO the python schema allows model-graphs to be a string or an array.  We support array here - make it support both
 	 */
 	public static class IngestOwlConfig{
 
 		private String baseDir;
-		private List<String> files;
+		private String fallbackModelGraph;
 
-		// TODO the python schema allows model-graphs to be a string or an array.  We support array here - make it support both
 		@JsonProperty("model-graphs")
 		private List<String> modelgraphs;
+		private List<String> files;
 
-		public List<String> getFiles() {
-			return files;
+		/**
+		 * Get methods
+		 */
+		public String getBaseDir() {
+			return baseDir;
 		}
-		public void setFiles(List<String> files) {
-			this.files = files;
+		public String getFallbackModelGraph() {
+			return fallbackModelGraph;
 		}
 		public List<String> getModelgraphs() {
 			return modelgraphs;
 		}
+		public List<String> getFiles() {
+			return files;
+		}
+
+		/**
+		 * Set methods
+		 */
+		public void setBaseDir(String baseDir) {
+			this.baseDir = baseDir;
+		}
+		public void setFallbackModelGraph(String fallbackModelGraph) {
+			this.fallbackModelGraph = fallbackModelGraph;
+		}
 		public void setModelgraphs(List<String> modelgraphs) {
 			this.modelgraphs = modelgraphs;
 		}
-		public void setBaseDir(String baseDir) {
-			this.baseDir = baseDir;
+		public void setFiles(List<String> files) {
+			this.files = files;
 		}
 
 		/**
 		 * Get an instance from YAML
+		 * @param yamlFile 				a YAML file
+		 * @param fallbackModelGraph 	use this model graph if not specified anywhere else
+		 * @return 						the config object
 		 */
-		public static IngestOwlConfig fromYaml(File yamlFile) throws Exception {
+		public static IngestOwlConfig fromYaml(File yamlFile, String fallbackModelGraph) throws Exception {
 			try {
 				ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
 				mapper.findAndRegisterModules();
 				IngestOwlConfig config = mapper.readValue(yamlFile, IngestOwlConfig.class); // validates/populates IngestOwlConfig instance using YAML
 				config.setBaseDir(yamlFile.getParent());
+				config.setFallbackModelGraph(fallbackModelGraph);
 				return config;
 			}catch(Exception e) {
 				LocalLogger.printStackTrace(e);
@@ -399,9 +443,9 @@ public class Manifest {
 						modelGraphs = this.getModelgraphs().toArray(new String[0]);
 					}
 				}
-				// error if no model graphs found
+				// if no model graphs found, use the fallback
 				if(modelGraphs == null || modelGraphs.length == 0) {
-					throw new Exception("No model graphs provided for OWL ingestion");
+					modelGraphs = new String[]{ this.fallbackModelGraph };
 				}
 
 				// upload each OWL file to each model graph

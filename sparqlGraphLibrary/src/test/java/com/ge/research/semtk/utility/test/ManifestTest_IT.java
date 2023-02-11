@@ -17,8 +17,6 @@
 package com.ge.research.semtk.utility.test;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,6 +28,7 @@ import org.junit.Test;
 
 import com.ge.research.semtk.load.utility.Manifest;
 import com.ge.research.semtk.load.utility.Manifest.IngestOwlConfig;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 
@@ -42,32 +41,27 @@ public class ManifestTest_IT {
 	@Test
 	public void testIngestOwl() throws Exception{
 
-		IngestOwlConfig config = IngestOwlConfig.fromYaml(new File("src/test/resources/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"));
-		String[] modelGraphs;
-
-		// error if provide null model graphs (none are specified in YAML either)
-		modelGraphs = null;
-		try {
-			config.ingest(modelGraphs, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
-			fail(); // should not get here
-		}catch(Exception e) {
-			assertTrue(e.getMessage().contains("No model graphs provided for OWL ingestion"));
-		}
-
-		// error if provide null model graphs (none are specified in YAML either)
-		modelGraphs = new String[] {};
-		try {
-			config.ingest(modelGraphs, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
-			fail(); // should not get here
-		}catch(Exception e) {
-			assertTrue(e.getMessage().contains("No model graphs provided for OWL ingestion"));
-		}
+		IngestOwlConfig config = IngestOwlConfig.fromYaml(new File("src/test/resources/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), ManifestTest.FALLBACK_MODEL_GRAPH);
 
 		// provide a valid model graph
 		TestGraph.clearGraph();
-		modelGraphs = new String[]{TestGraph.getDataset()};
+		String[] modelGraphs = {TestGraph.getDataset()};
 		config.ingest(modelGraphs, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
 		assertEquals(TestGraph.getNumTriples(), 1439);
+
+		// ------------------ test that model gets loaded to fallback model graph if no model graph is provided ----------------
+
+		SparqlEndpointInterface seiFallback = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), ManifestTest.FALLBACK_MODEL_GRAPH);
+
+		// model graphs null (none are specified in YAML either)
+		seiFallback.clearGraph();
+		config.ingest(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
+		assertEquals(seiFallback.getNumTriples(), 1439);
+
+		// model graphs empty (none are specified in YAML either)
+		seiFallback.clearGraph();
+		config.ingest(new String[]{}, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
+		assertEquals(seiFallback.getNumTriples(), 1439);
 	}
 
 	/**
@@ -85,10 +79,9 @@ public class ManifestTest_IT {
 
 			// get manifest
 			File manifestFile = Manifest.getTopLevelManifestFile(tempDir);
-			Manifest manifest = Manifest.fromYaml(manifestFile);
+			Manifest manifest = Manifest.fromYaml(manifestFile, ManifestTest.FALLBACK_MODEL_GRAPH, ManifestTest.FALLBACK_DATA_GRAPH);
 			assertEquals(manifest.getName(), "Entity Resolution");
 
-			// TODO this will fail until we resolve what to do about the CLI's rack001 default graphs (import.yaml does not specify model graph)
 			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, true, new PrintWriter(System.out));
 
 			// TODO asserts
