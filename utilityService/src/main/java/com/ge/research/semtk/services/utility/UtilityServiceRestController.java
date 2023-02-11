@@ -48,7 +48,7 @@ import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
-import com.ge.research.semtk.load.utility.Manifest;
+import com.ge.research.semtk.load.manifest.Manifest;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.plotting.PlotlyPlotSpec;
 import com.ge.research.semtk.resultSet.RecordProcessResults;

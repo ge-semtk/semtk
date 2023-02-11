@@ -14,13 +14,11 @@
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  */
-package com.ge.research.semtk.utility.test;
+package com.ge.research.semtk.load.manifest.test;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.net.URL;
@@ -28,9 +26,8 @@ import java.util.LinkedList;
 
 import org.apache.commons.math3.util.Pair;
 
-import com.ge.research.semtk.load.utility.Manifest;
-import com.ge.research.semtk.load.utility.Manifest.IngestOwlConfig;
-import com.ge.research.semtk.load.utility.Manifest.Step;
+import com.ge.research.semtk.load.manifest.Manifest;
+import com.ge.research.semtk.load.manifest.Manifest.Step;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.test.TestGraph;
 
@@ -115,43 +112,6 @@ public class ManifestTest {
 			File file = new File("src/test/resources/manifest_animals_minimal.yaml");
 			Manifest manifest = Manifest.fromYaml(file, FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
 			assertEquals(manifest.getName(), "Animals");
-		}
-
-		/**
-		 * Test populating an IngestOwlConfig instance from a YAML file
-		 */
-		@Test
-		public void testIngestOwlConfig() throws Exception{
-
-			IngestOwlConfig config;
-
-			// this config has owl files only (no model graph)
-			config = IngestOwlConfig.fromYaml(new File("src/test/resources/ingest_owl_config_1.yaml"), ManifestTest.FALLBACK_MODEL_GRAPH);
-			assertTrue(config.getBaseDir().matches("src(.*)test(.*)resources"));
-			assertEquals(config.getFallbackModelGraph(),ManifestTest.FALLBACK_MODEL_GRAPH);
-			assertEquals(config.getFiles().size(), 3);
-			assertEquals(config.getFiles().get(0),"woodchuck.owl");
-			assertEquals(config.getFiles().get(1),"hedgehog.owl");
-			assertEquals(config.getFiles().get(2),"raccoon.owl");
-			assertNull(config.getModelgraph());
-
-			// this config has model graph as array size 1
-			config = IngestOwlConfig.fromYaml(new File("src/test/resources/ingest_owl_config_2.yaml"), ManifestTest.FALLBACK_MODEL_GRAPH);
-			assertEquals(config.getFiles().size(), 3);
-			assertEquals(config.getModelgraph(),"http://junit/animals/model");
-
-			// this config has model graph as string
-			config = IngestOwlConfig.fromYaml(new File("src/test/resources/ingest_owl_config_3.yaml"), ManifestTest.FALLBACK_MODEL_GRAPH);
-			assertEquals(config.getFiles().size(), 3);
-			assertEquals(config.getModelgraph(),"http://junit/animals/model");
-
-			// this config has multiple model graphs.  Legacy schema supports this (likely unused), disallowing it here
-			try {
-				config = IngestOwlConfig.fromYaml(new File("src/test/resources/ingest_owl_config_4.yaml"), ManifestTest.FALLBACK_MODEL_GRAPH);
-				fail();
-			}catch(Exception e) {
-				assertTrue(e.getMessage().contains("Not currently supporting multiple model graphs"));
-			}
 		}
 
 }

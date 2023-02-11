@@ -14,26 +14,21 @@
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  */
-package com.ge.research.semtk.utility.test;
+package com.ge.research.semtk.load.manifest.test;
 
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.PrintWriter;
-import java.util.zip.ZipInputStream;
 
-import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
-import com.ge.research.semtk.load.utility.Manifest;
-import com.ge.research.semtk.load.utility.Manifest.IngestOwlConfig;
+import com.ge.research.semtk.load.manifest.IngestOwlConfig;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.TestGraph;
-import com.ge.research.semtk.utility.Utility;
 
+public class IngestOwlConfigTest_IT {
 
-public class ManifestTest_IT {
 
 	/**
 	 * Test loading a set of OWL files via YAML (e.g. import.yaml)
@@ -62,34 +57,5 @@ public class ManifestTest_IT {
 		config.ingest(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
 		assertEquals(seiFallback.getNumTriples(), 1439);
 	}
-
-	/**
-	 * Test loading a manifest via YAML
-	 */
-	@Test
-	public void testLoadManifest() throws Exception{
-
-		File tempDir = null;
-		try {
-			// unzip ingestion package
-			ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream("src/test/resources/IngestionPackage.zip"));
-			tempDir = Utility.createTempDirectory();
-			Utility.unzip(zipInputStream, tempDir);
-
-			// get manifest
-			File manifestFile = Manifest.getTopLevelManifestFile(tempDir);
-			Manifest manifest = Manifest.fromYaml(manifestFile, ManifestTest.FALLBACK_MODEL_GRAPH, ManifestTest.FALLBACK_DATA_GRAPH);
-			assertEquals(manifest.getName(), "Entity Resolution");
-
-			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, true, new PrintWriter(System.out));
-
-			// TODO asserts
-
-		}catch(Exception e) {
-			throw e;
-		}finally{
-			FileUtils.deleteDirectory(tempDir);
-		}
-	}
-
+	
 }
