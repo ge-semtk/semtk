@@ -47,7 +47,7 @@ public class IngestCsvConfigTest_IT extends YamlConfigTest{
 		dataSei.clearGraph();
 		dataSeiFallback.clearGraph();
 
-		config.load(MODEL_GRAPH, DATA_GRAPH, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
+		config.load(MODEL_GRAPH, DATA_GRAPH, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, new PrintWriter(System.out));
 		assertEquals(dataSei.getNumTriples(), 9999999);  // TODO add real number when load is implemented
 		assertEquals(dataSeiFallback.getNumTriples(), 0);
 

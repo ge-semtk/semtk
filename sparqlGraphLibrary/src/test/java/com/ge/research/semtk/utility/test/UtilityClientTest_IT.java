@@ -71,12 +71,12 @@ public class UtilityClientTest_IT extends YamlConfigTest{
 		assert(response.matches("(.*)Load file (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)ANALYSIS.owl(.*)"));
 		assert(response.matches("(.*)Load nodegroups (.*)manifests(.*)nodegroups(.*)queries(.*)"));
 		assert(response.matches("(.*)Load data (.*)TestData(.*)Package-1(.*)import.yaml(.*)"));
-		assert(response.matches("(.*)Load CSV PROV_S_ACTIVITY1.csv using class http://arcos.rack/PROV-S#ACTIVITY(.*)"));
-		assert(response.matches("(.*)Load CSV REQUIREMENTS_REQUIREMENT1.csv using class http://arcos.rack/REQUIREMENTS#REQUIREMENT(.*)"));
-		assert(response.matches("(.*)Load CSV TESTING_TEST1.csv using class http://arcos.rack/TESTING#TEST(.*)"));
-		assert(response.matches("(.*)Load CSV PROV_S_ACTIVITY2.csv using class http://arcos.rack/PROV-S#ACTIVITY(.*)"));
-		assert(response.matches("(.*)Load CSV REQUIREMENTS_REQUIREMENT2.csv using class http://arcos.rack/REQUIREMENTS#REQUIREMENT(.*)"));
-		assert(response.matches("(.*)Load CSV TESTING_TEST2.csv using class http://arcos.rack/TESTING#TEST(.*)"));
+		assert(response.matches("(.*)Load CSV (.*)PROV_S_ACTIVITY1.csv using class http://arcos.rack/PROV-S#ACTIVITY(.*)"));
+		assert(response.matches("(.*)Load CSV (.*)REQUIREMENTS_REQUIREMENT1.csv using class http://arcos.rack/REQUIREMENTS#REQUIREMENT(.*)"));
+		assert(response.matches("(.*)Load CSV (.*)TESTING_TEST1.csv using class http://arcos.rack/TESTING#TEST(.*)"));
+		assert(response.matches("(.*)Load CSV (.*)PROV_S_ACTIVITY2.csv using class http://arcos.rack/PROV-S#ACTIVITY(.*)"));
+		assert(response.matches("(.*)Load CSV (.*)REQUIREMENTS_REQUIREMENT2.csv using class http://arcos.rack/REQUIREMENTS#REQUIREMENT(.*)"));
+		assert(response.matches("(.*)Load CSV (.*)TESTING_TEST2.csv using class http://arcos.rack/TESTING#TEST(.*)"));
 		assert(response.matches("(.*)Load data (.*)TestData(.*)Package-2(.*)import.yaml(.*)"));
 		assert(response.matches("(.*)Load data (.*)TestData(.*)Package-3(.*)import.yaml(.*)"));
 		assert(response.matches("(.*)Load data (.*)TestData(.*)Resolutions-1(.*)import.yaml(.*)"));

@@ -213,11 +213,25 @@ public class Manifest extends YamlConfig {
 
 		// clear graphs first, if wanted
 		if(clear) {
-			// TODO
+			if(defaultGraph) {
+				// TODO call SemTK to clear default graph
+			} else {
+				LinkedList<URL> modelGraphs = getModelgraphsFootprint();
+				if(modelGraphs != null) {
+					// TODO call SemTK to clear each model graph in the footprint
+				}
+				LinkedList<URL> dataGraphs = getDatagraphsFootprint();
+				if(dataGraphs != null) {
+					// TODO call SemTK to clear each data graph in the footprint
+				}
+			}
+			if(getNodegroupsFootprint() != null) {
+				// TODO call SemTK to clear each nodegroup in the footprint
+			}
 		}
 
 		// if loading to default graph, then set targetGraph
-		String targetGraph = null;
+		String targetGraph = null;  // TODO this is a string array in Python, maybe will need to be here too
 		if(defaultGraph) {
 			targetGraph = SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME;
 		}
@@ -229,7 +243,7 @@ public class Manifest extends YamlConfig {
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load data " + stepFile.getAbsolutePath());
 				IngestCsvConfig config = new IngestCsvConfig(stepFile, this.fallbackModelGraph, this.fallbackDataGraph);
-				config.load(targetGraph, targetGraph, server, serverTypeString, progressWriter); // TODO targetGraphs likely wrong here - fix
+				config.load(targetGraph, targetGraph, server, serverTypeString, clear, progressWriter); // TODO targetGraphs likely wrong here - fix
 				// TODO so far just implemented one option (class+csv), need to cover them all
 
 			}else if(type == StepType.MODEL) {

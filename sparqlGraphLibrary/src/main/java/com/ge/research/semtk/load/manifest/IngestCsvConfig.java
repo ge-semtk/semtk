@@ -21,6 +21,7 @@ import java.io.PrintWriter;
 import java.util.LinkedList;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -44,7 +45,7 @@ public class IngestCsvConfig extends YamlConfig {
 		if(stepsNode != null) {
 			for(JsonNode stepNode : stepsNode){
 				if(stepNode.has("class") && stepNode.has("csv")) {
-					addStep(new ClassCsvIngestionStep(stepNode.get("class").asText(), stepNode.get("csv").asText()));
+					addStep(new ClassCsvIngestionStep(stepNode.get("class").asText(), baseDir + File.separator + stepNode.get("csv").asText()));
 				}else {
 					//TODO support 4 more steps from the schema
 					throw new Exception("Ingestion step is not yet supported: " + stepNode.asText());
@@ -87,14 +88,25 @@ public class IngestCsvConfig extends YamlConfig {
 	 * @param dataGraph			// TODO not sure if this is correct  TODO should be multiple?
 	 * @param server 			triple store location
 	 * @param serverTypeString 	triple store type
+	 * @param clear				if true, clears before loading
 	 * @param progressWriter 	writer for reporting progress
 	 */
-	public void load(String modelGraph, String dataGraph, String server, String serverType, PrintWriter progressWriter) throws Exception {
+	public void load(String modelGraph, String dataGraph, String server, String serverType, boolean clear, PrintWriter progressWriter) throws Exception {
 		try {
-			// TODO model/data graph logic here, and use in load() call
 
+			// TODO get connection using model/data graph logic
+			SparqlConnection conn = new SparqlConnection();
+
+			if(clear) {
+				// TODO call SemTK to clear the connection
+			}
+
+			// execute each step
 			for(IngestionStep step : this.getSteps()) {
-				step.load(progressWriter);
+				if(step instanceof ClassCsvIngestionStep) {
+					((ClassCsvIngestionStep)step).run(conn, progressWriter);
+				}
+				// TODO add other step types
 			}
 
 		}catch(Exception e) {
@@ -103,10 +115,11 @@ public class IngestCsvConfig extends YamlConfig {
 		}
 	}
 
+
+
 	// **************  ingestion step types below ************************
 
 	public static abstract class IngestionStep{
-		void load(PrintWriter progressWriter) {}
 	}
 
 	public static class ClassCsvIngestionStep extends IngestionStep{
@@ -122,10 +135,10 @@ public class IngestCsvConfig extends YamlConfig {
 		public String getCsv() {
 			return csv;
 		}
-		public void load(PrintWriter progressWriter) {
-			progressWriter.println("Load CSV " + csv + " using class " + clazz);  // TODO add test
+		public void run(SparqlConnection conn, PrintWriter progressWriter) {
+			progressWriter.println("Load CSV " + csv + " using class " + clazz);
 			progressWriter.flush();
-			// TODO SemTK call
+			// TODO call SemTK to load CSV using class template with the given connection
 		}
 	}
 
