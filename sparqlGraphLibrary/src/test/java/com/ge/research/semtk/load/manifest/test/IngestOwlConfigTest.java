@@ -36,8 +36,7 @@ public class IngestOwlConfigTest {
 	@Test
 	public void test() throws Exception{
 
-		// note this test does not actually perform load - but using something unique anyway
-		final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model";
+		final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model";	// this test does not contact triplestore - but using something unique anyway
 
 		IngestOwlConfig config;
 

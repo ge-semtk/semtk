@@ -24,8 +24,6 @@ import java.util.LinkedList;
 import org.apache.commons.math3.util.Pair;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.Utility;
@@ -193,7 +191,8 @@ public class Manifest {
 			if(type == StepType.DATA) {
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load data " + stepFile.getAbsolutePath());
-				// TODO implement and test
+				// TODO implement and test.
+				// TODO so far just implemented one option (class+csv), need to cover them all
 
 			}else if(type == StepType.MODEL) {
 				File stepFile = new File(baseDir, (String)step.getValue());
@@ -268,7 +267,7 @@ public class Manifest {
 
 		// populate the manifest
 
-		JsonNode manifestJsonNode = (new ObjectMapper(new YAMLFactory())).readTree(yamlStr);
+		JsonNode manifestJsonNode = Utility.getJsonNodeFromYaml(yamlStr);
 		String name = manifestJsonNode.get("name").asText();  // required
 		String description = manifestJsonNode.get("description") != null ? manifestJsonNode.get("description").asText() : null; // optional
 		Manifest manifest = new Manifest(name, description);

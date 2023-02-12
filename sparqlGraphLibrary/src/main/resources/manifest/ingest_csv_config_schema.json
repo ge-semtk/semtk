@@ -1,0 +1,70 @@
+{
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["ingestion-steps"],
+    "properties": {
+        "ingestion-steps": {
+            "type": "array",
+            "items": {
+                "oneOf": [
+                    {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["nodegroup", "csv"],
+                        "properties": {
+                            "nodegroup": {"type": "string"},
+                            "csv": {"type": "string"}
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["owl"],
+                        "properties": {"owl": {"type": "string"}}
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["class", "csv"],
+                        "properties": {
+                            "class": {"type": "string"},
+                            "csv": {"type": "string"}
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["name", "creator", "nodegroup_json"],
+                        "properties": {
+                            "name": {"type": "string"},
+                            "creator": {"type": "string"},
+                            "comment": {"type": "string"},
+                            "nodegroup_json": {"type": "string"}
+                        }
+                    },
+                    {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": ["count", "nodegroup"],
+                        "properties": {
+                            "count": {"type": "number"},
+                            "nodegroup": {"type": "string"},
+                            "constraints": {"type": "array", "items": { "type": "string"} }
+                        }
+                    }
+                ]
+            }
+        },
+        "model-graphs": {
+            "oneOf": [
+                {"type": "string"},
+                {"type": "array", "items": {"type": "string"}}
+            ]
+        },
+        "data-graph": {"type": "string"},
+        "extra-data-graphs": {
+            "type": "array",
+            "contains": {"type": "string"}
+        }
+    }
+}

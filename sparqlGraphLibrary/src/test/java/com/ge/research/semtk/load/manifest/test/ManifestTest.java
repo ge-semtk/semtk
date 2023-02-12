@@ -33,8 +33,7 @@ public class ManifestTest {
 	@Test
 	public void test() throws Exception{
 
-		// note this test does not actually perform load - but using something unique anyway
-		final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model";
+		final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model"; // this test does not contact triplestore - but using something unique anyway
 		final String FALLBACK_DATA_GRAPH = TestGraph.getDataset() + "/data";
 
 		Manifest manifest = Manifest.fromYaml(new File("src/test/resources/manifest/manifest_animals.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);

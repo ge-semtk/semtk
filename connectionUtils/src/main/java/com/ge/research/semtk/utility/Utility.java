@@ -1030,15 +1030,25 @@ public abstract class Utility {
 	}
 
 	/**
+	 * Get a JsonNode from a YAML string
+	 * @param yamlStr		the YAML string
+	 * @return 				the JsonNode
+	 * @throws Exception
+	 */
+	public static JsonNode getJsonNodeFromYaml(String yamlStr) throws Exception {
+		return (new ObjectMapper(new YAMLFactory())).readTree(yamlStr);
+	}
+
+	/**
 	 * Validate YAML against a schema
-	 * @param yamlStr the YAML to validate
+	 * @param yamlStr 		the YAML to validate
 	 * @param jsonSchemaStr a JSON schema
-	 * @throws Exception if validation fails
+	 * @throws Exception 	if validation fails
 	 */
 	public static void validateYaml(String yamlStr, String jsonSchemaStr) throws Exception {
 
 		// read yaml into JSON tree
-		JsonNode yamlToValidate = (new ObjectMapper(new YAMLFactory())).readTree(yamlStr);
+		JsonNode yamlToValidate = Utility.getJsonNodeFromYaml(yamlStr);
 
 		// get schema
 		JsonSchemaFactory schemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);

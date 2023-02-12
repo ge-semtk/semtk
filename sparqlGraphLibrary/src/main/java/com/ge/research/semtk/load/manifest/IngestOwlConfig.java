@@ -23,9 +23,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
@@ -92,7 +90,7 @@ public class IngestOwlConfig{
 			config.setBaseDir(yamlFile.getParent());
 			config.setFallbackModelGraph(fallbackModelGraph);
 
-			JsonNode configJsonNode = (new ObjectMapper(new YAMLFactory())).readTree(yamlStr);
+			JsonNode configJsonNode = Utility.getJsonNodeFromYaml(yamlStr);
 			// add files
 			JsonNode filesNode = configJsonNode.get("files");
 			if(filesNode != null) {
