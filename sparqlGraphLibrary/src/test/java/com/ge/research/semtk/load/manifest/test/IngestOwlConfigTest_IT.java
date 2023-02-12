@@ -31,13 +31,13 @@ public class IngestOwlConfigTest_IT {
 
 
 	/**
-	 * Test loading a set of OWL files via YAML (e.g. import.yaml)
+	 * Test loading OWL via YAML file
 	 */
 	@Test
-	public void testIngestOwl() throws Exception{
+	public void test() throws Exception{
 
-		final String MODEL_GRAPH = TestGraph.getDataset();
-		final String MODEL_GRAPH_FALLBACK = TestGraph.getDataset() + "/fallback";
+		final String MODEL_GRAPH = TestGraph.getDataset() + "/model";
+		final String MODEL_GRAPH_FALLBACK = TestGraph.getDataset() + "/model/fallback";
 
 		SparqlEndpointInterface modelSei = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), MODEL_GRAPH);
 		SparqlEndpointInterface modelSeiFallback = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), MODEL_GRAPH_FALLBACK);

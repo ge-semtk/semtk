@@ -60,7 +60,7 @@ public class UtilityClientTest_IT {
 		seiModel.clearGraph();
 		seiData.clearGraph();
 
-		BufferedReader reader = client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), DEFAULT_MODEL_GRAPH, DEFAULT_DATA_GRAPH);
+		BufferedReader reader = client.execLoadIngestionPackage(new File("src/test/resources/manifest/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), DEFAULT_MODEL_GRAPH, DEFAULT_DATA_GRAPH);
 		String response = Utility.readToString(reader);
 		// check the response stream
 		assert(response.contains("Loading 'Entity Resolution'..."));
@@ -71,6 +71,12 @@ public class UtilityClientTest_IT {
 		assert(response.matches("(.*)Load file (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)ANALYSIS.owl(.*)"));
 		assert(response.matches("(.*)Load nodegroups (.*)manifests(.*)nodegroups(.*)queries(.*)"));
 		assert(response.matches("(.*)Load data (.*)TestData(.*)Package-1(.*)import.yaml(.*)"));
+		assert(response.matches("(.*)Load CSV PROV_S_ACTIVITY1.csv using class http://arcos.rack/PROV-S#ACTIVITY(.*)"));
+		assert(response.matches("(.*)Load CSV REQUIREMENTS_REQUIREMENT1.csv using class http://arcos.rack/REQUIREMENTS#REQUIREMENT(.*)"));
+		assert(response.matches("(.*)Load CSV TESTING_TEST1.csv using class http://arcos.rack/TESTING#TEST(.*)"));
+		assert(response.matches("(.*)Load CSV PROV_S_ACTIVITY2.csv using class http://arcos.rack/PROV-S#ACTIVITY(.*)"));
+		assert(response.matches("(.*)Load CSV REQUIREMENTS_REQUIREMENT2.csv using class http://arcos.rack/REQUIREMENTS#REQUIREMENT(.*)"));
+		assert(response.matches("(.*)Load CSV TESTING_TEST2.csv using class http://arcos.rack/TESTING#TEST(.*)"));
 		assert(response.matches("(.*)Load data (.*)TestData(.*)Package-2(.*)import.yaml(.*)"));
 		assert(response.matches("(.*)Load data (.*)TestData(.*)Package-3(.*)import.yaml(.*)"));
 		assert(response.matches("(.*)Load data (.*)TestData(.*)Resolutions-1(.*)import.yaml(.*)"));
@@ -94,7 +100,7 @@ public class UtilityClientTest_IT {
 		assert(response.contains("Error: This endpoint only accepts ingestion packages in zip file format"));
 
 		// contains no top-level manifest.yaml
-		response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), DEFAULT_MODEL_GRAPH, DEFAULT_DATA_GRAPH));
+		response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/manifest/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), DEFAULT_MODEL_GRAPH, DEFAULT_DATA_GRAPH));
 		assert(response.contains("Error: Cannot find a top-level manifest in IngestionPackageNoManifest.zip"));
 	}
 

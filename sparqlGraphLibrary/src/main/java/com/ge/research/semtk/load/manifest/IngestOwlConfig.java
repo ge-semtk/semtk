@@ -35,25 +35,17 @@ import com.ge.research.semtk.utility.Utility;
 public class IngestOwlConfig extends YamlConfig {
 
 	public IngestOwlConfig(File yamlFile, String fallbackModelGraph) throws Exception {
-		super(yamlFile, fallbackModelGraph, null);
+		super(yamlFile, Utility.getResourceAsFile(IngestOwlConfig.class, "manifest/ingest_owl_config_schema.json"), fallbackModelGraph, null);
 
-		String yamlStr = Utility.getStringFromFilePath(yamlFile.getAbsolutePath());  // TODO MOVE TO SUPERCLASS
-
-		// validate YAML against schema  TODO move this into superclass
-		String configSchema = Utility.getResourceAsString(IngestOwlConfig.class, "manifest/ingest_owl_config_schema.json");
-		Utility.validateYaml(yamlStr, configSchema);
-
-		// populate the config item
-		JsonNode configJsonNode = Utility.getJsonNodeFromYaml(yamlStr);
 		// add files
-		JsonNode filesNode = configJsonNode.get("files");
+		JsonNode filesNode = configNode.get("files");
 		if(filesNode != null) {
 			for(JsonNode fileNode : filesNode){
 				addFile(fileNode.asText());
 			}
 		}
 		// add model graph (may be either String or array size 1 to support pre-existing schema) // TODO de-duplicate
-		JsonNode modelGraphNode = configJsonNode.get("model-graphs");
+		JsonNode modelGraphNode = configNode.get("model-graphs");
 		if(modelGraphNode != null) {
 			if(modelGraphNode.isTextual()) {
 				setModelgraph(modelGraphNode.asText());

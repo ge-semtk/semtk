@@ -1,0 +1,4 @@
+identifier,dataInsertedBy_identifier,description,satisfies_identifier
+L1-REQ-1,Package 2,This is requirement L1-1.,L0-REQ-1
+L1-REQ-2,Package 2,This is requirement L1-2.,L0-REQ-1
+L0-REQ-1,Package 2,,

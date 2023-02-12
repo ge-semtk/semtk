@@ -46,28 +46,21 @@ public class Manifest extends YamlConfig {
 	private static String DEFAULT_FILE_NAME = "manifest.yaml";	// the default manifest file name
 
 	public Manifest(File yamlFile, String fallbackModelGraph, String fallbackDataGraph) throws Exception {
-		super(yamlFile, fallbackModelGraph, fallbackDataGraph);
-		String yamlStr = Utility.getStringFromFilePath(yamlFile.getAbsolutePath());
-
-		// validate manifest YAML against schema
-		String manifestSchema = Utility.getResourceAsString(Manifest.class, "manifest/manifest_schema.json");
-		Utility.validateYaml(yamlStr, manifestSchema);
+		super(yamlFile, Utility.getResourceAsFile(Manifest.class, "manifest/manifest_schema.json"), fallbackModelGraph, fallbackDataGraph);
 
 		// populate the manifest
-
-		JsonNode manifestJsonNode = Utility.getJsonNodeFromYaml(yamlStr);
-		String name = manifestJsonNode.get("name").asText();  // required
-		String description = manifestJsonNode.get("description") != null ? manifestJsonNode.get("description").asText() : null; // optional
+		String name = configNode.get("name").asText();  // required
+		String description = configNode.get("description") != null ? configNode.get("description").asText() : null; // optional
 
 		setName(name);
 		setDescription(description);
 
 		// 3 optional boolean properties
-		if(manifestJsonNode.get("copy-to-default-graph") != null) { setCopyToDefaultGraph(manifestJsonNode.get("copy-to-default-graph").booleanValue()); }
-		if(manifestJsonNode.get("perform-entity-resolution") != null) { setPerformEntityResolution(manifestJsonNode.get("perform-entity-resolution").booleanValue()); }
+		if(configNode.get("copy-to-default-graph") != null) { setCopyToDefaultGraph(configNode.get("copy-to-default-graph").booleanValue()); }
+		if(configNode.get("perform-entity-resolution") != null) { setPerformEntityResolution(configNode.get("perform-entity-resolution").booleanValue()); }
 
 		// footprint
-		JsonNode footprintJsonNode = manifestJsonNode.get("footprint");
+		JsonNode footprintJsonNode = configNode.get("footprint");
 		if(footprintJsonNode != null) {
 			JsonNode nodes;
 			nodes = footprintJsonNode.get("model-graphs");
@@ -91,7 +84,7 @@ public class Manifest extends YamlConfig {
 		}
 
 		// steps
-		JsonNode stepsJsonNode = manifestJsonNode.get("steps");
+		JsonNode stepsJsonNode = configNode.get("steps");
 		if(stepsJsonNode != null) {
 			for(JsonNode stepNode : stepsJsonNode){
 				if(stepNode.has(StepType.MODEL.toString())) {
@@ -235,7 +228,8 @@ public class Manifest extends YamlConfig {
 			if(type == StepType.DATA) {
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load data " + stepFile.getAbsolutePath());
-				// TODO implement and test.
+				IngestCsvConfig config = new IngestCsvConfig(stepFile, this.fallbackModelGraph, this.fallbackDataGraph);
+				config.load(targetGraph, targetGraph, server, serverTypeString, progressWriter); // TODO targetGraphs likely wrong here - fix
 				// TODO so far just implemented one option (class+csv), need to cover them all
 
 			}else if(type == StepType.MODEL) {

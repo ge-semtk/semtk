@@ -17,9 +17,11 @@
 package com.ge.research.semtk.load.manifest;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.util.LinkedList;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
 /**
@@ -27,7 +29,7 @@ import com.ge.research.semtk.utility.Utility;
  * Populated from a YAML file conforming to schema ingest_csv_config_schema.json
  */
 public class IngestCsvConfig extends YamlConfig {
-	
+
 	private LinkedList<IngestionStep> steps = new LinkedList<IngestionStep>();
 	private String datagraph;			// optional
 
@@ -35,15 +37,7 @@ public class IngestCsvConfig extends YamlConfig {
 	 * Constructor
 	 */
 	public IngestCsvConfig(File yamlFile, String fallbackModelGraph, String fallbackDataGraph) throws Exception {
-		super(yamlFile, fallbackModelGraph, fallbackDataGraph);
-		String yamlStr = Utility.getStringFromFilePath(yamlFile.getAbsolutePath());
-
-		// validate YAML against schema
-		String configSchema = Utility.getResourceAsString(IngestCsvConfig.class, "manifest/ingest_csv_config_schema.json");
-		Utility.validateYaml(yamlStr, configSchema);
-
-		// read YAML
-		JsonNode configNode = Utility.getJsonNodeFromYaml(yamlStr);
+		super(yamlFile, Utility.getResourceAsFile(IngestCsvConfig.class, "manifest/ingest_csv_config_schema.json"), fallbackModelGraph, fallbackDataGraph);
 
 		// populate ingestion steps
 		JsonNode stepsNode = configNode.get("ingestion-steps");
@@ -52,7 +46,7 @@ public class IngestCsvConfig extends YamlConfig {
 				if(stepNode.has("class") && stepNode.has("csv")) {
 					addStep(new ClassCsvIngestionStep(stepNode.get("class").asText(), stepNode.get("csv").asText()));
 				}else {
-					//TODO support
+					//TODO support 4 more steps from the schema
 					throw new Exception("Ingestion step is not yet supported: " + stepNode.asText());
 				}
 			}
@@ -76,7 +70,6 @@ public class IngestCsvConfig extends YamlConfig {
 	public String getDatagraph() {
 		return datagraph;
 	}
-
 	/**
 	 * Set methods
 	 */
@@ -87,8 +80,35 @@ public class IngestCsvConfig extends YamlConfig {
 		this.datagraph = datagraph;
 	}
 
-	public static abstract class IngestionStep{}
 	
+	/**
+	 * Ingest data
+	 * @param modelGraph		a model graph (optional - overrides if present)  // TODO not sure if this is correct
+	 * @param dataGraph			// TODO not sure if this is correct  TODO should be multiple?
+	 * @param server 			triple store location
+	 * @param serverTypeString 	triple store type
+	 * @param progressWriter 	writer for reporting progress
+	 */
+	public void load(String modelGraph, String dataGraph, String server, String serverType, PrintWriter progressWriter) throws Exception {
+		try {
+			// TODO model/data graph logic here, and use in load() call
+
+			for(IngestionStep step : this.getSteps()) {
+				step.load(progressWriter);
+			}
+
+		}catch(Exception e) {
+			LocalLogger.printStackTrace(e);
+			throw new Exception("Error ingesting data: " + e.getMessage());
+		}
+	}
+
+	// **************  ingestion step types below ************************
+
+	public static abstract class IngestionStep{
+		void load(PrintWriter progressWriter) {}
+	}
+
 	public static class ClassCsvIngestionStep extends IngestionStep{
 		private String clazz;
 		private String csv;
@@ -101,6 +121,11 @@ public class IngestCsvConfig extends YamlConfig {
 		}
 		public String getCsv() {
 			return csv;
+		}
+		public void load(PrintWriter progressWriter) {
+			progressWriter.println("Load CSV " + csv + " using class " + clazz);  // TODO add test
+			progressWriter.flush();
+			// TODO SemTK call
 		}
 	}
 

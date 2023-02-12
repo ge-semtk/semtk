@@ -40,8 +40,8 @@ public class ManifestTest_IT {
 	@Test
 	public void testLoadManifest() throws Exception{
 
-		final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model";
-		final String FALLBACK_DATA_GRAPH = TestGraph.getDataset() + "/data";
+		final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model/fallback";
+		final String FALLBACK_DATA_GRAPH = TestGraph.getDataset() + "/data/fallback";
 		SparqlEndpointInterface modelSeiFallback = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), FALLBACK_MODEL_GRAPH);
 		SparqlEndpointInterface dataSeiFallback = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), FALLBACK_DATA_GRAPH);
 
