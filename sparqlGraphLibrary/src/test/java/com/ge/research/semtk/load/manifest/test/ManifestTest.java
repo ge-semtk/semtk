@@ -21,10 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
-import java.net.URL;
 import java.util.LinkedList;
-
-import org.apache.commons.math3.util.Pair;
 
 import com.ge.research.semtk.load.manifest.Manifest;
 import com.ge.research.semtk.load.manifest.Manifest.Step;
@@ -40,8 +37,8 @@ public class ManifestTest {
 		final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model";
 		final String FALLBACK_DATA_GRAPH = TestGraph.getDataset() + "/data";
 
-		Manifest manifest = Manifest.fromYaml(new File("src/test/resources/manifest_animals.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
-		assertTrue(manifest.getBaseDir().matches("src(.*)test(.*)resources"));
+		Manifest manifest = Manifest.fromYaml(new File("src/test/resources/manifest/manifest_animals.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
+		assertTrue(manifest.getBaseDir().matches("src(.*)test(.*)resources(.*)manifest"));
 		assertEquals(manifest.getFallbackModelGraph(), FALLBACK_MODEL_GRAPH);
 		assertEquals(manifest.getFallbackDataGraph(), FALLBACK_DATA_GRAPH);
 
@@ -117,7 +114,7 @@ public class ManifestTest {
 		final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model";
 		final String FALLBACK_DATA_GRAPH = TestGraph.getDataset() + "/data";
 
-		File file = new File("src/test/resources/manifest_animals_minimal.yaml");
+		File file = new File("src/test/resources/manifest/manifest_animals_minimal.yaml");
 		Manifest manifest = Manifest.fromYaml(file, FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
 		assertEquals(manifest.getName(), "Animals");
 	}

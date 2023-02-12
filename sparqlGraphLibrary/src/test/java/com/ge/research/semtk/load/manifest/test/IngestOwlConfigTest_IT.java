@@ -42,7 +42,7 @@ public class IngestOwlConfigTest_IT {
 		SparqlEndpointInterface modelSei = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), MODEL_GRAPH);
 		SparqlEndpointInterface modelSeiFallback = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), MODEL_GRAPH_FALLBACK);
 
-		IngestOwlConfig config = IngestOwlConfig.fromYaml(new File("src/test/resources/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), MODEL_GRAPH_FALLBACK);
+		IngestOwlConfig config = IngestOwlConfig.fromYaml(new File("src/test/resources/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), MODEL_GRAPH_FALLBACK);
 
 		// test that model gets loaded to the graph provided
 		modelSei.clearGraph();

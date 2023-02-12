@@ -84,7 +84,7 @@ public class IngestOwlConfig{
 			String yamlStr = Utility.getStringFromFilePath(yamlFile.getAbsolutePath());
 
 			// validate YAML against schema
-			String configSchema = Utility.getResourceAsString(Manifest.class, "ingest_owl_config_schema.json");
+			String configSchema = Utility.getResourceAsString(IngestOwlConfig.class, "manifest/ingest_owl_config_schema.json");
 			Utility.validateYaml(yamlStr, configSchema);
 
 			// populate the config item

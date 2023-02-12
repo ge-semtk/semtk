@@ -263,7 +263,7 @@ public class Manifest {
 		String yamlStr = Utility.getStringFromFilePath(yamlFile.getAbsolutePath());
 
 		// validate manifest YAML against schema
-		String manifestSchema = Utility.getResourceAsString(Manifest.class, "manifest_schema.json");
+		String manifestSchema = Utility.getResourceAsString(Manifest.class, "manifest/manifest_schema.json");
 		Utility.validateYaml(yamlStr, manifestSchema);
 
 		// populate the manifest

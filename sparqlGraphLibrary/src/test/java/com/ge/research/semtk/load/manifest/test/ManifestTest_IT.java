@@ -49,7 +49,7 @@ public class ManifestTest_IT {
 		try {
 			// unzip ingestion package
 			// TODO eventually use the unzipped folder when added to src/test/resources
-			ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream("src/test/resources/IngestionPackage.zip"));
+			ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream("src/test/resources/manifest/IngestionPackage.zip"));
 			tempDir = Utility.createTempDirectory();
 			Utility.unzip(zipInputStream, tempDir);
 
@@ -71,7 +71,9 @@ public class ManifestTest_IT {
 		}catch(Exception e) {
 			throw e;
 		}finally{
-			FileUtils.deleteDirectory(tempDir);
+			if(tempDir != null) {
+				FileUtils.deleteDirectory(tempDir);
+			}
 		}
 	}
 
