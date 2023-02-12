@@ -128,7 +128,7 @@ public class IngestOwlConfig{
 	 * @param serverTypeString 	triple store type
 	 * @param progressWriter 	writer for reporting progress
 	 */
-	public void ingest(String modelGraph, String server, String serverType, PrintWriter progressWriter) throws Exception {
+	public void load(String modelGraph, String server, String serverType, PrintWriter progressWriter) throws Exception {
 		try {
 			// use modelGraph from method parameter if present.  Else use from config YAML if present.  Else use fallback.
 			if(modelGraph == null) {

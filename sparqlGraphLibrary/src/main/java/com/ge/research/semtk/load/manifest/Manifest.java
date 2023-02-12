@@ -199,7 +199,7 @@ public class Manifest {
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load model " + stepFile.getAbsolutePath());
 				IngestOwlConfig config = IngestOwlConfig.fromYaml(stepFile, this.fallbackModelGraph);  // read the config YAML file
-				config.ingest(targetGraph, server, serverTypeString, progressWriter);
+				config.load(targetGraph, server, serverTypeString, progressWriter);
 
 			}else if(type == StepType.NODEGROUPS) {
 				File stepFile = new File(baseDir, (String)step.getValue());

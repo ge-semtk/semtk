@@ -16,6 +16,8 @@
  */
 package com.ge.research.semtk.utility.test;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.BufferedReader;
 import java.io.File;
 
@@ -24,6 +26,7 @@ import org.junit.Test;
 
 import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.services.client.UtilityClient;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
@@ -35,8 +38,8 @@ public class UtilityClientTest_IT {
 	private static int SERVICE_PORT;
 	private static UtilityClient client = null;
 
-	private String DEFAULT_MODEL_GRAPH = "http://junit/UtilityClientTest_IT/model";
-	private String DEFAULT_DATA_GRAPH = "http://junit/UtilityClientTest_IT/data";
+	static String DEFAULT_MODEL_GRAPH = "";
+	static String DEFAULT_DATA_GRAPH = "";
 
 	@BeforeClass
 	public static void setup() throws Exception {
@@ -45,10 +48,17 @@ public class UtilityClientTest_IT {
 		SERVICE_SERVER = IntegrationTestUtility.get("utilityservice.server");
 		SERVICE_PORT = IntegrationTestUtility.getInt("utilityservice.port");
 		client = new UtilityClient(new RestClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, "fake"));
+		DEFAULT_MODEL_GRAPH = TestGraph.getDataset() + "/model";
+		DEFAULT_DATA_GRAPH = TestGraph.getDataset() + "/data";
 	}
 
 	@Test
 	public void testLoadIngestionPackage() throws Exception {
+
+		SparqlEndpointInterface seiModel = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), DEFAULT_MODEL_GRAPH);
+		SparqlEndpointInterface seiData = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), DEFAULT_DATA_GRAPH);
+		seiModel.clearGraph();
+		seiData.clearGraph();
 
 		BufferedReader reader = client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), DEFAULT_MODEL_GRAPH, DEFAULT_DATA_GRAPH);
 		String response = Utility.readToString(reader);
@@ -66,6 +76,12 @@ public class UtilityClientTest_IT {
 		assert(response.matches("(.*)Load data (.*)TestData(.*)Resolutions-1(.*)import.yaml(.*)"));
 		assert(response.matches("(.*)Load data (.*)TestData(.*)Resolutions-1(.*)import.yaml(.*)"));
 		assert(response.contains("Load complete"));
+
+		assertEquals(seiModel.getNumTriples(), 1439);  	// TODO will change when load is fully implemented
+		assertEquals(seiData.getNumTriples(), 0);		// TODO will change when load is fully implemented
+
+		seiModel.dropGraph();
+		seiData.dropGraph();
 	}
 
 	// Test error conditions

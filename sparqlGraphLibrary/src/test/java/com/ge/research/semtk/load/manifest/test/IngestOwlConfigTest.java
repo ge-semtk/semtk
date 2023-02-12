@@ -26,6 +26,7 @@ import java.io.File;
 import org.junit.Test;
 
 import com.ge.research.semtk.load.manifest.IngestOwlConfig;
+import com.ge.research.semtk.test.TestGraph;
 
 public class IngestOwlConfigTest {
 
@@ -35,12 +36,15 @@ public class IngestOwlConfigTest {
 	@Test
 	public void testIngestOwlConfig() throws Exception{
 
+		// note this test does not actually perform load - but using something unique anyway
+		final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model";
+
 		IngestOwlConfig config;
 
 		// this config has owl files only (no model graph)
-		config = IngestOwlConfig.fromYaml(new File("src/test/resources/ingest_owl_config_1.yaml"), ManifestTest.FALLBACK_MODEL_GRAPH);
+		config = IngestOwlConfig.fromYaml(new File("src/test/resources/ingest_owl_config_1.yaml"), FALLBACK_MODEL_GRAPH);
 		assertTrue(config.getBaseDir().matches("src(.*)test(.*)resources"));
-		assertEquals(config.getFallbackModelGraph(),ManifestTest.FALLBACK_MODEL_GRAPH);
+		assertEquals(config.getFallbackModelGraph(), FALLBACK_MODEL_GRAPH);
 		assertEquals(config.getFiles().size(), 3);
 		assertEquals(config.getFiles().get(0),"woodchuck.owl");
 		assertEquals(config.getFiles().get(1),"hedgehog.owl");
@@ -48,18 +52,18 @@ public class IngestOwlConfigTest {
 		assertNull(config.getModelgraph());
 
 		// this config has model graph as array size 1
-		config = IngestOwlConfig.fromYaml(new File("src/test/resources/ingest_owl_config_2.yaml"), ManifestTest.FALLBACK_MODEL_GRAPH);
+		config = IngestOwlConfig.fromYaml(new File("src/test/resources/ingest_owl_config_2.yaml"), FALLBACK_MODEL_GRAPH);
 		assertEquals(config.getFiles().size(), 3);
 		assertEquals(config.getModelgraph(),"http://junit/animals/model");
 
 		// this config has model graph as string
-		config = IngestOwlConfig.fromYaml(new File("src/test/resources/ingest_owl_config_3.yaml"), ManifestTest.FALLBACK_MODEL_GRAPH);
+		config = IngestOwlConfig.fromYaml(new File("src/test/resources/ingest_owl_config_3.yaml"), FALLBACK_MODEL_GRAPH);
 		assertEquals(config.getFiles().size(), 3);
 		assertEquals(config.getModelgraph(),"http://junit/animals/model");
 
 		// this config has multiple model graphs.  Legacy schema supports this (likely unused), disallowing it here
 		try {
-			config = IngestOwlConfig.fromYaml(new File("src/test/resources/ingest_owl_config_4.yaml"), ManifestTest.FALLBACK_MODEL_GRAPH);
+			config = IngestOwlConfig.fromYaml(new File("src/test/resources/ingest_owl_config_4.yaml"), FALLBACK_MODEL_GRAPH);
 			fail();
 		}catch(Exception e) {
 			assertTrue(e.getMessage().contains("Not currently supporting multiple model graphs"));

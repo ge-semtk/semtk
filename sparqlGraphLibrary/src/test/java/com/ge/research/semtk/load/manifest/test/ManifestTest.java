@@ -33,85 +33,93 @@ import com.ge.research.semtk.test.TestGraph;
 
 public class ManifestTest {
 
-		public final static String FALLBACK_MODEL_GRAPH = "http://junit/ManifestTest/fallback/model";
-		public final static String FALLBACK_DATA_GRAPH = "http://junit/ManifestTest/fallback/data";
+	@Test
+	public void test() throws Exception{
 
-		@Test
-		public void test() throws Exception{
-			Manifest manifest = Manifest.fromYaml(new File("src/test/resources/manifest_animals.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
-			assertTrue(manifest.getBaseDir().matches("src(.*)test(.*)resources"));
-			assertEquals(manifest.getFallbackModelGraph(),ManifestTest.FALLBACK_MODEL_GRAPH);
-			assertEquals(manifest.getFallbackDataGraph(),ManifestTest.FALLBACK_DATA_GRAPH);
+		// note this test does not actually perform load - but using something unique anyway
+		final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model";
+		final String FALLBACK_DATA_GRAPH = TestGraph.getDataset() + "/data";
 
-			assertEquals(manifest.getName(), "Animals");
-			assertEquals(manifest.getDescription(), "Load information about animals");
-			assertTrue(manifest.getCopyToDefaultGraph());
-			assertTrue(manifest.getPerformEntityResolution());
+		Manifest manifest = Manifest.fromYaml(new File("src/test/resources/manifest_animals.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
+		assertTrue(manifest.getBaseDir().matches("src(.*)test(.*)resources"));
+		assertEquals(manifest.getFallbackModelGraph(), FALLBACK_MODEL_GRAPH);
+		assertEquals(manifest.getFallbackDataGraph(), FALLBACK_DATA_GRAPH);
 
-			// test footprint
-			assertEquals(manifest.getModelgraphsFootprint().size(), 1);
-			assertEquals(manifest.getModelgraphsFootprint().get(0), new URL("http://junit/animals/model"));
-			assertEquals(manifest.getDatagraphsFootprint().size(), 2);
-			assertEquals(manifest.getDatagraphsFootprint().get(0), new URL("http://junit/animals/data1"));
-			assertEquals(manifest.getDatagraphsFootprint().get(1), new URL("http://junit/animals/data2"));
-			assertEquals(manifest.getNodegroupsFootprint().size(), 1);
-			assertEquals(manifest.getNodegroupsFootprint().get(0), "animals/nodegroups");
+		assertEquals(manifest.getName(), "Animals");
+		assertEquals(manifest.getDescription(), "Load information about animals");
+		assertTrue(manifest.getCopyToDefaultGraph());
+		assertTrue(manifest.getPerformEntityResolution());
 
-			// test steps
-			LinkedList<Step> steps = manifest.getSteps();
-			assertEquals(steps.size(), 7);
-			assertEquals(steps.get(0).getType(), Manifest.StepType.MODEL );
-			assertEquals(steps.get(0).getValue(), "animals/import.yaml" );
-			assertEquals(steps.get(1).getType(), Manifest.StepType.MANIFEST );
-			assertEquals(steps.get(1).getValue(), "animals.yaml" );
-			assertEquals(steps.get(2).getType(), Manifest.StepType.NODEGROUPS );
-			assertEquals(steps.get(2).getValue(), "animals/nodegroups" );
-			assertEquals(steps.get(3).getType(), Manifest.StepType.DATA );
-			assertEquals(steps.get(3).getValue(), "animals/mammals/import.yaml" );
-			assertEquals(steps.get(6).getType(), Manifest.StepType.COPYGRAPH );
-			assertEquals(steps.get(6).getValue(), new Pair<URL, URL>(new URL("http://junit/animals/domestic"), new URL("http://junit/animals/wild")));
+		// test footprint
+		assertEquals(manifest.getModelgraphsFootprint().size(), 1);
+		assertEquals(manifest.getModelgraphsFootprint().get(0).toString(), "http://junit/animals/model");
+		assertEquals(manifest.getDatagraphsFootprint().size(), 2);
+		assertEquals(manifest.getDatagraphsFootprint().get(0).toString(), "http://junit/animals/data1");
+		assertEquals(manifest.getDatagraphsFootprint().get(1).toString(), "http://junit/animals/data2");
+		assertEquals(manifest.getNodegroupsFootprint().size(), 1);
+		assertEquals(manifest.getNodegroupsFootprint().get(0), "animals/nodegroups");
 
-			// test connections
-			final String SERVER = TestGraph.getSparqlServer();
-			final String SERVER_TYPE = TestGraph.getSparqlServerType();
-			// test regular connection
-			SparqlConnection conn = manifest.getConnection(SERVER, SERVER_TYPE);
-			assertEquals(conn.getName(), "Animals");
-			assertEquals(conn.getModelInterfaces().size(), 1);
-			assertEquals(conn.getModelInterface(0).getGraph(), "http://junit/animals/model");
-			assertEquals(conn.getModelInterface(0).getServerAndPort(), SERVER);
-			assertEquals(conn.getModelInterface(0).getServerType(), SERVER_TYPE);
-			assertEquals(conn.getDataInterfaces().size(), 2);
-			assertEquals(conn.getDataInterface(0).getGraph(), "http://junit/animals/data1");
-			assertEquals(conn.getDataInterface(0).getServerAndPort(), SERVER);
-			assertEquals(conn.getDataInterface(0).getServerType(), SERVER_TYPE);
-			assertEquals(conn.getDataInterface(1).getGraph(), "http://junit/animals/data2");
-			assertEquals(conn.getDataInterface(1).getServerAndPort(), SERVER);
-			assertEquals(conn.getDataInterface(1).getServerType(), SERVER_TYPE);
-			// test default connection
-			conn = manifest.getDefaultGraphConnection(SERVER, SERVER_TYPE);
-			assertEquals(conn.getName(), "Default Graph");
-			assertEquals(conn.getModelInterfaces().size(), 1);
-			assertTrue(conn.getModelInterface(0).isDefaultGraph());
-			assertEquals(conn.getModelInterface(0).getGraph(), "urn:x-arq:DefaultGraph");
-			assertEquals(conn.getModelInterface(0).getServerAndPort(), SERVER);
-			assertEquals(conn.getModelInterface(0).getServerType(), SERVER_TYPE);
-			assertEquals(conn.getDataInterfaces().size(), 1);
-			assertTrue(conn.getDataInterface(0).isDefaultGraph());
-			assertEquals(conn.getDataInterface(0).getGraph(), "urn:x-arq:DefaultGraph");
-			assertEquals(conn.getDataInterface(0).getServerAndPort(), SERVER);
-			assertEquals(conn.getDataInterface(0).getServerType(), SERVER_TYPE);
-		}
+		// test steps
+		LinkedList<Step> steps = manifest.getSteps();
+		assertEquals(steps.size(), 7);
+		assertEquals(steps.get(0).getType(), Manifest.StepType.MODEL );
+		assertEquals(steps.get(0).getValue(), "animals/import.yaml" );
+		assertEquals(steps.get(1).getType(), Manifest.StepType.MANIFEST );
+		assertEquals(steps.get(1).getValue(), "animals.yaml" );
+		assertEquals(steps.get(2).getType(), Manifest.StepType.NODEGROUPS );
+		assertEquals(steps.get(2).getValue(), "animals/nodegroups" );
+		assertEquals(steps.get(3).getType(), Manifest.StepType.DATA );
+		assertEquals(steps.get(3).getValue(), "animals/mammals/import.yaml" );
+		assertEquals(steps.get(6).getType(), Manifest.StepType.COPYGRAPH );
+		assertEquals(steps.get(6).getValue().toString(), "[http://junit/animals/domestic, http://junit/animals/wild]");
 
-		/**
-		 * Test that bare bones manifest does not error
-		 * Test signature with file parameter
-		 */
-		@Test
-		public void testMinimalManifest_andFromFile() throws Exception{
-			File file = new File("src/test/resources/manifest_animals_minimal.yaml");
-			Manifest manifest = Manifest.fromYaml(file, FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
-			assertEquals(manifest.getName(), "Animals");
-		}
+		// test connections
+		final String SERVER = TestGraph.getSparqlServer();
+		final String SERVER_TYPE = TestGraph.getSparqlServerType();
+		// test regular connection
+		SparqlConnection conn = manifest.getConnection(SERVER, SERVER_TYPE);
+		assertEquals(conn.getName(), "Animals");
+		assertEquals(conn.getModelInterfaces().size(), 1);
+		assertEquals(conn.getModelInterface(0).getGraph(), "http://junit/animals/model");
+		assertEquals(conn.getModelInterface(0).getServerAndPort(), SERVER);
+		assertEquals(conn.getModelInterface(0).getServerType(), SERVER_TYPE);
+		assertEquals(conn.getDataInterfaces().size(), 2);
+		assertEquals(conn.getDataInterface(0).getGraph(), "http://junit/animals/data1");
+		assertEquals(conn.getDataInterface(0).getServerAndPort(), SERVER);
+		assertEquals(conn.getDataInterface(0).getServerType(), SERVER_TYPE);
+		assertEquals(conn.getDataInterface(1).getGraph(), "http://junit/animals/data2");
+		assertEquals(conn.getDataInterface(1).getServerAndPort(), SERVER);
+		assertEquals(conn.getDataInterface(1).getServerType(), SERVER_TYPE);
+		System.out.println("4");
+		// test default connection
+		conn = manifest.getDefaultGraphConnection(SERVER, SERVER_TYPE);
+		assertEquals(conn.getName(), "Default Graph");
+		assertEquals(conn.getModelInterfaces().size(), 1);
+		assertTrue(conn.getModelInterface(0).isDefaultGraph());
+		assertEquals(conn.getModelInterface(0).getGraph(), "urn:x-arq:DefaultGraph");
+		assertEquals(conn.getModelInterface(0).getServerAndPort(), SERVER);
+		assertEquals(conn.getModelInterface(0).getServerType(), SERVER_TYPE);
+		assertEquals(conn.getDataInterfaces().size(), 1);
+		assertTrue(conn.getDataInterface(0).isDefaultGraph());
+		assertEquals(conn.getDataInterface(0).getGraph(), "urn:x-arq:DefaultGraph");
+		assertEquals(conn.getDataInterface(0).getServerAndPort(), SERVER);
+		assertEquals(conn.getDataInterface(0).getServerType(), SERVER_TYPE);
+	}
+
+	/**
+	 * Test that bare bones manifest does not error
+	 * Test signature with file parameter
+	 */
+	@Test
+	public void testMinimalManifest_andFromFile() throws Exception{
+
+		// note this test does not actually perform load - but using something unique anyway
+		final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model";
+		final String FALLBACK_DATA_GRAPH = TestGraph.getDataset() + "/data";
+
+		File file = new File("src/test/resources/manifest_animals_minimal.yaml");
+		Manifest manifest = Manifest.fromYaml(file, FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
+		assertEquals(manifest.getName(), "Animals");
+	}
 
 }
