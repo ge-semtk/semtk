@@ -32,7 +32,11 @@ import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 
 
-public class ManifestTest_IT {
+public class ManifestTest_IT extends YamlConfigTest {
+
+	public ManifestTest_IT() throws Exception {
+		super();
+	}
 
 	/**
 	 * Test loading a manifest via YAML
@@ -40,10 +44,8 @@ public class ManifestTest_IT {
 	@Test
 	public void testLoadManifest() throws Exception{
 
-		final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model/fallback";
-		final String FALLBACK_DATA_GRAPH = TestGraph.getDataset() + "/data/fallback";
-		SparqlEndpointInterface modelSeiFallback = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), FALLBACK_MODEL_GRAPH);
-		SparqlEndpointInterface dataSeiFallback = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), FALLBACK_DATA_GRAPH);
+		SparqlEndpointInterface modelSeiFallback = TestGraph.getSei(FALLBACK_MODEL_GRAPH);
+		SparqlEndpointInterface dataSeiFallback = TestGraph.getSei(FALLBACK_DATA_GRAPH);
 
 		File tempDir = null;
 		try {

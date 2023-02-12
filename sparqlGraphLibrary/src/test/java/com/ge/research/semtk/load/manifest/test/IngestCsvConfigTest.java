@@ -24,21 +24,21 @@ import java.io.File;
 
 import com.ge.research.semtk.load.manifest.IngestCsvConfig;
 import com.ge.research.semtk.load.manifest.IngestCsvConfig.ClassCsvIngestionStep;
-import com.ge.research.semtk.test.TestGraph;
 
 // TODO test variations, valid and invalid
 // TODO test model graph (when implemented)
 // TODO test extra data graphs (when implemented)
-public class IngestCsvConfigTest {
+public class IngestCsvConfigTest extends YamlConfigTest {
+
+	public IngestCsvConfigTest() throws Exception {
+		super();
+	}
 
 	/**
 	 * Test populating an IngestCsvConfigTest instance from a YAML file
 	 */
 	@Test
 	public void test() throws Exception{
-
-		final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model";  // this test does not contact triplestore - but using something unique anyway
-		final String FALLBACK_DATA_GRAPH = TestGraph.getDataset() + "/data";
 
 		IngestCsvConfig config;
 		

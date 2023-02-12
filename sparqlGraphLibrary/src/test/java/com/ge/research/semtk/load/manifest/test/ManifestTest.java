@@ -28,13 +28,14 @@ import com.ge.research.semtk.load.manifest.Manifest.Step;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.test.TestGraph;
 
-public class ManifestTest {
+public class ManifestTest extends YamlConfigTest {
+
+	public ManifestTest() throws Exception {
+		super();
+	}
 
 	@Test
 	public void test() throws Exception{
-
-		final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model"; // this test does not contact triplestore - but using something unique anyway
-		final String FALLBACK_DATA_GRAPH = TestGraph.getDataset() + "/data";
 
 		Manifest manifest = new Manifest(new File("src/test/resources/manifest/manifest_animals.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
 		assertTrue(manifest.getBaseDir().matches("src(.*)test(.*)resources(.*)manifest"));

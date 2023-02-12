@@ -17,18 +17,20 @@
 package com.ge.research.semtk.load.manifest.test;
 
 import static org.junit.Assert.assertEquals;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.PrintWriter;
-
-import org.junit.Test;
 
 import com.ge.research.semtk.load.manifest.IngestCsvConfig;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.TestGraph;
 
-public class IngestCsvConfigTest_IT {
+public class IngestCsvConfigTest_IT extends YamlConfigTest{
 
+	public IngestCsvConfigTest_IT() throws Exception {
+		super();
+	}
 
 	/**
 	 * Test loading data via YAML file
@@ -36,14 +38,10 @@ public class IngestCsvConfigTest_IT {
 	@Test
 	public void test() throws Exception{
 
-		final String MODEL_GRAPH = TestGraph.getDataset() + "/model";
-		final String DATA_GRAPH = TestGraph.getDataset() + "/data";
-		final String DATA_GRAPH_FALLBACK = TestGraph.getDataset() + "/data/fallback";
-
-		SparqlEndpointInterface dataSei = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), DATA_GRAPH);
-		SparqlEndpointInterface dataSeiFallback = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), DATA_GRAPH_FALLBACK);
+		SparqlEndpointInterface dataSei = TestGraph.getSei(DATA_GRAPH);
+		SparqlEndpointInterface dataSeiFallback = TestGraph.getSei(FALLBACK_DATA_GRAPH);
 		
-		IngestCsvConfig config = new IngestCsvConfig(new File("src/test/resources/manifest/IngestionPackage/TestData/Package-1/import.yaml"), null, DATA_GRAPH_FALLBACK);
+		IngestCsvConfig config = new IngestCsvConfig(new File("src/test/resources/manifest/IngestionPackage/TestData/Package-1/import.yaml"), null, FALLBACK_DATA_GRAPH);
 
 		// test that data gets loaded to the graph provided
 		dataSei.clearGraph();

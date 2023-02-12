@@ -24,6 +24,7 @@ import java.io.File;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.ge.research.semtk.load.manifest.test.YamlConfigTest;
 import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.services.client.UtilityClient;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -31,15 +32,16 @@ import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 
-public class UtilityClientTest_IT {
+public class UtilityClientTest_IT extends YamlConfigTest{
+
+	public UtilityClientTest_IT() throws Exception {
+		super();
+	}
 
 	private static String SERVICE_PROTOCOL;
 	private static String SERVICE_SERVER;
 	private static int SERVICE_PORT;
 	private static UtilityClient client = null;
-
-	static String DEFAULT_MODEL_GRAPH = "";
-	static String DEFAULT_DATA_GRAPH = "";
 
 	@BeforeClass
 	public static void setup() throws Exception {
@@ -48,19 +50,17 @@ public class UtilityClientTest_IT {
 		SERVICE_SERVER = IntegrationTestUtility.get("utilityservice.server");
 		SERVICE_PORT = IntegrationTestUtility.getInt("utilityservice.port");
 		client = new UtilityClient(new RestClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, "fake"));
-		DEFAULT_MODEL_GRAPH = TestGraph.getDataset() + "/model";
-		DEFAULT_DATA_GRAPH = TestGraph.getDataset() + "/data";
 	}
 
 	@Test
 	public void testLoadIngestionPackage() throws Exception {
 
-		SparqlEndpointInterface seiModel = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), DEFAULT_MODEL_GRAPH);
-		SparqlEndpointInterface seiData = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), DEFAULT_DATA_GRAPH);
+		SparqlEndpointInterface seiModel = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), FALLBACK_MODEL_GRAPH);
+		SparqlEndpointInterface seiData = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), FALLBACK_DATA_GRAPH);
 		seiModel.clearGraph();
 		seiData.clearGraph();
 
-		BufferedReader reader = client.execLoadIngestionPackage(new File("src/test/resources/manifest/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), DEFAULT_MODEL_GRAPH, DEFAULT_DATA_GRAPH);
+		BufferedReader reader = client.execLoadIngestionPackage(new File("src/test/resources/manifest/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
 		String response = Utility.readToString(reader);
 		// check the response stream
 		assert(response.contains("Loading 'Entity Resolution'..."));
@@ -96,11 +96,11 @@ public class UtilityClientTest_IT {
 		String response;
 
 		// not a zip file
-		response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/animalQuery.json"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), DEFAULT_MODEL_GRAPH, DEFAULT_DATA_GRAPH));
+		response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/animalQuery.json"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH));
 		assert(response.contains("Error: This endpoint only accepts ingestion packages in zip file format"));
 
 		// contains no top-level manifest.yaml
-		response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/manifest/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), DEFAULT_MODEL_GRAPH, DEFAULT_DATA_GRAPH));
+		response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/manifest/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH));
 		assert(response.contains("Error: Cannot find a top-level manifest in IngestionPackageNoManifest.zip"));
 	}
 

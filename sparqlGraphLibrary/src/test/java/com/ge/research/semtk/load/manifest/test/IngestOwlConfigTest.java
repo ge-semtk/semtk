@@ -16,6 +16,7 @@
  */
 package com.ge.research.semtk.load.manifest.test;
 
+import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -23,20 +24,19 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 
-import org.junit.Test;
-
 import com.ge.research.semtk.load.manifest.IngestOwlConfig;
-import com.ge.research.semtk.test.TestGraph;
 
-public class IngestOwlConfigTest {
+public class IngestOwlConfigTest extends YamlConfigTest {
+
+	public IngestOwlConfigTest() throws Exception {
+		super();
+	}
 
 	/**
 	 * Test populating an IngestOwlConfig instance from a YAML file
 	 */
 	@Test
 	public void test() throws Exception{
-
-		final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model";	// this test does not contact triplestore - but using something unique anyway
 
 		IngestOwlConfig config;
 

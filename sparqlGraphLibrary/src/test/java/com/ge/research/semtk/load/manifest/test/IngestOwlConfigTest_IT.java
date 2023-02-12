@@ -27,8 +27,11 @@ import com.ge.research.semtk.load.manifest.IngestOwlConfig;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.TestGraph;
 
-public class IngestOwlConfigTest_IT {
+public class IngestOwlConfigTest_IT extends YamlConfigTest {
 
+	public IngestOwlConfigTest_IT() throws Exception {
+		super();
+	}
 
 	/**
 	 * Test loading OWL via YAML file
@@ -36,13 +39,10 @@ public class IngestOwlConfigTest_IT {
 	@Test
 	public void test() throws Exception{
 
-		final String MODEL_GRAPH = TestGraph.getDataset() + "/model";
-		final String MODEL_GRAPH_FALLBACK = TestGraph.getDataset() + "/model/fallback";
+		SparqlEndpointInterface modelSei = TestGraph.getSei(MODEL_GRAPH);
+		SparqlEndpointInterface modelSeiFallback = TestGraph.getSei(FALLBACK_MODEL_GRAPH);
 
-		SparqlEndpointInterface modelSei = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), MODEL_GRAPH);
-		SparqlEndpointInterface modelSeiFallback = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), MODEL_GRAPH_FALLBACK);
-
-		IngestOwlConfig config = new IngestOwlConfig(new File("src/test/resources/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), MODEL_GRAPH_FALLBACK);
+		IngestOwlConfig config = new IngestOwlConfig(new File("src/test/resources/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), FALLBACK_MODEL_GRAPH);
 
 		// test that model gets loaded to the graph provided
 		modelSei.clearGraph();
