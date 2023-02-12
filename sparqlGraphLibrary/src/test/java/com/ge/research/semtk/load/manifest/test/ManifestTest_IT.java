@@ -55,7 +55,7 @@ public class ManifestTest_IT {
 
 			// get manifest
 			File manifestFile = Manifest.getTopLevelManifestFile(tempDir);
-			Manifest manifest = Manifest.fromYaml(manifestFile, FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);  // should only load to model, not data
+			Manifest manifest = new Manifest(manifestFile, FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);  // should only load to model, not data
 			assertEquals(manifest.getName(), "Entity Resolution");
 
 			modelSeiFallback.clearGraph();

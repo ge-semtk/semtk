@@ -36,7 +36,7 @@ public class ManifestTest {
 		final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model"; // this test does not contact triplestore - but using something unique anyway
 		final String FALLBACK_DATA_GRAPH = TestGraph.getDataset() + "/data";
 
-		Manifest manifest = Manifest.fromYaml(new File("src/test/resources/manifest/manifest_animals.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
+		Manifest manifest = new Manifest(new File("src/test/resources/manifest/manifest_animals.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
 		assertTrue(manifest.getBaseDir().matches("src(.*)test(.*)resources(.*)manifest"));
 		assertEquals(manifest.getFallbackModelGraph(), FALLBACK_MODEL_GRAPH);
 		assertEquals(manifest.getFallbackDataGraph(), FALLBACK_DATA_GRAPH);
@@ -114,7 +114,7 @@ public class ManifestTest {
 		final String FALLBACK_DATA_GRAPH = TestGraph.getDataset() + "/data";
 
 		File file = new File("src/test/resources/manifest/manifest_animals_minimal.yaml");
-		Manifest manifest = Manifest.fromYaml(file, FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
+		Manifest manifest = new Manifest(file, FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
 		assertEquals(manifest.getName(), "Animals");
 	}
 

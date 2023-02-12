@@ -38,11 +38,12 @@ public class IngestCsvConfigTest {
 	public void test() throws Exception{
 
 		final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model";  // this test does not contact triplestore - but using something unique anyway
+		final String FALLBACK_DATA_GRAPH = TestGraph.getDataset() + "/data";
 
 		IngestCsvConfig config;
 		
 		// this config has a datagraph + steps
-		config = IngestCsvConfig.fromYaml(new File("src/test/resources/manifest/ingest_csv_config_1.yaml"), FALLBACK_MODEL_GRAPH);
+		config = new IngestCsvConfig(new File("src/test/resources/manifest/ingest_csv_config_1.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
 		assertTrue(config.getBaseDir().matches("src(.*)test(.*)resources(.*)manifest"));
 		assertEquals(config.getFallbackModelGraph(), FALLBACK_MODEL_GRAPH);
 		assertEquals(config.getSteps().size(), 2);
@@ -53,7 +54,7 @@ public class IngestCsvConfigTest {
 		assertEquals(config.getDatagraph(), "http://junit/animals/data");
 		
 		// this config has steps only (no graphs)
-		config = IngestCsvConfig.fromYaml(new File("src/test/resources/manifest/ingest_csv_config_2.yaml"), FALLBACK_MODEL_GRAPH);
+		config = new IngestCsvConfig(new File("src/test/resources/manifest/ingest_csv_config_2.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
 		assertEquals(config.getDatagraph(), null);
 	}
 	

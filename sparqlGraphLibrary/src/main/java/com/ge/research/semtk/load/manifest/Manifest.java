@@ -32,11 +32,7 @@ import com.ge.research.semtk.utility.Utility;
  * Class representing a manifest for loading content into triplestore
  * Populated from a YAML file conforming to schema manifest_schema.json
  */
-public class Manifest {
-
-	private String baseDir;
-	private String fallbackModelGraph;
-	private String fallbackDataGraph;
+public class Manifest extends YamlConfig {
 
 	private String name;
 	private String description;
@@ -49,26 +45,77 @@ public class Manifest {
 
 	private static String DEFAULT_FILE_NAME = "manifest.yaml";	// the default manifest file name
 
-	/**
-	 * Constructor
-	 */
-	public Manifest(String name, String description) {
-		this.name = name;
-		this.description = description;
+	public Manifest(File yamlFile, String fallbackModelGraph, String fallbackDataGraph) throws Exception {
+		super(yamlFile, fallbackModelGraph, fallbackDataGraph);
+		String yamlStr = Utility.getStringFromFilePath(yamlFile.getAbsolutePath());
+
+		// validate manifest YAML against schema
+		String manifestSchema = Utility.getResourceAsString(Manifest.class, "manifest/manifest_schema.json");
+		Utility.validateYaml(yamlStr, manifestSchema);
+
+		// populate the manifest
+
+		JsonNode manifestJsonNode = Utility.getJsonNodeFromYaml(yamlStr);
+		String name = manifestJsonNode.get("name").asText();  // required
+		String description = manifestJsonNode.get("description") != null ? manifestJsonNode.get("description").asText() : null; // optional
+
+		setName(name);
+		setDescription(description);
+
+		// 3 optional boolean properties
+		if(manifestJsonNode.get("copy-to-default-graph") != null) { setCopyToDefaultGraph(manifestJsonNode.get("copy-to-default-graph").booleanValue()); }
+		if(manifestJsonNode.get("perform-entity-resolution") != null) { setPerformEntityResolution(manifestJsonNode.get("perform-entity-resolution").booleanValue()); }
+
+		// footprint
+		JsonNode footprintJsonNode = manifestJsonNode.get("footprint");
+		if(footprintJsonNode != null) {
+			JsonNode nodes;
+			nodes = footprintJsonNode.get("model-graphs");
+			if(nodes != null) {
+				for(JsonNode node : nodes){
+					addModelgraphFootprint(new URL(node.asText()));
+				}
+			}
+			nodes = footprintJsonNode.get("data-graphs");
+			if(nodes != null) {
+				for(JsonNode node : nodes){
+					addDatagraphFootprint(new URL(node.asText()));
+				}
+			}
+			nodes = footprintJsonNode.get("nodegroups");
+			if(nodes != null) {
+				for(JsonNode node : nodes){
+					addNodegroupFootprint(new String(node.asText()));
+				}
+			}
+		}
+
+		// steps
+		JsonNode stepsJsonNode = manifestJsonNode.get("steps");
+		if(stepsJsonNode != null) {
+			for(JsonNode stepNode : stepsJsonNode){
+				if(stepNode.has(StepType.MODEL.toString())) {
+					addStep(new Step(StepType.MODEL, stepNode.get(StepType.MODEL.toString()).asText()));
+				}else if(stepNode.has(StepType.DATA.toString())) {
+					addStep(new Step(StepType.DATA, stepNode.get(StepType.DATA.toString()).asText()));
+				}else if(stepNode.has(StepType.NODEGROUPS.toString())) {
+					addStep(new Step(StepType.NODEGROUPS, stepNode.get(StepType.NODEGROUPS.toString()).asText()));
+				}else if(stepNode.has(StepType.MANIFEST.toString())) {
+					addStep(new Step(StepType.MANIFEST, stepNode.get(StepType.MANIFEST.toString()).asText()));
+				}else if(stepNode.has(StepType.COPYGRAPH.toString())) {
+					String fromGraph = stepNode.get(StepType.COPYGRAPH.toString()).get("from-graph").asText();
+					String toGraph = stepNode.get(StepType.COPYGRAPH.toString()).get("to-graph").asText();
+					addStep(new Step(StepType.COPYGRAPH, new Pair<URL, URL>(new URL(fromGraph), new URL(toGraph))));
+				}else {
+					throw new Exception("Unsupported manifest step: " + stepNode);
+				}
+			}
+		}
 	}
 
 	/**
 	 * Get methods
 	 */
-	public String getBaseDir() {
-		return baseDir;
-	}
-	public String getFallbackModelGraph() {
-		return fallbackModelGraph;
-	}
-	public String getFallbackDataGraph() {
-		return fallbackDataGraph;
-	}
 	/* Returns the name specified in the manifest */
 	public String getName() {
 		return name;
@@ -102,14 +149,11 @@ public class Manifest {
 	/**
 	 * Set methods
 	 */
-	private void setBaseDir(String baseDir) {
-		this.baseDir = baseDir;
+	public void setName(String name) {
+		this.name = name;
 	}
-	public void setFallbackModelGraph(String fallbackModelGraph) {
-		this.fallbackModelGraph = fallbackModelGraph;
-	}
-	public void setFallbackDataGraph(String fallbackDataGraph) {
-		this.fallbackDataGraph = fallbackDataGraph;
+	public void setDescription(String description) {
+		this.description = description;
 	}
 	public void setCopyToDefaultGraph(boolean b) {
 		this.copyToDefaultGraph = b;
@@ -197,7 +241,7 @@ public class Manifest {
 			}else if(type == StepType.MODEL) {
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load model " + stepFile.getAbsolutePath());
-				IngestOwlConfig config = IngestOwlConfig.fromYaml(stepFile, this.fallbackModelGraph);  // read the config YAML file
+				IngestOwlConfig config = new IngestOwlConfig(stepFile, this.fallbackModelGraph);  // read the config YAML file
 				config.load(targetGraph, server, serverTypeString, progressWriter);
 
 			}else if(type == StepType.NODEGROUPS) {
@@ -208,7 +252,7 @@ public class Manifest {
 			}else if(type == StepType.MANIFEST) {
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load manifest " + stepFile.getAbsolutePath());
-				Manifest subManifest = Manifest.fromYaml(stepFile, fallbackModelGraph, fallbackDataGraph);
+				Manifest subManifest = new Manifest(stepFile, fallbackModelGraph, fallbackDataGraph);
 				subManifest.load(server, serverTypeString, clear, defaultGraph, false, progressWriter);
 
 			}else if(type == StepType.COPYGRAPH) {
@@ -247,85 +291,6 @@ public class Manifest {
 			throw new Exception(Manifest.DEFAULT_FILE_NAME + " does not exist in " + baseDir);
 		}
 		return manifestFile;
-	}
-
-	/**
-	 * Instantiate a manifest from YAML
-	 * @param yamlFile 				a YAML file
-	 * @param fallbackModelGraph 	use this model graph if not specified anywhere else
-	 * @param fallbackDataGraph 	use this data graph if not specified anywhere else
-	 * @return 						the manifest object
-	 * @throws Exception 			e.g. if fails validation
-	 */
-	public static Manifest fromYaml(File yamlFile, String fallbackModelGraph, String fallbackDataGraph) throws Exception{
-
-		String yamlStr = Utility.getStringFromFilePath(yamlFile.getAbsolutePath());
-
-		// validate manifest YAML against schema
-		String manifestSchema = Utility.getResourceAsString(Manifest.class, "manifest/manifest_schema.json");
-		Utility.validateYaml(yamlStr, manifestSchema);
-
-		// populate the manifest
-
-		JsonNode manifestJsonNode = Utility.getJsonNodeFromYaml(yamlStr);
-		String name = manifestJsonNode.get("name").asText();  // required
-		String description = manifestJsonNode.get("description") != null ? manifestJsonNode.get("description").asText() : null; // optional
-		Manifest manifest = new Manifest(name, description);
-		manifest.setBaseDir(yamlFile.getParent());
-		manifest.setFallbackModelGraph(fallbackModelGraph);
-		manifest.setFallbackDataGraph(fallbackDataGraph);
-
-		// 3 optional boolean properties
-		if(manifestJsonNode.get("copy-to-default-graph") != null) { manifest.setCopyToDefaultGraph(manifestJsonNode.get("copy-to-default-graph").booleanValue()); }
-		if(manifestJsonNode.get("perform-entity-resolution") != null) { manifest.setPerformEntityResolution(manifestJsonNode.get("perform-entity-resolution").booleanValue()); }
-
-		// footprint
-		JsonNode footprintJsonNode = manifestJsonNode.get("footprint");
-		if(footprintJsonNode != null) {
-			JsonNode nodes;
-			nodes = footprintJsonNode.get("model-graphs");
-			if(nodes != null) {
-				for(JsonNode node : nodes){
-					manifest.addModelgraphFootprint(new URL(node.asText()));
-				}
-			}
-			nodes = footprintJsonNode.get("data-graphs");
-			if(nodes != null) {
-				for(JsonNode node : nodes){
-					manifest.addDatagraphFootprint(new URL(node.asText()));
-				}
-			}
-			nodes = footprintJsonNode.get("nodegroups");
-			if(nodes != null) {
-				for(JsonNode node : nodes){
-					manifest.addNodegroupFootprint(new String(node.asText()));
-				}
-			}
-		}
-
-		// steps
-		JsonNode stepsJsonNode = manifestJsonNode.get("steps");
-		if(stepsJsonNode != null) {
-			for(JsonNode stepNode : stepsJsonNode){
-				if(stepNode.has(StepType.MODEL.toString())) {
-					manifest.addStep(new Step(StepType.MODEL, stepNode.get(StepType.MODEL.toString()).asText()));
-				}else if(stepNode.has(StepType.DATA.toString())) {
-					manifest.addStep(new Step(StepType.DATA, stepNode.get(StepType.DATA.toString()).asText()));
-				}else if(stepNode.has(StepType.NODEGROUPS.toString())) {
-					manifest.addStep(new Step(StepType.NODEGROUPS, stepNode.get(StepType.NODEGROUPS.toString()).asText()));
-				}else if(stepNode.has(StepType.MANIFEST.toString())) {
-					manifest.addStep(new Step(StepType.MANIFEST, stepNode.get(StepType.MANIFEST.toString()).asText()));
-				}else if(stepNode.has(StepType.COPYGRAPH.toString())) {
-					String fromGraph = stepNode.get(StepType.COPYGRAPH.toString()).get("from-graph").asText();
-					String toGraph = stepNode.get(StepType.COPYGRAPH.toString()).get("to-graph").asText();
-					manifest.addStep(new Step(StepType.COPYGRAPH, new Pair<URL, URL>(new URL(fromGraph), new URL(toGraph))));
-				}else {
-					throw new Exception("Unsupported manifest step: " + stepNode);
-				}
-			}
-		}
-
-		return manifest;
 	}
 
 
