@@ -24,6 +24,7 @@ import java.io.File;
 
 import com.ge.research.semtk.load.manifest.IngestCsvConfig;
 import com.ge.research.semtk.load.manifest.IngestCsvConfig.ClassCsvIngestionStep;
+import com.ge.research.semtk.utility.Utility;
 
 // TODO test variations, valid and invalid
 // TODO test extra data graphs (when implemented)
@@ -42,7 +43,7 @@ public class IngestCsvConfigTest extends YamlConfigTest {
 		IngestCsvConfig config;
 		
 		// this config has a datagraph + steps
-		config = new IngestCsvConfig(new File("src/test/resources/manifest/ingest_csv_config_1.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
+		config = new IngestCsvConfig(Utility.getResourceAsFile(this, "/manifest/ingest_csv_config_1.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
 		assertTrue(config.getBaseDir().matches("src(.*)test(.*)resources(.*)manifest"));
 		assertEquals(config.getFallbackModelGraph(), FALLBACK_MODEL_GRAPH);
 		assertEquals(config.getSteps().size(), 2);
@@ -55,7 +56,7 @@ public class IngestCsvConfigTest extends YamlConfigTest {
 		assertEquals(config.getDatagraphs().get(0), "http://junit/animals/data");
 		
 		// this config has steps only (no graphs)
-		config = new IngestCsvConfig(new File("src/test/resources/manifest/ingest_csv_config_2.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
+		config = new IngestCsvConfig(Utility.getResourceAsFile(this, "/manifest/ingest_csv_config_2.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
 		assertEquals(config.getDatagraphs(), null);
 	}
 	

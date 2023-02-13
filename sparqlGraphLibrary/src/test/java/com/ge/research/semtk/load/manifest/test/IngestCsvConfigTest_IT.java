@@ -27,6 +27,7 @@ import java.util.LinkedList;
 import com.ge.research.semtk.load.manifest.IngestCsvConfig;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.TestGraph;
+import com.ge.research.semtk.utility.Utility;
 
 public class IngestCsvConfigTest_IT extends YamlConfigTest{
 
@@ -43,7 +44,7 @@ public class IngestCsvConfigTest_IT extends YamlConfigTest{
 		SparqlEndpointInterface dataSei = TestGraph.getSei(DATA_GRAPH);
 		SparqlEndpointInterface dataSeiFallback = TestGraph.getSei(FALLBACK_DATA_GRAPH);
 		
-		IngestCsvConfig config = new IngestCsvConfig(new File("src/test/resources/manifest/IngestionPackage/TestData/Package-1/import.yaml"), null, FALLBACK_DATA_GRAPH);
+		IngestCsvConfig config = new IngestCsvConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/TestData/Package-1/import.yaml"), null, FALLBACK_DATA_GRAPH);
 
 		// test that data gets loaded to the graph provided
 		dataSei.clearGraph();

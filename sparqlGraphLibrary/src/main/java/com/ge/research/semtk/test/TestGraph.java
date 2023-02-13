@@ -671,7 +671,7 @@ public class TestGraph {
 	 * @return
 	 * @throws IOException
 	 */
-	public static File getTempYaml(Object caller, String resource) throws Exception, IOException {
+	public static File getJunitYaml(Object caller, String resource) throws Exception, IOException {
 		Path source = Path.of(caller.getClass().getResource(resource).toURI());
 		Path tempName = Path.of(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString());
 		Files.copy(source, tempName);
@@ -686,12 +686,25 @@ public class TestGraph {
 	 * @throws IOException
 	 * @throws Exception
 	 */
-	public static File unzipIngestionPackageToTemp(Object caller, String resource) throws IOException, Exception {
+	public static File unzipIngestionPackageToJunit(Object caller, String resource) throws IOException, Exception {
 		Path source = Path.of(caller.getClass().getResource(resource).toURI());
 		File tmpDir = Utility.createTempDirectory();
 		Utility.unzip(new ZipInputStream(new FileInputStream(source.toString())), tmpDir);
 		TestGraph.walkForYamlAndFixJunitGraphs(tmpDir.toPath());
 		return tmpDir;
+	}
+	
+	
+	/**
+	 * Copy a zip file to temp with junit-ized graphs in the yamls.
+	 * @param caller
+	 * @param resource
+	 * @return
+	 * @throws Exception
+	 */
+	public static File getJunitZip(Object caller, String resource) throws Exception {
+		File unzippedJunit = unzipIngestionPackageToJunit(caller, resource);
+		return Utility.zipFolderToTempFile(unzippedJunit.toPath()).toFile();
 	}
 	
 }

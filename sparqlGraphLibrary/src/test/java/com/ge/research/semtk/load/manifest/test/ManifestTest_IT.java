@@ -50,7 +50,7 @@ public class ManifestTest_IT extends YamlConfigTest {
 		File tempDir = null;
 		try {
 			
-			tempDir = TestGraph.unzipIngestionPackageToTemp(this, "/manifest/IngestionPackage.zip");
+			tempDir = TestGraph.unzipIngestionPackageToJunit(this, "/manifest/IngestionPackage.zip");
 
 			// get manifest
 			File manifestFile = Manifest.getTopLevelManifestFile(tempDir);
