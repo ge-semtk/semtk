@@ -49,11 +49,8 @@ public class ManifestTest_IT extends YamlConfigTest {
 
 		File tempDir = null;
 		try {
-			// unzip ingestion package
-			// TODO eventually use the unzipped folder when added to src/test/resources
-			ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream("src/test/resources/manifest/IngestionPackage.zip"));
-			tempDir = Utility.createTempDirectory();
-			Utility.unzip(zipInputStream, tempDir);
+			
+			tempDir = TestGraph.unzipIngestionPackageToTemp(this, "/manifest/IngestionPackage.zip");
 
 			// get manifest
 			File manifestFile = Manifest.getTopLevelManifestFile(tempDir);
