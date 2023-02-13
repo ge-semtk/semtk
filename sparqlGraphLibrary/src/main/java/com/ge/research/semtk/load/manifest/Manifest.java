@@ -19,11 +19,14 @@ package com.ge.research.semtk.load.manifest;
 import java.io.File;
 import java.io.PrintWriter;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.LinkedList;
 
 import org.apache.commons.math3.util.Pair;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.ge.research.semtk.load.dataset.CSVDataset;
+import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.Utility;
@@ -231,32 +234,50 @@ public class Manifest extends YamlConfig {
 		}
 
 		// if loading to default graph, then set targetGraph
-		String targetGraph = null;  // TODO this is a string array in Python, maybe will need to be here too
+		String targetGraph = null;  // TODO this is a string array in Python, maybe will need to be here too.  Inspect all uses to be sure correct
 		if(defaultGraph) {
 			targetGraph = SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME;
 		}
 
+		// execute each manifest step
 		for(Step step : getSteps()) {
 			StepType type = step.getType();
 
 			if(type == StepType.DATA) {
+				// load content using CSV ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load data " + stepFile.getAbsolutePath());
 				IngestCsvConfig config = new IngestCsvConfig(stepFile, this.fallbackModelGraph, this.fallbackDataGraph);
-				config.load(targetGraph, targetGraph, server, serverTypeString, clear, progressWriter); // TODO targetGraphs likely wrong here - fix
+				config.load(targetGraph, targetGraph, server, serverTypeString, clear, progressWriter);
 
 			}else if(type == StepType.MODEL) {
+				// load via an owl ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load model " + stepFile.getAbsolutePath());
-				IngestOwlConfig config = new IngestOwlConfig(stepFile, this.fallbackModelGraph);  // read the config YAML file
+				IngestOwlConfig config = new IngestOwlConfig(stepFile, this.fallbackModelGraph);
 				config.load(targetGraph, server, serverTypeString, progressWriter);
 
 			}else if(type == StepType.NODEGROUPS) {
-				File stepFile = new File(baseDir, (String)step.getValue());
-				progressWriter.println("Load nodegroups " + stepFile.getAbsolutePath());
-				// TODO implement
+				// load nodegroups/reports from a directory
+				File nodegroupsDirectory = new File(baseDir, (String)step.getValue());
+				progressWriter.println("Load nodegroups from " + nodegroupsDirectory.getAbsolutePath());
+				Dataset nodegroupCsv = new CSVDataset(new File(nodegroupsDirectory, "store_data.csv").getAbsolutePath(), false);
+				for(ArrayList<String> entry : nodegroupCsv.getNextRecords(nodegroupCsv.getNumRows())) {
+					String id = entry.get(nodegroupCsv.getColumnIndex("ID"));
+					String comments = entry.get(nodegroupCsv.getColumnIndex("comments"));
+					String creator = entry.get(nodegroupCsv.getColumnIndex("creator"));
+					String jsonFile = entry.get(nodegroupCsv.getColumnIndex("jsonFile"));
+					String itemType = entry.get(nodegroupCsv.getColumnIndex("itemType"));
+
+					// TODO call SemTK to delete item if found with same id/type (see Python logic)
+
+					progressWriter.println("Store " + itemType + " \"" + id + "\" from " + jsonFile);
+					// TODO call SemTK to store nodegroup/report item
+				}
+				nodegroupCsv.close();
 
 			}else if(type == StepType.MANIFEST) {
+				// load content using sub-manifest
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load manifest " + stepFile.getAbsolutePath());
 				Manifest subManifest = new Manifest(stepFile, fallbackModelGraph, fallbackDataGraph);
@@ -275,12 +296,12 @@ public class Manifest extends YamlConfig {
 		if(topLevel) {
 			if(this.getCopyToDefaultGraph()) {
 				if(clear) {
-					// TODO clear default graph
+					// TODO call SemTK to clear default graph
 				}
-				// TODO copy each model/data graph to default graph
+				// TODO call SemTK to copy each model/data graph to default graph
 			}
 			if(this.getPerformEntityResolution()) {
-				// TODO entity resolution
+				// TODO call SemTK to perform entity resolution
 			}
 		}
 	}

@@ -87,7 +87,7 @@ public class ManifestTest extends YamlConfigTest {
 		assertEquals(conn.getDataInterface(1).getGraph(), "http://junit/animals/data2");
 		assertEquals(conn.getDataInterface(1).getServerAndPort(), SERVER);
 		assertEquals(conn.getDataInterface(1).getServerType(), SERVER_TYPE);
-		System.out.println("4");
+
 		// test default connection
 		conn = manifest.getDefaultGraphConnection(SERVER, SERVER_TYPE);
 		assertEquals(conn.getName(), "Default Graph");

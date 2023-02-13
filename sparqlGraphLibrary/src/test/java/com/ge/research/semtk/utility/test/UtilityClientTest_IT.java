@@ -65,11 +65,16 @@ public class UtilityClientTest_IT extends YamlConfigTest{
 		// check the response stream
 		assert(response.contains("Loading 'Entity Resolution'..."));
 		assert(response.matches("(.*)Load manifest (.*)manifests(.*)rack.yaml(.*)"));
+
 		assert(response.contains("Loading 'RACK ontology'..."));
 		assert(response.matches("(.*)Load model (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)import.yaml(.*)"));
 		assert(response.matches("(.*)Load file (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)AGENTS.owl(.*)"));
 		assert(response.matches("(.*)Load file (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)ANALYSIS.owl(.*)"));
+
 		assert(response.matches("(.*)Load nodegroups (.*)manifests(.*)nodegroups(.*)queries(.*)"));
+		assert(response.matches("(.*)Store PrefabNodeGroup \"query Models for Thing\" from query Models for Thing.json(.*)"));
+		assert(response.matches("(.*)Store Report \"report data verification\" from report data verification.json(.*)"));
+
 		assert(response.matches("(.*)Load data (.*)TestData(.*)Package-1(.*)import.yaml(.*)"));
 		assert(response.matches("(.*)Load CSV (.*)PROV_S_ACTIVITY1.csv using class http://arcos.rack/PROV-S#ACTIVITY(.*)"));
 		assert(response.matches("(.*)Load CSV (.*)REQUIREMENTS_REQUIREMENT1.csv using class http://arcos.rack/REQUIREMENTS#REQUIREMENT(.*)"));
@@ -81,6 +86,7 @@ public class UtilityClientTest_IT extends YamlConfigTest{
 		assert(response.matches("(.*)Load data (.*)TestData(.*)Package-3(.*)import.yaml(.*)"));
 		assert(response.matches("(.*)Load data (.*)TestData(.*)Resolutions-1(.*)import.yaml(.*)"));
 		assert(response.matches("(.*)Load data (.*)TestData(.*)Resolutions-1(.*)import.yaml(.*)"));
+
 		assert(response.contains("Load complete"));
 
 		assertEquals(seiModel.getNumTriples(), 1439);  	// TODO will change when load is fully implemented
