@@ -34,7 +34,7 @@ import com.ge.research.semtk.utility.Utility;
 public class IngestOwlConfig extends YamlConfig {
 
 	public IngestOwlConfig(File yamlFile, String fallbackModelGraph) throws Exception {
-		super(yamlFile, Utility.getResourceAsFile(IngestOwlConfig.class, "manifest/ingest_owl_config_schema.json"), fallbackModelGraph, null);
+		super(yamlFile, Utility.getResourceAsFile(IngestOwlConfig.class, "/manifest/ingest_owl_config_schema.json"), fallbackModelGraph, null);
 
 		// add files
 		JsonNode filesNode = configNode.get("files");

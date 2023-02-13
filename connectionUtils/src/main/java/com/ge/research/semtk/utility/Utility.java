@@ -868,17 +868,19 @@ public abstract class Utility {
 		return getResourceAsFile(obj.getClass(), fileName);
 	}
 	public static File getResourceAsFile(Class c, String fileName) throws Exception {
-		File ret = null;
 		
-		// fat jars and other deployments seem to choke on returning a File
-		// so copy the data into a temp file
-		byte data[] = null;
-		data = getResourceAsBytes(c, fileName);
-		File tempFile = File.createTempFile("resource", "fileName");
-		tempFile.deleteOnExit();
-		FileUtils.writeByteArrayToFile(tempFile, data);
-		
-		return tempFile;
+		return new File(c.getResource(fileName).getFile());
+//		File ret = null;
+//		
+//		// fat jars and other deployments seem to choke on returning a File
+//		// so copy the data into a temp file
+//		byte data[] = null;
+//		data = getResourceAsBytes(c, fileName);
+//		File tempFile = File.createTempFile("resource", "fileName");
+//		tempFile.deleteOnExit();
+//		FileUtils.writeByteArrayToFile(tempFile, data);
+//		
+//		return tempFile;
 	}
 	
 	public static byte [] getResourceAsBytes(Object obj, String fileName) throws Exception {
