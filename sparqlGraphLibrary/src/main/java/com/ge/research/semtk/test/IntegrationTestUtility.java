@@ -228,6 +228,10 @@ public class IntegrationTestUtility{
 		return new DispatchRestClient(new DispatchClientConfig(get("protocol"), get("dispatchservice.server"), getInt("dispatchservice.port")));
 	}
 	
+	public static IngestorRestClient getIngestorRestClient() throws Exception{
+		return new IngestorRestClient(new IngestorClientConfig(get("protocol"), get("ingestionservice.server"), getInt("ingestionservice.port")));		
+	}
+	
 	/**
 	 * Get a NodeGroupExecutor using the integration test properties.
 	 */
