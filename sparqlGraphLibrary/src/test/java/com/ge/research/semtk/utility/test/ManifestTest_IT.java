@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.FileUtils;
@@ -42,7 +43,8 @@ public class ManifestTest_IT {
 	@Test
 	public void testIngestOwl() throws Exception{
 
-		IngestOwlConfig config = IngestOwlConfig.fromYaml(new File("src/test/resources/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"));
+		File yaml = TestGraph.getTempYaml(this, "/IngestionPackage/RACK-Ontology/OwlModels/import.yaml");
+		IngestOwlConfig config = IngestOwlConfig.fromYaml(yaml);
 		String[] modelGraphs;
 
 		// error if provide null model graphs (none are specified in YAML either)
@@ -78,10 +80,7 @@ public class ManifestTest_IT {
 
 		File tempDir = null;
 		try {
-			// unzip ingestion package
-			ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream("src/test/resources/IngestionPackage.zip"));
-			tempDir = Utility.createTempDirectory();
-			Utility.unzip(zipInputStream, tempDir);
+			tempDir = TestGraph.unzipIngestionPackageToTemp(this, "/IngestionPackage.zip");
 
 			// get manifest
 			File manifestFile = Manifest.getTopLevelManifestFile(tempDir);

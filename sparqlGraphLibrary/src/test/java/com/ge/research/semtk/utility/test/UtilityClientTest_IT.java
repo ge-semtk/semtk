@@ -46,7 +46,7 @@ public class UtilityClientTest_IT {
 	// TODO this will fail until we resolve what to do about the CLI's rack001 default graphs (import.yaml does not specify model graph)
 	@Test
 	public void testLoadIngestionPackage() throws Exception {
-		String response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackage.zip")));
+		String response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this, "/IngestionPackage.zip")));
 		// check the response stream
 		assert(response.contains("Loading 'Entity Resolution'..."));
 		assert(response.matches("(.*)Load manifest (.*)manifests(.*)rack.yaml(.*)"));
@@ -70,11 +70,11 @@ public class UtilityClientTest_IT {
 		String response;
 
 		// not a zip file
-		response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/animalQuery.json")));
+		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this, "src/test/resources/animalQuery.json")));
 		assert(response.contains("Error: This endpoint only accepts ingestion packages in zip file format"));
 
 		// contains no top-level manifest.yaml
-		response = Utility.readToString(client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackageNoManifest.zip")));
+		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this, "src/test/resources/IngestionPackageNoManifest.zip")));
 		assert(response.contains("Error: Cannot find a top-level manifest in IngestionPackageNoManifest.zip"));
 	}
 
