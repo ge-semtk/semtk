@@ -868,8 +868,11 @@ public abstract class Utility {
 		return getResourceAsFile(obj.getClass(), fileName);
 	}
 	public static File getResourceAsFile(Class c, String fileName) throws Exception {
-		
-		return new File(c.getResource(fileName).getFile());
+		try {
+			return new File(c.getResource(fileName).getFile());
+		} catch (Exception e) {
+			throw new Exception("Can't find resource " + fileName + " for class " + c.getName(), e);
+		}
 //		File ret = null;
 //		
 //		// fat jars and other deployments seem to choke on returning a File

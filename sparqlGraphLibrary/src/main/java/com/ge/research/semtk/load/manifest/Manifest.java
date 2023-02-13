@@ -49,7 +49,7 @@ public class Manifest extends YamlConfig {
 	private static String DEFAULT_FILE_NAME = "manifest.yaml";	// the default manifest file name
 
 	public Manifest(File yamlFile, String fallbackModelGraph, String fallbackDataGraph) throws Exception {
-		super(yamlFile, Utility.getResourceAsFile(Manifest.class, "manifest/manifest_schema.json"), fallbackModelGraph, fallbackDataGraph);
+		super(yamlFile, Utility.getResourceAsFile(Manifest.class, "/manifest/manifest_schema.json"), fallbackModelGraph, fallbackDataGraph);
 
 		// populate the manifest
 		String name = configNode.get("name").asText();  // required
