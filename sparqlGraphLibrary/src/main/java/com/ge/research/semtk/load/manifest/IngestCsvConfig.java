@@ -40,7 +40,7 @@ public class IngestCsvConfig extends YamlConfig {
 	 * Constructor
 	 */
 	public IngestCsvConfig(File yamlFile, String fallbackModelGraph, String fallbackDataGraph) throws Exception {
-		super(yamlFile, Utility.getResourceAsFile(IngestCsvConfig.class, "manifest/ingest_csv_config_schema.json"), fallbackModelGraph, fallbackDataGraph);
+		super(yamlFile, Utility.getResourceAsFile(IngestCsvConfig.class, "/manifest/ingest_csv_config_schema.json"), fallbackModelGraph, fallbackDataGraph);
 
 		// populate ingestion steps
 		JsonNode stepsNode = configNode.get("ingestion-steps");

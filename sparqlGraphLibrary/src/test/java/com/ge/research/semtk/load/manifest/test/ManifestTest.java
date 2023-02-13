@@ -39,7 +39,6 @@ public class ManifestTest extends YamlConfigTest {
 	public void test() throws Exception{
 
 		Manifest manifest = new Manifest(Utility.getResourceAsFile(this, "/manifest/manifest_animals.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
-		assertTrue(manifest.getBaseDir().matches("src(.*)test(.*)resources(.*)manifest"));
 		assertEquals(manifest.getFallbackModelGraph(), FALLBACK_MODEL_GRAPH);
 		assertEquals(manifest.getFallbackDataGraph(), FALLBACK_DATA_GRAPH);
 

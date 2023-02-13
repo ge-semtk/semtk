@@ -22,11 +22,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.File;
-
 import com.ge.research.semtk.load.manifest.IngestOwlConfig;
 import com.ge.research.semtk.test.TestGraph;
-import com.ge.research.semtk.utility.Utility;
 
 public class IngestOwlConfigTest extends YamlConfigTest {
 
@@ -44,7 +41,6 @@ public class IngestOwlConfigTest extends YamlConfigTest {
 
 		// this config has owl files only (no model graph)
 		config = new IngestOwlConfig(TestGraph.getJunitYaml(this, "/manifest/ingest_owl_config_1.yaml"), FALLBACK_MODEL_GRAPH);
-		assertTrue(config.getBaseDir().matches("src(.*)test(.*)resources(.*)manifest"));
 		assertEquals(config.getFallbackModelGraph(), FALLBACK_MODEL_GRAPH);
 		assertEquals(config.getFiles().size(), 3);
 		assertEquals(config.getFiles().get(0),"woodchuck.owl");

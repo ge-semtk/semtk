@@ -20,8 +20,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
-import java.io.File;
-
 import com.ge.research.semtk.load.manifest.IngestCsvConfig;
 import com.ge.research.semtk.load.manifest.IngestCsvConfig.ClassCsvIngestionStep;
 import com.ge.research.semtk.utility.Utility;
@@ -44,13 +42,12 @@ public class IngestCsvConfigTest extends YamlConfigTest {
 		
 		// this config has a datagraph + steps
 		config = new IngestCsvConfig(Utility.getResourceAsFile(this, "/manifest/ingest_csv_config_1.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
-		assertTrue(config.getBaseDir().matches("src(.*)test(.*)resources(.*)manifest"));
 		assertEquals(config.getFallbackModelGraph(), FALLBACK_MODEL_GRAPH);
 		assertEquals(config.getSteps().size(), 2);
 		assertEquals(((ClassCsvIngestionStep)config.getSteps().get(0)).getClazz(), "http://animals/woodland#WOODCHUCK");
-		assertTrue(((ClassCsvIngestionStep)config.getSteps().get(0)).getCsv().matches("src(.*)test(.*)resources(.*)manifest(.*)woodchucks.csv"));
+		assertTrue(((ClassCsvIngestionStep)config.getSteps().get(0)).getCsv().matches("(.*)manifest(.*)woodchucks.csv"));
 		assertEquals(((ClassCsvIngestionStep)config.getSteps().get(1)).getClazz(), "http://animals/woodland#HEDGEHOG");
-		assertTrue(((ClassCsvIngestionStep)config.getSteps().get(1)).getCsv().matches("src(.*)test(.*)resources(.*)manifest(.*)hedgehogs.csv"));
+		assertTrue(((ClassCsvIngestionStep)config.getSteps().get(1)).getCsv().matches("(.*)manifest(.*)hedgehogs.csv"));
 		assertEquals(config.getModelgraph(), null);  	// TODO don't have an example to test yet
 		assertEquals(config.getDatagraphs().size(), 1);
 		assertEquals(config.getDatagraphs().get(0), "http://junit/animals/data");

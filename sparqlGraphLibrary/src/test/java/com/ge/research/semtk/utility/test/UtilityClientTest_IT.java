@@ -19,7 +19,6 @@ package com.ge.research.semtk.utility.test;
 import static org.junit.Assert.assertEquals;
 
 import java.io.BufferedReader;
-import java.io.File;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -60,7 +59,7 @@ public class UtilityClientTest_IT extends YamlConfigTest{
 		seiModel.clearGraph();
 		seiData.clearGraph();
 
-		BufferedReader reader = client.execLoadIngestionPackage(TestGraph.getJunitZip(this, "manifest/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
+		BufferedReader reader = client.execLoadIngestionPackage(TestGraph.getJunitZip(this, "/manifest/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
 		String response = Utility.readToString(reader);
 		// check the response stream
 		assert(response.contains("Loading manifest 'Entity Resolution'..."));

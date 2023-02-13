@@ -19,7 +19,6 @@ package com.ge.research.semtk.load.manifest.test;
 import static org.junit.Assert.assertEquals;
 import org.junit.Test;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.LinkedList;
