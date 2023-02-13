@@ -3,6 +3,8 @@ package com.ge.research.semtk.load.manifest;
 import java.io.File;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.ge.research.semtk.utility.Utility;
 
 /**
@@ -55,6 +57,28 @@ public abstract class YamlConfig {
 	}
 	protected void setFallbackDataGraph(String fallbackDataGraph) {
 		this.fallbackDataGraph = fallbackDataGraph;
+	}
+
+	/**
+	 * Utility method for a node that may be a string or a string array.
+	 * Returns the string or the first array element, and errors if the array has multiple elements.
+	 */
+	protected static String getStringOrFirstArrayEntry(JsonNode node) throws Exception {
+		if(node == null) {
+			return null;
+		}else if(node.isTextual()) {
+			return node.asText();
+		}else if(node.isArray()){
+			ArrayNode array = (ArrayNode)node;
+			if(array.size() > 1) {
+				throw new Exception("Not currently supporting multiple entries for this node: " + node.toString());
+			}
+			if(array.get(0).getNodeType() != JsonNodeType.STRING) {
+				throw new Exception("Expected an array of strings for this node: " + node.toString());
+			}
+			return array.get(0).asText();
+		}
+		return null;
 	}
 
 }

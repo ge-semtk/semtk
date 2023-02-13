@@ -23,7 +23,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
@@ -44,19 +43,8 @@ public class IngestOwlConfig extends YamlConfig {
 				addFile(fileNode.asText());
 			}
 		}
-		// add model graph (may be either String or array size 1 to support pre-existing schema) // TODO de-duplicate
-		JsonNode modelGraphNode = configNode.get("model-graphs");
-		if(modelGraphNode != null) {
-			if(modelGraphNode.isTextual()) {
-				setModelgraph(modelGraphNode.asText());
-			}else if(modelGraphNode.isArray()){
-				ArrayNode array = (ArrayNode)modelGraphNode;
-				if(array.size() > 1) {
-					throw new Exception("Not currently supporting multiple model graphs");
-				}
-				setModelgraph(array.get(0).asText());
-			}
-		}
+		// add model graph (may be either String or array size 1 to support pre-existing schema)
+		setModelgraph(getStringOrFirstArrayEntry(configNode.get("model-graphs")));
 	}
 
 	private String modelgraph;   // schema supports multiple model graphs, but functionality not needed

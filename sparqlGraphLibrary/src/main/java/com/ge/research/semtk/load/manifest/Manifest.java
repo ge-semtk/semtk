@@ -244,7 +244,6 @@ public class Manifest extends YamlConfig {
 				progressWriter.println("Load data " + stepFile.getAbsolutePath());
 				IngestCsvConfig config = new IngestCsvConfig(stepFile, this.fallbackModelGraph, this.fallbackDataGraph);
 				config.load(targetGraph, targetGraph, server, serverTypeString, clear, progressWriter); // TODO targetGraphs likely wrong here - fix
-				// TODO so far just implemented one option (class+csv), need to cover them all
 
 			}else if(type == StepType.MODEL) {
 				File stepFile = new File(baseDir, (String)step.getValue());
@@ -255,7 +254,7 @@ public class Manifest extends YamlConfig {
 			}else if(type == StepType.NODEGROUPS) {
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load nodegroups " + stepFile.getAbsolutePath());
-				// TODO implement and test
+				// TODO implement
 
 			}else if(type == StepType.MANIFEST) {
 				File stepFile = new File(baseDir, (String)step.getValue());
@@ -264,8 +263,7 @@ public class Manifest extends YamlConfig {
 				subManifest.load(server, serverTypeString, clear, defaultGraph, false, progressWriter);
 
 			}else if(type == StepType.COPYGRAPH) {
-				progressWriter.println("Copy graph X to Y");
-				// TODO implement and test
+				throw new Exception("Manifest copy-graph step is not implemented");	// TODO implement
 
 			}else {
 				throw new Exception("Unrecognized manifest step: " + type);

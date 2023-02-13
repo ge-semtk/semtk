@@ -65,7 +65,7 @@ public class IngestOwlConfigTest extends YamlConfigTest {
 			config = new IngestOwlConfig(new File("src/test/resources/manifest/ingest_owl_config_4.yaml"), FALLBACK_MODEL_GRAPH);
 			fail();
 		}catch(Exception e) {
-			assertTrue(e.getMessage().contains("Not currently supporting multiple model graphs"));
+			assertTrue(e.getMessage().contains("Not currently supporting multiple entries for this node: [\"http://junit/animals/model\",\"http://junit/animals/model2\"]"));
 		}
 	}
 	

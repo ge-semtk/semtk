@@ -26,7 +26,6 @@ import com.ge.research.semtk.load.manifest.IngestCsvConfig;
 import com.ge.research.semtk.load.manifest.IngestCsvConfig.ClassCsvIngestionStep;
 
 // TODO test variations, valid and invalid
-// TODO test model graph (when implemented)
 // TODO test extra data graphs (when implemented)
 public class IngestCsvConfigTest extends YamlConfigTest {
 
@@ -51,6 +50,7 @@ public class IngestCsvConfigTest extends YamlConfigTest {
 		assertTrue(((ClassCsvIngestionStep)config.getSteps().get(0)).getCsv().matches("src(.*)test(.*)resources(.*)manifest(.*)woodchucks.csv"));
 		assertEquals(((ClassCsvIngestionStep)config.getSteps().get(1)).getClazz(), "http://animals/woodland#HEDGEHOG");
 		assertTrue(((ClassCsvIngestionStep)config.getSteps().get(1)).getCsv().matches("src(.*)test(.*)resources(.*)manifest(.*)hedgehogs.csv"));
+		assertEquals(config.getModelgraph(), null);  	// TODO don't have an example to test yet
 		assertEquals(config.getDatagraph(), "http://junit/animals/data");
 		
 		// this config has steps only (no graphs)
