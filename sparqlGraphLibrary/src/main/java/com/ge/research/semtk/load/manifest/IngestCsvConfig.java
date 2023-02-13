@@ -131,7 +131,6 @@ public class IngestCsvConfig extends YamlConfig {
 			for(IngestionStep step : this.getSteps()) {
 				if(step instanceof ClassCsvIngestionStep) {
 					((ClassCsvIngestionStep)step).run(conn, progressWriter);
-				// TODO add other step types
 				}else {
 					// should not get here
 					throw new Exception("Unexpected error");
