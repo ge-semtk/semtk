@@ -654,7 +654,7 @@ public class TestGraph {
             	String filename = file.toString();
 	            if (filename.endsWith("yaml") || filename.endsWith("YAML")) {
 	            	String content = new String(Files.readAllBytes(file), charset);
-	        		content = content.replaceAll("http://junit/", generateGraphName("auto") + "/");
+	            	content = junitizeGraphNames(content);
 	        		Files.write(file, content.getBytes(charset));
 	            }
                
@@ -663,6 +663,13 @@ public class TestGraph {
         });
        
         return;
+	}
+
+	/**
+	 * Add user and machine to all occurrences of "http://junit/"
+	 */
+	public static String junitizeGraphNames(String s) {
+		return s.replaceAll("http://junit/", generateGraphName("auto") + "/");
 	}
 	
 	/** 

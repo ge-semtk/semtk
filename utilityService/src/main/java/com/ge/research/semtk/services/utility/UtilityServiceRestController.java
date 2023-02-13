@@ -48,6 +48,7 @@ import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
+import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.load.manifest.Manifest;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
@@ -399,8 +400,7 @@ public class UtilityServiceRestController {
 				throw new Exception("Cannot find a top-level manifest in " + ingestionPackageZipFile.getOriginalFilename());
 			}
 			Manifest manifest = new Manifest(manifestFile, defaultModelGraph, defaultDataGraph);
-			IngestorRestClient ingestClient = null; // TODO ingest_props.getClient()
-			manifest.load(serverAndPort, serverType, false, false, true, ingestClient, responseWriter);   // TODO ngeClient
+			manifest.load(serverAndPort, serverType, false, false, true, getIngestorRestClient(), getNodegroupExecutionClient(), responseWriter);
 
 			responseWriter.println("Load complete");
 			responseWriter.flush();
@@ -462,5 +462,13 @@ public class UtilityServiceRestController {
 	private NodeGroupExecutionClient getNodegroupExecutionClient() throws Exception{
 		NodeGroupExecutionClientConfig necc = new NodeGroupExecutionClientConfig(props.getNodegroupExecutionServiceProtocol(), props.getNodegroupExecutionServiceServer(), props.getNodegroupExecutionServicePort());
 		return new NodeGroupExecutionClient(necc);
+	}
+
+	/**
+	 * Get a ingestion client.
+	 */
+	private IngestorRestClient getIngestorRestClient() throws Exception{
+		IngestorClientConfig icc = new IngestorClientConfig(props.getIngestionServiceProtocol(), props.getIngestionServiceServer(), props.getIngestionServicePort());
+		return new IngestorRestClient(icc);
 	}
 }

@@ -19,17 +19,15 @@ package com.ge.research.semtk.load.manifest.test;
 import static org.junit.Assert.assertEquals;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.PrintWriter;
-import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import com.ge.research.semtk.load.manifest.Manifest;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
-import com.ge.research.semtk.utility.Utility;
 
 
 public class ManifestTest_IT extends YamlConfigTest {
@@ -46,6 +44,7 @@ public class ManifestTest_IT extends YamlConfigTest {
 
 		SparqlEndpointInterface modelSeiFallback = TestGraph.getSei(FALLBACK_MODEL_GRAPH);
 		SparqlEndpointInterface dataSeiFallback = TestGraph.getSei(FALLBACK_DATA_GRAPH);
+		SparqlEndpointInterface dataSei =  TestGraph.getSei(TestGraph.junitizeGraphNames("http://junit/rack001/data"));  // e.g. http://junit/G7JZH4J3E/200005868/auto/rack001/data
 
 		File tempDir = null;
 		try {
@@ -59,13 +58,13 @@ public class ManifestTest_IT extends YamlConfigTest {
 
 			modelSeiFallback.clearGraph();
 			dataSeiFallback.clearGraph();
-			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, true, new PrintWriter(System.out));
-			assertEquals(modelSeiFallback.getNumTriples(), 1439);  	// TODO this will change when manifest.load is fully implemented
-			assertEquals(dataSeiFallback.getNumTriples(), 0);  		// TODO this will change when manifest.load is fully implemented
+			dataSei.clearGraph();
 
-			// clean up
-			modelSeiFallback.dropGraph();
-			dataSeiFallback.dropGraph();
+			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), new PrintWriter(System.out));
+
+			// TODO verify that these counts are correct
+			assertEquals(modelSeiFallback.getNumTriples(), 1439);
+			assertEquals(dataSei.getNumTriples(), 80);
 
 		}catch(Exception e) {
 			throw e;
@@ -73,6 +72,9 @@ public class ManifestTest_IT extends YamlConfigTest {
 			if(tempDir != null) {
 				FileUtils.deleteDirectory(tempDir);
 			}
+			modelSeiFallback.dropGraph();
+			dataSeiFallback.dropGraph();
+			dataSei.dropGraph();
 		}
 	}
 

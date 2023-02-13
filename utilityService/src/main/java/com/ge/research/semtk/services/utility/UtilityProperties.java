@@ -38,6 +38,10 @@ public class UtilityProperties extends Properties {
 	private int nodegroupExecutionServicePort;
 	private String nodegroupExecutionServiceProtocol;
 	
+	private String ingestionServiceServer;
+	private int ingestionServicePort;
+	private String ingestionServiceProtocol;
+
 	// this is old-fashioned.  Please don't add more properties here.
 	// Rest controller should instead @autowire new Utility*Properties classes that extend the correct subclass of Properties
 	// -Paul
@@ -61,6 +65,9 @@ public class UtilityProperties extends Properties {
 		this.checkNotEmpty("nodegroupExecutionServiceServer", nodegroupExecutionServiceServer);
 		this.checkNotEmpty("nodegroupExecutionServicePort", nodegroupExecutionServicePort);
 		this.checkNotEmpty("nodegroupExecutionServiceProtocol", nodegroupExecutionServiceProtocol);
+		this.checkNotEmpty("ingestionServiceServer", ingestionServiceServer);
+		this.checkNotEmpty("ingestionServicePort", ingestionServicePort);
+		this.checkNotEmpty("ingestionServiceProtocol", ingestionServiceProtocol);
 	}
 	
 	public String getSparqlServiceServer() {
@@ -129,4 +136,23 @@ public class UtilityProperties extends Properties {
 		this.nodegroupExecutionServiceProtocol = nodegroupExecutionServiceProtocol;
 	}
 	
+	public String getIngestionServiceServer() {
+		return ingestionServiceServer;
+	}
+	public void setIngestionServiceServer(String ingestionServiceServer) {
+		this.ingestionServiceServer = ingestionServiceServer;
+	}
+	public int getIngestionServicePort() {
+		return ingestionServicePort;
+	}
+	public void setIngestionServicePort(int ingestionServicePort) {
+		this.ingestionServicePort = ingestionServicePort;
+	}
+	public String getIngestionServiceProtocol() {
+		return ingestionServiceProtocol;
+	}
+	public void setIngestionServiceProtocol(String ingestionServiceProtocol) {
+		this.ingestionServiceProtocol = ingestionServiceProtocol;
+	}
+
 }

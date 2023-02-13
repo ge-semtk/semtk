@@ -25,6 +25,7 @@ import java.util.LinkedList;
 import org.apache.commons.math3.util.Pair;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
@@ -213,7 +214,7 @@ public class Manifest extends YamlConfig {
 	 * @param ingestClient		ingestionRestClient
 	 * @param progressWriter 	writer for reporting progress
 	 */
-	public void load(String server, String serverTypeString, boolean clear, boolean defaultGraph, boolean topLevel, IngestorRestClient ingestClient, PrintWriter progressWriter) throws Exception {
+	public void load(String server, String serverTypeString, boolean clear, boolean defaultGraph, boolean topLevel, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
 
 		progressWriter.println("Loading manifest '" + getName() + "'...");
 
@@ -258,7 +259,7 @@ public class Manifest extends YamlConfig {
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load data " + stepFile.getAbsolutePath());
 				IngestCsvConfig config = new IngestCsvConfig(stepFile, this.fallbackModelGraph, this.fallbackDataGraph);
-				config.load(targetGraph, (targetGraph == null ? null : new LinkedList<String>(Arrays.asList(targetGraph))), server, serverTypeString, clear, ingestClient, progressWriter);
+				config.load(targetGraph, (targetGraph == null ? null : new LinkedList<String>(Arrays.asList(targetGraph))), server, serverTypeString, clear, ingestClient, ngeClient, progressWriter);
 
 			}else if(type == StepType.NODEGROUPS) {
 				// load nodegroups/reports from a directory
@@ -284,7 +285,7 @@ public class Manifest extends YamlConfig {
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load manifest " + stepFile.getAbsolutePath());
 				Manifest subManifest = new Manifest(stepFile, fallbackModelGraph, fallbackDataGraph);
-				subManifest.load(server, serverTypeString, clear, defaultGraph, false, ingestClient, progressWriter);
+				subManifest.load(server, serverTypeString, clear, defaultGraph, false, ingestClient, ngeClient, progressWriter);
 
 			}else if(type == StepType.COPYGRAPH) {
 				throw new Exception("Manifest copy-graph step is not implemented");	// TODO implement

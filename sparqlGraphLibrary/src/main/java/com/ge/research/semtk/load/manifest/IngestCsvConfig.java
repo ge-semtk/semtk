@@ -17,11 +17,9 @@
 package com.ge.research.semtk.load.manifest;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 
@@ -115,7 +113,7 @@ public class IngestCsvConfig extends YamlConfig {
 	 * @param ingestClient	    Ingestor rest client
 	 * @param progressWriter 	writer for reporting progress
 	 */
-	public void load(String modelGraph, LinkedList<String> dataGraphs, String server, String serverType, boolean clear, IngestorRestClient ingestClient, PrintWriter progressWriter) throws Exception {
+	public void load(String modelGraph, LinkedList<String> dataGraphs, String server, String serverType, boolean clear, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
 		try {
 
 			// determine which model/data graphs to use
@@ -140,7 +138,7 @@ public class IngestCsvConfig extends YamlConfig {
 			// execute each step
 			for(IngestionStep step : this.getSteps()) {
 				if(step instanceof ClassCsvIngestionStep) {
-					((ClassCsvIngestionStep)step).run(conn, ingestClient, progressWriter);
+					((ClassCsvIngestionStep)step).run(conn, ingestClient, ngeClient, progressWriter);
 				}else {
 					// should not get here
 					throw new Exception("Unexpected error");
@@ -174,25 +172,17 @@ public class IngestCsvConfig extends YamlConfig {
 		public String getCsv() {
 			return csv;
 		}
-		public void run(SparqlConnection conn, IngestorRestClient ingestClient, PrintWriter progressWriter) throws Exception {
+		public void run(SparqlConnection conn, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
 			progressWriter.println("Load CSV " + csv + " using class " + clazz);
 			progressWriter.flush();
 			String jobId = ingestClient.execFromCsvUsingClassTemplate(clazz, null, Files.readString(Path.of(csv)), conn, false, null);
-			ArrayList<String> warnings = ingestClient.getWarnings();
-			// TODO do something with warnings, such as progressWriter
-			NodeGroupExecutionClient ngeClient = null;
-			// TODO make this an actual client
-			ngeClient.waitForCompletion(jobId);
-			if (ngeClient.getJobSuccess(jobId)) {
-				String msg = ngeClient.getJobStatusMessage(jobId);
-				// TODO do something with message
-			} else {
-				String msg = ngeClient.getResultsTable(jobId).toCSVString();
-				// TODO do something with message
+			for (String warning : ingestClient.getWarnings()) {
+				progressWriter.println("Warning: " + warning);
 			}
-			ngeClient.waitForIngestionJob(jobId);   // throws error with table in it if there's an error.  Otherwise silent wait.
-			
-			
+			ngeClient.waitForCompletion(jobId);
+			if (!ngeClient.getJobSuccess(jobId)) {
+				progressWriter.println("Failed loading CSV by class:\n" + ngeClient.getResultsTable(jobId).toCSVString());
+			}
 		}
 	}
 
