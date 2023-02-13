@@ -18,6 +18,7 @@ package com.ge.research.semtk.load.manifest;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -32,8 +33,8 @@ import com.ge.research.semtk.utility.Utility;
 public class IngestCsvConfig extends YamlConfig {
 
 	private LinkedList<IngestionStep> steps = new LinkedList<IngestionStep>();
-	private String modelgraph;   	// schema supports multiple model graphs, but functionality not needed
-	private String datagraph;		// optional
+	private String modelgraph;   			// schema supports multiple model graphs, but functionality not needed
+	private LinkedList<String> datagraphs;
 
 	/**
 	 * Constructor
@@ -59,11 +60,12 @@ public class IngestCsvConfig extends YamlConfig {
 
 		// add data graph
 		if(configNode.has("data-graph")){
-			setDatagraph(configNode.get("data-graph").asText());
+			addDatagraph(configNode.get("data-graph").asText());
 		}
-		// TODO change "datagraph" to "datagraphs" and add the extra ones (need an example to test)
-		if(configNode.has("extra-data-graphs")){
-			throw new Exception("extra-data-graphs is not supported yet");
+		if(configNode.has("extra-data-graphs")){  // TODO needs junit
+			for(JsonNode n : configNode.get("extra-data-graphs")) {
+				addDatagraph(n.asText());
+			}
 		}
 	}
 
@@ -76,8 +78,8 @@ public class IngestCsvConfig extends YamlConfig {
 	public String getModelgraph() {
 		return modelgraph;
 	}
-	public String getDatagraph() {
-		return datagraph;
+	public LinkedList<String> getDatagraphs() {
+		return datagraphs;
 	}
 	/**
 	 * Set methods
@@ -88,46 +90,41 @@ public class IngestCsvConfig extends YamlConfig {
 	public void setModelgraph(String modelgraph) {
 		this.modelgraph = modelgraph;
 	}
-	public void setDatagraph(String datagraph) {
-		this.datagraph = datagraph;
+	public void addDatagraph(String datagraph) {
+		if(datagraphs == null) {
+			datagraphs = new LinkedList<String>();
+		}
+		datagraphs.add(datagraph);
 	}
 
 	
 	/**
 	 * Ingest data
-	 * @param modelGraph		a model graph (optional) // TODO may need multiple
-	 * @param dataGraph			a data graph (optional)  // TODO may need multiple
+	 * @param modelGraph		a model graph (optional)
+	 * @param dataGraphs		a data graph (optional)
 	 * @param server 			triple store location
 	 * @param serverTypeString 	triple store type
 	 * @param clear				if true, clears before loading
 	 * @param progressWriter 	writer for reporting progress
 	 */
-	public void load(String modelGraph, String dataGraph, String server, String serverType, boolean clear, PrintWriter progressWriter) throws Exception {
+	public void load(String modelGraph, LinkedList<String> dataGraphs, String server, String serverType, boolean clear, PrintWriter progressWriter) throws Exception {
 		try {
 
-			// get connection
-			// TODO can this logic be shared?
+			// determine which model/data graphs to use
+			// use if provided as method parameter, else use from config YAML, else use fallback
+			modelGraph = (modelGraph != null) ? modelGraph : (this.getModelgraph() != null ? this.getModelgraph() : this.fallbackModelGraph );
+			dataGraphs = (dataGraphs != null) ? dataGraphs : (this.getDatagraphs() != null ? this.getDatagraphs() : new LinkedList<String>(Arrays.asList(this.fallbackDataGraph)) );
+
+			// create a connection
 			SparqlConnection conn = new SparqlConnection();
-			if(modelGraph == null) {						// if provided as method parameter, use that
-				if(this.getModelgraph() != null) {
-					modelGraph = this.getModelgraph();		// else use from config YAML
-				}else{
-					modelGraph = this.fallbackModelGraph;	// else use fallback
-				}
-			}
-			if(dataGraph == null) {							// if provided as method parameter, use that
-				if(this.getDatagraph() != null) {
-					dataGraph = this.getDatagraph();		// else use from config
-				}else{
-					dataGraph = this.fallbackDataGraph;		// else use fallback
-				}
-			}
 			conn.addModelInterface(serverType, server, modelGraph);
-			conn.addDataInterface(serverType, server, dataGraph);
+			for(String dg : dataGraphs) {
+				conn.addDataInterface(serverType, server, dg);
+			}
 
 			// clear if appropriate
 			if(clear) {
-				// TODO call SemTK to clear all model/data graphs in the connection
+				// TODO call SemTK to clear modelGraph, dataGraphs
 			}
 
 			// execute each step

@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 import org.apache.commons.math3.util.Pair;
@@ -212,7 +213,8 @@ public class Manifest extends YamlConfig {
 	 * @param progressWriter 	writer for reporting progress
 	 */
 	public void load(String server, String serverTypeString, boolean clear, boolean defaultGraph, boolean topLevel, PrintWriter progressWriter) throws Exception {
-		progressWriter.println("Loading '" + getName() + "'...");
+
+		progressWriter.println("Loading manifest '" + getName() + "'...");
 
 		// clear graphs first, if wanted
 		if(clear) {
@@ -234,28 +236,28 @@ public class Manifest extends YamlConfig {
 		}
 
 		// if loading to default graph, then set targetGraph
-		String targetGraph = null;  // TODO this is a string array in Python, maybe will need to be here too.  Inspect all uses to be sure correct
+		String targetGraph = null;
 		if(defaultGraph) {
-			targetGraph = SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME;
+			targetGraph = SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME;	// TODO add junit to test default graph
 		}
 
 		// execute each manifest step
 		for(Step step : getSteps()) {
 			StepType type = step.getType();
 
-			if(type == StepType.DATA) {
-				// load content using CSV ingestion YAML
-				File stepFile = new File(baseDir, (String)step.getValue());
-				progressWriter.println("Load data " + stepFile.getAbsolutePath());
-				IngestCsvConfig config = new IngestCsvConfig(stepFile, this.fallbackModelGraph, this.fallbackDataGraph);
-				config.load(targetGraph, targetGraph, server, serverTypeString, clear, progressWriter);
-
-			}else if(type == StepType.MODEL) {
+			if(type == StepType.MODEL) {
 				// load via an owl ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load model " + stepFile.getAbsolutePath());
 				IngestOwlConfig config = new IngestOwlConfig(stepFile, this.fallbackModelGraph);
 				config.load(targetGraph, server, serverTypeString, progressWriter);
+
+			}else if(type == StepType.DATA) {
+				// load content using CSV ingestion YAML
+				File stepFile = new File(baseDir, (String)step.getValue());
+				progressWriter.println("Load data " + stepFile.getAbsolutePath());
+				IngestCsvConfig config = new IngestCsvConfig(stepFile, this.fallbackModelGraph, this.fallbackDataGraph);
+				config.load(targetGraph, new LinkedList<String>(Arrays.asList(targetGraph)), server, serverTypeString, clear, progressWriter);
 
 			}else if(type == StepType.NODEGROUPS) {
 				// load nodegroups/reports from a directory

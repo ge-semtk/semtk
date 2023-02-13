@@ -51,11 +51,12 @@ public class IngestCsvConfigTest extends YamlConfigTest {
 		assertEquals(((ClassCsvIngestionStep)config.getSteps().get(1)).getClazz(), "http://animals/woodland#HEDGEHOG");
 		assertTrue(((ClassCsvIngestionStep)config.getSteps().get(1)).getCsv().matches("src(.*)test(.*)resources(.*)manifest(.*)hedgehogs.csv"));
 		assertEquals(config.getModelgraph(), null);  	// TODO don't have an example to test yet
-		assertEquals(config.getDatagraph(), "http://junit/animals/data");
+		assertEquals(config.getDatagraphs().size(), 1);
+		assertEquals(config.getDatagraphs().get(0), "http://junit/animals/data");
 		
 		// this config has steps only (no graphs)
 		config = new IngestCsvConfig(new File("src/test/resources/manifest/ingest_csv_config_2.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
-		assertEquals(config.getDatagraph(), null);
+		assertEquals(config.getDatagraphs(), null);
 	}
 	
 }

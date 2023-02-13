@@ -80,13 +80,7 @@ public class IngestOwlConfig extends YamlConfig {
 	public void load(String modelGraph, String server, String serverType, PrintWriter progressWriter) throws Exception {
 		try {
 			// use modelGraph from method parameter if present.  Else use from config YAML if present.  Else use fallback.
-			if(modelGraph == null) {
-				if(this.getModelgraph() != null) {
-					modelGraph = this.getModelgraph();		// use from config
-				}else{
-					modelGraph = this.fallbackModelGraph;	// use the fallback
-				}
-			}
+			modelGraph = (modelGraph != null) ? modelGraph : (this.getModelgraph() != null ? this.getModelgraph() : this.fallbackModelGraph );
 
 			// upload each OWL file to model graph
 			for(String fileStr : this.getFiles()) {

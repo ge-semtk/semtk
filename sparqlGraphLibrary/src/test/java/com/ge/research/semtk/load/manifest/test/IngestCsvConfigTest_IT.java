@@ -21,6 +21,8 @@ import org.junit.Test;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.util.Arrays;
+import java.util.LinkedList;
 
 import com.ge.research.semtk.load.manifest.IngestCsvConfig;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -47,7 +49,7 @@ public class IngestCsvConfigTest_IT extends YamlConfigTest{
 		dataSei.clearGraph();
 		dataSeiFallback.clearGraph();
 
-		config.load(MODEL_GRAPH, DATA_GRAPH, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, new PrintWriter(System.out));
+		config.load(MODEL_GRAPH, new LinkedList<String>(Arrays.asList(DATA_GRAPH)), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, new PrintWriter(System.out));
 		assertEquals(dataSei.getNumTriples(), 9999999);  // TODO add real number when load is implemented
 		assertEquals(dataSeiFallback.getNumTriples(), 0);
 

@@ -63,10 +63,10 @@ public class UtilityClientTest_IT extends YamlConfigTest{
 		BufferedReader reader = client.execLoadIngestionPackage(new File("src/test/resources/manifest/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
 		String response = Utility.readToString(reader);
 		// check the response stream
-		assert(response.contains("Loading 'Entity Resolution'..."));
+		assert(response.contains("Loading manifest 'Entity Resolution'..."));
 		assert(response.matches("(.*)Load manifest (.*)manifests(.*)rack.yaml(.*)"));
 
-		assert(response.contains("Loading 'RACK ontology'..."));
+		assert(response.contains("Loading manifest 'RACK ontology'..."));
 		assert(response.matches("(.*)Load model (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)import.yaml(.*)"));
 		assert(response.matches("(.*)Load file (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)AGENTS.owl(.*)"));
 		assert(response.matches("(.*)Load file (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)ANALYSIS.owl(.*)"));
