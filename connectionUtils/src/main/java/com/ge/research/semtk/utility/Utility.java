@@ -38,8 +38,12 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -64,6 +68,7 @@ import java.util.zip.GZIPOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.parsers.DocumentBuilder;
@@ -1028,6 +1033,10 @@ public abstract class Utility {
 	public static File createTempDirectory() throws IOException {
 		return Files.createTempDirectory("semtk.", new FileAttribute<?>[] { }).toFile();
 	}
+	
+	public static File createTempFile(String suffix) throws IOException {
+		return Files.createTempFile("semtk.", suffix).toFile();
+	}
 
 	/**
 	 * Get a JsonNode from a YAML string
@@ -1066,4 +1075,68 @@ public abstract class Utility {
 			throw new Exception("Failed schema validation: " + exceptionString);
 		}
 	}
+	
+	/**
+	 * Create a temp folder and copy source recursively into it
+	 * @param source
+	 * @return
+	 * @throws IOException
+	 */
+	public static File copyToTempFolder(Path source) throws IOException {
+		File tmpDir = Utility.createTempDirectory();
+		copyFolder(source, tmpDir.toPath());
+		return tmpDir;
+	}
+	
+	
+	public static Path unzipToTempFolder(Path zipPath) throws Exception {
+		File tempDir = Utility.createTempDirectory();
+		ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipPath.toString()));
+		
+		Utility.unzip(zipInputStream, tempDir);
+		return tempDir.toPath();
+	}
+	
+	public static Path zipFolderToTempFile(Path source) throws IOException {
+		File zipFile = Utility.createTempFile(".zip");
+        
+        final ZipOutputStream outputStream = new ZipOutputStream(new FileOutputStream(zipFile));
+        Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) throws IOException {
+               
+                Path targetFile = source.relativize(file);
+                outputStream.putNextEntry(new ZipEntry(targetFile.toString()));
+                byte[] bytes = Files.readAllBytes(file);
+                outputStream.write(bytes, 0, bytes.length);
+                outputStream.closeEntry();
+               
+                return FileVisitResult.CONTINUE;
+            }
+        });
+        outputStream.close();
+	    
+        return zipFile.toPath();
+	}
+
+	
+	private static void copyFolder(Path source, Path target) throws IOException {
+        Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
+
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+                    throws IOException {
+                Files.createDirectories(target.resolve(source.relativize(dir).toString()));
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                    throws IOException {
+                Files.copy(file, target.resolve(source.relativize(file).toString()));
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+	
 }

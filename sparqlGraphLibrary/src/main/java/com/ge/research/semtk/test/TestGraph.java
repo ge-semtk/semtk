@@ -20,13 +20,25 @@ package com.ge.research.semtk.test;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.UUID;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -628,4 +640,58 @@ public class TestGraph {
 	}
 	
 
+	/**
+	 * Walk a directory structure and search yaml files for "http://junit/" and add user and machine
+	 * @param source
+	 * @throws IOException
+	 */
+	private static void walkForYamlAndFixJunitGraphs(Path source) throws IOException {
+		Charset charset = StandardCharsets.UTF_8;
+        
+        Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) throws IOException {
+            	String filename = file.toString();
+	            if (filename.endsWith("yaml") || filename.endsWith("YAML")) {
+	            	String content = new String(Files.readAllBytes(file), charset);
+	        		content = content.replaceAll("http://junit/", generateGraphName("auto") + "/");
+	        		Files.write(file, content.getBytes(charset));
+	            }
+               
+                return FileVisitResult.CONTINUE;
+            }
+        });
+       
+        return;
+	}
+	
+	/** 
+	 * Copy a yaml and fix http://junit/
+	 * @param source
+	 * @return
+	 * @throws IOException
+	 */
+	public static File getTempYaml(Object caller, String resource) throws Exception, IOException {
+		Path source = Path.of(caller.getClass().getResource(resource).toURI());
+		Path tempName = Path.of(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString());
+		Files.copy(source, tempName);
+		walkForYamlAndFixJunitGraphs(tempName);
+		return tempName.toFile();
+	}
+	/**
+	 * Unzip an ingestion package and fix all of *.yaml   http://junit/
+	 * 
+	 * @param source
+	 * @return
+	 * @throws IOException
+	 * @throws Exception
+	 */
+	public static File unzipIngestionPackageToTemp(Object caller, String resource) throws IOException, Exception {
+		Path source = Path.of(caller.getClass().getResource(resource).toURI());
+		File tmpDir = Utility.createTempDirectory();
+		Utility.unzip(new ZipInputStream(new FileInputStream(source.toString())), tmpDir);
+		TestGraph.walkForYamlAndFixJunitGraphs(tmpDir.toPath());
+		return tmpDir;
+	}
+	
 }
