@@ -256,7 +256,7 @@ public class Manifest extends YamlConfig {
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load data " + stepFile.getAbsolutePath());
 				IngestCsvConfig config = new IngestCsvConfig(stepFile, this.fallbackModelGraph, this.fallbackDataGraph);
-				config.load(targetGraph, new LinkedList<String>(Arrays.asList(targetGraph)), server, serverTypeString, clear, progressWriter);
+				config.load(targetGraph, (targetGraph == null ? null : new LinkedList<String>(Arrays.asList(targetGraph))), server, serverTypeString, clear, progressWriter);
 
 			}else if(type == StepType.NODEGROUPS) {
 				// load nodegroups/reports from a directory
