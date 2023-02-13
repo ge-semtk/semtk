@@ -48,6 +48,7 @@ import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
+import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.load.manifest.Manifest;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.plotting.PlotlyPlotSpec;
@@ -398,7 +399,8 @@ public class UtilityServiceRestController {
 				throw new Exception("Cannot find a top-level manifest in " + ingestionPackageZipFile.getOriginalFilename());
 			}
 			Manifest manifest = new Manifest(manifestFile, defaultModelGraph, defaultDataGraph);
-			manifest.load(serverAndPort, serverType, false, false, true, responseWriter);
+			IngestorRestClient ingestClient = null; // TODO ingest_props.getClient()
+			manifest.load(serverAndPort, serverType, false, false, true, ingestClient, responseWriter);   // TODO ngeClient
 
 			responseWriter.println("Load complete");
 			responseWriter.flush();

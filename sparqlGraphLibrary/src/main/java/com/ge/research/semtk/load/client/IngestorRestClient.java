@@ -29,6 +29,7 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.services.client.RestClientConfig;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 
 
 public class IngestorRestClient extends SharedIngestNgeClient {
@@ -215,6 +216,10 @@ public class IngestorRestClient extends SharedIngestNgeClient {
 			this.parametersJSON.remove("trackFlag");
 			this.parametersJSON.remove("overrideBaseURI");
 		}
+	}
+	
+	public String execFromCsvUsingClassTemplate(String classUri, String idRegex, String data, SparqlConnection conn, boolean trackFlag, String overrideBaseURI) throws ConnectException, EndpointNotFoundException, Exception{
+		return this.execFromCsvUsingClassTemplate(classUri, idRegex, data, conn.toJson().toJSONString(), trackFlag, overrideBaseURI);
 	}
 	
 	/**
