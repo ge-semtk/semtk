@@ -1,0 +1,3 @@
+ingestion-steps:
+- {class: "http://animals/woodland#WOODCHUCK", csv: "woodchucks.csv"}
+- {class: "http://animals/woodland#HEDGEHOG", csv: "hedgehogs.csv"}

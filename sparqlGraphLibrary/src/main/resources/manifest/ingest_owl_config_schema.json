@@ -1,0 +1,17 @@
+{
+    "type" : "object",
+    "additionalProperties": false,
+    "required": ["files"],
+    "properties": {
+        "files": {
+            "type": "array",
+            "contains": {"type": "string"}
+        },
+        "model-graphs": {
+            "oneOf": [
+                {"type": "string"},
+                {"type": "array", "items": {"type": "string"}}
+            ]
+        }
+    }
+}

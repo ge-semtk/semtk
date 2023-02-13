@@ -48,7 +48,7 @@ import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
-import com.ge.research.semtk.load.utility.Manifest;
+import com.ge.research.semtk.load.manifest.Manifest;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.plotting.PlotlyPlotSpec;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
@@ -358,6 +358,8 @@ public class UtilityServiceRestController {
 	public void loadIngestionPackage(	@RequestParam("serverAndPort") String serverAndPort, // e.g. http://localhost:3030/JUNIT for fuseki, http://localhost:2420 for virtuoso
 										@RequestParam("serverType") String serverType,// e.g. "fuseki"
 										@RequestParam("file") MultipartFile ingestionPackageZipFile,
+										@RequestParam("defaultModelGraph") String defaultModelGraph,
+										@RequestParam("defaultDataGraph") String defaultDataGraph,
 										@RequestHeader HttpHeaders headers,
 										HttpServletResponse resp){
 
@@ -395,7 +397,7 @@ public class UtilityServiceRestController {
 			}catch(Exception e) {
 				throw new Exception("Cannot find a top-level manifest in " + ingestionPackageZipFile.getOriginalFilename());
 			}
-			Manifest manifest = Manifest.fromYaml(manifestFile);
+			Manifest manifest = new Manifest(manifestFile, defaultModelGraph, defaultDataGraph);
 			manifest.load(serverAndPort, serverType, false, false, true, responseWriter);
 
 			responseWriter.println("Load complete");
