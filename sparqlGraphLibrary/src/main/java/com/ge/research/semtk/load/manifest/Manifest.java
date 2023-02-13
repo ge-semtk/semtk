@@ -18,7 +18,6 @@ package com.ge.research.semtk.load.manifest;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -42,8 +41,8 @@ public class Manifest extends YamlConfig {
 	private String description;
 	private boolean copyToDefaultGraph = false;
 	private boolean performEntityResolution = false;
-	private LinkedList<URL> modelgraphsFootprint = new LinkedList<URL>();
-	private LinkedList<URL> datagraphsFootprint = new LinkedList<URL>();
+	private LinkedList<String> modelgraphsFootprint = new LinkedList<String>();
+	private LinkedList<String> datagraphsFootprint = new LinkedList<String>();
 	private LinkedList<String> nodegroupsFootprint = new LinkedList<String>();
 	private LinkedList<Step> steps = new LinkedList<Step>();
 
@@ -70,13 +69,13 @@ public class Manifest extends YamlConfig {
 			nodes = footprintJsonNode.get("model-graphs");
 			if(nodes != null) {
 				for(JsonNode node : nodes){
-					addModelgraphFootprint(new URL(node.asText()));
+					addModelgraphFootprint(node.asText());
 				}
 			}
 			nodes = footprintJsonNode.get("data-graphs");
 			if(nodes != null) {
 				for(JsonNode node : nodes){
-					addDatagraphFootprint(new URL(node.asText()));
+					addDatagraphFootprint(node.asText());
 				}
 			}
 			nodes = footprintJsonNode.get("nodegroups");
@@ -102,7 +101,7 @@ public class Manifest extends YamlConfig {
 				}else if(stepNode.has(StepType.COPYGRAPH.toString())) {
 					String fromGraph = stepNode.get(StepType.COPYGRAPH.toString()).get("from-graph").asText();
 					String toGraph = stepNode.get(StepType.COPYGRAPH.toString()).get("to-graph").asText();
-					addStep(new Step(StepType.COPYGRAPH, new Pair<URL, URL>(new URL(fromGraph), new URL(toGraph))));
+					addStep(new Step(StepType.COPYGRAPH, new Pair<String, String>(fromGraph, toGraph)));
 				}else {
 					throw new Exception("Unsupported manifest step: " + stepNode);
 				}
@@ -129,10 +128,10 @@ public class Manifest extends YamlConfig {
 	public boolean getPerformEntityResolution() {
 		return performEntityResolution;
 	}
-	public LinkedList<URL> getModelgraphsFootprint() {
+	public LinkedList<String> getModelgraphsFootprint() {
 		return modelgraphsFootprint;
 	}
-	public LinkedList<URL> getDatagraphsFootprint() {
+	public LinkedList<String> getDatagraphsFootprint() {
 		return datagraphsFootprint;
 	}
 	public LinkedList<String> getNodegroupsFootprint() {
@@ -158,11 +157,11 @@ public class Manifest extends YamlConfig {
 	public void setPerformEntityResolution(boolean b) {
 		this.performEntityResolution = b;
 	}
-	public void addModelgraphFootprint(URL url) {
-		this.modelgraphsFootprint.add(url);
+	public void addModelgraphFootprint(String s) {
+		this.modelgraphsFootprint.add(s);
 	}
-	public void addDatagraphFootprint(URL url) {
-		this.datagraphsFootprint.add(url);
+	public void addDatagraphFootprint(String s) {
+		this.datagraphsFootprint.add(s);
 	}
 	public void addNodegroupFootprint(String s) {
 		this.nodegroupsFootprint.add(s);
@@ -180,10 +179,10 @@ public class Manifest extends YamlConfig {
 	public SparqlConnection getConnection(String server, String serverTypeString) throws Exception {
 		SparqlConnection conn = new SparqlConnection();
 		conn.setName(this.name);
-		for(URL graph : modelgraphsFootprint) {
+		for(String graph : modelgraphsFootprint) {
 			conn.addModelInterface(SparqlEndpointInterface.getInstance(serverTypeString, server, graph.toString()));
 		}
-		for(URL graph : datagraphsFootprint) {
+		for(String graph : datagraphsFootprint) {
 			conn.addDataInterface(SparqlEndpointInterface.getInstance(serverTypeString, server, graph.toString()));
 		}
 		return conn;
@@ -221,11 +220,11 @@ public class Manifest extends YamlConfig {
 			if(defaultGraph) {
 				// TODO call SemTK to clear default graph
 			} else {
-				LinkedList<URL> modelGraphs = getModelgraphsFootprint();
+				LinkedList<String> modelGraphs = getModelgraphsFootprint();
 				if(modelGraphs != null) {
 					// TODO call SemTK to clear each model graph in the footprint
 				}
-				LinkedList<URL> dataGraphs = getDatagraphsFootprint();
+				LinkedList<String> dataGraphs = getDatagraphsFootprint();
 				if(dataGraphs != null) {
 					// TODO call SemTK to clear each data graph in the footprint
 				}
