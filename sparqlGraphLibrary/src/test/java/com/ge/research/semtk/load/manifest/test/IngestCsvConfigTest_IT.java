@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 
 import com.ge.research.semtk.load.manifest.IngestCsvConfig;
+import com.ge.research.semtk.load.manifest.IngestOwlConfig;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
@@ -41,24 +42,35 @@ public class IngestCsvConfigTest_IT extends YamlConfigTest{
 	@Test
 	public void test() throws Exception{
 
+		SparqlEndpointInterface modelSei = TestGraph.getSei(MODEL_GRAPH);
 		SparqlEndpointInterface dataSei = TestGraph.getSei(DATA_GRAPH);
 		SparqlEndpointInterface dataSeiFallback = TestGraph.getSei(FALLBACK_DATA_GRAPH);
-		
-		IngestCsvConfig config = new IngestCsvConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/TestData/Package-1/import.yaml"), null, FALLBACK_DATA_GRAPH);
 
-		// test that data gets loaded to the graph provided
-		dataSei.clearGraph();
-		dataSeiFallback.clearGraph();
+		try {
+			modelSei.clearGraph();
+			dataSei.clearGraph();
+			dataSeiFallback.clearGraph();
 
-		config.load(MODEL_GRAPH, new LinkedList<String>(Arrays.asList(DATA_GRAPH)), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), new PrintWriter(System.out));
-		assertEquals(dataSei.getNumTriples(), 9999999);  // TODO add real number when load is implemented
-		assertEquals(dataSeiFallback.getNumTriples(), 0);
+			// need ontology in place in order to load data
+			IngestOwlConfig ingestOwlConfig = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), FALLBACK_MODEL_GRAPH);
+			ingestOwlConfig.load(MODEL_GRAPH, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
 
-		// TODO more tests - including fallback
+			// load data
+			IngestCsvConfig ingestCsvConfig = new IngestCsvConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/TestData/Package-1/import.yaml"), null, FALLBACK_DATA_GRAPH);
+			ingestCsvConfig.load(MODEL_GRAPH, new LinkedList<String>(Arrays.asList(DATA_GRAPH)), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), new PrintWriter(System.out));
+			assertEquals(dataSei.getNumTriples(), 20);  		// TODO verify that this is correct
+			assertEquals(dataSeiFallback.getNumTriples(), 0);	// confirm that nothing was written to fallback
 
-		// clean up
-		dataSei.dropGraph();
-		dataSeiFallback.dropGraph();
+			// TODO more tests - including loading data to fallback
+
+		}catch(Exception e) {
+			throw e;
+		}finally {
+			// clean up
+			modelSei.dropGraph();
+			dataSei.dropGraph();
+			dataSeiFallback.dropGraph();
+		}
 	}
 
 }
