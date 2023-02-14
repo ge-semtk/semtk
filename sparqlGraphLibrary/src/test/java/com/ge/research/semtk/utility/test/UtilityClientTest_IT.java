@@ -71,8 +71,8 @@ public class UtilityClientTest_IT extends YamlConfigTest{
 		assert(response.matches("(.*)Load file (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)ANALYSIS.owl(.*)"));
 
 		assert(response.matches("(.*)Load nodegroups (.*)manifests(.*)nodegroups(.*)queries(.*)"));
-		assert(response.matches("(.*)Store PrefabNodeGroup \"query Models for Thing\" from query Models for Thing.json(.*)"));
-		assert(response.matches("(.*)Store Report \"report data verification\" from report data verification.json(.*)"));
+		assert(response.matches("(.*)Store PrefabNodeGroup \"JUNIT query Models for Thing\" from query Models for Thing.json(.*)"));
+		assert(response.matches("(.*)Store Report \"JUNIT report data verification\" from report data verification.json(.*)"));
 
 		assert(response.matches("(.*)Load data (.*)TestData(.*)Package-1(.*)import.yaml(.*)"));
 		assert(response.matches("(.*)Load CSV (.*)PROV_S_ACTIVITY1.csv using class http://arcos.rack/PROV-S#ACTIVITY(.*)"));
