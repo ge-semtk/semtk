@@ -570,7 +570,7 @@ public class NodeGroupExecutionClientTest_IT {
 			resultSei.clearGraph();
 			TestGraph.clearGraph();
 			TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
-			
+
 			// get ingestion and result nodegroup
 			SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
 						
@@ -585,6 +585,27 @@ public class NodeGroupExecutionClientTest_IT {
 			String query = sgjson.getNodeGroup(TestGraph.getOInfo()).generateSparqlSelect();
 			Table t = resultSei.executeQueryToTable(query);
 			assertEquals("Wrong number of rows returned from constructed graph", 4, t.getNumRows());
+		}
+
+		@Test
+		public void testCopyGraph() throws Exception{
+
+			// copy from this graph
+			TestGraph.clearGraph();
+			TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
+			assertEquals(TestGraph.getNumTriples(), 50);
+
+			// copy to this graph
+			SparqlEndpointInterface toGraphSei = TestGraph.getSei(TestGraph.getDataset() + "/copy");
+			toGraphSei.clearGraph();
+			assertEquals(toGraphSei.getNumTriples(), 0);	// assert empty before copy
+
+			String statusMessage = nodeGroupExecutionClient.execCopyGraphSync(
+					TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), TestGraph.getDataset(),
+					toGraphSei.getServerAndPort(), toGraphSei.getServerType(), toGraphSei.getGraph());
+
+			assertTrue(statusMessage.contains("Successfully copied"));
+			assertEquals(toGraphSei.getNumTriples(), 50);	// assert populated after copy
 		}
 	}
 

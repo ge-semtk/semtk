@@ -122,6 +122,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	private static final String dispatchRawSparqlEndpoint = "/dispatchRawSparql";
 	private static final String dispatchConstructByIdEndpoint = "/dispatchConstructById";
 	private static final String dispatchConstructFromNodegroupEndpoint = "/dispatchConstructFromNodegroup";
+	private static final String copyGraphEndpoint = "/copyGraph";
 	
 	private ArrayList<String> warnings = null;
 	
@@ -2337,4 +2338,60 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		return this.execDispatchDeleteFromNodeGroup(ng, conn, null, null);
 	}
 	
+	/**
+	 * Launch an asynchronous call to copy a graph
+	 * @param fromServerAndPort		copy from this graph
+	 * @param fromServerType		copy from this graph
+	 * @param fromGraph				copy from this graph
+	 * @param toServerAndPort		copy to this graph
+	 * @param toServerType			copy to this graph
+	 * @param toGraph				copy to this graph
+	 * @return  					a job ID
+	 * @throws Exception 			if call is unsuccessful
+	 */
+	@SuppressWarnings("unchecked")
+	public String execCopyGraphAsync(String fromServerAndPort, String fromServerType, String fromGraph,
+			String toServerAndPort, String toServerType, String toGraph) throws Exception {
+
+		conf.setServiceEndpoint(mappingPrefix + copyGraphEndpoint);
+		this.parametersJSON.put("fromServerAndPort", fromServerAndPort);
+		this.parametersJSON.put("fromServerType", fromServerType);
+		this.parametersJSON.put("fromGraph", fromGraph);
+		this.parametersJSON.put("toServerAndPort", toServerAndPort);
+		this.parametersJSON.put("toServerType", toServerType);
+		this.parametersJSON.put("toGraph", toGraph);
+
+		try{
+			JSONObject jobj = (JSONObject) this.execute();
+			SimpleResultSet retval = SimpleResultSet.fromJson(jobj);
+			retval.throwExceptionIfUnsuccessful();
+			return retval.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
+		}finally{
+			this.reset();
+		}
+
+	}
+
+	/**
+	 * Launch a synchronous call to copy a graph
+	 * @param fromServerAndPort		copy from this graph
+	 * @param fromServerType		copy from this graph
+	 * @param fromGraph				copy from this graph
+	 * @param toServerAndPort		copy to this graph
+	 * @param toServerType			copy to this graph
+	 * @param toGraph				copy to this graph
+	 * @return 						a status message (e.g. "Successfully copied <from-graph> to <to-graph>")
+	 * @throws Exception 			if call is unsuccessful
+	 */
+	public String execCopyGraphSync(String fromServerAndPort, String fromServerType, String fromGraph,
+			String toServerAndPort, String toServerType, String toGraph) throws Exception {
+		String jobId = this.execCopyGraphAsync(fromServerAndPort, fromServerType, fromGraph, toServerAndPort, toServerType, toGraph);
+		this.waitForCompletion(jobId);
+		if (this.getJobSuccess(jobId)) {
+			return this.getJobStatusMessage(jobId);
+		} else {
+			throw new Exception("Copy graph failed:\n" + this.getResultsTable(jobId).toCSVString());
+		}
+	}
+
 }

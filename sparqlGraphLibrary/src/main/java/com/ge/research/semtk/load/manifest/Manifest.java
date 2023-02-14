@@ -18,7 +18,6 @@ package com.ge.research.semtk.load.manifest;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
 
@@ -27,8 +26,6 @@ import org.apache.commons.math3.util.Pair;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
 import com.ge.research.semtk.load.client.IngestorRestClient;
-import com.ge.research.semtk.load.dataset.CSVDataset;
-import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.Utility;
@@ -247,7 +244,7 @@ public class Manifest extends YamlConfig {
 		// if loading to default graph, then set targetGraph
 		String targetGraph = null;
 		if(defaultGraph) {
-			targetGraph = SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME;	// TODO add junit to test default graph
+			targetGraph = SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME;	// TODO add junit to test loading (not copying) to default graph
 		}
 
 		// execute each manifest step
@@ -283,7 +280,7 @@ public class Manifest extends YamlConfig {
 				subManifest.load(server, serverTypeString, clear, defaultGraph, false, ingestClient, ngeClient, progressWriter);
 
 			}else if(type == StepType.COPYGRAPH) {
-				// TODO call client when ready
+				// TODO call client
 				throw new Exception("Manifest copy-graph step is not implemented");
 
 			}else {
@@ -298,12 +295,20 @@ public class Manifest extends YamlConfig {
 				if(clear) {
 					clearDefaultGraph(serverTypeString, server);
 				}
-				// TODO call SemTK to copy each model/data graph to default graph
+				// call SemTK to copy each model/data footprint graph to default graph
+				for(String graph : this.getGraphsFootprint()) {
+					progressWriter.println("Copy graph " + graph + " to default graph");
+					progressWriter.flush();
+					String msg = ngeClient.execCopyGraphSync(server, serverTypeString, graph, server, serverTypeString, SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME);
+					progressWriter.println(msg);
+					progressWriter.flush();
+				}
 			}
 			if(this.getPerformEntityResolution()) {
 				// TODO call SemTK to perform entity resolution
 			}
 		}
+		progressWriter.flush();
 	}
 
 	/**
