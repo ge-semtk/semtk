@@ -1,5 +1,6 @@
 package com.ge.research.semtk.load.manifest.test;
 
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.TestGraph;
 
 /**
@@ -7,16 +8,17 @@ import com.ge.research.semtk.test.TestGraph;
  */
 public abstract class YamlConfigTest {
 
-	public final String MODEL_GRAPH;
-	public final String DATA_GRAPH;
-	public final String FALLBACK_MODEL_GRAPH;
-	public final String FALLBACK_DATA_GRAPH;
+	protected final String MODEL_GRAPH = TestGraph.getDataset() + "/model";
+	protected final String DATA_GRAPH = TestGraph.getDataset() + "/data";
+	protected final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model/fallback";
+	protected final String FALLBACK_DATA_GRAPH  = TestGraph.getDataset() + "/data/fallback";
+
+	protected SparqlEndpointInterface modelSei = TestGraph.getSei(MODEL_GRAPH);
+	protected SparqlEndpointInterface dataSei = TestGraph.getSei(DATA_GRAPH);
+	protected SparqlEndpointInterface modelSeiFallback = TestGraph.getSei(FALLBACK_MODEL_GRAPH);
+	protected SparqlEndpointInterface dataSeiFallback = TestGraph.getSei(FALLBACK_DATA_GRAPH);
 	
 	public YamlConfigTest() throws Exception{
-		MODEL_GRAPH = TestGraph.getDataset() + "/model";
-		DATA_GRAPH = TestGraph.getDataset() + "/data";
-		FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model/fallback";
-		FALLBACK_DATA_GRAPH = TestGraph.getDataset() + "/data/fallback";
 	}
 
 }

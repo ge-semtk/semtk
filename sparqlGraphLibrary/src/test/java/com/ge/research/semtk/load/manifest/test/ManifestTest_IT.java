@@ -42,9 +42,7 @@ public class ManifestTest_IT extends YamlConfigTest {
 	@Test
 	public void testLoadManifest() throws Exception{
 
-		SparqlEndpointInterface modelSeiFallback = TestGraph.getSei(FALLBACK_MODEL_GRAPH);
-		SparqlEndpointInterface dataSeiFallback = TestGraph.getSei(FALLBACK_DATA_GRAPH);
-		SparqlEndpointInterface dataSei =  TestGraph.getSei(TestGraph.junitizeGraphNames("http://junit/rack001/data"));  // e.g. http://junit/G7JZH4J3E/200005868/auto/rack001/data
+		SparqlEndpointInterface dataSeiFromYaml =  TestGraph.getSei(TestGraph.junitizeGraphNames("http://junit/rack001/data"));  // e.g. http://junit/G7JZH4J3E/200005868/auto/rack001/data
 
 		File tempDir = null;
 		try {
@@ -58,13 +56,13 @@ public class ManifestTest_IT extends YamlConfigTest {
 
 			modelSeiFallback.clearGraph();
 			dataSeiFallback.clearGraph();
-			dataSei.clearGraph();
+			dataSeiFromYaml.clearGraph();
 
 			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), new PrintWriter(System.out));
 
 			// TODO verify that these counts are correct
 			assertEquals(modelSeiFallback.getNumTriples(), 1439);
-			assertEquals(dataSei.getNumTriples(), 80);
+			assertEquals(dataSeiFromYaml.getNumTriples(), 80);
 
 		}catch(Exception e) {
 			throw e;
@@ -74,7 +72,7 @@ public class ManifestTest_IT extends YamlConfigTest {
 			}
 			modelSeiFallback.dropGraph();
 			dataSeiFallback.dropGraph();
-			dataSei.dropGraph();
+			dataSeiFromYaml.dropGraph();
 		}
 	}
 

@@ -23,7 +23,6 @@ import java.io.PrintWriter;
 import org.junit.Test;
 
 import com.ge.research.semtk.load.manifest.IngestOwlConfig;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 
@@ -39,30 +38,33 @@ public class IngestOwlConfigTest_IT extends YamlConfigTest {
 	@Test
 	public void test() throws Exception{
 
-		SparqlEndpointInterface modelSei = TestGraph.getSei(MODEL_GRAPH);
-		SparqlEndpointInterface modelSeiFallback = TestGraph.getSei(FALLBACK_MODEL_GRAPH);
+		try {
 
-		IngestOwlConfig config = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), FALLBACK_MODEL_GRAPH);
+			IngestOwlConfig config = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), FALLBACK_MODEL_GRAPH);
 
-		// test that model gets loaded to the graph provided
-		modelSei.clearGraph();
-		modelSeiFallback.clearGraph();
-		config.load(MODEL_GRAPH, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
-		assertEquals(modelSei.getNumTriples(), 1439);
-		assertEquals(modelSeiFallback.getNumTriples(), 0);
+			// test that model gets loaded to the graph provided
+			modelSei.clearGraph();
+			modelSeiFallback.clearGraph();
+			config.load(MODEL_GRAPH, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
+			assertEquals(modelSei.getNumTriples(), 1439);
+			assertEquals(modelSeiFallback.getNumTriples(), 0);
 
-		// test that model gets loaded to fallback model graph if no model graph is provided (also not specified in YAML)
-		modelSei.clearGraph();
-		modelSeiFallback.clearGraph();
-		config.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
-		assertEquals(modelSei.getNumTriples(), 0);
-		assertEquals(modelSeiFallback.getNumTriples(), 1439);
+			// test that model gets loaded to fallback model graph if no model graph is provided (also not specified in YAML)
+			modelSei.clearGraph();
+			modelSeiFallback.clearGraph();
+			config.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
+			assertEquals(modelSei.getNumTriples(), 0);
+			assertEquals(modelSeiFallback.getNumTriples(), 1439);
 
-		// TODO test that gets loaded to YAML-specified graph
+			// TODO test that gets loaded to YAML-specified graph
 
-		// clean up
-		modelSei.dropGraph();
-		modelSeiFallback.dropGraph();
+		}catch(Exception e) {
+			throw e;
+		}finally {
+			// clean up
+			modelSei.dropGraph();
+			modelSeiFallback.dropGraph();
+		}
 	}
 
 }

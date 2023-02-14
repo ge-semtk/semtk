@@ -25,7 +25,6 @@ import java.util.LinkedList;
 
 import com.ge.research.semtk.load.manifest.IngestCsvConfig;
 import com.ge.research.semtk.load.manifest.IngestOwlConfig;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
@@ -41,10 +40,6 @@ public class IngestCsvConfigTest_IT extends YamlConfigTest{
 	 */
 	@Test
 	public void test() throws Exception{
-
-		SparqlEndpointInterface modelSei = TestGraph.getSei(MODEL_GRAPH);
-		SparqlEndpointInterface dataSei = TestGraph.getSei(DATA_GRAPH);
-		SparqlEndpointInterface dataSeiFallback = TestGraph.getSei(FALLBACK_DATA_GRAPH);
 
 		try {
 			modelSei.clearGraph();
