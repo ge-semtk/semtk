@@ -17,6 +17,7 @@
 package com.ge.research.semtk.utility.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
 
 import java.io.BufferedReader;
 
@@ -26,6 +27,7 @@ import org.junit.Test;
 import com.ge.research.semtk.load.manifest.test.YamlConfigTest;
 import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.services.client.UtilityClient;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
@@ -54,6 +56,9 @@ public class UtilityClientTest_IT extends YamlConfigTest{
 	public void testLoadIngestionPackage() throws Exception {
 
 		try {
+
+			// this ingestion package copies to the default graph - only allow to run on Fuseki    // TODO add a similar test without default graph, to run on all triplestore types
+			assumeTrue("Skipping test: only use default graph on Fuseki triplestore", TestGraph.getSei().getServerType().equals(SparqlEndpointInterface.FUSEKI_SERVER));
 
 			clearGraphs();
 

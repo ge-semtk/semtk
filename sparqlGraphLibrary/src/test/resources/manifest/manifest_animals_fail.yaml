@@ -12,7 +12,7 @@ fooootprint: # there is a typo here, expect error
     - http://junit/animals/data2
 
 steps:
-  - manifest: animals.yaml
+  - manifestttt: animals.yaml
 
   - nodegroups: animals/nodegroups
 

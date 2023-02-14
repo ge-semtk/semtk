@@ -1,4 +1,0 @@
-name: 'Animals'
-
-steps:
-  - manifestttt: animals.yaml  # this should fail

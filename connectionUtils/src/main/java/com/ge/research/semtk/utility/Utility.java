@@ -1065,7 +1065,7 @@ public abstract class Utility {
 		JsonNode yamlToValidate = Utility.getJsonNodeFromYaml(yamlStr);
 
 		// get schema
-		JsonSchemaFactory schemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
+		JsonSchemaFactory schemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V201909);
 		JsonSchema schema = schemaFactory.getSchema(jsonSchemaStr);
 
 		// validate
