@@ -52,9 +52,11 @@ public class IngestCsvConfig extends YamlConfig {
 		if(stepsNode != null) {
 			for(JsonNode stepNode : stepsNode){
 				if(stepNode.has("class") && stepNode.has("csv")) {
-					addStep(new ClassCsvIngestionStep(stepNode.get("class").asText(), baseDir + File.separator + stepNode.get("csv").asText()));
-				}else {
-					//TODO support 4 more steps from the schema
+					addStep(new CsvByClassIngestionStep(stepNode.get("class").asText(), baseDir + File.separator + stepNode.get("csv").asText()));
+				} else if (stepNode.has("nodegroup") && stepNode.has("csv")) {
+					addStep(new CsvByNodegroupIngestionStep(stepNode.get("nodegroup").asText(), baseDir + File.separator + stepNode.get("csv").asText()));	// TODO junit
+				} else {
+					//TODO support 3 more steps from the schema
 					throw new Exception("Ingestion step is not yet supported: " + stepNode.asText());
 				}
 			}
@@ -137,8 +139,10 @@ public class IngestCsvConfig extends YamlConfig {
 
 			// execute each step
 			for(IngestionStep step : this.getSteps()) {
-				if(step instanceof ClassCsvIngestionStep) {
-					((ClassCsvIngestionStep)step).run(conn, ingestClient, ngeClient, progressWriter);
+				if(step instanceof CsvByClassIngestionStep) {
+					((CsvByClassIngestionStep)step).run(conn, ingestClient, ngeClient, progressWriter);
+				}else if(step instanceof CsvByNodegroupIngestionStep) {
+						((CsvByNodegroupIngestionStep)step).run(conn, ingestClient, ngeClient, progressWriter);
 				}else {
 					// should not get here
 					throw new Exception("Unexpected error");
@@ -158,31 +162,54 @@ public class IngestCsvConfig extends YamlConfig {
 
 	public static abstract class IngestionStep{
 	}
+	public static abstract class CsvIngestionStep extends IngestionStep{
+		String csvPath;
+		public CsvIngestionStep(String csvPath) {
+			this.csvPath = csvPath;
+		}
+		public String getCsvPath() {
+			return csvPath;
+		}
+	}
 
-	public static class ClassCsvIngestionStep extends IngestionStep{
+	/* Ingestion step: load CSV by class */
+	public static class CsvByClassIngestionStep extends CsvIngestionStep{
 		private String clazz;
-		private String csv;
-		public ClassCsvIngestionStep(String clazz, String csv) {
+		public CsvByClassIngestionStep(String clazz, String csvPath) {
+			super(csvPath);
 			this.clazz = clazz;
-			this.csv = csv;
 		}
 		public String getClazz() {
 			return clazz;
 		}
-		public String getCsv() {
-			return csv;
-		}
 		public void run(SparqlConnection conn, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
-			progressWriter.println("Load CSV " + csv + " using class " + clazz);
+			progressWriter.println("Load CSV " + csvPath + " using class " + clazz);
 			progressWriter.flush();
-			String jobId = ingestClient.execFromCsvUsingClassTemplate(clazz, null, Files.readString(Path.of(csv)), conn, false, null);
+			String jobId = ingestClient.execFromCsvUsingClassTemplate(clazz, null, Files.readString(Path.of(csvPath)), conn, false, null);
 			for (String warning : ingestClient.getWarnings()) {
-				progressWriter.println("Warning: " + warning);
+				//progressWriter.println("Warning: " + warning);  TODO suppress for now
 			}
 			ngeClient.waitForCompletion(jobId);
 			if (!ngeClient.getJobSuccess(jobId)) {
 				progressWriter.println("Failed loading CSV by class:\n" + ngeClient.getResultsTable(jobId).toCSVString());
 			}
+		}
+	}
+
+	/* Ingestion step: load CSV by nodegroup */
+	public static class CsvByNodegroupIngestionStep extends CsvIngestionStep{
+		private String nodegroupId;
+		public CsvByNodegroupIngestionStep(String nodegroupId, String csvPath) {
+			super(csvPath);
+			this.nodegroupId = nodegroupId;
+		}
+		public String getNodegroupId() {
+			return nodegroupId;
+		}
+		public void run(SparqlConnection conn, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
+			progressWriter.println("Load CSV " + csvPath + " using nodegroup " + nodegroupId);
+			progressWriter.flush();
+			// TODO call SemTK to load CSV by nodegroup.  Remove ingestClient/ngeClient if unused.
 		}
 	}
 

@@ -18,7 +18,6 @@ package com.ge.research.semtk.load.manifest.test;
 
 import static org.junit.Assert.assertEquals;
 
-import java.io.File;
 import java.io.PrintWriter;
 
 import org.junit.Test;
