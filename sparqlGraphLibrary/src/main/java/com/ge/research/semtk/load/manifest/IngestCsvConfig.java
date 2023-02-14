@@ -142,7 +142,7 @@ public class IngestCsvConfig extends YamlConfig {
 				if(step instanceof CsvByClassIngestionStep) {
 					((CsvByClassIngestionStep)step).run(conn, ingestClient, ngeClient, progressWriter);
 				}else if(step instanceof CsvByNodegroupIngestionStep) {
-						((CsvByNodegroupIngestionStep)step).run(conn, ingestClient, ngeClient, progressWriter);
+						((CsvByNodegroupIngestionStep)step).run(conn, ngeClient, progressWriter);
 				}else {
 					// should not get here
 					throw new Exception("Unexpected error");
@@ -206,10 +206,10 @@ public class IngestCsvConfig extends YamlConfig {
 		public String getNodegroupId() {
 			return nodegroupId;
 		}
-		public void run(SparqlConnection conn, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
+		public void run(SparqlConnection conn, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
 			progressWriter.println("Load CSV " + csvPath + " using nodegroup " + nodegroupId);
 			progressWriter.flush();
-			// TODO call SemTK to load CSV by nodegroup.  Remove ingestClient/ngeClient if unused.
+			// TODO call SemTK to load CSV by nodegroup.  Use ngeClient for this
 		}
 	}
 

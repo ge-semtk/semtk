@@ -272,20 +272,8 @@ public class Manifest extends YamlConfig {
 				// load nodegroups/reports from a directory
 				File nodegroupsDirectory = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load nodegroups from " + nodegroupsDirectory.getAbsolutePath());
-				Dataset nodegroupCsv = new CSVDataset(new File(nodegroupsDirectory, "store_data.csv").getAbsolutePath(), false);
-				for(ArrayList<String> entry : nodegroupCsv.getNextRecords(nodegroupCsv.getNumRows())) {
-					String id = entry.get(nodegroupCsv.getColumnIndex("ID"));
-					String comments = entry.get(nodegroupCsv.getColumnIndex("comments"));
-					String creator = entry.get(nodegroupCsv.getColumnIndex("creator"));
-					String jsonFile = entry.get(nodegroupCsv.getColumnIndex("jsonFile"));
-					String itemType = entry.get(nodegroupCsv.getColumnIndex("itemType"));
-
-					// TODO call SemTK to delete item if found with same id/type (see Python logic)
-
-					progressWriter.println("Store " + itemType + " \"" + id + "\" from " + jsonFile);
-					// TODO call SemTK to store nodegroup/report item
-				}
-				nodegroupCsv.close();
+				// TODO send nodegroup CSV when Paul is ready for it
+				// TODO call SemTK to delete item if found with same id/type (see Python logic)
 
 			}else if(type == StepType.MANIFEST) {
 				// load content using sub-manifest
@@ -295,7 +283,8 @@ public class Manifest extends YamlConfig {
 				subManifest.load(server, serverTypeString, clear, defaultGraph, false, ingestClient, ngeClient, progressWriter);
 
 			}else if(type == StepType.COPYGRAPH) {
-				throw new Exception("Manifest copy-graph step is not implemented");	// TODO implement
+				// TODO call client when ready
+				throw new Exception("Manifest copy-graph step is not implemented");
 
 			}else {
 				throw new Exception("Unrecognized manifest step: " + type);

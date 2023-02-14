@@ -41,8 +41,8 @@ public class IngestCsvConfigTest extends YamlConfigTest {
 		IngestCsvConfig config;
 		
 		// this config has a datagraph + steps
-		config = new IngestCsvConfig(Utility.getResourceAsFile(this, "/manifest/ingest_csv_config_1.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
-		assertEquals(config.getFallbackModelGraph(), FALLBACK_MODEL_GRAPH);
+		config = new IngestCsvConfig(Utility.getResourceAsFile(this, "/manifest/ingest_csv_config_1.yaml"), MODEL_FALLBACK_GRAPH, DATA_FALLBACK_GRAPH);
+		assertEquals(config.getFallbackModelGraph(), MODEL_FALLBACK_GRAPH);
 		assertEquals(config.getSteps().size(), 2);
 		assertEquals(((CsvByClassIngestionStep)config.getSteps().get(0)).getClazz(), "http://animals/woodland#WOODCHUCK");
 		assertTrue(((CsvByClassIngestionStep)config.getSteps().get(0)).getCsvPath().matches("(.*)manifest(.*)woodchucks.csv"));
@@ -53,7 +53,7 @@ public class IngestCsvConfigTest extends YamlConfigTest {
 		assertEquals(config.getDatagraphs().get(0), "http://junit/animals/data");
 		
 		// this config has steps only (no graphs)
-		config = new IngestCsvConfig(Utility.getResourceAsFile(this, "/manifest/ingest_csv_config_2.yaml"), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
+		config = new IngestCsvConfig(Utility.getResourceAsFile(this, "/manifest/ingest_csv_config_2.yaml"), MODEL_FALLBACK_GRAPH, DATA_FALLBACK_GRAPH);
 		assertEquals(config.getDatagraphs(), null);
 	}
 	

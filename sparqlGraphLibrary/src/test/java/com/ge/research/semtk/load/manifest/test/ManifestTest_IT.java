@@ -51,17 +51,16 @@ public class ManifestTest_IT extends YamlConfigTest {
 
 			// get manifest
 			File manifestFile = Manifest.getTopLevelManifestFile(tempDir);
-			Manifest manifest = new Manifest(manifestFile, FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);  // should only load to model, not data
+			Manifest manifest = new Manifest(manifestFile, MODEL_FALLBACK_GRAPH, DATA_FALLBACK_GRAPH);  // should only load to model, not data
 			assertEquals(manifest.getName(), "Entity Resolution");
 
-			modelSeiFallback.clearGraph();
-			dataSeiFallback.clearGraph();
+			clearGraphs();
 			dataSeiFromYaml.clearGraph();
 
 			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), new PrintWriter(System.out));
 
 			// TODO verify that these counts are correct
-			assertEquals(modelSeiFallback.getNumTriples(), 1439);
+			assertEquals(modelFallbackSei.getNumTriples(), 1439);
 			assertEquals(dataSeiFromYaml.getNumTriples(), 80);
 
 		}catch(Exception e) {
@@ -70,8 +69,7 @@ public class ManifestTest_IT extends YamlConfigTest {
 			if(tempDir != null) {
 				FileUtils.deleteDirectory(tempDir);
 			}
-			modelSeiFallback.dropGraph();
-			dataSeiFallback.dropGraph();
+			clearGraphs();
 			dataSeiFromYaml.dropGraph();
 		}
 	}

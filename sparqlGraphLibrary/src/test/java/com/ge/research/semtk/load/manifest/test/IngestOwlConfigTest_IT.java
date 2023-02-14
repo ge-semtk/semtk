@@ -40,30 +40,27 @@ public class IngestOwlConfigTest_IT extends YamlConfigTest {
 
 		try {
 
-			IngestOwlConfig config = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), FALLBACK_MODEL_GRAPH);
+			IngestOwlConfig config = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), MODEL_FALLBACK_GRAPH);
 
 			// test that model gets loaded to the graph provided
 			modelSei.clearGraph();
-			modelSeiFallback.clearGraph();
+			modelFallbackSei.clearGraph();
 			config.load(MODEL_GRAPH, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
 			assertEquals(modelSei.getNumTriples(), 1439);
-			assertEquals(modelSeiFallback.getNumTriples(), 0);
+			assertEquals(modelFallbackSei.getNumTriples(), 0);
 
 			// test that model gets loaded to fallback model graph if no model graph is provided (also not specified in YAML)
-			modelSei.clearGraph();
-			modelSeiFallback.clearGraph();
+			clearGraphs();
 			config.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
 			assertEquals(modelSei.getNumTriples(), 0);
-			assertEquals(modelSeiFallback.getNumTriples(), 1439);
+			assertEquals(modelFallbackSei.getNumTriples(), 1439);
 
 			// TODO test that gets loaded to YAML-specified graph
 
 		}catch(Exception e) {
 			throw e;
 		}finally {
-			// clean up
-			modelSei.dropGraph();
-			modelSeiFallback.dropGraph();
+			clearGraphs();
 		}
 	}
 

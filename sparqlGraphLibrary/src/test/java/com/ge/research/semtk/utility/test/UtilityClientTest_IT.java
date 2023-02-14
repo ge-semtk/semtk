@@ -26,7 +26,6 @@ import org.junit.Test;
 import com.ge.research.semtk.load.manifest.test.YamlConfigTest;
 import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.services.client.UtilityClient;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
@@ -54,45 +53,45 @@ public class UtilityClientTest_IT extends YamlConfigTest{
 	@Test
 	public void testLoadIngestionPackage() throws Exception {
 
-		SparqlEndpointInterface seiModel = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), FALLBACK_MODEL_GRAPH);
-		SparqlEndpointInterface seiData = SparqlEndpointInterface.getInstance(TestGraph.getSparqlServerType(), TestGraph.getSparqlServer(), FALLBACK_DATA_GRAPH);
-		seiModel.clearGraph();
-		seiData.clearGraph();
+		try {
 
-		BufferedReader reader = client.execLoadIngestionPackage(TestGraph.getJunitZip(this, "/manifest/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
-		String response = Utility.readToString(reader);
-		// check the response stream
-		assert(response.contains("Loading manifest 'Entity Resolution'..."));
-		assert(response.matches("(.*)Load manifest (.*)manifests(.*)rack.yaml(.*)"));
+			clearGraphs();
 
-		assert(response.contains("Loading manifest 'RACK ontology'..."));
-		assert(response.matches("(.*)Load model (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)import.yaml(.*)"));
-		assert(response.matches("(.*)Load file (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)AGENTS.owl(.*)"));
-		assert(response.matches("(.*)Load file (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)ANALYSIS.owl(.*)"));
+			BufferedReader reader = client.execLoadIngestionPackage(TestGraph.getJunitZip(this, "/manifest/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), MODEL_FALLBACK_GRAPH, DATA_FALLBACK_GRAPH);
+			String response = Utility.readToString(reader);
+			// check the response stream
+			assert(response.contains("Loading manifest 'Entity Resolution'..."));
+			assert(response.matches("(.*)Load manifest (.*)manifests(.*)rack.yaml(.*)"));
 
-		assert(response.matches("(.*)Load nodegroups (.*)manifests(.*)nodegroups(.*)queries(.*)"));
-		assert(response.matches("(.*)Store PrefabNodeGroup \"JUNIT query Models for Thing\" from query Models for Thing.json(.*)"));
-		assert(response.matches("(.*)Store Report \"JUNIT report data verification\" from report data verification.json(.*)"));
+			assert(response.contains("Loading manifest 'RACK ontology'..."));
+			assert(response.matches("(.*)Load model (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)import.yaml(.*)"));
+			assert(response.matches("(.*)Load file (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)AGENTS.owl(.*)"));
+			assert(response.matches("(.*)Load file (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)ANALYSIS.owl(.*)"));
 
-		assert(response.matches("(.*)Load data (.*)TestData(.*)Package-1(.*)import.yaml(.*)"));
-		assert(response.matches("(.*)Load CSV (.*)PROV_S_ACTIVITY1.csv using class http://arcos.rack/PROV-S#ACTIVITY(.*)"));
-		assert(response.matches("(.*)Load CSV (.*)REQUIREMENTS_REQUIREMENT1.csv using class http://arcos.rack/REQUIREMENTS#REQUIREMENT(.*)"));
-		assert(response.matches("(.*)Load CSV (.*)TESTING_TEST1.csv using class http://arcos.rack/TESTING#TEST(.*)"));
-		assert(response.matches("(.*)Load CSV (.*)PROV_S_ACTIVITY2.csv using class http://arcos.rack/PROV-S#ACTIVITY(.*)"));
-		assert(response.matches("(.*)Load CSV (.*)REQUIREMENTS_REQUIREMENT2.csv using class http://arcos.rack/REQUIREMENTS#REQUIREMENT(.*)"));
-		assert(response.matches("(.*)Load CSV (.*)TESTING_TEST2.csv using class http://arcos.rack/TESTING#TEST(.*)"));
-		assert(response.matches("(.*)Load data (.*)TestData(.*)Package-2(.*)import.yaml(.*)"));
-		assert(response.matches("(.*)Load data (.*)TestData(.*)Package-3(.*)import.yaml(.*)"));
-		assert(response.matches("(.*)Load data (.*)TestData(.*)Resolutions-1(.*)import.yaml(.*)"));
-		assert(response.matches("(.*)Load data (.*)TestData(.*)Resolutions-1(.*)import.yaml(.*)"));
+			assert(response.matches("(.*)Load nodegroups (.*)manifests(.*)nodegroups(.*)queries(.*)"));
 
-		assert(response.contains("Load complete"));
+			assert(response.matches("(.*)Load data (.*)TestData(.*)Package-1(.*)import.yaml(.*)"));
+			assert(response.matches("(.*)Load CSV (.*)PROV_S_ACTIVITY1.csv using class http://arcos.rack/PROV-S#ACTIVITY(.*)"));
+			assert(response.matches("(.*)Load CSV (.*)REQUIREMENTS_REQUIREMENT1.csv using class http://arcos.rack/REQUIREMENTS#REQUIREMENT(.*)"));
+			assert(response.matches("(.*)Load CSV (.*)TESTING_TEST1.csv using class http://arcos.rack/TESTING#TEST(.*)"));
+			assert(response.matches("(.*)Load CSV (.*)PROV_S_ACTIVITY2.csv using class http://arcos.rack/PROV-S#ACTIVITY(.*)"));
+			assert(response.matches("(.*)Load CSV (.*)REQUIREMENTS_REQUIREMENT2.csv using class http://arcos.rack/REQUIREMENTS#REQUIREMENT(.*)"));
+			assert(response.matches("(.*)Load CSV (.*)TESTING_TEST2.csv using class http://arcos.rack/TESTING#TEST(.*)"));
+			assert(response.matches("(.*)Load data (.*)TestData(.*)Package-2(.*)import.yaml(.*)"));
+			assert(response.matches("(.*)Load data (.*)TestData(.*)Package-3(.*)import.yaml(.*)"));
+			assert(response.matches("(.*)Load data (.*)TestData(.*)Resolutions-1(.*)import.yaml(.*)"));
+			assert(response.matches("(.*)Load data (.*)TestData(.*)Resolutions-1(.*)import.yaml(.*)"));
 
-		assertEquals(seiModel.getNumTriples(), 1439);  	// TODO will change when load is fully implemented
-		assertEquals(seiData.getNumTriples(), 0);		// TODO will change when load is fully implemented
+			assert(response.contains("Load complete"));
 
-		seiModel.dropGraph();
-		seiData.dropGraph();
+			assertEquals(modelFallbackSei.getNumTriples(), 1439);  	// TODO will change when load is fully implemented
+			assertEquals(dataFallbackSei.getNumTriples(), 0);		// TODO will change when load is fully implemented
+
+		}catch(Exception e){
+			throw e;
+		}finally {
+			clearGraphs();
+		}
 	}
 
 	// Test error conditions
@@ -101,11 +100,11 @@ public class UtilityClientTest_IT extends YamlConfigTest{
 		String response;
 
 		// not a zip file
-		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/animalQuery.json"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH));
+		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/animalQuery.json"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), MODEL_FALLBACK_GRAPH, DATA_FALLBACK_GRAPH));
 		assert(response.contains("Error: This endpoint only accepts ingestion packages in zip file format"));
 
 		// contains no top-level manifest.yaml
-		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/manifest/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH));
+		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/manifest/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), MODEL_FALLBACK_GRAPH, DATA_FALLBACK_GRAPH));
 		assert(response.contains("Error: Cannot find a top-level manifest in IngestionPackageNoManifest.zip"));
 	}
 
