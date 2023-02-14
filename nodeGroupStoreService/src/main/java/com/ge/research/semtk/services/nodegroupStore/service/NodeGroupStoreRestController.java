@@ -171,7 +171,7 @@ public class NodeGroupStoreRestController {
 					SparqlGraphJson sgJson = new SparqlGraphJson(sgJsonJson);
 					JSONObject connJson = sgJson.getSparqlConnJson();
 					if(connJson == null){
-						throw new Exception("storeNodeGroup :: sparqlgraph json serialization passed to store node group did not contain a valid connection block. it is possible that only the node group itself was passed. please check that complete input is sent.");
+						throw new Exception("Item '" + requestBody.getName() + "' does not contain a valid connection block. it is possible that only the node group itself was passed. please check that complete input is sent.");
 					}
 		
 					store.insertNodeGroup(sgJsonJson, connJson, requestBody.getName(), requestBody.getComments(), requestBody.getCreator());
