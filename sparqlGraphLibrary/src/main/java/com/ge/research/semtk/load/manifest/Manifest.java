@@ -232,7 +232,7 @@ public class Manifest extends YamlConfig {
 		// clear graphs first
 		if(clear) {
 			if(defaultGraph) {
-				// TODO call SemTK to clear default graph
+				clearDefaultGraph(serverTypeString, server);
 			} else {
 				// clear each model and data graph in the footprint
 				for(String g : getGraphsFootprint()) {
@@ -307,7 +307,7 @@ public class Manifest extends YamlConfig {
 		if(topLevel) {
 			if(this.getCopyToDefaultGraph()) {
 				if(clear) {
-					// TODO call SemTK to clear default graph
+					clearDefaultGraph(serverTypeString, server);
 				}
 				// TODO call SemTK to copy each model/data graph to default graph
 			}
@@ -359,6 +359,13 @@ public class Manifest extends YamlConfig {
 		public Object getValue(){
 			return value;
 		}
+	}
+
+	/**
+	 * Clear the default graph
+	 */
+	private void clearDefaultGraph(String serverTypeString, String server) throws Exception {
+		SparqlEndpointInterface.getInstance(serverTypeString, server, SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME).clearGraph();
 	}
 
 }
