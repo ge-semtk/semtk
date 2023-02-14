@@ -53,6 +53,7 @@ public class ManifestTest extends YamlConfigTest {
 		assertEquals(manifest.getDatagraphsFootprint().size(), 2);
 		assertEquals(manifest.getDatagraphsFootprint().get(0).toString(), "http://junit/animals/data1");
 		assertEquals(manifest.getDatagraphsFootprint().get(1).toString(), "http://junit/animals/data2");
+		assertEquals(manifest.getGraphsFootprint().size(), 3);
 		assertEquals(manifest.getNodegroupsFootprint().size(), 1);
 		assertEquals(manifest.getNodegroupsFootprint().get(0), "animals/nodegroups");
 

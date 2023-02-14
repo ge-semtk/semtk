@@ -136,6 +136,17 @@ public class Manifest extends YamlConfig {
 	public LinkedList<String> getDatagraphsFootprint() {
 		return datagraphsFootprint;
 	}
+	/* Gets all model and data graphs in the footprint */
+	public LinkedList<String> getGraphsFootprint(){
+		LinkedList<String> ret = new LinkedList<String>();
+		if (getModelgraphsFootprint() != null) {
+			ret.addAll(getModelgraphsFootprint());
+		}
+		if (getDatagraphsFootprint() != null) {
+			ret.addAll(getDatagraphsFootprint());
+		}
+		return ret;
+	}
 	public LinkedList<String> getNodegroupsFootprint() {
 		return nodegroupsFootprint;
 	}
@@ -218,18 +229,14 @@ public class Manifest extends YamlConfig {
 
 		progressWriter.println("Loading manifest '" + getName() + "'...");
 
-		// clear graphs first, if wanted
+		// clear graphs first
 		if(clear) {
 			if(defaultGraph) {
 				// TODO call SemTK to clear default graph
 			} else {
-				LinkedList<String> modelGraphs = getModelgraphsFootprint();
-				if(modelGraphs != null) {
-					// TODO call SemTK to clear each model graph in the footprint
-				}
-				LinkedList<String> dataGraphs = getDatagraphsFootprint();
-				if(dataGraphs != null) {
-					// TODO call SemTK to clear each data graph in the footprint
+				// clear each model and data graph in the footprint
+				for(String g : getGraphsFootprint()) {
+					SparqlEndpointInterface.getInstance(serverTypeString, server, g).clearGraph();
 				}
 			}
 			if(getNodegroupsFootprint() != null) {
