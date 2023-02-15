@@ -304,7 +304,6 @@ public class NodeGroupStoreRestClient extends RestClient {
 		
 		
 		String errorMsg = "";
-		int lineNumber=1; // header is line #1
 		while ((errorMsg = br.readNext()) != null) {
 			
 			if (errorMsg.length() > 0 && statusWriter != null)
@@ -330,7 +329,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 				}
 				
 				// add
-				this.storeNodeGroup(ngId, ngComments, ngOwner, ngFilePath, itemType, sparqlConnOverrideFile);
+				this.storeItem(ngId, ngComments, ngOwner, ngFilePath, itemType, sparqlConnOverrideFile);
 				exists.add(ngId);
 				if (statusWriter != null) statusWriter.println("Stored: " + ngId);
 			}	
@@ -349,7 +348,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 	 * @param sparqlConnOverrideFile
 	 * @throws Exception - on failures (including already exists)
 	 */
-	public void storeNodeGroup(String ngId, String ngComments, String ngOwner, String ngFilePath, NgStore.StoredItemTypes itemType, String sparqlConnOverrideFile) throws Exception {
+	public void storeItem(String ngId, String ngComments, String ngOwner, String ngFilePath, NgStore.StoredItemTypes itemType, String sparqlConnOverrideFile) throws Exception {
 
 		// validate nodegroup file
 		if(!ngFilePath.endsWith(".json")){
