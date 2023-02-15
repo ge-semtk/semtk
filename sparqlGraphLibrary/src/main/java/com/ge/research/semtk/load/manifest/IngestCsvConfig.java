@@ -48,7 +48,7 @@ public class IngestCsvConfig extends YamlConfig {
 		super(yamlFile, Utility.getResourceAsFile(IngestCsvConfig.class, "/manifest/ingest_csv_config_schema.json"), fallbackModelGraph, fallbackDataGraph);
 
 		if(fallbackModelGraph == null) {
-			throw new Exception("Fallback model graph not provided");
+			throw new Exception("Fallback model graph not provided");  // TODO junit
 		}
 		if(fallbackDataGraph == null) {
 			throw new Exception("Fallback data graph not provided");

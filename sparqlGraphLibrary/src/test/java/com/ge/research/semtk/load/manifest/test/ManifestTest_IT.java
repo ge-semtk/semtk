@@ -31,46 +31,46 @@ import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 
 
-public class ManifestTest_IT extends YamlConfigTest {
+public class ManifestTest_IT {
+
+	// not extending YamlConfigTest because need to match ingestion package footprint
+	SparqlEndpointInterface modelFallbackSei = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/model"));
+	SparqlEndpointInterface dataFallbackSei = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/data"));
+	SparqlEndpointInterface dataSeiFromYaml = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/data"));  // for this package, same as footprint/fallback
+	SparqlEndpointInterface defaultGraphSei = TestGraph.getSei(SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME);
 
 	public ManifestTest_IT() throws Exception {
 		super();
 	}
 
 	/**
-	 * Test loading a manifest via YAML
-	 * TODO the YAML footprint does not reflect the model fallback used here - reconcile
+	 * Test loading a manifest via YAML, including a copy to default graph.
+	 *
+	 * TODO add a similar test without a copy to default graph
 	 */
 	@Test
 	public void testLoadManifest() throws Exception{
 
-		// this ingestion package copies to the default graph - only allow to run on Fuseki    // TODO add a similar test without default graph, to run on all triplestore types
+		// this ingestion package copies to the default graph - only allow to run on Fuseki
 		assumeTrue("Skipping test: only use default graph on Fuseki triplestore", TestGraph.getSei().getServerType().equals(SparqlEndpointInterface.FUSEKI_SERVER));
 
-		SparqlEndpointInterface dataSeiFromYaml =  TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/data"));  // e.g. http://junit/G7JZH4J3E/200005868/auto/rack001/data
+		modelFallbackSei.clearGraph();
+		dataFallbackSei.clearGraph();
+		dataSeiFromYaml.clearGraph();
+		defaultGraphSei.clearGraph();
 
 		File tempDir = null;
 		try {
-			
+			// get manifest from ingestion package, perform load
 			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/manifest/IngestionPackage.zip");
-
-			// get manifest
-			File manifestFile = Manifest.getTopLevelManifestFile(tempDir);
-			Manifest manifest = new Manifest(manifestFile, modelFallbackSei.getGraph(), dataFallbackSei.getGraph());  // should only load to model, not data
-			assertEquals(manifest.getName(), "Entity Resolution");
-
-			clearGraphs();
-			dataSeiFromYaml.clearGraph();
-			defaultGraphSei.clearGraph();
-			assertEquals(defaultGraphSei.getNumTriples(), 0);
-
+			Manifest manifest = new Manifest(Manifest.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());  // should only load to model, not data
 			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), new PrintWriter(System.out));
 
 			// confirm model/data loaded
 			assertEquals(modelFallbackSei.getNumTriples(), 1439);	// TODO verify that count is correct
 			assertEquals(dataSeiFromYaml.getNumTriples(), 80);		// TODO verify that count is correct
-			// verify copied to default graph
-			assertEquals(defaultGraphSei.getNumTriples(), 80);		// TODO this would change if properly reflect fallback model graph in the footprint
+			// confirm copied to default graph
+			assertEquals(defaultGraphSei.getNumTriples(), 1439 + 80);
 
 		}catch(Exception e) {
 			throw e;
@@ -78,8 +78,10 @@ public class ManifestTest_IT extends YamlConfigTest {
 			if(tempDir != null) {
 				FileUtils.deleteDirectory(tempDir);
 			}
-			clearGraphs();
-			dataSeiFromYaml.dropGraph();
+			modelFallbackSei.clearGraph();
+			dataFallbackSei.clearGraph();
+			dataSeiFromYaml.clearGraph();
+			defaultGraphSei.clearGraph();
 		}
 	}
 
