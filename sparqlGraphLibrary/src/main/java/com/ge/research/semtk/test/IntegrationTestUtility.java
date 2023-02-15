@@ -280,15 +280,16 @@ public class IntegrationTestUtility{
 	public static void cleanupNodegroupStore(NodeGroupStoreRestClient nodeGroupStoreClient, String creator) throws Exception {
 		// Clean up old nodegroups.   Shouldn't happen but it seems to.
 		// So as not to interfere with others' testing, don't delete if creation date is today
-		TableResultSet tabRes = nodeGroupStoreClient.executeGetNodeGroupMetadata();
+		TableResultSet tabRes = nodeGroupStoreClient.executeGetStoredItemsMetadata(NgStore.StoredItemTypes.StoredItem);
 		tabRes.throwExceptionIfUnsuccessful();
 		Table storeTab = tabRes.getTable();
-		String today = Utility.getSPARQLCurrentDateString();
 		for (int i=0; i < storeTab.getNumRows(); i++) {
-			if (storeTab.getCell(i,  "creator").equals(creator) && 
-					! storeTab.getCell(i, "creationDate").equals(today)) {
+			if (storeTab.getCell(i,  "creator").equals(creator)) {
 				String id = storeTab.getCell(i, "ID");
-				nodeGroupStoreClient.deleteStoredNodeGroup(id);
+				String it = storeTab.getCell(i, "itemType");
+				it = it.contains("#") ? it.split("#")[1] : it; // get rid of itemType uri prefix if any
+				NgStore.StoredItemTypes itemType = NgStore.StoredItemTypes.valueOf(it);
+				nodeGroupStoreClient.deleteStoredItem(id, itemType);
 			}
 		}
 	}

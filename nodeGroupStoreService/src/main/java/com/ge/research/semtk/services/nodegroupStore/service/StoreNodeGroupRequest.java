@@ -95,6 +95,12 @@ public class StoreNodeGroupRequest {
 		if(this.getItem() == null || this.getItem().trim().isEmpty()){
 			throw new Exception("Invalid request to store node group: node group is not provided, or is empty");
 		}
+		// provide nice English errors
+		if (this.name == null || this.name.isBlank()) throw new Exception("Invalid request to store nodegroup: nodegroup name is blank");
+		if (this.comments == null) throw new Exception("Invalid request to store nodegroup: comments are null");
+
+		if (this.creator == null) throw new Exception("Invalid request to store nodegroup: creator is null");
+
 	}
 	public String getJsonRenderedNodeGroup() {
 		return jsonRenderedNodeGroup;

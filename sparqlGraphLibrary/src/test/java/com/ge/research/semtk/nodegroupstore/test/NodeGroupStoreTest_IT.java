@@ -19,6 +19,7 @@ package com.ge.research.semtk.nodegroupstore.test;
 
 import static org.junit.Assert.*;
 
+import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -32,6 +33,7 @@ import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.services.nodegroupStore.NgStore;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.utility.Utility;
 
@@ -65,7 +67,7 @@ public class NodeGroupStoreTest_IT {
 	@AfterClass
     public static void teardown() throws Exception {
         // delete stored nodegroup when done with all tests
-		nodeGroupStoreClient.deleteStoredNodeGroupIfExists(ID);
+		IntegrationTestUtility.cleanupNodegroupStore(nodeGroupStoreClient, CREATOR);
     } 
 	
 	/**
@@ -128,7 +130,7 @@ public class NodeGroupStoreTest_IT {
 		// null comments - should fail
 		result = nodeGroupStoreClient.executeStoreNodeGroup(ID, null, CREATOR, NG_JSON);
 		assertFalse(result.getSuccess());
-		assertTrue(result.getRationaleAsString("").contains("Invalid request to store node group: comments are not provided"));		
+		assertTrue(result.getRationaleAsString("").contains(" comments "));		
 
 		// empty comments - should succeed
 		result = nodeGroupStoreClient.executeStoreNodeGroup(ID, "", CREATOR, NG_JSON);
@@ -152,7 +154,7 @@ public class NodeGroupStoreTest_IT {
 		// null creator
 		result = nodeGroupStoreClient.executeStoreNodeGroup(ID, COMMENTS, null, NG_JSON);
 		assertFalse(result.getSuccess());
-		assertTrue(result.getRationaleAsString("").contains("Invalid request to store node group: creator is not provided"));		
+		assertTrue(result.getRationaleAsString("").contains(" creator "));		
 
 		// empty creator
 		result = nodeGroupStoreClient.executeStoreNodeGroup(ID, COMMENTS, "", NG_JSON);
@@ -168,20 +170,22 @@ public class NodeGroupStoreTest_IT {
 	public void testGetNodegroupMetadata() throws Exception {
 		try {
 			TableResultSet res;
-			res = nodeGroupStoreClient.executeGetNodeGroupMetadata();
+			res = nodeGroupStoreClient.executeGetStoredItemsMetadata(NgStore.StoredItemTypes.PrefabNodeGroup);
 			int countBefore = res.getResults().getNumRows();
 			nodeGroupStoreClient.executeStoreNodeGroup(ID + "a", COMMENTS, CREATOR, NG_JSON);
 			nodeGroupStoreClient.executeStoreNodeGroup(ID + "b", COMMENTS, CREATOR, NG_JSON);
 			nodeGroupStoreClient.executeStoreNodeGroup(ID + "c", "", "", NG_JSON);
-			res = nodeGroupStoreClient.executeGetNodeGroupMetadata();
+			res = nodeGroupStoreClient.executeGetStoredItemsMetadata(NgStore.StoredItemTypes.PrefabNodeGroup);
 			int countAfter = res.getResults().getNumRows();
 			assertEquals(countBefore + 3, countAfter);		 // confirm that we get metadata for 3 more nodegroups (imperfect test)
 			assertEquals(res.getTable().getNumColumns(),5);  // confirm that there are 4 columns of metadata
 			// could add more tests.
 		} finally {
-			nodeGroupStoreClient.deleteStoredNodeGroup(ID + "a");
-			nodeGroupStoreClient.deleteStoredNodeGroup(ID + "b");
-			nodeGroupStoreClient.deleteStoredNodeGroup(ID + "c");
+			try {
+				nodeGroupStoreClient.deleteStoredNodeGroup(ID + "a");
+				nodeGroupStoreClient.deleteStoredNodeGroup(ID + "b");
+				nodeGroupStoreClient.deleteStoredNodeGroup(ID + "c");
+			} catch (Exception e) {}
 		}
 	}
 	
@@ -238,4 +242,19 @@ public class NodeGroupStoreTest_IT {
 		}
 	}
 
+	@Test 
+	public void testLoadStoreDataCsv() throws Exception {
+		IntegrationTestUtility.cleanupNodegroupStore("junit");
+		try {
+			String storeData = Utility.getResourceAsFile(this, "/store_data.csv").getAbsolutePath();
+			nodeGroupStoreClient.loadStoreDataCsv(storeData, null, new PrintWriter(System.out));
+	    	assertEquals(4, IntegrationTestUtility.countItemsInStoreByCreator("junit"));
+		} finally {
+			try {
+				IntegrationTestUtility.cleanupNodegroupStore("junit");
+			} catch (Exception e) {}
+		}
+	}
+	
+	
 }

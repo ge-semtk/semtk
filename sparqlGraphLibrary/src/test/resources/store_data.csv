@@ -1,0 +1,5 @@
+Context,ID,comments,creationDate,creator,jsonFile
+Context,JUNIT TEST NODEGROUP 1,"Test nodegroup 1 created by TestStoreNodegroup unit test",11/9/18,junit,sampleBattery.json
+Context,JUNIT TEST NODEGROUP 2,"Test nodegroup 2 created by TestStoreNodegroup unit test",10/19/18,junit,sampleBattery.json
+Context,JUNIT TEST NODEGROUP 3,"Test nodegroup 3 created by TestStoreNodegroup unit test",10/19/18,junit,sampleBattery.json
+"Context, with commas",JUNIT TEST NODEGROUP 4,"Test nodegroup 4, created by TestStoreNodegroup unit test",10/19/18,junit,sampleBattery.json

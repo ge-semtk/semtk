@@ -282,31 +282,27 @@ public class NodeGroupStoreRestClient extends RestClient {
 
 		StoreDataCsvReader br = new StoreDataCsvReader(csvFileName, statusWriter);		
 		
-		String errorMsg = "";
-		while ((errorMsg = br.readNext()) != null) {
+		while (br.readNext() != null) {
 			
-			if (errorMsg.length() > 0 && statusWriter != null)
-				statusWriter.println(errorMsg);
-			else {
-				String ngId = br.getId();           
-				String ngComments = br.getComments();
-				String ngOwner = br.getCreator();
-				String ngFilePath = br.getJsonFile();
-				NgStore.StoredItemTypes itemType = br.getItemType();
-				
-				// if nodegroup json path is bad, try same directory as csv file
-				if (!(new File(ngFilePath).exists())) {
-					String parent = (Paths.get(csvFileName)).getParent().toString();
-					String fname =  (Paths.get(ngFilePath)).getFileName().toString();
-					ngFilePath = (Paths.get(parent, fname)).toString();
-				}
-				
-				// add
-				this.storeItem(ngId, ngComments, ngOwner, ngFilePath, itemType, sparqlConnOverrideFile, true);
-				if (statusWriter != null) { statusWriter.println("Stored: " + ngId); statusWriter.flush(); }
-			}	
 			
+			String ngId = br.getId();           
+			String ngComments = br.getComments();
+			String ngOwner = br.getCreator();
+			String ngFilePath = br.getJsonFile();
+			NgStore.StoredItemTypes itemType = br.getItemType();
+
+			// if nodegroup json path is bad, try same directory as csv file
+			if (!(new File(ngFilePath).exists())) {
+				String parent = (Paths.get(csvFileName)).getParent().toString();
+				String fname =  (Paths.get(ngFilePath)).getFileName().toString();
+				ngFilePath = (Paths.get(parent, fname)).toString();
+			}
+
+			// add
+			this.storeItem(ngId, ngComments, ngOwner, ngFilePath, itemType, sparqlConnOverrideFile, true);
+			if (statusWriter != null) { statusWriter.println("Stored: " + ngId); statusWriter.flush(); }
 		}
+			
 		if (statusWriter != null) { statusWriter.println("Finished processing file: " + csvFileName); statusWriter.flush(); }
 	}
 
