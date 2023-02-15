@@ -279,8 +279,10 @@ public class Manifest extends YamlConfig {
 				subManifest.load(server, serverTypeString, clear, defaultGraph, false, ingestClient, ngeClient, ngStoreClient, progressWriter);
 
 			}else if(type == StepType.COPYGRAPH) {
-				// TODO call client
-				throw new Exception("Manifest copy-graph step is not implemented");
+				// perform the copy		TODO junit
+				String fromGraph = ((String[])step.getValue())[0];
+				String toGraph = ((String[])step.getValue())[1];
+				ngeClient.copyGraph(server, serverTypeString, fromGraph, server, serverTypeString, toGraph);
 
 			}else {
 				throw new Exception("Unrecognized manifest step: " + type);
