@@ -24,6 +24,7 @@ import java.io.BufferedReader;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.ge.research.semtk.load.manifest.test.ManifestTest_IT;
 import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.services.client.UtilityClient;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -65,25 +66,20 @@ public class UtilityClientTest_IT {
 			// this ingestion package copies to the default graph - only allow to run on Fuseki
 			assumeTrue("Skipping test: only use default graph on Fuseki triplestore", TestGraph.getSei().getServerType().equals(SparqlEndpointInterface.FUSEKI_SERVER));
 
-			modelFallbackSei.clearGraph();
-			dataFallbackSei.clearGraph();
-			dataSeiFromYaml.clearGraph();
-			defaultGraphSei.clearGraph();
+			reset();
 
 			BufferedReader reader = client.execLoadIngestionPackage(TestGraph.getZipAndUniquifyJunitGraphs(this, "/manifest/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 			String response = Utility.readToString(reader);
+
 			// check the response stream
 			assert(response.contains("Loading manifest 'Entity Resolution'..."));
 			assert(response.matches("(.*)Load manifest (.*)manifests(.*)rack.yaml(.*)"));
-
 			assert(response.contains("Loading manifest 'RACK ontology'..."));
 			assert(response.matches("(.*)Load model (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)import.yaml(.*)"));
 			assert(response.matches("(.*)Load file (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)AGENTS.owl(.*)"));
 			assert(response.matches("(.*)Load file (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)ANALYSIS.owl(.*)"));
-
 			assert(response.matches("(.*)Load nodegroups (.*)manifests(.*)nodegroups(.*)queries(.*)"));
 			assert(response.matches("(.*)Stored: JUNIT query Files of a Given Format(.*)"));
-
 			assert(response.matches("(.*)Load data (.*)TestData(.*)Package-1(.*)import.yaml(.*)"));
 			assert(response.matches("(.*)Load CSV (.*)PROV_S_ACTIVITY1.csv using class http://arcos.rack/PROV-S#ACTIVITY(.*)"));
 			assert(response.matches("(.*)Load CSV (.*)REQUIREMENTS_REQUIREMENT1.csv using class http://arcos.rack/REQUIREMENTS#REQUIREMENT(.*)"));
@@ -95,20 +91,18 @@ public class UtilityClientTest_IT {
 			assert(response.matches("(.*)Load data (.*)TestData(.*)Package-3(.*)import.yaml(.*)"));
 			assert(response.matches("(.*)Load data (.*)TestData(.*)Resolutions-1(.*)import.yaml(.*)"));
 			assert(response.matches("(.*)Load data (.*)TestData(.*)Resolutions-1(.*)import.yaml(.*)"));
-
 			assert(response.contains("Load complete"));
 
-			assertEquals(modelFallbackSei.getNumTriples(), 1439);  	// TODO verify that count is correct
-			assertEquals(dataSeiFromYaml.getNumTriples(), 80);		// TODO verify that count is correct
-			assertEquals(defaultGraphSei.getNumTriples(), 1439 + 80);
+			// check the counts
+			assertEquals("Number of triples loaded to model graph", ManifestTest_IT.NUM_EXPECTED_TRIPLES_MODEL, modelFallbackSei.getNumTriples());
+			assertEquals("Number of triples loaded to data graph", ManifestTest_IT.NUM_EXPECTED_TRIPLES_DATA, dataSeiFromYaml.getNumTriples());
+			assertEquals("Number of triples loaded to default graph", ManifestTest_IT.NUM_EXPECTED_TRIPLES_MODEL + ManifestTest_IT.NUM_EXPECTED_TRIPLES_DATA, defaultGraphSei.getNumTriples());
+			assertEquals("Number of nodegroups", ManifestTest_IT.NUM_EXPECTED_NODEGROUPS, IntegrationTestUtility.countItemsInStoreByCreator("junit"));
 
 		}catch(Exception e){
 			throw e;
 		}finally {
-			modelFallbackSei.clearGraph();
-			dataFallbackSei.clearGraph();
-			dataSeiFromYaml.clearGraph();
-			defaultGraphSei.clearGraph();
+			reset();
 		}
 	}
 
@@ -124,6 +118,15 @@ public class UtilityClientTest_IT {
 		// contains no top-level manifest.yaml
 		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/manifest/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
 		assert(response.contains("Error: Cannot find a top-level manifest in IngestionPackageNoManifest.zip"));
+	}
+
+	// clear graphs and nodegroup store
+	private void reset() throws Exception {
+		modelFallbackSei.clearGraph();
+		dataFallbackSei.clearGraph();
+		dataSeiFromYaml.clearGraph();
+		defaultGraphSei.clearGraph();
+		IntegrationTestUtility.cleanupNodegroupStore("junit");
 	}
 
 }

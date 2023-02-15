@@ -39,9 +39,9 @@ public class ManifestTest_IT {
 	SparqlEndpointInterface dataSeiFromYaml = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/data"));  // for this package, same as footprint/fallback
 	SparqlEndpointInterface defaultGraphSei = TestGraph.getSei(SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME);
 
-	final int NUM_EXPECTED_TRIPLES_MODEL = 1439;		// TODO verify that this is correct
-	final int NUM_EXPECTED_TRIPLES_DATA = 80;			// TODO verify that this is correct
-	final int NUM_EXPECTED_NODEGROUPS = 31;
+	public final static int NUM_EXPECTED_TRIPLES_MODEL = 1439;		// TODO verify that this is correct
+	public final static int NUM_EXPECTED_TRIPLES_DATA = 80;		// TODO verify that this is correct
+	public final static int NUM_EXPECTED_NODEGROUPS = 31;
 
 	public ManifestTest_IT() throws Exception {
 		super();
