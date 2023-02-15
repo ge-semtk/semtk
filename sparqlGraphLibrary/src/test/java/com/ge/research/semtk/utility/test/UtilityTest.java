@@ -207,7 +207,7 @@ public class UtilityTest {
 
 		// confirm successful unzip
 		try {
-			File zipFile = Utility.getResourceAsFile(this, "IngestionPackage.zip");
+			File zipFile = Utility.getResourceAsFile(this, "/manifest/IngestionPackage.zip");
 			tempDir = Utility.createTempDirectory();
 			Utility.unzip(new ZipInputStream(new FileInputStream(zipFile)), tempDir);
 			assertTrue((new File(tempDir.getAbsolutePath() + File.separator + "manifest.yaml").exists()));
@@ -221,7 +221,7 @@ public class UtilityTest {
 
 		// confirm error if try to unzip a file other than a zip file
 		try {
-			File nonZipFile = Utility.getResourceAsFile(this, "animalQuery.json");
+			File nonZipFile = Utility.getResourceAsFile(this, "/animalQuery.json");
 			tempDir = Utility.createTempDirectory();
 			Utility.unzip(new ZipInputStream(new FileInputStream(nonZipFile)), tempDir);
 			fail(); 	// should not get here
