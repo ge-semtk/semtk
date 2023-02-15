@@ -45,7 +45,7 @@ public class IngestOwlConfigTest_IT extends YamlConfigTest {
 
 			// TODO uniquifyJunitGraphName
 			IngestOwlConfig configWithoutModelInYaml = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), modelFallbackSei.getGraph());
-			IngestOwlConfig configWithModelInYaml = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import-WithModel.yaml"), modelFallbackSei.getGraph());
+			IngestOwlConfig configWithModelInYaml = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import-WithModelgraph.yaml"), modelFallbackSei.getGraph());
 
 			// Case 1: if load() model graph parameter, then confirm loads there
 			clearGraphs();
