@@ -60,6 +60,7 @@ import com.ge.research.semtk.querygen.timeseries.TimeSeriesConstraint;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.services.nodegroupStore.NgStore;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
@@ -271,6 +272,7 @@ public class IntegrationTestUtility{
 		return "junit_" + UUID.randomUUID().toString();
 	}
 	
+
 	public static void cleanupNodegroupStore(String creator) throws Exception {
 		cleanupNodegroupStore(getNodeGroupStoreRestClient(), creator);
 	}
@@ -291,6 +293,24 @@ public class IntegrationTestUtility{
 		}
 	}
 	
+	/**
+	 * Count number of nodegroups in store with creator==creator
+	 * @param creator
+	 * @return
+	 * @throws Exception
+	 */
+	public static int countItemsInStoreByCreator(String creator) throws Exception {
+		int ret = 0;
+		TableResultSet tabRes = getNodeGroupStoreRestClient().executeGetStoredItemsMetadata(NgStore.StoredItemTypes.StoredItem);
+		tabRes.throwExceptionIfUnsuccessful();
+		Table storeTab = tabRes.getTable();
+		for (int i=0; i < storeTab.getNumRows(); i++) {
+			if (storeTab.getCell(i,  "creator").equals(creator)) {
+				ret += 1;
+			}
+		}
+		return ret;
+	}
 	/**
 	 * Replace "http://semtk.research.ge.com/generated# with UriResolver.DEFAULT_URI_PREFIX
 	 * @param str
