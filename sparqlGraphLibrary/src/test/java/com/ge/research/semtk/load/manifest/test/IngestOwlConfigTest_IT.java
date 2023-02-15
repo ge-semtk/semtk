@@ -23,6 +23,7 @@ import java.io.PrintWriter;
 import org.junit.Test;
 
 import com.ge.research.semtk.load.manifest.IngestOwlConfig;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 
@@ -40,22 +41,35 @@ public class IngestOwlConfigTest_IT extends YamlConfigTest {
 
 		try {
 
-			IngestOwlConfig config = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), modelFallbackSei.getGraph());
+			final int NUM_EXPECTED_TRIPLES = 1439;		// TODO verify that this is correct
+
+			// TODO uniquifyJunitGraphName
+			IngestOwlConfig configWithoutModelInYaml = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), modelFallbackSei.getGraph());
+			IngestOwlConfig configWithModelInYaml = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import-WithModelString.yaml"), modelFallbackSei.getGraph());
 
 			// Case 1: if load() model graph parameter, then confirm loads there
 			clearGraphs();
-			config.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
-			assertEquals(modelSei.getNumTriples(), 1439);
+			configWithoutModelInYaml.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
+			assertEquals(modelSei.getNumTriples(), NUM_EXPECTED_TRIPLES);
 			assertEquals(modelFallbackSei.getNumTriples(), 0);
 
 			// Case 2: if no load() model graph parameter, then confirm loads to YAML data graph if present
-			// TODO need a different YAML (with model graph) to test this
+			clearGraphs();
+			SparqlEndpointInterface modelSeiFromYaml = TestGraph.getSei(configWithModelInYaml.getModelgraph());  // from the YAML, e.g. http://junit/rack001/model
+			modelSeiFromYaml.clearGraph();
+			configWithModelInYaml.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
+			assertEquals(modelSei.getNumTriples(), 0);
+			assertEquals(modelFallbackSei.getNumTriples(), 0);
+			assertEquals(modelSeiFromYaml.getNumTriples(), NUM_EXPECTED_TRIPLES);
 
 			// Case 3: if no load() model graph parameter, and no YAML data graph, then confirm loads to fallback
 			clearGraphs();
-			config.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
+			configWithoutModelInYaml.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
 			assertEquals(modelSei.getNumTriples(), 0);
-			assertEquals(modelFallbackSei.getNumTriples(), 1439);
+			assertEquals(modelFallbackSei.getNumTriples(), NUM_EXPECTED_TRIPLES);
+
+			// TODO test import-WithModelArray.yaml
+			// TODO test import-WithModelArrayMultiple.yaml
 
 		}catch(Exception e) {
 			throw e;

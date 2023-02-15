@@ -1,0 +1,23 @@
+model-graphs: http://junit/rack001/model
+
+files:
+- AGENTS.owl
+- ANALYSIS.owl
+- BASELINE.owl
+- CLAIM.owl
+- CONFIDENCE.owl
+- DOCUMENT.owl
+- EntityResolution.owl
+- FILE.owl
+- HARDWARE.owl
+- HAZARD.owl
+- MODEL.owl
+- PROCESS.owl
+- PROV-S.owl
+- REQUIREMENTS.owl
+- REVIEW.owl
+- SECURITY.owl
+- SOFTWARE.owl
+- SYSTEM.owl
+- TESTING.owl
+- RESOLUTIONS.owl
