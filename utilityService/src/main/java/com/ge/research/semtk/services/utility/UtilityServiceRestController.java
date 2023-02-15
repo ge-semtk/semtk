@@ -52,6 +52,8 @@ import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.load.manifest.Manifest;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
+import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.plotting.PlotlyPlotSpec;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -400,7 +402,7 @@ public class UtilityServiceRestController {
 				throw new Exception("Cannot find a top-level manifest in " + ingestionPackageZipFile.getOriginalFilename());
 			}
 			Manifest manifest = new Manifest(manifestFile, defaultModelGraph, defaultDataGraph);
-			manifest.load(serverAndPort, serverType, false, false, true, getIngestorRestClient(), getNodegroupExecutionClient(), responseWriter);
+			manifest.load(serverAndPort, serverType, false, false, true, getIngestorRestClient(), getNodegroupExecutionClient(), getNodegroupStoreClient(), responseWriter);
 
 			responseWriter.println("Load complete");
 			responseWriter.flush();
@@ -462,6 +464,14 @@ public class UtilityServiceRestController {
 	private NodeGroupExecutionClient getNodegroupExecutionClient() throws Exception{
 		NodeGroupExecutionClientConfig necc = new NodeGroupExecutionClientConfig(props.getNodegroupExecutionServiceProtocol(), props.getNodegroupExecutionServiceServer(), props.getNodegroupExecutionServicePort());
 		return new NodeGroupExecutionClient(necc);
+	}
+
+	/**
+	 * Get a nodegroup store client.
+	 */
+	private NodeGroupStoreRestClient getNodegroupStoreClient() throws Exception{
+		NodeGroupStoreConfig ngsc = new NodeGroupStoreConfig(props.getNodegroupStoreServiceProtocol(), props.getNodegroupStoreServiceServer(), props.getNodegroupStoreServicePort());
+		return new NodeGroupStoreRestClient(ngsc);
 	}
 
 	/**
