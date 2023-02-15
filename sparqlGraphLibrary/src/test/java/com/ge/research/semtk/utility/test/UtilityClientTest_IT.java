@@ -24,7 +24,6 @@ import java.io.BufferedReader;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.ge.research.semtk.load.manifest.test.YamlConfigTest;
 import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.services.client.UtilityClient;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -32,7 +31,13 @@ import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 
-public class UtilityClientTest_IT extends YamlConfigTest{
+public class UtilityClientTest_IT {
+
+	// not extending YamlConfigTest because need to match ingestion package footprint
+	SparqlEndpointInterface modelFallbackSei = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/model"));
+	SparqlEndpointInterface dataFallbackSei = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/data"));
+	SparqlEndpointInterface dataSeiFromYaml = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/data"));  // for this package, same as footprint/fallback
+	SparqlEndpointInterface defaultGraphSei = TestGraph.getSei(SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME);
 
 	public UtilityClientTest_IT() throws Exception {
 		super();
@@ -57,10 +62,13 @@ public class UtilityClientTest_IT extends YamlConfigTest{
 
 		try {
 
-			// this ingestion package copies to the default graph - only allow to run on Fuseki    // TODO add a similar test without default graph, to run on all triplestore types
+			// this ingestion package copies to the default graph - only allow to run on Fuseki
 			assumeTrue("Skipping test: only use default graph on Fuseki triplestore", TestGraph.getSei().getServerType().equals(SparqlEndpointInterface.FUSEKI_SERVER));
 
-			clearGraphs();
+			modelFallbackSei.clearGraph();
+			dataFallbackSei.clearGraph();
+			dataSeiFromYaml.clearGraph();
+			defaultGraphSei.clearGraph();
 
 			BufferedReader reader = client.execLoadIngestionPackage(TestGraph.getZipAndUniquifyJunitGraphs(this, "/manifest/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 			String response = Utility.readToString(reader);
@@ -89,13 +97,17 @@ public class UtilityClientTest_IT extends YamlConfigTest{
 
 			assert(response.contains("Load complete"));
 
-			assertEquals(modelFallbackSei.getNumTriples(), 1439);  	// TODO will change when load is fully implemented
-			assertEquals(dataFallbackSei.getNumTriples(), 0);		// TODO will change when load is fully implemented
+			assertEquals(modelFallbackSei.getNumTriples(), 1439);  	// TODO verify that count is correct
+			assertEquals(dataSeiFromYaml.getNumTriples(), 80);		// TODO verify that count is correct
+			assertEquals(defaultGraphSei.getNumTriples(), 1439 + 80);
 
 		}catch(Exception e){
 			throw e;
 		}finally {
-			clearGraphs();
+			modelFallbackSei.clearGraph();
+			dataFallbackSei.clearGraph();
+			dataSeiFromYaml.clearGraph();
+			defaultGraphSei.clearGraph();
 		}
 	}
 
