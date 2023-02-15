@@ -177,54 +177,45 @@ public class NodeGroupStoreRestClient extends RestClient {
 		return retval;		
 	}
 	public SimpleResultSet executeStoreNodeGroup(String proposedId, String comments, String creator, JSONObject nodeGroupJSON) throws Exception {
-		return this.executeStoreNodeGroup(proposedId, comments, creator, nodeGroupJSON, null);
+		return this.executeStoreItem(proposedId, comments, creator, nodeGroupJSON, null);
 	}
 	
+	public SimpleResultSet executeStoreItem(String proposedId, String comments, String creator, JSONObject nodeGroupJSON, NgStore.StoredItemTypes itemType) throws Exception {
+		return this.executeStoreItem(proposedId, comments, creator, nodeGroupJSON, itemType, false);
+	}
 	@SuppressWarnings({ "unchecked" })
-	public SimpleResultSet executeStoreNodeGroup(String proposedId, String comments, String creator, JSONObject nodeGroupJSON, NgStore.StoredItemTypes itemType) throws Exception {
+	public SimpleResultSet executeStoreItem(String proposedId, String comments, String creator, JSONObject nodeGroupJSON, NgStore.StoredItemTypes itemType, boolean overwriteFlag) throws Exception {
 		SimpleResultSet retval = null;
 		
 		if(nodeGroupJSON == null){
 			throw new Exception("Cannot store null nodegroup");
 		}
 		
-		conf.setServiceEndpoint("nodeGroupStore/getNodeGroupById");
+		conf.setServiceEndpoint("nodeGroupStore/storeItem");
 		this.parametersJSON.put("id", proposedId);
 		this.parametersJSON.put("name", proposedId);
 		this.parametersJSON.put("comments", comments);
 		this.parametersJSON.put("creator", creator); 
-		this.parametersJSON.put("jsonRenderedNodeGroup", nodeGroupJSON.toJSONString() );
+		this.parametersJSON.put("item", nodeGroupJSON.toJSONString() );
+		this.parametersJSON.put("overwriteFlag", overwriteFlag);
 		if (itemType != null) {
 			this.parametersJSON.put("itemType", itemType.toString() );
 		}
 		
 		try{
-		
-			TableResultSet ret = new TableResultSet((JSONObject) this.execute());
-			ret.throwExceptionIfUnsuccessful();
-			if(ret.getTable().getNumRows() >= 1){
-				// this is a problem as this already exists. 
-				throw new Exception ("executeStoreNodeGroup :: nodegroup with ID (" + proposedId + ") already exists. Exiting without adding.");
-			}		
-			else{
-				this.parametersJSON.remove("id");
-				LocalLogger.logToStdErr("existence check succeeded. proceeding to insert node group: " + proposedId);
-				
-				// perform actual insertion.
-				conf.setServiceEndpoint("nodeGroupStore/storeNodeGroup");
-				JSONObject interim = (JSONObject) this.execute();
-				retval = SimpleResultSet.fromJson( interim );
-			}
+			JSONObject interim = (JSONObject) this.execute();
+			retval = SimpleResultSet.fromJson( interim );
 		}
 		finally{
 			// reset conf and parametersJSON
 			conf.setServiceEndpoint(null);
 			this.parametersJSON.remove("id");
 			this.parametersJSON.remove("name");
-			this.parametersJSON.remove("jsonRenderedNodeGroup");
+			this.parametersJSON.remove("item");
 			this.parametersJSON.remove("comments");
 			this.parametersJSON.remove("creator");
 			this.parametersJSON.remove("itemType");
+			this.parametersJSON.remove("overwriteFlag");
 		}
 		
 		return retval;				
@@ -289,19 +280,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 	 */
 	public void loadStoreDataCsv(String csvFileName, String sparqlConnOverrideFile, PrintWriter statusWriter) throws Exception {
 
-		StoreDataCsvReader br = new StoreDataCsvReader(csvFileName, statusWriter);
-		
-
-		// build "exists" as hashset of nodegroup ids
-		HashSet<String> exists = new HashSet<String>();
-		
-		TableResultSet res = this.executeGetStoredItemsMetadata(NgStore.StoredItemTypes.StoredItem);
-		res.throwExceptionIfUnsuccessful("Error while checking of nodegroup Id already exists");
-		for (int i=0; i < res.getTable().getNumRows(); i++) {
-			String key = res.getTable().getCell(i, "itemType").split("#")[1] + ":" + res.getTable().getCell(i, "ID");
-			exists.add(key);
-		}
-		
+		StoreDataCsvReader br = new StoreDataCsvReader(csvFileName, statusWriter);		
 		
 		String errorMsg = "";
 		while ((errorMsg = br.readNext()) != null) {
@@ -321,21 +300,14 @@ public class NodeGroupStoreRestClient extends RestClient {
 					String fname =  (Paths.get(ngFilePath)).getFileName().toString();
 					ngFilePath = (Paths.get(parent, fname)).toString();
 				}
-	
-				// delete if exists
-				if (exists.contains(itemType.toString() + ":" + ngId)) {
-					SimpleResultSet r = this.deleteStoredItem(ngId, itemType);
-					r.throwExceptionIfUnsuccessful("Error while removing preview version of nodegroup");
-				}
 				
 				// add
-				this.storeItem(ngId, ngComments, ngOwner, ngFilePath, itemType, sparqlConnOverrideFile);
-				exists.add(ngId);
-				if (statusWriter != null) statusWriter.println("Stored: " + ngId);
+				this.storeItem(ngId, ngComments, ngOwner, ngFilePath, itemType, sparqlConnOverrideFile, true);
+				if (statusWriter != null) { statusWriter.println("Stored: " + ngId); statusWriter.flush(); }
 			}	
 			
 		}
-		if (statusWriter != null) statusWriter.println("Finished processing file: " + csvFileName);
+		if (statusWriter != null) { statusWriter.println("Finished processing file: " + csvFileName); statusWriter.flush(); }
 	}
 
 
@@ -348,7 +320,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 	 * @param sparqlConnOverrideFile
 	 * @throws Exception - on failures (including already exists)
 	 */
-	public void storeItem(String ngId, String ngComments, String ngOwner, String ngFilePath, NgStore.StoredItemTypes itemType, String sparqlConnOverrideFile) throws Exception {
+	public void storeItem(String ngId, String ngComments, String ngOwner, String ngFilePath, NgStore.StoredItemTypes itemType, String sparqlConnOverrideFile, boolean overwriteFlag) throws Exception {
 
 		// validate nodegroup file
 		if(!ngFilePath.endsWith(".json")){
@@ -369,7 +341,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 		}
 
 		// store it
-		SimpleResultSet r = this.executeStoreNodeGroup(ngId, ngComments, ngOwner, ngJson, itemType);
+		SimpleResultSet r = this.executeStoreItem(ngId, ngComments, ngOwner, ngJson, itemType, overwriteFlag);
 		r.throwExceptionIfUnsuccessful("Error while storing nodegroup");
 
 	}

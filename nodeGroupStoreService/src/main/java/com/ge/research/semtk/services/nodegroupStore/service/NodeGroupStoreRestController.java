@@ -155,13 +155,17 @@ public class NodeGroupStoreRestController {
 	
 				// throw a meaningful exception if needed info is not present in the request
 				requestBody.validate();	
-	
-				// check that the ID does not already exist. if it does, fail.
 				NgStore store = new NgStore(this.getStoreDataSei());
+				
+				// check that the ID does not already exist
 				Table instanceTable = store.getStoredItemTable(requestBody.getName(), requestBody.getItemType());
 				
-				if(instanceTable.getNumRows() > 0){
-					throw new Exception("Unable to store item:  ID (" + requestBody.getName() + ") already exists");
+				if(instanceTable.getNumRows() > 0) {
+					if (requestBody.getOverwriteFlag()) {
+						store.deleteStoredItem(requestBody.getName(), requestBody.getItemType());
+					} else {
+						throw new Exception("Unable to store item:  ID (" + requestBody.getName() + ") already exists and overwriteFlag=false");
+					}
 				}
 	
 				
