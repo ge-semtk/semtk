@@ -600,7 +600,7 @@ public class NodeGroupExecutionClientTest_IT {
 			toGraphSei.clearGraph();
 			assertEquals(toGraphSei.getNumTriples(), 0);	// assert empty before copy
 
-			String statusMessage = nodeGroupExecutionClient.execCopyGraphSync(
+			String statusMessage = nodeGroupExecutionClient.copyGraph(
 					TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), TestGraph.getDataset(),
 					toGraphSei.getServerAndPort(), toGraphSei.getServerType(), toGraphSei.getGraph());
 

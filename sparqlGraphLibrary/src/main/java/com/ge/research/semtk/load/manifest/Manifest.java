@@ -26,6 +26,7 @@ import org.apache.commons.math3.util.Pair;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
 import com.ge.research.semtk.load.client.IngestorRestClient;
+import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.Utility;
@@ -222,7 +223,7 @@ public class Manifest extends YamlConfig {
 	 * @param ingestClient		ingestionRestClient
 	 * @param progressWriter 	writer for reporting progress
 	 */
-	public void load(String server, String serverTypeString, boolean clear, boolean defaultGraph, boolean topLevel, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
+	public void load(String server, String serverTypeString, boolean clear, boolean defaultGraph, boolean topLevel, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, NodeGroupStoreRestClient ngStoreClient, PrintWriter progressWriter) throws Exception {
 
 		progressWriter.println("Loading manifest '" + getName() + "'...");
 
@@ -236,9 +237,7 @@ public class Manifest extends YamlConfig {
 					SparqlEndpointInterface.getInstance(serverTypeString, server, g).clearGraph();
 				}
 			}
-			if(getNodegroupsFootprint() != null) {
-				// TODO call SemTK to clear each nodegroup in the footprint
-			}
+			// no need to delete nodegroups, they will get overwritten below
 		}
 
 		// if loading to default graph, then set targetGraph
@@ -269,15 +268,15 @@ public class Manifest extends YamlConfig {
 				// load nodegroups/reports from a directory
 				File nodegroupsDirectory = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load nodegroups from " + nodegroupsDirectory.getAbsolutePath());
-				// TODO send nodegroup CSV when Paul is ready for it
-				// TODO call SemTK to delete item if found with same id/type (see Python logic)
+				File csvFile = new File(nodegroupsDirectory, "store_data.csv");
+				ngStoreClient.loadStoreDataCsv(csvFile.getAbsolutePath(), null, progressWriter);
 
 			}else if(type == StepType.MANIFEST) {
 				// load content using sub-manifest
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load manifest " + stepFile.getAbsolutePath());
 				Manifest subManifest = new Manifest(stepFile, fallbackModelGraph, fallbackDataGraph);
-				subManifest.load(server, serverTypeString, clear, defaultGraph, false, ingestClient, ngeClient, progressWriter);
+				subManifest.load(server, serverTypeString, clear, defaultGraph, false, ingestClient, ngeClient, ngStoreClient, progressWriter);
 
 			}else if(type == StepType.COPYGRAPH) {
 				// TODO call client
@@ -299,7 +298,7 @@ public class Manifest extends YamlConfig {
 				for(String graph : this.getGraphsFootprint()) {
 					progressWriter.println("Copy graph " + graph + " to default graph");
 					progressWriter.flush();
-					String msg = ngeClient.execCopyGraphSync(server, serverTypeString, graph, server, serverTypeString, SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME);
+					String msg = ngeClient.copyGraph(server, serverTypeString, graph, server, serverTypeString, SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME);
 					progressWriter.println(msg);
 					progressWriter.flush();
 				}

@@ -214,7 +214,7 @@ public class IngestCsvConfig extends YamlConfig {
 		public void run(SparqlConnection conn, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
 			progressWriter.println("Load CSV " + csvPath + " using nodegroup " + nodegroupId);
 			progressWriter.flush();
-			// TODO call SemTK to load CSV by nodegroup.  Use ngeClient for this
+			ngeClient.dispatchIngestFromCsvStringsByIdSync(this.nodegroupId, Files.readString(Path.of(csvPath))); // TODO junit
 		}
 	}
 

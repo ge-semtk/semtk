@@ -2350,7 +2350,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	 * @throws Exception 			if call is unsuccessful
 	 */
 	@SuppressWarnings("unchecked")
-	public String execCopyGraphAsync(String fromServerAndPort, String fromServerType, String fromGraph,
+	private String copyGraphAsyncToJobId(String fromServerAndPort, String fromServerType, String fromGraph,
 			String toServerAndPort, String toServerType, String toGraph) throws Exception {
 
 		conf.setServiceEndpoint(mappingPrefix + copyGraphEndpoint);
@@ -2369,7 +2369,6 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		}finally{
 			this.reset();
 		}
-
 	}
 
 	/**
@@ -2383,9 +2382,9 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	 * @return 						a status message (e.g. "Successfully copied <from-graph> to <to-graph>")
 	 * @throws Exception 			if call is unsuccessful
 	 */
-	public String execCopyGraphSync(String fromServerAndPort, String fromServerType, String fromGraph,
+	public String copyGraph(String fromServerAndPort, String fromServerType, String fromGraph,
 			String toServerAndPort, String toServerType, String toGraph) throws Exception {
-		String jobId = this.execCopyGraphAsync(fromServerAndPort, fromServerType, fromGraph, toServerAndPort, toServerType, toGraph);
+		String jobId = this.copyGraphAsyncToJobId(fromServerAndPort, fromServerType, fromGraph, toServerAndPort, toServerType, toGraph);
 		this.waitForCompletion(jobId);
 		if (this.getJobSuccess(jobId)) {
 			return this.getJobStatusMessage(jobId);

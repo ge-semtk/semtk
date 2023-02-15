@@ -58,19 +58,22 @@ public class ManifestTest_IT {
 		dataFallbackSei.clearGraph();
 		dataSeiFromYaml.clearGraph();
 		defaultGraphSei.clearGraph();
+		IntegrationTestUtility.cleanupNodegroupStore("junit");
 
 		File tempDir = null;
 		try {
 			// get manifest from ingestion package, perform load
 			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/manifest/IngestionPackage.zip");
 			Manifest manifest = new Manifest(Manifest.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());  // should only load to model, not data
-			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), new PrintWriter(System.out));
+			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), new PrintWriter(System.out));
 
 			// confirm model/data loaded
 			assertEquals(modelFallbackSei.getNumTriples(), 1439);	// TODO verify that count is correct
 			assertEquals(dataSeiFromYaml.getNumTriples(), 80);		// TODO verify that count is correct
 			// confirm copied to default graph
 			assertEquals(defaultGraphSei.getNumTriples(), 1439 + 80);
+
+			assertEquals("Number of nodegroups", 31, IntegrationTestUtility.countItemsInStoreByCreator("junit"));
 
 		}catch(Exception e) {
 			throw e;
@@ -82,6 +85,7 @@ public class ManifestTest_IT {
 			dataFallbackSei.clearGraph();
 			dataSeiFromYaml.clearGraph();
 			defaultGraphSei.clearGraph();
+			IntegrationTestUtility.cleanupNodegroupStore("junit");
 		}
 	}
 
