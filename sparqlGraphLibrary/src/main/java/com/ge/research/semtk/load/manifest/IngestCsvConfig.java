@@ -47,6 +47,13 @@ public class IngestCsvConfig extends YamlConfig {
 	public IngestCsvConfig(File yamlFile, String fallbackModelGraph, String fallbackDataGraph) throws Exception {
 		super(yamlFile, Utility.getResourceAsFile(IngestCsvConfig.class, "/manifest/ingest_csv_config_schema.json"), fallbackModelGraph, fallbackDataGraph);
 
+		if(fallbackModelGraph == null) {
+			throw new Exception("Fallback model graph not provided");
+		}
+		if(fallbackDataGraph == null) {
+			throw new Exception("Fallback data graph not provided");
+		}
+
 		// populate ingestion steps
 		JsonNode stepsNode = configNode.get("ingestion-steps");
 		if(stepsNode != null) {
@@ -121,6 +128,8 @@ public class IngestCsvConfig extends YamlConfig {
 			// use if provided as method parameter, else use from config YAML, else use fallback
 			modelGraph = (modelGraph != null) ? modelGraph : (this.getModelgraph() != null ? this.getModelgraph() : this.fallbackModelGraph );
 			dataGraphs = (dataGraphs != null) ? dataGraphs : (this.getDatagraphs() != null ? this.getDatagraphs() : new LinkedList<String>(Arrays.asList(this.fallbackDataGraph)) );
+			if(modelGraph == null) { throw new Exception ("No model graph found"); }
+			if(dataGraphs == null || dataGraphs.isEmpty()) { throw new Exception ("No data graph found"); }
 
 			// create a connection
 			SparqlConnection conn = new SparqlConnection();

@@ -47,12 +47,12 @@ public class ManifestTest_IT extends YamlConfigTest {
 		// this ingestion package copies to the default graph - only allow to run on Fuseki    // TODO add a similar test without default graph, to run on all triplestore types
 		assumeTrue("Skipping test: only use default graph on Fuseki triplestore", TestGraph.getSei().getServerType().equals(SparqlEndpointInterface.FUSEKI_SERVER));
 
-		SparqlEndpointInterface dataSeiFromYaml =  TestGraph.getSei(TestGraph.junitizeGraphNames("http://junit/rack001/data"));  // e.g. http://junit/G7JZH4J3E/200005868/auto/rack001/data
+		SparqlEndpointInterface dataSeiFromYaml =  TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/data"));  // e.g. http://junit/G7JZH4J3E/200005868/auto/rack001/data
 
 		File tempDir = null;
 		try {
 			
-			tempDir = TestGraph.unzipIngestionPackageToJunit(this, "/manifest/IngestionPackage.zip");
+			tempDir = TestGraph.unzipIngestionPackageAndUniquifyJunitGraphs(this, "/manifest/IngestionPackage.zip");
 
 			// get manifest
 			File manifestFile = Manifest.getTopLevelManifestFile(tempDir);

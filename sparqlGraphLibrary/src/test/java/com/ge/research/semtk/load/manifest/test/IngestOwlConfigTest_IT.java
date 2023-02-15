@@ -42,20 +42,20 @@ public class IngestOwlConfigTest_IT extends YamlConfigTest {
 
 			IngestOwlConfig config = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), modelFallbackSei.getGraph());
 
-			// test that model gets loaded to the graph provided
-			modelSei.clearGraph();
-			modelFallbackSei.clearGraph();
+			// Case 1: if load() model graph parameter, then confirm loads there
+			clearGraphs();
 			config.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
 			assertEquals(modelSei.getNumTriples(), 1439);
 			assertEquals(modelFallbackSei.getNumTriples(), 0);
 
-			// test that model gets loaded to fallback model graph if no model graph is provided (also not specified in YAML)
+			// Case 2: if no load() model graph parameter, then confirm loads to YAML data graph if present
+			// TODO need a different YAML (with model graph) to test this
+
+			// Case 3: if no load() model graph parameter, and no YAML data graph, then confirm loads to fallback
 			clearGraphs();
 			config.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
 			assertEquals(modelSei.getNumTriples(), 0);
 			assertEquals(modelFallbackSei.getNumTriples(), 1439);
-
-			// TODO test that gets loaded to YAML-specified graph
 
 		}catch(Exception e) {
 			throw e;

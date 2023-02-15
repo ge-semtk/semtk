@@ -36,6 +36,10 @@ public class IngestOwlConfig extends YamlConfig {
 	public IngestOwlConfig(File yamlFile, String fallbackModelGraph) throws Exception {
 		super(yamlFile, Utility.getResourceAsFile(IngestOwlConfig.class, "/manifest/ingest_owl_config_schema.json"), fallbackModelGraph, null);
 
+		if(fallbackModelGraph == null) {
+			throw new Exception("Fallback model graph not provided");
+		}
+
 		// add files
 		JsonNode filesNode = configNode.get("files");
 		if(filesNode != null) {
@@ -81,6 +85,7 @@ public class IngestOwlConfig extends YamlConfig {
 		try {
 			// use modelGraph from method parameter if present.  Else use from config YAML if present.  Else use fallback.
 			modelGraph = (modelGraph != null) ? modelGraph : (this.getModelgraph() != null ? this.getModelgraph() : this.fallbackModelGraph );
+			if(modelGraph == null) { throw new Exception ("No model graph found"); }
 
 			// upload each OWL file to model graph
 			for(String fileStr : this.getFiles()) {
