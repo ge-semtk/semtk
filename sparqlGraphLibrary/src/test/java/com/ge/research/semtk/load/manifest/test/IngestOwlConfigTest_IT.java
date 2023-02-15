@@ -45,7 +45,7 @@ public class IngestOwlConfigTest_IT extends YamlConfigTest {
 
 			// TODO uniquifyJunitGraphName
 			IngestOwlConfig configWithoutModelInYaml = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), modelFallbackSei.getGraph());
-			IngestOwlConfig configWithModelInYaml = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import-WithModelString.yaml"), modelFallbackSei.getGraph());
+			IngestOwlConfig configWithModelInYaml = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import-WithModel.yaml"), modelFallbackSei.getGraph());
 
 			// Case 1: if load() model graph parameter, then confirm loads there
 			clearGraphs();
@@ -67,9 +67,6 @@ public class IngestOwlConfigTest_IT extends YamlConfigTest {
 			configWithoutModelInYaml.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
 			assertEquals(modelSei.getNumTriples(), 0);
 			assertEquals(modelFallbackSei.getNumTriples(), NUM_EXPECTED_TRIPLES);
-
-			// TODO test import-WithModelArray.yaml
-			// TODO test import-WithModelArrayMultiple.yaml
 
 		}catch(Exception e) {
 			throw e;

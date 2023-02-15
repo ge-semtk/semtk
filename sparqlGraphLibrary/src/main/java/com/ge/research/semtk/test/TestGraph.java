@@ -673,9 +673,9 @@ public class TestGraph {
 	}
 
 	/**
-	 * Unzip an ingestion package and add user/machine to "http://junit/" graphs in all YAML files
+	 * Unzip a zip file and add user/machine to "http://junit/" graphs in all YAML files
 	 */
-	public static File unzipIngestionPackageAndUniquifyJunitGraphs(Object caller, String resource) throws IOException, Exception {
+	public static File unzipAndUniquifyJunitGraphs(Object caller, String resource) throws IOException, Exception {
 		Path source = Path.of(caller.getClass().getResource(resource).toURI());
 		File tmpDir = Utility.createTempDirectory();
 		Utility.unzip(new ZipInputStream(new FileInputStream(source.toString())), tmpDir);
@@ -688,7 +688,7 @@ public class TestGraph {
 	 * Copy a zip file to temp and add user/machine to "http://junit/" graphs in all YAML files
 	 */
 	public static File getZipAndUniquifyJunitGraphs(Object caller, String resource) throws Exception {
-		File unzippedJunit = unzipIngestionPackageAndUniquifyJunitGraphs(caller, resource);
+		File unzippedJunit = unzipAndUniquifyJunitGraphs(caller, resource);
 		return Utility.zipFolderToTempFile(unzippedJunit.toPath()).toFile();
 	}
 	
