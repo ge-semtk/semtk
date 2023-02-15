@@ -39,14 +39,43 @@ public class ManifestTest_IT {
 	SparqlEndpointInterface dataSeiFromYaml = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/data"));  // for this package, same as footprint/fallback
 	SparqlEndpointInterface defaultGraphSei = TestGraph.getSei(SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME);
 
+	final int NUM_EXPECTED_TRIPLES_MODEL = 1439;		// TODO verify that this is correct
+	final int NUM_EXPECTED_TRIPLES_DATA = 80;			// TODO verify that this is correct
+	final int NUM_EXPECTED_NODEGROUPS = 31;
+
 	public ManifestTest_IT() throws Exception {
 		super();
 	}
 
 	/**
-	 * Test loading a manifest via YAML, including a copy to default graph.
-	 *
-	 * TODO add a similar test without a copy to default graph
+	 * Test loading a manifest via YAML, with copy-to-default-graph=false
+	 */
+	@Test
+	public void testLoadManifest_NoDefaultGraph() throws Exception{
+		// Note: no copy to default graph, so don't have to limit to Fuseki only
+
+		File tempDir = null;
+		try {
+			// get manifest from ingestion package, perform load
+			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/manifest/IngestionPackage.zip");
+			Manifest manifest = new Manifest(Manifest.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());  // should only load to model, not data
+			manifest.setCopyToDefaultGraph(false); // copy-to-default-graph=false
+
+			reset();
+			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), new PrintWriter(System.out));
+			assertEquals("Number of triples loaded to model graph", NUM_EXPECTED_TRIPLES_MODEL, modelFallbackSei.getNumTriples());
+			assertEquals("Number of triples loaded to data graph", NUM_EXPECTED_TRIPLES_DATA, dataSeiFromYaml.getNumTriples());
+			assertEquals("Number of triples loaded to default graph", 0, defaultGraphSei.getNumTriples());
+			assertEquals("Number of nodegroups", NUM_EXPECTED_NODEGROUPS, IntegrationTestUtility.countItemsInStoreByCreator("junit"));
+
+		}finally{
+			if(tempDir != null) { FileUtils.deleteDirectory(tempDir); }
+			reset();
+		}
+	}
+
+	/**
+	 * Test loading a manifest via YAML, with copy-to-default-graph=true
 	 */
 	@Test
 	public void testLoadManifest() throws Exception{
@@ -54,39 +83,32 @@ public class ManifestTest_IT {
 		// this ingestion package copies to the default graph - only allow to run on Fuseki
 		assumeTrue("Skipping test: only use default graph on Fuseki triplestore", TestGraph.getSei().getServerType().equals(SparqlEndpointInterface.FUSEKI_SERVER));
 
-		modelFallbackSei.clearGraph();
-		dataFallbackSei.clearGraph();
-		dataSeiFromYaml.clearGraph();
-		defaultGraphSei.clearGraph();
-		IntegrationTestUtility.cleanupNodegroupStore("junit");
-
 		File tempDir = null;
 		try {
 			// get manifest from ingestion package, perform load
 			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/manifest/IngestionPackage.zip");
 			Manifest manifest = new Manifest(Manifest.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());  // should only load to model, not data
+
+			reset();
 			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), new PrintWriter(System.out));
+			assertEquals("Number of triples loaded to model graph", NUM_EXPECTED_TRIPLES_MODEL, modelFallbackSei.getNumTriples());
+			assertEquals("Number of triples loaded to data graph", NUM_EXPECTED_TRIPLES_DATA, dataSeiFromYaml.getNumTriples());
+			assertEquals("Number of triples loaded to default graph", NUM_EXPECTED_TRIPLES_MODEL + NUM_EXPECTED_TRIPLES_DATA, defaultGraphSei.getNumTriples());
+			assertEquals("Number of nodegroups", NUM_EXPECTED_NODEGROUPS, IntegrationTestUtility.countItemsInStoreByCreator("junit"));
 
-			// confirm model/data loaded
-			assertEquals(modelFallbackSei.getNumTriples(), 1439);	// TODO verify that count is correct
-			assertEquals(dataSeiFromYaml.getNumTriples(), 80);		// TODO verify that count is correct
-			// confirm copied to default graph
-			assertEquals(defaultGraphSei.getNumTriples(), 1439 + 80);
-
-			assertEquals("Number of nodegroups", 31, IntegrationTestUtility.countItemsInStoreByCreator("junit"));
-
-		}catch(Exception e) {
-			throw e;
 		}finally{
-			if(tempDir != null) {
-				FileUtils.deleteDirectory(tempDir);
-			}
-			modelFallbackSei.clearGraph();
-			dataFallbackSei.clearGraph();
-			dataSeiFromYaml.clearGraph();
-			defaultGraphSei.clearGraph();
-			IntegrationTestUtility.cleanupNodegroupStore("junit");
+			if(tempDir != null) { FileUtils.deleteDirectory(tempDir); }
+			reset();
 		}
+	}
+
+	// clear graphs and nodegroup store
+	private void reset() throws Exception {
+		modelFallbackSei.clearGraph();
+		dataFallbackSei.clearGraph();
+		dataSeiFromYaml.clearGraph();
+		defaultGraphSei.clearGraph();
+		IntegrationTestUtility.cleanupNodegroupStore("junit");
 	}
 
 }
