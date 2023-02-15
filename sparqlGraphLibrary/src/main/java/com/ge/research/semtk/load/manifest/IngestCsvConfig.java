@@ -47,6 +47,13 @@ public class IngestCsvConfig extends YamlConfig {
 	public IngestCsvConfig(File yamlFile, String fallbackModelGraph, String fallbackDataGraph) throws Exception {
 		super(yamlFile, Utility.getResourceAsFile(IngestCsvConfig.class, "/manifest/ingest_csv_config_schema.json"), fallbackModelGraph, fallbackDataGraph);
 
+		if(fallbackModelGraph == null) {
+			throw new Exception("Fallback model graph not provided");
+		}
+		if(fallbackDataGraph == null) {
+			throw new Exception("Fallback data graph not provided");
+		}
+
 		// populate ingestion steps
 		JsonNode stepsNode = configNode.get("ingestion-steps");
 		if(stepsNode != null) {
@@ -56,8 +63,7 @@ public class IngestCsvConfig extends YamlConfig {
 				} else if (stepNode.has("nodegroup") && stepNode.has("csv")) {
 					addStep(new CsvByNodegroupIngestionStep(stepNode.get("nodegroup").asText(), baseDir + File.separator + stepNode.get("csv").asText()));	// TODO junit
 				} else {
-					//TODO support 3 more steps from the schema
-					throw new Exception("Ingestion step is not yet supported: " + stepNode.asText());
+					throw new Exception("Ingestion step not supported: " + stepNode.asText());
 				}
 			}
 		}
@@ -69,7 +75,7 @@ public class IngestCsvConfig extends YamlConfig {
 		if(configNode.has("data-graph")){
 			addDatagraph(configNode.get("data-graph").asText());
 		}
-		if(configNode.has("extra-data-graphs")){  // TODO needs junit
+		if(configNode.has("extra-data-graphs")){  // TODO junit
 			for(JsonNode n : configNode.get("extra-data-graphs")) {
 				addDatagraph(n.asText());
 			}
@@ -122,6 +128,8 @@ public class IngestCsvConfig extends YamlConfig {
 			// use if provided as method parameter, else use from config YAML, else use fallback
 			modelGraph = (modelGraph != null) ? modelGraph : (this.getModelgraph() != null ? this.getModelgraph() : this.fallbackModelGraph );
 			dataGraphs = (dataGraphs != null) ? dataGraphs : (this.getDatagraphs() != null ? this.getDatagraphs() : new LinkedList<String>(Arrays.asList(this.fallbackDataGraph)) );
+			if(modelGraph == null) { throw new Exception ("No model graph found"); }
+			if(dataGraphs == null || dataGraphs.isEmpty()) { throw new Exception ("No data graph found"); }
 
 			// create a connection
 			SparqlConnection conn = new SparqlConnection();
@@ -144,12 +152,9 @@ public class IngestCsvConfig extends YamlConfig {
 				}else if(step instanceof CsvByNodegroupIngestionStep) {
 						((CsvByNodegroupIngestionStep)step).run(conn, ngeClient, progressWriter);
 				}else {
-					// should not get here
-					throw new Exception("Unexpected error");
+					throw new Exception("Unexpected error");		// should not get here
 				}
-
 			}
-
 		}catch(Exception e) {
 			LocalLogger.printStackTrace(e);
 			throw new Exception("Error ingesting data: " + e.getMessage());

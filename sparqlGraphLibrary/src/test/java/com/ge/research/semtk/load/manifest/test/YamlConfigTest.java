@@ -8,17 +8,11 @@ import com.ge.research.semtk.test.TestGraph;
  */
 public abstract class YamlConfigTest {
 
-	protected final String MODEL_GRAPH = TestGraph.getDataset() + "/model";
-	protected final String DATA_GRAPH = TestGraph.getDataset() + "/data";
-	protected final String MODEL_FALLBACK_GRAPH = TestGraph.getDataset() + "/model/fallback";
-	protected final String DATA_FALLBACK_GRAPH  = TestGraph.getDataset() + "/data/fallback";
-	protected final String DEFAULT_GRAPH = SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME;
-
-	protected SparqlEndpointInterface modelSei = TestGraph.getSei(MODEL_GRAPH);
-	protected SparqlEndpointInterface dataSei = TestGraph.getSei(DATA_GRAPH);
-	protected SparqlEndpointInterface modelFallbackSei = TestGraph.getSei(MODEL_FALLBACK_GRAPH);
-	protected SparqlEndpointInterface dataFallbackSei = TestGraph.getSei(DATA_FALLBACK_GRAPH);
-	protected SparqlEndpointInterface defaultGraphSei = TestGraph.getSei(DEFAULT_GRAPH);
+	protected SparqlEndpointInterface modelSei = TestGraph.getSei(TestGraph.getDataset() + "/model");
+	protected SparqlEndpointInterface dataSei = TestGraph.getSei(TestGraph.getDataset() + "/data");
+	protected SparqlEndpointInterface modelFallbackSei = TestGraph.getSei(TestGraph.getDataset() + "/model/fallback");
+	protected SparqlEndpointInterface dataFallbackSei = TestGraph.getSei(TestGraph.getDataset() + "/data/fallback");
+	protected SparqlEndpointInterface defaultGraphSei = TestGraph.getSei(SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME);
 	
 	public YamlConfigTest() throws Exception{
 	}

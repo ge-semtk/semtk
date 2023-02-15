@@ -17,12 +17,8 @@
 
 package com.ge.research.semtk.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
@@ -36,15 +32,12 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
-import java.util.zip.ZipOutputStream;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
@@ -64,7 +57,6 @@ import com.ge.research.semtk.sparqlX.NeptuneSparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
-import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -74,6 +66,8 @@ import com.ge.research.semtk.utility.Utility;
  * NOTE: This class cannot be put in under src/test/java because it must remain accessible to other projects.
  */
 public class TestGraph {
+
+	private static final String JUNIT_PREFIX = "http://junit";
 
 	// PEC TODO: if we want the option of sharing or splitting model from data in different graphs then static functions will not do.
 	//           It will have to be an object instantiated by a json nodegroup (shows whether they're split) or NULL (pick a default)
@@ -522,8 +516,7 @@ public class TestGraph {
 		} catch (Exception e) {
 			machine = "unknown_host";
 		}
-		
-		return String.format("http://junit/%s/%s/%s", machine, user, sub);
+		return String.format(JUNIT_PREFIX + "/%s/%s/%s", machine, user, sub);
 	}
 	@Deprecated
 	public static String generateDatasetName(String sub) {
@@ -641,11 +634,9 @@ public class TestGraph {
 	
 
 	/**
-	 * Walk a directory structure and search yaml files for "http://junit/" and add user and machine
-	 * @param source
-	 * @throws IOException
+	 * Walk a directory structure, add user/machine to "http://junit/" graphs in all YAML files
 	 */
-	private static void walkForYamlAndFixJunitGraphs(Path source) throws IOException {
+	private static void walkForYamlAndUniquifyJunitGraphs(Path source) throws IOException {
 		Charset charset = StandardCharsets.UTF_8;
         
         Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
@@ -654,63 +645,50 @@ public class TestGraph {
             	String filename = file.toString();
 	            if (filename.endsWith("yaml") || filename.endsWith("YAML")) {
 	            	String content = new String(Files.readAllBytes(file), charset);
-	            	content = junitizeGraphNames(content);
+	            	content = uniquifyJunitGraphs(content);
 	        		Files.write(file, content.getBytes(charset));
 	            }
-               
                 return FileVisitResult.CONTINUE;
             }
         });
-       
         return;
 	}
 
 	/**
-	 * Add user and machine to all occurrences of "http://junit/"
+	 * Add user/machine to all http://junit/
 	 */
-	public static String junitizeGraphNames(String s) {
-		return s.replaceAll("http://junit/", generateGraphName("auto") + "/");
+	public static String uniquifyJunitGraphs(String s) {
+		return s.replaceAll(JUNIT_PREFIX + "/", generateGraphName("auto") + "/");
 	}
 	
 	/** 
-	 * Copy a yaml and fix http://junit/
-	 * @param source
-	 * @return
-	 * @throws IOException
+	 * Copy a yaml and add user/machine to http://junit/
 	 */
-	public static File getJunitYaml(Object caller, String resource) throws Exception, IOException {
+	public static File getYamlAndUniquifyJunitGraphs(Object caller, String resource) throws Exception, IOException {
 		Path source = Path.of(caller.getClass().getResource(resource).toURI());
 		Path tempName = Path.of(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString());
 		Files.copy(source, tempName);
-		walkForYamlAndFixJunitGraphs(tempName);
+		walkForYamlAndUniquifyJunitGraphs(tempName);
 		return tempName.toFile();
 	}
+
 	/**
-	 * Unzip an ingestion package and fix all of *.yaml   http://junit/
-	 * 
-	 * @param source
-	 * @return
-	 * @throws IOException
-	 * @throws Exception
+	 * Unzip an ingestion package and add user/machine to "http://junit/" graphs in all YAML files
 	 */
-	public static File unzipIngestionPackageToJunit(Object caller, String resource) throws IOException, Exception {
+	public static File unzipIngestionPackageAndUniquifyJunitGraphs(Object caller, String resource) throws IOException, Exception {
 		Path source = Path.of(caller.getClass().getResource(resource).toURI());
 		File tmpDir = Utility.createTempDirectory();
 		Utility.unzip(new ZipInputStream(new FileInputStream(source.toString())), tmpDir);
-		TestGraph.walkForYamlAndFixJunitGraphs(tmpDir.toPath());
+		TestGraph.walkForYamlAndUniquifyJunitGraphs(tmpDir.toPath());
 		return tmpDir;
 	}
 	
 	
 	/**
-	 * Copy a zip file to temp with junit-ized graphs in the yamls.
-	 * @param caller
-	 * @param resource
-	 * @return
-	 * @throws Exception
+	 * Copy a zip file to temp and add user/machine to "http://junit/" graphs in all YAML files
 	 */
-	public static File getJunitZip(Object caller, String resource) throws Exception {
-		File unzippedJunit = unzipIngestionPackageToJunit(caller, resource);
+	public static File getZipAndUniquifyJunitGraphs(Object caller, String resource) throws Exception {
+		File unzippedJunit = unzipIngestionPackageAndUniquifyJunitGraphs(caller, resource);
 		return Utility.zipFolderToTempFile(unzippedJunit.toPath()).toFile();
 	}
 	
