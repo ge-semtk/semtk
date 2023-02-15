@@ -123,6 +123,7 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	private static final String dispatchConstructByIdEndpoint = "/dispatchConstructById";
 	private static final String dispatchConstructFromNodegroupEndpoint = "/dispatchConstructFromNodegroup";
 	private static final String copyGraphEndpoint = "/copyGraph";
+	private static final String dispatchCombineEntitiesInConnEndpoint = "/dispatchCombineEntitiesInConn";
 	
 	private ArrayList<String> warnings = null;
 	
@@ -2392,5 +2393,53 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 			throw new Exception("Copy graph failed:\n" + this.getResultsTable(jobId).toCSVString());
 		}
 	}
+	
+	@SuppressWarnings("unchecked")
+	private String dispatchCombineEntitiesInConnToJobId(SparqlConnection conn, String sameAsClassURI, String targetPropURI, String duplicatePropURI, ArrayList<String> deletePredicatesFromDuplicate, ArrayList<String> deletePredicatesFromTarget)
+	throws Exception {
+		conf.setServiceEndpoint(mappingPrefix + dispatchCombineEntitiesInConnEndpoint);
+		this.parametersJSON.put("conn", conn.toJson().toJSONString());
+		if (sameAsClassURI != null ) {
+			this.parametersJSON.put("sameAsClassURI", sameAsClassURI);
+		}
+		if (targetPropURI != null ) {
+			this.parametersJSON.put("targetPropURI", targetPropURI);
+		}
+		if (duplicatePropURI != null ) {
+			this.parametersJSON.put("duplicatePropURI", duplicatePropURI);
+		}
+		if (deletePredicatesFromDuplicate != null ) {
+			JSONArray jArr = new JSONArray();
+			jArr.addAll(deletePredicatesFromDuplicate);
+			this.parametersJSON.put("deletePredicatesFromDuplicate", jArr);
+		}
+		if (deletePredicatesFromTarget != null ) {
+			JSONArray jArr = new JSONArray();
+			jArr.addAll(deletePredicatesFromTarget);
+			this.parametersJSON.put("deletePredicatesFromTarget", jArr);
+		}
 
+		try{
+			JSONObject jobj = (JSONObject) this.execute();
+			SimpleResultSet retval = SimpleResultSet.fromJson(jobj);
+			retval.throwExceptionIfUnsuccessful();
+			return retval.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
+		}finally{
+			this.reset();
+		}
+	}
+	/**
+	 * Combine entities
+	 * @param conn
+	 * @return - status success string if any
+	 * @throws Exception
+	 */
+	public String combineEntitiesInConn(SparqlConnection conn) throws Exception {
+		String jobId = this.dispatchCombineEntitiesInConnToJobId(conn, null, null, null, null, null);
+		this.waitForCompletion(jobId);
+		if (this.getJobSuccess(jobId)) {
+			return this.getJobStatusMessage(jobId);
+		} else
+			throw new Exception("Combine entities in conn failed:\n" + this.getResultsTable(jobId).toCSVString()); 
+	}
 }

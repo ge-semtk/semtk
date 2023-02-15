@@ -607,5 +607,21 @@ public class NodeGroupExecutionClientTest_IT {
 			assertTrue(statusMessage.contains("Successfully copied"));
 			assertEquals(toGraphSei.getNumTriples(), 50);	// assert populated after copy
 		}
+		
+		@Test
+		public void testCombineEntitiesInConn() throws Exception{
+			// just testing that something goes through to the endpoint from the client
+			// See CombineEntitiesThreadTest_IT for more
+			TestGraph.clearGraph();
+			TestGraph.uploadOwlResource(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/PROV-S.owl");
+			TestGraph.uploadOwlResource(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/RESOLUTIONS.owl");
+			TestGraph.uploadOwlResource(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/EntityResolution.owl");
+			try {
+				nodeGroupExecutionClient.combineEntitiesInConn(TestGraph.getSparqlConn());
+				fail("Missing combineEntitiesInConn failure: no entities found");
+			} catch (Exception e) {
+				assertTrue("Wrong combineEntitiesInConn exception: " + e.toString(), e.toString().contains("No SameAs instances"));
+			}
+		}
 	}
 
