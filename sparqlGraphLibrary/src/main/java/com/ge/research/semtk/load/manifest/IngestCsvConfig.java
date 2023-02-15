@@ -56,8 +56,7 @@ public class IngestCsvConfig extends YamlConfig {
 				} else if (stepNode.has("nodegroup") && stepNode.has("csv")) {
 					addStep(new CsvByNodegroupIngestionStep(stepNode.get("nodegroup").asText(), baseDir + File.separator + stepNode.get("csv").asText()));	// TODO junit
 				} else {
-					//TODO support 3 more steps from the schema
-					throw new Exception("Ingestion step is not yet supported: " + stepNode.asText());
+					throw new Exception("Ingestion step not supported: " + stepNode.asText());
 				}
 			}
 		}
@@ -69,7 +68,7 @@ public class IngestCsvConfig extends YamlConfig {
 		if(configNode.has("data-graph")){
 			addDatagraph(configNode.get("data-graph").asText());
 		}
-		if(configNode.has("extra-data-graphs")){  // TODO needs junit
+		if(configNode.has("extra-data-graphs")){  // TODO junit
 			for(JsonNode n : configNode.get("extra-data-graphs")) {
 				addDatagraph(n.asText());
 			}
@@ -144,12 +143,9 @@ public class IngestCsvConfig extends YamlConfig {
 				}else if(step instanceof CsvByNodegroupIngestionStep) {
 						((CsvByNodegroupIngestionStep)step).run(conn, ngeClient, progressWriter);
 				}else {
-					// should not get here
-					throw new Exception("Unexpected error");
+					throw new Exception("Unexpected error");		// should not get here
 				}
-
 			}
-
 		}catch(Exception e) {
 			LocalLogger.printStackTrace(e);
 			throw new Exception("Error ingesting data: " + e.getMessage());

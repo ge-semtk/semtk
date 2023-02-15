@@ -40,12 +40,12 @@ public class IngestOwlConfigTest_IT extends YamlConfigTest {
 
 		try {
 
-			IngestOwlConfig config = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), MODEL_FALLBACK_GRAPH);
+			IngestOwlConfig config = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), modelFallbackSei.getGraph());
 
 			// test that model gets loaded to the graph provided
 			modelSei.clearGraph();
 			modelFallbackSei.clearGraph();
-			config.load(MODEL_GRAPH, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
+			config.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
 			assertEquals(modelSei.getNumTriples(), 1439);
 			assertEquals(modelFallbackSei.getNumTriples(), 0);
 

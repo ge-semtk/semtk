@@ -56,7 +56,7 @@ public class ManifestTest_IT extends YamlConfigTest {
 
 			// get manifest
 			File manifestFile = Manifest.getTopLevelManifestFile(tempDir);
-			Manifest manifest = new Manifest(manifestFile, MODEL_FALLBACK_GRAPH, DATA_FALLBACK_GRAPH);  // should only load to model, not data
+			Manifest manifest = new Manifest(manifestFile, modelFallbackSei.getGraph(), dataFallbackSei.getGraph());  // should only load to model, not data
 			assertEquals(manifest.getName(), "Entity Resolution");
 
 			clearGraphs();

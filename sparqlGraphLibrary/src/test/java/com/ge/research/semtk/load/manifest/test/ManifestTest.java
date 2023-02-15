@@ -38,9 +38,9 @@ public class ManifestTest extends YamlConfigTest {
 	@Test
 	public void test() throws Exception{
 
-		Manifest manifest = new Manifest(Utility.getResourceAsFile(this, "/manifest/manifest_animals.yaml"), MODEL_FALLBACK_GRAPH, DATA_FALLBACK_GRAPH);
-		assertEquals(manifest.getFallbackModelGraph(), MODEL_FALLBACK_GRAPH);
-		assertEquals(manifest.getFallbackDataGraph(), DATA_FALLBACK_GRAPH);
+		Manifest manifest = new Manifest(Utility.getResourceAsFile(this, "/manifest/manifest_animals.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+		assertEquals(manifest.getFallbackModelGraph(), modelFallbackSei.getGraph());
+		assertEquals(manifest.getFallbackDataGraph(), dataFallbackSei.getGraph());
 
 		assertEquals(manifest.getName(), "Animals");
 		assertEquals(manifest.getDescription(), "Load information about animals");

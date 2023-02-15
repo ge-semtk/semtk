@@ -62,7 +62,7 @@ public class UtilityClientTest_IT extends YamlConfigTest{
 
 			clearGraphs();
 
-			BufferedReader reader = client.execLoadIngestionPackage(TestGraph.getJunitZip(this, "/manifest/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), MODEL_FALLBACK_GRAPH, DATA_FALLBACK_GRAPH);
+			BufferedReader reader = client.execLoadIngestionPackage(TestGraph.getJunitZip(this, "/manifest/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 			String response = Utility.readToString(reader);
 			// check the response stream
 			assert(response.contains("Loading manifest 'Entity Resolution'..."));
@@ -105,11 +105,11 @@ public class UtilityClientTest_IT extends YamlConfigTest{
 		String response;
 
 		// not a zip file
-		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/animalQuery.json"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), MODEL_FALLBACK_GRAPH, DATA_FALLBACK_GRAPH));
+		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/animalQuery.json"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
 		assert(response.contains("Error: This endpoint only accepts ingestion packages in zip file format"));
 
 		// contains no top-level manifest.yaml
-		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/manifest/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), MODEL_FALLBACK_GRAPH, DATA_FALLBACK_GRAPH));
+		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/manifest/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
 		assert(response.contains("Error: Cannot find a top-level manifest in IngestionPackageNoManifest.zip"));
 	}
 
