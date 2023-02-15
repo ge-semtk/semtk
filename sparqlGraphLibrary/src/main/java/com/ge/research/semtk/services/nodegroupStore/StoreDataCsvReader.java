@@ -22,7 +22,6 @@ public class StoreDataCsvReader extends StoreDataCsv {
 		this.br = new CSVReader(new FileReader(csvFileName));
 		this.lineNumber = 0;
 		this.checkHeaders();
-		
 	}
 	
 	private void checkHeaders() throws Exception {
@@ -56,6 +55,7 @@ public class StoreDataCsvReader extends StoreDataCsv {
 		this.parsedLine = this.br.readNext();
 		
 		if (this.parsedLine == null) {
+			this.br.close();
 			return null;
 		} else if (parsedLine.length == 0) {
 			return "Ignoring blank line number: "+ this.lineNumber;
