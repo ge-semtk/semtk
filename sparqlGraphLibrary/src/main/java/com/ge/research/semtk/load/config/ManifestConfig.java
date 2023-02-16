@@ -307,7 +307,7 @@ public class ManifestConfig extends YamlConfig {
 			}
 			if(this.getPerformEntityResolution()) {
 				// entity resolution in default graph
-				if(!loadToDefaultGraph && !getCopyToDefaultGraph()) {  // TODO only allow if copy?
+				if(!loadToDefaultGraph && !getCopyToDefaultGraph()) {
 					throw new Exception("Cannot perform entity resolution because not populating default graph");
 				}
 				try {

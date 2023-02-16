@@ -44,7 +44,7 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 
 		try {
 
-			final int NUM_EXPECTED_TRIPLES = 20;		// TODO verify that this is correct
+			final int NUM_EXPECTED_TRIPLES = 20;
 
 			// TODO uniquifyJunitGraphName
 			LoadOwlConfig loadOwlConfig = new LoadOwlConfig(Utility.getResourceAsFile(this, "/config/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), modelFallbackSei.getGraph());
