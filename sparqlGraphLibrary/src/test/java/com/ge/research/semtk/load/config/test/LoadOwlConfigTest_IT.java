@@ -14,7 +14,7 @@
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  */
-package com.ge.research.semtk.load.manifest.test;
+package com.ge.research.semtk.load.config.test;
 
 import static org.junit.Assert.assertEquals;
 
@@ -22,14 +22,14 @@ import java.io.PrintWriter;
 
 import org.junit.Test;
 
-import com.ge.research.semtk.load.manifest.IngestOwlConfig;
+import com.ge.research.semtk.load.config.LoadOwlConfig;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 
-public class IngestOwlConfigTest_IT extends YamlConfigTest {
+public class LoadOwlConfigTest_IT extends YamlConfigTest {
 
-	public IngestOwlConfigTest_IT() throws Exception {
+	public LoadOwlConfigTest_IT() throws Exception {
 		super();
 	}
 
@@ -44,8 +44,8 @@ public class IngestOwlConfigTest_IT extends YamlConfigTest {
 			final int NUM_EXPECTED_TRIPLES = 1439;		// TODO verify that this is correct
 
 			// TODO uniquifyJunitGraphName
-			IngestOwlConfig configWithoutModelInYaml = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), modelFallbackSei.getGraph());
-			IngestOwlConfig configWithModelInYaml = new IngestOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import-WithModelgraph.yaml"), modelFallbackSei.getGraph());
+			LoadOwlConfig configWithoutModelInYaml = new LoadOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), modelFallbackSei.getGraph());
+			LoadOwlConfig configWithModelInYaml = new LoadOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import-WithModelgraph.yaml"), modelFallbackSei.getGraph());
 
 			// Case 1: if load() model graph parameter, then confirm loads there
 			clearGraphs();

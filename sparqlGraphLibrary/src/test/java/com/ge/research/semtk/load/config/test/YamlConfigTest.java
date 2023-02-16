@@ -1,4 +1,4 @@
-package com.ge.research.semtk.load.manifest.test;
+package com.ge.research.semtk.load.config.test;
 
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.TestGraph;

@@ -14,7 +14,7 @@
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  */
-package com.ge.research.semtk.load.manifest;
+package com.ge.research.semtk.load.config;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -254,14 +254,14 @@ public class ManifestConfig extends YamlConfig {
 				// load via an owl ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load model " + stepFile.getAbsolutePath());
-				IngestOwlConfig config = new IngestOwlConfig(stepFile, this.fallbackModelGraph);
+				LoadOwlConfig config = new LoadOwlConfig(stepFile, this.fallbackModelGraph);
 				config.load(targetGraph, server, serverTypeString, progressWriter);
 
 			}else if(type == StepType.DATA) {
 				// load content using CSV ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load data " + stepFile.getAbsolutePath());
-				IngestCsvConfig config = new IngestCsvConfig(stepFile, this.fallbackModelGraph, this.fallbackDataGraph);
+				LoadDataConfig config = new LoadDataConfig(stepFile, this.fallbackModelGraph, this.fallbackDataGraph);
 				config.load(targetGraph, (targetGraph == null ? null : new LinkedList<String>(Arrays.asList(targetGraph))), server, serverTypeString, clear, ingestClient, ngeClient, progressWriter);
 
 			}else if(type == StepType.NODEGROUPS) {

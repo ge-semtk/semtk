@@ -14,34 +14,34 @@
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  */
-package com.ge.research.semtk.load.manifest.test;
+package com.ge.research.semtk.load.config.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
-import com.ge.research.semtk.load.manifest.IngestCsvConfig;
-import com.ge.research.semtk.load.manifest.IngestCsvConfig.CsvByClassIngestionStep;
+import com.ge.research.semtk.load.config.LoadDataConfig;
+import com.ge.research.semtk.load.config.LoadDataConfig.CsvByClassIngestionStep;
 import com.ge.research.semtk.utility.Utility;
 
 // TODO test variations, valid and invalid
 // TODO test extra data graphs (when implemented)
-public class IngestCsvConfigTest extends YamlConfigTest {
+public class LoadDataConfigTest extends YamlConfigTest {
 
-	public IngestCsvConfigTest() throws Exception {
+	public LoadDataConfigTest() throws Exception {
 		super();
 	}
 
 	/**
-	 * Test populating an IngestCsvConfigTest instance from a YAML file
+	 * Test populating an LoadDataConfig instance from a YAML file
 	 */
 	@Test
 	public void test() throws Exception{
 
-		IngestCsvConfig config;
+		LoadDataConfig config;
 		
 		// this config has a datagraph + steps
-		config = new IngestCsvConfig(Utility.getResourceAsFile(this, "/manifest/ingest_csv_config_1.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+		config = new LoadDataConfig(Utility.getResourceAsFile(this, "/manifest/ingest_csv_config_1.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 		assertEquals(config.getFallbackModelGraph(), modelFallbackSei.getGraph());
 		assertEquals(config.getSteps().size(), 2);
 		assertEquals(((CsvByClassIngestionStep)config.getSteps().get(0)).getClazz(), "http://animals/woodland#WOODCHUCK");
@@ -53,7 +53,7 @@ public class IngestCsvConfigTest extends YamlConfigTest {
 		assertEquals(config.getDatagraphs().get(0), "http://junit/animals/data");
 		
 		// this config has steps only (no graphs)
-		config = new IngestCsvConfig(Utility.getResourceAsFile(this, "/manifest/ingest_csv_config_2.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+		config = new LoadDataConfig(Utility.getResourceAsFile(this, "/manifest/ingest_csv_config_2.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 		assertEquals(config.getDatagraphs(), null);
 	}
 	

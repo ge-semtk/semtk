@@ -14,7 +14,7 @@
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  */
-package com.ge.research.semtk.load.manifest.test;
+package com.ge.research.semtk.load.config.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -27,7 +27,7 @@ import java.io.PrintWriter;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
-import com.ge.research.semtk.load.manifest.ManifestConfig;
+import com.ge.research.semtk.load.config.ManifestConfig;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;

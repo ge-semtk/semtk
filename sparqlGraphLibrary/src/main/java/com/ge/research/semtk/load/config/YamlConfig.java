@@ -1,4 +1,4 @@
-package com.ge.research.semtk.load.manifest;
+package com.ge.research.semtk.load.config;
 
 import java.io.File;
 

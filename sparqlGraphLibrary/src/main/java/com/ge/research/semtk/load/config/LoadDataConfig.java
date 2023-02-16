@@ -14,7 +14,7 @@
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  */
-package com.ge.research.semtk.load.manifest;
+package com.ge.research.semtk.load.config;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -35,7 +35,7 @@ import com.ge.research.semtk.utility.Utility;
  * Configuration for loading data to the triplestore
  * Populated from a YAML file conforming to schema ingest_csv_config_schema.json
  */
-public class IngestCsvConfig extends YamlConfig {
+public class LoadDataConfig extends YamlConfig {
 
 	private LinkedList<IngestionStep> steps = new LinkedList<IngestionStep>();
 	private String modelgraph;   			// schema supports multiple model graphs, but functionality not needed
@@ -44,8 +44,8 @@ public class IngestCsvConfig extends YamlConfig {
 	/**
 	 * Constructor
 	 */
-	public IngestCsvConfig(File yamlFile, String fallbackModelGraph, String fallbackDataGraph) throws Exception {
-		super(yamlFile, Utility.getResourceAsFile(IngestCsvConfig.class, "/manifest/ingest_csv_config_schema.json"), fallbackModelGraph, fallbackDataGraph);
+	public LoadDataConfig(File yamlFile, String fallbackModelGraph, String fallbackDataGraph) throws Exception {
+		super(yamlFile, Utility.getResourceAsFile(LoadDataConfig.class, "/manifest/ingest_csv_config_schema.json"), fallbackModelGraph, fallbackDataGraph);
 
 		if(fallbackModelGraph == null) {
 			throw new Exception("Fallback model graph not provided");  // TODO junit

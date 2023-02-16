@@ -14,7 +14,7 @@
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  */
-package com.ge.research.semtk.load.manifest.test;
+package com.ge.research.semtk.load.config.test;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
@@ -22,25 +22,25 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import com.ge.research.semtk.load.manifest.IngestOwlConfig;
+import com.ge.research.semtk.load.config.LoadOwlConfig;
 import com.ge.research.semtk.test.TestGraph;
 
-public class IngestOwlConfigTest extends YamlConfigTest {
+public class LoadOwlConfigTest extends YamlConfigTest {
 
-	public IngestOwlConfigTest() throws Exception {
+	public LoadOwlConfigTest() throws Exception {
 		super();
 	}
 
 	/**
-	 * Test populating an IngestOwlConfig instance from a YAML file
+	 * Test populating an LoadOwlConfig instance from a YAML file
 	 */
 	@Test
 	public void test() throws Exception{
 
-		IngestOwlConfig config;
+		LoadOwlConfig config;
 
 		// this config has owl files only (no model graph)
-		config = new IngestOwlConfig(TestGraph.getYamlAndUniquifyJunitGraphs(this, "/manifest/ingest_owl_config_1.yaml"), modelFallbackSei.getGraph());
+		config = new LoadOwlConfig(TestGraph.getYamlAndUniquifyJunitGraphs(this, "/manifest/ingest_owl_config_1.yaml"), modelFallbackSei.getGraph());
 		assertEquals(config.getFallbackModelGraph(), modelFallbackSei.getGraph());
 		assertEquals(config.getFiles().size(), 3);
 		assertEquals(config.getFiles().get(0),"woodchuck.owl");
@@ -49,18 +49,18 @@ public class IngestOwlConfigTest extends YamlConfigTest {
 		assertNull(config.getModelgraph());
 
 		// this config has model graph as array size 1
-		config = new IngestOwlConfig(TestGraph.getYamlAndUniquifyJunitGraphs(this, "/manifest/ingest_owl_config_2.yaml"), modelFallbackSei.getGraph());
+		config = new LoadOwlConfig(TestGraph.getYamlAndUniquifyJunitGraphs(this, "/manifest/ingest_owl_config_2.yaml"), modelFallbackSei.getGraph());
 		assertEquals(config.getFiles().size(), 3);
 		assertEquals(config.getModelgraph(),"http://junit/animals/model");
 
 		// this config has model graph as string
-		config = new IngestOwlConfig(TestGraph.getYamlAndUniquifyJunitGraphs(this, "/manifest/ingest_owl_config_3.yaml"), modelFallbackSei.getGraph());
+		config = new LoadOwlConfig(TestGraph.getYamlAndUniquifyJunitGraphs(this, "/manifest/ingest_owl_config_3.yaml"), modelFallbackSei.getGraph());
 		assertEquals(config.getFiles().size(), 3);
 		assertEquals(config.getModelgraph(),"http://junit/animals/model");
 
 		// this config has multiple model graphs.  Legacy schema supports this (likely unused), disallowing it here
 		try {
-			config = new IngestOwlConfig(TestGraph.getYamlAndUniquifyJunitGraphs(this, "/manifest/ingest_owl_config_4.yaml"), modelFallbackSei.getGraph());
+			config = new LoadOwlConfig(TestGraph.getYamlAndUniquifyJunitGraphs(this, "/manifest/ingest_owl_config_4.yaml"), modelFallbackSei.getGraph());
 			fail();
 		}catch(Exception e) {
 			assertTrue(e.getMessage().contains("Not currently supporting multiple entries for this node: [\"http://junit/animals/model\",\"http://junit/animals/model2\"]"));

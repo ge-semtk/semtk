@@ -24,7 +24,7 @@ import java.io.BufferedReader;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.ge.research.semtk.load.manifest.test.ManifestConfigTest_IT;
+import com.ge.research.semtk.load.config.test.ManifestConfigTest_IT;
 import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.services.client.UtilityClient;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
