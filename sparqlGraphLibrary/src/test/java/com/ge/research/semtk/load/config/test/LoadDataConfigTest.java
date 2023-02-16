@@ -46,7 +46,7 @@ public class LoadDataConfigTest extends YamlConfigTest {
 		assertTrue(((CsvByClassIngestionStep)config.getSteps().get(0)).getCsvPath().matches("(.*)config(.*)woodchucks.csv"));
 		assertEquals(((CsvByClassIngestionStep)config.getSteps().get(1)).getClazz(), "http://animals/woodland#HEDGEHOG");
 		assertTrue(((CsvByClassIngestionStep)config.getSteps().get(1)).getCsvPath().matches("(.*)config(.*)hedgehogs.csv"));
-		assertEquals(config.getModelgraph(), null);  	// TODO don't have an example to test yet
+		assertEquals(config.getModelgraph(), null);
 		assertEquals(config.getDatagraphs().size(), 1);
 		assertEquals(config.getDatagraphs().get(0), "http://junit/animals/data");
 		
@@ -60,6 +60,10 @@ public class LoadDataConfigTest extends YamlConfigTest {
 		assertEquals(config.getDatagraphs().get(0), "http://junit/animals/data");
 		assertEquals(config.getDatagraphs().get(1), "http://junit/animals/data2");
 		assertEquals(config.getDatagraphs().get(2), "http://junit/animals/data3");
+
+		// this config has a model-graph
+		config = new LoadDataConfig(Utility.getResourceAsFile(this, "/config/load_data_config_4.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+		assertEquals(config.getModelgraph(), "http://junit/animals/model");
 	}
 	
 }
