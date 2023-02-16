@@ -96,7 +96,7 @@ public class UtilityClientTest_IT {
 			// check the counts
 			assertEquals("Number of triples loaded to model graph", ManifestTest_IT.NUM_EXPECTED_TRIPLES_MODEL, modelFallbackSei.getNumTriples());
 			assertEquals("Number of triples loaded to data graph", ManifestTest_IT.NUM_EXPECTED_TRIPLES_DATA, dataSeiFromYaml.getNumTriples());
-			assertEquals("Number of triples loaded to default graph", ManifestTest_IT.NUM_EXPECTED_TRIPLES_MODEL + ManifestTest_IT.NUM_EXPECTED_TRIPLES_DATA, defaultGraphSei.getNumTriples());
+			assertEquals("Number of triples loaded to default graph", ManifestTest_IT.NUM_EXPECTED_TRIPLES_MODEL + ManifestTest_IT.NUM_EXPECTED_TRIPLES_DATA + ManifestTest_IT.NUM_NET_CHANGE_ENTITY_RESOLUTION_TRIPLES, defaultGraphSei.getNumTriples());
 			assertEquals("Number of nodegroups", ManifestTest_IT.NUM_EXPECTED_NODEGROUPS, IntegrationTestUtility.countItemsInStoreByCreator("junit"));
 
 		}catch(Exception e){
