@@ -188,11 +188,11 @@ public class LoadDataConfig extends YamlConfig {
 			return clazz;
 		}
 		public void run(SparqlConnection conn, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
-			progressWriter.println("Load CSV " + csvPath + " using class " + clazz);
+			progressWriter.println("Load CSV " + (new File(csvPath)).getName() + " using class " + clazz);
 			progressWriter.flush();
 			String jobId = ingestClient.execFromCsvUsingClassTemplate(clazz, null, Files.readString(Path.of(csvPath)), conn, false, null);
 			for (String warning : ingestClient.getWarnings()) {
-				//progressWriter.println("Warning: " + warning);  TODO suppress for now
+				progressWriter.println("Load CSV warning: " + warning);
 			}
 			ngeClient.waitForCompletion(jobId);
 			if (!ngeClient.getJobSuccess(jobId)) {
