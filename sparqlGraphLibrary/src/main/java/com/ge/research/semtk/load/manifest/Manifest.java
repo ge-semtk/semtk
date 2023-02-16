@@ -307,10 +307,16 @@ public class Manifest extends YamlConfig {
 			}
 			if(this.getPerformEntityResolution()) {
 				// entity resolution in default graph
-				if(!loadToDefaultGraph && !getCopyToDefaultGraph()) {
+				if(!loadToDefaultGraph && !getCopyToDefaultGraph()) {  // TODO only allow if copy?
 					throw new Exception("Cannot perform entity resolution because not populating default graph");
 				}
-				ngeClient.combineEntitiesInConn(getDefaultGraphConnection(server, serverTypeString));
+				try {
+					ngeClient.combineEntitiesInConn(getDefaultGraphConnection(server, serverTypeString));
+				}catch(Exception e) {
+					if(!e.getMessage().contains("No SameAs instances")) {  // if exception is about no entities to resolve, suppress it
+						throw e;
+					}
+				}
 			}
 		}
 		progressWriter.flush();
