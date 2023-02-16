@@ -225,7 +225,7 @@ public class ManifestConfig extends YamlConfig {
 	 */
 	public void load(String server, String serverTypeString, boolean clear, boolean loadToDefaultGraph, boolean topLevel, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, NodeGroupStoreRestClient ngStoreClient, PrintWriter progressWriter) throws Exception {
 
-		progressWriter.println("Loading manifest '" + getName() + "'...");
+		writeProgress("Loading manifest '" + getName() + "'...", progressWriter);
 
 		// clear graphs first
 		if(clear) {
@@ -253,28 +253,28 @@ public class ManifestConfig extends YamlConfig {
 			if(type == StepType.MODEL) {
 				// load via an owl ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
-				progressWriter.println("Load model " + stepFile.getAbsolutePath());
+				writeProgress("Load model " + stepFile.getAbsolutePath(), progressWriter);
 				LoadOwlConfig config = new LoadOwlConfig(stepFile, this.fallbackModelGraph);
 				config.load(targetGraph, server, serverTypeString, progressWriter);
 
 			}else if(type == StepType.DATA) {
 				// load content using CSV ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
-				progressWriter.println("Load data " + stepFile.getAbsolutePath());
+				writeProgress("Load data " + stepFile.getAbsolutePath(), progressWriter);
 				LoadDataConfig config = new LoadDataConfig(stepFile, this.fallbackModelGraph, this.fallbackDataGraph);
 				config.load(targetGraph, (targetGraph == null ? null : new LinkedList<String>(Arrays.asList(targetGraph))), server, serverTypeString, clear, ingestClient, ngeClient, progressWriter);
 
 			}else if(type == StepType.NODEGROUPS) {
 				// load nodegroups/reports from a directory
 				File nodegroupsDirectory = new File(baseDir, (String)step.getValue());
-				progressWriter.println("Load nodegroups from " + nodegroupsDirectory.getAbsolutePath());
+				writeProgress("Load nodegroups from " + nodegroupsDirectory.getAbsolutePath(), progressWriter);
 				File csvFile = new File(nodegroupsDirectory, "store_data.csv");
 				ngStoreClient.loadStoreDataCsv(csvFile.getAbsolutePath(), null, progressWriter);
 
 			}else if(type == StepType.MANIFEST) {
 				// load content using sub-manifest
 				File stepFile = new File(baseDir, (String)step.getValue());
-				progressWriter.println("Load manifest " + stepFile.getAbsolutePath());
+				writeProgress("Load manifest " + stepFile.getAbsolutePath(), progressWriter);
 				ManifestConfig subManifest = new ManifestConfig(stepFile, fallbackModelGraph, fallbackDataGraph);
 				subManifest.load(server, serverTypeString, false, loadToDefaultGraph, false, ingestClient, ngeClient, ngStoreClient, progressWriter);
 
@@ -287,7 +287,6 @@ public class ManifestConfig extends YamlConfig {
 			}else {
 				throw new Exception("Unrecognized manifest step: " + type);
 			}
-			progressWriter.flush();
 		}
 
 		// actions to be performed on top-level manifests only: copy to default graph, entity resolution
@@ -298,14 +297,13 @@ public class ManifestConfig extends YamlConfig {
 				}
 				// call SemTK to copy each model/data footprint graph to default graph
 				for(String graph : this.getGraphsFootprint()) {
-					progressWriter.println("Copy graph " + graph + " to default graph");
-					progressWriter.flush();
+					writeProgress("Copy graph " + graph + " to default graph", progressWriter);
 					String msg = ngeClient.copyGraph(server, serverTypeString, graph, server, serverTypeString, SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME);
-					progressWriter.println(msg);
-					progressWriter.flush();
+					writeProgress(msg, progressWriter);
 				}
 			}
 			if(this.getPerformEntityResolution()) {
+				writeProgress("Perform entity resolution (on default graph)", progressWriter);
 				// entity resolution in default graph
 				if(!loadToDefaultGraph && !getCopyToDefaultGraph()) {
 					throw new Exception("Cannot perform entity resolution because not populating default graph");
@@ -319,7 +317,6 @@ public class ManifestConfig extends YamlConfig {
 				}
 			}
 		}
-		progressWriter.flush();
 	}
 
 	/**

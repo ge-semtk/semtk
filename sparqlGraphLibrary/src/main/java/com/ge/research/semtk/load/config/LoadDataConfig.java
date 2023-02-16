@@ -188,15 +188,14 @@ public class LoadDataConfig extends YamlConfig {
 			return clazz;
 		}
 		public void run(SparqlConnection conn, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
-			progressWriter.println("Load CSV " + (new File(csvPath)).getName() + " using class " + clazz);
-			progressWriter.flush();
+			writeProgress("Load CSV " + (new File(csvPath)).getName() + " using class " + clazz, progressWriter);
 			String jobId = ingestClient.execFromCsvUsingClassTemplate(clazz, null, Files.readString(Path.of(csvPath)), conn, false, null);
 			for (String warning : ingestClient.getWarnings()) {
-				progressWriter.println("Load CSV warning: " + warning);
+				writeProgress("Load CSV warning: " + warning, progressWriter);
 			}
 			ngeClient.waitForCompletion(jobId);
 			if (!ngeClient.getJobSuccess(jobId)) {
-				progressWriter.println("Failed loading CSV by class:\n" + ngeClient.getResultsTable(jobId).toCSVString());
+				writeProgress("Failed loading CSV by class:\n" + ngeClient.getResultsTable(jobId).toCSVString(), progressWriter);
 			}
 		}
 	}
@@ -212,8 +211,7 @@ public class LoadDataConfig extends YamlConfig {
 			return nodegroupId;
 		}
 		public void run(SparqlConnection conn, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
-			progressWriter.println("Load CSV " + csvPath + " using nodegroup " + nodegroupId);
-			progressWriter.flush();
+			writeProgress("Load CSV " + csvPath + " using nodegroup " + nodegroupId, progressWriter);
 			ngeClient.dispatchIngestFromCsvStringsByIdSync(this.nodegroupId, Files.readString(Path.of(csvPath))); // TODO junit
 		}
 	}

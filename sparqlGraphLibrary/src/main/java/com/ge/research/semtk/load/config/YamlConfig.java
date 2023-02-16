@@ -1,6 +1,7 @@
 package com.ge.research.semtk.load.config;
 
 import java.io.File;
+import java.io.PrintWriter;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -79,6 +80,14 @@ public abstract class YamlConfig {
 			return array.get(0).asText();
 		}
 		return null;
+	}
+
+	/**
+	 * Convenience method to write/flush
+	 */
+	protected static void writeProgress(String s, PrintWriter progressWriter) {
+		progressWriter.println(s);
+		progressWriter.flush();
 	}
 
 }
