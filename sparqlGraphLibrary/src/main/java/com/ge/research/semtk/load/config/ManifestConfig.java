@@ -33,7 +33,7 @@ import com.ge.research.semtk.utility.Utility;
 
 /**
  * Class representing a manifest for loading content into triplestore
- * Populated from a YAML file conforming to schema manifest_schema.json
+ * Populated from a YAML file conforming to schema manifest_config_schema.json
  */
 public class ManifestConfig extends YamlConfig {
 
@@ -49,7 +49,7 @@ public class ManifestConfig extends YamlConfig {
 	private static String DEFAULT_FILE_NAME = "manifest.yaml";	// the default manifest file name
 
 	public ManifestConfig(File yamlFile, String fallbackModelGraph, String fallbackDataGraph) throws Exception {
-		super(yamlFile, Utility.getResourceAsFile(ManifestConfig.class, "/manifest/manifest_schema.json"), fallbackModelGraph, fallbackDataGraph);
+		super(yamlFile, Utility.getResourceAsFile(ManifestConfig.class, "/configSchema/manifest_config_schema.json"), fallbackModelGraph, fallbackDataGraph);
 
 		// populate the manifest
 		String name = configNode.get("name").asText();  // required

@@ -613,9 +613,9 @@ public class NodeGroupExecutionClientTest_IT {
 			// just testing that something goes through to the endpoint from the client
 			// See CombineEntitiesThreadTest_IT for more
 			TestGraph.clearGraph();
-			TestGraph.uploadOwlResource(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/PROV-S.owl");
-			TestGraph.uploadOwlResource(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/RESOLUTIONS.owl");
-			TestGraph.uploadOwlResource(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/EntityResolution.owl");
+			TestGraph.uploadOwlResource(this, "/config/IngestionPackage/RACK-Ontology/OwlModels/PROV-S.owl");
+			TestGraph.uploadOwlResource(this, "/config/IngestionPackage/RACK-Ontology/OwlModels/RESOLUTIONS.owl");
+			TestGraph.uploadOwlResource(this, "/config/IngestionPackage/RACK-Ontology/OwlModels/EntityResolution.owl");
 			try {
 				nodeGroupExecutionClient.combineEntitiesInConn(TestGraph.getSparqlConn());
 				fail("Missing combineEntitiesInConn failure: no entities found");

@@ -61,7 +61,7 @@ public class ManifestConfigTest_IT {
 		boolean loadToDefaultGraph;
 		try {
 			// get manifest from ingestion package, perform load
-			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/manifest/IngestionPackage.zip");
+			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/config/IngestionPackage.zip");
 			ManifestConfig manifest = new ManifestConfig(ManifestConfig.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 
 			// load to non-default graphs, do not copy to default graph
@@ -108,7 +108,7 @@ public class ManifestConfigTest_IT {
 		boolean loadToDefaultGraph;
 		try {
 			// get manifest from ingestion package, perform load
-			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/manifest/IngestionPackage.zip");
+			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/config/IngestionPackage.zip");
 			ManifestConfig manifest = new ManifestConfig(ManifestConfig.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 
 			// load directly (not copy) to default graph, no entity resolution

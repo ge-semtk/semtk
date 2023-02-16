@@ -47,9 +47,9 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 			final int NUM_EXPECTED_TRIPLES = 20;		// TODO verify that this is correct
 
 			// TODO uniquifyJunitGraphName
-			LoadOwlConfig loadOwlConfig = new LoadOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), modelFallbackSei.getGraph());
-			LoadDataConfig loadDataConfig = new LoadDataConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/TestData/Package-1/import.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
-			LoadDataConfig loadDataConfigWithNoDatagraphInYaml = new LoadDataConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/TestData/Package-1/import-withNoDatagraph.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+			LoadOwlConfig loadOwlConfig = new LoadOwlConfig(Utility.getResourceAsFile(this, "/config/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), modelFallbackSei.getGraph());
+			LoadDataConfig loadDataConfig = new LoadDataConfig(Utility.getResourceAsFile(this, "/config/IngestionPackage/TestData/Package-1/import.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+			LoadDataConfig loadDataConfigWithNoDatagraphInYaml = new LoadDataConfig(Utility.getResourceAsFile(this, "/config/IngestionPackage/TestData/Package-1/import-withNoDatagraph.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 
 			// Case 1: if load() data graph parameter, then confirm loads there
 			clearGraphs();

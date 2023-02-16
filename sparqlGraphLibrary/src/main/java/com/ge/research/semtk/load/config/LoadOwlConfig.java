@@ -29,12 +29,12 @@ import com.ge.research.semtk.utility.Utility;
 
 /**
  * Configuration for loading a set of OWL files to the triplestore
- * Populated from a YAML file conforming to schema ingest_owl_config_schema.json
+ * Populated from a YAML file conforming to schema load_owl_config_schema.json
  */
 public class LoadOwlConfig extends YamlConfig {
 
 	public LoadOwlConfig(File yamlFile, String fallbackModelGraph) throws Exception {
-		super(yamlFile, Utility.getResourceAsFile(LoadOwlConfig.class, "/manifest/ingest_owl_config_schema.json"), fallbackModelGraph, null);
+		super(yamlFile, Utility.getResourceAsFile(LoadOwlConfig.class, "/configSchema/load_owl_config_schema.json"), fallbackModelGraph, null);
 
 		if(fallbackModelGraph == null) {
 			throw new Exception("Fallback model graph not provided");

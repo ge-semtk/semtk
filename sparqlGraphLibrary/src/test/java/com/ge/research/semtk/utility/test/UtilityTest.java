@@ -207,7 +207,7 @@ public class UtilityTest {
 
 		// confirm successful unzip
 		try {
-			File zipFile = Utility.getResourceAsFile(this, "/manifest/IngestionPackage.zip");
+			File zipFile = Utility.getResourceAsFile(this, "/config/IngestionPackage.zip");
 			tempDir = Utility.createTempDirectory();
 			Utility.unzip(new ZipInputStream(new FileInputStream(zipFile)), tempDir);
 			assertTrue((new File(tempDir.getAbsolutePath() + File.separator + "manifest.yaml").exists()));
@@ -234,15 +234,15 @@ public class UtilityTest {
 
 	@Test
 	public void testValidateYaml() throws Exception{
-		String schema = Utility.getResourceAsString(this, "/manifest/manifest_schema.json");
+		String schema = Utility.getResourceAsString(this, "/configSchema/manifest_config_schema.json");
 
 		// this YAML should pass validation
-		String yaml = Utility.getResourceAsString(this, "/manifest/manifest_animals.yaml");
+		String yaml = Utility.getResourceAsString(this, "/config/manifest_animals.yaml");
 		Utility.validateYaml(yaml, schema);
 
 		// this YAML should fail validation
 		try {
-			yaml = Utility.getResourceAsString(this, "/manifest/manifest_animals_badformat.yaml");
+			yaml = Utility.getResourceAsString(this, "/config/manifest_animals_badformat.yaml");
 			Utility.validateYaml(yaml, schema);
 			fail();  // should not get here
 		}catch(Exception e) {
@@ -251,7 +251,7 @@ public class UtilityTest {
 
 		// this YAML should fail validation
 		try {
-			yaml = Utility.getResourceAsString(this, "/manifest/manifest_animals_fail.yaml");
+			yaml = Utility.getResourceAsString(this, "/config/manifest_animals_fail.yaml");
 			Utility.validateYaml(yaml, schema);
 			fail();  // should not get here
 		}catch(Exception e) {

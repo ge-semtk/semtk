@@ -38,7 +38,7 @@ public class ManifestTest extends YamlConfigTest {
 	@Test
 	public void test() throws Exception{
 
-		ManifestConfig manifest = new ManifestConfig(Utility.getResourceAsFile(this, "/manifest/manifest_animals.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+		ManifestConfig manifest = new ManifestConfig(Utility.getResourceAsFile(this, "/config/manifest_animals.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 		assertEquals(manifest.getFallbackModelGraph(), modelFallbackSei.getGraph());
 		assertEquals(manifest.getFallbackDataGraph(), dataFallbackSei.getGraph());
 
@@ -115,7 +115,7 @@ public class ManifestTest extends YamlConfigTest {
 		final String FALLBACK_MODEL_GRAPH = TestGraph.getDataset() + "/model";
 		final String FALLBACK_DATA_GRAPH = TestGraph.getDataset() + "/data";
 
-		File file = new File("src/test/resources/manifest/manifest_animals_minimal.yaml");
+		File file = new File("src/test/resources/config/manifest_animals_minimal.yaml");
 		ManifestConfig manifest = new ManifestConfig(file, FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
 		assertEquals(manifest.getName(), "Animals");
 	}

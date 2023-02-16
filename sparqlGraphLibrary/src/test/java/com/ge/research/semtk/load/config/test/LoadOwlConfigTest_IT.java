@@ -44,8 +44,8 @@ public class LoadOwlConfigTest_IT extends YamlConfigTest {
 			final int NUM_EXPECTED_TRIPLES = 1439;		// TODO verify that this is correct
 
 			// TODO uniquifyJunitGraphName
-			LoadOwlConfig configWithoutModelInYaml = new LoadOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), modelFallbackSei.getGraph());
-			LoadOwlConfig configWithModelInYaml = new LoadOwlConfig(Utility.getResourceAsFile(this, "/manifest/IngestionPackage/RACK-Ontology/OwlModels/import-WithModelgraph.yaml"), modelFallbackSei.getGraph());
+			LoadOwlConfig configWithoutModelInYaml = new LoadOwlConfig(Utility.getResourceAsFile(this, "/config/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), modelFallbackSei.getGraph());
+			LoadOwlConfig configWithModelInYaml = new LoadOwlConfig(Utility.getResourceAsFile(this, "/config/IngestionPackage/RACK-Ontology/OwlModels/import-WithModelgraph.yaml"), modelFallbackSei.getGraph());
 
 			// Case 1: if load() model graph parameter, then confirm loads there
 			clearGraphs();

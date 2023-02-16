@@ -68,7 +68,7 @@ public class UtilityClientTest_IT {
 
 			reset();
 
-			BufferedReader reader = client.execLoadIngestionPackage(TestGraph.getZipAndUniquifyJunitGraphs(this, "/manifest/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+			BufferedReader reader = client.execLoadIngestionPackage(TestGraph.getZipAndUniquifyJunitGraphs(this, "/config/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 			String response = Utility.readToString(reader);
 
 			// check the response stream
@@ -116,7 +116,7 @@ public class UtilityClientTest_IT {
 		assert(response.contains("Error: This endpoint only accepts ingestion packages in zip file format"));
 
 		// contains no top-level manifest.yaml
-		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/manifest/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
+		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/config/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
 		assert(response.contains("Error: Cannot find a top-level manifest in IngestionPackageNoManifest.zip"));
 	}
 
