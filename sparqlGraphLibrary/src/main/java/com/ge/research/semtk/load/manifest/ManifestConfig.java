@@ -35,7 +35,7 @@ import com.ge.research.semtk.utility.Utility;
  * Class representing a manifest for loading content into triplestore
  * Populated from a YAML file conforming to schema manifest_schema.json
  */
-public class Manifest extends YamlConfig {
+public class ManifestConfig extends YamlConfig {
 
 	private String name;
 	private String description;
@@ -48,8 +48,8 @@ public class Manifest extends YamlConfig {
 
 	private static String DEFAULT_FILE_NAME = "manifest.yaml";	// the default manifest file name
 
-	public Manifest(File yamlFile, String fallbackModelGraph, String fallbackDataGraph) throws Exception {
-		super(yamlFile, Utility.getResourceAsFile(Manifest.class, "/manifest/manifest_schema.json"), fallbackModelGraph, fallbackDataGraph);
+	public ManifestConfig(File yamlFile, String fallbackModelGraph, String fallbackDataGraph) throws Exception {
+		super(yamlFile, Utility.getResourceAsFile(ManifestConfig.class, "/manifest/manifest_schema.json"), fallbackModelGraph, fallbackDataGraph);
 
 		// populate the manifest
 		String name = configNode.get("name").asText();  // required
@@ -275,7 +275,7 @@ public class Manifest extends YamlConfig {
 				// load content using sub-manifest
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load manifest " + stepFile.getAbsolutePath());
-				Manifest subManifest = new Manifest(stepFile, fallbackModelGraph, fallbackDataGraph);
+				ManifestConfig subManifest = new ManifestConfig(stepFile, fallbackModelGraph, fallbackDataGraph);
 				subManifest.load(server, serverTypeString, false, loadToDefaultGraph, false, ingestClient, ngeClient, ngStoreClient, progressWriter);
 
 			}else if(type == StepType.COPYGRAPH) {
@@ -329,9 +329,9 @@ public class Manifest extends YamlConfig {
 	 * @throws Exception if the file is not found
 	 */
 	public static File getTopLevelManifestFile(File baseDir) throws Exception {
-		File manifestFile = new File(baseDir.getAbsoluteFile() + File.separator + Manifest.DEFAULT_FILE_NAME);
+		File manifestFile = new File(baseDir.getAbsoluteFile() + File.separator + ManifestConfig.DEFAULT_FILE_NAME);
 		if(!manifestFile.exists()) {
-			throw new Exception(Manifest.DEFAULT_FILE_NAME + " does not exist in " + baseDir);
+			throw new Exception(ManifestConfig.DEFAULT_FILE_NAME + " does not exist in " + baseDir);
 		}
 		return manifestFile;
 	}

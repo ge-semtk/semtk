@@ -27,13 +27,13 @@ import java.io.PrintWriter;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
-import com.ge.research.semtk.load.manifest.Manifest;
+import com.ge.research.semtk.load.manifest.ManifestConfig;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 
 
-public class ManifestTest_IT {
+public class ManifestConfigTest_IT {
 
 	// not extending YamlConfigTest because need to match ingestion package footprint
 	SparqlEndpointInterface modelFallbackSei = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/model"));
@@ -46,7 +46,7 @@ public class ManifestTest_IT {
 	public final static int NUM_NET_CHANGE_ENTITY_RESOLUTION_TRIPLES = -12;	// TODO verify that this is correct  (entity resolution results in net loss of triples)
 	public final static int NUM_EXPECTED_NODEGROUPS = 31;
 
-	public ManifestTest_IT() throws Exception {
+	public ManifestConfigTest_IT() throws Exception {
 		super();
 	}
 
@@ -62,7 +62,7 @@ public class ManifestTest_IT {
 		try {
 			// get manifest from ingestion package, perform load
 			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/manifest/IngestionPackage.zip");
-			Manifest manifest = new Manifest(Manifest.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+			ManifestConfig manifest = new ManifestConfig(ManifestConfig.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 
 			// load to non-default graphs, do not copy to default graph
 			reset();
@@ -109,7 +109,7 @@ public class ManifestTest_IT {
 		try {
 			// get manifest from ingestion package, perform load
 			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/manifest/IngestionPackage.zip");
-			Manifest manifest = new Manifest(Manifest.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+			ManifestConfig manifest = new ManifestConfig(ManifestConfig.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 
 			// load directly (not copy) to default graph, no entity resolution
 			reset();

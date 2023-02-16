@@ -23,8 +23,8 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.util.LinkedList;
 
-import com.ge.research.semtk.load.manifest.Manifest;
-import com.ge.research.semtk.load.manifest.Manifest.Step;
+import com.ge.research.semtk.load.manifest.ManifestConfig;
+import com.ge.research.semtk.load.manifest.ManifestConfig.Step;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
@@ -38,7 +38,7 @@ public class ManifestTest extends YamlConfigTest {
 	@Test
 	public void test() throws Exception{
 
-		Manifest manifest = new Manifest(Utility.getResourceAsFile(this, "/manifest/manifest_animals.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+		ManifestConfig manifest = new ManifestConfig(Utility.getResourceAsFile(this, "/manifest/manifest_animals.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 		assertEquals(manifest.getFallbackModelGraph(), modelFallbackSei.getGraph());
 		assertEquals(manifest.getFallbackDataGraph(), dataFallbackSei.getGraph());
 
@@ -60,15 +60,15 @@ public class ManifestTest extends YamlConfigTest {
 		// test steps
 		LinkedList<Step> steps = manifest.getSteps();
 		assertEquals(steps.size(), 7);
-		assertEquals(steps.get(0).getType(), Manifest.StepType.MODEL );
+		assertEquals(steps.get(0).getType(), ManifestConfig.StepType.MODEL );
 		assertEquals(steps.get(0).getValue(), "animals/import.yaml" );
-		assertEquals(steps.get(1).getType(), Manifest.StepType.MANIFEST );
+		assertEquals(steps.get(1).getType(), ManifestConfig.StepType.MANIFEST );
 		assertEquals(steps.get(1).getValue(), "animals.yaml" );
-		assertEquals(steps.get(2).getType(), Manifest.StepType.NODEGROUPS );
+		assertEquals(steps.get(2).getType(), ManifestConfig.StepType.NODEGROUPS );
 		assertEquals(steps.get(2).getValue(), "animals/nodegroups" );
-		assertEquals(steps.get(3).getType(), Manifest.StepType.DATA );
+		assertEquals(steps.get(3).getType(), ManifestConfig.StepType.DATA );
 		assertEquals(steps.get(3).getValue(), "animals/mammals/import.yaml" );
-		assertEquals(steps.get(6).getType(), Manifest.StepType.COPYGRAPH );
+		assertEquals(steps.get(6).getType(), ManifestConfig.StepType.COPYGRAPH );
 		assertEquals(steps.get(6).getValue().toString(), "[http://junit/animals/domestic, http://junit/animals/wild]");
 
 		// test connections
@@ -116,7 +116,7 @@ public class ManifestTest extends YamlConfigTest {
 		final String FALLBACK_DATA_GRAPH = TestGraph.getDataset() + "/data";
 
 		File file = new File("src/test/resources/manifest/manifest_animals_minimal.yaml");
-		Manifest manifest = new Manifest(file, FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
+		ManifestConfig manifest = new ManifestConfig(file, FALLBACK_MODEL_GRAPH, FALLBACK_DATA_GRAPH);
 		assertEquals(manifest.getName(), "Animals");
 	}
 

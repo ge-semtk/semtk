@@ -50,7 +50,7 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
-import com.ge.research.semtk.load.manifest.Manifest;
+import com.ge.research.semtk.load.manifest.ManifestConfig;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
@@ -397,11 +397,11 @@ public class UtilityServiceRestController {
 			// load the manifest
 			File manifestFile = null;
 			try {
-				manifestFile = Manifest.getTopLevelManifestFile(tempDir);
+				manifestFile = ManifestConfig.getTopLevelManifestFile(tempDir);
 			}catch(Exception e) {
 				throw new Exception("Cannot find a top-level manifest in " + ingestionPackageZipFile.getOriginalFilename());
 			}
-			Manifest manifest = new Manifest(manifestFile, defaultModelGraph, defaultDataGraph);
+			ManifestConfig manifest = new ManifestConfig(manifestFile, defaultModelGraph, defaultDataGraph);
 			manifest.load(serverAndPort, serverType, false, false, true, getIngestorRestClient(), getNodegroupExecutionClient(), getNodegroupStoreClient(), responseWriter);
 
 			responseWriter.println("Load complete");

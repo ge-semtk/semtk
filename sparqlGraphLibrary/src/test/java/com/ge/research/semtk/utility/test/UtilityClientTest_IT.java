@@ -24,7 +24,7 @@ import java.io.BufferedReader;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.ge.research.semtk.load.manifest.test.ManifestTest_IT;
+import com.ge.research.semtk.load.manifest.test.ManifestConfigTest_IT;
 import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.services.client.UtilityClient;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -94,10 +94,10 @@ public class UtilityClientTest_IT {
 			assert(response.contains("Load complete"));
 
 			// check the counts
-			assertEquals("Number of triples loaded to model graph", ManifestTest_IT.NUM_EXPECTED_TRIPLES_MODEL, modelFallbackSei.getNumTriples());
-			assertEquals("Number of triples loaded to data graph", ManifestTest_IT.NUM_EXPECTED_TRIPLES_DATA, dataSeiFromYaml.getNumTriples());
-			assertEquals("Number of triples loaded to default graph", ManifestTest_IT.NUM_EXPECTED_TRIPLES_MODEL + ManifestTest_IT.NUM_EXPECTED_TRIPLES_DATA + ManifestTest_IT.NUM_NET_CHANGE_ENTITY_RESOLUTION_TRIPLES, defaultGraphSei.getNumTriples());
-			assertEquals("Number of nodegroups", ManifestTest_IT.NUM_EXPECTED_NODEGROUPS, IntegrationTestUtility.countItemsInStoreByCreator("junit"));
+			assertEquals("Number of triples loaded to model graph", ManifestConfigTest_IT.NUM_EXPECTED_TRIPLES_MODEL, modelFallbackSei.getNumTriples());
+			assertEquals("Number of triples loaded to data graph", ManifestConfigTest_IT.NUM_EXPECTED_TRIPLES_DATA, dataSeiFromYaml.getNumTriples());
+			assertEquals("Number of triples loaded to default graph", ManifestConfigTest_IT.NUM_EXPECTED_TRIPLES_MODEL + ManifestConfigTest_IT.NUM_EXPECTED_TRIPLES_DATA + ManifestConfigTest_IT.NUM_NET_CHANGE_ENTITY_RESOLUTION_TRIPLES, defaultGraphSei.getNumTriples());
+			assertEquals("Number of nodegroups", ManifestConfigTest_IT.NUM_EXPECTED_NODEGROUPS, IntegrationTestUtility.countItemsInStoreByCreator("junit"));
 
 		}catch(Exception e){
 			throw e;
