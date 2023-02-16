@@ -1,4 +1,7 @@
 data-graph: http://junit/animals/data
+extra-data-graphs:
+- http://junit/animals/data2
+- http://junit/animals/data3
 ingestion-steps:
 - {class: "http://animals/woodland#WOODCHUCK", csv: "woodchucks.csv"}
 - {class: "http://animals/woodland#HEDGEHOG", csv: "hedgehogs.csv"}

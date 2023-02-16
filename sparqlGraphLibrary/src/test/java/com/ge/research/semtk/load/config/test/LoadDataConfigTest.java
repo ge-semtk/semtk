@@ -24,8 +24,6 @@ import com.ge.research.semtk.load.config.LoadDataConfig;
 import com.ge.research.semtk.load.config.LoadDataConfig.CsvByClassIngestionStep;
 import com.ge.research.semtk.utility.Utility;
 
-// TODO test variations, valid and invalid
-// TODO test extra data graphs (when implemented)
 public class LoadDataConfigTest extends YamlConfigTest {
 
 	public LoadDataConfigTest() throws Exception {
@@ -41,7 +39,7 @@ public class LoadDataConfigTest extends YamlConfigTest {
 		LoadDataConfig config;
 		
 		// this config has a datagraph + steps
-		config = new LoadDataConfig(Utility.getResourceAsFile(this, "/config/load_csv_config_1.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+		config = new LoadDataConfig(Utility.getResourceAsFile(this, "/config/load_data_config_1.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 		assertEquals(config.getFallbackModelGraph(), modelFallbackSei.getGraph());
 		assertEquals(config.getSteps().size(), 2);
 		assertEquals(((CsvByClassIngestionStep)config.getSteps().get(0)).getClazz(), "http://animals/woodland#WOODCHUCK");
@@ -53,8 +51,15 @@ public class LoadDataConfigTest extends YamlConfigTest {
 		assertEquals(config.getDatagraphs().get(0), "http://junit/animals/data");
 		
 		// this config has steps only (no graphs)
-		config = new LoadDataConfig(Utility.getResourceAsFile(this, "/config/load_csv_config_2.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+		config = new LoadDataConfig(Utility.getResourceAsFile(this, "/config/load_data_config_2.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 		assertEquals(config.getDatagraphs(), null);
+
+		// this config test has extra-graphs
+		config = new LoadDataConfig(Utility.getResourceAsFile(this, "/config/load_data_config_3.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+		assertEquals(3, config.getDatagraphs().size());
+		assertEquals(config.getDatagraphs().get(0), "http://junit/animals/data");
+		assertEquals(config.getDatagraphs().get(1), "http://junit/animals/data2");
+		assertEquals(config.getDatagraphs().get(2), "http://junit/animals/data3");
 	}
 	
 }
