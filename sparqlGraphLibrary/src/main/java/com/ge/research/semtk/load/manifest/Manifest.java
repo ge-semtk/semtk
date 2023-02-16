@@ -276,7 +276,7 @@ public class Manifest extends YamlConfig {
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load manifest " + stepFile.getAbsolutePath());
 				Manifest subManifest = new Manifest(stepFile, fallbackModelGraph, fallbackDataGraph);
-				subManifest.load(server, serverTypeString, clear, loadToDefaultGraph, false, ingestClient, ngeClient, ngStoreClient, progressWriter);
+				subManifest.load(server, serverTypeString, false, loadToDefaultGraph, false, ingestClient, ngeClient, ngStoreClient, progressWriter);
 
 			}else if(type == StepType.COPYGRAPH) {
 				// perform the copy		TODO junit
