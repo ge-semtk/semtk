@@ -17,6 +17,8 @@
 package com.ge.research.semtk.load.manifest.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
@@ -39,8 +41,9 @@ public class ManifestTest_IT {
 	SparqlEndpointInterface dataSeiFromYaml = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/data"));  // for this package, same as footprint/fallback
 	SparqlEndpointInterface defaultGraphSei = TestGraph.getSei(SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME);
 
-	public final static int NUM_EXPECTED_TRIPLES_MODEL = 1439;		// TODO verify that this is correct
-	public final static int NUM_EXPECTED_TRIPLES_DATA = 80;			// TODO verify that this is correct
+	public final static int NUM_EXPECTED_TRIPLES_MODEL = 1439;				// TODO verify that this is correct
+	public final static int NUM_EXPECTED_TRIPLES_DATA = 80;					// TODO verify that this is correct
+	public final static int NUM_NET_CHANGE_ENTITY_RESOLUTION_TRIPLES = -12;	// TODO verify that this is correct  (entity resolution results in net loss of triples)
 	public final static int NUM_EXPECTED_NODEGROUPS = 31;
 
 	public ManifestTest_IT() throws Exception {
@@ -63,13 +66,26 @@ public class ManifestTest_IT {
 
 			// load to non-default graphs, do not copy to default graph
 			reset();
-			manifest.setCopyToDefaultGraph(false); // set copy-to-default-graph=false
 			loadToDefaultGraph = false;
+			manifest.setCopyToDefaultGraph(false); // sets copy-to-default-graph=false
+			manifest.setPerformEntityResolution(false);
 			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, loadToDefaultGraph, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), new PrintWriter(System.out));
 			assertEquals("Number of triples loaded to model graph", NUM_EXPECTED_TRIPLES_MODEL, modelFallbackSei.getNumTriples());
 			assertEquals("Number of triples loaded to data graph", NUM_EXPECTED_TRIPLES_DATA, dataSeiFromYaml.getNumTriples());
 			assertEquals("Number of triples loaded to default graph", 0, defaultGraphSei.getNumTriples());
 			assertEquals("Number of nodegroups", NUM_EXPECTED_NODEGROUPS, IntegrationTestUtility.countItemsInStoreByCreator("junit"));
+
+			// error if try to perform entity resolution when not using default graph
+			reset();
+			loadToDefaultGraph = false;
+			manifest.setCopyToDefaultGraph(false);
+			manifest.setPerformEntityResolution(true);
+			try {
+				manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, loadToDefaultGraph, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), new PrintWriter(System.out));
+				fail(); // should not get here
+			}catch(Exception e) {
+				assertTrue(e.getMessage().contains("Cannot perform entity resolution because not populating default graph"));
+			}
 
 		}finally{
 			if(tempDir != null) { FileUtils.deleteDirectory(tempDir); }
@@ -95,23 +111,35 @@ public class ManifestTest_IT {
 			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/manifest/IngestionPackage.zip");
 			Manifest manifest = new Manifest(Manifest.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 
-			// load directly to default graph
+			// load directly (not copy) to default graph, no entity resolution
 			reset();
-			manifest.setCopyToDefaultGraph(false);
 			loadToDefaultGraph = true;
+			manifest.setCopyToDefaultGraph(false);
+			manifest.setPerformEntityResolution(false);
 			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, loadToDefaultGraph, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), new PrintWriter(System.out));
 			assertEquals("Number of triples loaded to model graph", 0, modelFallbackSei.getNumTriples());
 			assertEquals("Number of triples loaded to data graph", 0, dataSeiFromYaml.getNumTriples());
 			assertEquals("Number of triples loaded to default graph", NUM_EXPECTED_TRIPLES_MODEL + NUM_EXPECTED_TRIPLES_DATA, defaultGraphSei.getNumTriples());
 
-			// load to non-default graph, copy to default graph
+			// load directly (not copy) to default graph, perform entity resolution
 			reset();
-			manifest.setCopyToDefaultGraph(true);   // it's already true, but making it explicit
+			loadToDefaultGraph = true;
+			manifest.setCopyToDefaultGraph(false);
+			manifest.setPerformEntityResolution(true);
+			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, loadToDefaultGraph, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), new PrintWriter(System.out));
+			assertEquals("Number of triples loaded to model graph", 0, modelFallbackSei.getNumTriples());
+			assertEquals("Number of triples loaded to data graph", 0, dataSeiFromYaml.getNumTriples());
+			assertEquals("Number of triples loaded to default graph", NUM_EXPECTED_TRIPLES_MODEL + NUM_EXPECTED_TRIPLES_DATA + NUM_NET_CHANGE_ENTITY_RESOLUTION_TRIPLES, defaultGraphSei.getNumTriples());
+
+			// copy (not load directly) to default graph, perform entity resolution
+			reset();
 			loadToDefaultGraph = false;
+			manifest.setCopyToDefaultGraph(true);   // it's already true, but making it explicit
+			manifest.setPerformEntityResolution(true);
 			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, loadToDefaultGraph, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), new PrintWriter(System.out));
 			assertEquals("Number of triples loaded to model graph", NUM_EXPECTED_TRIPLES_MODEL, modelFallbackSei.getNumTriples());
 			assertEquals("Number of triples loaded to data graph", NUM_EXPECTED_TRIPLES_DATA, dataSeiFromYaml.getNumTriples());
-			assertEquals("Number of triples loaded to default graph", NUM_EXPECTED_TRIPLES_MODEL + NUM_EXPECTED_TRIPLES_DATA, defaultGraphSei.getNumTriples());
+			assertEquals("Number of triples loaded to default graph", NUM_EXPECTED_TRIPLES_MODEL + NUM_EXPECTED_TRIPLES_DATA + NUM_NET_CHANGE_ENTITY_RESOLUTION_TRIPLES, defaultGraphSei.getNumTriples());
 
 		}finally{
 			if(tempDir != null) { FileUtils.deleteDirectory(tempDir); }

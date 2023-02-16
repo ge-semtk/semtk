@@ -306,7 +306,11 @@ public class Manifest extends YamlConfig {
 				}
 			}
 			if(this.getPerformEntityResolution()) {
-				// TODO call SemTK to perform entity resolution
+				// entity resolution in default graph
+				if(!loadToDefaultGraph && !getCopyToDefaultGraph()) {
+					throw new Exception("Cannot perform entity resolution because not populating default graph");
+				}
+				ngeClient.combineEntitiesInConn(getDefaultGraphConnection(server, serverTypeString));
 			}
 		}
 		progressWriter.flush();
