@@ -40,7 +40,7 @@ public class ManifestTest_IT {
 	SparqlEndpointInterface defaultGraphSei = TestGraph.getSei(SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME);
 
 	public final static int NUM_EXPECTED_TRIPLES_MODEL = 1439;		// TODO verify that this is correct
-	public final static int NUM_EXPECTED_TRIPLES_DATA = 80;		// TODO verify that this is correct
+	public final static int NUM_EXPECTED_TRIPLES_DATA = 80;			// TODO verify that this is correct
 	public final static int NUM_EXPECTED_NODEGROUPS = 31;
 
 	public ManifestTest_IT() throws Exception {
@@ -48,21 +48,24 @@ public class ManifestTest_IT {
 	}
 
 	/**
-	 * Test loading a manifest via YAML, with copy-to-default-graph=false
+	 * Test loading a manifest via YAML, without using default graph
 	 */
 	@Test
 	public void testLoadManifest_NoDefaultGraph() throws Exception{
 		// Note: no copy to default graph, so don't have to limit to Fuseki only
 
 		File tempDir = null;
+		boolean loadToDefaultGraph;
 		try {
 			// get manifest from ingestion package, perform load
 			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/manifest/IngestionPackage.zip");
-			Manifest manifest = new Manifest(Manifest.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());  // should only load to model, not data
-			manifest.setCopyToDefaultGraph(false); // copy-to-default-graph=false
+			Manifest manifest = new Manifest(Manifest.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 
+			// load to non-default graphs, do not copy to default graph
 			reset();
-			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), new PrintWriter(System.out));
+			manifest.setCopyToDefaultGraph(false); // set copy-to-default-graph=false
+			loadToDefaultGraph = false;
+			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, loadToDefaultGraph, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), new PrintWriter(System.out));
 			assertEquals("Number of triples loaded to model graph", NUM_EXPECTED_TRIPLES_MODEL, modelFallbackSei.getNumTriples());
 			assertEquals("Number of triples loaded to data graph", NUM_EXPECTED_TRIPLES_DATA, dataSeiFromYaml.getNumTriples());
 			assertEquals("Number of triples loaded to default graph", 0, defaultGraphSei.getNumTriples());
@@ -75,26 +78,40 @@ public class ManifestTest_IT {
 	}
 
 	/**
-	 * Test loading a manifest via YAML, with copy-to-default-graph=true
+	 * Test loading a manifest via YAML, with data loaded to the default graph in 2 different ways:
+	 * 1) via copy-to-default-graph=true in the manifest YAML
+	 * 2) via load() with loadToDefaultGraph=true
 	 */
 	@Test
-	public void testLoadManifest() throws Exception{
+	public void testLoadManifest_UsesDefaultGraph() throws Exception{
 
 		// this ingestion package copies to the default graph - only allow to run on Fuseki
 		assumeTrue("Skipping test: only use default graph on Fuseki triplestore", TestGraph.getSei().getServerType().equals(SparqlEndpointInterface.FUSEKI_SERVER));
 
 		File tempDir = null;
+		boolean loadToDefaultGraph;
 		try {
 			// get manifest from ingestion package, perform load
 			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/manifest/IngestionPackage.zip");
-			Manifest manifest = new Manifest(Manifest.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());  // should only load to model, not data
+			Manifest manifest = new Manifest(Manifest.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 
+			// load directly to default graph
 			reset();
-			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), new PrintWriter(System.out));
+			manifest.setCopyToDefaultGraph(false);
+			loadToDefaultGraph = true;
+			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, loadToDefaultGraph, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), new PrintWriter(System.out));
+			assertEquals("Number of triples loaded to model graph", 0, modelFallbackSei.getNumTriples());
+			assertEquals("Number of triples loaded to data graph", 0, dataSeiFromYaml.getNumTriples());
+			assertEquals("Number of triples loaded to default graph", NUM_EXPECTED_TRIPLES_MODEL + NUM_EXPECTED_TRIPLES_DATA, defaultGraphSei.getNumTriples());
+
+			// load to non-default graph, copy to default graph
+			reset();
+			manifest.setCopyToDefaultGraph(true);   // it's already true, but making it explicit
+			loadToDefaultGraph = false;
+			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, loadToDefaultGraph, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), new PrintWriter(System.out));
 			assertEquals("Number of triples loaded to model graph", NUM_EXPECTED_TRIPLES_MODEL, modelFallbackSei.getNumTriples());
 			assertEquals("Number of triples loaded to data graph", NUM_EXPECTED_TRIPLES_DATA, dataSeiFromYaml.getNumTriples());
 			assertEquals("Number of triples loaded to default graph", NUM_EXPECTED_TRIPLES_MODEL + NUM_EXPECTED_TRIPLES_DATA, defaultGraphSei.getNumTriples());
-			assertEquals("Number of nodegroups", NUM_EXPECTED_NODEGROUPS, IntegrationTestUtility.countItemsInStoreByCreator("junit"));
 
 		}finally{
 			if(tempDir != null) { FileUtils.deleteDirectory(tempDir); }

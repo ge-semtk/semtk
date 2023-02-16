@@ -215,21 +215,21 @@ public class Manifest extends YamlConfig {
 
 	/**
 	 * Load the contents specified in the manifest
-	 * @param server 			the triple store location (e.g. "http://localhost:3030/DATASET")
-	 * @param serverTypeString 	the triple store type (e.g. "fuseki")
-	 * @param clear 			if true, clears the footprint graphs (before loading)
-	 * @param defaultGraph 		if true, loads everything to the default graph instead of the target graphs
-	 * @param topLevel 			true if this is a top-level manifest, false for recursively calling sub-manifests
-	 * @param ingestClient		ingestionRestClient
-	 * @param progressWriter 	writer for reporting progress
+	 * @param server 				the triple store location (e.g. "http://localhost:3030/DATASET")
+	 * @param serverTypeString 		the triple store type (e.g. "fuseki")
+	 * @param clear 				if true, clears the footprint graphs (before loading)
+	 * @param loadToDefaultGraph 	if true, loads everything to the default graph instead of the target graphs
+	 * @param topLevel 				true if this is a top-level manifest, false for recursively calling sub-manifests
+	 * @param ingestClient			ingestionRestClient
+	 * @param progressWriter 		writer for reporting progress
 	 */
-	public void load(String server, String serverTypeString, boolean clear, boolean defaultGraph, boolean topLevel, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, NodeGroupStoreRestClient ngStoreClient, PrintWriter progressWriter) throws Exception {
+	public void load(String server, String serverTypeString, boolean clear, boolean loadToDefaultGraph, boolean topLevel, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, NodeGroupStoreRestClient ngStoreClient, PrintWriter progressWriter) throws Exception {
 
 		progressWriter.println("Loading manifest '" + getName() + "'...");
 
 		// clear graphs first
 		if(clear) {
-			if(defaultGraph) {
+			if(loadToDefaultGraph) {
 				clearDefaultGraph(serverTypeString, server);
 			} else {
 				// clear each model and data graph in the footprint
@@ -242,8 +242,8 @@ public class Manifest extends YamlConfig {
 
 		// if loading to default graph, then set targetGraph
 		String targetGraph = null;
-		if(defaultGraph) {
-			targetGraph = SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME;	// TODO add junit to test loading (not copying) to default graph
+		if(loadToDefaultGraph) {
+			targetGraph = SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME;
 		}
 
 		// execute each manifest step
@@ -276,7 +276,7 @@ public class Manifest extends YamlConfig {
 				File stepFile = new File(baseDir, (String)step.getValue());
 				progressWriter.println("Load manifest " + stepFile.getAbsolutePath());
 				Manifest subManifest = new Manifest(stepFile, fallbackModelGraph, fallbackDataGraph);
-				subManifest.load(server, serverTypeString, clear, defaultGraph, false, ingestClient, ngeClient, ngStoreClient, progressWriter);
+				subManifest.load(server, serverTypeString, clear, loadToDefaultGraph, false, ingestClient, ngeClient, ngStoreClient, progressWriter);
 
 			}else if(type == StepType.COPYGRAPH) {
 				// perform the copy		TODO junit
