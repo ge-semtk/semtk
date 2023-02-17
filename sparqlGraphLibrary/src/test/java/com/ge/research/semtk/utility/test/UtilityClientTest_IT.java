@@ -16,8 +16,8 @@
  */
 package com.ge.research.semtk.utility.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assume.assumeTrue;
+import static org.junit.Assert.*; 
+import static org.junit.Assume.*;
 
 import java.io.BufferedReader;
 
@@ -74,20 +74,20 @@ public class UtilityClientTest_IT {
 			String response = Utility.readToString(reader);
 
 			// check the response stream
-			assert(response.contains("Loading manifest for 'Entity Resolution'..."));
-			assert(response.contains("Loading manifest for 'RACK ontology'..."));
-			assert(response.matches("(.*)Clear graph http://junit/(.*)/rack001/model(.*)"));
-			assert(response.matches("(.*)Clear graph http://junit/(.*)/rack001/data(.*)"));
-			assert(response.contains("Load OWL AGENTS.owl"));
-			assert(response.contains("Load OWL ANALYSIS.owl"));
-			assert(response.contains("Store nodegroups"));
-			assert(response.contains("Stored: JUNIT query Files of a Given Format"));
-			assert(response.contains("Load CSV PROV_S_ACTIVITY1.csv as http://arcos.rack/PROV-S#ACTIVITY"));
-			assert(response.contains("Load CSV REQUIREMENTS_REQUIREMENT1.csv as http://arcos.rack/REQUIREMENTS#REQUIREMENT"));
-			assert(response.contains("Load CSV TESTING_TEST1.csv as http://arcos.rack/TESTING#TEST"));
-			assert(response.matches("(.*)Copy graph http://junit/(.*)/auto/rack001/data to default graph(.*)"));
-			assert(response.contains("Perform entity resolution"));
-			assert(response.contains("Load complete"));
+			assertTrue("Bad response:\n" + response, response.contains("Loading manifest for 'Entity Resolution'..."));
+			assertTrue(response.contains("Loading manifest for 'RACK ontology'..."));
+			assertTrue(response.matches("(.*)Clear graph http://junit/(.*)/rack001/model(.*)"));
+			assertTrue(response.matches("(.*)Clear graph http://junit/(.*)/rack001/data(.*)"));
+			assertTrue(response.contains("Load OWL AGENTS.owl"));
+			assertTrue(response.contains("Load OWL ANALYSIS.owl"));
+			assertTrue(response.contains("Store nodegroups"));
+			assertTrue(response.contains("Stored: JUNIT query Files of a Given Format"));
+			assertTrue(response.contains("Load CSV PROV_S_ACTIVITY1.csv as http://arcos.rack/PROV-S#ACTIVITY"));
+			assertTrue(response.contains("Load CSV REQUIREMENTS_REQUIREMENT1.csv as http://arcos.rack/REQUIREMENTS#REQUIREMENT"));
+			assertTrue(response.contains("Load CSV TESTING_TEST1.csv as http://arcos.rack/TESTING#TEST"));
+			assertTrue(response.matches("(.*)Copy graph http://junit/(.*)/auto/rack001/data to default graph(.*)"));
+			assertTrue(response.contains("Perform entity resolution"));
+			assertTrue(response.contains("Load complete"));
 
 			// check the counts
 			assertEquals("Number of triples loaded to model graph", ManifestConfigTest_IT.NUM_EXPECTED_TRIPLES_MODEL, modelFallbackSei.getNumTriples());
@@ -109,11 +109,11 @@ public class UtilityClientTest_IT {
 
 		// not a zip file
 		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/animalQuery.json"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
-		assert(response.contains("Error: This endpoint only accepts ingestion packages in zip file format"));
+		assertTrue(response.contains("Error: This endpoint only accepts ingestion packages in zip file format"));
 
 		// contains no top-level manifest.yaml
 		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/config/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
-		assert(response.contains("Error: Cannot find a top-level manifest in IngestionPackageNoManifest.zip"));
+		assertTrue(response.contains("Error: Cannot find a top-level manifest in IngestionPackageNoManifest.zip"));
 	}
 
 	// clear graphs and nodegroup store
