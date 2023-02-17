@@ -246,7 +246,7 @@ public class NodeGroupStoreTest_IT {
 	public void testLoadStoreDataCsv() throws Exception {
 		IntegrationTestUtility.cleanupNodegroupStore("junit");
 		try {
-			String storeData = Utility.getResourceAsFile(this, "/store_data.csv").getAbsolutePath();
+			String storeData = Utility.getResourceAsTempFile(this, "/store_data.csv").getAbsolutePath();
 			nodeGroupStoreClient.loadStoreDataCsv(storeData, null, new PrintWriter(System.out));
 	    	assertEquals(4, IntegrationTestUtility.countItemsInStoreByCreator("junit"));
 		} finally {

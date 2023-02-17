@@ -49,7 +49,7 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 		LoadDataConfig config;
 
 		// this config has a datagraph + steps
-		config = new LoadDataConfig(Utility.getResourceAsFile(this, "/config/load_data_config_1.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+		config = new LoadDataConfig(Utility.getResourceAsTempFile(this, "/config/load_data_config_1.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 		assertEquals(config.getFallbackModelGraph(), modelFallbackSei.getGraph());
 		assertEquals(config.getSteps().size(), 2);
 		assertEquals(((CsvByClassIngestionStep)config.getSteps().get(0)).getClazz(), "http://animals/woodland#WOODCHUCK");
@@ -61,31 +61,31 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 		assertEquals(config.getDatagraphs().get(0), "http://junit/animals/data");
 
 		// this config has steps only (no graphs)
-		config = new LoadDataConfig(Utility.getResourceAsFile(this, "/config/load_data_config_2.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+		config = new LoadDataConfig(Utility.getResourceAsTempFile(this, "/config/load_data_config_2.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 		assertEquals(config.getDatagraphs(), null);
 
 		// this config test has extra-graphs
-		config = new LoadDataConfig(Utility.getResourceAsFile(this, "/config/load_data_config_3.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+		config = new LoadDataConfig(Utility.getResourceAsTempFile(this, "/config/load_data_config_3.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 		assertEquals(3, config.getDatagraphs().size());
 		assertEquals(config.getDatagraphs().get(0), "http://junit/animals/data");
 		assertEquals(config.getDatagraphs().get(1), "http://junit/animals/data2");
 		assertEquals(config.getDatagraphs().get(2), "http://junit/animals/data3");
 
 		// this config has a model-graph
-		config = new LoadDataConfig(Utility.getResourceAsFile(this, "/config/load_data_config_4.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+		config = new LoadDataConfig(Utility.getResourceAsTempFile(this, "/config/load_data_config_4.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 		assertEquals(config.getModelgraph(), "http://junit/animals/model");
 	}
 
 	@Test
 	public void testInstantiate_Fail() throws Exception{
 		try {
-			new LoadDataConfig(Utility.getResourceAsFile(this, "/config/load_data_config_1.yaml"), null, dataFallbackSei.getGraph());
+			new LoadDataConfig(Utility.getResourceAsTempFile(this, "/config/load_data_config_1.yaml"), null, dataFallbackSei.getGraph());
 			fail(); // should not get here
 		}catch(Exception e) {
 			assertTrue(e.getMessage().contains("Fallback model graph not provided"));
 		}
 		try {
-			new LoadDataConfig(Utility.getResourceAsFile(this, "/config/load_data_config_1.yaml"), modelFallbackSei.getGraph(), null);
+			new LoadDataConfig(Utility.getResourceAsTempFile(this, "/config/load_data_config_1.yaml"), modelFallbackSei.getGraph(), null);
 			fail(); // should not get here
 		}catch(Exception e) {
 			assertTrue(e.getMessage().contains("Fallback data graph not provided"));
@@ -101,11 +101,11 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 		try {
 
 			final int NUM_EXPECTED_TRIPLES = 20;
-
+			
 			// TODO uniquifyJunitGraphName
-			LoadOwlConfig loadOwlConfig = new LoadOwlConfig(Utility.getResourceAsFile(this, "/config/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), modelFallbackSei.getGraph());
-			LoadDataConfig loadDataConfig = new LoadDataConfig(Utility.getResourceAsFile(this, "/config/IngestionPackage/TestData/Package-1/import.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
-			LoadDataConfig loadDataConfigWithNoDatagraphInYaml = new LoadDataConfig(Utility.getResourceAsFile(this, "/config/IngestionPackage/TestData/Package-1/import-withNoDatagraph.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+			LoadOwlConfig loadOwlConfig = new LoadOwlConfig(Utility.getResourceAsTempFile(this, "/config/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), modelFallbackSei.getGraph());
+			LoadDataConfig loadDataConfig = new LoadDataConfig(Utility.getResourceAsTempFile(this, "/config/IngestionPackage/TestData/Package-1/import.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+			LoadDataConfig loadDataConfigWithNoDatagraphInYaml = new LoadDataConfig(Utility.getResourceAsTempFile(this, "/config/IngestionPackage/TestData/Package-1/import-withNoDatagraph.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 
 			// Case 1: if load() data graph parameter, then confirm loads there
 			clearGraphs();

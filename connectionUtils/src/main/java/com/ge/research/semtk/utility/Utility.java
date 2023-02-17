@@ -866,10 +866,10 @@ public abstract class Utility {
 		return ret;
 	}
 	
-	public static File getResourceAsFile(Object obj, String fileName) throws Exception {
-		return getResourceAsFile(obj.getClass(), fileName);
+	public static File getResourceAsTempFile(Object obj, String fileName) throws Exception {
+		return getResourceAsTempFile(obj.getClass(), fileName);
 	}
-	public static File getResourceAsFile(Class c, String fileName) throws Exception {
+	public static File getResourceAsTempFile(Class c, String fileName) throws Exception {
 		// fat jars and other deployments seem to choke on returning a File
 		// so copy the data into a temp file
 		// Resources should be retrieved as Streams, not files.

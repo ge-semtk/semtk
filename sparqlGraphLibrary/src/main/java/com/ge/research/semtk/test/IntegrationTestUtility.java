@@ -247,7 +247,7 @@ public class IntegrationTestUtility{
 	}
 	
 	public static File getSampleFile(Object caller) throws Exception {
-		return Utility.getResourceAsFile(caller, "/annotationBattery.owl");
+		return Utility.getResourceAsTempFile(caller, "/annotationBattery.owl");
 	}
 	
 	public static String getSampleJsonBlob(Object caller) throws Exception {

@@ -108,11 +108,11 @@ public class UtilityClientTest_IT {
 		String response;
 
 		// not a zip file
-		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/animalQuery.json"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
+		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsTempFile(this,"/animalQuery.json"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
 		assertTrue(response.contains("Error: This endpoint only accepts ingestion packages in zip file format"));
 
 		// contains no top-level manifest.yaml
-		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/config/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
+		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsTempFile(this,"/config/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
 		assertTrue(response.contains("Error: Cannot find a top-level manifest"));
 	}
 

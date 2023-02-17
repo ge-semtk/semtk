@@ -34,7 +34,7 @@ import com.ge.research.semtk.utility.Utility;
 public class LoadOwlConfig extends YamlConfig {
 
 	public LoadOwlConfig(File yamlFile, String fallbackModelGraph) throws Exception {
-		super(yamlFile, Utility.getResourceAsFile(LoadOwlConfig.class, "/configSchema/load_owl_config_schema.json"), fallbackModelGraph, null);
+		super(yamlFile, Utility.getResourceAsTempFile(LoadOwlConfig.class, "/configSchema/load_owl_config_schema.json"), fallbackModelGraph, null);
 
 		if(fallbackModelGraph == null) {
 			throw new Exception("Fallback model graph not provided");

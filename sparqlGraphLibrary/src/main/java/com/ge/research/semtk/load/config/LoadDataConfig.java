@@ -45,7 +45,7 @@ public class LoadDataConfig extends YamlConfig {
 	 * Constructor
 	 */
 	public LoadDataConfig(File yamlFile, String fallbackModelGraph, String fallbackDataGraph) throws Exception {
-		super(yamlFile, Utility.getResourceAsFile(LoadDataConfig.class, "/configSchema/load_data_config_schema.json"), fallbackModelGraph, fallbackDataGraph);
+		super(yamlFile, Utility.getResourceAsTempFile(LoadDataConfig.class, "/configSchema/load_data_config_schema.json"), fallbackModelGraph, fallbackDataGraph);
 
 		if(fallbackModelGraph == null) {
 			throw new Exception("Fallback model graph not provided");

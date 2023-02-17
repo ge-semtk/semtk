@@ -256,8 +256,8 @@ public class JavaApiDemo {
 		// load demo model owl		
 		queryClientModel.clearAll();
 		queryClientData.clearAll();
-		queryClientModel.uploadOwl(Utility.getResourceAsFile(aSemtkLibClass, "/semantics/OwlModels/hardware.owl"));
-		queryClientModel.uploadOwl(Utility.getResourceAsFile(aSemtkLibClass, "/semantics/OwlModels/testconfig.owl"));
+		queryClientModel.uploadOwl(Utility.getResourceAsTempFile(aSemtkLibClass, "/semantics/OwlModels/hardware.owl"));
+		queryClientModel.uploadOwl(Utility.getResourceAsTempFile(aSemtkLibClass, "/semantics/OwlModels/testconfig.owl"));
 		
 		// ingest demo csv
 		String data = Utility.getResourceAsString(aSemtkLibClass, "demoNodegroup_data.csv");

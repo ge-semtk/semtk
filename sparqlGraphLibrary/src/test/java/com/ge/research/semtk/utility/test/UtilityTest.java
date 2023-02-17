@@ -222,7 +222,7 @@ public class UtilityTest {
 
 		// confirm error if try to unzip a file other than a zip file
 		try {
-			File nonZipFile = Utility.getResourceAsFile(this, "/animalQuery.json");
+			File nonZipFile = Utility.getResourceAsTempFile(this, "/animalQuery.json");
 			tempDir = Utility.createTempDirectory();
 			Utility.unzip(new ZipInputStream(new FileInputStream(nonZipFile)), tempDir);
 			fail(); 	// should not get here

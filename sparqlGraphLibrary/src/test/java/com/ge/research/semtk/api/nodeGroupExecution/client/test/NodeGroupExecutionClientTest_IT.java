@@ -509,7 +509,7 @@ public class NodeGroupExecutionClientTest_IT {
 			// This file has
 			//   column[0] "Battery" as a character description
 			//   column[1] "Cell"    as a character sequence
-			File contentFile = Utility.getResourceAsFile(this, "/sampleBatteryUTF8.csv");
+			File contentFile = Utility.getResourceAsTempFile(this, "/sampleBatteryUTF8.csv");
 			Table inTab = Table.fromCsvFile(contentFile.getAbsolutePath());
 			inTab.sortByColumnStr(inTab.getColumnNames()[0]);
 			

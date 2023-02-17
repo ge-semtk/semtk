@@ -665,18 +665,17 @@ public class TestGraph {
 	 * Copy a yaml and add user/machine to http://junit/
 	 */
 	public static File getYamlAndUniquifyJunitGraphs(Object caller, String resource) throws Exception, IOException {
-		Path source = Path.of(caller.getClass().getResource(resource).toURI());  // TODO fix to give good error if file not present
-		Path tempName = Path.of(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString());
-		Files.copy(source, tempName);
-		walkForYamlAndUniquifyJunitGraphs(tempName);
-		return tempName.toFile();
+
+		File tempFile = Utility.getResourceAsTempFile(TestGraph.class, resource);
+		walkForYamlAndUniquifyJunitGraphs(tempFile.toPath());
+		return tempFile;
 	}
 
 	/**
 	 * Unzip a zip file and add user/machine to "http://junit/" graphs in all YAML files
 	 */
 	public static File unzipAndUniquifyJunitGraphs(Object caller, String resource) throws IOException, Exception {
-		File resourceFile = Utility.getResourceAsFile(caller, resource);
+		File resourceFile = Utility.getResourceAsTempFile(caller, resource);
 		File tmpDir = Utility.createTempDirectory();
 		Utility.unzip(new ZipInputStream(new FileInputStream(resourceFile.toString())), tmpDir);
 		TestGraph.walkForYamlAndUniquifyJunitGraphs(tmpDir.toPath());

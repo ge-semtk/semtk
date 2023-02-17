@@ -38,7 +38,7 @@ public class ManifestConfigInstantiateTest_IT extends YamlConfigTest {
 	@Test
 	public void test() throws Exception{
 
-		ManifestConfig manifest = new ManifestConfig(Utility.getResourceAsFile(this, "/config/manifest_animals.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+		ManifestConfig manifest = new ManifestConfig(Utility.getResourceAsTempFile(this, "/config/manifest_animals.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 		assertEquals(manifest.getFallbackModelGraph(), modelFallbackSei.getGraph());
 		assertEquals(manifest.getFallbackDataGraph(), dataFallbackSei.getGraph());
 
