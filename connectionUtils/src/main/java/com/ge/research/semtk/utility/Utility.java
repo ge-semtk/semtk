@@ -926,6 +926,13 @@ public abstract class Utility {
 			return "/" + resourceName;
 		}
 	}
+	
+	public static File getResourceUnzippedToTemp(Object caller, String resource) throws IOException, Exception {
+		File resourceFile = Utility.getResourceAsTempFile(caller, resource);
+		File tmpDir = Utility.createTempDirectory();
+		Utility.unzip(new ZipInputStream(new FileInputStream(resourceFile.toString())), tmpDir);
+		return tmpDir;
+	}
 	/**
 	 * Replace UUIDs in a string with "<UUID>".
 	 * Note: does not affect hashes.

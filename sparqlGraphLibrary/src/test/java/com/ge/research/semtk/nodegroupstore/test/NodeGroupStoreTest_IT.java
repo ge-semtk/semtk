@@ -19,7 +19,9 @@ package com.ge.research.semtk.nodegroupstore.test;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.PrintWriter;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.UUID;
 
@@ -35,6 +37,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.nodegroupStore.NgStore;
 import com.ge.research.semtk.test.IntegrationTestUtility;
+import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 
 /**
@@ -246,8 +249,9 @@ public class NodeGroupStoreTest_IT {
 	public void testLoadStoreDataCsv() throws Exception {
 		IntegrationTestUtility.cleanupNodegroupStore("junit");
 		try {
-			String storeData = Utility.getResourceAsTempFile(this, "/store_data.csv").getAbsolutePath();
-			nodeGroupStoreClient.loadStoreDataCsv(storeData, null, new PrintWriter(System.out));
+			File tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/store_data.zip");
+			
+			nodeGroupStoreClient.loadStoreDataCsv(Paths.get(tempDir.getAbsolutePath(), "store_data.csv").toString(), null, new PrintWriter(System.out));
 	    	assertEquals(4, IntegrationTestUtility.countItemsInStoreByCreator("junit"));
 		} finally {
 			try {

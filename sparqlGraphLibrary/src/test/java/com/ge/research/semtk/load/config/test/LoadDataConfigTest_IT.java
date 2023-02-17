@@ -22,7 +22,9 @@ import static org.junit.Assert.fail;
 
 import org.junit.Test;
 
+import java.io.File;
 import java.io.PrintWriter;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedList;
 
@@ -102,10 +104,17 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 
 			final int NUM_EXPECTED_TRIPLES = 20;
 			
-			// TODO uniquifyJunitGraphName
-			LoadOwlConfig loadOwlConfig = new LoadOwlConfig(Utility.getResourceAsTempFile(this, "/config/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), modelFallbackSei.getGraph());
-			LoadDataConfig loadDataConfig = new LoadDataConfig(Utility.getResourceAsTempFile(this, "/config/IngestionPackage/TestData/Package-1/import.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
-			LoadDataConfig loadDataConfigWithNoDatagraphInYaml = new LoadDataConfig(Utility.getResourceAsTempFile(this, "/config/IngestionPackage/TestData/Package-1/import-withNoDatagraph.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+			File tempDir = Utility.getResourceUnzippedToTemp(this, "/config/IngestionPackage.zip");
+			LoadOwlConfig loadOwlConfig = new LoadOwlConfig(
+					Paths.get(tempDir.getAbsolutePath(), "RACK-Ontology","OwlModels","import.yaml").toFile(), 
+					modelFallbackSei.getGraph());
+			LoadDataConfig loadDataConfig = new LoadDataConfig(
+					Paths.get(tempDir.getAbsolutePath(), "TestData","Package-1","import.yaml").toFile(), 
+					modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+			// TODO this one isn't in the zip
+			LoadDataConfig loadDataConfigWithNoDatagraphInYaml = new LoadDataConfig(
+					Paths.get(tempDir.getAbsolutePath(), "TestData","Package-1","import-withNoDatagraph.yaml").toFile(), 
+					modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 
 			// Case 1: if load() data graph parameter, then confirm loads there
 			clearGraphs();

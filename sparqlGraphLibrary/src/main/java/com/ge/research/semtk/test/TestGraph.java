@@ -675,9 +675,7 @@ public class TestGraph {
 	 * Unzip a zip file and add user/machine to "http://junit/" graphs in all YAML files
 	 */
 	public static File unzipAndUniquifyJunitGraphs(Object caller, String resource) throws IOException, Exception {
-		File resourceFile = Utility.getResourceAsTempFile(caller, resource);
-		File tmpDir = Utility.createTempDirectory();
-		Utility.unzip(new ZipInputStream(new FileInputStream(resourceFile.toString())), tmpDir);
+		File tmpDir = Utility.getResourceUnzippedToTemp(caller, resource);
 		TestGraph.walkForYamlAndUniquifyJunitGraphs(tmpDir.toPath());
 		return tmpDir;
 	}
