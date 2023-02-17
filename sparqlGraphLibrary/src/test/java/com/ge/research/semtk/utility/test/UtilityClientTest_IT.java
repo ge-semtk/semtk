@@ -68,7 +68,9 @@ public class UtilityClientTest_IT {
 
 			reset();
 
-			BufferedReader reader = client.execLoadIngestionPackage(TestGraph.getZipAndUniquifyJunitGraphs(this, "/config/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+			boolean clear = false;
+			boolean loadToDefaultGraph = false;
+			BufferedReader reader = client.execLoadIngestionPackage(TestGraph.getZipAndUniquifyJunitGraphs(this, "/config/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), clear, loadToDefaultGraph, modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 			String response = Utility.readToString(reader);
 
 			// check the response stream
@@ -76,6 +78,7 @@ public class UtilityClientTest_IT {
 			assert(response.contains("Loading manifest for 'RACK ontology'..."));
 			assert(response.contains("Load OWL AGENTS.owl"));
 			assert(response.contains("Load OWL ANALYSIS.owl"));
+			assert(response.contains("Store nodegroups"));
 			assert(response.contains("Stored: JUNIT query Files of a Given Format"));
 			assert(response.contains("Load CSV PROV_S_ACTIVITY1.csv as http://arcos.rack/PROV-S#ACTIVITY"));
 			assert(response.contains("Load CSV REQUIREMENTS_REQUIREMENT1.csv as http://arcos.rack/REQUIREMENTS#REQUIREMENT"));
@@ -103,11 +106,11 @@ public class UtilityClientTest_IT {
 		String response;
 
 		// not a zip file
-		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/animalQuery.json"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
+		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/animalQuery.json"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
 		assert(response.contains("Error: This endpoint only accepts ingestion packages in zip file format"));
 
 		// contains no top-level manifest.yaml
-		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/config/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
+		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/config/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
 		assert(response.contains("Error: Cannot find a top-level manifest in IngestionPackageNoManifest.zip"));
 	}
 

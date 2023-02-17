@@ -362,8 +362,10 @@ public class UtilityServiceRestController {
 	public void loadIngestionPackage(	@RequestParam("serverAndPort") String serverAndPort, // e.g. http://localhost:3030/JUNIT for fuseki, http://localhost:2420 for virtuoso
 										@RequestParam("serverType") String serverType,// e.g. "fuseki"
 										@RequestParam("file") MultipartFile ingestionPackageZipFile,
-										@RequestParam("defaultModelGraph") String defaultModelGraph,
-										@RequestParam("defaultDataGraph") String defaultDataGraph,
+										@RequestParam("clear") boolean clear,
+										@RequestParam("loadToDefaultGraph") boolean loadToDefaultGraph,	// true to load directly to default graph
+										@RequestParam("defaultModelGraph") String defaultModelGraph,	// fallback model graph - use if not otherwise specified
+										@RequestParam("defaultDataGraph") String defaultDataGraph,		// fallback data graph - use if not otherwise specified
 										@RequestHeader HttpHeaders headers,
 										HttpServletResponse resp){
 
@@ -402,8 +404,6 @@ public class UtilityServiceRestController {
 				throw new Exception("Cannot find a top-level manifest in " + ingestionPackageZipFile.getOriginalFilename());
 			}
 			ManifestConfig manifest = new ManifestConfig(manifestFile, defaultModelGraph, defaultDataGraph);
-			boolean clear = false;					// TODO make this an endpoint parameter
-			boolean loadToDefaultGraph = false;		// TODO make this an endpoint parameter
 			manifest.load(serverAndPort, serverType, clear, loadToDefaultGraph, true, getIngestorRestClient(), getNodegroupExecutionClient(), getNodegroupStoreClient(), responseWriter);
 
 			responseWriter.println("Load complete");

@@ -32,7 +32,7 @@ import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 
-
+// TODO test with clear=True
 public class ManifestConfigTest_IT {
 
 	// not extending YamlConfigTest because need to match ingestion package footprint

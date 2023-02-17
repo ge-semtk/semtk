@@ -265,6 +265,7 @@ public class ManifestConfig extends YamlConfig {
 
 			}else if(type == StepType.NODEGROUPS) {
 				// load nodegroups/reports from a directory
+				writeProgress("Store nodegroups", progressWriter);
 				File nodegroupsDirectory = new File(baseDir, (String)step.getValue());
 				File csvFile = new File(nodegroupsDirectory, "store_data.csv");
 				ngStoreClient.loadStoreDataCsv(csvFile.getAbsolutePath(), null, progressWriter);
