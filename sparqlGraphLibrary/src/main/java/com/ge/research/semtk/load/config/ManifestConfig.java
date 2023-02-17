@@ -225,15 +225,16 @@ public class ManifestConfig extends YamlConfig {
 	 */
 	public void load(String server, String serverTypeString, boolean clear, boolean loadToDefaultGraph, boolean topLevel, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, NodeGroupStoreRestClient ngStoreClient, PrintWriter progressWriter) throws Exception {
 
-		writeProgress("Loading manifest '" + getName() + "'...", progressWriter);
+		writeProgress("Loading manifest for '" + getName() + "'...", progressWriter);
 
 		// clear graphs first
 		if(clear) {
 			if(loadToDefaultGraph) {
-				clearDefaultGraph(serverTypeString, server);
+				clearDefaultGraph(serverTypeString, server, progressWriter);
 			} else {
 				// clear each model and data graph in the footprint
 				for(String g : getGraphsFootprint()) {
+					writeProgress("Clear graph " + g, progressWriter);
 					SparqlEndpointInterface.getInstance(serverTypeString, server, g).clearGraph();
 				}
 			}
@@ -253,28 +254,24 @@ public class ManifestConfig extends YamlConfig {
 			if(type == StepType.MODEL) {
 				// load via an owl ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
-				writeProgress("Load model " + stepFile.getAbsolutePath(), progressWriter);
 				LoadOwlConfig config = new LoadOwlConfig(stepFile, this.fallbackModelGraph);
 				config.load(targetGraph, server, serverTypeString, progressWriter);
 
 			}else if(type == StepType.DATA) {
 				// load content using CSV ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
-				writeProgress("Load data " + stepFile.getAbsolutePath(), progressWriter);
 				LoadDataConfig config = new LoadDataConfig(stepFile, this.fallbackModelGraph, this.fallbackDataGraph);
 				config.load(targetGraph, (targetGraph == null ? null : new LinkedList<String>(Arrays.asList(targetGraph))), server, serverTypeString, clear, ingestClient, ngeClient, progressWriter);
 
 			}else if(type == StepType.NODEGROUPS) {
 				// load nodegroups/reports from a directory
 				File nodegroupsDirectory = new File(baseDir, (String)step.getValue());
-				writeProgress("Load nodegroups from " + nodegroupsDirectory.getAbsolutePath(), progressWriter);
 				File csvFile = new File(nodegroupsDirectory, "store_data.csv");
 				ngStoreClient.loadStoreDataCsv(csvFile.getAbsolutePath(), null, progressWriter);
 
 			}else if(type == StepType.MANIFEST) {
 				// load content using sub-manifest
 				File stepFile = new File(baseDir, (String)step.getValue());
-				writeProgress("Load manifest " + stepFile.getAbsolutePath(), progressWriter);
 				ManifestConfig subManifest = new ManifestConfig(stepFile, fallbackModelGraph, fallbackDataGraph);
 				subManifest.load(server, serverTypeString, false, loadToDefaultGraph, false, ingestClient, ngeClient, ngStoreClient, progressWriter);
 
@@ -282,6 +279,7 @@ public class ManifestConfig extends YamlConfig {
 				// perform the copy		TODO junit
 				String fromGraph = ((String[])step.getValue())[0];
 				String toGraph = ((String[])step.getValue())[1];
+				writeProgress("Copy " + fromGraph + " to " + toGraph, progressWriter);
 				ngeClient.copyGraph(server, serverTypeString, fromGraph, server, serverTypeString, toGraph);
 
 			}else {
@@ -293,7 +291,7 @@ public class ManifestConfig extends YamlConfig {
 		if(topLevel) {
 			if(this.getCopyToDefaultGraph()) {
 				if(clear) {
-					clearDefaultGraph(serverTypeString, server);
+					clearDefaultGraph(serverTypeString, server, progressWriter);
 				}
 				// call SemTK to copy each model/data footprint graph to default graph
 				for(String graph : this.getGraphsFootprint()) {
@@ -303,7 +301,7 @@ public class ManifestConfig extends YamlConfig {
 				}
 			}
 			if(this.getPerformEntityResolution()) {
-				writeProgress("Perform entity resolution (on default graph)", progressWriter);
+				writeProgress("Perform entity resolution", progressWriter);
 				// entity resolution in default graph
 				if(!loadToDefaultGraph && !getCopyToDefaultGraph()) {
 					throw new Exception("Cannot perform entity resolution because not populating default graph");
@@ -366,7 +364,8 @@ public class ManifestConfig extends YamlConfig {
 	/**
 	 * Clear the default graph
 	 */
-	private void clearDefaultGraph(String serverTypeString, String server) throws Exception {
+	private void clearDefaultGraph(String serverTypeString, String server, PrintWriter progressWriter) throws Exception {
+		writeProgress("Clear default graph", progressWriter);
 		SparqlEndpointInterface.getInstance(serverTypeString, server, SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME).clearGraph();
 	}
 

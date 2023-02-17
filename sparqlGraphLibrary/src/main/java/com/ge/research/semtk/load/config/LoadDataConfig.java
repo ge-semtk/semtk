@@ -61,7 +61,7 @@ public class LoadDataConfig extends YamlConfig {
 				if(stepNode.has("class") && stepNode.has("csv")) {
 					addStep(new CsvByClassIngestionStep(stepNode.get("class").asText(), baseDir + File.separator + stepNode.get("csv").asText()));
 				} else if (stepNode.has("nodegroup") && stepNode.has("csv")) {
-					addStep(new CsvByNodegroupIngestionStep(stepNode.get("nodegroup").asText(), baseDir + File.separator + stepNode.get("csv").asText()));	// TODO junit
+					addStep(new CsvByNodegroupIngestionStep(stepNode.get("nodegroup").asText(), baseDir + File.separator + stepNode.get("csv").asText()));
 				} else {
 					throw new Exception("Ingestion step not supported: " + stepNode.asText());
 				}
@@ -75,7 +75,7 @@ public class LoadDataConfig extends YamlConfig {
 		if(configNode.has("data-graph")){
 			addDatagraph(configNode.get("data-graph").asText());
 		}
-		if(configNode.has("extra-data-graphs")){  // TODO junit
+		if(configNode.has("extra-data-graphs")){
 			for(JsonNode n : configNode.get("extra-data-graphs")) {
 				addDatagraph(n.asText());
 			}
@@ -188,7 +188,7 @@ public class LoadDataConfig extends YamlConfig {
 			return clazz;
 		}
 		public void run(SparqlConnection conn, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
-			writeProgress("Load CSV " + (new File(csvPath)).getName() + " using class " + clazz, progressWriter);
+			writeProgress("Load CSV " + (new File(csvPath)).getName() + " as " + clazz, progressWriter);
 			String jobId = ingestClient.execFromCsvUsingClassTemplate(clazz, null, Files.readString(Path.of(csvPath)), conn, false, null);
 			for (String warning : ingestClient.getWarnings()) {
 				writeProgress("Load CSV warning: " + warning, progressWriter);

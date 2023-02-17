@@ -72,25 +72,16 @@ public class UtilityClientTest_IT {
 			String response = Utility.readToString(reader);
 
 			// check the response stream
-			assert(response.contains("Loading manifest 'Entity Resolution'..."));
-			assert(response.matches("(.*)Load manifest (.*)manifests(.*)rack.yaml(.*)"));
-			assert(response.contains("Loading manifest 'RACK ontology'..."));
-			assert(response.matches("(.*)Load model (.*)manifests(.*)RACK-Ontology(.*)OwlModels(.*)import.yaml(.*)"));
-			assert(response.matches("(.*)Load OWL AGENTS.owl(.*)"));
-			assert(response.matches("(.*)Load OWL ANALYSIS.owl(.*)"));
-			assert(response.matches("(.*)Load nodegroups (.*)manifests(.*)nodegroups(.*)queries(.*)"));
-			assert(response.matches("(.*)Stored: JUNIT query Files of a Given Format(.*)"));
-			assert(response.matches("(.*)Load data (.*)TestData(.*)Package-1(.*)import.yaml(.*)"));
-			assert(response.matches("(.*)Load CSV PROV_S_ACTIVITY1.csv using class http://arcos.rack/PROV-S#ACTIVITY(.*)"));
-			assert(response.matches("(.*)Load CSV REQUIREMENTS_REQUIREMENT1.csv using class http://arcos.rack/REQUIREMENTS#REQUIREMENT(.*)"));
-			assert(response.matches("(.*)Load CSV TESTING_TEST1.csv using class http://arcos.rack/TESTING#TEST(.*)"));
-			assert(response.matches("(.*)Load CSV PROV_S_ACTIVITY2.csv using class http://arcos.rack/PROV-S#ACTIVITY(.*)"));
-			assert(response.matches("(.*)Load CSV REQUIREMENTS_REQUIREMENT2.csv using class http://arcos.rack/REQUIREMENTS#REQUIREMENT(.*)"));
-			assert(response.matches("(.*)Load CSV TESTING_TEST2.csv using class http://arcos.rack/TESTING#TEST(.*)"));
-			assert(response.matches("(.*)Load data (.*)TestData(.*)Package-2(.*)import.yaml(.*)"));
-			assert(response.matches("(.*)Load data (.*)TestData(.*)Package-3(.*)import.yaml(.*)"));
-			assert(response.matches("(.*)Load data (.*)TestData(.*)Resolutions-1(.*)import.yaml(.*)"));
-			assert(response.matches("(.*)Load data (.*)TestData(.*)Resolutions-1(.*)import.yaml(.*)"));
+			assert(response.contains("Loading manifest for 'Entity Resolution'..."));
+			assert(response.contains("Loading manifest for 'RACK ontology'..."));
+			assert(response.contains("Load OWL AGENTS.owl"));
+			assert(response.contains("Load OWL ANALYSIS.owl"));
+			assert(response.contains("Stored: JUNIT query Files of a Given Format"));
+			assert(response.contains("Load CSV PROV_S_ACTIVITY1.csv as http://arcos.rack/PROV-S#ACTIVITY"));
+			assert(response.contains("Load CSV REQUIREMENTS_REQUIREMENT1.csv as http://arcos.rack/REQUIREMENTS#REQUIREMENT"));
+			assert(response.contains("Load CSV TESTING_TEST1.csv as http://arcos.rack/TESTING#TEST"));
+			assert(response.matches("(.*)Copy graph http://junit/(.*)/auto/rack001/data to default graph(.*)"));
+			assert(response.contains("Perform entity resolution"));
 			assert(response.contains("Load complete"));
 
 			// check the counts

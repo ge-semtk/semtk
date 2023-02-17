@@ -402,7 +402,9 @@ public class UtilityServiceRestController {
 				throw new Exception("Cannot find a top-level manifest in " + ingestionPackageZipFile.getOriginalFilename());
 			}
 			ManifestConfig manifest = new ManifestConfig(manifestFile, defaultModelGraph, defaultDataGraph);
-			manifest.load(serverAndPort, serverType, false, false, true, getIngestorRestClient(), getNodegroupExecutionClient(), getNodegroupStoreClient(), responseWriter);
+			boolean clear = false;					// TODO make this an endpoint parameter
+			boolean loadToDefaultGraph = false;		// TODO make this an endpoint parameter
+			manifest.load(serverAndPort, serverType, clear, loadToDefaultGraph, true, getIngestorRestClient(), getNodegroupExecutionClient(), getNodegroupStoreClient(), responseWriter);
 
 			responseWriter.println("Load complete");
 			responseWriter.flush();
