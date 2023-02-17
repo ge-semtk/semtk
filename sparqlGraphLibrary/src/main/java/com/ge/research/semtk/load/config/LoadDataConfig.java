@@ -48,7 +48,7 @@ public class LoadDataConfig extends YamlConfig {
 		super(yamlFile, Utility.getResourceAsFile(LoadDataConfig.class, "/configSchema/load_data_config_schema.json"), fallbackModelGraph, fallbackDataGraph);
 
 		if(fallbackModelGraph == null) {
-			throw new Exception("Fallback model graph not provided");  // TODO junit
+			throw new Exception("Fallback model graph not provided");
 		}
 		if(fallbackDataGraph == null) {
 			throw new Exception("Fallback data graph not provided");

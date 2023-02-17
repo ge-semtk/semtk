@@ -18,6 +18,8 @@ package com.ge.research.semtk.load.config.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import org.junit.Test;
 
 import com.ge.research.semtk.load.config.LoadDataConfig;
@@ -66,4 +68,20 @@ public class LoadDataConfigTest extends YamlConfigTest {
 		assertEquals(config.getModelgraph(), "http://junit/animals/model");
 	}
 	
+	@Test
+	public void test_fail() throws Exception{
+		try {
+			new LoadDataConfig(Utility.getResourceAsFile(this, "/config/load_data_config_1.yaml"), null, dataFallbackSei.getGraph());
+			fail(); // should not get here
+		}catch(Exception e) {
+			assertTrue(e.getMessage().contains("Fallback model graph not provided"));
+		}
+		try {
+			new LoadDataConfig(Utility.getResourceAsFile(this, "/config/load_data_config_1.yaml"), modelFallbackSei.getGraph(), null);
+			fail(); // should not get here
+		}catch(Exception e) {
+			assertTrue(e.getMessage().contains("Fallback data graph not provided"));
+		}
+	}
+
 }
