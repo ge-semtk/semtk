@@ -17,6 +17,9 @@
 package com.ge.research.semtk.load.config.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.PrintWriter;
 
@@ -34,10 +37,46 @@ public class LoadOwlConfigTest_IT extends YamlConfigTest {
 	}
 
 	/**
+	 * Test populating an LoadOwlConfig instance from a YAML file
+	 */
+	@Test
+	public void testInstantiate() throws Exception{
+
+		LoadOwlConfig config;
+
+		// this config has owl files only (no model graph)
+		config = new LoadOwlConfig(TestGraph.getYamlAndUniquifyJunitGraphs(this, "/config/load_owl_config_1.yaml"), modelFallbackSei.getGraph());
+		assertEquals(config.getFallbackModelGraph(), modelFallbackSei.getGraph());
+		assertEquals(config.getFiles().size(), 3);
+		assertEquals(config.getFiles().get(0),"woodchuck.owl");
+		assertEquals(config.getFiles().get(1),"hedgehog.owl");
+		assertEquals(config.getFiles().get(2),"raccoon.owl");
+		assertNull(config.getModelgraph());
+
+		// this config has model graph as array size 1
+		config = new LoadOwlConfig(TestGraph.getYamlAndUniquifyJunitGraphs(this, "/config/load_owl_config_2.yaml"), modelFallbackSei.getGraph());
+		assertEquals(config.getFiles().size(), 3);
+		assertEquals(config.getModelgraph(),"http://junit/animals/model");
+
+		// this config has model graph as string
+		config = new LoadOwlConfig(TestGraph.getYamlAndUniquifyJunitGraphs(this, "/config/load_owl_config_3.yaml"), modelFallbackSei.getGraph());
+		assertEquals(config.getFiles().size(), 3);
+		assertEquals(config.getModelgraph(),"http://junit/animals/model");
+
+		// this config has multiple model graphs.  Legacy schema supports this (likely unused), disallowing it here
+		try {
+			config = new LoadOwlConfig(TestGraph.getYamlAndUniquifyJunitGraphs(this, "/config/load_owl_config_4.yaml"), modelFallbackSei.getGraph());
+			fail();
+		}catch(Exception e) {
+			assertTrue(e.getMessage().contains("Not currently supporting multiple entries for this node: [\"http://junit/animals/model\",\"http://junit/animals/model2\"]"));
+		}
+	}
+
+	/**
 	 * Test loading OWL via YAML file
 	 */
 	@Test
-	public void test() throws Exception{
+	public void testLoad() throws Exception{
 
 		try {
 

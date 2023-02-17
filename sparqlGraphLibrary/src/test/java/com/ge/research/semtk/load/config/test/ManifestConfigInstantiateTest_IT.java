@@ -29,9 +29,9 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 
-public class ManifestConfigTest extends YamlConfigTest {
+public class ManifestConfigInstantiateTest_IT extends YamlConfigTest {
 
-	public ManifestConfigTest() throws Exception {
+	public ManifestConfigInstantiateTest_IT() throws Exception {
 		super();
 	}
 
