@@ -870,50 +870,17 @@ public abstract class Utility {
 		return getResourceAsFile(obj.getClass(), fileName);
 	}
 	public static File getResourceAsFile(Class c, String fileName) throws Exception {
-
-		String ext = FileNameUtils.getExtension(fileName).toLowerCase();
-		if (ext.equals("zip")) return getResourceAsZipFile(c, fileName);
-		
-		File ret = null;
-		
 		// fat jars and other deployments seem to choke on returning a File
 		// so copy the data into a temp file
 		// Resources should be retrieved as Streams, not files.
-		byte data[] = null;
-		data = getResourceAsBytes(c, fileName);
-		File tempFile = File.createTempFile("resource", "." + FileNameUtils.getExtension(fileName));
-		tempFile.deleteOnExit();
-		FileUtils.writeByteArrayToFile(tempFile, data);
-		
-		return tempFile;
-	}
-	
-	/**
-	 * For some reason copying bytes in getResourceAsFile() does not work for zip files.
-	 * @param obj
-	 * @param fileName
-	 * @return
-	 * @throws Exception
-	 */
-	public static File getResourceZipAsFile(Object obj, String fileName) throws Exception {
-		return getResourceAsFile(obj.getClass(), fileName);
-	}
-	public static File getResourceAsZipFile(Class c, String fileName) throws Exception {
-		
 		InputStream in = c.getResourceAsStream(fixResourceName(fileName));
 		if (in == null) {
 			throw new Exception("Could find resource file: " + fileName);
 		}
-		ZipInputStream zin = new ZipInputStream(in);
 		
-		File tempFile = File.createTempFile("resource", ".zip");
-		ZipOutputStream zout = new ZipOutputStream(new FileOutputStream(tempFile));
-		ZipEntry e = null;
-		while ((e = zin.getNextEntry()) != null) {
-			zout.putNextEntry(new ZipEntry(e));
-		}
-		zin.close();
-		zout.close();
+		File tempFile = File.createTempFile("resource", "." + FileNameUtils.getExtension(fileName));
+		tempFile.deleteOnExit();
+		FileUtils.copyInputStreamToFile(in, tempFile);
 		
 		return tempFile;
 	}

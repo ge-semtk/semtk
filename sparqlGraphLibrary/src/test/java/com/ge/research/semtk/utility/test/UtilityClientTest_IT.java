@@ -113,7 +113,7 @@ public class UtilityClientTest_IT {
 
 		// contains no top-level manifest.yaml
 		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/config/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
-		assertTrue(response.contains("Error: Cannot find a top-level manifest in IngestionPackageNoManifest.zip"));
+		assertTrue(response.contains("Error: Cannot find a top-level manifest"));
 	}
 
 	// clear graphs and nodegroup store

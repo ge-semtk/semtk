@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.net.URL;
 import java.util.TreeMap;
@@ -207,9 +208,9 @@ public class UtilityTest {
 
 		// confirm successful unzip
 		try {
-			File zipFile = Utility.getResourceAsFile(this, "/config/IngestionPackage.zip");
+			InputStream zipStream = this.getClass().getResourceAsStream("/config/IngestionPackage.zip");
 			tempDir = Utility.createTempDirectory();
-			Utility.unzip(new ZipInputStream(new FileInputStream(zipFile)), tempDir);
+			Utility.unzip(new ZipInputStream(zipStream), tempDir);
 			assertTrue((new File(tempDir.getAbsolutePath() + File.separator + "manifest.yaml").exists()));
 			assertTrue((new File(tempDir.getAbsolutePath() + File.separator + "manifests" + File.separator + "rack.yaml").exists()));
 			assertTrue((new File(tempDir.getAbsolutePath() + File.separator + "nodegroups" + File.separator + "queries" + File.separator + "GetDataInsertedByFromGuid.json").exists()));
