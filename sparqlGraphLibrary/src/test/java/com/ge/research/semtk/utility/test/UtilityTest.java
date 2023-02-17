@@ -207,7 +207,7 @@ public class UtilityTest {
 
 		// confirm successful unzip
 		try {
-			File zipFile = Utility.getResourceAsFile(this, "IngestionPackage.zip");
+			File zipFile = Utility.getResourceAsFile(this, "/config/IngestionPackage.zip");
 			tempDir = Utility.createTempDirectory();
 			Utility.unzip(new ZipInputStream(new FileInputStream(zipFile)), tempDir);
 			assertTrue((new File(tempDir.getAbsolutePath() + File.separator + "manifest.yaml").exists()));
@@ -221,7 +221,7 @@ public class UtilityTest {
 
 		// confirm error if try to unzip a file other than a zip file
 		try {
-			File nonZipFile = Utility.getResourceAsFile(this, "animalQuery.json");
+			File nonZipFile = Utility.getResourceAsFile(this, "/animalQuery.json");
 			tempDir = Utility.createTempDirectory();
 			Utility.unzip(new ZipInputStream(new FileInputStream(nonZipFile)), tempDir);
 			fail(); 	// should not get here
@@ -234,15 +234,15 @@ public class UtilityTest {
 
 	@Test
 	public void testValidateYaml() throws Exception{
-		String schema = Utility.getResourceAsString(this, "manifest_schema.json");
+		String schema = Utility.getResourceAsString(this, "/configSchema/manifest_config_schema.json");
 
 		// this YAML should pass validation
-		String yaml = Utility.readFile("src/test/resources/manifest_animals.yaml");
+		String yaml = Utility.getResourceAsString(this, "/config/manifest_animals.yaml");
 		Utility.validateYaml(yaml, schema);
 
 		// this YAML should fail validation
 		try {
-			yaml = Utility.readFile("src/test/resources/manifest_animals_badformat.yaml");
+			yaml = Utility.getResourceAsString(this, "/config/manifest_animals_badformat.yaml");
 			Utility.validateYaml(yaml, schema);
 			fail();  // should not get here
 		}catch(Exception e) {
@@ -251,12 +251,13 @@ public class UtilityTest {
 
 		// this YAML should fail validation
 		try {
-			yaml = Utility.readFile("src/test/resources/manifest_animals_fail.yaml");
+			yaml = Utility.getResourceAsString(this, "/config/manifest_animals_fail.yaml");
 			Utility.validateYaml(yaml, schema);
 			fail();  // should not get here
 		}catch(Exception e) {
 			assertTrue(e.getMessage().contains("$.name: is missing but it is required"));
 			assertTrue(e.getMessage().contains("$.fooootprint: is not defined in the schema and the schema does not allow additional properties"));
+			assertTrue(e.getMessage().contains("manifestttt: is not defined in the schema and the schema does not allow additional properties"));
 		}
 	}
 

@@ -45,13 +45,13 @@ public class SparqlEndpointInterfaceTest_IT {
 		IntegrationTestUtility.authenticateJunit();		
 	}
 	
-	
 	@Test 
 	public void testQuery() throws Exception{
 		TestGraph.clearGraph();
 		TestGraph.initGraphWithData(this.getClass(), "sampleBattery");
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromResource(this, "/sampleBattery.json");
 		TestGraph.queryAndCheckResults(sgJson, this, "/sampleBatteryResults.csv");
+		assertEquals(TestGraph.getSei().getNumTriples(), 74);
 	}
 	
 	

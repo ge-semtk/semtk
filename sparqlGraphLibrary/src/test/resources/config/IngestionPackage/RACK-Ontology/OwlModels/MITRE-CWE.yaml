@@ -1,0 +1,5 @@
+# This file is intended to be used with the rack CLI script found in RACK/cli/
+#
+# Script documentation is available in RACK/cli/README.md
+files:
+- "MITRE-CWE.owl"

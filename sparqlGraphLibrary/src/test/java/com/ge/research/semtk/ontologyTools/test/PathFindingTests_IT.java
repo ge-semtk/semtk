@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Hashtable;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -89,6 +90,10 @@ public class PathFindingTests_IT {
 		assertEquals("Path start", TEST_RESULT, path.getStartClassName());
 		assertEquals("Path end", REQUIREMENT, path.getEndClassName());
 		assertTrue(path.containsClass(TEST));
+		
+		// test getInstanceCountHash()
+		Hashtable<String, Long> instanceCount = stats.getInstanceCountHash();
+		assertEquals("Wrong number of requirements found", Long.valueOf(8), instanceCount.get(REQUIREMENT));
 
 	}
 	

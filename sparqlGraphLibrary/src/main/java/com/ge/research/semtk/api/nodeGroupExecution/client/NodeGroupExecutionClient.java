@@ -122,6 +122,8 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 	private static final String dispatchRawSparqlEndpoint = "/dispatchRawSparql";
 	private static final String dispatchConstructByIdEndpoint = "/dispatchConstructById";
 	private static final String dispatchConstructFromNodegroupEndpoint = "/dispatchConstructFromNodegroup";
+	private static final String copyGraphEndpoint = "/copyGraph";
+	private static final String dispatchCombineEntitiesInConnEndpoint = "/dispatchCombineEntitiesInConn";
 	
 	private ArrayList<String> warnings = null;
 	
@@ -2337,4 +2339,107 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 		return this.execDispatchDeleteFromNodeGroup(ng, conn, null, null);
 	}
 	
+	/**
+	 * Launch an asynchronous call to copy a graph
+	 * @param fromServerAndPort		copy from this graph
+	 * @param fromServerType		copy from this graph
+	 * @param fromGraph				copy from this graph
+	 * @param toServerAndPort		copy to this graph
+	 * @param toServerType			copy to this graph
+	 * @param toGraph				copy to this graph
+	 * @return  					a job ID
+	 * @throws Exception 			if call is unsuccessful
+	 */
+	@SuppressWarnings("unchecked")
+	private String copyGraphAsyncToJobId(String fromServerAndPort, String fromServerType, String fromGraph,
+			String toServerAndPort, String toServerType, String toGraph) throws Exception {
+
+		conf.setServiceEndpoint(mappingPrefix + copyGraphEndpoint);
+		this.parametersJSON.put("fromServerAndPort", fromServerAndPort);
+		this.parametersJSON.put("fromServerType", fromServerType);
+		this.parametersJSON.put("fromGraph", fromGraph);
+		this.parametersJSON.put("toServerAndPort", toServerAndPort);
+		this.parametersJSON.put("toServerType", toServerType);
+		this.parametersJSON.put("toGraph", toGraph);
+
+		try{
+			JSONObject jobj = (JSONObject) this.execute();
+			SimpleResultSet retval = SimpleResultSet.fromJson(jobj);
+			retval.throwExceptionIfUnsuccessful();
+			return retval.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
+		}finally{
+			this.reset();
+		}
+	}
+
+	/**
+	 * Launch a synchronous call to copy a graph
+	 * @param fromServerAndPort		copy from this graph
+	 * @param fromServerType		copy from this graph
+	 * @param fromGraph				copy from this graph
+	 * @param toServerAndPort		copy to this graph
+	 * @param toServerType			copy to this graph
+	 * @param toGraph				copy to this graph
+	 * @return 						a status message (e.g. "Successfully copied <from-graph> to <to-graph>")
+	 * @throws Exception 			if call is unsuccessful
+	 */
+	public String copyGraph(String fromServerAndPort, String fromServerType, String fromGraph,
+			String toServerAndPort, String toServerType, String toGraph) throws Exception {
+		String jobId = this.copyGraphAsyncToJobId(fromServerAndPort, fromServerType, fromGraph, toServerAndPort, toServerType, toGraph);
+		this.waitForCompletion(jobId);
+		if (this.getJobSuccess(jobId)) {
+			return this.getJobStatusMessage(jobId);
+		} else {
+			throw new Exception("Copy graph failed:\n" + this.getResultsTable(jobId).toCSVString());
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	private String dispatchCombineEntitiesInConnToJobId(SparqlConnection conn, String sameAsClassURI, String targetPropURI, String duplicatePropURI, ArrayList<String> deletePredicatesFromDuplicate, ArrayList<String> deletePredicatesFromTarget)
+	throws Exception {
+		conf.setServiceEndpoint(mappingPrefix + dispatchCombineEntitiesInConnEndpoint);
+		this.parametersJSON.put("conn", conn.toJson().toJSONString());
+		if (sameAsClassURI != null ) {
+			this.parametersJSON.put("sameAsClassURI", sameAsClassURI);
+		}
+		if (targetPropURI != null ) {
+			this.parametersJSON.put("targetPropURI", targetPropURI);
+		}
+		if (duplicatePropURI != null ) {
+			this.parametersJSON.put("duplicatePropURI", duplicatePropURI);
+		}
+		if (deletePredicatesFromDuplicate != null ) {
+			JSONArray jArr = new JSONArray();
+			jArr.addAll(deletePredicatesFromDuplicate);
+			this.parametersJSON.put("deletePredicatesFromDuplicate", jArr);
+		}
+		if (deletePredicatesFromTarget != null ) {
+			JSONArray jArr = new JSONArray();
+			jArr.addAll(deletePredicatesFromTarget);
+			this.parametersJSON.put("deletePredicatesFromTarget", jArr);
+		}
+
+		try{
+			JSONObject jobj = (JSONObject) this.execute();
+			SimpleResultSet retval = SimpleResultSet.fromJson(jobj);
+			retval.throwExceptionIfUnsuccessful();
+			return retval.getResult(SimpleResultSet.JOB_ID_RESULT_KEY);
+		}finally{
+			this.reset();
+		}
+	}
+	/**
+	 * Combine entities
+	 * @param conn
+	 * @return - status success string if any
+	 * @throws Exception
+	 */
+	public String combineEntitiesInConn(SparqlConnection conn) throws Exception {
+		String jobId = this.dispatchCombineEntitiesInConnToJobId(conn, null, null, null, null, null);
+		this.waitForCompletion(jobId);
+		if (this.getJobSuccess(jobId)) {
+			return this.getJobStatusMessage(jobId);
+		} else
+			throw new Exception("Combine entities in conn failed:\n" + this.getResultsTable(jobId).toCSVString()); 
+	}
 }

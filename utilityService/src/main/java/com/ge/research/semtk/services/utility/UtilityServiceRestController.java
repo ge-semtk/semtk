@@ -48,7 +48,12 @@ import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
+import com.ge.research.semtk.load.client.IngestorClientConfig;
+import com.ge.research.semtk.load.client.IngestorRestClient;
+import com.ge.research.semtk.load.config.ManifestConfig;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
+import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.plotting.PlotlyPlotSpec;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -348,12 +353,23 @@ public class UtilityServiceRestController {
 	
 	/**
 	 * Load content from an ingestion package (zip file) to triplestore
+	 *
+	 * Not using @RequestBody because can't use with @RequestParam
 	 */
 	@Operation(description="Load content from an ingestion package")
 	@CrossOrigin
 	@RequestMapping(value="/loadIngestionPackage", method=RequestMethod.POST, consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
-	public void loadIngestionPackage(@RequestParam("file") MultipartFile ingestionPackageZipFile, HttpServletResponse resp){
+	public void loadIngestionPackage(	@RequestParam("serverAndPort") String serverAndPort, // e.g. http://localhost:3030/JUNIT for fuseki, http://localhost:2420 for virtuoso
+										@RequestParam("serverType") String serverType,// e.g. "fuseki"
+										@RequestParam("file") MultipartFile ingestionPackageZipFile,
+										@RequestParam("clear") boolean clear,
+										@RequestParam("loadToDefaultGraph") boolean loadToDefaultGraph,	// true to load directly to default graph
+										@RequestParam("defaultModelGraph") String defaultModelGraph,	// fallback model graph - use if not otherwise specified
+										@RequestParam("defaultDataGraph") String defaultDataGraph,		// fallback data graph - use if not otherwise specified
+										@RequestHeader HttpHeaders headers,
+										HttpServletResponse resp){
 
+		HeadersManager.setHeaders(headers);
 		final String ENDPOINT_NAME = "loadIngestionPackage";
 		LocalLogger.logToStdOut(SERVICE_NAME + " " + ENDPOINT_NAME);
 		PrintWriter responseWriter = null;
@@ -370,6 +386,7 @@ public class UtilityServiceRestController {
 		ZipInputStream zipInputStream = null;
 		File tempDir = null;
 		try {
+
 			// unzip the file
 			if(!ingestionPackageZipFile.getOriginalFilename().endsWith(".zip")) {
 				throw new Exception("This endpoint only accepts ingestion packages in zip file format");
@@ -379,23 +396,18 @@ public class UtilityServiceRestController {
 			Utility.unzip(zipInputStream, tempDir);
 			LocalLogger.logToStdOut("Unzipped " + ingestionPackageZipFile.getOriginalFilename() + " to " + tempDir.toString());
 
-			// load the contents of the ingestion package
-			// TODO implement
-			responseWriter.println("Loading ingestion package...");
-			responseWriter.flush();
-			Thread.sleep(5*1000);
-			responseWriter.println("Loaded ontologies (not implemented yet)");
-			responseWriter.flush();
-			Thread.sleep(5*1000);
-			responseWriter.println("Loaded nodegroups (not implemented yet)");
-			responseWriter.flush();
-			Thread.sleep(5*1000);
-			responseWriter.println("Loaded instance data (not implemented yet)");
-			responseWriter.flush();
-			Thread.sleep(5*1000);
+			// load the manifest
+			File manifestFile = null;
+			try {
+				manifestFile = ManifestConfig.getTopLevelManifestFile(tempDir);
+			}catch(Exception e) {
+				throw new Exception("Cannot find a top-level manifest in " + ingestionPackageZipFile.getOriginalFilename());
+			}
+			ManifestConfig manifest = new ManifestConfig(manifestFile, defaultModelGraph, defaultDataGraph);
+			manifest.load(serverAndPort, serverType, clear, loadToDefaultGraph, true, getIngestorRestClient(), getNodegroupExecutionClient(), getNodegroupStoreClient(), responseWriter);
+
 			responseWriter.println("Load complete");
 			responseWriter.flush();
-
 			LocalLogger.logToStdOut(SERVICE_NAME + " " + ENDPOINT_NAME + " completed");
 
 		} catch (Exception e){
@@ -454,5 +466,21 @@ public class UtilityServiceRestController {
 	private NodeGroupExecutionClient getNodegroupExecutionClient() throws Exception{
 		NodeGroupExecutionClientConfig necc = new NodeGroupExecutionClientConfig(props.getNodegroupExecutionServiceProtocol(), props.getNodegroupExecutionServiceServer(), props.getNodegroupExecutionServicePort());
 		return new NodeGroupExecutionClient(necc);
+	}
+
+	/**
+	 * Get a nodegroup store client.
+	 */
+	private NodeGroupStoreRestClient getNodegroupStoreClient() throws Exception{
+		NodeGroupStoreConfig ngsc = new NodeGroupStoreConfig(props.getNodegroupStoreServiceProtocol(), props.getNodegroupStoreServiceServer(), props.getNodegroupStoreServicePort());
+		return new NodeGroupStoreRestClient(ngsc);
+	}
+
+	/**
+	 * Get a ingestion client.
+	 */
+	private IngestorRestClient getIngestorRestClient() throws Exception{
+		IngestorClientConfig icc = new IngestorClientConfig(props.getIngestionServiceProtocol(), props.getIngestionServiceServer(), props.getIngestionServicePort());
+		return new IngestorRestClient(icc);
 	}
 }

@@ -38,8 +38,12 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -64,6 +68,7 @@ import java.util.zip.GZIPOutputStream;
 import java.util.zip.Inflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 import javax.xml.bind.DatatypeConverter;
 import javax.xml.parsers.DocumentBuilder;
@@ -247,6 +252,22 @@ public abstract class Utility {
 		return ret.toString();
 	}
 	
+	/**
+	 * Read contents of a BufferedReader to a String
+	 */
+	public static String readToString(BufferedReader reader) throws Exception {
+		if (reader == null) {
+			return null;
+		}
+		StringBuffer buffer = new StringBuffer();
+		String s;
+		while ((s = reader.readLine()) != null) {
+			buffer.append(s);
+		}
+		reader.close();
+		return buffer.toString();
+	}
+
 	/**
 	 * Built a ping result
 	 * @return
@@ -847,17 +868,22 @@ public abstract class Utility {
 		return getResourceAsFile(obj.getClass(), fileName);
 	}
 	public static File getResourceAsFile(Class c, String fileName) throws Exception {
-		File ret = null;
-		
-		// fat jars and other deployments seem to choke on returning a File
-		// so copy the data into a temp file
-		byte data[] = null;
-		data = getResourceAsBytes(c, fileName);
-		File tempFile = File.createTempFile("resource", "fileName");
-		tempFile.deleteOnExit();
-		FileUtils.writeByteArrayToFile(tempFile, data);
-		
-		return tempFile;
+		try {
+			return new File(c.getResource(fileName).getFile());
+		} catch (Exception e) {
+			throw new Exception("Can't find resource " + fileName + " for class " + c.getName(), e);
+		}
+//		File ret = null;
+//		
+//		// fat jars and other deployments seem to choke on returning a File
+//		// so copy the data into a temp file
+//		byte data[] = null;
+//		data = getResourceAsBytes(c, fileName);
+//		File tempFile = File.createTempFile("resource", "fileName");
+//		tempFile.deleteOnExit();
+//		FileUtils.writeByteArrayToFile(tempFile, data);
+//		
+//		return tempFile;
 	}
 	
 	public static byte [] getResourceAsBytes(Object obj, String fileName) throws Exception {
@@ -1012,20 +1038,34 @@ public abstract class Utility {
 	public static File createTempDirectory() throws IOException {
 		return Files.createTempDirectory("semtk.", new FileAttribute<?>[] { }).toFile();
 	}
+	
+	public static File createTempFile(String suffix) throws IOException {
+		return Files.createTempFile("semtk.", suffix).toFile();
+	}
+
+	/**
+	 * Get a JsonNode from a YAML string
+	 * @param yamlStr		the YAML string
+	 * @return 				the JsonNode
+	 * @throws Exception
+	 */
+	public static JsonNode getJsonNodeFromYaml(String yamlStr) throws Exception {
+		return (new ObjectMapper(new YAMLFactory())).readTree(yamlStr);
+	}
 
 	/**
 	 * Validate YAML against a schema
-	 * @param yamlStr the YAML to validate
+	 * @param yamlStr 		the YAML to validate
 	 * @param jsonSchemaStr a JSON schema
-	 * @throws Exception if validation fails
+	 * @throws Exception 	if validation fails
 	 */
 	public static void validateYaml(String yamlStr, String jsonSchemaStr) throws Exception {
 
 		// read yaml into JSON tree
-		JsonNode yamlToValidate = (new ObjectMapper(new YAMLFactory())).readTree(yamlStr);
+		JsonNode yamlToValidate = Utility.getJsonNodeFromYaml(yamlStr);
 
 		// get schema
-		JsonSchemaFactory schemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
+		JsonSchemaFactory schemaFactory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V201909);
 		JsonSchema schema = schemaFactory.getSchema(jsonSchemaStr);
 
 		// validate
@@ -1040,4 +1080,68 @@ public abstract class Utility {
 			throw new Exception("Failed schema validation: " + exceptionString);
 		}
 	}
+	
+	/**
+	 * Create a temp folder and copy source recursively into it
+	 * @param source
+	 * @return
+	 * @throws IOException
+	 */
+	public static File copyToTempFolder(Path source) throws IOException {
+		File tmpDir = Utility.createTempDirectory();
+		copyFolder(source, tmpDir.toPath());
+		return tmpDir;
+	}
+	
+	
+	public static Path unzipToTempFolder(Path zipPath) throws Exception {
+		File tempDir = Utility.createTempDirectory();
+		ZipInputStream zipInputStream = new ZipInputStream(new FileInputStream(zipPath.toString()));
+		
+		Utility.unzip(zipInputStream, tempDir);
+		return tempDir.toPath();
+	}
+	
+	public static Path zipFolderToTempFile(Path source) throws IOException {
+		File zipFile = Utility.createTempFile(".zip");
+        
+        final ZipOutputStream outputStream = new ZipOutputStream(new FileOutputStream(zipFile));
+        Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) throws IOException {
+               
+                Path targetFile = source.relativize(file);
+                outputStream.putNextEntry(new ZipEntry(targetFile.toString()));
+                byte[] bytes = Files.readAllBytes(file);
+                outputStream.write(bytes, 0, bytes.length);
+                outputStream.closeEntry();
+               
+                return FileVisitResult.CONTINUE;
+            }
+        });
+        outputStream.close();
+	    
+        return zipFile.toPath();
+	}
+
+	
+	private static void copyFolder(Path source, Path target) throws IOException {
+        Files.walkFileTree(source, new SimpleFileVisitor<Path>() {
+
+            @Override
+            public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs)
+                    throws IOException {
+                Files.createDirectories(target.resolve(source.relativize(dir).toString()));
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                    throws IOException {
+                Files.copy(file, target.resolve(source.relativize(file).toString()));
+                return FileVisitResult.CONTINUE;
+            }
+        });
+    }
+	
 }

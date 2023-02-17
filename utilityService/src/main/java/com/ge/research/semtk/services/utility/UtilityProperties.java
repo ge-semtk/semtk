@@ -37,7 +37,15 @@ public class UtilityProperties extends Properties {
 	private String nodegroupExecutionServiceServer;
 	private int nodegroupExecutionServicePort;
 	private String nodegroupExecutionServiceProtocol;
-	
+
+	private String nodegroupStoreServiceServer;
+	private int nodegroupStoreServicePort;
+	private String nodegroupStoreServiceProtocol;
+
+	private String ingestionServiceServer;
+	private int ingestionServicePort;
+	private String ingestionServiceProtocol;
+
 	// this is old-fashioned.  Please don't add more properties here.
 	// Rest controller should instead @autowire new Utility*Properties classes that extend the correct subclass of Properties
 	// -Paul
@@ -61,6 +69,12 @@ public class UtilityProperties extends Properties {
 		this.checkNotEmpty("nodegroupExecutionServiceServer", nodegroupExecutionServiceServer);
 		this.checkNotEmpty("nodegroupExecutionServicePort", nodegroupExecutionServicePort);
 		this.checkNotEmpty("nodegroupExecutionServiceProtocol", nodegroupExecutionServiceProtocol);
+		this.checkNotEmpty("nodegroupStoreServiceServer", nodegroupStoreServiceServer);
+		this.checkNotEmpty("nodegroupStoreServicePort", nodegroupStoreServicePort);
+		this.checkNotEmpty("nodegroupStoreServiceProtocol", nodegroupStoreServiceProtocol);
+		this.checkNotEmpty("ingestionServiceServer", ingestionServiceServer);
+		this.checkNotEmpty("ingestionServicePort", ingestionServicePort);
+		this.checkNotEmpty("ingestionServiceProtocol", ingestionServiceProtocol);
 	}
 	
 	public String getSparqlServiceServer() {
@@ -129,4 +143,45 @@ public class UtilityProperties extends Properties {
 		this.nodegroupExecutionServiceProtocol = nodegroupExecutionServiceProtocol;
 	}
 	
+	public String getNodegroupStoreServiceServer() {
+		return nodegroupStoreServiceServer;
+	}
+	public void setNodegroupStoreServiceServer(
+			String nodegroupStoreServiceServer) {
+		this.nodegroupStoreServiceServer = nodegroupStoreServiceServer;
+	}
+	public int getNodegroupStoreServicePort() {
+		return nodegroupStoreServicePort;
+	}
+	public void setNodegroupStoreServicePort(
+			int nodegroupStoreServicePort) {
+		this.nodegroupStoreServicePort = nodegroupStoreServicePort;
+	}
+	public String getNodegroupStoreServiceProtocol() {
+		return nodegroupStoreServiceProtocol;
+	}
+	public void setNodegroupStoreServiceProtocol(
+			String nodegroupStoreServiceProtocol) {
+		this.nodegroupStoreServiceProtocol = nodegroupStoreServiceProtocol;
+	}
+
+	public String getIngestionServiceServer() {
+		return ingestionServiceServer;
+	}
+	public void setIngestionServiceServer(String ingestionServiceServer) {
+		this.ingestionServiceServer = ingestionServiceServer;
+	}
+	public int getIngestionServicePort() {
+		return ingestionServicePort;
+	}
+	public void setIngestionServicePort(int ingestionServicePort) {
+		this.ingestionServicePort = ingestionServicePort;
+	}
+	public String getIngestionServiceProtocol() {
+		return ingestionServiceProtocol;
+	}
+	public void setIngestionServiceProtocol(String ingestionServiceProtocol) {
+		this.ingestionServiceProtocol = ingestionServiceProtocol;
+	}
+
 }

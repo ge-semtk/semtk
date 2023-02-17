@@ -1,0 +1,42 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns="http://com.ge.research.sadl.configuration#">
+  <Category rdf:about="http://com.ge.research.sadl.configuration#Jena-Based">
+    <subcategory>
+      <rdf:Bag>
+        <rdf:li>
+          <Builtin>
+            <name>noValue</name>
+            <class>com.ge.research.sadl.jena.reasoner.builtin.NoValue</class>
+          </Builtin>
+        </rdf:li>
+        <rdf:li>
+          <Builtin>
+            <class>com.ge.research.sadl.jena.reasoner.builtin.ThereExists</class>
+            <name>thereExists</name>
+          </Builtin>
+        </rdf:li>
+      </rdf:Bag>
+    </subcategory>
+  </Category>
+  <Category rdf:about="http://com.ge.research.sadl.configuration#ReasonerSpec">
+    <reasonerClassName>com.ge.research.sadl.jena.reasoner.JenaReasonerPlugin</reasonerClassName>
+  </Category>
+  <Category rdf:about="http://com.ge.research.sadl.configuration#Builtin"/>
+  <Category rdf:about="http://com.ge.research.sadl.configuration#Jena">
+    <pModelSpec>OWL_MEM</pModelSpec>
+    <pOWLTranslation rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+    >false</pOWLTranslation>
+    <pUseLuceneIndexer rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+    >false</pUseLuceneIndexer>
+    <pTimeOut>-1</pTimeOut>
+    <pTrace rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+    >false</pTrace>
+    <pRuleMode>hybrid</pRuleMode>
+    <pDerivationLogging>None</pDerivationLogging>
+    <pTransitiveClosureCaching rdf:datatype="http://www.w3.org/2001/XMLSchema#boolean"
+    >false</pTransitiveClosureCaching>
+    <translatorClassName>com.ge.research.sadl.jena.translator.JenaTranslatorPlugin</translatorClassName>
+  </Category>
+  <Category rdf:about="http://com.ge.research.sadl.configuration#Builtin"/>
+</rdf:RDF>

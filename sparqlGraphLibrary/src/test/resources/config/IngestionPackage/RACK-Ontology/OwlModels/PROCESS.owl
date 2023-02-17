@@ -1,0 +1,65 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:provs="http://arcos.rack/PROV-S#"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:Pr="http://arcos.rack/PROCESS#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xml:base="http://arcos.rack/PROCESS">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="PROV-S"/>
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'PROCESS.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:ID="PROPERTY">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:onClass>
+          <owl:Class rdf:ID="PROPERTY_TYPE"/>
+        </owl:onClass>
+        <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#long"
+        >1</owl:qualifiedCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="propertyType"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment xml:lang="en">A general property that holds on the basis of some ANALYSIS</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="PROV-S#ENTITY"/>
+  </owl:Class>
+  <owl:Class rdf:about="#PROPERTY_TYPE">
+    <rdfs:comment xml:lang="en">The target-independent identifier of the semantics of a PROPERTY.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="PROV-S#THING"/>
+  </owl:Class>
+  <owl:Class rdf:ID="OBJECTIVE">
+    <rdfs:comment xml:lang="en">An OBJECTIVE identifies tasks from a process for which evidence must be provided to show that the task has been completed. </rdfs:comment>
+    <rdfs:subClassOf rdf:resource="PROV-S#ENTITY"/>
+  </owl:Class>
+  <owl:ObjectProperty rdf:ID="satisfiedBy">
+    <rdfs:comment xml:lang="en">An ACTIVITY that demonstrates that the OBJECTIVE has been satisfied.</rdfs:comment>
+    <rdfs:range rdf:resource="PROV-S#ACTIVITY"/>
+    <rdfs:domain rdf:resource="#OBJECTIVE"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="scopeOf">
+    <rdfs:subPropertyOf rdf:resource="PROV-S#wasImpactedBy"/>
+    <rdfs:comment xml:lang="en">ENTITY(s) over which the PROPERTY holds</rdfs:comment>
+    <rdfs:range rdf:resource="PROV-S#ENTITY"/>
+    <rdfs:domain rdf:resource="#PROPERTY"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="mitigates">
+    <rdfs:subPropertyOf rdf:resource="PROV-S#wasImpactedBy"/>
+    <rdfs:comment xml:lang="en">ENTITY(s) that is being mitigated by this PROPERTY</rdfs:comment>
+    <rdfs:range rdf:resource="PROV-S#ENTITY"/>
+    <rdfs:domain rdf:resource="#PROPERTY"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="#propertyType">
+    <rdfs:comment xml:lang="en">The semantic tag for this property instance.</rdfs:comment>
+    <rdfs:range rdf:resource="#PROPERTY_TYPE"/>
+    <rdfs:domain rdf:resource="#PROPERTY"/>
+  </owl:ObjectProperty>
+</rdf:RDF>

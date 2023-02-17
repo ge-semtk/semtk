@@ -3,7 +3,9 @@ package com.ge.research.semtk.ontologyTools;
 import java.util.HashSet;
 import java.util.Hashtable;
 
+import org.apache.jena.atlas.json.JSON;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.edc.JobTracker;
@@ -110,6 +112,24 @@ public class PredicateStats {
 	
 	private String buildKey(OntologyPath path) {
 		return path.toJson().toJSONString();
+	}
+	
+	/**
+	 * Get a hash of  ret.get(className) = count
+	 * @return
+	 * @throws Exception
+	 */
+	public Hashtable<String, Long> getInstanceCountHash() throws Exception {
+		Hashtable<String, Long> ret = new Hashtable<String, Long>();
+		for (String k : this.exactHash.keySet()) {
+			JSONObject jObj = (JSONObject) (new JSONParser()).parse(k);		
+			OntologyPath path = new OntologyPath(jObj);
+			Triple t = path.getTriple(0);;
+			if (t.getPredicate().toLowerCase().endsWith("#type") && t.getObject().toLowerCase().endsWith("#class")) {
+				ret.put(t.getSubject(), new Long(this.exactHash.get(k)));
+			}
+		}
+		return ret;
 	}
 	
 	/**

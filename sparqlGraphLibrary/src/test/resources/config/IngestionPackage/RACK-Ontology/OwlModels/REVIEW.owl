@@ -1,0 +1,89 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:provs="http://arcos.rack/PROV-S#"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:Rv="http://arcos.rack/REVIEW#"
+    xmlns:D="http://arcos.rack/DOCUMENT#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xml:base="http://arcos.rack/REVIEW">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="DOCUMENT"/>
+    <owl:imports rdf:resource="PROV-S"/>
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'REVIEW.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:ID="REVIEW_STATE">
+    <owl:equivalentClass>
+      <owl:Class>
+        <owl:oneOf rdf:parseType="Collection">
+          <Rv:REVIEW_STATE rdf:ID="Passed">
+            <provs:identifier>Passed</provs:identifier>
+          </Rv:REVIEW_STATE>
+          <Rv:REVIEW_STATE rdf:ID="ReviseWithoutReview">
+            <provs:identifier>Revise Without Review</provs:identifier>
+          </Rv:REVIEW_STATE>
+          <Rv:REVIEW_STATE rdf:ID="ReviseWithReview">
+            <provs:identifier>Revise With Review</provs:identifier>
+          </Rv:REVIEW_STATE>
+        </owl:oneOf>
+      </owl:Class>
+    </owl:equivalentClass>
+    <rdfs:comment xml:lang="en">Life-cycle status of a review log</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="PROV-S#THING"/>
+  </owl:Class>
+  <owl:Class rdf:ID="REVIEW">
+    <rdfs:comment xml:lang="en">Artifact review ACTIVITY</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="PROV-S#ACTIVITY"/>
+  </owl:Class>
+  <owl:Class rdf:ID="REVIEW_LOG">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:allValuesFrom rdf:resource="#REVIEW"/>
+        <owl:onProperty rdf:resource="PROV-S#wasGeneratedBy"/>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment xml:lang="en">Outcome of a REVIEW ACTIVITY</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="PROV-S#ENTITY"/>
+  </owl:Class>
+  <owl:ObjectProperty rdf:ID="reviewer">
+    <rdfs:subPropertyOf rdf:resource="PROV-S#wasAssociatedWith"/>
+    <rdfs:comment xml:lang="en">AGENT(s) performing the review</rdfs:comment>
+    <rdfs:range rdf:resource="PROV-S#AGENT"/>
+    <rdfs:domain rdf:resource="#REVIEW"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="reviewed">
+    <rdfs:subPropertyOf rdf:resource="PROV-S#used"/>
+    <rdfs:comment xml:lang="en">ENTITY(s) being reviewed</rdfs:comment>
+    <rdfs:range rdf:resource="PROV-S#ENTITY"/>
+    <rdfs:domain rdf:resource="#REVIEW"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="governedBy">
+    <rdfs:subPropertyOf rdf:resource="PROV-S#used"/>
+    <rdfs:comment xml:lang="en">ENTITY(s) (e.g. REQUIREMENT or SPECIFICATION) used for performing the review</rdfs:comment>
+    <rdfs:range rdf:resource="PROV-S#ENTITY"/>
+    <rdfs:domain rdf:resource="#REVIEW"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="reviewResult">
+    <rdfs:comment xml:lang="en">Review status descriptor</rdfs:comment>
+    <rdfs:range rdf:resource="#REVIEW_STATE"/>
+    <rdfs:domain rdf:resource="#REVIEW_LOG"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="reviews">
+    <rdfs:subPropertyOf rdf:resource="PROV-S#wasImpactedBy"/>
+    <rdfs:comment xml:lang="en">The subject being reviewed</rdfs:comment>
+    <rdfs:range rdf:resource="PROV-S#ENTITY"/>
+    <rdfs:domain rdf:resource="#REVIEW_LOG"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="author">
+    <rdfs:subPropertyOf rdf:resource="PROV-S#wasAssociatedWith"/>
+    <rdfs:comment xml:lang="en">AGENT(s) putting items up for review</rdfs:comment>
+    <rdfs:range rdf:resource="PROV-S#AGENT"/>
+    <rdfs:domain rdf:resource="#REVIEW"/>
+  </owl:ObjectProperty>
+</rdf:RDF>

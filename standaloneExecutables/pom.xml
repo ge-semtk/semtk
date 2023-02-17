@@ -15,13 +15,6 @@
 			<version>${project.version}</version>
 		</dependency>
 
-		<!-- License: Apache 2.0 -->
-		<dependency>
-			<groupId>com.opencsv</groupId>
-			<artifactId>opencsv</artifactId>
-			<version>5.7.1</version>
-		</dependency>
-
 	</dependencies>
 
 	<!-- create runnable ("fat") jars with dependencies included -->

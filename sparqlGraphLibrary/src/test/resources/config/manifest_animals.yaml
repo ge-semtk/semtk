@@ -7,10 +7,10 @@ perform-triplestore-optimization: false
 
 footprint:
   model-graphs:
-    - http://animals/model
+    - http://junit/animals/model
   data-graphs:
-    - http://animals/data1
-    - http://animals/data2
+    - http://junit/animals/data1
+    - http://junit/animals/data2
   nodegroups:
     - animals/nodegroups
 
@@ -25,5 +25,5 @@ steps:
   - data: animals/amphibians/import.yaml
 
   - copygraph:
-      from-graph: http://animals/domestic
-      to-graph: http://animals/wild
+      from-graph: http://junit/animals/domestic
+      to-graph: http://junit/animals/wild

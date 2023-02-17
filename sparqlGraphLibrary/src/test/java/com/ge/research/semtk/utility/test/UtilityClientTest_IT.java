@@ -16,17 +16,33 @@
  */
 package com.ge.research.semtk.utility.test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assume.assumeTrue;
+
 import java.io.BufferedReader;
-import java.io.File;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import com.ge.research.semtk.load.config.test.ManifestConfigTest_IT;
 import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.services.client.UtilityClient;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.IntegrationTestUtility;
+import com.ge.research.semtk.test.TestGraph;
+import com.ge.research.semtk.utility.Utility;
 
 public class UtilityClientTest_IT {
+
+	// not extending YamlConfigTest because need to match ingestion package footprint
+	SparqlEndpointInterface modelFallbackSei = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/model"));
+	SparqlEndpointInterface dataFallbackSei = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/data"));
+	SparqlEndpointInterface dataSeiFromYaml = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/data"));  // for this package, same as footprint/fallback
+	SparqlEndpointInterface defaultGraphSei = TestGraph.getSei(SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME);
+
+	public UtilityClientTest_IT() throws Exception {
+		super();
+	}
 
 	private static String SERVICE_PROTOCOL;
 	private static String SERVICE_SERVER;
@@ -39,36 +55,74 @@ public class UtilityClientTest_IT {
 		SERVICE_PROTOCOL = IntegrationTestUtility.get("protocol");
 		SERVICE_SERVER = IntegrationTestUtility.get("utilityservice.server");
 		SERVICE_PORT = IntegrationTestUtility.getInt("utilityservice.port");
-		client = new UtilityClient(new RestClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, "fake"));  
+		client = new UtilityClient(new RestClientConfig(SERVICE_PROTOCOL, SERVICE_SERVER, SERVICE_PORT, "fake"));
 	}
 
 	@Test
 	public void testLoadIngestionPackage() throws Exception {
-		BufferedReader reader = client.execLoadIngestionPackage(new File("src/test/resources/IngestionPackage.zip"));
-		StringBuffer statusBuffer = new StringBuffer();
-		String s;
-		while ((s = reader.readLine()) != null) {
-			statusBuffer.append(s);
-			System.out.println(s);
-			// TODO confirm that status updates are arriving in real time
+
+		try {
+
+			// this ingestion package copies to the default graph - only allow to run on Fuseki
+			assumeTrue("Skipping test: only use default graph on Fuseki triplestore", TestGraph.getSei().getServerType().equals(SparqlEndpointInterface.FUSEKI_SERVER));
+
+			reset();
+
+			boolean clear = true;
+			boolean loadToDefaultGraph = false;
+			BufferedReader reader = client.execLoadIngestionPackage(TestGraph.getZipAndUniquifyJunitGraphs(this, "/config/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), clear, loadToDefaultGraph, modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+			String response = Utility.readToString(reader);
+
+			// check the response stream
+			assert(response.contains("Loading manifest for 'Entity Resolution'..."));
+			assert(response.contains("Loading manifest for 'RACK ontology'..."));
+			assert(response.matches("(.*)Clear graph http://junit/(.*)/rack001/model(.*)"));
+			assert(response.matches("(.*)Clear graph http://junit/(.*)/rack001/data(.*)"));
+			assert(response.contains("Load OWL AGENTS.owl"));
+			assert(response.contains("Load OWL ANALYSIS.owl"));
+			assert(response.contains("Store nodegroups"));
+			assert(response.contains("Stored: JUNIT query Files of a Given Format"));
+			assert(response.contains("Load CSV PROV_S_ACTIVITY1.csv as http://arcos.rack/PROV-S#ACTIVITY"));
+			assert(response.contains("Load CSV REQUIREMENTS_REQUIREMENT1.csv as http://arcos.rack/REQUIREMENTS#REQUIREMENT"));
+			assert(response.contains("Load CSV TESTING_TEST1.csv as http://arcos.rack/TESTING#TEST"));
+			assert(response.matches("(.*)Copy graph http://junit/(.*)/auto/rack001/data to default graph(.*)"));
+			assert(response.contains("Perform entity resolution"));
+			assert(response.contains("Load complete"));
+
+			// check the counts
+			assertEquals("Number of triples loaded to model graph", ManifestConfigTest_IT.NUM_EXPECTED_TRIPLES_MODEL, modelFallbackSei.getNumTriples());
+			assertEquals("Number of triples loaded to data graph", ManifestConfigTest_IT.NUM_EXPECTED_TRIPLES_DATA, dataSeiFromYaml.getNumTriples());
+			assertEquals("Number of triples loaded to default graph", ManifestConfigTest_IT.NUM_EXPECTED_TRIPLES_MODEL + ManifestConfigTest_IT.NUM_EXPECTED_TRIPLES_DATA + ManifestConfigTest_IT.NUM_NET_CHANGE_ENTITY_RESOLUTION_TRIPLES, defaultGraphSei.getNumTriples());
+			assertEquals("Number of nodegroups", ManifestConfigTest_IT.NUM_EXPECTED_NODEGROUPS, IntegrationTestUtility.countItemsInStoreByCreator("junit"));
+
+		}catch(Exception e){
+			throw e;
+		}finally {
+			reset();
 		}
-		reader.close();
-		assert(statusBuffer.toString().contains("Load complete"));
-		// TODO when implemented, confirm that content loaded to triplestore as expected
 	}
 
-
-	// Test sending something other than an ingestion package, confirm get useful error message
+	// Test error conditions
 	@Test
-	public void testLoadIngestionPackage_nonZip() throws Exception {
-		BufferedReader reader = client.execLoadIngestionPackage(new File("src/test/resources/animalQuery.json"));
-		StringBuffer statusBuffer = new StringBuffer();
-		String s;
-		while ((s = reader.readLine()) != null) {
-			statusBuffer.append(s);
-		}
-		reader.close();
-		assert(statusBuffer.toString().contains("Error: This endpoint only accepts ingestion packages in zip file format"));
+	public void testLoadIngestionPackage_errorConditions() throws Exception {
+		String response;
+
+		// not a zip file
+		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/animalQuery.json"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
+		assert(response.contains("Error: This endpoint only accepts ingestion packages in zip file format"));
+
+		// contains no top-level manifest.yaml
+		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsFile(this,"/config/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, false, modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
+		assert(response.contains("Error: Cannot find a top-level manifest in IngestionPackageNoManifest.zip"));
+	}
+
+	// clear graphs and nodegroup store
+	private void reset() throws Exception {
+		modelFallbackSei.clearGraph();
+		dataFallbackSei.clearGraph();
+		dataSeiFromYaml.clearGraph();
+		defaultGraphSei.clearGraph();
+		IntegrationTestUtility.cleanupNodegroupStore("junit");
 	}
 
 }

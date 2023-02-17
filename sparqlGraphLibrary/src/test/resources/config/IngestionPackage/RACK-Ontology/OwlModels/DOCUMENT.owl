@@ -1,0 +1,140 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:provs="http://arcos.rack/PROV-S#"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:D="http://arcos.rack/DOCUMENT#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xml:base="http://arcos.rack/DOCUMENT">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="PROV-S"/>
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'DOCUMENT.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:ID="REQUEST">
+    <rdfs:comment xml:lang="en">A REQUEST initiates a defined course of action or changed to fulfill a need.</rdfs:comment>
+    <rdfs:subClassOf>
+      <owl:Class rdf:ID="DOCUMENT"/>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="#DOCUMENT">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="issuingOrganization"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:ObjectProperty rdf:ID="status"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="dateOfIssue"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:maxCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >1</owl:maxCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:ID="versionNumber"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:comment xml:lang="en">A piece of written, printed, or electronic matter that provides information or evidence or that serves as an official record.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="PROV-S#COLLECTION"/>
+  </owl:Class>
+  <owl:Class rdf:ID="SECTION">
+    <rdfs:comment xml:lang="en">A SECTION is generic grouping of ENTITYs with a document</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="PROV-S#COLLECTION"/>
+  </owl:Class>
+  <owl:Class rdf:ID="DESCRIPTION">
+    <rdfs:comment xml:lang="en">A DESCRIPTION document represents a planned or actual concept, function, design or object.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="#DOCUMENT"/>
+  </owl:Class>
+  <owl:Class rdf:ID="DOC_STATUS">
+    <owl:equivalentClass>
+      <owl:Class>
+        <owl:oneOf rdf:parseType="Collection">
+          <D:DOC_STATUS rdf:ID="In_Development">
+            <provs:identifier>In Development</provs:identifier>
+          </D:DOC_STATUS>
+          <D:DOC_STATUS rdf:ID="Released">
+            <provs:identifier>Released</provs:identifier>
+          </D:DOC_STATUS>
+          <D:DOC_STATUS rdf:ID="Withdrawn">
+            <provs:identifier>Withdrawn</provs:identifier>
+          </D:DOC_STATUS>
+        </owl:oneOf>
+      </owl:Class>
+    </owl:equivalentClass>
+    <rdfs:comment xml:lang="en">Life-cycle status of a document</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="PROV-S#THING"/>
+  </owl:Class>
+  <owl:Class rdf:ID="REPORT">
+    <rdfs:comment xml:lang="en">A REPORT describes the results of activities such as investigations, observations, assessments, or test.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="#DOCUMENT"/>
+  </owl:Class>
+  <owl:Class rdf:ID="SPECIFICATION">
+    <rdfs:comment xml:lang="en">A SPECIFICATION identifies the requirements, design, behavior, or other expected characteristics of a system, service or process.</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="#DOCUMENT"/>
+  </owl:Class>
+  <owl:Class rdf:ID="PLAN">
+    <rdfs:comment xml:lang="en">A PLAN presents a systematic course of action for achieving a declared purpose, including when, how, and by whom specified activities are to be performed. </rdfs:comment>
+    <rdfs:subClassOf rdf:resource="#DOCUMENT"/>
+  </owl:Class>
+  <owl:Class rdf:ID="PROCEDURE">
+    <rdfs:comment xml:lang="en">A PROCEDURE presents an ordered series of steps to perform a process, activity, or task</rdfs:comment>
+    <rdfs:subClassOf rdf:resource="#DOCUMENT"/>
+  </owl:Class>
+  <owl:ObjectProperty rdf:ID="approvalAuthority">
+    <rdfs:comment xml:lang="en">AGENT responsible for approving a document.</rdfs:comment>
+    <rdfs:range rdf:resource="PROV-S#AGENT"/>
+    <rdfs:domain rdf:resource="#DOCUMENT"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:ID="references">
+    <rdfs:subPropertyOf rdf:resource="PROV-S#wasImpactedBy"/>
+    <rdfs:comment xml:lang="en">Source Materials used in the development of a document.</rdfs:comment>
+    <rdfs:range rdf:resource="PROV-S#ENTITY"/>
+    <rdfs:domain rdf:resource="#DOCUMENT"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="#issuingOrganization">
+    <rdfs:subPropertyOf rdf:resource="PROV-S#wasAttributedTo"/>
+    <rdfs:comment xml:lang="en">AGENT responsible for producing a document.</rdfs:comment>
+    <rdfs:range rdf:resource="PROV-S#AGENT"/>
+    <rdfs:domain rdf:resource="#DOCUMENT"/>
+  </owl:ObjectProperty>
+  <owl:ObjectProperty rdf:about="#status">
+    <rdfs:comment xml:lang="en">Identifies the maturity of the document, In_Development, Released, Withdrawn.</rdfs:comment>
+    <rdfs:range rdf:resource="#DOC_STATUS"/>
+    <rdfs:domain rdf:resource="#DOCUMENT"/>
+  </owl:ObjectProperty>
+  <owl:DatatypeProperty rdf:about="#dateOfIssue">
+    <rdfs:comment xml:lang="en">Release date for the document.</rdfs:comment>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#date"/>
+    <rdfs:domain rdf:resource="#DOCUMENT"/>
+  </owl:DatatypeProperty>
+  <owl:DatatypeProperty rdf:about="#versionNumber">
+    <rdfs:comment xml:lang="en">The release version of the document</rdfs:comment>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    <rdfs:domain rdf:resource="#DOCUMENT"/>
+  </owl:DatatypeProperty>
+</rdf:RDF>

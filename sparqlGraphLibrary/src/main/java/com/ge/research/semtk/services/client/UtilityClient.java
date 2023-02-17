@@ -27,7 +27,7 @@ import com.ge.research.semtk.connutil.EndpointNotFoundException;
  * Client for UtilityService
  */
 public class UtilityClient extends RestClient {
-	
+
 	/**
 	 * Constructor
 	 */
@@ -43,16 +43,29 @@ public class UtilityClient extends RestClient {
 
 	/**
 	 * Load an ingestion package
-	 * @param ingestionPackageFile the ingestion package (zip file)
-	 * @return a BufferedReader providing updates while the load is running
+	 * @param ingestionPackageFile 	the ingestion package (zip file)
+	 * @param serverAndPort			the triple store location, e.g. http://host:port (or http://host:port/DATASET for fuseki)
+	 * @param serverType			the triple store type (e.g. "fuseki")
+	 * @param clear					if true, clears the footprint graphs (before loading)
+	 * @param loadToDefaultGraph	if true, loads everything to the default graph instead of to the specified graphs
+	 * @param defaultModelGraph		use where no model graph specified
+	 * @param defaultDataGraph		use where no data graph specified
+	 * @return 						a BufferedReader providing updates while the load is running
 	 */
-	public BufferedReader execLoadIngestionPackage(File ingestionPackageFile) throws ConnectException, EndpointNotFoundException, Exception {
-		
+	@SuppressWarnings("unchecked")
+	public BufferedReader execLoadIngestionPackage(File ingestionPackageFile, String serverAndPort, String serverType, boolean clear, boolean loadToDefaultGraph, String defaultModelGraph, String defaultDataGraph) throws ConnectException, EndpointNotFoundException, Exception {
+
 		if(!ingestionPackageFile.exists()) {
 			throw new Exception("File does not exist: " + ingestionPackageFile.getAbsolutePath());
 		}
 
 		this.parametersJSON.clear();
+		parametersJSON.put("serverAndPort", serverAndPort);
+		parametersJSON.put("serverType", serverType);
+		parametersJSON.put("clear", String.valueOf(clear));
+		parametersJSON.put("loadToDefaultGraph", String.valueOf(loadToDefaultGraph));
+		parametersJSON.put("defaultModelGraph", defaultModelGraph);
+		parametersJSON.put("defaultDataGraph", defaultDataGraph);
 		this.fileParameter = ingestionPackageFile;  // send a file as part of request
 				
 		this.conf.setServiceEndpoint("utility/loadIngestionPackage");
