@@ -261,7 +261,7 @@ public class ManifestConfig extends YamlConfig {
 				// load content using CSV ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
 				LoadDataConfig config = new LoadDataConfig(stepFile, this.fallbackModelGraph, this.fallbackDataGraph);
-				config.load(targetGraph, (targetGraph == null ? null : new LinkedList<String>(Arrays.asList(targetGraph))), server, serverTypeString, clear, ingestClient, ngeClient, progressWriter);
+				config.load(targetGraph, (targetGraph == null ? null : new LinkedList<String>(Arrays.asList(targetGraph))), server, serverTypeString, false, ingestClient, ngeClient, progressWriter);
 
 			}else if(type == StepType.NODEGROUPS) {
 				// load nodegroups/reports from a directory

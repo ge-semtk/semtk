@@ -68,7 +68,7 @@ public class UtilityClientTest_IT {
 
 			reset();
 
-			boolean clear = false;
+			boolean clear = true;
 			boolean loadToDefaultGraph = false;
 			BufferedReader reader = client.execLoadIngestionPackage(TestGraph.getZipAndUniquifyJunitGraphs(this, "/config/IngestionPackage.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), clear, loadToDefaultGraph, modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 			String response = Utility.readToString(reader);
@@ -76,6 +76,8 @@ public class UtilityClientTest_IT {
 			// check the response stream
 			assert(response.contains("Loading manifest for 'Entity Resolution'..."));
 			assert(response.contains("Loading manifest for 'RACK ontology'..."));
+			assert(response.matches("(.*)Clear graph http://junit/(.*)/rack001/model(.*)"));
+			assert(response.matches("(.*)Clear graph http://junit/(.*)/rack001/data(.*)"));
 			assert(response.contains("Load OWL AGENTS.owl"));
 			assert(response.contains("Load OWL ANALYSIS.owl"));
 			assert(response.contains("Store nodegroups"));
