@@ -32,6 +32,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.StringWriter;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
@@ -864,26 +865,24 @@ public abstract class Utility {
 		return ret;
 	}
 	
+	@Deprecated // Use getResourceAsStream
 	public static File getResourceAsFile(Object obj, String fileName) throws Exception {
 		return getResourceAsFile(obj.getClass(), fileName);
 	}
+	@Deprecated // Use getResourceAsStream    see end of https://stackoverflow.com/questions/18055189/why-is-my-uri-not-hierarchical
 	public static File getResourceAsFile(Class c, String fileName) throws Exception {
-		try {
-			return new File(c.getResource(fileName).getFile());
-		} catch (Exception e) {
-			throw new Exception("Can't find resource " + fileName + " for class " + c.getName(), e);
-		}
-//		File ret = null;
-//		
-//		// fat jars and other deployments seem to choke on returning a File
-//		// so copy the data into a temp file
-//		byte data[] = null;
-//		data = getResourceAsBytes(c, fileName);
-//		File tempFile = File.createTempFile("resource", "fileName");
-//		tempFile.deleteOnExit();
-//		FileUtils.writeByteArrayToFile(tempFile, data);
-//		
-//		return tempFile;
+
+		File ret = null;
+		
+		// fat jars and other deployments seem to choke on returning a File
+		// so copy the data into a temp file
+		byte data[] = null;
+		data = getResourceAsBytes(c, fileName);
+		File tempFile = File.createTempFile("resource", "fileName");
+		tempFile.deleteOnExit();
+		FileUtils.writeByteArrayToFile(tempFile, data);
+		
+		return tempFile;
 	}
 	
 	public static byte [] getResourceAsBytes(Object obj, String fileName) throws Exception {
