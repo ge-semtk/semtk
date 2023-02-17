@@ -66,7 +66,7 @@ define([	// properly require.config'ed
 				// name
 				if (this.inputName.value == "") {
 					msgHtml += "<li>Name must not be empty</li>";
-					IIDXHelper.changeControlGroupHelpText(this.grpName, "Name must not be empty", "warning");
+					IIDXHelper.changeControlGroupHelpText(this.grpName, "Name must not be empty", "error");
 				} else {
 					IIDXHelper.changeControlGroupHelpText(this.grpName, "", "");
 				}
@@ -74,8 +74,8 @@ define([	// properly require.config'ed
 				// no graphs means the server URL and Type have some issues
 				if (this.selectGraphModel.options.length == 0) {
 					msgHtml += "<li>Server URL and/or type are not correct</li>";
-					IIDXHelper.changeControlGroupHelpText(this.grpServerUrl, "e.g. http://localhost:3030/MYDATASET", "warning");
-					IIDXHelper.changeControlGroupHelpText(this.grpServerType, "Invalid triplestore connection", "warning");
+					IIDXHelper.changeControlGroupHelpText(this.grpServerUrl, "e.g. http://localhost:3030/MYDATASET", "error");
+					IIDXHelper.changeControlGroupHelpText(this.grpServerType, "Invalid triplestore connection", "error");
 				} else {
 					IIDXHelper.changeControlGroupHelpText(this.grpServerUrl, "", "");
 					IIDXHelper.changeControlGroupHelpText(this.grpServerType, "", "");
@@ -83,21 +83,22 @@ define([	// properly require.config'ed
 				
 				// model graph
 				if (IIDXHelper.getSelectValues(this.selectGraphModel).length == 0) {
-					msgHtml += "<li>Select at least one model graph</li>";
-					IIDXHelper.changeControlGroupHelpText(this.grpGraphModel, "Select at least one", "warning");
+					msgHtml += "<li>Select one or more, or enter on next screen</li>";
+					IIDXHelper.changeControlGroupHelpText(this.grpGraphModel, "Multi-select, or type on next screen", "warning");
 				} else {
 					IIDXHelper.changeControlGroupHelpText(this.grpGraphModel, "", "");
 				}
 				
 				// main data graph
 				if (IIDXHelper.getSelectValues(this.selectGraphDataIngest).length == 0) {
-					msgHtml += "<li>Select one main data graph</li>";
-					IIDXHelper.changeControlGroupHelpText(this.grpGraphDataIngest, "Select exactly one", "warning");
+					msgHtml += "<li>Select one, or enter on next screen</li>";
+					IIDXHelper.changeControlGroupHelpText(this.grpGraphDataIngest, "Select one, or enter on next screen", "warning");
 				} else {
 					IIDXHelper.changeControlGroupHelpText(this.grpGraphDataIngest, "", "");
 				}
 				
-				return msgHtml != "" ? "Fix connection errors before continuing." : null;
+				return msgHtml.indexOf("Name must not be empty") > -1  || msgHtml.indexOf("Server URL") > -1 ? "Named valid connection required to continue" : null;
+				
 			},
 
 			okCallback : function() {
@@ -107,14 +108,22 @@ define([	// properly require.config'ed
 				var newConn = new SparqlConnection();
 				newConn.setName(this.inputName.value);
 				
+				var graphs = IIDXHelper.getSelectValues(this.selectGraphModel);
+				if (graphs.length==0) {
+					graphs = [""]
+				}
 				// model endpoint
-                for (var graph of IIDXHelper.getSelectValues(this.selectGraphModel)) {
-					newConn.addModelInterface(this.inputServerType.value, this.inputServerUrl.value, graph);
+                for (var graph of graphs) {
+					newConn.addModelInterface(this.inputServerType.value, this.inputServerUrl.value || "", graph);
 				}
 				
+				graphs = IIDXHelper.getSelectValues(this.selectGraphDataIngest);
+				if (graphs.length==0) {
+					graphs = [""]
+				}
 				// data ingest endpoint
-				var dataGraph0 = IIDXHelper.getSelectValues(this.selectGraphDataIngest)[0];
-				newConn.addDataInterface(this.inputServerType.value, this.inputServerUrl.value, dataGraph0);
+				var dataGraph0 = graphs[0];
+				newConn.addDataInterface(this.inputServerType.value, this.inputServerUrl.value || "", dataGraph0);
 				
 				// other data endpoints
 				for (var graph of IIDXHelper.getSelectValues(this.selectGraphDataOther)) {

@@ -74,15 +74,19 @@ public class InstanceDictGenerator {
 							+ "		%s \n "
 							+ " where {\n"
 							+ "	\n"
-							+ "	?t <http://www.w3.org/2000/01/rdf-schema#subClassOf>* <%s> .\n"
-							+ " ?sub a ?t .\n"
 							+ "	?sub <%s> ?str.\n"
+							+ " ?sub a ?t .\n"
+							+ "	?t <http://www.w3.org/2000/01/rdf-schema#subClassOf>* <%s> .\n"
 							+ " filter ( ! regex (?str, \"%s\")) .\n"
 							+ " ?sub2 ?pred2 ?str ."
 							+ "} \n"
 							+ "GROUP BY ?sub ?str "
 							+ "HAVING (COUNT(distinct ?sub2) < %d)", 
-							SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", conn, this.oInfo), domainUri, propUri, this.wordRegex, this.specificityLimit + 1 );
+							SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", conn, this.oInfo), 
+							propUri, 
+							domainUri, 
+							this.wordRegex, 
+							this.specificityLimit + 1 );
 					
 					Table tab = conn.getDefaultQueryInterface().executeToTable(query);
 					tab.appendColumn("property", "literal", propUri);

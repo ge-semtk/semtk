@@ -771,9 +771,11 @@ define([	// properly require.config'ed
             // display m0
             if (this.conn == null) {
                 this.callbackChangeSei(null, -1);
-            } else {
+            } else if (this.conn.modelInterfaces.length > 0) {
                 this.callbackChangeSei("m", 0);
-            }
+            } else {
+				this.callbackChangeSei("m", -1);
+			}
         },
 
         // Remove empty sei's
@@ -783,7 +785,7 @@ define([	// properly require.config'ed
         cleanupConnection : function (cn) {
             // If dataInterface[0] is empty then duplicate modelInterface[0]
             var data0 = cn.getDataInterface(0);
-            if (data0.getServerURL() == "" && data0.getGraph() == "") {
+            if (! data0.getServerURL()  && ! data0.getGraph() ) {
                 var model0 = cn.getModelInterface(0);
                 data0.setServerURL(model0.getServerURL());
                 data0.setGraph(model0.getGraph());
@@ -792,13 +794,13 @@ define([	// properly require.config'ed
             // remove empty sei's with indices > 0
             for (var i=cn.getDataInterfaceCount()-1; i > 0; i--) {
                 var sei = cn.getDataInterface(i);
-                if (sei.getServerURL() == "" && sei.getGraph() == "") {
+                if (! sei.getServerURL()  && ! sei.getGraph() ) {
                     cn.delDataInterface(i);
                 }
             }
             for (var i=cn.getModelInterfaceCount()-1; i > 0; i--) {
                 var sei = cn.getModelInterface(i);
-                if (sei.getServerURL() == "" && sei.getGraph() == "") {
+                if (! sei.getServerURL()  && ! sei.getGraph() ) {
                     cn.delModelInterface(i);
                 }
             }
@@ -817,7 +819,7 @@ define([	// properly require.config'ed
                 errHTML = "No connections have been built.<br>";
             } else {
                 // look for errors
-                if (this.conn.getName() == "") {
+                if (! this.conn.getName() ) {
                     errHTML += "Name is empty. <br>";
                 } else {
                     header = "<b>Connection '" + this.conn.getName() + "' has the following errors:</b><br>";
@@ -825,10 +827,10 @@ define([	// properly require.config'ed
 
                 for (var i=0; i < this.conn.getModelInterfaceCount(); i++) {
                     var sei = this.conn.getModelInterface(i);
-                    if (sei.getServerURL() == "") {
+                    if (! sei.getServerURL() ) {
                         errHTML += "Ontology endpoint " + i + " server URL is empty. <br>";
                     }
-                    if (sei.getGraph() == "") {
+                    if (! sei.getGraph()) {
                         errHTML += "Ontology endpoint " + i + " graph is empty. <br>";
                     } else if (sei.getGraph().indexOf(":") == -1 && sei.getServerType() == SparqlConnection.VIRTUOSO_SERVER ) {
                         errHTML += "Ontology endpoint " + i + " graph does not contain ':'<br>";
@@ -837,11 +839,11 @@ define([	// properly require.config'ed
 
                 for (var i=0; i < this.conn.getDataInterfaceCount(); i++) {
                     var sei = this.conn.getDataInterface(i);
-                    if (sei.getServerURL() == "") {
+                    if (! sei.getServerURL()) {
                         errHTML += "Data endpoint " + i + " server URL is empty. <br>";
                     }
 
-                    if (sei.getGraph() == "") {
+                    if (! sei.getGraph()) {
                         errHTML += "Data endpoint " + i + " graph is empty. <br>";
                     } else if (sei.getGraph().indexOf(":") == -1 && sei.getServerType() == SparqlConnection.VIRTUOSO_SERVER  ) {
                         errHTML += "Data endpoint " + i + " graph does not contain ':'<br>";
@@ -852,14 +854,17 @@ define([	// properly require.config'ed
             // call one of the callbacks
             if (errHTML == "") {
                 successCallback();
-            } else {
-
+                
+            } else if (optCancelCallback && this.conn.getName()) {
+				// user can force as long as it has a name and caller provided cancelCallback
                 ModalIidx.okCancel("Connection error",
                                    header + errHTML,
                                    successCallback,
                                    "Continue",
                                    optCancelCallback);
-            }
+            } else {
+				ModalIidx.alert("Connection error", header + errHTML);
+			}
 
         },
 
@@ -887,7 +892,7 @@ define([	// properly require.config'ed
         // if data or model has no sei, then cheat and copy this one there too.
         storeDisplayedSei : function() {
 
-            if (this.currSeiType != null) {
+            if (this.currSeiType != null && this.currSeiIndex > -1) {
                 // get the current sei
                 var sei = (this.currSeiType == "m") ? this.conn.getModelInterface(this.currSeiIndex) : this.conn.getDataInterface(this.currSeiIndex);
                 var oppSei0 = (this.currSeiType == "m") ? this.conn.getDataInterface(0) : this.conn.getModelInterface(0);
@@ -899,7 +904,7 @@ define([	// properly require.config'ed
                 sei.setGraph(this.document.getElementById("mdGraph").value.trim());
 
                 // of Other type of sei's 0th entry is empty, copy this one in.
-                if (oppSei0.getServerURL() == "" && oppSei0.getGraph() == "") {
+                if (! oppSei0.getServerURL() && ! oppSei0.getGraph() ) {
                     oppSei0.setServerURL(sei.getServerURL());
                     oppSei0.setServerType(sei.getServerType());
                     oppSei0.setGraph(sei.getGraph());
