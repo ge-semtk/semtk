@@ -21,14 +21,15 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.File;
 import java.io.PrintWriter;
+import java.nio.file.Paths;
 
 import org.junit.Test;
 
 import com.ge.research.semtk.load.config.LoadOwlConfig;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.TestGraph;
-import com.ge.research.semtk.utility.Utility;
 
 public class LoadOwlConfigTest_IT extends YamlConfigTest {
 
@@ -56,19 +57,19 @@ public class LoadOwlConfigTest_IT extends YamlConfigTest {
 		// this config has model graph as array size 1
 		config = new LoadOwlConfig(TestGraph.getYamlAndUniquifyJunitGraphs(this, "/config/load_owl_config_2.yaml"), modelFallbackSei.getGraph());
 		assertEquals(config.getFiles().size(), 3);
-		assertEquals(config.getModelgraph(),"http://junit/animals/model");
+		assertEquals(config.getModelgraph(), TestGraph.uniquifyJunitGraphs("http://junit/animals/model"));
 
 		// this config has model graph as string
 		config = new LoadOwlConfig(TestGraph.getYamlAndUniquifyJunitGraphs(this, "/config/load_owl_config_3.yaml"), modelFallbackSei.getGraph());
 		assertEquals(config.getFiles().size(), 3);
-		assertEquals(config.getModelgraph(),"http://junit/animals/model");
+		assertEquals(config.getModelgraph(), TestGraph.uniquifyJunitGraphs("http://junit/animals/model"));
 
 		// this config has multiple model graphs.  Legacy schema supports this (likely unused), disallowing it here
 		try {
 			config = new LoadOwlConfig(TestGraph.getYamlAndUniquifyJunitGraphs(this, "/config/load_owl_config_4.yaml"), modelFallbackSei.getGraph());
 			fail();
 		}catch(Exception e) {
-			assertTrue(e.getMessage().contains("Not currently supporting multiple entries for this node: [\"http://junit/animals/model\",\"http://junit/animals/model2\"]"));
+			assertTrue(e.getMessage().contains("Not currently supporting multiple entries for this node"));
 		}
 	}
 
@@ -82,28 +83,31 @@ public class LoadOwlConfigTest_IT extends YamlConfigTest {
 
 			final int NUM_EXPECTED_TRIPLES = 1439;
 
-			// TODO uniquifyJunitGraphName
-			LoadOwlConfig configWithoutModelInYaml = new LoadOwlConfig(Utility.getResourceAsTempFile(this, "/config/IngestionPackage/RACK-Ontology/OwlModels/import.yaml"), modelFallbackSei.getGraph());
-			LoadOwlConfig configWithModelInYaml = new LoadOwlConfig(Utility.getResourceAsTempFile(this, "/config/IngestionPackage/RACK-Ontology/OwlModels/import-withModelgraph.yaml"), modelFallbackSei.getGraph());
+			File tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/config/IngestionPackage.zip");
+			LoadOwlConfig config = new LoadOwlConfig(
+					Paths.get(tempDir.getAbsolutePath(), "RACK-Ontology","OwlModels","import.yaml").toFile(),  // this YAML file has no model
+					modelFallbackSei.getGraph());
 
 			// Case 1: if load() model graph parameter, then confirm loads there
 			clearGraphs();
-			configWithoutModelInYaml.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
+			config.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
 			assertEquals(modelSei.getNumTriples(), NUM_EXPECTED_TRIPLES);
 			assertEquals(modelFallbackSei.getNumTriples(), 0);
 
 			// Case 2: if no load() model graph parameter, then confirm loads to YAML data graph if present
 			clearGraphs();
-			SparqlEndpointInterface modelSeiFromYaml = TestGraph.getSei(configWithModelInYaml.getModelgraph());  // from the YAML, e.g. http://junit/rack001/model
+			config.setModelgraph(TestGraph.uniquifyJunitGraphs("http://junit/rack001/model"));  // add model graph to YAML config
+			SparqlEndpointInterface modelSeiFromYaml = TestGraph.getSei(config.getModelgraph());
 			modelSeiFromYaml.clearGraph();
-			configWithModelInYaml.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
+			config.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
 			assertEquals(modelSei.getNumTriples(), 0);
 			assertEquals(modelFallbackSei.getNumTriples(), 0);
 			assertEquals(modelSeiFromYaml.getNumTriples(), NUM_EXPECTED_TRIPLES);
 
 			// Case 3: if no load() model graph parameter, and no YAML data graph, then confirm loads to fallback
 			clearGraphs();
-			configWithoutModelInYaml.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
+			config.setModelgraph(null);  // remove model graph from YAML config
+			config.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
 			assertEquals(modelSei.getNumTriples(), 0);
 			assertEquals(modelFallbackSei.getNumTriples(), NUM_EXPECTED_TRIPLES);
 

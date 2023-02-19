@@ -31,8 +31,6 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.UUID;
-import java.util.zip.ZipInputStream;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -67,7 +65,7 @@ import com.ge.research.semtk.utility.Utility;
  */
 public class TestGraph {
 
-	private static final String JUNIT_PREFIX = "http://junit";
+	private static final String JUNIT_PREFIX = "http://junit";  // prefix for a graph used for junit testing
 
 	// PEC TODO: if we want the option of sharing or splitting model from data in different graphs then static functions will not do.
 	//           It will have to be an object instantiated by a json nodegroup (shows whether they're split) or NULL (pick a default)
@@ -169,8 +167,6 @@ public class TestGraph {
 		return getSei().getGraph();
 	}
 	
-	
-	
 	/**
 	 * Get the SPARQL server username.
 	 * @throws Exception 
@@ -209,8 +205,6 @@ public class TestGraph {
 	
 	/**
 	 * Get directly (no oInfoClient)
-	 * @return
-	 * @throws Exception
 	 */
 	public static OntologyInfo getOInfo() throws Exception {
 		return new OntologyInfo(TestGraph.getSparqlConn());
@@ -234,7 +228,6 @@ public class TestGraph {
 		
 		return res.getResults();
 	}
-	
 	public static Table execTableSelect(SparqlGraphJson sgJson) throws Exception {
 		// execute a select query
 		// exception if there's any problem
@@ -242,40 +235,33 @@ public class TestGraph {
 		
 		return SparqlGraphJson.executeSelectToTable(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
 	}
-	
-	
 	public static Table execTableSelect(JSONObject sgJsonJson, OntologyInfoClient oInfoClient) throws Exception {
 		// execute a select query
 		// exception if there's any problem
 		// return the table
-		
 		return SparqlGraphJson.executeSelectToTable(sgJsonJson, getSparqlConn(), oInfoClient);
 	}
+
 	public static JSONArray execJsonConstruct(SparqlGraphJson sgJson) throws Exception {
 		// execute a construct query
 		// exception if there's any problem
 		// return the jsonArray
-		
 		return SparqlGraphJson.executeConstructToJson(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
 	}
-	
 	public static JSONArray execJsonConstruct(NodeGroup ng) throws Exception {
 		SparqlGraphJson sgJson = new SparqlGraphJson(ng, getSparqlConn());
 		return SparqlGraphJson.executeConstructToJson(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
 	}
-	
 	public static JSONArray execJsonConstruct(JSONObject sgJsonJson, OntologyInfoClient oInfoClient) throws Exception {
 		// execute a construct query
 		// exception if there's any problem
 		// return the table
-		
 		return SparqlGraphJson.executeConstructToJson(sgJsonJson, getSparqlConn(), oInfoClient);
 	}
 	
 	public static Table execSelectFromResource(Object o, String resourceName) throws Exception {
 		return execSelectFromResource(o.getClass(), resourceName);
 	}
-	
 	@SuppressWarnings("rawtypes")
 	public static Table execSelectFromResource(Class c, String resourceName) throws Exception {
 		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(c, resourceName);
@@ -286,7 +272,6 @@ public class TestGraph {
 	public static JSONArray execConstructFromResource(Object o, String resourceName) throws Exception {
 		return execConstructFromResource(o.getClass(), resourceName);
 	}
-	
 	@SuppressWarnings("rawtypes")
 	public static JSONArray execConstructFromResource(Class c, String resourceName) throws Exception {
 		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(c, resourceName);
@@ -360,14 +345,10 @@ public class TestGraph {
 	}
 	
 	public static void clearSyncedGraph(String owlFilename) throws Exception {
-		
 		String base = Utility.getXmlBaseFromOwlRdf(new FileInputStream(owlFilename));
-		
 		SparqlEndpointInterface sei = getSei();
-		
 		sei.setGraph(base);
 		sei.clearGraph();
-		
 	}
 	
 	public static void uploadTurtleResource(Object o, String resourceName) throws Exception {
@@ -397,8 +378,8 @@ public class TestGraph {
 			throw new Exception(resultSet.getRationaleAsString(" "));
 		}
 		IntegrationTestUtility.getOntologyInfoClient().uncacheChangedConn(sei);
-
 	}
+
 	/**
 	 * Upload an owl string to the test graph
 	 * @param owl
@@ -486,7 +467,6 @@ public class TestGraph {
 	 * Not compatible with enabled owl imports.  
 	 * @param jsonObject
 	 */	
-	@SuppressWarnings("unchecked")
 	public static SparqlGraphJson getSparqlGraphJsonFromJson(JSONObject jObj) throws Exception{
 		
 		SparqlGraphJson s = new SparqlGraphJson(jObj);
@@ -495,12 +475,10 @@ public class TestGraph {
 		SparqlConnection conn = s.getSparqlConn();
 		conn.clearDataInterfaces();
 		conn.addDataInterface(getSei());
-		
 		conn.clearModelInterfaces();
 		conn.addModelInterface(getSei());
 		
 		s.setSparqlConn(conn);
-		
 		return s;
 	}
 	
@@ -625,7 +603,6 @@ public class TestGraph {
 	}
 	
 	public static PredicateStats getPredicateStats() throws Exception {
-		SparqlConnection conn = TestGraph.getSparqlConn();
 		OntologyInfoClient client = IntegrationTestUtility.getOntologyInfoClient();
 		String jobId = client.execGetPredicateStats(TestGraph.getSparqlConn());
 		IntegrationTestUtility.getStatusClient(jobId).waitForCompletionSuccess();
@@ -662,17 +639,18 @@ public class TestGraph {
 	}
 	
 	/** 
-	 * Copy a yaml and add user/machine to http://junit/
+	 * Copy a yaml to temp, add user/machine to http://junit/ graphs in all YAML files.
+	 * @return the temp file
 	 */
 	public static File getYamlAndUniquifyJunitGraphs(Object caller, String resource) throws Exception, IOException {
-
 		File tempFile = Utility.getResourceAsTempFile(TestGraph.class, resource);
 		walkForYamlAndUniquifyJunitGraphs(tempFile.toPath());
 		return tempFile;
 	}
 
 	/**
-	 * Unzip a zip file and add user/machine to "http://junit/" graphs in all YAML files
+	 * Unzip a zip file to a temp dir, add user/machine to http://junit/ graphs in all YAML files.
+	 * @return the temp dir
 	 */
 	public static File unzipAndUniquifyJunitGraphs(Object caller, String resource) throws IOException, Exception {
 		File tmpDir = Utility.getResourceUnzippedToTemp(caller, resource);
@@ -680,13 +658,13 @@ public class TestGraph {
 		return tmpDir;
 	}
 	
-	
 	/**
-	 * Copy a zip file to temp and add user/machine to "http://junit/" graphs in all YAML files
+	 * Unzip a zip file to a temp dir, add user/machine to http://junit/ graphs in all YAML files, return the zipped dir
+	 * @return the zip file
 	 */
 	public static File getZipAndUniquifyJunitGraphs(Object caller, String resource) throws Exception {
-		File unzippedJunit = unzipAndUniquifyJunitGraphs(caller, resource);
-		return Utility.zipFolderToTempFile(unzippedJunit.toPath()).toFile();
+		File tmpDir = unzipAndUniquifyJunitGraphs(caller, resource);
+		return Utility.zipFolderToTempFile(tmpDir.toPath()).toFile();
 	}
 	
 }

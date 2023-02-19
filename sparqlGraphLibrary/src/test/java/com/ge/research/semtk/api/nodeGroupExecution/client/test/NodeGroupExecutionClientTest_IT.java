@@ -49,6 +49,7 @@ import static org.junit.Assert.*;
 
 import java.io.File;
 import java.math.BigInteger;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -613,9 +614,10 @@ public class NodeGroupExecutionClientTest_IT {
 			// just testing that something goes through to the endpoint from the client
 			// See CombineEntitiesThreadTest_IT for more
 			TestGraph.clearGraph();
-			TestGraph.uploadOwlResource(this, "/config/IngestionPackage/RACK-Ontology/OwlModels/PROV-S.owl");
-			TestGraph.uploadOwlResource(this, "/config/IngestionPackage/RACK-Ontology/OwlModels/RESOLUTIONS.owl");
-			TestGraph.uploadOwlResource(this, "/config/IngestionPackage/RACK-Ontology/OwlModels/EntityResolution.owl");
+			File tempDir = Utility.getResourceUnzippedToTemp(this, "/config/IngestionPackage.zip");
+			TestGraph.uploadOwlContents(Utility.getStringFromFilePath(Paths.get(tempDir.getAbsolutePath(), "RACK-Ontology","OwlModels","PROV-S.owl").toString()));
+			TestGraph.uploadOwlContents(Utility.getStringFromFilePath(Paths.get(tempDir.getAbsolutePath(), "RACK-Ontology","OwlModels","RESOLUTIONS.owl").toString()));
+			TestGraph.uploadOwlContents(Utility.getStringFromFilePath(Paths.get(tempDir.getAbsolutePath(), "RACK-Ontology","OwlModels","EntityResolution.owl").toString()));
 			try {
 				nodeGroupExecutionClient.combineEntitiesInConn(TestGraph.getSparqlConn());
 				fail("Missing combineEntitiesInConn failure: no entities found");

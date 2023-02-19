@@ -1,9 +1,0 @@
-data-graph: "http://junit/rack001/data"
-ingestion-steps:
-#Phase1: Identifiers Only
-- {class: "http://arcos.rack/PROV-S#ACTIVITY", csv: "PROV_S_ACTIVITY1.csv"}
-- {class: "http://arcos.rack/RESOLUTIONS#SAME_AS", csv: "RESOLUTIONS_SAME_AS1.csv"}
-
-#Phase2: All Evidence
-- {class: "http://arcos.rack/PROV-S#ACTIVITY", csv: "PROV_S_ACTIVITY2.csv"}
-- {class: "http://arcos.rack/RESOLUTIONS#SAME_AS", csv: "RESOLUTIONS_SAME_AS2.csv"}

@@ -1,3 +1,0 @@
-identifier,dataInsertedBy_identifier,description,verifies_identifier
-{L1-TST-1},Package 1,This is test L1-1.,{L1-REQ-1}
-{L1-TST-2},Package 1,This is test L1-2.,{L1-REQ-1}

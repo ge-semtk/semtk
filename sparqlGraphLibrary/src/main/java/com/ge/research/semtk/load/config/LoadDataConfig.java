@@ -103,11 +103,14 @@ public class LoadDataConfig extends YamlConfig {
 	public void setModelgraph(String modelgraph) {
 		this.modelgraph = modelgraph;
 	}
+	public void setDataGraphs(LinkedList<String> datagraphs) {
+		this.datagraphs = datagraphs;
+	}
 	public void addDatagraph(String datagraph) {
 		if(datagraphs == null) {
-			datagraphs = new LinkedList<String>();
+			this.datagraphs = new LinkedList<String>();
 		}
-		datagraphs.add(datagraph);
+		this.datagraphs.add(datagraph);
 	}
 
 	

@@ -55,9 +55,9 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 		assertEquals(config.getFallbackModelGraph(), modelFallbackSei.getGraph());
 		assertEquals(config.getSteps().size(), 2);
 		assertEquals(((CsvByClassIngestionStep)config.getSteps().get(0)).getClazz(), "http://animals/woodland#WOODCHUCK");
-		assertTrue(((CsvByClassIngestionStep)config.getSteps().get(0)).getCsvPath().matches("(.*)config(.*)woodchucks.csv"));
+		assertTrue(((CsvByClassIngestionStep)config.getSteps().get(0)).getCsvPath().endsWith("woodchucks.csv"));
 		assertEquals(((CsvByClassIngestionStep)config.getSteps().get(1)).getClazz(), "http://animals/woodland#HEDGEHOG");
-		assertTrue(((CsvByClassIngestionStep)config.getSteps().get(1)).getCsvPath().matches("(.*)config(.*)hedgehogs.csv"));
+		assertTrue(((CsvByClassIngestionStep)config.getSteps().get(1)).getCsvPath().endsWith("hedgehogs.csv"));
 		assertEquals(config.getModelgraph(), null);
 		assertEquals(config.getDatagraphs().size(), 1);
 		assertEquals(config.getDatagraphs().get(0), "http://junit/animals/data");
@@ -99,21 +99,15 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 	 */
 	@Test
 	public void testLoad() throws Exception{
-
 		try {
-
 			final int NUM_EXPECTED_TRIPLES = 20;
-			
-			File tempDir = Utility.getResourceUnzippedToTemp(this, "/config/IngestionPackage.zip");
+
+			File tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/config/IngestionPackage.zip");
 			LoadOwlConfig loadOwlConfig = new LoadOwlConfig(
 					Paths.get(tempDir.getAbsolutePath(), "RACK-Ontology","OwlModels","import.yaml").toFile(), 
 					modelFallbackSei.getGraph());
 			LoadDataConfig loadDataConfig = new LoadDataConfig(
 					Paths.get(tempDir.getAbsolutePath(), "TestData","Package-1","import.yaml").toFile(), 
-					modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
-			// TODO this one isn't in the zip
-			LoadDataConfig loadDataConfigWithNoDatagraphInYaml = new LoadDataConfig(
-					Paths.get(tempDir.getAbsolutePath(), "TestData","Package-1","import-withNoDatagraph.yaml").toFile(), 
 					modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 
 			// Case 1: if load() data graph parameter, then confirm loads there
@@ -135,7 +129,8 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 			// Case 3: if no load() data graph parameter, and no YAML data graph, then confirm loads to fallback
 			clearGraphs();
 			loadOwlConfig.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));  // loads OWL to fallback
-			loadDataConfigWithNoDatagraphInYaml.load(null, null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), new PrintWriter(System.out));
+			loadDataConfig.setDataGraphs(null);  // no datagraph in YAML
+			loadDataConfig.load(null, null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), new PrintWriter(System.out));
 			assertEquals(dataSei.getNumTriples(), 0);
 			assertEquals(dataFallbackSei.getNumTriples(), NUM_EXPECTED_TRIPLES);
 
