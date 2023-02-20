@@ -237,7 +237,7 @@ public class LoadDataConfig extends YamlConfig {
 			File file = (new File(filePath));
 			SparqlEndpointInterface sei = conn.getDataInterface(0);
 			writeProgress("Load OWL " + file.getName() + " to " + sei.getGraph(), progressWriter);
-			sei.uploadOwl(Files.readAllBytes(file.toPath()));	// TODO junit
+			sei.uploadOwl(Files.readAllBytes(file.toPath()));
 		}
 	}
 
