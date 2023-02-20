@@ -62,8 +62,10 @@ public class LoadDataConfig extends YamlConfig {
 					addStep(new CsvByClassIngestionStep(stepNode.get("class").asText(), baseDir + File.separator + stepNode.get("csv").asText()));
 				} else if (stepNode.has("nodegroup") && stepNode.has("csv")) {
 					addStep(new CsvByNodegroupIngestionStep(stepNode.get("nodegroup").asText(), baseDir + File.separator + stepNode.get("csv").asText()));
-				} else {
-					throw new Exception("Ingestion step not supported: " + stepNode.asText());
+				} else if (stepNode.has("owl")) {
+					addStep(new OwlIngestionStep(baseDir + File.separator + stepNode.get("owl").asText()));
+				}else {
+					throw new Exception("Ingestion step not supported: " + stepNode);
 				}
 			}
 		}
@@ -193,8 +195,10 @@ public class LoadDataConfig extends YamlConfig {
 		public void run(SparqlConnection conn, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
 			writeProgress("Load CSV " + (new File(csvPath)).getName() + " as " + clazz, progressWriter);
 			String jobId = ingestClient.execFromCsvUsingClassTemplate(clazz, null, Files.readString(Path.of(csvPath)), conn, false, null);
-			for (String warning : ingestClient.getWarnings()) {
-				writeProgress("Load CSV warning: " + warning, progressWriter);
+			if(ingestClient.getWarnings() != null) {
+				for (String warning : ingestClient.getWarnings()) {
+					writeProgress("Load CSV warning: " + warning, progressWriter);
+				}
 			}
 			ngeClient.waitForCompletion(jobId);
 			if (!ngeClient.getJobSuccess(jobId)) {

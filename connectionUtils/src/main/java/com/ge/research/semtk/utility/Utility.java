@@ -841,9 +841,10 @@ public abstract class Utility {
 		return s;
 	}
 	
+	// ****************************************** start getResource() functions ******************************************
+
 	/**
 	 * Get a file resource as a string.  
-	 * 
 	 * @param obj the calling object
 	 * @param fileName the name of the file resource.  May need to prepend this with /
 	 * @return the file contents
@@ -857,45 +858,25 @@ public abstract class Utility {
 		if (in == null) {
 			throw new Exception("Couldn't find resource file: " + fileName);
 		}
-		
 		ret = IOUtils.toString(in, StandardCharsets.UTF_8);
 		if (ret == null) {
 			throw new Exception("Resource file is empty: " + fileName);
 		}
-		
 		return ret;
 	}
 	
-	public static File getResourceAsTempFile(Object obj, String fileName) throws Exception {
-		return getResourceAsTempFile(obj.getClass(), fileName);
-	}
-	public static File getResourceAsTempFile(Class c, String fileName) throws Exception {
-		// fat jars and other deployments seem to choke on returning a File
-		// so copy the data into a temp file
-		// Resources should be retrieved as Streams, not files.
-		InputStream in = c.getResourceAsStream(fixResourceName(fileName));
-		if (in == null) {
-			throw new Exception("Could find resource file: " + fileName);
-		}
-		
-		File tempFile = File.createTempFile("resource", "." + FileNameUtils.getExtension(fileName));
-		tempFile.deleteOnExit();
-		FileUtils.copyInputStreamToFile(in, tempFile);
-		
-		return tempFile;
-	}
-	
+	/**
+	 * Get a file resource as a byte array
+	 */
 	public static byte [] getResourceAsBytes(Object obj, String fileName) throws Exception {
 		return getResourceAsBytes(obj.getClass(), fileName);
 	}
 	public static byte [] getResourceAsBytes(Class c, String fileName) throws Exception  {
 		byte [] ret = null;
-		
 		InputStream in = c.getResourceAsStream(fixResourceName(fileName));
 		if (in == null) {
 			throw new Exception("Could find resource file: " + fileName);
 		}
-		
 		ret = IOUtils.toByteArray(in);
 		if (ret == null) {
 			throw new Exception("Resource file is empty: " + fileName);
@@ -903,18 +884,12 @@ public abstract class Utility {
 		return ret;
 	}
 	
-	
 	/**
-	 * Get a file resource as JSON
-	 * @param obj
-	 * @param fileName
-	 * @return
-	 * @throws Exception
+	 * Get a file resource as a JSON object
 	 */
 	public static JSONObject getResourceAsJson(Object obj, String fileName) throws Exception {
 		return Utility.getJsonObjectFromString(Utility.getResourceAsString(obj, fileName));
 	}
-	
 	public static JSONObject getResourceAsJson(Class c, String fileName) throws Exception {
 		return Utility.getJsonObjectFromString(Utility.getResourceAsString(c, fileName));
 	}
@@ -927,12 +902,41 @@ public abstract class Utility {
 		}
 	}
 	
+	/**
+	 * Get a file resource as a file (after copying to temp)
+	 * @param obj the calling object
+	 * @param fileName the name of the file resource.  May need to prepend this with /
+	 * @return the temp file
+	 */
+	public static File getResourceAsTempFile(Object obj, String fileName) throws Exception {
+		return getResourceAsTempFile(obj.getClass(), fileName);
+	}
+	public static File getResourceAsTempFile(Class c, String fileName) throws Exception {
+		// fat jars and other deployments seem to choke on returning a File
+		// so copy the data into a temp file
+		// Resources should be retrieved as Streams, not files.
+		InputStream in = c.getResourceAsStream(fixResourceName(fileName));
+		if (in == null) {
+			throw new Exception("Could find resource file: " + fileName);
+		}
+		File tempFile = File.createTempFile("resource", "." + FileNameUtils.getExtension(fileName));
+		tempFile.deleteOnExit();
+		FileUtils.copyInputStreamToFile(in, tempFile);
+		return tempFile;
+	}
+
+	/**
+	 * Unzip a zip file resource to a temp directory
+	 */
 	public static File getResourceUnzippedToTemp(Object caller, String resource) throws IOException, Exception {
 		File resourceFile = Utility.getResourceAsTempFile(caller, resource);
 		File tmpDir = Utility.createTempDirectory();
 		Utility.unzip(new ZipInputStream(new FileInputStream(resourceFile.toString())), tmpDir);
 		return tmpDir;
 	}
+
+	// ****************************************** end getResource() functions ******************************************
+
 	/**
 	 * Replace UUIDs in a string with "<UUID>".
 	 * Note: does not affect hashes.
