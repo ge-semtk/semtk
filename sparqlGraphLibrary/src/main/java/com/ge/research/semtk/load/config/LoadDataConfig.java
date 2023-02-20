@@ -62,8 +62,6 @@ public class LoadDataConfig extends YamlConfig {
 					addStep(new CsvByClassIngestionStep(stepNode.get("class").asText(), baseDir + File.separator + stepNode.get("csv").asText()));
 				} else if (stepNode.has("nodegroup") && stepNode.has("csv")) {
 					addStep(new CsvByNodegroupIngestionStep(stepNode.get("nodegroup").asText(), baseDir + File.separator + stepNode.get("csv").asText()));
-				} else if (stepNode.has("owl")) {
-					addStep(new OwlIngestionStep(baseDir + File.separator + stepNode.get("owl").asText()));
 				}else {
 					throw new Exception("Ingestion step not supported: " + stepNode);
 				}
