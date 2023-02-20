@@ -18,24 +18,11 @@
 
 package com.ge.research.semtk.standaloneExecutables;
 
-import com.opencsv.CSVReader;
-import org.apache.commons.lang.ArrayUtils;
-import org.json.simple.JSONObject;
-
 import com.ge.research.semtk.utility.LocalLogger;
-import com.ge.research.semtk.utility.Utility;
-import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
-import com.ge.research.semtk.resultSet.SimpleResultSet;
-import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.sparqlX.SparqlConnection;
 
-import java.io.File;
-import java.io.FileReader;
 import java.io.PrintWriter;
-import java.nio.file.Paths;
-import java.util.Arrays;
 
 /**
  * Utility to load nodegroups from local disk to the semantic store.
@@ -68,11 +55,5 @@ public class StoreNodeGroup {
 			LocalLogger.printStackTrace(e);
 			System.exit(1);  // need this to catch errors in the calling script
 		}
-
-		System.exit(0);
 	}
-
-
-
-
 }
