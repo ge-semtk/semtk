@@ -55,5 +55,6 @@ public class StoreNodeGroup {
 			LocalLogger.printStackTrace(e);
 			System.exit(1);  // need this to catch errors in the calling script
 		}
+		System.exit(0);
 	}
 }
