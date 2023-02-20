@@ -51,7 +51,7 @@ public class ManifestConfigTest_LoadTurnstile_IT {
 		File tempDir = null;
 		try {
 			// get manifest from ingestion package, perform load
-			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/config/turnstile.zip");
+			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/config/IngestionPackage-Turnstile.zip");
 			ManifestConfig manifest = new ManifestConfig(ManifestConfig.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 
 			reset();
