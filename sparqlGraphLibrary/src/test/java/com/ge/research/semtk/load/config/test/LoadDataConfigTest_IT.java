@@ -55,9 +55,9 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 		assertEquals(config.getFallbackModelGraph(), modelFallbackSei.getGraph());
 		assertEquals(config.getSteps().size(), 2);
 		assertEquals(((CsvByClassIngestionStep)config.getSteps().get(0)).getClazz(), "http://animals/woodland#WOODCHUCK");
-		assertTrue(((CsvByClassIngestionStep)config.getSteps().get(0)).getCsvPath().endsWith("woodchucks.csv"));
+		assertTrue(((CsvByClassIngestionStep)config.getSteps().get(0)).getFilePath().endsWith("woodchucks.csv"));
 		assertEquals(((CsvByClassIngestionStep)config.getSteps().get(1)).getClazz(), "http://animals/woodland#HEDGEHOG");
-		assertTrue(((CsvByClassIngestionStep)config.getSteps().get(1)).getCsvPath().endsWith("hedgehogs.csv"));
+		assertTrue(((CsvByClassIngestionStep)config.getSteps().get(1)).getFilePath().endsWith("hedgehogs.csv"));
 		assertEquals(config.getModelgraph(), null);
 		assertEquals(config.getDatagraphs().size(), 1);
 		assertEquals(config.getDatagraphs().get(0), "http://junit/animals/data");
