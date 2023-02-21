@@ -3,7 +3,6 @@ description: 'Load information about animals'
 
 copy-to-graph: 'uri://DefaultGraph'
 perform-entity-resolution: 'uri://DefaultGraph'
-perform-triplestore-optimization: false
 
 footprint:
   model-graphs:
