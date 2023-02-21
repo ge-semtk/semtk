@@ -14,17 +14,17 @@ import com.ge.research.semtk.utility.Utility;
 public abstract class YamlConfig {
 
 	protected String baseDir;				// the directory containing the YAML file
-	protected String fallbackModelGraph;	// load to this model graph if not otherwise specified
-	protected String fallbackDataGraph;		// load to this data graph if not otherwise specified
+	protected String defaultModelGraph;		// load to this model graph if not otherwise specified
+	protected String defaultDataGraph;		// load to this data graph if not otherwise specified
 	protected JsonNode configNode;			// this file as a JsonNode
 
 	/**
 	 * Constructor
 	 */
-	public YamlConfig(File yamlFile, File schemaFile, String fallbackModelGraph, String fallbackDataGraph) throws Exception {
+	public YamlConfig(File yamlFile, File schemaFile, String defaultModelGraph, String defaultDataGraph) throws Exception {
 		setBaseDir(yamlFile.getParent());
-		setFallbackModelGraph(fallbackModelGraph);
-		setFallbackDataGraph(fallbackDataGraph);
+		setDefaultModelGraph(defaultModelGraph);
+		setDefaultDataGraph(defaultDataGraph);
 
 		// validate manifest YAML against schema
 		String yamlStr = Utility.getStringFromFilePath(yamlFile.getAbsolutePath());
@@ -40,11 +40,11 @@ public abstract class YamlConfig {
 	public String getBaseDir() {
 		return baseDir;
 	}
-	public String getFallbackModelGraph() {
-		return fallbackModelGraph;
+	public String getDefaultModelGraph() {
+		return defaultModelGraph;
 	}
-	public String getFallbackDataGraph() {
-		return fallbackDataGraph;
+	public String getDefaultDataGraph() {
+		return defaultDataGraph;
 	}
 
 	/**
@@ -53,11 +53,11 @@ public abstract class YamlConfig {
 	protected void setBaseDir(String baseDir) {
 		this.baseDir = baseDir;
 	}
-	protected void setFallbackModelGraph(String fallbackModelGraph) {
-		this.fallbackModelGraph = fallbackModelGraph;
+	protected void setDefaultModelGraph(String defaultModelGraph) {
+		this.defaultModelGraph = defaultModelGraph;
 	}
-	protected void setFallbackDataGraph(String fallbackDataGraph) {
-		this.fallbackDataGraph = fallbackDataGraph;
+	protected void setDefaultDataGraph(String defaultDataGraph) {
+		this.defaultDataGraph = defaultDataGraph;
 	}
 
 	/**

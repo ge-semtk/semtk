@@ -47,7 +47,7 @@ public class LoadOwlConfigTest_IT extends YamlConfigTest {
 
 		// this config has owl files only (no model graph)
 		config = new LoadOwlConfig(TestGraph.getYamlAndUniquifyJunitGraphs(this, "/config/load_owl_config_1.yaml"), modelFallbackSei.getGraph());
-		assertEquals(config.getFallbackModelGraph(), modelFallbackSei.getGraph());
+		assertEquals(config.getDefaultModelGraph(), modelFallbackSei.getGraph());
 		assertEquals(config.getFiles().size(), 3);
 		assertEquals(config.getFiles().get(0),"woodchuck.owl");
 		assertEquals(config.getFiles().get(1),"hedgehog.owl");

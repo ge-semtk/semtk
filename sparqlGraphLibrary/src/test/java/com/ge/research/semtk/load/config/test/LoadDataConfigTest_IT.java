@@ -52,7 +52,7 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 
 		// this config has a datagraph + steps
 		config = new LoadDataConfig(Utility.getResourceAsTempFile(this, "/config/load_data_config_1.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
-		assertEquals(config.getFallbackModelGraph(), modelFallbackSei.getGraph());
+		assertEquals(config.getDefaultModelGraph(), modelFallbackSei.getGraph());
 		assertEquals(config.getSteps().size(), 2);
 		assertEquals(((CsvByClassIngestionStep)config.getSteps().get(0)).getClazz(), "http://animals/woodland#WOODCHUCK");
 		assertTrue(((CsvByClassIngestionStep)config.getSteps().get(0)).getFilePath().endsWith("woodchucks.csv"));
@@ -84,13 +84,13 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 			new LoadDataConfig(Utility.getResourceAsTempFile(this, "/config/load_data_config_1.yaml"), null, dataFallbackSei.getGraph());
 			fail(); // should not get here
 		}catch(Exception e) {
-			assertTrue(e.getMessage().contains("Fallback model graph not provided"));
+			assertTrue(e.getMessage().contains("Default model graph not provided"));
 		}
 		try {
 			new LoadDataConfig(Utility.getResourceAsTempFile(this, "/config/load_data_config_1.yaml"), modelFallbackSei.getGraph(), null);
 			fail(); // should not get here
 		}catch(Exception e) {
-			assertTrue(e.getMessage().contains("Fallback data graph not provided"));
+			assertTrue(e.getMessage().contains("Default data graph not provided"));
 		}
 	}
 

@@ -44,14 +44,14 @@ public class LoadDataConfig extends YamlConfig {
 	/**
 	 * Constructor
 	 */
-	public LoadDataConfig(File yamlFile, String fallbackModelGraph, String fallbackDataGraph) throws Exception {
-		super(yamlFile, Utility.getResourceAsTempFile(LoadDataConfig.class, "/configSchema/load_data_config_schema.json"), fallbackModelGraph, fallbackDataGraph);
+	public LoadDataConfig(File yamlFile, String defaultModelGraph, String defaultDataGraph) throws Exception {
+		super(yamlFile, Utility.getResourceAsTempFile(LoadDataConfig.class, "/configSchema/load_data_config_schema.json"), defaultModelGraph, defaultDataGraph);
 
-		if(fallbackModelGraph == null) {
-			throw new Exception("Fallback model graph not provided");
+		if(defaultModelGraph == null) {
+			throw new Exception("Default model graph not provided");
 		}
-		if(fallbackDataGraph == null) {
-			throw new Exception("Fallback data graph not provided");
+		if(defaultDataGraph == null) {
+			throw new Exception("Default data graph not provided");
 		}
 
 		// populate ingestion steps
@@ -130,9 +130,9 @@ public class LoadDataConfig extends YamlConfig {
 		try {
 
 			// determine which model/data graphs to use
-			// use if provided as method parameter, else use from config YAML, else use fallback
-			modelGraph = (modelGraph != null) ? modelGraph : (this.getModelgraph() != null ? this.getModelgraph() : this.fallbackModelGraph );
-			dataGraphs = (dataGraphs != null) ? dataGraphs : (this.getDatagraphs() != null ? this.getDatagraphs() : new LinkedList<String>(Arrays.asList(this.fallbackDataGraph)) );
+			// use if provided as method parameter, else use from config YAML, else use default
+			modelGraph = (modelGraph != null) ? modelGraph : (this.getModelgraph() != null ? this.getModelgraph() : this.defaultModelGraph );
+			dataGraphs = (dataGraphs != null) ? dataGraphs : (this.getDatagraphs() != null ? this.getDatagraphs() : new LinkedList<String>(Arrays.asList(this.defaultDataGraph)) );
 			if(modelGraph == null) { throw new Exception ("No model graph found"); }
 			if(dataGraphs == null || dataGraphs.isEmpty()) { throw new Exception ("No data graph found"); }
 

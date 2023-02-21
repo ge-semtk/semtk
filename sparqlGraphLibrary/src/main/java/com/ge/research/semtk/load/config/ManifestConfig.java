@@ -18,7 +18,6 @@ package com.ge.research.semtk.load.config;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.LinkedList;
 
 import org.apache.commons.math3.util.Pair;
@@ -48,8 +47,8 @@ public class ManifestConfig extends YamlConfig {
 
 	private static String DEFAULT_FILE_NAME = "manifest.yaml";	// the default manifest file name
 
-	public ManifestConfig(File yamlFile, String fallbackModelGraph, String fallbackDataGraph) throws Exception {
-		super(yamlFile, Utility.getResourceAsTempFile(ManifestConfig.class, "/configSchema/manifest_config_schema.json"), fallbackModelGraph, fallbackDataGraph);
+	public ManifestConfig(File yamlFile, String defaultModelGraph, String defaultDataGraph) throws Exception {
+		super(yamlFile, Utility.getResourceAsTempFile(ManifestConfig.class, "/configSchema/manifest_config_schema.json"), defaultModelGraph, defaultDataGraph);
 
 		// populate the manifest
 		String name = configNode.get("name").asText();  // required
@@ -228,13 +227,13 @@ public class ManifestConfig extends YamlConfig {
 			if(type == StepType.MODEL) {
 				// load via an owl ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
-				LoadOwlConfig config = new LoadOwlConfig(stepFile, this.fallbackModelGraph);
+				LoadOwlConfig config = new LoadOwlConfig(stepFile, this.defaultModelGraph);
 				config.load(null, server, serverTypeString, progressWriter);
 
 			}else if(type == StepType.DATA) {
 				// load content using CSV ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
-				LoadDataConfig config = new LoadDataConfig(stepFile, this.fallbackModelGraph, this.fallbackDataGraph);
+				LoadDataConfig config = new LoadDataConfig(stepFile, this.defaultModelGraph, this.defaultDataGraph);
 				config.load(null, null, server, serverTypeString, false, ingestClient, ngeClient, progressWriter);
 
 			}else if(type == StepType.NODEGROUPS) {
@@ -247,7 +246,7 @@ public class ManifestConfig extends YamlConfig {
 			}else if(type == StepType.MANIFEST) {
 				// load content using sub-manifest
 				File stepFile = new File(baseDir, (String)step.getValue());
-				ManifestConfig subManifest = new ManifestConfig(stepFile, fallbackModelGraph, fallbackDataGraph);
+				ManifestConfig subManifest = new ManifestConfig(stepFile, defaultModelGraph, defaultDataGraph);
 				subManifest.load(server, serverTypeString, false, false, ingestClient, ngeClient, ngStoreClient, progressWriter);
 
 			}else if(type == StepType.COPYGRAPH) {

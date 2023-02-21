@@ -33,11 +33,11 @@ import com.ge.research.semtk.utility.Utility;
  */
 public class LoadOwlConfig extends YamlConfig {
 
-	public LoadOwlConfig(File yamlFile, String fallbackModelGraph) throws Exception {
-		super(yamlFile, Utility.getResourceAsTempFile(LoadOwlConfig.class, "/configSchema/load_owl_config_schema.json"), fallbackModelGraph, null);
+	public LoadOwlConfig(File yamlFile, String defaultModelGraph) throws Exception {
+		super(yamlFile, Utility.getResourceAsTempFile(LoadOwlConfig.class, "/configSchema/load_owl_config_schema.json"), defaultModelGraph, null);
 
-		if(fallbackModelGraph == null) {
-			throw new Exception("Fallback model graph not provided");
+		if(defaultModelGraph == null) {
+			throw new Exception("Default model graph not provided");
 		}
 
 		// add files
@@ -83,8 +83,8 @@ public class LoadOwlConfig extends YamlConfig {
 	 */
 	public void load(String modelGraph, String server, String serverType, PrintWriter progressWriter) throws Exception {
 		try {
-			// use modelGraph from method parameter if present.  Else use from config YAML if present.  Else use fallback.
-			modelGraph = (modelGraph != null) ? modelGraph : (this.getModelgraph() != null ? this.getModelgraph() : this.fallbackModelGraph );
+			// use modelGraph from method parameter if present.  Else use from config YAML if present.  Else use default.
+			modelGraph = (modelGraph != null) ? modelGraph : (this.getModelgraph() != null ? this.getModelgraph() : this.defaultModelGraph );
 			if(modelGraph == null) { throw new Exception ("No model graph found"); }
 
 			// upload each OWL file to model graph
