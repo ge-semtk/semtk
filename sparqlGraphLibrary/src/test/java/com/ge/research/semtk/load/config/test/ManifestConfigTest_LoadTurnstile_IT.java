@@ -47,16 +47,15 @@ public class ManifestConfigTest_LoadTurnstile_IT {
 	@Test
 	public void test() throws Exception{
 		// Note: no copy to default graph, so don't have to limit to Fuseki only
-
-		assumeTrue("Skip until fixed", false);		// TODO fix
-
+		assumeTrue("Skip until fixed", true);		// TODO fix
+		reset();
 		File tempDir = null;
 		try {
 			// get manifest from ingestion package, perform load
 			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/config/IngestionPackage-Turnstile.zip");
 			ManifestConfig manifest = new ManifestConfig(ManifestConfig.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 
-			reset();
+			
 			manifest.setCopyToGraph(null);
 			manifest.setEntityResolutionGraph(null);
 			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), true, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), new PrintWriter(System.out));
@@ -67,6 +66,7 @@ public class ManifestConfigTest_LoadTurnstile_IT {
 			assertEquals("Number of triples loaded to data fallback graph", 0, dataFallbackSei.getNumTriples());
 		}finally{
 			if(tempDir != null) { FileUtils.deleteDirectory(tempDir); }
+			reset();
 		}
 	}
 
