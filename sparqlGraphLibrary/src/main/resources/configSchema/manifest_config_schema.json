@@ -6,8 +6,8 @@
         "name": {"type": "string"},
         "description": {"type": "string"},
         
-        "copy-to-default-graph":            {"type": "boolean"},
-    	"perform-entity-resolution":        {"type": "boolean"},
+        "copy-to-graph":            		{"type": "string"},
+        "perform-entity-resolution":        {"type": "string"},
     	"perform-triplestore-optimization": {"type": "boolean"},
 
 	    "footprint": {

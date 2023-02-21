@@ -1,8 +1,8 @@
 name: 'Animals'
 description: 'Load information about animals'
 
-copy-to-default-graph: true
-perform-entity-resolution: true
+copy-to-graph: 'uri://DefaultGraph'
+perform-entity-resolution: 'uri://DefaultGraph'
 perform-triplestore-optimization: false
 
 footprint:

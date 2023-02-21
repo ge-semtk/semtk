@@ -58,8 +58,8 @@ public class ManifestConfigTest_LoadTurnstile_IT {
 			ManifestConfig manifest = new ManifestConfig(ManifestConfig.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 
 			reset();
-			manifest.setCopyToDefaultGraph(false);
-			manifest.setPerformEntityResolution(false);
+			manifest.setCopyToGraph(null);
+			manifest.setEntityResolutionGraph(null);
 			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), true, false, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), new PrintWriter(System.out));
 			assertEquals("Number of triples loaded to model fallback graph", 1986, modelFallbackSei.getNumTriples());
 			assertEquals("Number of triples loaded to data graph 1", 338, dataSeiFromYaml1.getNumTriples());

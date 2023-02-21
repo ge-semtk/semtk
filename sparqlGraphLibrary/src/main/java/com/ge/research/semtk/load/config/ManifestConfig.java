@@ -39,8 +39,8 @@ public class ManifestConfig extends YamlConfig {
 
 	private String name;
 	private String description;
-	private boolean copyToDefaultGraph = false;
-	private boolean performEntityResolution = false;
+	private String copyToGraph;
+	private String entityResolutionGraph;
 	private LinkedList<String> modelgraphsFootprint = new LinkedList<String>();
 	private LinkedList<String> datagraphsFootprint = new LinkedList<String>();
 	private LinkedList<String> nodegroupsFootprint = new LinkedList<String>();
@@ -58,9 +58,8 @@ public class ManifestConfig extends YamlConfig {
 		setName(name);
 		setDescription(description);
 
-		// 3 optional boolean properties
-		if(configNode.get("copy-to-default-graph") != null) { setCopyToDefaultGraph(configNode.get("copy-to-default-graph").booleanValue()); }
-		if(configNode.get("perform-entity-resolution") != null) { setPerformEntityResolution(configNode.get("perform-entity-resolution").booleanValue()); }
+		if(configNode.get("copy-to-graph") != null && !configNode.get("copy-to-graph").asText().trim().isEmpty()) { setCopyToGraph(configNode.get("copy-to-graph").asText()); }
+		if(configNode.get("perform-entity-resolution") != null && !configNode.get("perform-entity-resolution").asText().trim().isEmpty()) { setEntityResolutionGraph(configNode.get("perform-entity-resolution").asText()); }
 
 		// footprint
 		JsonNode footprintJsonNode = configNode.get("footprint");
@@ -120,13 +119,13 @@ public class ManifestConfig extends YamlConfig {
 	public String getDescription() {
 		return description;
 	}
-	/* Returns true when this manifest prescribes copying the footprint to the default graph */
-	public boolean getCopyToDefaultGraph() {
-		return copyToDefaultGraph;
+	/* Returns the graph to copy to (after load complete) */
+	public String getCopyToGraph() {
+		return copyToGraph;
 	}
-	/* Returns true when this manifest prescribes running entity resolution */
-	public boolean getPerformEntityResolution() {
-		return performEntityResolution;
+	/* Returns the graph in which to perform entity resolution (after load complete) */
+	public String getEntityResolutionGraph() {
+		return entityResolutionGraph;
 	}
 	public LinkedList<String> getModelgraphsFootprint() {
 		return modelgraphsFootprint;
@@ -162,11 +161,11 @@ public class ManifestConfig extends YamlConfig {
 	public void setDescription(String description) {
 		this.description = description;
 	}
-	public void setCopyToDefaultGraph(boolean b) {
-		this.copyToDefaultGraph = b;
+	public void setCopyToGraph(String s) {
+		this.copyToGraph = s;
 	}
-	public void setPerformEntityResolution(boolean b) {
-		this.performEntityResolution = b;
+	public void setEntityResolutionGraph(String s) {
+		this.entityResolutionGraph = s;
 	}
 	public void addModelgraphFootprint(String s) {
 		this.modelgraphsFootprint.add(s);
@@ -196,20 +195,6 @@ public class ManifestConfig extends YamlConfig {
 		for(String graph : datagraphsFootprint) {
 			conn.addDataInterface(SparqlEndpointInterface.getInstance(serverTypeString, server, graph.toString()));
 		}
-		return conn;
-	}
-
-	/**
-	 * Build a connection to the default graph
-	 * @param server the triple store location (e.g. "http://localhost:3030/DATASET")
-	 * @param serverTypeString the triple store type (e.g. "fuseki")
-	 * @return the connection object
-	 */
-	public SparqlConnection getDefaultGraphConnection(String server, String serverTypeString) throws Exception {
-		SparqlConnection conn = new SparqlConnection();
-		conn.setName("Default Graph");
-		conn.addModelInterface(SparqlEndpointInterface.getInstance(serverTypeString, server, SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME));
-		conn.addDataInterface(SparqlEndpointInterface.getInstance(serverTypeString, server, SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME));
 		return conn;
 	}
 
@@ -288,27 +273,30 @@ public class ManifestConfig extends YamlConfig {
 			}
 		}
 
-		// actions to be performed on top-level manifests only: copy to default graph, entity resolution
+		// actions to be performed on top-level manifests only: copy to graph, entity resolution
 		if(topLevel) {
-			if(this.getCopyToDefaultGraph()) {
+
+			// copy to graph
+			String copyToGraph = this.getCopyToGraph();
+			if(copyToGraph != null) {
 				if(clear) {
-					clearDefaultGraph(serverTypeString, server, progressWriter);
+					writeProgress("Clear graph " + copyToGraph, progressWriter);
+					SparqlEndpointInterface.getInstance(serverTypeString, server, copyToGraph).clearGraph();
 				}
-				// call SemTK to copy each model/data footprint graph to default graph
-				for(String graph : this.getGraphsFootprint()) {
-					writeProgress("Copy graph " + graph + " to default graph", progressWriter);
-					String msg = ngeClient.copyGraph(server, serverTypeString, graph, server, serverTypeString, SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME);
+				for(String graph : this.getGraphsFootprint()) {  // copy each model/data footprint graph to the given graph
+					writeProgress("Copy graph " + graph + " to " + copyToGraph, progressWriter);
+					String msg = ngeClient.copyGraph(server, serverTypeString, graph, server, serverTypeString, copyToGraph);
 					writeProgress(msg, progressWriter);
 				}
 			}
-			if(this.getPerformEntityResolution()) {
-				writeProgress("Perform entity resolution", progressWriter);
-				// entity resolution in default graph
-				if(!loadToDefaultGraph && !getCopyToDefaultGraph()) {
-					throw new Exception("Cannot perform entity resolution because not populating default graph");
-				}
+
+			// entity resolution
+			String entityResolutionGraph = this.getEntityResolutionGraph();
+			if(entityResolutionGraph != null) {
+				writeProgress("Perform entity resolution in " + entityResolutionGraph, progressWriter);
 				try {
-					ngeClient.combineEntitiesInConn(getDefaultGraphConnection(server, serverTypeString));
+					SparqlConnection conn = new SparqlConnection("Entity Resolution", serverTypeString, server, entityResolutionGraph);
+					ngeClient.combineEntitiesInConn(conn);
 				}catch(Exception e) {
 					if(!e.getMessage().contains("No SameAs instances")) {  // if exception is about no entities to resolve, suppress it
 						throw e;
@@ -365,7 +353,7 @@ public class ManifestConfig extends YamlConfig {
 	/**
 	 * Clear the default graph
 	 */
-	private void clearDefaultGraph(String serverTypeString, String server, PrintWriter progressWriter) throws Exception {
+	private void clearDefaultGraph(String serverTypeString, String server, PrintWriter progressWriter) throws Exception {  	// TODO eliminate
 		writeProgress("Clear default graph", progressWriter);
 		SparqlEndpointInterface.getInstance(serverTypeString, server, SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME).clearGraph();
 	}

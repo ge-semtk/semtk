@@ -1,7 +1,7 @@
 # name property is missing, expect error
 
-copy-to-default-graph: true
-perform-entity-resolution: true
+copy-to-graph: 'uri://DefaultGraph'
+perform-entity-resolution: 'uri://DefaultGraph'
 perform-triplestore-optimization: false
 
 fooootprint: # there is a typo here, expect error
