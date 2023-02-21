@@ -29,6 +29,7 @@ import org.junit.Test;
 
 import com.ge.research.semtk.load.config.LoadOwlConfig;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 
 public class LoadOwlConfigTest_IT extends YamlConfigTest {
@@ -90,7 +91,7 @@ public class LoadOwlConfigTest_IT extends YamlConfigTest {
 
 			// Case 1: if load() model graph parameter, then confirm loads there
 			clearGraphs();
-			config.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
+			config.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));
 			assertEquals(modelSei.getNumTriples(), NUM_EXPECTED_TRIPLES);
 			assertEquals(modelFallbackSei.getNumTriples(), 0);
 
@@ -99,7 +100,7 @@ public class LoadOwlConfigTest_IT extends YamlConfigTest {
 			config.setModelgraph(TestGraph.uniquifyJunitGraphs("http://junit/rack001/model"));  // add model graph to YAML config
 			SparqlEndpointInterface modelSeiFromYaml = TestGraph.getSei(config.getModelgraph());
 			modelSeiFromYaml.clearGraph();
-			config.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
+			config.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));
 			assertEquals(modelSei.getNumTriples(), 0);
 			assertEquals(modelFallbackSei.getNumTriples(), 0);
 			assertEquals(modelSeiFromYaml.getNumTriples(), NUM_EXPECTED_TRIPLES);
@@ -107,7 +108,7 @@ public class LoadOwlConfigTest_IT extends YamlConfigTest {
 			// Case 3: if no load() model graph parameter, and no YAML data graph, then confirm loads to fallback
 			clearGraphs();
 			config.setModelgraph(null);  // remove model graph from YAML config
-			config.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));
+			config.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));
 			assertEquals(modelSei.getNumTriples(), 0);
 			assertEquals(modelFallbackSei.getNumTriples(), NUM_EXPECTED_TRIPLES);
 

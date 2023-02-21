@@ -112,14 +112,14 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 
 			// Case 1: if load() data graph parameter, then confirm loads there
 			clearGraphs();
-			loadOwlConfig.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));  // loads OWL
+			loadOwlConfig.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));  // loads OWL
 			loadDataConfig.load(modelSei.getGraph(), new LinkedList<String>(Arrays.asList(dataSei.getGraph())), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), new PrintWriter(System.out));
 			assertEquals(dataSei.getNumTriples(), NUM_EXPECTED_TRIPLES);
 			assertEquals(dataFallbackSei.getNumTriples(), 0);
 
 			// Case 2: if no load() data graph parameter, then confirm loads to YAML data graph if present    "http://junit/rack001/data"
 			clearGraphs();
-			loadOwlConfig.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));  // loads OWL to fallback
+			loadOwlConfig.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));  // loads OWL to fallback
 			loadDataConfig.load(null, null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), new PrintWriter(System.out));
 			SparqlEndpointInterface dataSeiFromYaml = TestGraph.getSei(loadDataConfig.getDatagraphs().get(0));		// this is what's in the YAML
 			assertEquals(dataSei.getNumTriples(), 0);
@@ -128,7 +128,7 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 
 			// Case 3: if no load() data graph parameter, and no YAML data graph, then confirm loads to fallback
 			clearGraphs();
-			loadOwlConfig.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), new PrintWriter(System.out));  // loads OWL to fallback
+			loadOwlConfig.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));  // loads OWL to fallback
 			loadDataConfig.setDataGraphs(null);  // no datagraph in YAML
 			loadDataConfig.load(null, null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), new PrintWriter(System.out));
 			assertEquals(dataSei.getNumTriples(), 0);
