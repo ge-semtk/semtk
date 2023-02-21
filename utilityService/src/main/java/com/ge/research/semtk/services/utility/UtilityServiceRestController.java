@@ -60,6 +60,9 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
@@ -403,7 +406,7 @@ public class UtilityServiceRestController {
 				throw new Exception("Cannot find a top-level manifest in " + ingestionPackageZipFile.getOriginalFilename());
 			}
 			ManifestConfig manifest = new ManifestConfig(manifestFile, defaultModelGraph, defaultDataGraph);
-			manifest.load(serverAndPort, serverType, clear, true, getIngestorRestClient(), getNodegroupExecutionClient(), getNodegroupStoreClient(), responseWriter);
+			manifest.load(serverAndPort, serverType, clear, true, getIngestorRestClient(), getNodegroupExecutionClient(), getNodegroupStoreClient(), getSparqlQueryClient(), responseWriter);
 
 			responseWriter.println("Load complete");
 			responseWriter.flush();
@@ -457,6 +460,16 @@ public class UtilityServiceRestController {
 		conn.addDataInterface(servicesgraph_prop.getEndpointType(), servicesgraph_prop.getEndpointServerUrl(), servicesgraph_prop.getEndpointDataset());
 		conn.setDomain(servicesgraph_prop.getEndpointDomain());
 		return conn;
+	}
+	
+	/**
+	 * Get a sparqlQueryClient with no endpoint or Sei
+	 */
+	private SparqlQueryClient getSparqlQueryClient() throws Exception{
+		SparqlQueryAuthClientConfig config = new SparqlQueryAuthClientConfig(props.getSparqlServiceProtocol(), props.getSparqlServiceServer(), props.getSparqlServicePort(), 
+					"unset-endpoint", "unset-server", "unset-server-type", "unset-graph", 
+					props.getSparqlServiceUser(), props.getSparqlServicePass());
+		return new SparqlQueryClient(config);
 	}
 	
 	/**

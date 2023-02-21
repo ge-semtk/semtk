@@ -477,4 +477,14 @@ public class IntegrationTestUtility{
 		return count;
 	}
 	
+	/**
+	 * Clear non-default test sei
+	 * @param sei
+	 * @throws Exception
+	 */
+	public static void clearGraph(SparqlEndpointInterface sei) throws Exception {
+		sei.clearGraph();
+		IntegrationTestUtility.getOntologyInfoClient().uncacheChangedConn(sei);
+	}
+	
 }

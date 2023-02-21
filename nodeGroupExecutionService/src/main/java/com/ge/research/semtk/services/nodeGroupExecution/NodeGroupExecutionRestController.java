@@ -1668,6 +1668,7 @@ public class NodeGroupExecutionRestController {
 					} finally {
 						fis.close();
 					}
+					oinfo_props.getClient().uncacheChangedConn(toSei);
 					tracker.setJobSuccess(jobId, "Successfully copied " + fromSei.getGraph() + " into " + toSei.getGraph());
 					
 				} catch (Exception e) {

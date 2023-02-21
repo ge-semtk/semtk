@@ -23,9 +23,11 @@ import java.io.File;
 import java.io.PrintWriter;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ge.research.semtk.load.config.ManifestConfig;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
@@ -39,6 +41,11 @@ public class ManifestConfigTest_LoadTurnstile_IT {
 
 	public ManifestConfigTest_LoadTurnstile_IT() throws Exception {
 		super();
+	}
+	
+	@BeforeClass
+	public static void setup() throws Exception {
+	    IntegrationTestUtility.authenticateJunit();
 	}
 
 	/**
@@ -58,7 +65,7 @@ public class ManifestConfigTest_LoadTurnstile_IT {
 			
 			manifest.setCopyToGraph(null);
 			manifest.setEntityResolutionGraph(null);
-			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), true, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), new PrintWriter(System.out));
+			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), true, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));
 			assertEquals("Number of triples loaded to model fallback graph", 1986, modelFallbackSei.getNumTriples());
 			assertEquals("Number of triples loaded to data graph 1", 338, dataSeiFromYaml1.getNumTriples());
 			assertEquals("Number of triples loaded to data graph 2", 1386, dataSeiFromYaml2.getNumTriples());
@@ -72,10 +79,11 @@ public class ManifestConfigTest_LoadTurnstile_IT {
 
 	// clear graphs and nodegroup store
 	private void reset() throws Exception {
-		modelFallbackSei.clearGraph();
-		dataFallbackSei.clearGraph();
-		dataSeiFromYaml1.clearGraph();
-		dataSeiFromYaml2.clearGraph();
+		IntegrationTestUtility.clearGraph(modelFallbackSei);
+		IntegrationTestUtility.clearGraph(dataFallbackSei);
+		IntegrationTestUtility.clearGraph(dataSeiFromYaml1);
+		IntegrationTestUtility.clearGraph(dataSeiFromYaml2);
+		
 		IntegrationTestUtility.cleanupNodegroupStore("junit");
 	}
 

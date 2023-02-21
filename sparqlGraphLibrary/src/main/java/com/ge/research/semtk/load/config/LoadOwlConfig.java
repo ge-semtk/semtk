@@ -24,6 +24,7 @@ import java.util.List;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -81,7 +82,7 @@ public class LoadOwlConfig extends YamlConfig {
 	 * @param serverTypeString 	triple store type
 	 * @param progressWriter 	writer for reporting progress
 	 */
-	public void load(String modelGraph, String server, String serverType, PrintWriter progressWriter) throws Exception {
+	public void load(String modelGraph, String server, String serverType, SparqlQueryClient queryClient, PrintWriter progressWriter) throws Exception {
 		try {
 			// use modelGraph from method parameter if present.  Else use from config YAML if present.  Else use default.
 			modelGraph = (modelGraph != null) ? modelGraph : (this.getModelgraph() != null ? this.getModelgraph() : this.defaultModelGraph );
@@ -91,8 +92,9 @@ public class LoadOwlConfig extends YamlConfig {
 			for(String fileStr : this.getFiles()) {
 				File file = new File(this.baseDir, fileStr);
 				writeProgress("Load OWL " + file.getName() + " to " + modelGraph, progressWriter);
-				SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(serverType, server, modelGraph);
-				sei.uploadOwl(Files.readAllBytes(file.toPath()));
+				SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(serverType, server, modelGraph, username, password);
+				queryClient.setSei(sei);
+				queryClient.uploadOwl(file);
 			}
 
 		}catch(Exception e) {

@@ -28,6 +28,7 @@ import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.utility.Utility;
 
 /**
@@ -206,7 +207,7 @@ public class ManifestConfig extends YamlConfig {
 	 * @param ingestClient			ingestionRestClient
 	 * @param progressWriter 		writer for reporting progress
 	 */
-	public void load(String server, String serverTypeString, boolean clear, boolean topLevel, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, NodeGroupStoreRestClient ngStoreClient, PrintWriter progressWriter) throws Exception {
+	public void load(String server, String serverTypeString, boolean clear, boolean topLevel, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, NodeGroupStoreRestClient ngStoreClient, SparqlQueryClient queryClient, PrintWriter progressWriter) throws Exception {
 
 		writeProgress("Loading manifest for '" + getName() + "'...", progressWriter);
 
@@ -215,7 +216,8 @@ public class ManifestConfig extends YamlConfig {
 			// clear each model and data graph in the footprint
 			for(String g : getGraphsFootprint()) {
 				writeProgress("Clear graph " + g, progressWriter);
-				SparqlEndpointInterface.getInstance(serverTypeString, server, g).clearGraph();
+				queryClient.setSei(SparqlEndpointInterface.getInstance(serverTypeString, server, g, username, password));
+				queryClient.clearAll();
 			}
 			// no need to delete nodegroups, they will get overwritten below
 		}
@@ -228,7 +230,7 @@ public class ManifestConfig extends YamlConfig {
 				// load via an owl ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
 				LoadOwlConfig config = new LoadOwlConfig(stepFile, this.defaultModelGraph);
-				config.load(null, server, serverTypeString, progressWriter);
+				config.load(null, server, serverTypeString, queryClient, progressWriter);
 
 			}else if(type == StepType.DATA) {
 				// load content using CSV ingestion YAML
@@ -247,7 +249,7 @@ public class ManifestConfig extends YamlConfig {
 				// load content using sub-manifest
 				File stepFile = new File(baseDir, (String)step.getValue());
 				ManifestConfig subManifest = new ManifestConfig(stepFile, defaultModelGraph, defaultDataGraph);
-				subManifest.load(server, serverTypeString, false, false, ingestClient, ngeClient, ngStoreClient, progressWriter);
+				subManifest.load(server, serverTypeString, false, false, ingestClient, ngeClient, ngStoreClient, queryClient, progressWriter);
 
 			}else if(type == StepType.COPYGRAPH) {
 				// perform the copy		TODO junit
@@ -269,7 +271,7 @@ public class ManifestConfig extends YamlConfig {
 			if(copyToGraph != null) {
 				if(clear) {
 					writeProgress("Clear graph " + copyToGraph, progressWriter);
-					SparqlEndpointInterface.getInstance(serverTypeString, server, copyToGraph).clearGraph();
+					SparqlEndpointInterface.getInstance(serverTypeString, server, copyToGraph, username, password).clearGraph();
 				}
 				for(String graph : this.getGraphsFootprint()) {  // copy each model/data footprint graph to the given graph
 					writeProgress("Copy graph " + graph + " to " + copyToGraph, progressWriter);

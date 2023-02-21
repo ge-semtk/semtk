@@ -62,6 +62,13 @@ public class SparqlQueryAuthClientConfig extends SparqlQueryClientConfig {
 		return sparqlServerPassword;
 	}
 	
+	public void setSparqlServerUser(String u) {
+		sparqlServerUser = u;
+	}
+	public void setSparqlServerPassword(String p) {
+		sparqlServerPassword = p;
+	}
+	
 	@Override
 	public SparqlEndpointInterface buildSei() throws Exception {
 		return SparqlEndpointInterface.getInstance(this.getSparqlServerType(), this.getServiceURL(), this.getGraph(), this.getSparqlServerUser(), this.getSparqlServerPassword());

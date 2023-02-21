@@ -292,8 +292,11 @@ public abstract class SparqlEndpointInterface {
 		}
 	}
 	
-	public String getServer() {
-		return server;
+	public String getProtocol() {
+		return this.server.split(":")[0];
+	}
+	public String getServerWithoutProtocol() {
+		return this.server.split(":")[1].substring(2);
 	}
 
 	public int getPort() {
