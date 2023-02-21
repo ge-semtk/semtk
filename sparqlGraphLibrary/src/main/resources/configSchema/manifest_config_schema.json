@@ -8,7 +8,6 @@
         
         "copy-to-graph":            		{"type": "string"},
         "perform-entity-resolution":        {"type": "string"},
-    	"perform-triplestore-optimization": {"type": "boolean"},
 
 	    "footprint": {
 	        "type": "object",
