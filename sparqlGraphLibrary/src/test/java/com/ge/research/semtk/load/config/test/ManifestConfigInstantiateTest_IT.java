@@ -90,15 +90,6 @@ public class ManifestConfigInstantiateTest_IT extends YamlConfigTest {
 		assertEquals(conn.getDataInterface(1).getServerAndPort(), SERVER);
 		assertEquals(conn.getDataInterface(1).getServerType(), SERVER_TYPE);
 
-		// test default connection
-		conn = new SparqlConnection("Default Graph", SERVER_TYPE, SERVER, SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME);
-		assertEquals(conn.getModelInterfaces().size(), 1);
-		assertTrue(conn.getModelInterface(0).isDefaultGraph());
-		assertEquals(conn.getModelInterface(0).getGraph(), "urn:x-arq:DefaultGraph");
-		assertEquals(conn.getDataInterfaces().size(), 1);
-		assertTrue(conn.getDataInterface(0).isDefaultGraph());
-		assertEquals(conn.getDataInterface(0).getGraph(), "urn:x-arq:DefaultGraph");
-
 	}
 
 	/**

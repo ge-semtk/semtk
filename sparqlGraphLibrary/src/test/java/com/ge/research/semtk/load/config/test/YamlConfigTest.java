@@ -22,7 +22,6 @@ public abstract class YamlConfigTest {
 		dataSei.clearGraph();
 		modelFallbackSei.clearGraph();
 		dataFallbackSei.clearGraph();
-		// not clearing default graph - can do this in individual tests if appropriate (e.g. using Fuseki)
 	}
 
 }

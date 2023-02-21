@@ -36,7 +36,6 @@ public class ManifestConfigTest_LoadTurnstile_IT {
 	SparqlEndpointInterface dataFallbackSei = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/data"));
 	SparqlEndpointInterface dataSeiFromYaml1 = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/do-178c"));
 	SparqlEndpointInterface dataSeiFromYaml2 = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/turnstiledata"));
-	SparqlEndpointInterface defaultGraphSei = TestGraph.getSei(SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME);
 
 	public ManifestConfigTest_LoadTurnstile_IT() throws Exception {
 		super();
@@ -60,13 +59,12 @@ public class ManifestConfigTest_LoadTurnstile_IT {
 			reset();
 			manifest.setCopyToGraph(null);
 			manifest.setEntityResolutionGraph(null);
-			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), true, false, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), new PrintWriter(System.out));
+			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), true, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), new PrintWriter(System.out));
 			assertEquals("Number of triples loaded to model fallback graph", 1986, modelFallbackSei.getNumTriples());
 			assertEquals("Number of triples loaded to data graph 1", 338, dataSeiFromYaml1.getNumTriples());
 			assertEquals("Number of triples loaded to data graph 2", 1386, dataSeiFromYaml2.getNumTriples());
 			assertEquals("Number of nodegroups", 32, IntegrationTestUtility.countItemsInStoreByCreator("junit"));	
 			assertEquals("Number of triples loaded to data fallback graph", 0, dataFallbackSei.getNumTriples());
-			assertEquals("Number of triples loaded to default graph", 0, defaultGraphSei.getNumTriples());
 		}finally{
 			if(tempDir != null) { FileUtils.deleteDirectory(tempDir); }
 		}
@@ -78,7 +76,6 @@ public class ManifestConfigTest_LoadTurnstile_IT {
 		dataFallbackSei.clearGraph();
 		dataSeiFromYaml1.clearGraph();
 		dataSeiFromYaml2.clearGraph();
-		defaultGraphSei.clearGraph();
 		IntegrationTestUtility.cleanupNodegroupStore("junit");
 	}
 

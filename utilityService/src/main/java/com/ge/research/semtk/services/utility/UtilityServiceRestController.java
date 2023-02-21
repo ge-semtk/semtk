@@ -363,7 +363,6 @@ public class UtilityServiceRestController {
 										@RequestParam("serverType") String serverType,// e.g. "fuseki"
 										@RequestParam("file") MultipartFile ingestionPackageZipFile,
 										@RequestParam("clear") boolean clear,
-										@RequestParam("loadToDefaultGraph") boolean loadToDefaultGraph,	// true to load directly to default graph
 										@RequestParam("defaultModelGraph") String defaultModelGraph,	// fallback model graph - use if not otherwise specified
 										@RequestParam("defaultDataGraph") String defaultDataGraph,		// fallback data graph - use if not otherwise specified
 										@RequestHeader HttpHeaders headers,
@@ -404,7 +403,7 @@ public class UtilityServiceRestController {
 				throw new Exception("Cannot find a top-level manifest in " + ingestionPackageZipFile.getOriginalFilename());
 			}
 			ManifestConfig manifest = new ManifestConfig(manifestFile, defaultModelGraph, defaultDataGraph);
-			manifest.load(serverAndPort, serverType, clear, loadToDefaultGraph, true, getIngestorRestClient(), getNodegroupExecutionClient(), getNodegroupStoreClient(), responseWriter);
+			manifest.load(serverAndPort, serverType, clear, true, getIngestorRestClient(), getNodegroupExecutionClient(), getNodegroupStoreClient(), responseWriter);
 
 			responseWriter.println("Load complete");
 			responseWriter.flush();

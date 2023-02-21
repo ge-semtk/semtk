@@ -203,33 +203,22 @@ public class ManifestConfig extends YamlConfig {
 	 * @param server 				the triple store location (e.g. "http://localhost:3030/DATASET")
 	 * @param serverTypeString 		the triple store type (e.g. "fuseki")
 	 * @param clear 				if true, clears the footprint graphs (before loading)
-	 * @param loadToDefaultGraph 	if true, loads everything to the default graph instead of the target graphs
 	 * @param topLevel 				true if this is a top-level manifest, false for recursively calling sub-manifests
 	 * @param ingestClient			ingestionRestClient
 	 * @param progressWriter 		writer for reporting progress
 	 */
-	public void load(String server, String serverTypeString, boolean clear, boolean loadToDefaultGraph, boolean topLevel, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, NodeGroupStoreRestClient ngStoreClient, PrintWriter progressWriter) throws Exception {
+	public void load(String server, String serverTypeString, boolean clear, boolean topLevel, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, NodeGroupStoreRestClient ngStoreClient, PrintWriter progressWriter) throws Exception {
 
 		writeProgress("Loading manifest for '" + getName() + "'...", progressWriter);
 
 		// clear graphs first
 		if(clear) {
-			if(loadToDefaultGraph) {
-				clearDefaultGraph(serverTypeString, server, progressWriter);
-			} else {
-				// clear each model and data graph in the footprint
-				for(String g : getGraphsFootprint()) {
-					writeProgress("Clear graph " + g, progressWriter);
-					SparqlEndpointInterface.getInstance(serverTypeString, server, g).clearGraph();
-				}
+			// clear each model and data graph in the footprint
+			for(String g : getGraphsFootprint()) {
+				writeProgress("Clear graph " + g, progressWriter);
+				SparqlEndpointInterface.getInstance(serverTypeString, server, g).clearGraph();
 			}
 			// no need to delete nodegroups, they will get overwritten below
-		}
-
-		// if loading to default graph, then set targetGraph
-		String targetGraph = null;
-		if(loadToDefaultGraph) {
-			targetGraph = SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME;
 		}
 
 		// execute each manifest step
@@ -240,13 +229,13 @@ public class ManifestConfig extends YamlConfig {
 				// load via an owl ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
 				LoadOwlConfig config = new LoadOwlConfig(stepFile, this.fallbackModelGraph);
-				config.load(targetGraph, server, serverTypeString, progressWriter);
+				config.load(null, server, serverTypeString, progressWriter);
 
 			}else if(type == StepType.DATA) {
 				// load content using CSV ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
 				LoadDataConfig config = new LoadDataConfig(stepFile, this.fallbackModelGraph, this.fallbackDataGraph);
-				config.load(targetGraph, (targetGraph == null ? null : new LinkedList<String>(Arrays.asList(targetGraph))), server, serverTypeString, false, ingestClient, ngeClient, progressWriter);
+				config.load(null, null, server, serverTypeString, false, ingestClient, ngeClient, progressWriter);
 
 			}else if(type == StepType.NODEGROUPS) {
 				// load nodegroups/reports from a directory
@@ -259,7 +248,7 @@ public class ManifestConfig extends YamlConfig {
 				// load content using sub-manifest
 				File stepFile = new File(baseDir, (String)step.getValue());
 				ManifestConfig subManifest = new ManifestConfig(stepFile, fallbackModelGraph, fallbackDataGraph);
-				subManifest.load(server, serverTypeString, false, loadToDefaultGraph, false, ingestClient, ngeClient, ngStoreClient, progressWriter);
+				subManifest.load(server, serverTypeString, false, false, ingestClient, ngeClient, ngStoreClient, progressWriter);
 
 			}else if(type == StepType.COPYGRAPH) {
 				// perform the copy		TODO junit
@@ -348,14 +337,6 @@ public class ManifestConfig extends YamlConfig {
 		public Object getValue(){
 			return value;
 		}
-	}
-
-	/**
-	 * Clear the default graph
-	 */
-	private void clearDefaultGraph(String serverTypeString, String server, PrintWriter progressWriter) throws Exception {  	// TODO eliminate
-		writeProgress("Clear default graph", progressWriter);
-		SparqlEndpointInterface.getInstance(serverTypeString, server, SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME).clearGraph();
 	}
 
 }
