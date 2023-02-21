@@ -94,6 +94,10 @@ import com.ge.research.semtk.utility.Utility;
  * 		External users will use only the constructor and save/restore from JSON methods.
  *    	Query methods are for use by internal SemTk code, and will be blocked by security, etc.
  *      Use the NodeGroupExecutionClient or SparqlQueryClient instead.
+ *      
+ * INTERNAL USE WARNING:
+ *      Modifying a model graph is a particular danger.  
+ *      OntologyInfoService must be notified to clear the cache for that model.
  *       
  * This is an abstract class - create a subclass per implementation (Virtuoso, etc)
  * 
@@ -492,7 +496,7 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Create a SPARQLEndpointInterface and execute a query
-	 * See "internal use" note
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * @param server
 	 * @param graph
 	 * @param serverTypeString
@@ -507,7 +511,7 @@ public abstract class SparqlEndpointInterface {
   
 	/**
 	 * Create a SPARQLEndpointInterface and execute a query
-	 * See "internal use" note
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * @param server
 	 * @param graph
 	 * @param serverTypeString
@@ -549,7 +553,7 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Execute query and assemble a GeneralResultSet object.
-	 * See "internal use" note
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * 
 	 * Returns:
 	 * 	  TableResultSet for a select query (success or failure)
@@ -582,6 +586,13 @@ public abstract class SparqlEndpointInterface {
 		
 		return resultSet;
 	}	
+	/**
+	 * 
+	 * WARNING:  see INTERNAL USE notes at top of this file
+	 * @param query
+	 * @return
+	 * @throws Exception
+	 */
 	public String executeQueryToRdf(String query) throws Exception {
 		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(query, SparqlResultTypes.RDF);
 		res.throwExceptionIfUnsuccessful();
@@ -590,7 +601,7 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Execute query to table
-	 * See "internal use" note
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * @param query
 	 * @return
 	 * @throws Exception
@@ -603,6 +614,7 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Always contains { "@graph" : [] }
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * @param query
 	 * @return
 	 * @throws Exception
@@ -634,6 +646,8 @@ public abstract class SparqlEndpointInterface {
 		}
 	}
 	/**
+	 * 
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * @param query
 	 * @return
 	 * @throws Exception
@@ -672,7 +686,7 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Execute a query. Uses http POST.  
 	 * Depending on the type of query (select, insert, construct, etc), decides whether to use auth or non-auth.
-	 * See "internal use" note
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	  
 	 * Sample result from a SELECT query:
 	 *  
@@ -740,7 +754,7 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Run a test query depending on isAuth()
-	 * See "internal use" note
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * @return
 	 * @throws Exception
 	 */
@@ -770,6 +784,7 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	/**
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * Delete triples chunkSize at a time until the graph is empty.
 	 * Designed for Neptune.
 	 * @param chunkSize
@@ -845,7 +860,7 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Execute a query using POST
 	 * Adds Auth elements ONLY IF this.userName != null
-	 * See "internal use" note
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
 	 * @throws Exception
 	 */
@@ -897,7 +912,7 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Execute a query using POST and streaming results to a PrintWriter
 	 * Adds Auth elements ONLY IF this.userName != null
-	 * See "internal use" note
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * ------- Still Experimental ---------
 	 * 			- missing https username password basic auth
 	 * @param query
@@ -951,7 +966,8 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * clear the graph
-	 * See "internal use" note
+	 * WARNING: internal semtk use only.   Use SparqlQueryClient.clearGraph()
+	 * See INTERNAL USE info at top of this file.
 	 * @throws Exception
 	 */
 	public void clearGraph() throws Exception {
@@ -962,7 +978,7 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	/**
-	 * See "internal use" note
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * @param res
 	 * @throws Exception
 	 */
@@ -976,7 +992,8 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Delete all URI's starting with prefix
-	 * See "internal use" note
+	 * WARNING:  see INTERNAL USE notes at top of this file
+	 * See INTERNAL USE info at top of this file.
 	 * @param prefix
 	 * @throws Exception
 	 */
@@ -992,7 +1009,7 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	/**
-	 * See "internal use" note
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * It has been observed that this behaves differently on different triple-stores.
 	 * e.g. virtuoso throws an error if you create a graph that already exists
 	 *      Neptune doesn't seem to support this command at all (?)
@@ -1010,7 +1027,7 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	/**
-	 * See "internal use" note
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * It has been observed that this behaves differently on different triple-stores.
 	 * e.g. virtuoso throws an error if you drop a graph that doesn't exist
 	 *      while Neptune succeeds.
@@ -1219,6 +1236,11 @@ public abstract class SparqlEndpointInterface {
 		return true;
 	}
 	
+	/**
+	 * WARNING:  see INTERNAL USE notes at top of this file
+	 * @param owl
+	 * @throws Exception
+	 */
 	public void uploadOwl(byte [] owl) throws Exception {
 		SimpleResultSet res = new SimpleResultSet(
 				this.executeUpload(owl)
@@ -1226,12 +1248,23 @@ public abstract class SparqlEndpointInterface {
 		res.throwExceptionIfUnsuccessful("Error uploading owl");
 	}
 	
+	/**
+	 * WARNING:  see INTERNAL USE notes at top of this file
+	 * @param owl
+	 * @throws Exception
+	 */
 	public void authUploadOwl(byte [] owl) throws Exception {
 		SimpleResultSet res = new SimpleResultSet(
 				this.executeAuthUploadOwl(owl)
 				);
 		res.throwExceptionIfUnsuccessful("Error uploading owl");
 	}
+	
+	/**
+	 * WARNING:  see INTERNAL USE notes at top of this file
+	 * @param turtle
+	 * @throws Exception
+	 */
 	public void uploadTurtle(byte [] turtle) throws Exception {
 		SimpleResultSet res = new SimpleResultSet(
 				this.executeUploadTurtle(turtle)
@@ -1239,6 +1272,11 @@ public abstract class SparqlEndpointInterface {
 		res.throwExceptionIfUnsuccessful("Error uploading turtle");
 	}
 	
+	/**
+	 * WARNING:  see INTERNAL USE notes at top of this file
+	 * @param turtle
+	 * @throws Exception
+	 */
 	public void authUploadTurtle(byte [] turtle) throws Exception {
 		SimpleResultSet res = new SimpleResultSet(
 				this.executeAuthUploadTurtle(turtle)
@@ -1248,7 +1286,7 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Upload turtle.  Many triplestores treat ttl and owl the same.
-	 * See "internal use" note
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * @param turtle
 	 * @return
 	 * @throws AuthorizationException
@@ -1260,7 +1298,7 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Upload OWL.  Many triplestores treat ttl and owl the same.
-	 * See "internal use" note
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * @param turtle
 	 * @return
 	 * @throws AuthorizationException
@@ -1272,6 +1310,7 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Main entry point from query service: presumes ttl and owl are treated the same
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * @param turtle
 	 * @return
 	 * @throws AuthorizationException
@@ -1284,7 +1323,7 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Main entry point from query service: presumes ttl and owl are treated the same
 	 * Execute an auth query using POST
-	 * See "internal use" note
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
 	 * @throws Exception
 	 */
@@ -1295,7 +1334,7 @@ public abstract class SparqlEndpointInterface {
 	
 	/**
 	 * Execute an auth query using POST, and using AUTH if this.userName != null
-	 * See "internal use" note
+	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * @return a JSONObject wrapping the results. in the event the results were tabular, they can be obtained in the JsonArray "@Table". if the results were a graph, use "@Graph" for json-ld
 	 * @throws Exception
 	 */
