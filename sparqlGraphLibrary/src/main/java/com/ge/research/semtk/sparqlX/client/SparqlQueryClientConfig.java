@@ -22,6 +22,7 @@ import java.util.ArrayList;
 
 import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.utility.LocalLogger;
 
 /**
  * Configuration for SparqlQueryClient (non-auth query)
@@ -49,7 +50,12 @@ public class SparqlQueryClientConfig extends RestClientConfig {
 		this.sparqlDataset = other.sparqlDataset;
 	}
 	
+	@Deprecated
 	public void setEndpointInterfaceFields(SparqlEndpointInterface sei) {
+		this.setSei(sei);
+	}
+	
+	public void setSei(SparqlEndpointInterface sei) {
 		this.sparqlServerAndPort = sei.getServerAndPort();
 		this.sparqlServerType = sei.getServerType();
 		this.sparqlDataset = sei.getGraph();
@@ -71,7 +77,7 @@ public class SparqlQueryClientConfig extends RestClientConfig {
 			
 			//SparqlQueryClientConfig config = new SparqlQueryClientConfig(this);
 			SparqlQueryClientConfig config = this.getSparqlQueryClientConfigFromExistingConfig(this);
-			config.setEndpointInterfaceFields(seiList.get(i));
+			config.setSei(seiList.get(i));
 			ret.add(config);
 		}
 		return ret;

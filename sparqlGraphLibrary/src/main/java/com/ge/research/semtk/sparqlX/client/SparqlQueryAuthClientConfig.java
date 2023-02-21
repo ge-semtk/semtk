@@ -53,7 +53,19 @@ public class SparqlQueryAuthClientConfig extends SparqlQueryClientConfig {
 		}
 	}
 	
+	@Override
+	@Deprecated
+	public void setEndpointInterfaceFields(SparqlEndpointInterface sei) {
+		this.setSei(sei);
+	}
 	
+	@Override
+	public void setSei(SparqlEndpointInterface sei) {
+		super.setSei(sei);
+		this.setSparqlServerUser(sei.getUserName());
+		this.setSparqlServerPassword(sei.getPassword());
+		
+	}
 	public String getSparqlServerUser(){
 		return sparqlServerUser;
 	}

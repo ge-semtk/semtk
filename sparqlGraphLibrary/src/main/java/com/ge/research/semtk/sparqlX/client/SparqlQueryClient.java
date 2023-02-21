@@ -92,11 +92,6 @@ public class SparqlQueryClient extends RestClient {
 	public void setSei(SparqlEndpointInterface sei) throws Exception {
 
 		this.getConfig().setEndpointInterfaceFields(sei);
-		
-		if (this.conf instanceof SparqlQueryAuthClientConfig) {
-			((SparqlQueryAuthClientConfig) this.conf).setSparqlServerUser(sei.getUserName());
-			((SparqlQueryAuthClientConfig) this.conf).setSparqlServerPassword(sei.getPassword());
-		}
 			
 	}
 
