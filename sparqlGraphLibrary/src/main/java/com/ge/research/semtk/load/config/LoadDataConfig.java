@@ -204,7 +204,7 @@ public class LoadDataConfig extends YamlConfig {
 			}
 			ngeClient.waitForCompletion(jobId);
 			if (!ngeClient.getJobSuccess(jobId)) {
-				writeProgress("Failed loading CSV by class:\n" + ngeClient.getResultsTable(jobId).toCSVString(), progressWriter);
+				throw new Exception("Failed loading CSV by class:\n" + ngeClient.getResultsTable(jobId).toCSVString());
 			}
 		}
 	}
