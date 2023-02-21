@@ -99,7 +99,7 @@ public class LoadOwlConfigTest_IT extends YamlConfigTest {
 			clearGraphs();
 			config.setModelgraph(TestGraph.uniquifyJunitGraphs("http://junit/rack001/model"));  // add model graph to YAML config
 			SparqlEndpointInterface modelSeiFromYaml = TestGraph.getSei(config.getModelgraph());
-			modelSeiFromYaml.clearGraph();
+			IntegrationTestUtility.clearGraph(modelSeiFromYaml);
 			config.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));
 			assertEquals(modelSei.getNumTriples(), 0);
 			assertEquals(modelFallbackSei.getNumTriples(), 0);

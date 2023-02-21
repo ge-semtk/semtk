@@ -1,6 +1,7 @@
 package com.ge.research.semtk.load.config.test;
 
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 
 /**
@@ -18,10 +19,11 @@ public abstract class YamlConfigTest {
 	}
 
 	protected void clearGraphs() throws Exception{
-		modelSei.clearGraph();
-		dataSei.clearGraph();
-		modelFallbackSei.clearGraph();
-		dataFallbackSei.clearGraph();
+		
+		IntegrationTestUtility.clearGraph(modelSei);
+		IntegrationTestUtility.clearGraph(dataSei);
+		IntegrationTestUtility.clearGraph(modelFallbackSei);
+		IntegrationTestUtility.clearGraph(dataFallbackSei);
 	}
 
 }
