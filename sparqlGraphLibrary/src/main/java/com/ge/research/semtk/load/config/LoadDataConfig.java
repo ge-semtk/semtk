@@ -195,7 +195,7 @@ public class LoadDataConfig extends YamlConfig {
 			return clazz;
 		}
 		public void run(SparqlConnection conn, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
-			writeProgress("Load CSV " + (new File(filePath)).getName() + " as " + clazz, progressWriter);
+			writeProgress("Load CSV " + (new File(filePath)).getName() + " as class " + clazz, progressWriter);
 			String jobId = ingestClient.execFromCsvUsingClassTemplate(clazz, null, Files.readString(Path.of(filePath)), conn, false, null);
 			if(ingestClient.getWarnings() != null) {
 				for (String warning : ingestClient.getWarnings()) {
@@ -220,8 +220,8 @@ public class LoadDataConfig extends YamlConfig {
 			return nodegroupId;
 		}
 		public void run(SparqlConnection conn, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
-			writeProgress("Load CSV " + filePath + " using nodegroup " + nodegroupId, progressWriter);
-			ngeClient.dispatchIngestFromCsvStringsByIdSync(this.nodegroupId, Files.readString(Path.of(filePath))); // TODO junit
+			writeProgress("Load CSV " + (new File(filePath)).getName() + " using nodegroup \"" + nodegroupId + "\"", progressWriter);
+			ngeClient.dispatchIngestFromCsvStringsByIdSync(this.nodegroupId, Files.readString(Path.of(filePath)), conn); // TODO junit
 		}
 	}
 
