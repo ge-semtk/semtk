@@ -19,7 +19,6 @@ package com.ge.research.semtk.load.config;
 import java.io.File;
 import java.io.PrintWriter;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.LinkedList;
 
@@ -59,11 +58,11 @@ public class LoadDataConfig extends YamlConfig {
 		if(stepsNode != null) {
 			for(JsonNode stepNode : stepsNode){
 				if(stepNode.has("class") && stepNode.has("csv")) {
-					addStep(new CsvByClassIngestionStep(stepNode.get("class").asText(), baseDir + File.separator + stepNode.get("csv").asText()));
+					addStep(new CsvByClassIngestionStep(stepNode.get("class").asText(), baseDir, stepNode.get("csv").asText()));
 				} else if (stepNode.has("nodegroup") && stepNode.has("csv")) {
-					addStep(new CsvByNodegroupIngestionStep(stepNode.get("nodegroup").asText(), baseDir + File.separator + stepNode.get("csv").asText()));
+					addStep(new CsvByNodegroupIngestionStep(stepNode.get("nodegroup").asText(), baseDir, stepNode.get("csv").asText()));
 				} else if (stepNode.has("owl")) {
-					addStep(new OwlIngestionStep(baseDir + File.separator + stepNode.get("owl").asText()));
+					addStep(new OwlIngestionStep(baseDir, stepNode.get("owl").asText()));
 				}else {
 					throw new Exception("Ingestion step not supported: " + stepNode);
 				}
@@ -175,28 +174,39 @@ public class LoadDataConfig extends YamlConfig {
 	public static abstract class IngestionStep{
 	}
 	public static abstract class FileIngestionStep extends IngestionStep{
-		String filePath;
-		public FileIngestionStep(String filePath) {
+		String fileBaseDir;
+		String filePath;		// path relative to base dir
+		public FileIngestionStep(String fileBaseDir, String filePath) {
+			this.fileBaseDir = fileBaseDir;
 			this.filePath = filePath;
+		}
+		public String getFileBaseDir() {
+			return fileBaseDir;
 		}
 		public String getFilePath() {
 			return filePath;
+		}
+		public File getFile() {
+			return new File(fileBaseDir + File.separator + filePath);
+		}
+		public String getDisplayableFilePath() {
+			return (new File(fileBaseDir)).getName() + File.separator + filePath;  // show final directory of the base path, for context
 		}
 	}
 
 	/* Ingestion step: load CSV by class */
 	public static class CsvByClassIngestionStep extends FileIngestionStep{
 		private String clazz;
-		public CsvByClassIngestionStep(String clazz, String csvPath) {
-			super(csvPath);
+		public CsvByClassIngestionStep(String clazz, String baseDir, String csvPath) {
+			super(baseDir, csvPath);
 			this.clazz = clazz;
 		}
 		public String getClazz() {
 			return clazz;
 		}
 		public void run(SparqlConnection conn, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
-			writeProgress("Load CSV " + (new File(filePath)).getName() + " as class " + clazz, progressWriter);
-			String jobId = ingestClient.execFromCsvUsingClassTemplate(clazz, null, Files.readString(Path.of(filePath)), conn, false, null);
+			writeProgress("Load CSV " + getDisplayableFilePath() + " as class " + clazz, progressWriter);
+			String jobId = ingestClient.execFromCsvUsingClassTemplate(clazz, null, Files.readString(getFile().toPath()), conn, false, null);
 			if(ingestClient.getWarnings() != null) {
 				for (String warning : ingestClient.getWarnings()) {
 					writeProgress("Load CSV warning: " + warning, progressWriter);
@@ -212,32 +222,31 @@ public class LoadDataConfig extends YamlConfig {
 	/* Ingestion step: load CSV by nodegroup */
 	public static class CsvByNodegroupIngestionStep extends FileIngestionStep{
 		private String nodegroupId;
-		public CsvByNodegroupIngestionStep(String nodegroupId, String csvPath) {
-			super(csvPath);
+		public CsvByNodegroupIngestionStep(String nodegroupId, String baseDir, String csvPath) {
+			super(baseDir, csvPath);
 			this.nodegroupId = nodegroupId;
 		}
 		public String getNodegroupId() {
 			return nodegroupId;
 		}
 		public void run(SparqlConnection conn, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
-			writeProgress("Load CSV " + (new File(filePath)).getName() + " using nodegroup \"" + nodegroupId + "\"", progressWriter);
-			ngeClient.dispatchIngestFromCsvStringsByIdSync(this.nodegroupId, Files.readString(Path.of(filePath)), conn); // TODO junit
+			writeProgress("Load CSV " + getDisplayableFilePath() + " using nodegroup \"" + nodegroupId + "\"", progressWriter);
+			ngeClient.dispatchIngestFromCsvStringsByIdSync(this.nodegroupId, Files.readString(getFile().toPath()), conn); // TODO junit
 		}
 	}
 
 	/* Ingestion step: load OWL to data (not model) interface */
 	public static class OwlIngestionStep extends FileIngestionStep{
-		public OwlIngestionStep(String owlPath) {
-			super(owlPath);
+		public OwlIngestionStep(String baseDir, String owlPath) {
+			super(baseDir, owlPath);
 		}
 		public void run(SparqlConnection conn, PrintWriter progressWriter) throws Exception {
 			if(conn.getDataInterfaceCount() != 1) {
 				throw new Exception("Error: cannot load OWL because 0 or multiple data interfaces are specified");
 			}
-			File file = (new File(filePath));
 			SparqlEndpointInterface sei = conn.getDataInterface(0);
-			writeProgress("Load OWL " + file.getName() + " to " + sei.getGraph(), progressWriter);
-			sei.uploadOwl(Files.readAllBytes(file.toPath()));
+			writeProgress("Load OWL " + getDisplayableFilePath() + " to " + sei.getGraph(), progressWriter);
+			sei.uploadOwl(Files.readAllBytes(getFile().toPath()));
 		}
 	}
 

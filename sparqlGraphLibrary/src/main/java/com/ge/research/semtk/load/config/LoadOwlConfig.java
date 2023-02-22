@@ -91,7 +91,7 @@ public class LoadOwlConfig extends YamlConfig {
 			// upload each OWL file to model graph
 			for(String fileStr : this.getFiles()) {
 				File file = new File(this.baseDir, fileStr);
-				writeProgress("Load OWL " + file.getName() + " to " + modelGraph, progressWriter);
+				writeProgress("Load OWL " + new File(this.baseDir).getName() + File.separator + file.getName() + " to " + modelGraph, progressWriter);
 				SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(serverType, server, modelGraph, username, password);
 				queryClient.setSei(sei);
 				queryClient.uploadOwl(file);

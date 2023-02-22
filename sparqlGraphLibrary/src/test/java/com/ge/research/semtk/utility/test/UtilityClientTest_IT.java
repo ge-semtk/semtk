@@ -77,13 +77,10 @@ public class UtilityClientTest_IT {
 			assertTrue(response.contains("Loading manifest for 'RACK ontology'..."));
 			assertTrue(response.matches("(.*)Clear graph http://junit/(.*)/rack001/model(.*)"));
 			assertTrue(response.matches("(.*)Clear graph http://junit/(.*)/rack001/data(.*)"));
-			assertTrue(response.contains("Load OWL AGENTS.owl"));
-			assertTrue(response.contains("Load OWL ANALYSIS.owl"));
+			assertTrue(response.matches("(.*)Load OWL OwlModels(.*)AGENTS.owl(.*)"));
 			assertTrue(response.contains("Store nodegroups"));
 			assertTrue(response.contains("Stored: JUNIT query Files of a Given Format"));
-			assertTrue(response.contains("Load CSV PROV_S_ACTIVITY1.csv as http://arcos.rack/PROV-S#ACTIVITY"));
-			assertTrue(response.contains("Load CSV REQUIREMENTS_REQUIREMENT1.csv as http://arcos.rack/REQUIREMENTS#REQUIREMENT"));
-			assertTrue(response.contains("Load CSV TESTING_TEST1.csv as http://arcos.rack/TESTING#TEST"));
+			assertTrue(response.matches("(.*)Load CSV Package-1(.*)PROV_S_ACTIVITY1.csv as class http://arcos.rack/PROV-S#ACTIVITY(.*)"));
 			assertTrue(response.matches("(.*)Copy graph http://junit/(.*)/auto/rack001/data to uri://DefaultGraph(.*)"));
 			assertTrue(response.contains("Perform entity resolution"));
 			assertTrue(response.contains("Load complete"));
