@@ -302,8 +302,6 @@ public class NodeGroupStoreRestClient extends RestClient {
 			this.storeItem(ngId, ngComments, ngOwner, ngFilePath, itemType, sparqlConnOverrideFile, true);
 			if (statusWriter != null) { statusWriter.println("Stored: " + ngId); statusWriter.flush(); }
 		}
-			
-		if (statusWriter != null) { statusWriter.println("Finished processing file: " + csvFileName); statusWriter.flush(); }
 	}
 
 
