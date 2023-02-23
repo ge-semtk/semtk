@@ -27,6 +27,7 @@ import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionCli
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
+import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -125,7 +126,7 @@ public class LoadDataConfig extends YamlConfig {
 	 * @param ingestClient	    Ingestor rest client
 	 * @param progressWriter 	writer for reporting progress
 	 */
-	public void load(String modelGraph, LinkedList<String> dataGraphs, String server, String serverType, boolean clear, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
+	public void load(String modelGraph, LinkedList<String> dataGraphs, String server, String serverType, boolean clear, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, SparqlQueryClient queryClient, PrintWriter progressWriter) throws Exception {
 		try {
 
 			// determine which model/data graphs to use
@@ -145,7 +146,8 @@ public class LoadDataConfig extends YamlConfig {
 			// clear if appropriate
 			if(clear) {
 				for (SparqlEndpointInterface sei : conn.getAllInterfaces()) {
-					sei.clearGraph();
+					queryClient.setSei(sei);
+					queryClient.clearAll();
 				}
 			}
 
@@ -246,7 +248,7 @@ public class LoadDataConfig extends YamlConfig {
 			}
 			SparqlEndpointInterface sei = conn.getDataInterface(0);
 			writeProgress("Load OWL " + getDisplayableFilePath() + " to " + sei.getGraph(), progressWriter);
-			sei.uploadOwl(Files.readAllBytes(getFile().toPath()));
+			sei.uploadOwl(Files.readAllBytes(getFile().toPath()));  // OK to use SEI (instead of client) because uploading data (not model)
 		}
 	}
 

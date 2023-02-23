@@ -60,7 +60,7 @@ public class ManifestConfigTest_LoadTurnstile_IT {
 			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/config/IngestionPackage-Turnstile.zip");
 			ManifestConfig manifest = new ManifestConfig(ManifestConfig.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 
-			
+			reset();
 			manifest.setCopyToGraph(null);
 			manifest.setEntityResolutionGraph(null);
 			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), true, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));

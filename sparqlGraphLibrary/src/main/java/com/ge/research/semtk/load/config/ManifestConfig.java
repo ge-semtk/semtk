@@ -48,6 +48,13 @@ public class ManifestConfig extends YamlConfig {
 
 	private static String DEFAULT_FILE_NAME = "manifest.yaml";	// the default manifest file name
 
+	/**
+	 * Constructor
+	 * @param yamlFile			the YAML file
+	 * @param defaultModelGraph	model graph to use if not otherwise specified
+	 * @param defaultDataGraph	data graph to use if not otherwise specified
+	 * @throws Exception
+	 */
 	public ManifestConfig(File yamlFile, String defaultModelGraph, String defaultDataGraph) throws Exception {
 		super(yamlFile, Utility.getResourceAsTempFile(ManifestConfig.class, "/configSchema/manifest_config_schema.json"), defaultModelGraph, defaultDataGraph);
 
@@ -236,7 +243,7 @@ public class ManifestConfig extends YamlConfig {
 				// load content using CSV ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
 				LoadDataConfig config = new LoadDataConfig(stepFile, this.defaultModelGraph, this.defaultDataGraph);
-				config.load(null, null, server, serverTypeString, false, ingestClient, ngeClient, progressWriter);
+				config.load(null, null, server, serverTypeString, false, ingestClient, ngeClient, queryClient, progressWriter);
 
 			}else if(type == StepType.NODEGROUPS) {
 				// load nodegroups/reports from a directory
@@ -271,7 +278,8 @@ public class ManifestConfig extends YamlConfig {
 			if(copyToGraph != null) {
 				if(clear) {
 					writeProgress("Clear graph " + copyToGraph, progressWriter);
-					SparqlEndpointInterface.getInstance(serverTypeString, server, copyToGraph, username, password).clearGraph();
+					queryClient.setSei(SparqlEndpointInterface.getInstance(serverTypeString, server, copyToGraph, username, password));
+					queryClient.clearAll();
 				}
 				for(String graph : this.getGraphsFootprint()) {  // copy each model/data footprint graph to the given graph
 					writeProgress("Copy graph " + graph + " to " + copyToGraph, progressWriter);

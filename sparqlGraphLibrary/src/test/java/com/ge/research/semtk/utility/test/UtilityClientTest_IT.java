@@ -114,10 +114,10 @@ public class UtilityClientTest_IT {
 
 	// clear graphs and nodegroup store
 	private void reset() throws Exception {
-		modelFallbackSei.clearGraph();
-		dataFallbackSei.clearGraph();
-		dataSeiFromYaml.clearGraph();
-		defaultGraphSei.clearGraph();
+		IntegrationTestUtility.clearGraph(modelFallbackSei);
+		IntegrationTestUtility.clearGraph(dataFallbackSei);
+		IntegrationTestUtility.clearGraph(dataSeiFromYaml);
+		IntegrationTestUtility.clearGraph(defaultGraphSei);
 		IntegrationTestUtility.cleanupNodegroupStore("junit");
 	}
 
