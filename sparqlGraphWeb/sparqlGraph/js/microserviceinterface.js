@@ -50,6 +50,8 @@ define([	'sparqlgraph/js/msiresultset',
 		MicroServiceInterface.FORM_CONTENT = false;  // 3rd param to postToEndpoint
 
 		MicroServiceInterface.prototype = {
+				getUrl : function () { return this.url; },
+				
 				getServiceName : function () {
 					return this.url.slice(0,-1).split('/').pop();
 				},

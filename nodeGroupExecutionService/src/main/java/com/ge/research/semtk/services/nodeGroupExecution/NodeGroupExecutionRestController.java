@@ -1634,9 +1634,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject copyGraph(@RequestBody SparqlEndpointsRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		final String ENDPOINT_NAME = "copyGraph";
 		HeadersManager.setHeaders(headers);
-	
-		LocalLogger.logToStdOut("Sparql Query Service start downloadOwlFile");
-		
+			
 		try {
 			String jobId = JobTracker.generateJobId();
 			JobTracker tracker = this.getJobTracker();

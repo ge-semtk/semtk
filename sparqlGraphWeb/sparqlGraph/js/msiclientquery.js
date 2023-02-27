@@ -127,6 +127,17 @@ define([	// properly require.config'ed   bootstrap-modal
 
 				this.msi.postToEndpoint("syncOwl", formdata, MicroServiceInterface.FORM_CONTENT, successCallback, this.optFailureCallback, this.optTimeout);
 			},
+			
+			// get a URL that can be used to GET /downloadOwlGraph
+			getDownloadOwlGraphUrl : function () {
+				return this.msi.getUrl() + 
+					"/downloadOwlGraph" +
+					"?serverURL=" + encodeURIComponent(this.data.serverAndPort) +
+					"&serverType=" + encodeURIComponent(this.data.serverType) +
+					"&graph=" + encodeURIComponent(this.data.graph) +
+					"&user=" + encodeURIComponent(this.data.user) +
+					"&password=" + encodeURIComponent(this.data.password) 
+			},
 
 			// get the success message
 			getSuccessMessageHTML : function (resultSet) {
@@ -147,6 +158,7 @@ define([	// properly require.config'ed   bootstrap-modal
 
 			/*
 			 *  For compatibility with the "old" sparqlgraph sparqlserverinterface, etc.
+			 *  NO LONGER USED.
 			 */
 
 			executeAndParse : function (sparql, callback) {

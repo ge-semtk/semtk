@@ -22,7 +22,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -38,6 +40,8 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -53,11 +57,14 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
+import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.demo.DemoSetupThread;
 import com.ge.research.semtk.demo.JavaApiDemo;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
+import com.ge.research.semtk.edc.resultsStorage.TableResultsSerializer;
+import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -552,13 +559,14 @@ public class SparqlQueryServiceRestController {
 		try {			
 			requestBody.validate(); 	// check inputs 
 			resp.setHeader("Content-Disposition", "attachment; filename=download.owl");
-			resp.setCharacterEncoding("UTF_8");
+			resp.setCharacterEncoding("UTF-8");   // "UTF_8" was crashing 2/22/23 -Paul
 			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
 			sei.downloadOwlStreamed(resp.getWriter());
 			
 		} catch (Exception e) {			
 			LocalLogger.printStackTrace(e);
 			try {
+				resp.setCharacterEncoding(Charset.defaultCharset().name());
 				resp.getWriter().print("<error>\n\t" + e.toString() + "\n</error>");
 			} catch (Exception ee) {
 				LocalLogger.printStackTrace(ee);
@@ -568,6 +576,43 @@ public class SparqlQueryServiceRestController {
 			HeadersManager.setHeaders(new HttpHeaders());
 		}		
 	}	
+	
+	@Operation(
+			summary="Download graph as owl.   GET version of /downloadOwlFile",
+			description="Easy to call from js or a browser with URL"
+			)
+	@CrossOrigin
+	@RequestMapping(value= "/downloadOwlGraph" , method= RequestMethod.GET)
+	public void downloadOwlGraph(@RequestParam String serverURL, @RequestParam String serverType, @RequestParam String graph, @RequestParam(required=false) String user, @RequestParam(required=false) String password, HttpServletResponse resp, @RequestHeader HttpHeaders headers) {
+		HeadersManager.setHeaders(headers);
+		SparqlEndpointInterface sei = null;
+		LocalLogger.logToStdOut("Sparql Query Service start downloadOwlFile");
+		
+		try {		
+			String filename = graph.replaceFirst("\\w+://", "").replaceAll("[^a-zA-Z0-9-_\\.]", "_") + ".owl";
+			resp.setHeader("Content-Disposition", "attachment; filename=" + filename);
+			resp.setCharacterEncoding("UTF-8");
+			sei = SparqlEndpointInterface.getInstance(serverType, serverURL, graph, user, password);	
+			sei.downloadOwlStreamed(resp.getWriter());
+			
+		} catch (Exception e) {			
+			LocalLogger.printStackTrace(e);
+			try {
+				resp.setCharacterEncoding(Charset.defaultCharset().name());
+				resp.getWriter().print("<error>\n" + 
+						"downloadOwlGraph failed with serverURL=" + serverURL + 
+						", serverType=" + serverType + 
+						", graph=" + graph + 
+						"<br>" + e.toString() 
+						+ "\n</error>");
+			} catch (Exception ee) {
+				LocalLogger.printStackTrace(ee);
+			}
+			
+		} finally {
+			HeadersManager.setHeaders(new HttpHeaders());
+		}		
+	}
 	
 	
 	//public JSONObject uploadOwl(@RequestBody SparqlAuthRequestBody requestBody, @RequestParam("owlFile") MultipartFile owlFile){
@@ -582,8 +627,8 @@ public class SparqlQueryServiceRestController {
 								@RequestParam("serverType") String serverType, 
 								@RequestParam(value="dataset", required=false) String dataset, // deprecated in favor of graph
 								@RequestParam(value="graph", required=false) String graph, 
-								@RequestParam("user") String user, 
-								@RequestParam("password") String password, 
+								@RequestParam(value="user", required=false) String user, 
+								@RequestParam(value="password", required=false) String password, 
 								@RequestParam("owlFile") MultipartFile owlFile, 
 								@RequestHeader HttpHeaders headers) {
 		
@@ -626,7 +671,10 @@ public class SparqlQueryServiceRestController {
 			if (serverAndPort == null || serverAndPort.trim().isEmpty() ) throw new Exception("serverAndPort is empty.");
 			if (serverType == null || serverType.trim().isEmpty() ) throw new Exception("serverType is empty.");
 
-			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, graph, user, password);
+			// force auth interface even if none was provided.  Some don't need it.
+			String nonEmptyUser = (user==null || user.isBlank()) ? "no-user" : user;
+			String nonEmptyPassword = (password==null || password.isBlank()) ? "no-password" : password;
+			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, graph, nonEmptyUser, nonEmptyPassword);
 			
 			SimpleResultSet sResult = this.uploadFile(sei, multiFile.getInputStream(), multiFile.getName());
 			return sResult.toJson();

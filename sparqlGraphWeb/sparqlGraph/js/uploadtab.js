@@ -295,6 +295,24 @@ define([	// properly require.config'ed
 				table.appendChild(tr);
 
 
+				// ===== download owl =====
+				tr = document.createElement("tr");
+
+				td1 = document.createElement("td");
+				td1.id = "tdDownloadOwl1";
+				tr.appendChild(td1);
+
+				// button cell
+				td2 = document.createElement("td");
+				button = document.createElement("button");
+				button.id = "butDownloadOwl";
+				button.classList.add("btn");
+				button.innerHTML = "Download Owl";
+				button.onclick = this.toolsDownloadOwl.bind(this);
+				td2.appendChild(button);
+				tr.appendChild(td2);
+				table.appendChild(tr);
+				
 				// ===== clear data row =====
 				tr = document.createElement("tr");
 
@@ -566,10 +584,9 @@ define([	// properly require.config'ed
 				document.getElementById("tdChooseGraph1").innerHTML = "<b>Server: </b>" + this.getGraphServerUrl() + "<br>" +
 																		"<b>Graph: </b>" + this.getGraphGraph();
 
-				// clear graph
+				
+				document.getElementById("butDownloadOwl").disabled = (! connFlag);
 				document.getElementById("butClearGraph").disabled = (! connFlag);
-
-				// clear prefix
 				this.fillClearPrefix();
 
 				// upload owl
@@ -932,6 +949,27 @@ define([	// properly require.config'ed
 			/**
 			 * Clear graph button callback
 			 */
+			toolsDownloadOwl : function () {
+
+				if (this.getGraphServerUrl() === "") {
+					this.logAndAlert("Error", "No graph specified.");
+					return;
+				}
+				
+
+				IIDXHelper.progressBarCreate(this.progressDiv, "progress-danger progress-striped active");
+				IIDXHelper.progressBarSetPercent(this.progressDiv, 50);
+
+                var queryClient = new MsiClientQuery(
+									g.service.sparqlQuery.url,
+									this.getSelectedSei());
+				var downloadUrl = queryClient.getDownloadOwlGraphUrl();
+				IIDXHelper.downloadUrl(downloadUrl);
+			},
+			
+			/**
+			 * Clear graph button callback
+			 */
 			toolsClearGraph : function () {
 
 				if (this.getGraphServerUrl() === "") {
@@ -987,6 +1025,7 @@ define([	// properly require.config'ed
 			// note: opposite of disableAll() is .fillAll()
 			disableAll : function () {
 				this.button.disabled = true;
+				document.getElementById("butDownloadOwl").disabled = true;
 				document.getElementById("butClearGraph").disabled = true;
 				document.getElementById("butClearPrefix").disabled = true;
 				document.getElementById("butUploadFile").disabled = true;
