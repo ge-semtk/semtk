@@ -18,8 +18,8 @@
 package com.ge.research.semtk.fdccache.test;
 
 import static org.junit.Assert.*;
-import static org.junit.Assume.assumeTrue;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -28,6 +28,7 @@ import com.ge.research.semtk.fdccache.FdcCacheSpecRunner;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
@@ -35,6 +36,7 @@ import com.ge.research.semtk.utility.Utility;
 public class FdcCacheSpecRunnerTest_IT {
 	private final static String CREATOR = "Junit CacheSpecRunnerTest_IT.java";
 	private static SparqlConnection cacheConn = null;
+	private static SparqlEndpointInterface cacheSei;
 	
 	@BeforeClass
 	public static void setup() throws Exception {
@@ -56,10 +58,16 @@ public class FdcCacheSpecRunnerTest_IT {
 		// create a connection for caching:  TestGraph stuff and model in model[0].  Cache in data[0].
 		cacheConn = SparqlConnection.deepCopy(TestGraph.getSparqlConn());
 		cacheConn.clearDataInterfaces();
-		cacheConn.addDataInterface(TestGraph.getSei(TestGraph.generateGraphName("cache")));
+		cacheSei = TestGraph.getSei(TestGraph.generateGraphName("cache"));
+		cacheConn.addDataInterface(cacheSei);
 		cacheConn.getDataInterface(0).clearGraph();
 	}
 	
+	@AfterClass
+	public static void cleanup() throws Exception {
+		IntegrationTestUtility.clearGraph(cacheSei);
+	}
+
 	@Test
 	public void testSimple() throws Exception {
 		cacheConn.getDataInterface(0).clearGraph();

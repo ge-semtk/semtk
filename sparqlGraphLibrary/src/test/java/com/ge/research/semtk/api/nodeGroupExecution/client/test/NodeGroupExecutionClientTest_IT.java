@@ -51,7 +51,6 @@ import java.io.File;
 import java.math.BigInteger;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -80,6 +79,7 @@ public class NodeGroupExecutionClientTest_IT {
 		
 		@AfterClass
 	    public static void teardown() throws Exception {
+			IntegrationTestUtility.clearGraph(resultSei);
 	        // delete stored nodegroup when done with all tests
 			nodeGroupStoreClient.deleteStoredNodeGroupIfExists(ID);
 	    } 

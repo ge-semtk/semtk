@@ -27,11 +27,9 @@ import org.junit.Test;
 
 import com.ge.research.semtk.belmont.Node;
 import com.ge.research.semtk.belmont.NodeGroup;
-import com.ge.research.semtk.ontologyTools.ClassInstance;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.PathExplorer;
 import com.ge.research.semtk.ontologyTools.PathItemRequest;
-import com.ge.research.semtk.ontologyTools.ReturnRequest;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -42,7 +40,8 @@ public class PathExplorerTest_IT {
 	private static SparqlConnection conn = null;
 	private static OntologyInfo oInfo = null;
 	private static PathExplorer explorer = null;
-	
+	private static SparqlEndpointInterface cacheSei;
+
 	@BeforeClass
 	public static void setup() throws Exception {
 		
@@ -53,13 +52,17 @@ public class PathExplorerTest_IT {
 		
 		// create a nodegroup cache graph based on the jUnit test graph name
 		String cacheName = TestGraph.generateGraphName("ngCache");
-		SparqlEndpointInterface cacheSei = TestGraph.getSei(cacheName);
+		cacheSei = TestGraph.getSei(cacheName);
 		cacheSei.clearGraph();
 		
 		explorer = new PathExplorer(oInfo, conn, IntegrationTestUtility.getNodeGroupExecutionRestClient(), cacheSei);
 		
 	}
 	
+	@AfterClass
+	public static void cleanup() throws Exception {
+		IntegrationTestUtility.clearGraph(cacheSei);
+	}
 	
 	@Test
 	public void addClassAirportToAircraft() throws Exception {
