@@ -80,6 +80,7 @@ public class PathFindingTests_IT {
 
 		TestGraph.clearPrefix(UriResolver.DEFAULT_URI_PREFIX);
 		TestGraph.ingest(this.getClass(), "RACK/ingest_req_test_result.json", "RACK/ingest_req_test_result.csv");
+		assertEquals(TestGraph.getNumTriples(), 334);
 		
 		PredicateStats stats = new PredicateStats(TestGraph.getSparqlConn(), oInfo);
 		

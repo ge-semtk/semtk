@@ -20,6 +20,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import org.json.simple.JSONObject;
 import org.junit.Test;
 
 import java.io.File;
@@ -134,10 +135,37 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 			assertEquals(dataSei.getNumTriples(), 0);
 			assertEquals(dataFallbackSei.getNumTriples(), NUM_EXPECTED_TRIPLES);
 
-		}catch(Exception e) {
-			throw e;
 		}finally {
 			clearGraphs();
+		}
+	}
+
+	/**
+	 * Test loading data via YAML file: load by nodegroup
+	 */
+	@Test
+	public void testLoad_ByNodegroup() throws Exception{
+		try {
+			TestGraph.clearGraph();
+
+			// store a nodegroup to use for loading
+			JSONObject nodegroupJson = Utility.getResourceAsJson(this, "/RACK/ingest_req_test_result.json");
+			IntegrationTestUtility.getNodeGroupStoreRestClient().executeStoreNodeGroup("JUNIT LoadDataConfig-byNodegroup", "", "junit", nodegroupJson);
+
+			// upload OWL
+			TestGraph.uploadOwlResource(this, "/RACK/PROV-S.owl");
+			TestGraph.uploadOwlResource(this, "/RACK/REQUIREMENTS.owl");
+			TestGraph.uploadOwlResource(this, "/RACK/TESTING.owl");
+
+			// load data by nodegroup
+			File tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/config/LoadDataConfig-byNodegroup.zip");
+			LoadDataConfig loadDataConfig = new LoadDataConfig(Paths.get(tempDir.getAbsolutePath(), "import.yaml").toFile(), TestGraph.getSei().getGraph(), TestGraph.getSei().getGraph());
+			loadDataConfig.load(TestGraph.getSei().getGraph(), new LinkedList<String>(Arrays.asList(TestGraph.getSei().getGraph())), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));
+			assertEquals(TestGraph.getSei().getNumTriples(), 334);
+
+		} finally{
+			IntegrationTestUtility.cleanupNodegroupStore("junit");
+			TestGraph.clearGraph();
 		}
 	}
 
