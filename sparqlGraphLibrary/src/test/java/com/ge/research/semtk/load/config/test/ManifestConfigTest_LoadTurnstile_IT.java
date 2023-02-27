@@ -47,7 +47,7 @@ public class ManifestConfigTest_LoadTurnstile_IT {
 	}
 
 	/**
-	 * Test loading the Turnstile ingestion package
+	 * Test loading a subset of the Turnstile ingestion package
 	 */
 	@Test
 	public void test() throws Exception{
@@ -57,7 +57,7 @@ public class ManifestConfigTest_LoadTurnstile_IT {
 		File tempDir = null;
 		try {
 			// get manifest from ingestion package, perform load
-			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/config/IngestionPackage-Turnstile.zip");
+			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/config/IngestionPackage-TurnstileSubset.zip");
 			ManifestConfig manifest = new ManifestConfig(ManifestConfig.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 
 			reset();
@@ -66,7 +66,7 @@ public class ManifestConfigTest_LoadTurnstile_IT {
 			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), true, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));
 			assertEquals("Number of triples loaded to model fallback graph", 1986, modelFallbackSei.getNumTriples());
 			assertEquals("Number of triples loaded to data graph 1", 338, dataSeiFromYaml1.getNumTriples());
-			assertEquals("Number of triples loaded to data graph 2", 1386, dataSeiFromYaml2.getNumTriples());
+			assertEquals("Number of triples loaded to data graph 2", 104, dataSeiFromYaml2.getNumTriples());  // full Turnstile example has more data loaded here
 			assertEquals("Number of nodegroups", 32, IntegrationTestUtility.countItemsInStoreByCreator("junit"));	
 			assertEquals("Number of triples loaded to data fallback graph", 0, dataFallbackSei.getNumTriples());
 		}finally{
