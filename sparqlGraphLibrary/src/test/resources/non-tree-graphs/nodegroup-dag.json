@@ -7,14 +7,14 @@
 		"model": [
 			{
 				"type": "fuseki",
-				"url": "http://localhost:3030/RACK",
+				"url": "http://localhost:3030/JUNIT",
 				"graph": "http://rack001/model"
 			}
 		],
 		"data": [
 			{
 				"type": "fuseki",
-				"url": "http://localhost:3030/RACK",
+				"url": "http://localhost:3030/JUNIT",
 				"graph": "http://rack001/data"
 			}
 		]
