@@ -18,7 +18,6 @@ package com.ge.research.semtk.load.config.test;
 
 import org.junit.Test;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.util.LinkedList;
@@ -76,7 +75,7 @@ public class ManifestConfigInstantiateTest_IT extends YamlConfigTest {
 		final String SERVER = TestGraph.getSparqlServer();
 		final String SERVER_TYPE = TestGraph.getSparqlServerType();
 		// test regular connection
-		SparqlConnection conn = manifest.getConnection(SERVER, SERVER_TYPE);
+		SparqlConnection conn = manifest.getFootprintConnection(SERVER, SERVER_TYPE);
 		assertEquals(conn.getName(), "Animals");
 		assertEquals(conn.getModelInterfaces().size(), 1);
 		assertEquals(conn.getModelInterface(0).getGraph(), "http://junit/animals/model");

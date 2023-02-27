@@ -18,7 +18,6 @@ package com.ge.research.semtk.load.config;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.nio.file.Files;
 import java.util.LinkedList;
 import java.util.List;
 

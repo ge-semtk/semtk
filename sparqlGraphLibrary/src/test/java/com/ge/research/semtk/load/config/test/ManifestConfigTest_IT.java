@@ -23,9 +23,12 @@ import java.io.File;
 import java.io.PrintWriter;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.math3.util.Pair;
 import org.junit.Test;
 
 import com.ge.research.semtk.load.config.ManifestConfig;
+import com.ge.research.semtk.load.config.ManifestConfig.Step;
+import com.ge.research.semtk.load.config.ManifestConfig.StepType;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
@@ -36,6 +39,7 @@ public class ManifestConfigTest_IT {
 	SparqlEndpointInterface modelFallbackSei = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/model"));
 	SparqlEndpointInterface dataFallbackSei = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/data"));
 	SparqlEndpointInterface dataSeiFromYaml = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/data"));  // for this package, same as footprint/fallback
+	SparqlEndpointInterface dataSeiFromYamlCopy = TestGraph.getSei(TestGraph.uniquifyJunitGraphs("http://junit/rack001/data/copy")); // only for testing copy-graph step
 	SparqlEndpointInterface defaultGraphSei = TestGraph.getSei(SparqlEndpointInterface.SEMTK_DEFAULT_GRAPH_NAME);
 
 	public final static int NUM_EXPECTED_TRIPLES_MODEL = 1439;
@@ -68,6 +72,13 @@ public class ManifestConfigTest_IT {
 			assertEquals("Number of triples loaded to data graph", NUM_EXPECTED_TRIPLES_DATA, dataSeiFromYaml.getNumTriples());
 			assertEquals("Number of triples loaded to default graph", 0, defaultGraphSei.getNumTriples());
 			assertEquals("Number of nodegroups", NUM_EXPECTED_NODEGROUPS, IntegrationTestUtility.countItemsInStoreByCreator("junit"));
+
+			// test copy-graph step
+			reset();
+			manifest.addStep(new Step(StepType.COPYGRAPH, new Pair<String, String>(TestGraph.uniquifyJunitGraphs("http://junit/rack001/data"), TestGraph.uniquifyJunitGraphs("http://junit/rack001/data/copy"))));
+			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), true, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));
+			assertEquals("Number of triples loaded to data graph", NUM_EXPECTED_TRIPLES_DATA, dataSeiFromYaml.getNumTriples());
+			assertEquals("Number of triples loaded to data graph copy", NUM_EXPECTED_TRIPLES_DATA, dataSeiFromYamlCopy.getNumTriples());
 
 		}finally{
 			if(tempDir != null) { FileUtils.deleteDirectory(tempDir); }
@@ -119,6 +130,7 @@ public class ManifestConfigTest_IT {
 		IntegrationTestUtility.clearGraph(modelFallbackSei);
 		IntegrationTestUtility.clearGraph(dataFallbackSei);
 		IntegrationTestUtility.clearGraph(dataSeiFromYaml);
+		IntegrationTestUtility.clearGraph(dataSeiFromYamlCopy);
 		IntegrationTestUtility.clearGraph(defaultGraphSei);
 		IntegrationTestUtility.cleanupNodegroupStore("junit");
 	}

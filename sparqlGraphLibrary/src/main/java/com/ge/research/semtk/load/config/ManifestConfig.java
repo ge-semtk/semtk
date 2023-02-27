@@ -193,7 +193,7 @@ public class ManifestConfig extends YamlConfig {
 	 * @param serverTypeString the triple store type (e.g. "fuseki")
 	 * @return the connection object
 	 */
-	public SparqlConnection getConnection(String server, String serverTypeString) throws Exception {
+	public SparqlConnection getFootprintConnection(String server, String serverTypeString) throws Exception {
 		SparqlConnection conn = new SparqlConnection();
 		conn.setName(this.name);
 		for(String graph : modelgraphsFootprint) {
@@ -259,9 +259,9 @@ public class ManifestConfig extends YamlConfig {
 				subManifest.load(server, serverTypeString, false, false, ingestClient, ngeClient, ngStoreClient, queryClient, progressWriter);
 
 			}else if(type == StepType.COPYGRAPH) {
-				// perform the copy		TODO junit
-				String fromGraph = ((String[])step.getValue())[0];
-				String toGraph = ((String[])step.getValue())[1];
+				// perform the copy
+				String fromGraph = (String)((Pair)step.getValue()).getFirst();
+				String toGraph = (String)((Pair)step.getValue()).getSecond();
 				writeProgress("Copy " + fromGraph + " to " + toGraph, progressWriter);
 				ngeClient.copyGraph(server, serverTypeString, fromGraph, server, serverTypeString, toGraph);
 
