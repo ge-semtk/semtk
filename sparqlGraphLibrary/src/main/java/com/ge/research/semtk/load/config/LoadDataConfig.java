@@ -233,7 +233,7 @@ public class LoadDataConfig extends YamlConfig {
 		}
 		public void run(SparqlConnection conn, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
 			writeProgress("Load CSV " + getDisplayableFilePath() + " using nodegroup \"" + nodegroupId + "\"", progressWriter);
-			ngeClient.dispatchIngestFromCsvStringsByIdSync(this.nodegroupId, Files.readString(getFile().toPath()), conn); // TODO junit
+			ngeClient.dispatchIngestFromCsvStringsByIdSync(this.nodegroupId, Files.readString(getFile().toPath()), conn);
 		}
 	}
 

@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import org.json.simple.*;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -32,13 +33,11 @@ import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
-import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
-import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
 import com.ge.research.semtk.resultSet.TableResultSet;
 
 
@@ -49,6 +48,8 @@ public class IngestorRestClientTest_IT {
 	
 	private static SparqlGraphJson sgJson_TestGraph;
 	private static String sgJsonString_TestGraph;
+
+	private static String otherDataset;
 	
 	@BeforeClass
 	public static void setup() throws Exception {
@@ -60,6 +61,11 @@ public class IngestorRestClientTest_IT {
 
 		sgJson_TestGraph = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
 		sgJsonString_TestGraph = sgJson_TestGraph.getJson().toJSONString();   // template as a string
+	}
+
+	@AfterClass
+	public static void cleanup() throws Exception {
+		IntegrationTestUtility.clearGraph(TestGraph.getSei(otherDataset));
 	}
 	
 	
@@ -92,7 +98,7 @@ public class IngestorRestClientTest_IT {
 		JSONObject sparqlConnJson = sgJson_TestGraph.getSparqlConn().toJson();  // original TestGraph sparql conn 
 				
 		SparqlConnection sparqlConnectionOverride = new SparqlConnection(sparqlConnJson.toJSONString()); // get the connection object
-		String otherDataset = sparqlConnectionOverride.getDefaultQueryInterface().getGraph() + "OTHER";
+		otherDataset = sparqlConnectionOverride.getDefaultQueryInterface().getGraph() + "OTHER";
 		sparqlConnectionOverride.getDataInterface(0).setGraph(otherDataset);
 		sparqlConnectionOverride.getModelInterface(0).setGraph(otherDataset);
 		
