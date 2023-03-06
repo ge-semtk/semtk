@@ -106,6 +106,7 @@ public class AuthorizationProperties {
 	}
 	
 	public void validate() throws Exception {
+		System.out.println("---- Properties ----");
 		if (refreshFreqSeconds < 1 || refreshFreqSeconds > 3600) {
 			throw new Exception(this.getPrefixedNameValue("refreshFreqSeconds", (Integer) refreshFreqSeconds) + " must be between " + String.valueOf(1) + " and " + String.valueOf(3600));
 
