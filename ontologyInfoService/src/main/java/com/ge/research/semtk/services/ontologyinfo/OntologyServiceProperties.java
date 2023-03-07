@@ -27,7 +27,6 @@ import com.ge.research.semtk.properties.Properties;
 @ConfigurationProperties(prefix="oinfo", ignoreUnknownFields = true)
 public class OntologyServiceProperties extends Properties {
 
-	
 	public OntologyServiceProperties() {
 		super();
 		this.setPrefix("oinfo");
@@ -35,7 +34,6 @@ public class OntologyServiceProperties extends Properties {
 	
 	public void validate() throws Exception {
 		super.validate();
-		
 	}
 	
 }

@@ -15,18 +15,18 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.filestaging;
+package com.ge.research.semtk.services.utility;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import com.ge.research.semtk.properties.ResultsServiceProperties;
+import com.ge.research.semtk.properties.NgExecServiceProperties;
 
 @Configuration
-@ConfigurationProperties(prefix="filestaging.results", ignoreUnknownFields = true)
-public class FileStagingResultsServiceProperties extends ResultsServiceProperties {
-	public FileStagingResultsServiceProperties() {
+@ConfigurationProperties(prefix="utility.ngexec", ignoreUnknownFields = true)
+public class UtilityNgExecProperties extends NgExecServiceProperties {
+	public UtilityNgExecProperties() {
 		super();
-		this.setPrefix("filestaging.results");
+		setPrefix("utility.ngexec");
 	}
 }

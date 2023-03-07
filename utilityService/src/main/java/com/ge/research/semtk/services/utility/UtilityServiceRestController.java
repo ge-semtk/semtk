@@ -42,18 +42,12 @@ import org.springframework.web.multipart.MultipartFile;
 import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONObject;
 
-import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
-import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClientConfig;
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
-import com.ge.research.semtk.load.client.IngestorClientConfig;
-import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.load.config.ManifestConfig;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
-import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
-import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.plotting.PlotlyPlotSpec;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -62,12 +56,10 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
-import com.ge.research.semtk.sparqlX.client.SparqlQueryClientConfig;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
-import com.ge.research.semtk.services.utility.UtilityProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -85,18 +77,33 @@ public class UtilityServiceRestController {
  	private static final String SERVICE_NAME = "utilityService";
 
 	@Autowired
-	UtilityProperties props;
-	@Autowired
-	ServicesGraphProperties servicesgraph_prop;
-	@Autowired 
 	private AuthProperties auth_prop; 
-	@Autowired 
+	@Autowired
+	private ServicesGraphProperties servicesgraph_prop;
+	@Autowired
 	private ApplicationContext appContext;
+	@Autowired
+	private UtilityNgStoreProperties ngstore_prop;
+	@Autowired
+	private UtilityNgExecProperties ngexec_prop;
+	@Autowired
+	private UtilityIngestProperties ingest_prop;
+	@Autowired
+	private UtilityQueryServiceProperties query_prop;
+	@Autowired
+	private UtilityQueryServiceCredentialsProperties query_credentials_prop;
 	
 	@PostConstruct
     public void init() {
 		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
+		env_prop.validateWithExit();
 		auth_prop.validateWithExit();
+		servicesgraph_prop.validateWithExit();
+		ngstore_prop.validateWithExit();
+		ngexec_prop.validateWithExit();
+		ingest_prop.validateWithExit();
+		query_prop.validateWithExit();
+		query_credentials_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);
 	}
 	
@@ -134,7 +141,7 @@ public class UtilityServiceRestController {
 			NodeGroup ng = (new SparqlGraphJson(Utility.getJsonObjectFromString(ngStr))).getNodeGroup();
 			
 			// execute the nodegroup
-			Table table = getNodegroupExecutionClient().dispatchSelectFromNodeGroup(ng, getServicesSparqlConnection(), null, null);
+			Table table = ngexec_prop.getClient().dispatchSelectFromNodeGroup(ng, getServicesSparqlConnection(), null, null);
 	    	res.addResults(table);
 	    	res.setSuccess(true);
 			
@@ -167,7 +174,7 @@ public class UtilityServiceRestController {
 			// execute the nodegroup
 			LocalLogger.logToStdOut("Insert EDC mnemonic data:\n" + dataFileContent);
 			LocalLogger.logToStdOut("Insert EDC mnemonic data using connection " + getServicesSparqlConnection().toJson().toString());
-			retVal = getNodegroupExecutionClient().execIngestionFromCsvStr(sparqlGraphJson, dataFileContent);
+			retVal = ngexec_prop.getClient().execIngestionFromCsvStr(sparqlGraphJson, dataFileContent);
 			
 		} catch (Exception e) {
 			retVal.setSuccess(false);
@@ -216,7 +223,7 @@ public class UtilityServiceRestController {
 			// execute the nodegroup
 			LocalLogger.logToStdOut("Delete mnemonic " + mnemonic);
 			LocalLogger.logToStdOut("Delete mnemonic using connection " + getServicesSparqlConnection().toJson().toString());
-			res = getNodegroupExecutionClient().execDispatchDeleteFromNodeGroup(deleteNodegroup, getServicesSparqlConnection(), null, runtimeConstraints);
+			res = ngexec_prop.getClient().execDispatchDeleteFromNodeGroup(deleteNodegroup, getServicesSparqlConnection(), null, runtimeConstraints);
 			
 		} catch (Exception e) {
 	    	res.setSuccess(false);
@@ -236,7 +243,7 @@ public class UtilityServiceRestController {
     	TableResultSet res = new TableResultSet();	
 		try {
 			NodeGroup ng = (new SparqlGraphJson(Utility.getResourceAsJson(this, "/nodegroups/GetFdcCacheSpecList.json"))).getNodeGroup();
-			Table table = getNodegroupExecutionClient().dispatchSelectFromNodeGroup(ng, getServicesSparqlConnection(), null, null);
+			Table table = ngexec_prop.getClient().dispatchSelectFromNodeGroup(ng, getServicesSparqlConnection(), null, null);
 	    	res.addResults(table);
 	    	res.setSuccess(true);
 		} catch (Exception e) {
@@ -279,7 +286,7 @@ public class UtilityServiceRestController {
 			// execute the nodegroup
 			LocalLogger.logToStdOut("Delete FDC Cache Spec '" + specId + "'");
 			LocalLogger.logToStdOut("Delete FDC Cache Spec using connection " + getServicesSparqlConnection().toJson().toString());
-			res = getNodegroupExecutionClient().execDispatchDeleteFromNodeGroup(nodegroup, getServicesSparqlConnection(), null, runtimeConstraints);
+			res = ngexec_prop.getClient().execDispatchDeleteFromNodeGroup(nodegroup, getServicesSparqlConnection(), null, runtimeConstraints);
 			
 		} catch (Exception e) {
 	    	res.setSuccess(false);
@@ -291,6 +298,7 @@ public class UtilityServiceRestController {
 	}
 	
 	
+	@SuppressWarnings("unchecked")
 	@Operation(
 			description="Get user name provided by a proxy\n{ name : 'fred' } or { name : 'anonymous' } if none"
 			)
@@ -312,7 +320,6 @@ public class UtilityServiceRestController {
 		JSONObject ret = new JSONObject();
 		ret.put("name", user);
 		return ret;
-	
 	}
 	
 	
@@ -406,7 +413,7 @@ public class UtilityServiceRestController {
 				throw new Exception("Cannot find a top-level manifest in " + ingestionPackageZipFile.getOriginalFilename());
 			}
 			ManifestConfig manifest = new ManifestConfig(manifestFile, defaultModelGraph, defaultDataGraph);
-			manifest.load(serverAndPort, serverType, clear, true, getIngestorRestClient(), getNodegroupExecutionClient(), getNodegroupStoreClient(), getSparqlQueryClient(), responseWriter);
+			manifest.load(serverAndPort, serverType, clear, true, ingest_prop.getClient(), ngexec_prop.getClient(), ngstore_prop.getClient(), getSparqlQueryClient(), responseWriter);
 
 			responseWriter.println("Load complete");
 			responseWriter.flush();
@@ -466,33 +473,11 @@ public class UtilityServiceRestController {
 	 * Get a sparqlQueryClient with no endpoint or Sei
 	 */
 	private SparqlQueryClient getSparqlQueryClient() throws Exception{
-		SparqlQueryAuthClientConfig config = new SparqlQueryAuthClientConfig(props.getSparqlServiceProtocol(), props.getSparqlServiceServer(), props.getSparqlServicePort(), 
+		SparqlQueryAuthClientConfig config = new SparqlQueryAuthClientConfig(
+					query_prop.getProtocol(), query_prop.getServer(), query_prop.getPort(),
 					"unset-endpoint", "unset-server", "unset-server-type", "unset-graph", 
-					props.getSparqlServiceUser(), props.getSparqlServicePass());
+					query_credentials_prop.getUser(), query_credentials_prop.getPassword());
 		return new SparqlQueryClient(config);
 	}
-	
-	/**
-	 * Get a nodegroup execution client.
-	 */
-	private NodeGroupExecutionClient getNodegroupExecutionClient() throws Exception{
-		NodeGroupExecutionClientConfig necc = new NodeGroupExecutionClientConfig(props.getNodegroupExecutionServiceProtocol(), props.getNodegroupExecutionServiceServer(), props.getNodegroupExecutionServicePort());
-		return new NodeGroupExecutionClient(necc);
-	}
 
-	/**
-	 * Get a nodegroup store client.
-	 */
-	private NodeGroupStoreRestClient getNodegroupStoreClient() throws Exception{
-		NodeGroupStoreConfig ngsc = new NodeGroupStoreConfig(props.getNodegroupStoreServiceProtocol(), props.getNodegroupStoreServiceServer(), props.getNodegroupStoreServicePort());
-		return new NodeGroupStoreRestClient(ngsc);
-	}
-
-	/**
-	 * Get a ingestion client.
-	 */
-	private IngestorRestClient getIngestorRestClient() throws Exception{
-		IngestorClientConfig icc = new IngestorClientConfig(props.getIngestionServiceProtocol(), props.getIngestionServiceServer(), props.getIngestionServicePort());
-		return new IngestorRestClient(icc);
-	}
 }

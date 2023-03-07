@@ -18,8 +18,6 @@ package com.ge.research.semtk.auth;
 
 import java.util.Arrays;
 
-import org.json.simple.JSONObject;
-
 public class AuthorizationProperties {
 	private String prefix = "<unset>";
 	int refreshFreqSeconds = 300;
@@ -106,6 +104,7 @@ public class AuthorizationProperties {
 	}
 	
 	public void validate() throws Exception {
+		System.out.println("---- Properties ----");
 		if (refreshFreqSeconds < 1 || refreshFreqSeconds > 3600) {
 			throw new Exception(this.getPrefixedNameValue("refreshFreqSeconds", (Integer) refreshFreqSeconds) + " must be between " + String.valueOf(1) + " and " + String.valueOf(3600));
 

@@ -1,13 +1,13 @@
 /**
- ** Copyright 2020 General Electric Company
+ ** Copyright 2023 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
  ** you may not use this file except in compliance with the License.
  ** You may obtain a copy of the License at
- ** 
+ **
  **     http://www.apache.org/licenses/LICENSE-2.0
- ** 
+ **
  ** Unless required by applicable law or agreed to in writing, software
  ** distributed under the License is distributed on an "AS IS" BASIS,
  ** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -15,18 +15,18 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.filestaging;
+package com.ge.research.semtk.services.utility;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import com.ge.research.semtk.properties.ResultsServiceProperties;
+import com.ge.research.semtk.properties.IngestorServiceProperties;
 
 @Configuration
-@ConfigurationProperties(prefix="filestaging.results", ignoreUnknownFields = true)
-public class FileStagingResultsServiceProperties extends ResultsServiceProperties {
-	public FileStagingResultsServiceProperties() {
+@ConfigurationProperties(prefix="utility.ingest", ignoreUnknownFields = true)
+public class UtilityIngestProperties extends IngestorServiceProperties {
+	public UtilityIngestProperties() {
 		super();
-		this.setPrefix("filestaging.results");
+		setPrefix("utility.ingest");
 	}
 }
