@@ -35,19 +35,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.net.URL;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -57,14 +49,9 @@ import javax.servlet.http.HttpServletResponse;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
-import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.demo.DemoSetupThread;
 import com.ge.research.semtk.demo.JavaApiDemo;
-import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
-import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
-import com.ge.research.semtk.edc.resultsStorage.TableResultsSerializer;
-import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -75,7 +62,6 @@ import com.ge.research.semtk.services.sparql.requests.SparqlPrefixAuthRequestBod
 import com.ge.research.semtk.services.sparql.requests.SparqlPrefixesAuthRequestBody;
 import com.ge.research.semtk.services.sparql.requests.SparqlQueryAuthRequestBody;
 import com.ge.research.semtk.services.sparql.requests.SparqlQueryRequestBody;
-import com.ge.research.semtk.services.sparql.requests.SparqlRequestBody;
 import com.ge.research.semtk.sparqlX.NeptuneSparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -83,8 +69,6 @@ import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.sparqlX.parallel.SparqlParallelQueries;
 import com.ge.research.semtk.springutilib.requests.GraphNameRequestBody;
-import com.ge.research.semtk.springutilib.requests.SparqlEndpointRequestBody;
-import com.ge.research.semtk.springutilib.requests.SparqlEndpointsRequestBody;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
@@ -788,7 +772,7 @@ public class SparqlQueryServiceRestController {
 	 * @throws Exception
 	 */
 	private void uncache(SparqlEndpointInterface sei) throws Exception {
-		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
+		OntologyInfoClient oClient = oinfo_props.getClient();
 		SparqlConnection conn = new SparqlConnection();
 		conn.addModelInterface(sei);
 		oClient.uncacheChangedConn(conn);

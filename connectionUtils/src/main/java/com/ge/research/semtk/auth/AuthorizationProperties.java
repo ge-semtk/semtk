@@ -18,8 +18,6 @@ package com.ge.research.semtk.auth;
 
 import java.util.Arrays;
 
-import org.json.simple.JSONObject;
-
 public class AuthorizationProperties {
 	private String prefix = "<unset>";
 	int refreshFreqSeconds = 300;

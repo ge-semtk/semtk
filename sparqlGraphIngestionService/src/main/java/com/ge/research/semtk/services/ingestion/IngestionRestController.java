@@ -75,9 +75,6 @@ import com.ge.research.semtk.connutil.DirectoryConnector;
 import com.ge.research.semtk.connutil.FileSystemConnector;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
-import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
-import com.ge.research.semtk.edc.client.ResultsClient;
-import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.DataLoader;
@@ -318,7 +315,7 @@ public class IngestionRestController {
 	 */
 	private IngestionNodegroupBuilder buildTemplate(SparqlConnection conn, String classURI, String idRegex) throws Exception {
 		// get oInfo from the service (hopefully cached)
-		OntologyInfo oInfo = this.buildOInfoClient().getOntologyInfo(conn);
+		OntologyInfo oInfo = oinfo_props.getClient().getOntologyInfo(conn);
 		
 		IngestionNodegroupBuilder builder = new IngestionNodegroupBuilder(classURI, conn, oInfo);
 		builder.setIdRegex(idRegex); 
@@ -639,7 +636,7 @@ public class IngestionRestController {
 			
 			dl.runAsync(precheck, skipIngest, 
 					new StatusClient(new StatusClientConfig(status_prop.getProtocol(), status_prop.getServer(), status_prop.getPort(), jobId)), 
-					new ResultsClient(new ResultsClientConfig(results_prop.getProtocol(), results_prop.getServer(), results_prop.getPort()))
+					results_prop.getClient()
 					);
 			
 			if (trackFlag != null && trackFlag) {
@@ -1129,13 +1126,10 @@ public class IngestionRestController {
 	 * @throws Exception
 	 */
 	private void uncache(SparqlEndpointInterface sei) throws Exception {
-		OntologyInfoClient oClient = this.buildOInfoClient();
+		OntologyInfoClient oClient = oinfo_props.getClient();
 		SparqlConnection conn = new SparqlConnection();
 		conn.addModelInterface(sei);
 		oClient.uncacheChangedConn(conn);
 	}
 	
-	private OntologyInfoClient buildOInfoClient() throws Exception {
-		return new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
-	}
 }

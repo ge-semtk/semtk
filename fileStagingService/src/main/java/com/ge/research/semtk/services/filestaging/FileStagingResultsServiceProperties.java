@@ -20,10 +20,11 @@ package com.ge.research.semtk.services.filestaging;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import com.ge.research.semtk.properties.ServiceProperties;
+import com.ge.research.semtk.properties.ResultsServiceProperties;
+
 @Configuration
 @ConfigurationProperties(prefix="filestaging.results", ignoreUnknownFields = true)
-public class FileStagingResultsServiceProperties extends ServiceProperties {
+public class FileStagingResultsServiceProperties extends ResultsServiceProperties {
 	public FileStagingResultsServiceProperties() {
 		super();
 		this.setPrefix("filestaging.results");

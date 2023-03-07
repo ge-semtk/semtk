@@ -39,7 +39,6 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
-import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.ontologyTools.DataDictionaryGenerator;
 import com.ge.research.semtk.ontologyTools.InstanceDictGenerator;
 import com.ge.research.semtk.ontologyTools.RestrictionChecker;
@@ -403,7 +402,7 @@ public class OntologyInfoServiceRestController {
 		try {		
 			String jobId = JobTracker.generateJobId();
 			JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
-			ResultsClient rclient = new ResultsClient(new ResultsClientConfig(results_props.getProtocol(), results_props.getServer(), results_props.getPort()));
+			ResultsClient rclient = results_props.getClient();
 			
 			SparqlConnection conn = requestBody.buildSparqlConnection();
 			PredicateStats stats = this.predStatsCache.getIfCached(conn);
@@ -462,7 +461,7 @@ public class OntologyInfoServiceRestController {
 		try {		
 			String jobId = JobTracker.generateJobId();
 			JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
-			ResultsClient rclient = new ResultsClient(new ResultsClientConfig(results_props.getProtocol(), results_props.getServer(), results_props.getPort()));
+			ResultsClient rclient = results_props.getClient();
 			
 			SparqlConnection conn = requestBody.buildSparqlConnection();
 			tracker.createJob(jobId);
@@ -558,7 +557,7 @@ public class OntologyInfoServiceRestController {
 			String jobId = JobTracker.generateJobId();
 			JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
 			tracker.createJob(jobId);
-			ResultsClient rclient = new ResultsClient(new ResultsClientConfig(results_props.getProtocol(), results_props.getServer(), results_props.getPort()));
+			ResultsClient rclient = results_props.getClient();
 			
 			// spin up an async thread
 			new Thread(() -> {

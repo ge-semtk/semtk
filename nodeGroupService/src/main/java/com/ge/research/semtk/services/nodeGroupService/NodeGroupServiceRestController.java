@@ -17,8 +17,6 @@
 
 package com.ge.research.semtk.services.nodeGroupService;
 
-import static org.junit.Assert.assertArrayEquals;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 
@@ -30,9 +28,7 @@ import com.ge.research.semtk.belmont.*;
 import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
-import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
 import com.ge.research.semtk.edc.client.ResultsClient;
-import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.services.nodeGroupService.requests.*;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -75,7 +71,6 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.utility.LocalLogger;
-import com.google.gson.JsonArray;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -161,7 +156,7 @@ public class NodeGroupServiceRestController {
 					SparqlConnection conn = sgJson.getSparqlConn();
 					NodeGroup ng = sgJson.getNodeGroup();
 					SimpleResultSet results = new SimpleResultSet(true);
-					ResultsClient rclient = new ResultsClient(new ResultsClientConfig(results_props.getProtocol(), results_props.getServer(), results_props.getPort()));
+					ResultsClient rclient = results_props.getClient();
 					JSONArray pathJsonArr = new JSONArray();
 					JSONArray pathWarnArr = new JSONArray();
 					
@@ -1266,7 +1261,7 @@ public class NodeGroupServiceRestController {
 		/* This option is slower
 		 * But cache is cleared when owl is loaded or model might have changed
 		 */
-		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
+		OntologyInfoClient oClient = oinfo_props.getClient();
 		return oClient.getOntologyInfo(conn);
 		
 	}
@@ -1280,8 +1275,7 @@ public class NodeGroupServiceRestController {
 	 * @throws Exception
 	 */
 	private PredicateStats retrievePredicateStatsIfCached(SparqlConnection conn) throws Exception {
-
-		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
+		OntologyInfoClient oClient = oinfo_props.getClient();
 		return oClient.execGetCachedPredicateStats(conn);
 	}
 	
@@ -1306,7 +1300,7 @@ public class NodeGroupServiceRestController {
 	 */
 	private PredicateStats retrievePredicateStats(SparqlConnection conn, String parentJobId, int startPercent, int endPercent) throws Exception {
 
-		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
+		OntologyInfoClient oClient = oinfo_props.getClient();
 		String jobId = oClient.execGetPredicateStats(conn);
 		JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
 		
@@ -1315,7 +1309,7 @@ public class NodeGroupServiceRestController {
 		}
 		
 		if (tracker.jobSucceeded(jobId)) {
-			ResultsClient rclient = new ResultsClient(new ResultsClientConfig(results_props.getProtocol(), results_props.getServer(), results_props.getPort()));
+			ResultsClient rclient = results_props.getClient();
 			JSONObject statsJson = rclient.execGetBlobResult(jobId);
 			return new PredicateStats(statsJson);
 		} else {

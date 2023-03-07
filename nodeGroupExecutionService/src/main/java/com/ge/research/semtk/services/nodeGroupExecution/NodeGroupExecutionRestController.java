@@ -52,16 +52,11 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
-import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
 import com.ge.research.semtk.edc.client.ResultsClient;
-import com.ge.research.semtk.edc.client.ResultsClientConfig;
-import com.ge.research.semtk.edc.client.StatusClientConfig;
-import com.ge.research.semtk.load.client.IngestorClientConfig;
 import com.ge.research.semtk.load.client.IngestorRestClient;
 import com.ge.research.semtk.load.utility.ImportSpecHandler;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
-import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.ontologyTools.CombineEntitiesInConnThread;
 import com.ge.research.semtk.ontologyTools.CombineEntitiesTableThread;
@@ -102,13 +97,11 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
-import com.ge.research.semtk.sparqlX.dispatch.client.DispatchClientConfig;
 import com.ge.research.semtk.sparqlX.dispatch.client.DispatchRestClient;
 import com.ge.research.semtk.springutilib.requests.GetClassTemplateRequestBody;
 import com.ge.research.semtk.springutilib.requests.IdRequest;
 import com.ge.research.semtk.springutilib.requests.IngestConstants;
 import com.ge.research.semtk.springutilib.requests.IngestionFromStringsAndClassRequestBody;
-import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointRequestBody;
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointTrackRequestBody;
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointsRequestBody;
@@ -1037,7 +1030,7 @@ public class NodeGroupExecutionRestController {
 		try {	
 			
 			SparqlConnection conn = requestBody.buildSparqlConnection();
-			ResultsClient resClient = getResultsClient();
+			ResultsClient resClient = results_prop.getClient();
 			
 			ConnectedDataConstructor constructor = new ConnectedDataConstructor(
 					requestBody.getInstanceVal(), requestBody.buildInstanceType(),
@@ -1210,8 +1203,7 @@ public class NodeGroupExecutionRestController {
 				// borrowing auth username password from the services graph
 				sei.setUserAndPassword(jobSei.getUserName(), jobSei.getPassword());
 				
-				ResultsClientConfig  rConf   = new ResultsClientConfig(results_prop.getProtocol(), results_prop.getServer(), results_prop.getPort());
-				ResultsClient resClient = new ResultsClient(rConf);
+				ResultsClient resClient = results_prop.getClient();
 				
 				// create a new StoredQueryExecutor
 				SparqlExecutor sparqlExec = new SparqlExecutor(
@@ -1423,7 +1415,7 @@ public class NodeGroupExecutionRestController {
 		HeadersManager.setHeaders(headers);
 		try {
 			// pass-through
-			IngestorRestClient iclient = new IngestorRestClient(new IngestorClientConfig(ingest_prop.getProtocol(), ingest_prop.getServer(), ingest_prop.getPort()));
+			IngestorRestClient iclient = ingest_prop.getClient();
 			String jobId = iclient.execFromCsvUsingClassTemplate(requestBody.getClassURI(), requestBody.getIdRegex(), requestBody.getData(), requestBody.getConnection(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 			
 			// success: add jobId
@@ -1462,7 +1454,7 @@ public class NodeGroupExecutionRestController {
 		
 		try {
 			// pass-through
-			IngestorRestClient iclient = new IngestorRestClient(new IngestorClientConfig(ingest_prop.getProtocol(), ingest_prop.getServer(), ingest_prop.getPort()));
+			IngestorRestClient iclient = ingest_prop.getClient();
 			return iclient.execGetClassTemplateAndCsv(requestBody.getClassURI(), requestBody.getIdRegex(), requestBody.getConnection());
 			
 		} catch (Exception e) {
@@ -1491,8 +1483,7 @@ public class NodeGroupExecutionRestController {
 			TableResultSet retval = null;
 			
 			try {
-				NodeGroupStoreConfig ngcConf = new NodeGroupStoreConfig(ngstore_prop.getProtocol(), ngstore_prop.getServer(), ngstore_prop.getPort());
-				NodeGroupStoreRestClient nodegroupstoreclient = new NodeGroupStoreRestClient(ngcConf);
+				NodeGroupStoreRestClient nodegroupstoreclient = ngstore_prop.getClient();
 				retval = nodegroupstoreclient.executeGetNodeGroupRuntimeConstraints(requestBody.getNodegroupId()) ;
 			}
 			catch(Exception e){
@@ -1606,7 +1597,7 @@ public class NodeGroupExecutionRestController {
 		// pass-through to ingestion service
 		HeadersManager.setHeaders(headers);
 		try {
-			IngestorRestClient iclient = new IngestorRestClient(new IngestorClientConfig(ingest_prop.getProtocol(), ingest_prop.getServer(), ingest_prop.getPort()));
+			IngestorRestClient iclient = ingest_prop.getClient();
 			return iclient.execClearGraph(requestBody.buildSei(), requestBody.getTrackFlag()).toJson();
 		}
 		catch (Exception e) {
@@ -1797,7 +1788,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject runTrackingQuery(@RequestBody TrackQueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			IngestorRestClient iclient = new IngestorRestClient(new IngestorClientConfig(ingest_prop.getProtocol(), ingest_prop.getServer(), ingest_prop.getPort()));
+			IngestorRestClient iclient = ingest_prop.getClient();
 			return iclient.execRunTrackingQuery(requestBody.buildSei(), requestBody.getKey(), requestBody.getUser(), requestBody.getStartEpoch(), requestBody.getEndEpoch()).toJson();
 		}
 		catch (Exception e) {
@@ -1816,7 +1807,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject deleteTrackingEvents(@RequestBody TrackQueryRequestBody requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			IngestorRestClient iclient = new IngestorRestClient(new IngestorClientConfig(ingest_prop.getProtocol(), ingest_prop.getServer(), ingest_prop.getPort()));
+			IngestorRestClient iclient = ingest_prop.getClient();
 			return iclient.execDeleteTrackingEvents(requestBody.buildSei(), requestBody.getKey(), requestBody.getUser(), requestBody.getStartEpoch(), requestBody.getEndEpoch()).toJson();
 		}
 		catch (Exception e) {
@@ -1835,7 +1826,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject getTrackedIngestFile(@RequestBody IdRequest requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			IngestorRestClient iclient = new IngestorRestClient(new IngestorClientConfig(ingest_prop.getProtocol(), ingest_prop.getServer(), ingest_prop.getPort()));
+			IngestorRestClient iclient = ingest_prop.getClient();
 			return iclient.execGetTrackedIngestFile(requestBody.getId()).toJson();
 		}
 		catch (Exception e) {
@@ -1854,7 +1845,7 @@ public class NodeGroupExecutionRestController {
 	public JSONObject undoLoad(@RequestBody IdRequest requestBody, @RequestHeader HttpHeaders headers) {
 		HeadersManager.setHeaders(headers);
 		try {
-			IngestorRestClient iclient = new IngestorRestClient(new IngestorClientConfig(ingest_prop.getProtocol(), ingest_prop.getServer(), ingest_prop.getPort()));
+			IngestorRestClient iclient = ingest_prop.getClient();
 			return iclient.execUndoLoad(requestBody.getId()).toJson();
 		}
 		catch (Exception e) {
@@ -1911,7 +1902,7 @@ public class NodeGroupExecutionRestController {
 			SparqlConnection conn = requestBody.buildSparqlConnection();
 			
 			new CombineEntitiesTableThread(
-					tracker, this.getResultsClient(), jobId, this.retrieveOInfo(conn), conn, 
+					tracker, results_prop.getClient(), jobId, this.retrieveOInfo(conn), conn, 
 					requestBody.getDeletePredicatesFromTarget(), requestBody.getDeletePredicatesFromDuplicate(),
 					requestBody.buildTable()
 					).start();
@@ -1949,7 +1940,7 @@ public class NodeGroupExecutionRestController {
 			
 
 			new CombineEntitiesInConnThread(
-					tracker, this.getResultsClient(), jobId, this.retrieveOInfo(conn), conn, 
+					tracker, results_prop.getClient(), jobId, this.retrieveOInfo(conn), conn, 
 					requestBody.getSameAsClassURI(), requestBody.getTargetPropURI(), requestBody.getDuplicatePropURI(),
 					requestBody.getDeletePredicatesFromTarget(), requestBody.getDeletePredicatesFromDuplicate()
 					).start();
@@ -1985,7 +1976,7 @@ public class NodeGroupExecutionRestController {
 		
 		// store results to 
 		tracker.setJobPercentComplete(jobId, 81, "uploading RDF to graph");
-		JSONObject jObj = getResultsClient().execGetBlobResult(queryJobId);
+		JSONObject jObj = results_prop.getClient().execGetBlobResult(queryJobId);
 		String owl = (String) jObj.get("RDF");
 		this.uploadOwl(resultsSei, owl.getBytes());
 		tracker.setJobSuccess(jobId);
@@ -2050,24 +2041,16 @@ public class NodeGroupExecutionRestController {
 	}
 	
 	private SparqlGraphJson getNodegroupById(String id) throws Exception {
-		NodeGroupStoreConfig ngcConf = new NodeGroupStoreConfig(ngstore_prop.getProtocol(), ngstore_prop.getServer(), ngstore_prop.getPort());
-		NodeGroupStoreRestClient nodegroupstoreclient = new NodeGroupStoreRestClient(ngcConf);
+		NodeGroupStoreRestClient nodegroupstoreclient = ngstore_prop.getClient();
 		return nodegroupstoreclient.executeGetNodeGroupByIdToSGJson(id);
 	}
 	
-	// create the required StoredQueryExecutor
 	private NodeGroupExecutor getExecutor(String jobID) throws Exception{
-		NodeGroupStoreConfig ngcConf = new NodeGroupStoreConfig(ngstore_prop.getProtocol(), ngstore_prop.getServer(), ngstore_prop.getPort());
-		DispatchClientConfig dsConf  = new DispatchClientConfig(dispatch_prop.getProtocol(), dispatch_prop.getServer(), dispatch_prop.getPort());
-		ResultsClientConfig  rConf   = new ResultsClientConfig(results_prop.getProtocol(), results_prop.getServer(), results_prop.getPort());
-		StatusClientConfig   sConf   = new StatusClientConfig(status_prop.getProtocol(), status_prop.getServer(), status_prop.getPort(), jobID);
-		IngestorClientConfig iConf   = new IngestorClientConfig(ingest_prop.getProtocol(), ingest_prop.getServer(), ingest_prop.getPort());
-		
-		// create the other components we need. 
-		NodeGroupStoreRestClient nodegroupstoreclient = new NodeGroupStoreRestClient(ngcConf);
-		DispatchRestClient dispatchclient = new DispatchRestClient(dsConf);
-		ResultsClient resultsclient = new ResultsClient(rConf);
-		IngestorRestClient ingestClient = new IngestorRestClient(iConf);
+
+		NodeGroupStoreRestClient nodegroupstoreclient = ngstore_prop.getClient();
+		DispatchRestClient dispatchclient = dispatch_prop.getClient();
+		ResultsClient resultsclient = results_prop.getClient();
+		IngestorRestClient ingestClient = ingest_prop.getClient();
 		
 		// create the actual executor
 		NodeGroupExecutor retval = new NodeGroupExecutor(nodegroupstoreclient, dispatchclient, resultsclient, servicesgraph_props.buildSei(), ingestClient);
@@ -2107,19 +2090,13 @@ public class NodeGroupExecutionRestController {
 	 * @throws Exception
 	 */
 	private OntologyInfo retrieveOInfo(SparqlConnection conn) throws Exception {
-		OntologyInfoClient oClient = new OntologyInfoClient(new OntologyInfoClientConfig(oinfo_props.getProtocol(), oinfo_props.getServer(), oinfo_props.getPort()));
+		OntologyInfoClient oClient = oinfo_props.getClient();
 		return oClient.getOntologyInfo(conn);
 		
 	}
 	
 	private JobTracker getJobTracker() throws Exception{
 		return new JobTracker(servicesgraph_props.buildSei());
-	}
-	
-	private ResultsClient getResultsClient() throws Exception {
-		ResultsClientConfig  rConf   = new ResultsClientConfig(results_prop.getProtocol(), results_prop.getServer(), results_prop.getPort());
-		ResultsClient resClient = new ResultsClient(rConf);
-		return resClient;
 	}
 	
 }
