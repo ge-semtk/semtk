@@ -19,12 +19,9 @@
 package com.ge.research.semtk.services.sparql;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -72,6 +69,8 @@ import com.ge.research.semtk.springutilib.requests.GraphNameRequestBody;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.NeptuneS3Properties;
+import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.springutillib.properties.StoreProperties;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -115,17 +114,17 @@ public class SparqlQueryServiceRestController {
 	    response.addHeader("Access-Control-Max-Age", "3600");
 	}
 	@Autowired
-	OInfoServiceProperties oinfo_props;
+	OntologyInfoServiceProperties oinfo_props;
 	@Autowired
-	private QueryUploadNeptuneProperties upload_neptune_props; 
+	private NeptuneS3Properties neptune_prop;
 	@Autowired
 	private AuthProperties auth_prop; 
 	@Autowired 
 	private ApplicationContext appContext;
 	@Autowired
-	ServicesGraphProperties servicesgraph_prop;
+	private ServicesGraphProperties servicesgraph_prop;
 	@Autowired
-	StoreProperties store_prop;
+	private StoreProperties store_prop;
 	
 	@PostConstruct
     public void init() {
@@ -133,7 +132,7 @@ public class SparqlQueryServiceRestController {
 		env_prop.validateWithExit();
 		
 		oinfo_props.validateWithExit();
-		upload_neptune_props.validateWithExit();
+		neptune_prop.validateWithExit();
 		auth_prop.validateWithExit();
 		servicesgraph_prop.validateWithExit();
 		
@@ -686,9 +685,9 @@ public class SparqlQueryServiceRestController {
 		
 		if (sei instanceof NeptuneSparqlEndpointInterface) {
 			((NeptuneSparqlEndpointInterface)sei).setS3Config(
-					upload_neptune_props.getS3ClientRegion(),
-					upload_neptune_props.getS3BucketName(), 
-					upload_neptune_props.getAwsIamRoleArn());
+					neptune_prop.getS3ClientRegion(),
+					neptune_prop.getS3BucketName(), 
+					neptune_prop.getAwsIamRoleArn());
 		}
 		
 		if (! sei.isAuth()) { 
@@ -737,9 +736,9 @@ public class SparqlQueryServiceRestController {
 			if (sei instanceof NeptuneSparqlEndpointInterface) {
 
 				((NeptuneSparqlEndpointInterface)sei).setS3Config(
-						upload_neptune_props.getS3ClientRegion(),
-						upload_neptune_props.getS3BucketName(), 
-						upload_neptune_props.getAwsIamRoleArn());
+						neptune_prop.getS3ClientRegion(),
+						neptune_prop.getS3BucketName(), 
+						neptune_prop.getAwsIamRoleArn());
 			}
 			
 			if (! sei.isAuth()) { 

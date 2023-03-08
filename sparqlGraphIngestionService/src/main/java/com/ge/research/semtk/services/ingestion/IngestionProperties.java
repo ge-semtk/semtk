@@ -21,17 +21,16 @@ package com.ge.research.semtk.services.ingestion;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import com.ge.research.semtk.logging.easyLogger.EasyLogEnabledConfigProperties;
+import com.ge.research.semtk.properties.Properties;
 import com.ge.research.semtk.utility.LocalLogger;
 
 @Configuration
 @ConfigurationProperties(prefix="ingestion", ignoreUnknownFields = true)
-public class IngestionProperties extends EasyLogEnabledConfigProperties{
-	// stuff
+public class IngestionProperties extends Properties{
+
 	private String sparqlUserName = "";
 	private String sparqlPassword = "";
 	private int maxThreads = 0;
-	
 	private String loadTrackAwsRegion = "";
 	private String loadTrackS3Bucket = "";
 	private String loadTrackFolder = "";

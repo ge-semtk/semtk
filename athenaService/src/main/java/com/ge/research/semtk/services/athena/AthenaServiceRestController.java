@@ -41,7 +41,7 @@ import com.ge.research.semtk.services.athena.AthenaProperties;
 public class AthenaServiceRestController {
 
 	@Autowired
-	AthenaProperties props;
+	private AthenaProperties props;
 	
 	/**
 	 * Execute query in Athena

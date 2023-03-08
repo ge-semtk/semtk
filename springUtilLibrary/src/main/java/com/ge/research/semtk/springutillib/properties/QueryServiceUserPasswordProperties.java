@@ -15,18 +15,20 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.utility;
+package com.ge.research.semtk.springutillib.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import com.ge.research.semtk.properties.NgStoreServiceProperties;
+import com.ge.research.semtk.properties.UserPasswordProperties;
 
 @Configuration
-@ConfigurationProperties(prefix="utility.ngstore", ignoreUnknownFields = true)
-public class UtilityNgStoreProperties extends NgStoreServiceProperties {
-	public UtilityNgStoreProperties() {
+@ConfigurationProperties(prefix="query", ignoreUnknownFields = true)
+public class QueryServiceUserPasswordProperties extends UserPasswordProperties {
+
+	public QueryServiceUserPasswordProperties() {
 		super();
-		setPrefix("utility.ngstore");
+		setPrefix("query");
 	}
+
 }

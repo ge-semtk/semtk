@@ -15,19 +15,16 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.fdccache;
+package com.ge.research.semtk.springutillib.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import com.ge.research.semtk.properties.NgExecServiceProperties;
-import com.ge.research.semtk.properties.NgStoreServiceProperties;
-
 @Configuration
-@ConfigurationProperties(prefix="cache.ngstore", ignoreUnknownFields = true)
-public class CacheNgStoreProperties extends NgStoreServiceProperties {
-	public CacheNgStoreProperties() {
+@ConfigurationProperties(prefix="results", ignoreUnknownFields = true)
+public class ResultsServiceProperties extends com.ge.research.semtk.properties.ResultsServiceProperties {
+	public ResultsServiceProperties() {
 		super();
-		setPrefix("cache.ngstore");
+		this.setPrefix("results");
 	}
 }

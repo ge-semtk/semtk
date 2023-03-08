@@ -45,6 +45,7 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.LoggingProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -62,13 +63,13 @@ import io.swagger.v3.oas.annotations.Operation;
 public class StatusServiceRestController {
  	static final String SERVICE_NAME = "StatusService";
 	@Autowired
-	StatusProperties prop;
+	private StatusProperties prop;
 	@Autowired
-	ServicesGraphProperties servicesgraph_prop;
+	private ServicesGraphProperties servicesgraph_prop;
 	@Autowired
-	StatusLoggingProperties log_prop;
+	private LoggingProperties log_prop;
 	@Autowired
-	AuthProperties auth_prop;
+	private AuthProperties auth_prop;
 	@Autowired 
 	private ApplicationContext appContext;
 	

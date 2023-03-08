@@ -109,6 +109,14 @@ import com.ge.research.semtk.springutilib.requests.TrackQueryRequestBody;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.IngestorServiceProperties;
+import com.ge.research.semtk.springutillib.properties.LoggingProperties;
+import com.ge.research.semtk.springutillib.properties.NeptuneS3Properties;
+import com.ge.research.semtk.springutillib.properties.DispatchServiceProperties;
+import com.ge.research.semtk.springutillib.properties.StatusServiceProperties;
+import com.ge.research.semtk.springutillib.properties.NodegroupStoreServiceProperties;
+import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
+import com.ge.research.semtk.springutillib.properties.ResultsServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -130,25 +138,25 @@ public class NodeGroupExecutionRestController {
  	@Autowired
 	private AuthProperties auth_prop;
 	@Autowired
-	ServicesGraphProperties servicesgraph_props;
+	private ServicesGraphProperties servicesgraph_props;
 	@Autowired
-	NodegroupExecutionLoggingProperties log_prop;
+	private LoggingProperties log_prop;
 	@Autowired 
 	private ApplicationContext appContext;
 	@Autowired
-	OInfoServiceProperties oinfo_props;
+	private OntologyInfoServiceProperties oinfo_props;
 	@Autowired
-	NodegroupExecutionStoreProperties ngstore_prop;
+	private NodegroupStoreServiceProperties ngstore_prop;
 	@Autowired
-	NodegroupExecutionDispatchProperties dispatch_prop;
+	private DispatchServiceProperties dispatch_prop;
 	@Autowired
-	NodegroupExecutionResultsProperties results_prop;
+	private ResultsServiceProperties results_prop;
 	@Autowired
-	NodegroupExecutionStatusProperties status_prop;
+	private StatusServiceProperties status_prop;
 	@Autowired
-	NodegroupExecutionIngestProperties ingest_prop;
+	private IngestorServiceProperties ingest_prop;
 	@Autowired
-	private NgeUploadNeptuneProperties neptune_prop; 
+	private NeptuneS3Properties neptune_prop;
 	
 	@PostConstruct
     public void init() {

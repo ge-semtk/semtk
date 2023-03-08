@@ -20,17 +20,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 import com.ge.research.semtk.auth.AuthorizationProperties;
+
 @Configuration
 @ConfigurationProperties(prefix="auth", ignoreUnknownFields = true)
 public class AuthProperties extends AuthorizationProperties {
-	
-	/**
-	 * Exists so that SpringUtilLibrary isn't compiled into SparqlGraphLibrary
-	 */
+
 	public AuthProperties() {
 		super();
 		setPrefix("auth");
 	}
-	
 
 }

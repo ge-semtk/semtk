@@ -57,7 +57,11 @@ import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.NodegroupStoreServiceProperties;
+import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
+import com.ge.research.semtk.springutillib.properties.ResultsServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
+import com.ge.research.semtk.springutillib.properties.StatusServiceProperties;
 import com.ge.research.semtk.sparqlX.asynchronousQuery.AsynchronousNodeGroupBasedQueryDispatcher;
 import com.ge.research.semtk.sparqlX.dispatch.QueryFlags;
 
@@ -68,21 +72,19 @@ public class DispatcherServiceRestController {
  	static final String SERVICE_NAME = "dispatcher";
  	
 	@Autowired
-	AuthProperties auth_prop;
-	
+	private AuthProperties auth_prop;
 	@Autowired
-	DispatchProperties props;
+	private DispatchProperties props;
 	@Autowired
-	ServicesGraphProperties servicesgraph_props;
+	private ServicesGraphProperties servicesgraph_props;
 	@Autowired
-	DispatchNGStoreProperties store_props;
+	private NodegroupStoreServiceProperties store_props;
 	@Autowired
-	DispatchOInfoServiceProperties oinfo_props;
+	private OntologyInfoServiceProperties oinfo_props;
 	@Autowired
-	DispatchResultsServiceProperties results_props;
+	private ResultsServiceProperties results_props;
 	@Autowired
-	DispatchStatusServiceProperties status_props;
-	
+	private StatusServiceProperties status_props;
 	@Autowired 
 	private ApplicationContext appContext;
 	

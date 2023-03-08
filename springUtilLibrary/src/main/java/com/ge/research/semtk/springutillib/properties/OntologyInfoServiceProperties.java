@@ -1,5 +1,5 @@
 /**
- ** Copyright 2023 General Electric Company
+ ** Copyright 2020 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,20 +15,16 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.utility;
+package com.ge.research.semtk.springutillib.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import com.ge.research.semtk.properties.ServiceProperties;
-
 @Configuration
-@ConfigurationProperties(prefix="utility.query", ignoreUnknownFields = true)
-public class UtilityQueryServiceProperties extends ServiceProperties {
-
-	public UtilityQueryServiceProperties() {
+@ConfigurationProperties(prefix="oinfo", ignoreUnknownFields = true)
+public class OntologyInfoServiceProperties extends com.ge.research.semtk.properties.OntologyInfoServiceProperties {
+	public OntologyInfoServiceProperties() {
 		super();
-		setPrefix("utility.query");
+		setPrefix("oinfo");
 	}
-
 }

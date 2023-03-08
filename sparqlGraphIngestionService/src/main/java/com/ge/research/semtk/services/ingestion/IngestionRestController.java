@@ -62,7 +62,12 @@ import com.ge.research.semtk.springutilib.requests.TrackQueryRequestBody;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.LoggingProperties;
+import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
+import com.ge.research.semtk.springutillib.properties.QueryServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
+import com.ge.research.semtk.springutillib.properties.StatusServiceProperties;
+import com.ge.research.semtk.springutillib.properties.ResultsServiceProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -75,8 +80,6 @@ import com.ge.research.semtk.connutil.DirectoryConnector;
 import com.ge.research.semtk.connutil.FileSystemConnector;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
-import com.ge.research.semtk.edc.client.StatusClient;
-import com.ge.research.semtk.edc.client.StatusClientConfig;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.LoadTracker;
 import com.ge.research.semtk.load.dataset.CSVDataset;
@@ -105,26 +108,21 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 public class IngestionRestController {
  
 	@Autowired
-	AuthProperties auth_prop;
-	
+	private AuthProperties auth_prop;
 	@Autowired
-	IngestionProperties prop;
-	
+	private IngestionProperties prop;
 	@Autowired
-	OInfoServiceProperties oinfo_props;
-	
+	private LoggingProperties log_prop;
 	@Autowired
-	ResultsServiceProperties results_prop;
-	
+	private OntologyInfoServiceProperties oinfo_props;
 	@Autowired
-	ServicesGraphProperties servicesgraph_prop;
-	
+	private ResultsServiceProperties results_prop;
 	@Autowired
-	StatusServiceProperties status_prop;
-	
+	private ServicesGraphProperties servicesgraph_prop;
+	@Autowired
+	private StatusServiceProperties status_prop;
 	@Autowired 
-	QueryServiceProperties query_prop;
-	
+	private QueryServiceProperties query_prop;
 	@Autowired 
 	private ApplicationContext appContext;
 	
@@ -593,7 +591,7 @@ public class IngestionRestController {
 		SimpleResultSet simpleResult = new SimpleResultSet();
 		
 		// set up the logger
-		LoggerRestClient logger = LoggerRestClient.getInstance(prop, ThreadAuthenticator.getThreadUserName());
+		LoggerRestClient logger = LoggerRestClient.getInstance(log_prop, ThreadAuthenticator.getThreadUserName());
 				
 		try {
 			
@@ -635,7 +633,7 @@ public class IngestionRestController {
 				simpleResult.addResult("warnings", w);
 			
 			dl.runAsync(precheck, skipIngest, 
-					new StatusClient(new StatusClientConfig(status_prop.getProtocol(), status_prop.getServer(), status_prop.getPort(), jobId)), 
+					status_prop.getClient(jobId),
 					results_prop.getClient()
 					);
 			
@@ -1106,9 +1104,9 @@ public class IngestionRestController {
 	private LoggerRestClient getLoggerRestClient(LoggerRestClient logger, LoggerClientConfig lcc){
 		// send a log of the load having occurred.
 		try{	// wrapped in a try block because logging never announces a failure.
-			if(prop.getLoggingEnabled()){
+			if(log_prop.getLoggingEnabled()){
 				// logging was set to occur. 
-				lcc = new LoggerClientConfig(prop.getApplicationLogName(), prop.getLoggingProtocol(), prop.getLoggingServer(), Integer.parseInt(prop.getLoggingPort()), prop.getLoggingServiceLocation());
+				lcc = new LoggerClientConfig(log_prop.getApplicationLogName(), log_prop.getLoggingProtocol(), log_prop.getLoggingServer(), Integer.parseInt(log_prop.getLoggingPort()), log_prop.getLoggingServiceLocation());
 				logger = new LoggerRestClient(lcc);
 			}
 		}

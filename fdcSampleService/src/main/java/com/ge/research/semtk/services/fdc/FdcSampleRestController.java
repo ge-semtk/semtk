@@ -26,10 +26,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import static org.junit.Assume.assumeTrue;
-
-import java.io.File;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 
@@ -38,20 +34,17 @@ import javax.annotation.PostConstruct;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
-import com.ge.research.semtk.properties.OntologyInfoServiceProperties;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.services.fdc.FdcProperties;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.dispatch.FdcServiceManager;
 import com.ge.research.semtk.springutilib.requests.FdcRequest;
 import com.ge.research.semtk.springutillib.controllers.NodegroupProviderRestController;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
-import com.ge.research.semtk.test.IntegrationTestUtility;
-import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -66,14 +59,15 @@ import io.swagger.v3.oas.annotations.Operation;
 @ComponentScan(basePackages = {"com.ge.research.semtk.springutillib"})
 public class FdcSampleRestController extends NodegroupProviderRestController {
 	private static final String SERVICE_NAME = "fdcSample";
+
 	@Autowired
-	FdcProperties fdc_props;
+	private FdcProperties fdc_props;
 	@Autowired
 	private AuthProperties auth_prop;
 	@Autowired
-	OInfoServiceProperties oinfo_props;
+	private OntologyInfoServiceProperties oinfo_props;
 	@Autowired
-	ServicesGraphProperties servicesgraph_prop;
+	private ServicesGraphProperties servicesgraph_prop;
 	@Autowired 
 	private ApplicationContext appContext;
 	

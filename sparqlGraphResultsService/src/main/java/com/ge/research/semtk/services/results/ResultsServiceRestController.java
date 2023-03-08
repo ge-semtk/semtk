@@ -80,6 +80,7 @@ import com.ge.research.semtk.springutilib.requests.JobIdRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.LoggingProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
@@ -100,13 +101,13 @@ public class ResultsServiceRestController {
  	static final String SERVICE_NAME = "ResultsService";
 
 	@Autowired
-	ResultsProperties prop;
+	private ResultsProperties prop;
 	@Autowired
-	ServicesGraphProperties servicesgraph_prop;
+	private ServicesGraphProperties servicesgraph_prop;
 	@Autowired
-	ResultsLoggingProperties log_prop;
+	private LoggingProperties log_prop;
 	@Autowired
-	AuthProperties auth_prop; 
+	private AuthProperties auth_prop; 
 	@Autowired 
 	private ApplicationContext appContext;
 	

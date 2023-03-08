@@ -49,6 +49,7 @@ import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager
 import com.ge.research.semtk.load.config.ManifestConfig;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.plotting.PlotlyPlotSpec;
+import com.ge.research.semtk.properties.IngestorServiceProperties;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
@@ -59,7 +60,11 @@ import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.NodegroupExecutionServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
+import com.ge.research.semtk.springutillib.properties.QueryServiceUserPasswordProperties;
+import com.ge.research.semtk.springutillib.properties.NodegroupStoreServiceProperties;
+import com.ge.research.semtk.springutillib.properties.QueryServiceProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -83,15 +88,15 @@ public class UtilityServiceRestController {
 	@Autowired
 	private ApplicationContext appContext;
 	@Autowired
-	private UtilityNgStoreProperties ngstore_prop;
+	private NodegroupStoreServiceProperties ngstore_prop;
 	@Autowired
-	private UtilityNgExecProperties ngexec_prop;
+	private NodegroupExecutionServiceProperties ngexec_prop;
 	@Autowired
-	private UtilityIngestProperties ingest_prop;
+	private IngestorServiceProperties ingest_prop;
 	@Autowired
-	private UtilityQueryServiceProperties query_prop;
+	private QueryServiceProperties query_prop;
 	@Autowired
-	private UtilityQueryServiceCredentialsProperties query_credentials_prop;
+	private QueryServiceUserPasswordProperties query_credentials_prop;
 	
 	@PostConstruct
     public void init() {

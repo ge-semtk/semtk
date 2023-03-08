@@ -36,6 +36,8 @@ import com.ge.research.semtk.springutilib.requests.NodegroupRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
+import com.ge.research.semtk.springutillib.properties.ResultsServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 
 import org.json.simple.JSONArray;
@@ -91,12 +93,10 @@ public class NodeGroupServiceRestController {
 	public static final String RET_KEY_NODEGROUP = "nodegroup";
 	public static final String RET_KEY_SPARQLID = "sparqlID";
 
-	
-		
 	@Autowired
-	OInfoServiceProperties oinfo_props;
+	private OntologyInfoServiceProperties oinfo_props;
 	@Autowired
-	private NodegroupServiceResultsProperties results_props;
+	private ResultsServiceProperties results_props;
 	@Autowired
 	private ServicesGraphProperties servicesgraph_props;
 	@Autowired

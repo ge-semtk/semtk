@@ -64,6 +64,9 @@ import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.LoggingProperties;
+import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
+import com.ge.research.semtk.springutillib.properties.ResultsServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -83,11 +86,9 @@ public class OntologyInfoServiceRestController {
  	PredicateStatsCache predStatsCache = new PredicateStatsCache(HOUR * 24);   
  	
 	@Autowired
-	private OntologyInfoLoggingProperties log_prop;
+	private LoggingProperties log_prop;
 	@Autowired
-	private OntologyInfoResultsProperties results_props;
-	@Autowired
-	private OntologyServiceProperties oinfo_props;
+	private ResultsServiceProperties results_props;
 	@Autowired
 	private ServicesGraphProperties servicesgraph_props;
 	@Autowired 
@@ -102,7 +103,6 @@ public class OntologyInfoServiceRestController {
 
 		log_prop.validateWithExit();
 		results_props.validateWithExit();
-		oinfo_props.validateWithExit();
 		servicesgraph_props.validateWithExit();
 		auth_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);

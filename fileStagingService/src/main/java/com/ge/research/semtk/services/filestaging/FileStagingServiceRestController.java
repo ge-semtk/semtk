@@ -46,6 +46,7 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.ResultsServiceProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utilityge.Utility;
 
@@ -61,11 +62,11 @@ import io.swagger.v3.oas.annotations.Operation;
 public class FileStagingServiceRestController {
 
 	@Autowired
-	FileStagingProperties filestaging_prop; 
+	private FileStagingProperties filestaging_prop; 
 	@Autowired
-	FileStagingResultsServiceProperties results_prop;	// results service used by filestaging service
+	private ResultsServiceProperties results_prop;
 	@Autowired
-	AuthProperties auth_prop; 
+	private AuthProperties auth_prop; 
 	@Autowired 
 	private ApplicationContext appContext;
 	

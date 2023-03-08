@@ -38,7 +38,10 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
 import com.ge.research.semtk.springutillib.properties.AuthProperties;
+import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
+import com.ge.research.semtk.springutillib.properties.NodegroupExecutionServiceProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
+import com.ge.research.semtk.springutillib.properties.NodegroupStoreServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -58,15 +61,15 @@ public class FdcCacheServiceRestController {
 	@Autowired 
 	private ApplicationContext appContext;
 	@Autowired
-	AuthProperties auth_prop; 
+	private AuthProperties auth_prop; 
 	@Autowired
-	CacheNgExecProperties ngexec_prop; 
+	private NodegroupExecutionServiceProperties ngexec_prop; 
 	@Autowired
-	CacheNgStoreProperties ngstore_prop; 
+	private NodegroupStoreServiceProperties ngstore_prop; 
 	@Autowired
-	CacheOInfoProperties oinfo_prop; 
+	private OntologyInfoServiceProperties oinfo_prop; 
 	@Autowired
-	ServicesGraphProperties servicesgraph_prop; 
+	private ServicesGraphProperties servicesgraph_prop; 
 	
 	@PostConstruct
     public void init() {

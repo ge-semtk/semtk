@@ -61,6 +61,5 @@ public class StoreProperties {
 	public void setSparqlConnType(String sparqlConnType) {
 		this.sparqlConnType = sparqlConnType;
 	}
-    
 
 }

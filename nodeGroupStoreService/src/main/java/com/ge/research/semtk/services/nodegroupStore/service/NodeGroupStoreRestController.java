@@ -85,12 +85,12 @@ public class NodeGroupStoreRestController {
 	@Autowired 
 	private ApplicationContext appContext;
 	@Autowired
-	StoreProperties prop;
+	private StoreProperties prop;
+	@Autowired
+	private AuthProperties auth_prop;
+	@Autowired
+	private ServicesGraphProperties servicesgraph_prop;
 
-	@Autowired
-	AuthProperties auth_prop;
-	@Autowired
-	ServicesGraphProperties servicesgraph_prop;
 	private static final String SERVICE_NAME="nodeGroupStore";
 	
 	@PostConstruct

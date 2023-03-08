@@ -1,5 +1,5 @@
 /**
- ** Copyright 2020 General Electric Company
+ ** Copyright 2016 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,18 +15,18 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.utility;
+
+package com.ge.research.semtk.springutillib.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import com.ge.research.semtk.properties.NgExecServiceProperties;
+import com.ge.research.semtk.logging.easyLogger.EasyLogEnabledConfigProperties;
 
 @Configuration
-@ConfigurationProperties(prefix="utility.ngexec", ignoreUnknownFields = true)
-public class UtilityNgExecProperties extends NgExecServiceProperties {
-	public UtilityNgExecProperties() {
-		super();
-		setPrefix("utility.ngexec");
+@ConfigurationProperties(prefix="logging", ignoreUnknownFields = true)
+public class LoggingProperties extends EasyLogEnabledConfigProperties {
+	public LoggingProperties() {
+		setPrefix("logging");
 	}
 }

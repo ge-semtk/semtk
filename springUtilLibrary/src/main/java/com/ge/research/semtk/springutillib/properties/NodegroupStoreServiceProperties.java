@@ -1,5 +1,5 @@
 /**
- ** Copyright 2017 General Electric Company
+ ** Copyright 2023 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,18 +15,16 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.services.nodeGroupExecution;
+package com.ge.research.semtk.springutillib.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import com.ge.research.semtk.springutillib.properties.NeptuneS3Properties;
-
 @Configuration
-@ConfigurationProperties(prefix="query.neptuneupload", ignoreUnknownFields = true)
-public class NgeUploadNeptuneProperties extends NeptuneS3Properties {
-	public void validate() throws Exception {
-		this.setPrefix("node-group-execution.neptuneupload");
-		super.validate();
+@ConfigurationProperties(prefix="ngstore", ignoreUnknownFields = true)
+public class NodegroupStoreServiceProperties extends com.ge.research.semtk.properties.NgStoreServiceProperties {
+	public NodegroupStoreServiceProperties() {
+		super();
+		setPrefix("ngstore");
 	}
 }
