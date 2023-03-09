@@ -19,15 +19,16 @@ package com.ge.research.semtk.sparqlX.test;
 
 import static org.junit.Assert.*;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
+
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
-import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
-import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
@@ -54,20 +55,19 @@ public class SparqlEndpointInterfaceTest_IT {
 		assertEquals(TestGraph.getSei().getNumTriples(), 74);
 	}
 	
-	
 	@Test
-	public void testRoundTrip() throws Exception {
+	public void testLoadOwl() throws Exception {
 		TestGraph.clearGraph();
 		String s = Utility.getResourceAsString(this, "/Pet.owl");
 		TestGraph.getSei().executeUploadOwl(s.getBytes());
 		
 		OntologyInfo oInfo = new OntologyInfo();
-		oInfo.load(TestGraph.getSei(), false );
+		oInfo.load(TestGraph.getSei(), false);
 		assertTrue("Can't find the 'Dog' class", oInfo.getClassNames().contains("http://research.ge.com/kdl/pet#Dog"));
 	}
 	
 	@Test
-	public void testRDFReturn() throws Exception {
+	public void testLoadOwlQueryRDF() throws Exception {
 		TestGraph.clearGraph();
 		String s = Utility.getResourceAsString(this, "/Pet.owl");
 		SparqlEndpointInterface sei = TestGraph.getSei();
@@ -76,6 +76,26 @@ public class SparqlEndpointInterfaceTest_IT {
 		String sparql = SparqlToXUtils.generateConstructSPOSparql(sei, null) + " LIMIT 1 ";
 		String rdf = sei.executeQueryToRdf(sparql);
 		assertTrue("RDF wasn't returned", rdf.contains("<rdf:RDF"));
+	}
+
+	@Test
+	public void testUploadTurtleAsBytes() throws Exception{
+		TestGraph.clearGraph();
+		SparqlEndpointInterface sei = TestGraph.getSei();
+		byte[] ttlBytes = Utility.getResourceAsBytes(this, "musicTestDataset_2017.q2.ttl");
+		SimpleResultSet resultSet = SimpleResultSet.fromJson(sei.executeUploadTurtle(ttlBytes));
+		assertTrue(resultSet.getSuccess());
+		assertEquals(215, sei.getNumTriples());
+	}
+
+	@Test
+	public void testUploadTurtleAsStream() throws Exception{
+		TestGraph.clearGraph();
+		SparqlEndpointInterface sei = TestGraph.getSei();
+		InputStream ttlInputStream = new FileInputStream(Utility.getResourceAsTempFile(this, "musicTestDataset_2017.q2.ttl"));
+		SimpleResultSet resultSet = SimpleResultSet.fromJson(sei.executeAuthUploadStreamed(ttlInputStream, "musicTestDataset_2017.q2.ttl"));
+		assertTrue(resultSet.getSuccess());
+		assertEquals(215, sei.getNumTriples());
 	}
 
 }

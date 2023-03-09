@@ -18,12 +18,7 @@
 
 package com.ge.research.semtk.sparqlX;
 
-import java.io.BufferedReader;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,12 +30,9 @@ import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
-import org.apache.http.entity.mime.HttpMultipartMode;
 import org.apache.http.entity.mime.MultipartEntityBuilder;
 import org.apache.http.entity.mime.content.ByteArrayBody;
 import org.apache.http.entity.mime.content.ContentBody;
-import org.apache.http.entity.mime.content.FileBody;
-import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.util.EntityUtils;
@@ -51,7 +43,6 @@ import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -91,17 +82,15 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 	 */
 	@Override
 	protected void addParams(HttpPost httppost, String query, SparqlResultTypes resultType) throws Exception {
-		// add params
+
 		List<NameValuePair> params = new ArrayList<NameValuePair>(3);
 		
-		// if (this.password == null) {
 		if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.GRAPH_JSONLD || resultType == SparqlResultTypes.RDF) { 
 			params.add(new BasicNameValuePair("query", query));
 		} else {
 			params.add(new BasicNameValuePair("update", query));
 		}
 		//params.add(new BasicNameValuePair("format", this.getContentType(resultType)));
-		
 
 		// timeout 
 		if (this.getTimeoutPostParamName() != null && this.getTimeoutPostParamValue() != null) {
@@ -120,10 +109,8 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 	protected String getContentType(SparqlResultTypes resultType) throws Exception{
 		if (resultType == null) {
 			return this.getContentType(getDefaultResultType());
-			
 		} else if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.CONFIRM) { 
 			return CONTENTTYPE_SPARQL_QUERY_RESULT_JSON; 
-			
 		} else if (resultType == SparqlResultTypes.GRAPH_JSONLD) { 
 			return CONTENTTYPE_X_JSON_LD; 
 		} else if (resultType == SparqlResultTypes.HTML) { 
@@ -135,6 +122,7 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 		// fail and throw an exception if the value was not valid.
 		throw new Exception("Cannot get Fuseki content type for query type " + resultType);
 	}
+
 	/**
 	 * Build a GET URL
 	 */
@@ -142,70 +130,58 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 		return String.format("%s:%s/%s?query=", this.server, this.port, this.endpoint);
 	}
 
-
 	/**
 	 * Build a POST URL
 	 */
 	public String getPostURL(SparqlResultTypes resultType) {
 		if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.GRAPH_JSONLD || resultType == SparqlResultTypes.RDF ) { 
 			return String.format("%s:%s/%s", this.server, this.port, this.endpoint);
-
 		}else {
 			return String.format("%s:%s/%s/update", this.server, this.port, this.endpoint);	
-
 		}
-	}	
+	}
+
 	@Override 
-	public JSONObject executeUploadTurtle(byte [] turtle) throws AuthorizationException, Exception {
+	public JSONObject executeUploadTurtle(byte[] turtle) throws AuthorizationException, Exception {
 		return this.executeUpload(turtle, "file.ttl");
 	}
 	
 	@Override 
 	/** Main entry point from query service **/
-	public JSONObject executeAuthUploadTurtle(byte [] turtle) throws AuthorizationException, Exception {
+	public JSONObject executeAuthUploadTurtle(byte[] turtle) throws AuthorizationException, Exception {
 		return this.executeUpload(turtle, "file.ttl");
 	}
 	
 	@Override 
 	/** Main entry point from query service **/
-	public JSONObject executeAuthUploadOwl(byte [] turtle) throws AuthorizationException, Exception {
+	public JSONObject executeAuthUploadOwl(byte[] turtle) throws AuthorizationException, Exception {
 		return this.executeUpload(turtle, "file.owl");
 	}
 	
-	/** 
-	 * Default Upload of OWL
-	 */
 	@Override
+	/** Default upload of OWL.  Errors if bytes are not OWL **/
 	public JSONObject executeUpload(byte[] owl) throws AuthorizationException, Exception {
 		return this.executeUpload(owl, "file.owl");
 	}
 	
 	private JSONObject executeUpload(byte[] owl, String filename) throws AuthorizationException, Exception {
-		
 		MultipartEntityBuilder builder = MultipartEntityBuilder.create();   
-		
 		ContentBody fileBody = new ByteArrayBody(owl, filename);
 		builder.addPart("files[]", fileBody);
-
 		HttpEntity entity = builder.build();
 		return this.executeAuthUpload(entity);
 	}
 	
 	@Override
-	public JSONObject executeAuthUploadStreamed(InputStream is, String filenameUNUSED) throws AuthorizationException, Exception {
+	public JSONObject executeAuthUploadStreamed(InputStream is, String filename) throws AuthorizationException, Exception {
 		MultipartEntityBuilder builder = MultipartEntityBuilder.create();   
-		builder.addBinaryBody("files[]", is, ContentType.MULTIPART_FORM_DATA, "something.owl");
+		builder.addBinaryBody("files[]", is, ContentType.MULTIPART_FORM_DATA, filename);
 		HttpEntity entity = builder.build();
-		
 		return this.executeAuthUpload(entity);
 	}
 	
 	/**
 	 * Main function for auth uploading
-	 * @param entity 
-	 * @return
-	 * @throws AuthorizationException
-	 * @throws Exception
 	 */
 	private JSONObject executeAuthUpload(HttpEntity entity) throws AuthorizationException, Exception {
 		this.authorizeUpload();
@@ -243,6 +219,7 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 		resp_entity.getContent().close();
 		return ret.toJson();
 	}
+
 	/**
 	 * Handle an empty response
 	 * @throws Exception 
@@ -318,10 +295,8 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 	@Override
 	public SparqlEndpointInterface copy() throws Exception {
 		FusekiSparqlEndpointInterface retval = null;
-		
 		retval = new FusekiSparqlEndpointInterface(this.getServerAndPort(), this.graph, this.userName, this.password);
 		retval.copyRest(this);
-		
 		return (SparqlEndpointInterface) retval;
 	}
 	
