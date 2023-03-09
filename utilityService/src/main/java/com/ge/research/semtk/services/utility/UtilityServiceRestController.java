@@ -58,7 +58,7 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
-import com.ge.research.semtk.springutillib.properties.AuthProperties;
+import com.ge.research.semtk.springutillib.properties.AuthorizationProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.NodegroupExecutionServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
@@ -82,7 +82,7 @@ public class UtilityServiceRestController {
  	private static final String SERVICE_NAME = "utilityService";
 
 	@Autowired
-	private AuthProperties auth_prop; 
+	private AuthorizationProperties auth_prop; 
 	@Autowired
 	private ServicesGraphProperties servicesgraph_prop;
 	@Autowired
@@ -103,13 +103,13 @@ public class UtilityServiceRestController {
 		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
 		env_prop.validateWithExit();
 		auth_prop.validateWithExit();
-		servicesgraph_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
 		ngstore_prop.validateWithExit();
 		ngexec_prop.validateWithExit();
 		ingest_prop.validateWithExit();
 		query_prop.validateWithExit();
 		query_credentials_prop.validateWithExit();
-		AuthorizationManager.authorizeWithExit(auth_prop);
+		servicesgraph_prop.validateWithExit();
 	}
 	
 	/**

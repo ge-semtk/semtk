@@ -39,12 +39,11 @@ import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.connutil.DirectoryConnector;
 import com.ge.research.semtk.connutil.FileSystemConnector;
 import com.ge.research.semtk.edc.client.ResultsClient;
-import com.ge.research.semtk.edc.client.ResultsClientConfig;
 import com.ge.research.semtk.resultSet.ResultType;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
-import com.ge.research.semtk.springutillib.properties.AuthProperties;
+import com.ge.research.semtk.springutillib.properties.AuthorizationProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.ResultsServiceProperties;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -66,7 +65,7 @@ public class FileStagingServiceRestController {
 	@Autowired
 	private ResultsServiceProperties results_prop;
 	@Autowired
-	private AuthProperties auth_prop; 
+	private AuthorizationProperties auth_prop; 
 	@Autowired 
 	private ApplicationContext appContext;
 	
@@ -75,11 +74,11 @@ public class FileStagingServiceRestController {
 	@PostConstruct
     public void init() {
 		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
-		env_prop.validateWithExit();	
-		filestaging_prop.validateWithExit();
-		results_prop.validateWithExit();
+		env_prop.validateWithExit();
 		auth_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);
+		results_prop.validateWithExit();
+		filestaging_prop.validateWithExit();
 	}
 	
 	/**
@@ -159,7 +158,7 @@ public class FileStagingServiceRestController {
 	 * Send a file to the ResultsService
 	 */
 	private String sendToResultsService(String jobID, String filePathStr, String filename) throws Exception{
-		ResultsClient resultsClient = new ResultsClient(new ResultsClientConfig(results_prop.getProtocol(), results_prop.getServer(), results_prop.getPort()));
+		ResultsClient resultsClient = results_prop.getClient();
 		return resultsClient.storeBinaryFilePath(jobID, filePathStr, filename);  
 	}	
 	

@@ -20,7 +20,7 @@ package com.ge.research.semtk.logging.easyLogger;
 
 import com.ge.research.semtk.properties.Properties;
 
-public class EasyLogEnabledConfigProperties extends Properties {
+public class LoggingProperties extends Properties {
 
 	private Boolean loggingEnabled = false;
 	private String loggingProtocol = "HTTP";
@@ -51,5 +51,10 @@ public class EasyLogEnabledConfigProperties extends Properties {
 		checkNone("loggingPort", loggingPort);
 		checkNone("loggingServiceLocation", loggingServiceLocation);
 		checkNone("applicationLogName", applicationLogName);
+	}
+
+	public LoggerRestClient getClient() throws Exception {
+		LoggerClientConfig config = new LoggerClientConfig(applicationLogName, loggingProtocol, loggingServer, Integer.parseInt(loggingPort), loggingServiceLocation);
+		return new LoggerRestClient(config);
 	}
 }

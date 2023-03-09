@@ -67,12 +67,12 @@ import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.sparqlX.parallel.SparqlParallelQueries;
 import com.ge.research.semtk.springutilib.requests.GraphNameRequestBody;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
-import com.ge.research.semtk.springutillib.properties.AuthProperties;
+import com.ge.research.semtk.springutillib.properties.AuthorizationProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.NeptuneS3Properties;
 import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
-import com.ge.research.semtk.springutillib.properties.StoreProperties;
+import com.ge.research.semtk.springutillib.properties.NodegroupStoreProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
 
@@ -118,26 +118,23 @@ public class SparqlQueryServiceRestController {
 	@Autowired
 	private NeptuneS3Properties neptune_prop;
 	@Autowired
-	private AuthProperties auth_prop; 
+	private AuthorizationProperties auth_prop; 
 	@Autowired 
 	private ApplicationContext appContext;
 	@Autowired
 	private ServicesGraphProperties servicesgraph_prop;
 	@Autowired
-	private StoreProperties store_prop;
+	private NodegroupStoreProperties store_prop;
 	
 	@PostConstruct
     public void init() {
 		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
 		env_prop.validateWithExit();
-		
+		auth_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
 		oinfo_props.validateWithExit();
 		neptune_prop.validateWithExit();
-		auth_prop.validateWithExit();
 		servicesgraph_prop.validateWithExit();
-		
-		AuthorizationManager.authorizeWithExit(auth_prop);
-
 	}
 	
 	/**

@@ -20,13 +20,11 @@ package com.ge.research.semtk.springutillib.properties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import com.ge.research.semtk.properties.NgExecServiceProperties;
-
 @Configuration
-@ConfigurationProperties(prefix="ngexec", ignoreUnknownFields = true)
-public class NodegroupExecutionServiceProperties extends NgExecServiceProperties {
+@ConfigurationProperties(prefix="ngexec.service", ignoreUnknownFields = true)
+public class NodegroupExecutionServiceProperties extends com.ge.research.semtk.properties.NodegroupExecutionServiceProperties {
 	public NodegroupExecutionServiceProperties() {
 		super();
-		setPrefix("ngexec");
+		setPrefix("ngexec.service");
 	}
 }

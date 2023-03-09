@@ -78,7 +78,7 @@ import com.ge.research.semtk.services.results.requests.ResultsRequestBodyMaxRows
 import com.ge.research.semtk.services.results.requests.ResultsRequestBodyPath;
 import com.ge.research.semtk.springutilib.requests.JobIdRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
-import com.ge.research.semtk.springutillib.properties.AuthProperties;
+import com.ge.research.semtk.springutillib.properties.AuthorizationProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.LoggingProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
@@ -107,7 +107,7 @@ public class ResultsServiceRestController {
 	@Autowired
 	private LoggingProperties log_prop;
 	@Autowired
-	private AuthProperties auth_prop; 
+	private AuthorizationProperties auth_prop; 
 	@Autowired 
 	private ApplicationContext appContext;
 	
@@ -115,13 +115,11 @@ public class ResultsServiceRestController {
     public void init() {
 		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
 		env_prop.validateWithExit();
-		
+		auth_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
 		prop.validateWithExit();
 		servicesgraph_prop.validateWithExit();
 		log_prop.validateWithExit();
-		auth_prop.validateWithExit();
-		
-		AuthorizationManager.authorizeWithExit(auth_prop);
 	}
 	
 	

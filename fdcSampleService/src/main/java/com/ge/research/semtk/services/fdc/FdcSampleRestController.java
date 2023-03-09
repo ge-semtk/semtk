@@ -41,7 +41,7 @@ import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.dispatch.FdcServiceManager;
 import com.ge.research.semtk.springutilib.requests.FdcRequest;
 import com.ge.research.semtk.springutillib.controllers.NodegroupProviderRestController;
-import com.ge.research.semtk.springutillib.properties.AuthProperties;
+import com.ge.research.semtk.springutillib.properties.AuthorizationProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
@@ -63,7 +63,7 @@ public class FdcSampleRestController extends NodegroupProviderRestController {
 	@Autowired
 	private FdcProperties fdc_props;
 	@Autowired
-	private AuthProperties auth_prop;
+	private AuthorizationProperties auth_prop;
 	@Autowired
 	private OntologyInfoServiceProperties oinfo_props;
 	@Autowired
@@ -75,7 +75,6 @@ public class FdcSampleRestController extends NodegroupProviderRestController {
     public void init() {
 		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
 		env_prop.validateWithExit();
-		
 		fdc_props.validateWithExit();
 		
 		// --- put a sample FDC config in to the services sei if needed --- //

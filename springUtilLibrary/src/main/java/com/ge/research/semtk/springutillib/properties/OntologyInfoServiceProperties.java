@@ -21,10 +21,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix="oinfo", ignoreUnknownFields = true)
+@ConfigurationProperties(prefix="oinfo.service", ignoreUnknownFields = true)
 public class OntologyInfoServiceProperties extends com.ge.research.semtk.properties.OntologyInfoServiceProperties {
 	public OntologyInfoServiceProperties() {
 		super();
-		setPrefix("oinfo");
+		setPrefix("oinfo.service");
 	}
 }

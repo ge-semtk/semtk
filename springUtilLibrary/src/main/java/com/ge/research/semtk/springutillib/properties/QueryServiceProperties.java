@@ -6,12 +6,10 @@ import org.springframework.context.annotation.Configuration;
 import com.ge.research.semtk.properties.ServiceProperties;
 
 @Configuration
-@ConfigurationProperties(prefix="query", ignoreUnknownFields = true)
+@ConfigurationProperties(prefix="query.service", ignoreUnknownFields = true)
 public class QueryServiceProperties extends ServiceProperties {
-
 	public QueryServiceProperties() {
 		super();
-		setPrefix("query");
+		setPrefix("query.service");
 	}
-
 }

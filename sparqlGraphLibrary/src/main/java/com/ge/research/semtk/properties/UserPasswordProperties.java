@@ -17,8 +17,6 @@
 
 package com.ge.research.semtk.properties;
 
-// meant to be inherited into a spring boot properties object needing a user and password
-
 public abstract class UserPasswordProperties extends Properties {
 
 	private String user;

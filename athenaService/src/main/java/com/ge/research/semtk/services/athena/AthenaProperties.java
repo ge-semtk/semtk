@@ -20,9 +20,11 @@ package com.ge.research.semtk.services.athena;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import com.ge.research.semtk.properties.Properties;
+
 @Configuration
 @ConfigurationProperties(prefix="athena", ignoreUnknownFields = true)
-public class AthenaProperties {
+public class AthenaProperties extends Properties {
 
 	private String awsRegionId;
 	private String awsS3OutputBucket;

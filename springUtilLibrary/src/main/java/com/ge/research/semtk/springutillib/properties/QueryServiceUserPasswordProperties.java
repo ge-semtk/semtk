@@ -23,12 +23,10 @@ import org.springframework.context.annotation.Configuration;
 import com.ge.research.semtk.properties.UserPasswordProperties;
 
 @Configuration
-@ConfigurationProperties(prefix="query", ignoreUnknownFields = true)
+@ConfigurationProperties(prefix="query.service", ignoreUnknownFields = true)
 public class QueryServiceUserPasswordProperties extends UserPasswordProperties {
-
 	public QueryServiceUserPasswordProperties() {
 		super();
-		setPrefix("query");
+		setPrefix("query.service");
 	}
-
 }

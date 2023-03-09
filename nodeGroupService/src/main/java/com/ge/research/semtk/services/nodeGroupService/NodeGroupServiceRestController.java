@@ -34,7 +34,7 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.springutilib.requests.NodegroupRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
-import com.ge.research.semtk.springutillib.properties.AuthProperties;
+import com.ge.research.semtk.springutillib.properties.AuthorizationProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ResultsServiceProperties;
@@ -100,7 +100,7 @@ public class NodeGroupServiceRestController {
 	@Autowired
 	private ServicesGraphProperties servicesgraph_props;
 	@Autowired
-	private AuthProperties auth_prop;
+	private AuthorizationProperties auth_prop;
 	@Autowired 
 	private ApplicationContext appContext;
 	
@@ -109,17 +109,12 @@ public class NodeGroupServiceRestController {
     public void init() {
 		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
 		env_prop.validateWithExit();
-
-		// these are still in the older NodegroupExecutionServiceStartup
-		
+		auth_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
 		oinfo_props.validateWithExit();
 		results_props.validateWithExit();
 		servicesgraph_props.validateWithExit();
-		auth_prop.validateWithExit();
-		AuthorizationManager.authorizeWithExit(auth_prop);
-
 	}
-    //OntologyInfoCache oInfoCache = new OntologyInfoCache(5 * 60 * 1000);   // 5 seconds.  TODO make this a property
 
 	@CrossOrigin
 	@RequestMapping(value= "/**", method=RequestMethod.OPTIONS)
@@ -129,8 +124,6 @@ public class NodeGroupServiceRestController {
 	    response.addHeader("Access-Control-Allow-Headers", "origin, content-type, accept, x-requested-with");
 	    response.addHeader("Access-Control-Max-Age", "3600");
 	}
-	
-	
 	
 	@Operation(
 			summary="Find paths from a class to a nodegroup.",

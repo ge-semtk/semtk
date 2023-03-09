@@ -17,10 +17,11 @@
 
 package com.ge.research.semtk.properties;
 
-// meant to be inherited into a spring boot properties object
-// needing connection info for a microservice
-
+/**
+ * Properties to connect to a service
+ */
 public abstract class ServiceProperties extends Properties {
+
 	protected String server;
 	protected int    port;
 	protected String protocol;

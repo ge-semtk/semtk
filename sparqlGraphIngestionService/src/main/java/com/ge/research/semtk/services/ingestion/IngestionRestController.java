@@ -60,7 +60,7 @@ import com.ge.research.semtk.springutilib.requests.IngestionFromStringsRequestBo
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointTrackRequestBody;
 import com.ge.research.semtk.springutilib.requests.TrackQueryRequestBody;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
-import com.ge.research.semtk.springutillib.properties.AuthProperties;
+import com.ge.research.semtk.springutillib.properties.AuthorizationProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.LoggingProperties;
 import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
@@ -91,7 +91,6 @@ import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.logging.DetailsTuple;
 import com.ge.research.semtk.logging.easyLogger.LoggerRestClient;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
-import com.ge.research.semtk.logging.easyLogger.LoggerClientConfig;
 import com.ge.research.semtk.query.rdb.PostgresConnector;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.RecordProcessResults;
@@ -108,7 +107,7 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 public class IngestionRestController {
  
 	@Autowired
-	private AuthProperties auth_prop;
+	private AuthorizationProperties auth_prop;
 	@Autowired
 	private IngestionProperties prop;
 	@Autowired
@@ -135,15 +134,14 @@ public class IngestionRestController {
     public void init() {
 		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
 		env_prop.validateWithExit();
-		
-		prop.validateWithExit();
+		auth_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
 		oinfo_props.validateWithExit();
 		results_prop.validateWithExit();
 		status_prop.validateWithExit();
-		servicesgraph_prop.validateWithExit();
 		query_prop.validateWithExit();
-		auth_prop.validateWithExit();
-		AuthorizationManager.authorizeWithExit(auth_prop);
+		servicesgraph_prop.validateWithExit();
+		prop.validateWithExit();
 
 		String loadTrackRegion = prop.getLoadTrackAwsRegion().trim();
 		String loadTrackS3Bucket = prop.getLoadTrackS3Bucket().trim();
@@ -167,10 +165,6 @@ public class IngestionRestController {
 			tracker = null;
 		}
 	}
-	
-	
-	
-	
 	
 	@Operation(
 			summary=	"Main ASYNC string endpoint.  With override connection and precheck.",
@@ -990,7 +984,7 @@ public class IngestionRestController {
 		
 		// set up the logger
 		LoggerRestClient logger = null;
-		logger = getLoggerRestClient(logger, null);	
+		logger = getLoggerRestClient(logger);
 		ArrayList<DetailsTuple> detailsToLog = null;	
 		
 		RecordProcessResults retval = new RecordProcessResults();
@@ -1101,13 +1095,11 @@ public class IngestionRestController {
 		return retval.toJson();
 	}	
 	/* ======================= End Deprecated ======================= */
-	private LoggerRestClient getLoggerRestClient(LoggerRestClient logger, LoggerClientConfig lcc){
+	private LoggerRestClient getLoggerRestClient(LoggerRestClient logger){
 		// send a log of the load having occurred.
 		try{	// wrapped in a try block because logging never announces a failure.
 			if(log_prop.getLoggingEnabled()){
-				// logging was set to occur. 
-				lcc = new LoggerClientConfig(log_prop.getApplicationLogName(), log_prop.getLoggingProtocol(), log_prop.getLoggingServer(), Integer.parseInt(log_prop.getLoggingPort()), log_prop.getLoggingServiceLocation());
-				logger = new LoggerRestClient(lcc);
+				logger = log_prop.getClient();
 			}
 		}
 		catch(Exception eee){

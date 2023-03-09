@@ -5,10 +5,10 @@ import org.springframework.context.annotation.Configuration;
 
 
 @Configuration
-@ConfigurationProperties(prefix="dispatch", ignoreUnknownFields = true)
+@ConfigurationProperties(prefix="dispatch.service", ignoreUnknownFields = true)
 public class DispatchServiceProperties extends com.ge.research.semtk.properties.DispatchServiceProperties {
 	public DispatchServiceProperties() {
 		super();
-		setPrefix("dispatch");
+		setPrefix("dispatch.service");
 	}
 }

@@ -4,10 +4,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix="ingest", ignoreUnknownFields = true)
+@ConfigurationProperties(prefix="ingest.service", ignoreUnknownFields = true)
 public class IngestorServiceProperties extends com.ge.research.semtk.properties.IngestorServiceProperties {
 	public IngestorServiceProperties() {
 		super();
-		setPrefix("ingest");
+		setPrefix("ingest.service");
 	}
 }

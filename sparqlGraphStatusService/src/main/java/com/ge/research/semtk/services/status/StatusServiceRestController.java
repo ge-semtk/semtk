@@ -43,7 +43,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
-import com.ge.research.semtk.springutillib.properties.AuthProperties;
+import com.ge.research.semtk.springutillib.properties.AuthorizationProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.LoggingProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
@@ -69,7 +69,7 @@ public class StatusServiceRestController {
 	@Autowired
 	private LoggingProperties log_prop;
 	@Autowired
-	private AuthProperties auth_prop;
+	private AuthorizationProperties auth_prop;
 	@Autowired 
 	private ApplicationContext appContext;
 	
@@ -78,22 +78,19 @@ public class StatusServiceRestController {
     public void init() throws Exception {
 		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
 		env_prop.validateWithExit();
-		
+		auth_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
 		prop.validateWithExit();
 		servicesgraph_prop.validateWithExit();
 		log_prop.validateWithExit();
 		
-		auth_prop.validateWithExit();
-		AuthorizationManager.authorizeWithExit(auth_prop);
-		
 		// clear and upload latest owl
 		JobTracker.uploadOwlModel(getTracker(), 90);
-
 	}
+
 	@RequestMapping(value="/headers", method=RequestMethod.GET)
 	public String headers(@RequestHeader HttpHeaders headers) {
-		HeadersManager.setHeaders(headers);
-		
+		HeadersManager.setHeaders(headers);		
 		return headers.toString();
 	}
 		

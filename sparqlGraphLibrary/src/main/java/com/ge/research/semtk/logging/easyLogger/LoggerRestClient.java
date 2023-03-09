@@ -339,25 +339,25 @@ public class LoggerRestClient extends RestClient {
 	}
 	
 	@Deprecated // renamed to getInstance()
-	public static LoggerRestClient loggerConfigInitialization(EasyLogEnabledConfigProperties logProps, String userName) {
+	public static LoggerRestClient loggerConfigInitialization(LoggingProperties logProps, String userName) {
 		return getInstance(logProps, userName);
 	}
 	
-	public static LoggerRestClient getInstance(EasyLogEnabledConfigProperties logProps, String userName) {
+	public static LoggerRestClient getInstance(LoggingProperties logProps, String userName) {
 		LoggerRestClient ret = getInstance(logProps);
 		if (ret != null) { ret.setUser(userName); }
 		return ret;
 	}
 	
 	@Deprecated // renamed to getInstance()
-	public static LoggerRestClient loggerConfigInitialization(EasyLogEnabledConfigProperties logProps){
+	public static LoggerRestClient loggerConfigInitialization(LoggingProperties logProps){
 		return getInstance(logProps);
 	}
 	
 	/**
 	 *  Create a logger client from an EasyLogEnabledConfigProperties
 	 */
-	public static LoggerRestClient getInstance(EasyLogEnabledConfigProperties logProps){
+	public static LoggerRestClient getInstance(LoggingProperties logProps){
 		// send a log of the load having occurred.
 		LoggerRestClient logger = null;
 		try{	// wrapped in a try block because logging never announces a failure.

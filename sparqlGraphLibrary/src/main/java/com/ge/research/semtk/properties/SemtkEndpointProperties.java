@@ -18,15 +18,15 @@
 
 package com.ge.research.semtk.properties;
 
-import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
-// meant to be inherited into a spring boot microservice property object
-// properties for a triple-store endpoint
+/**
+ * Properties for a triplestore endpoint, including a domain and dataset
+ */
 public class SemtkEndpointProperties extends EndpointProperties {
+	
 	private String endpointDomain = "";
 	private String endpointDataset = "";
-	
 	
 	public String getEndpointDomain() {
 		return endpointDomain;
@@ -52,6 +52,7 @@ public class SemtkEndpointProperties extends EndpointProperties {
 					this.getEndpointUsername(), this.getEndpointPassword());
 		}
 	}
+
 	public void validate() throws Exception {
 		super.validate();
 		checkNone("endpointDomain", endpointDomain);

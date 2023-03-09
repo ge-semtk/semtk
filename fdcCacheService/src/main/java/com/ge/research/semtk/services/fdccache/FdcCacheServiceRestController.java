@@ -37,7 +37,7 @@ import com.ge.research.semtk.fdccache.FdcCacheSpecRunner;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
-import com.ge.research.semtk.springutillib.properties.AuthProperties;
+import com.ge.research.semtk.springutillib.properties.AuthorizationProperties;
 import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
 import com.ge.research.semtk.springutillib.properties.NodegroupExecutionServiceProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
@@ -61,7 +61,7 @@ public class FdcCacheServiceRestController {
 	@Autowired 
 	private ApplicationContext appContext;
 	@Autowired
-	private AuthProperties auth_prop; 
+	private AuthorizationProperties auth_prop; 
 	@Autowired
 	private NodegroupExecutionServiceProperties ngexec_prop; 
 	@Autowired
@@ -75,10 +75,8 @@ public class FdcCacheServiceRestController {
     public void init() {
 		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
 		env_prop.validateWithExit();	
-		
 		auth_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);
-		
 		ngexec_prop.validateWithExit();
 		ngstore_prop.validateWithExit();
 		oinfo_prop.validateWithExit();

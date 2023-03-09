@@ -55,7 +55,7 @@ import com.ge.research.semtk.sparqlX.BadQueryException;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
-import com.ge.research.semtk.springutillib.properties.AuthProperties;
+import com.ge.research.semtk.springutillib.properties.AuthorizationProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.NodegroupStoreServiceProperties;
 import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
@@ -72,7 +72,7 @@ public class DispatcherServiceRestController {
  	static final String SERVICE_NAME = "dispatcher";
  	
 	@Autowired
-	private AuthProperties auth_prop;
+	private AuthorizationProperties auth_prop;
 	@Autowired
 	private DispatchProperties props;
 	@Autowired
@@ -90,20 +90,18 @@ public class DispatcherServiceRestController {
 	
 	@PostConstruct
     public void init() {
-		props.validateWithExit();
+		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
+		env_prop.validateWithExit();
+		auth_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
 		store_props.validateWithExit();
-		servicesgraph_props.validateWithExit();
 		oinfo_props.validateWithExit();
 		status_props.validateWithExit();
 		results_props.validateWithExit();
-				
-		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
-		env_prop.validateWithExit();
-		
-		auth_prop.validateWithExit();
-		AuthorizationManager.authorizeWithExit(auth_prop);
-
+		props.validateWithExit();
+		servicesgraph_props.validateWithExit();
 	}
+	
 	@Operation(
 			summary=	"Run any kind of query on a nodegroup.",
 			description=	"Newer replacement for /query*FromNodegroup endpoints  <br>" +

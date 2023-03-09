@@ -21,11 +21,9 @@ package com.ge.research.semtk.springutillib.properties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import com.ge.research.semtk.logging.easyLogger.EasyLogEnabledConfigProperties;
-
 @Configuration
 @ConfigurationProperties(prefix="logging", ignoreUnknownFields = true)
-public class LoggingProperties extends EasyLogEnabledConfigProperties {
+public class LoggingProperties extends com.ge.research.semtk.logging.easyLogger.LoggingProperties {
 	public LoggingProperties() {
 		setPrefix("logging");
 	}

@@ -62,7 +62,7 @@ import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
-import com.ge.research.semtk.springutillib.properties.AuthProperties;
+import com.ge.research.semtk.springutillib.properties.AuthorizationProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.LoggingProperties;
 import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
@@ -94,20 +94,19 @@ public class OntologyInfoServiceRestController {
 	@Autowired 
 	private ApplicationContext appContext;
 	@Autowired
-	private AuthProperties auth_prop;
+	private AuthorizationProperties auth_prop;
 
 	@PostConstruct
     public void init() {
 		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
 		env_prop.validateWithExit();
-
-		log_prop.validateWithExit();
-		results_props.validateWithExit();
-		servicesgraph_props.validateWithExit();
 		auth_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);
-
+		results_props.validateWithExit();
+		servicesgraph_props.validateWithExit();
+		log_prop.validateWithExit();
 	}
+	
 	/**
 	 * Get a tabular data dictionary report.
 	 */

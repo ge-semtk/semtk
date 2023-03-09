@@ -21,10 +21,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix="ngstore", ignoreUnknownFields = true)
-public class NodegroupStoreServiceProperties extends com.ge.research.semtk.properties.NgStoreServiceProperties {
+@ConfigurationProperties(prefix="ngstore.service", ignoreUnknownFields = true)
+public class NodegroupStoreServiceProperties extends com.ge.research.semtk.properties.NodegroupStoreServiceProperties {
 	public NodegroupStoreServiceProperties() {
 		super();
-		setPrefix("ngstore");
+		setPrefix("ngstore.service");
 	}
 }

@@ -17,9 +17,10 @@
 
 package com.ge.research.semtk.properties;
 
-// meant to be inherited into a spring boot properties object needing database connection info
-
-public abstract class DatabaseProperties {
+/**
+ * Properties to connect to a database
+ */
+public abstract class DatabaseProperties extends Properties {
 	private String server;
 	private int    port;
 	private String database;

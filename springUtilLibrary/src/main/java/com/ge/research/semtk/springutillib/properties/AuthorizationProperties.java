@@ -19,13 +19,11 @@ package com.ge.research.semtk.springutillib.properties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import com.ge.research.semtk.auth.AuthorizationProperties;
-
 @Configuration
 @ConfigurationProperties(prefix="auth", ignoreUnknownFields = true)
-public class AuthProperties extends AuthorizationProperties {
+public class AuthorizationProperties extends com.ge.research.semtk.auth.AuthorizationProperties {
 
-	public AuthProperties() {
+	public AuthorizationProperties() {
 		super();
 		setPrefix("auth");
 	}

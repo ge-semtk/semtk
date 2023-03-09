@@ -18,9 +18,11 @@
 
 package com.ge.research.semtk.properties;
 
-// meant to be inherited into a spring boot microservice property object
-// properties for a triple-store endpoint
+/**
+ * Properties for a triplestore endpoint
+ */
 public class EndpointProperties extends Properties {
+
 	private String endpointType = "";
 	private String endpointUrl = "";
 	private String endpointUsername = "";

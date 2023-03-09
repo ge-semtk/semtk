@@ -44,10 +44,10 @@ import com.ge.research.semtk.springutilib.requests.StoredItemRenameRequest;
 import com.ge.research.semtk.springutilib.requests.StoredItemRequest;
 import com.ge.research.semtk.springutilib.requests.StoredItemTypeRequest;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
-import com.ge.research.semtk.springutillib.properties.AuthProperties;
+import com.ge.research.semtk.springutillib.properties.AuthorizationProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
-import com.ge.research.semtk.springutillib.properties.StoreProperties;
+import com.ge.research.semtk.springutillib.properties.NodegroupStoreProperties;
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
@@ -85,9 +85,9 @@ public class NodeGroupStoreRestController {
 	@Autowired 
 	private ApplicationContext appContext;
 	@Autowired
-	private StoreProperties prop;
+	private NodegroupStoreProperties prop;
 	@Autowired
-	private AuthProperties auth_prop;
+	private AuthorizationProperties auth_prop;
 	@Autowired
 	private ServicesGraphProperties servicesgraph_prop;
 
@@ -97,15 +97,14 @@ public class NodeGroupStoreRestController {
     public void init() throws Exception {
 		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
 		env_prop.validateWithExit();
+		auth_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
 
 		// StoreProperties needs to be split up into pieces
 		// and each one validated
 		// then put demo nodegroup into store
 		servicesgraph_prop.validateWithExit();
-		
-		auth_prop.validateWithExit();
-		AuthorizationManager.authorizeWithExit(auth_prop);
-		
+
 		// upload model in case it has changed
 		SparqlEndpointInterface modelSei = this.getStoreModelSei();
 		byte owl [] = Utility.getResourceAsBytes(NgStore.class, "/semantics/OwlModels/prefabNodeGroup.owl");

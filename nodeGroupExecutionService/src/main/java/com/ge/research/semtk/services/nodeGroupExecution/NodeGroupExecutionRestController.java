@@ -107,7 +107,7 @@ import com.ge.research.semtk.springutilib.requests.SparqlEndpointTrackRequestBod
 import com.ge.research.semtk.springutilib.requests.SparqlEndpointsRequestBody;
 import com.ge.research.semtk.springutilib.requests.TrackQueryRequestBody;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
-import com.ge.research.semtk.springutillib.properties.AuthProperties;
+import com.ge.research.semtk.springutillib.properties.AuthorizationProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.IngestorServiceProperties;
 import com.ge.research.semtk.springutillib.properties.LoggingProperties;
@@ -136,7 +136,7 @@ public class NodeGroupExecutionRestController {
  	
  	// updated
  	@Autowired
-	private AuthProperties auth_prop;
+	private AuthorizationProperties auth_prop;
 	@Autowired
 	private ServicesGraphProperties servicesgraph_props;
 	@Autowired
@@ -162,19 +162,16 @@ public class NodeGroupExecutionRestController {
     public void init() {
 		EnvironmentProperties env_prop = new EnvironmentProperties(appContext, EnvironmentProperties.SEMTK_REQ_PROPS, EnvironmentProperties.SEMTK_OPT_PROPS);
 		env_prop.validateWithExit();
-
-		// these are still in the older NodegroupExecutionServiceStartup
+		auth_prop.validateWithExit();
+		AuthorizationManager.authorizeWithExit(auth_prop);
 		ngstore_prop.validateWithExit();
 		dispatch_prop.validateWithExit();
 		results_prop.validateWithExit();
 		status_prop.validateWithExit();
 		ingest_prop.validateWithExit();
 		neptune_prop.validateWithExit();
-
 		servicesgraph_props.validateWithExit();
 		log_prop.validateWithExit();
-		auth_prop.validateWithExit();
-		AuthorizationManager.authorizeWithExit(auth_prop);
 	}
 	
 	@Operation(

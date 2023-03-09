@@ -20,11 +20,11 @@ package com.ge.research.semtk.services.filestaging;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
-import com.ge.research.semtk.properties.ServiceProperties;
+import com.ge.research.semtk.properties.Properties;
 
 @Configuration
 @ConfigurationProperties(prefix="filestaging", ignoreUnknownFields = true)
-public class FileStagingProperties extends ServiceProperties {
+public class FileStagingProperties extends Properties {
 	
 	public final static String STORETYPE_DIR = "directory";	// retrieve from a directory in a locally-accessible file system
 	public final static String STORETYPE_S3 = "s3";			// retrieve from an S3 bucket
@@ -41,6 +41,7 @@ public class FileStagingProperties extends ServiceProperties {
 	private String s3Bucket;		// for store type S3 
 	
 	public void validate() throws Exception {
+		super.validate();
 		checkNotEmpty("stageDirectory", stageDirectory);
 		checkNotEmpty("storeType", storeType);
 		checkNone("directory", directory);
