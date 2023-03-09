@@ -1,4 +1,4 @@
-package com.ge.research.semtk.aws;
+package com.ge.research.semtk.aws.test;
 
 import static org.junit.Assert.*;
 import static org.junit.Assume.*;
@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import org.junit.Test;
 
+import com.ge.research.semtk.aws.S3Connector;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class S3ConnectorTest_IT {

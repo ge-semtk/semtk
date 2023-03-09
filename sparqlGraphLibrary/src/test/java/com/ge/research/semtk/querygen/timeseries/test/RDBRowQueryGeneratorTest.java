@@ -15,7 +15,7 @@
  ** limitations under the License.
  */
 
-package com.ge.research.semtk.querygen.timeseries.rdb.test;
+package com.ge.research.semtk.querygen.timeseries.test;
 
 import static org.junit.Assert.*;
 

@@ -1,4 +1,4 @@
-package com.ge.research.semtk.querygen.timeseries.kairosdb.test;
+package com.ge.research.semtk.querygen.timeseries.test;
 
 import static org.junit.Assert.*;
 

@@ -14,7 +14,7 @@
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  */
-package com.ge.research.semtk.api.nodeGroupExecution.test;
+package com.ge.research.semtk.nodegroupexecution.test;
 
 import org.junit.BeforeClass;
 import org.junit.Test;

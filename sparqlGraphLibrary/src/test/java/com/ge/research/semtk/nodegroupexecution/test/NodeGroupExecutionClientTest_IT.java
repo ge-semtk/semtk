@@ -14,7 +14,7 @@
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  */
-package com.ge.research.semtk.api.nodeGroupExecution.client.test;
+package com.ge.research.semtk.nodegroupexecution.test;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;

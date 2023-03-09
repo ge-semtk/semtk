@@ -15,7 +15,7 @@
  ** limitations under the License.
  */ 
 
-package com.ge.research.semtk.belmont.runtimeConstraints.test;
+package com.ge.research.semtk.belmont.test;
 
 import static org.junit.Assert.*;
 

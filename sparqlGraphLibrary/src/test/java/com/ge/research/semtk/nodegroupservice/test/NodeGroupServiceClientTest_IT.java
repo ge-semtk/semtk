@@ -14,7 +14,7 @@
  ** See the License for the specific language governing permissions and
  ** limitations under the License.
  */
-package com.ge.research.semtk.api.client.test;
+package com.ge.research.semtk.nodegroupservice.test;
 
 import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
 import org.json.simple.JSONObject;
