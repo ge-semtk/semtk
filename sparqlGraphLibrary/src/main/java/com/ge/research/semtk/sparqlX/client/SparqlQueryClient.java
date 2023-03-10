@@ -67,7 +67,7 @@ public class SparqlQueryClient extends RestClient {
 		
 		// everyone except syncOwl uses this
 		if (! this.conf.getServiceEndpoint().endsWith("syncOwl")) {
-			parametersJSON.put("dataset", ((SparqlQueryClientConfig)this.conf).getSparqlDataset());
+			parametersJSON.put("graph", ((SparqlQueryClientConfig)this.conf).getSparqlDataset());
 		}
 		
 		// auth queries will have these as well
@@ -131,12 +131,32 @@ public class SparqlQueryClient extends RestClient {
 		}
 	}
 	
+	/**
+	 * Upload an OWL file
+	 */
 	public SimpleResultSet uploadOwl(File owlFile) throws Exception{
 		this.overrideConfEndpoint("uploadOwl");
-		
 		try {
 			this.fileParameter = owlFile;
 			this.fileParameterName = "owlFile";
+
+			JSONObject resultJSON = (JSONObject)super.execute();
+			SimpleResultSet retval = new SimpleResultSet(true);
+			retval.readJson(resultJSON);
+			return retval;
+		} finally {
+			this.restoreConfEndpoint();
+		}
+	}
+
+	/**
+	 * Upload a TTL file
+	 */
+	public SimpleResultSet uploadTurtle(File ttlFile) throws Exception{
+		this.overrideConfEndpoint("uploadTurtle");
+		try {
+			this.fileParameter = ttlFile;
+			this.fileParameterName = "ttlFile";
 
 			JSONObject resultJSON = (JSONObject)super.execute();
 			SimpleResultSet retval = new SimpleResultSet(true);

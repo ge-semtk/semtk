@@ -611,8 +611,7 @@ public class SparqlQueryServiceRestController {
 								@RequestParam(value="password", required=false) String password, 
 								@RequestParam("owlFile") MultipartFile owlFile, 
 								@RequestHeader HttpHeaders headers) {
-		
-		return this.uploadFile("uploadTurtle", serverAndPort, serverType, (dataset!=null)?dataset:graph, user, password, owlFile, headers);
+		return this.uploadFile("uploadOwl", serverAndPort, serverType, (dataset!=null)?dataset:graph, user, password, owlFile, headers);
 	}
 	
 	
@@ -646,7 +645,6 @@ public class SparqlQueryServiceRestController {
 		SparqlEndpointInterface sei = null;
 		LocalLogger.logToStdOut("Sparql Query Service start uploadTurtle");
 		
-		
 		try {	
 			if (serverAndPort == null || serverAndPort.trim().isEmpty() ) throw new Exception("serverAndPort is empty.");
 			if (serverType == null || serverType.trim().isEmpty() ) throw new Exception("serverType is empty.");
@@ -655,8 +653,8 @@ public class SparqlQueryServiceRestController {
 			String nonEmptyUser = (user==null || user.isBlank()) ? "no-user" : user;
 			String nonEmptyPassword = (password==null || password.isBlank()) ? "no-password" : password;
 			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, graph, nonEmptyUser, nonEmptyPassword);
-			
-			SimpleResultSet sResult = this.uploadFile(sei, multiFile.getInputStream(), multiFile.getName());
+
+			SimpleResultSet sResult = this.uploadFile(sei, multiFile.getInputStream(), multiFile.getOriginalFilename());
 			return sResult.toJson();
 			
 		} catch (Exception e) {			
