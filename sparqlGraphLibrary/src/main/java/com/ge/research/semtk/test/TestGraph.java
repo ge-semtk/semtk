@@ -91,11 +91,9 @@ public class TestGraph {
 		}
 		
 		if (sei instanceof NeptuneSparqlEndpointInterface) {
-
 			String region = IntegrationTestUtility.get("neptuneupload.s3ClientRegion");
 			String iamRoleArn = IntegrationTestUtility.get("neptuneupload.awsIamRoleArn");
 			String name =   IntegrationTestUtility.get("neptuneupload.s3BucketName");
-	       
 			((NeptuneSparqlEndpointInterface) sei).setS3Config(region, name, iamRoleArn);
 		}
 		return sei;
@@ -108,7 +106,6 @@ public class TestGraph {
 		ret.setEndpointServerUrl(sei.getServerAndPort());
 		ret.setEndpointUsername(sei.getUserName());
 		ret.setEndpointPassword(sei.getPassword());
-		
 		return ret;
 	}
 	
@@ -218,47 +215,21 @@ public class TestGraph {
 		}		
 	}
 	
+	/**
+	 * Execute a select query
+	 */
 	public static Table execTableSelect(String query) throws Exception {
-		// execute a select query
-		// exception if there's any problem
-		// return the table
 		SparqlEndpointInterface sei = getSei();
 		TableResultSet res = (TableResultSet) sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 		res.throwExceptionIfUnsuccessful();
-		
 		return res.getResults();
 	}
 	public static Table execTableSelect(SparqlGraphJson sgJson) throws Exception {
-		// execute a select query
-		// exception if there's any problem
-		// return the table
-		
 		return SparqlGraphJson.executeSelectToTable(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
 	}
 	public static Table execTableSelect(JSONObject sgJsonJson, OntologyInfoClient oInfoClient) throws Exception {
-		// execute a select query
-		// exception if there's any problem
-		// return the table
 		return SparqlGraphJson.executeSelectToTable(sgJsonJson, getSparqlConn(), oInfoClient);
 	}
-
-	public static JSONArray execJsonConstruct(SparqlGraphJson sgJson) throws Exception {
-		// execute a construct query
-		// exception if there's any problem
-		// return the jsonArray
-		return SparqlGraphJson.executeConstructToJson(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
-	}
-	public static JSONArray execJsonConstruct(NodeGroup ng) throws Exception {
-		SparqlGraphJson sgJson = new SparqlGraphJson(ng, getSparqlConn());
-		return SparqlGraphJson.executeConstructToJson(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
-	}
-	public static JSONArray execJsonConstruct(JSONObject sgJsonJson, OntologyInfoClient oInfoClient) throws Exception {
-		// execute a construct query
-		// exception if there's any problem
-		// return the table
-		return SparqlGraphJson.executeConstructToJson(sgJsonJson, getSparqlConn(), oInfoClient);
-	}
-	
 	public static Table execSelectFromResource(Object o, String resourceName) throws Exception {
 		return execSelectFromResource(o.getClass(), resourceName);
 	}
@@ -267,8 +238,20 @@ public class TestGraph {
 		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(c, resourceName);
 		return execTableSelect(sgjson.toJson(), IntegrationTestUtility.getOntologyInfoClient());
 	}
-	
-	
+
+	/**
+	 * Execute a construct query
+	 */
+	public static JSONArray execJsonConstruct(SparqlGraphJson sgJson) throws Exception {
+		return SparqlGraphJson.executeConstructToJson(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
+	}
+	public static JSONArray execJsonConstruct(NodeGroup ng) throws Exception {
+		SparqlGraphJson sgJson = new SparqlGraphJson(ng, getSparqlConn());
+		return SparqlGraphJson.executeConstructToJson(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
+	}
+	public static JSONArray execJsonConstruct(JSONObject sgJsonJson, OntologyInfoClient oInfoClient) throws Exception {
+		return SparqlGraphJson.executeConstructToJson(sgJsonJson, getSparqlConn(), oInfoClient);
+	}
 	public static JSONArray execConstructFromResource(Object o, String resourceName) throws Exception {
 		return execConstructFromResource(o.getClass(), resourceName);
 	}
@@ -277,7 +260,6 @@ public class TestGraph {
 		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(c, resourceName);
 		return execJsonConstruct(sgjson.toJson(), IntegrationTestUtility.getOntologyInfoClient());
 	}
-	
 	
 	/**
 	 * Get the number of triples in the test graph.
@@ -294,7 +276,6 @@ public class TestGraph {
 	// Use uploadOwlResource 
 	@Deprecated 
 	public static void uploadOwl(String owlFilename) throws Exception {
-		
 		SparqlEndpointInterface sei = getSei();		
 		Path path = Paths.get(owlFilename);
 		byte[] owl = Files.readAllBytes(path);
@@ -332,7 +313,6 @@ public class TestGraph {
 		String base = Utility.getXmlBaseFromOwlRdf(new FileInputStream(owlFilename));
 		
 		SparqlEndpointInterface sei = getSei();
-		
 		sei.setGraph(base);
 		sei.clearGraph();
 		
@@ -358,7 +338,6 @@ public class TestGraph {
 		uploadTurtleString(Utility.getResourceAsString(c, resourceName));
 	}
 	public static void uploadTurtle(String owlFilename) throws Exception {
-		
 		SparqlEndpointInterface sei = getSei();
 		Path path = Paths.get(owlFilename);
 		byte[] owl = Files.readAllBytes(path);
@@ -368,11 +347,8 @@ public class TestGraph {
 		}
 		IntegrationTestUtility.getOntologyInfoClient().uncacheChangedConn(sei);
 	}
-	
 	public static void uploadTurtleString(String turtleData) throws Exception {
-		
 		SparqlEndpointInterface sei = getSei();
-		
 		SimpleResultSet resultSet = SimpleResultSet.fromJson(sei.executeAuthUploadTurtle(turtleData.getBytes()));
 		if (!resultSet.getSuccess()) {
 			throw new Exception(resultSet.getRationaleAsString(" "));

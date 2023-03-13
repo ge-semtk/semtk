@@ -31,7 +31,6 @@ import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestConnection;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
-import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.test.QueryGenTest_IT;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
@@ -222,6 +221,7 @@ public class OntologyInfoTests_IT {
 		OntologyClass flower = oInfo.getClass("http://research.ge.com/kdl/plant#Flower");
 		assertTrue(cat != null);
 		assertTrue(flower != null);
+		testConn.clearGraphs();
 	}
 	
 	@Test
@@ -242,10 +242,12 @@ public class OntologyInfoTests_IT {
 		OntologyClass flower = oInfo.getClass("http://research.ge.com/kdl/plant#Flower");
 		assertTrue(cat != null);
 		assertTrue(flower != null);
+		testConn.clearGraphs();
 	}
 	
 	private TestConnection setupDoubleModel() throws Exception {
 		TestConnection conn = new TestConnection(2, 1, "http://research.ge.com/kdl/");
+		conn.clearGraphs();
 		conn.uploadOwl(0, "src/test/resources/Pet.owl");
 		conn.uploadOwl(1, "src/test/resources/Plant.owl");
 		return conn;

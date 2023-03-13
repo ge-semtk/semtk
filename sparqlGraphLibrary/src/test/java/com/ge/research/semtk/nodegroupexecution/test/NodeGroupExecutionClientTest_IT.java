@@ -598,7 +598,7 @@ public class NodeGroupExecutionClientTest_IT {
 
 			// copy to this graph
 			SparqlEndpointInterface toGraphSei = TestGraph.getSei(TestGraph.getDataset() + "/copy");
-			toGraphSei.clearGraph();
+			IntegrationTestUtility.clearGraph(toGraphSei);
 			assertEquals(toGraphSei.getNumTriples(), 0);	// assert empty before copy
 
 			String statusMessage = nodeGroupExecutionClient.copyGraph(
@@ -607,6 +607,7 @@ public class NodeGroupExecutionClientTest_IT {
 
 			assertTrue(statusMessage.contains("Successfully copied"));
 			assertEquals(toGraphSei.getNumTriples(), 50);	// assert populated after copy
+			IntegrationTestUtility.clearGraph(toGraphSei);
 		}
 		
 		@Test

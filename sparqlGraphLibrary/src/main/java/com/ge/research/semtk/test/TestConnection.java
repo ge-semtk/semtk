@@ -28,10 +28,6 @@ import java.util.HashMap;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
-import com.ge.research.semtk.belmont.NodeGroup;
-import com.ge.research.semtk.load.DataLoader;
-import com.ge.research.semtk.load.dataset.CSVDataset;
-import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.resultSet.GeneralResultSet;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -41,8 +37,6 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
-import com.ge.research.semtk.sparqlX.VirtuosoSparqlEndpointInterface;
-import com.ge.research.semtk.utility.Utility;
 
 /**
  * A utility class to load data to a semantic graph.  Intended for use in tests.
@@ -61,11 +55,11 @@ public class TestConnection {
 		
 		SparqlEndpointInterface sei = TestGraph.getSei();
 		for (int i=0; i < modelCount; i++) {
-			sei.setDataset(generateDatasetName(String.format("model%d", i)));
+			sei.setGraph(generateDatasetName(String.format("model%d", i)));
 			conn.addModelInterface( sei );
 		}
 		for (int i=0; i < dataCount; i++) {
-			sei.setDataset(generateDatasetName(String.format("data%d", i)));
+			sei.setGraph(generateDatasetName(String.format("data%d", i)));
 			conn.addModelInterface( sei );
 		}
 		
@@ -87,7 +81,7 @@ public class TestConnection {
 		seiList.addAll(this.conn.getDataInterfaces());
 		
 		for (SparqlEndpointInterface sei : seiList) {
-			sei.clearGraph();
+			IntegrationTestUtility.clearGraph(sei);
 		}
 	}
 	
