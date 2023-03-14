@@ -66,4 +66,14 @@ public class SparqlQueryClientTest_IT {
 		}
 	}
 
+	@Test
+	public void testDropGraph() throws Exception{
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(getClass(), "Pet.owl");
+		assertEquals(53, TestGraph.getNumTriples());
+		SparqlQueryClient client = IntegrationTestUtility.getSparqlQueryClient("/sparqlQueryService/dropGraph", TestGraph.getSparqlServer(), TestGraph.getDataset());
+		client.dropGraph();
+		assertEquals(0, TestGraph.getNumTriples());
+	}
+
 }
