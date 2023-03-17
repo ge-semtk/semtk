@@ -73,17 +73,18 @@ public class UtilityClientTest_IT {
 			String response = Utility.readToString(reader);
 
 			// check the response stream
-			assertTrue("Bad response:\n" + response, response.contains("Loading manifest for 'Entity Resolution'..."));
-			assertTrue(response.contains("Loading manifest for 'RACK ontology'..."));
-			assertTrue(response.matches("(.*)Clear graph http://junit/(.*)/rack001/model(.*)"));
-			assertTrue(response.matches("(.*)Clear graph http://junit/(.*)/rack001/data(.*)"));
-			assertTrue(response.matches("(.*)Load OWL OwlModels(.*)AGENTS.owl(.*)"));
-			assertTrue(response.contains("Store nodegroups"));
-			assertTrue(response.contains("Stored: JUNIT query Files of a Given Format"));
-			assertTrue(response.matches("(.*)Load CSV Package-1(.*)PROV_S_ACTIVITY1.csv as class http://arcos.rack/PROV-S#ACTIVITY(.*)"));
-			assertTrue(response.matches("(.*)Copy graph http://junit/(.*)/auto/rack001/data to uri://DefaultGraph(.*)"));
-			assertTrue(response.contains("Perform entity resolution"));
-			assertTrue(response.contains("Load complete"));
+			assertTrue("Bad response:\n" + response, response.contains("INFO: Loading manifest for 'Entity Resolution'..."));
+			assertTrue(response.contains("INFO: Loading manifest for 'RACK ontology'..."));
+			assertTrue(response.matches("(.*)INFO: Clear graph http://junit/(.*)/rack001/model(.*)"));
+			assertTrue(response.matches("(.*)INFO: Clear graph http://junit/(.*)/rack001/data(.*)"));
+			assertTrue(response.matches("(.*)INFO: Load OWL OwlModels(.*)AGENTS.owl(.*)"));
+			assertTrue(response.contains("INFO: Store nodegroups"));
+			assertTrue(response.contains("INFO: Stored: JUNIT query Files of a Given Format"));
+			assertTrue(response.matches("(.*)INFO: Load CSV Package-1(.*)PROV_S_ACTIVITY1.csv as class http://arcos.rack/PROV-S#ACTIVITY(.*)"));
+			assertTrue(response.contains("WARNING: Input is missing these columns:"));
+			assertTrue(response.matches("(.*)INFO: Copy graph http://junit/(.*)/auto/rack001/data to uri://DefaultGraph(.*)"));
+			assertTrue(response.contains("INFO: Perform entity resolution"));
+			assertTrue(response.contains("INFO: Load complete"));
 
 			// check the counts
 			assertEquals("Number of triples loaded to model graph", ManifestConfigTest_IT.NUM_EXPECTED_TRIPLES_MODEL, modelFallbackSei.getNumTriples());
@@ -105,11 +106,11 @@ public class UtilityClientTest_IT {
 
 		// not a zip file
 		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsTempFile(this,"/animalQuery.json"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
-		assertTrue(response.contains("Error: This endpoint only accepts ingestion packages in zip file format"));
+		assertTrue(response.contains("ERROR: This endpoint only accepts ingestion packages in zip file format"));
 
 		// contains no top-level manifest.yaml
 		response = Utility.readToString(client.execLoadIngestionPackage(Utility.getResourceAsTempFile(this,"/config/IngestionPackageNoManifest.zip"), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, modelFallbackSei.getGraph(), dataFallbackSei.getGraph()));
-		assertTrue(response.contains("Error: Cannot find a top-level manifest"));
+		assertTrue(response.contains("ERROR: Cannot find a top-level manifest"));
 	}
 
 	// clear graphs and nodegroup store

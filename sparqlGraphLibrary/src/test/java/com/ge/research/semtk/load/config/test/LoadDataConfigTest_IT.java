@@ -24,7 +24,6 @@ import org.json.simple.JSONObject;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -113,15 +112,15 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 
 			// Case 1: if load() data graph parameter, then confirm loads there
 			clearGraphs();
-			loadOwlConfig.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));  // loads OWL
-			loadDataConfig.load(modelSei.getGraph(), new LinkedList<String>(Arrays.asList(dataSei.getGraph())), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));
+			loadOwlConfig.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);  // loads OWL
+			loadDataConfig.load(modelSei.getGraph(), new LinkedList<String>(Arrays.asList(dataSei.getGraph())), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
 			assertEquals(dataSei.getNumTriples(), NUM_EXPECTED_TRIPLES);
 			assertEquals(dataFallbackSei.getNumTriples(), 0);
 
 			// Case 2: if no load() data graph parameter, then confirm loads to YAML data graph if present    "http://junit/rack001/data"
 			clearGraphs();
-			loadOwlConfig.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));  // loads OWL to fallback
-			loadDataConfig.load(null, null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));
+			loadOwlConfig.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);  // loads OWL to fallback
+			loadDataConfig.load(null, null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
 			SparqlEndpointInterface dataSeiFromYaml = TestGraph.getSei(loadDataConfig.getDatagraphs().get(0));		// this is what's in the YAML
 			assertEquals(dataSei.getNumTriples(), 0);
 			assertEquals(dataSeiFromYaml.getNumTriples(), NUM_EXPECTED_TRIPLES);
@@ -129,9 +128,9 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 
 			// Case 3: if no load() data graph parameter, and no YAML data graph, then confirm loads to fallback
 			clearGraphs();
-			loadOwlConfig.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));  // loads OWL to fallback
+			loadOwlConfig.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);  // loads OWL to fallback
 			loadDataConfig.setDataGraphs(null);  // no datagraph in YAML
-			loadDataConfig.load(null, null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));
+			loadDataConfig.load(null, null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
 			assertEquals(dataSei.getNumTriples(), 0);
 			assertEquals(dataFallbackSei.getNumTriples(), NUM_EXPECTED_TRIPLES);
 
@@ -160,7 +159,7 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 			// load data by nodegroup
 			File tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/config/LoadDataConfig-byNodegroup.zip");
 			LoadDataConfig loadDataConfig = new LoadDataConfig(Paths.get(tempDir.getAbsolutePath(), "import.yaml").toFile(), TestGraph.getSei().getGraph(), TestGraph.getSei().getGraph());
-			loadDataConfig.load(TestGraph.getSei().getGraph(), new LinkedList<String>(Arrays.asList(TestGraph.getSei().getGraph())), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));
+			loadDataConfig.load(TestGraph.getSei().getGraph(), new LinkedList<String>(Arrays.asList(TestGraph.getSei().getGraph())), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
 			assertEquals(TestGraph.getSei().getNumTriples(), 334);
 
 		} finally{

@@ -2,8 +2,6 @@ package com.ge.research.semtk.services.nodegroupStore;
 
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Arrays;
 import java.util.Hashtable;
 
 import com.ge.research.semtk.services.nodegroupStore.NgStore.StoredItemTypes;
@@ -13,19 +11,18 @@ import com.opencsv.exceptions.CsvValidationException;
 public class StoreDataCsvReader extends StoreDataCsv {
 	String filename = null;
 	CSVReader br = null;
-	PrintWriter writer = null;
 	Hashtable<String, Integer> colHash = null;
 	int colCount = 0;
 	int lineNumber;
 	String [] parsedLine = null;
 
-	public StoreDataCsvReader(String csvFileName, PrintWriter writer) throws Exception {
+	public StoreDataCsvReader(String csvFileName) throws Exception {
 		this.br = new CSVReader(new FileReader(csvFileName));
 		this.filename = csvFileName;
 		this.lineNumber = 0;
 		this.checkHeaders();
 	}
-	
+
 	private void checkHeaders() throws Exception {
 		String[] parsedLine = br.readNext(); // header line
 

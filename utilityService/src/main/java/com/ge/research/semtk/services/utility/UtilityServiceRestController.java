@@ -66,6 +66,7 @@ import com.ge.research.semtk.springutillib.properties.QueryServiceUserPasswordPr
 import com.ge.research.semtk.springutillib.properties.NodegroupStoreServiceProperties;
 import com.ge.research.semtk.springutillib.properties.QueryServiceProperties;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Logger;
 import com.ge.research.semtk.utility.Utility;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -387,12 +388,14 @@ public class UtilityServiceRestController {
 		final String ENDPOINT_NAME = "loadIngestionPackage";
 		LocalLogger.logToStdOut(SERVICE_NAME + " " + ENDPOINT_NAME);
 		PrintWriter responseWriter = null;
+		Logger responseLogger = null;
 
 		// set up
 		try {
 			resp.addHeader("content-type", "text/plain; charset=utf-8");
 			resp.flushBuffer();
 			responseWriter = resp.getWriter();
+			responseLogger = new Logger(responseWriter);
 		}catch(Exception e) {
 			LocalLogger.printStackTrace(e);
 		}
@@ -418,15 +421,13 @@ public class UtilityServiceRestController {
 				throw new Exception("Cannot find a top-level manifest in " + ingestionPackageZipFile.getOriginalFilename());
 			}
 			ManifestConfig manifest = new ManifestConfig(manifestFile, defaultModelGraph, defaultDataGraph);
-			manifest.load(serverAndPort, serverType, clear, true, ingest_prop.getClient(), ngexec_prop.getClient(), ngstore_prop.getClient(), getSparqlQueryClient(), responseWriter);
+			manifest.load(serverAndPort, serverType, clear, true, ingest_prop.getClient(), ngexec_prop.getClient(), ngstore_prop.getClient(), getSparqlQueryClient(), responseLogger);
 
-			responseWriter.println("Load complete");
-			responseWriter.flush();
+			responseLogger.info("Load complete");
 			LocalLogger.logToStdOut(SERVICE_NAME + " " + ENDPOINT_NAME + " completed");
 
 		} catch (Exception e){
-			responseWriter.println("Error: " + e.getMessage());
-			responseWriter.flush();
+			responseLogger.error(e.getMessage());
 			LocalLogger.printStackTrace(e);
 		}finally {
 			try {

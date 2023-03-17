@@ -18,12 +18,7 @@
 package com.ge.research.semtk.nodeGroupStore.client;
 
 import java.io.File;
-import java.io.FileReader;
-import java.io.PrintWriter;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Hashtable;
 
 import org.json.simple.JSONObject;
 
@@ -33,12 +28,11 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClient;
 import com.ge.research.semtk.services.nodegroupStore.NgStore;
-import com.ge.research.semtk.services.nodegroupStore.NgStore.StoredItemTypes;
 import com.ge.research.semtk.services.nodegroupStore.StoreDataCsvReader;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Logger;
 import com.ge.research.semtk.utility.Utility;
-import com.opencsv.CSVReader;
 
 
 public class NodeGroupStoreRestClient extends RestClient {
@@ -46,13 +40,11 @@ public class NodeGroupStoreRestClient extends RestClient {
 	@Override
 	public void buildParametersJSON() throws Exception {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	public void handleEmptyResponse() throws Exception {
 		// TODO Auto-generated method stub
-		
 	}
 
 	public NodeGroupStoreRestClient (NodeGroupStoreConfig config) {
@@ -65,6 +57,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 	 * @return
 	 * @throws Exception
 	 */
+	@SuppressWarnings("unchecked")
 	public TableResultSet executeGetNodeGroupById(String id) throws Exception{
 		TableResultSet retval = new TableResultSet();
 		
@@ -137,6 +130,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 	 * @return
 	 * @throws Exception
 	 */
+	@SuppressWarnings("unchecked")
 	public TableResultSet executeGetStoredItemsMetadata(NgStore.StoredItemTypes itemType) throws Exception {
 		TableResultSet retval = new TableResultSet();
 		
@@ -157,6 +151,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 		return retval;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public TableResultSet executeGetNodeGroupRuntimeConstraints(String nodeGroupId) throws Exception {
 		TableResultSet retval = new TableResultSet();
 		
@@ -243,6 +238,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 	 * @throws DoesNotExistException - nodegroup doesn't exist
 	 * @throws Exception - other error in the REST call
 	 */
+	@SuppressWarnings("unchecked")
 	public SimpleResultSet deleteStoredItem(String nodeGroupID, NgStore.StoredItemTypes itemType) throws DoesNotExistException, Exception{
 		SimpleResultSet retval = null;
 		
@@ -275,15 +271,14 @@ public class NodeGroupStoreRestClient extends RestClient {
 	 * Process a store_data.csv file
 	 * @param csvFileName
 	 * @param sparqlConnOverrideFile - override all the nodegroup connections
-	 * @param statusWriter - get status messages
+	 * @param logger - write status messages
 	 * @throws Exception
 	 */
-	public void loadStoreDataCsv(String csvFileName, String sparqlConnOverrideFile, PrintWriter statusWriter) throws Exception {
+	public void loadStoreDataCsv(String csvFileName, String sparqlConnOverrideFile, Logger logger) throws Exception {
 
-		StoreDataCsvReader br = new StoreDataCsvReader(csvFileName, statusWriter);		
+		StoreDataCsvReader br = new StoreDataCsvReader(csvFileName);
 		
 		while (br.readNext() != null) {
-			
 			
 			String ngId = br.getId();           
 			String ngComments = br.getComments();
@@ -300,7 +295,9 @@ public class NodeGroupStoreRestClient extends RestClient {
 
 			// add
 			this.storeItem(ngId, ngComments, ngOwner, ngFilePath, itemType, sparqlConnOverrideFile, true);
-			if (statusWriter != null) { statusWriter.println("Stored: " + ngId); statusWriter.flush(); }
+			if (logger != null) {
+				logger.info("Stored: " + ngId);
+			}
 		}
 	}
 

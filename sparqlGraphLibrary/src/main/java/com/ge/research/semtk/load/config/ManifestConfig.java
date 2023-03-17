@@ -17,7 +17,6 @@
 package com.ge.research.semtk.load.config;
 
 import java.io.File;
-import java.io.PrintWriter;
 import java.util.LinkedList;
 
 import org.apache.commons.math3.util.Pair;
@@ -29,6 +28,7 @@ import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
+import com.ge.research.semtk.utility.Logger;
 import com.ge.research.semtk.utility.Utility;
 
 /**
@@ -212,17 +212,21 @@ public class ManifestConfig extends YamlConfig {
 	 * @param clear 				if true, clears the footprint graphs (before loading)
 	 * @param topLevel 				true if this is a top-level manifest, false for recursively calling sub-manifests
 	 * @param ingestClient			ingestionRestClient
-	 * @param progressWriter 		writer for reporting progress
+	 * @param logger 				logger for reporting progress (may be null)
 	 */
-	public void load(String server, String serverTypeString, boolean clear, boolean topLevel, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, NodeGroupStoreRestClient ngStoreClient, SparqlQueryClient queryClient, PrintWriter progressWriter) throws Exception {
+	public void load(String server, String serverTypeString, boolean clear, boolean topLevel, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, NodeGroupStoreRestClient ngStoreClient, SparqlQueryClient queryClient, Logger logger) throws Exception {
 
-		writeProgress("Loading manifest for '" + getName() + "'...", progressWriter);
+		if(logger != null) {
+			logger.info("Loading manifest for '" + getName() + "'...");
+		}
 
 		// clear graphs first
 		if(clear) {
 			// clear each model and data graph in the footprint
 			for(String g : getGraphsFootprint()) {
-				writeProgress("Clear graph " + g, progressWriter);
+				if(logger != null) {
+					logger.info("Clear graph " + g);
+				}
 				queryClient.setSei(SparqlEndpointInterface.getInstance(serverTypeString, server, g, username, password));
 				queryClient.clearAll();
 			}
@@ -237,32 +241,36 @@ public class ManifestConfig extends YamlConfig {
 				// load via an owl ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
 				LoadOwlConfig config = new LoadOwlConfig(stepFile, this.defaultModelGraph);
-				config.load(null, server, serverTypeString, queryClient, progressWriter);
+				config.load(null, server, serverTypeString, queryClient, logger);
 
 			}else if(type == StepType.DATA) {
 				// load content using CSV ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
 				LoadDataConfig config = new LoadDataConfig(stepFile, this.defaultModelGraph, this.defaultDataGraph);
-				config.load(null, null, server, serverTypeString, false, ingestClient, ngeClient, queryClient, progressWriter);
+				config.load(null, null, server, serverTypeString, false, ingestClient, ngeClient, queryClient, logger);
 
 			}else if(type == StepType.NODEGROUPS) {
 				// load nodegroups/reports from a directory
-				writeProgress("Store nodegroups", progressWriter);
+				if(logger != null) {
+					logger.info("Store nodegroups");
+				}
 				File nodegroupsDirectory = new File(baseDir, (String)step.getValue());
 				File csvFile = new File(nodegroupsDirectory, "store_data.csv");
-				ngStoreClient.loadStoreDataCsv(csvFile.getAbsolutePath(), null, progressWriter);
+				ngStoreClient.loadStoreDataCsv(csvFile.getAbsolutePath(), null, logger);
 
 			}else if(type == StepType.MANIFEST) {
 				// load content using sub-manifest
 				File stepFile = new File(baseDir, (String)step.getValue());
 				ManifestConfig subManifest = new ManifestConfig(stepFile, defaultModelGraph, defaultDataGraph);
-				subManifest.load(server, serverTypeString, false, false, ingestClient, ngeClient, ngStoreClient, queryClient, progressWriter);
+				subManifest.load(server, serverTypeString, false, false, ingestClient, ngeClient, ngStoreClient, queryClient, logger);
 
 			}else if(type == StepType.COPYGRAPH) {
 				// perform the copy
 				String fromGraph = (String)((Pair)step.getValue()).getFirst();
 				String toGraph = (String)((Pair)step.getValue()).getSecond();
-				writeProgress("Copy " + fromGraph + " to " + toGraph, progressWriter);
+				if(logger != null) {
+					logger.info("Copy " + fromGraph + " to " + toGraph);
+				}
 				ngeClient.copyGraph(server, serverTypeString, fromGraph, server, serverTypeString, toGraph);
 
 			}else {
@@ -277,21 +285,29 @@ public class ManifestConfig extends YamlConfig {
 			String copyToGraph = this.getCopyToGraph();
 			if(copyToGraph != null) {
 				if(clear) {
-					writeProgress("Clear graph " + copyToGraph, progressWriter);
+					if(logger != null) {
+						logger.info("Clear graph " + copyToGraph);
+					}
 					queryClient.setSei(SparqlEndpointInterface.getInstance(serverTypeString, server, copyToGraph, username, password));
 					queryClient.clearAll();
 				}
 				for(String graph : this.getGraphsFootprint()) {  // copy each model/data footprint graph to the given graph
-					writeProgress("Copy graph " + graph + " to " + copyToGraph, progressWriter);
+					if(logger != null) {
+						logger.info("Copy graph " + graph + " to " + copyToGraph);
+					}
 					String msg = ngeClient.copyGraph(server, serverTypeString, graph, server, serverTypeString, copyToGraph);
-					writeProgress(msg, progressWriter);
+					if(logger != null) {
+						logger.info(msg);
+					}
 				}
 			}
 
 			// entity resolution
 			String entityResolutionGraph = this.getEntityResolutionGraph();
 			if(entityResolutionGraph != null) {
-				writeProgress("Perform entity resolution in " + entityResolutionGraph, progressWriter);
+				if(logger != null) {
+					logger.info("Perform entity resolution in " + entityResolutionGraph);
+				}
 				try {
 					SparqlConnection conn = new SparqlConnection("Entity Resolution", serverTypeString, server, entityResolutionGraph);
 					ngeClient.combineEntitiesInConn(conn);

@@ -250,8 +250,7 @@ public class NodeGroupStoreTest_IT {
 		IntegrationTestUtility.cleanupNodegroupStore("junit");
 		try {
 			File tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/store_data.zip");
-			
-			nodeGroupStoreClient.loadStoreDataCsv(Paths.get(tempDir.getAbsolutePath(), "store_data.csv").toString(), null, new PrintWriter(System.out));
+			nodeGroupStoreClient.loadStoreDataCsv(Paths.get(tempDir.getAbsolutePath(), "store_data.csv").toString(), null, null);
 	    	assertEquals(4, IntegrationTestUtility.countItemsInStoreByCreator("junit"));
 		} finally {
 			try {
@@ -259,6 +258,5 @@ public class NodeGroupStoreTest_IT {
 			} catch (Exception e) {}
 		}
 	}
-	
 	
 }

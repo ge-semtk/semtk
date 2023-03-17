@@ -63,7 +63,7 @@ public class ManifestConfigTest_LoadTurnstile_IT {
 			reset();
 			manifest.setCopyToGraph(null);
 			manifest.setEntityResolutionGraph(null);
-			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), true, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), new PrintWriter(System.out));
+			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), true, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
 			assertEquals("Number of triples loaded to model fallback graph", 1986, modelFallbackSei.getNumTriples());
 			assertEquals("Number of triples loaded to data graph 1", 338, dataSeiFromYaml1.getNumTriples());
 			assertEquals("Number of triples loaded to data graph 2", 104, dataSeiFromYaml2.getNumTriples());  // full Turnstile example has more data loaded here
