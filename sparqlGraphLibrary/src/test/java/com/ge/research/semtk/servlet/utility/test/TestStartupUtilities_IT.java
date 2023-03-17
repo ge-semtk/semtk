@@ -34,12 +34,11 @@ public class TestStartupUtilities_IT {
 	 */
 	@Test
 	public void testUploadOwlIfNeeded() throws Exception {
-		OntologyInfoClient oInfoClient = IntegrationTestUtility.getOntologyInfoClient();
-		SparqlEndpointInterface sei = TestGraph.getSei();
-		
-		
 		TestGraph.clearGraph();
 		
+		OntologyInfoClient oInfoClient = IntegrationTestUtility.getOntologyInfoClient();
+		SparqlEndpointInterface sei = TestGraph.getSei();
+
 		Utility.OwlRdfInfo fileInfo = Utility.getInfoFromOwlRdf(getClass().getResourceAsStream("/pet.owl"));
 		// test that null is returned when ontology is not yet loaded
 		assertEquals("Version from triplestore is not null when graph is empty", 
