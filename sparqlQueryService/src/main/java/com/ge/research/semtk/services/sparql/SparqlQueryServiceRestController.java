@@ -725,8 +725,8 @@ public class SparqlQueryServiceRestController {
 			
 			// get graphName from owl
 			byte [] owlBytes = owlFile.getBytes();
-			String graphName = Utility.getInfoFromOwlRdf(new ByteArrayInputStream(owlBytes));
-			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, graphName, user, password);
+			Utility.OwlRdfInfo fileInfo = Utility.getInfoFromOwlRdf(new ByteArrayInputStream(owlBytes));
+			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, fileInfo.getBase(), user, password);
 						
 			if (sei instanceof NeptuneSparqlEndpointInterface) {
 
