@@ -102,6 +102,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 
 
+
 /*
  * Utility methods
  */
@@ -170,6 +171,7 @@ public abstract class Utility {
 		ZONED_FORMATTERS.add(ZONED_FORMATTER_SADL);
 	}
 
+	
 	/**
 	 * Change the format of a datetime string.
 	 * @param dateTimeString		the string, e.g. "02/02/2018 4:00:00 AM"
@@ -606,27 +608,62 @@ public abstract class Utility {
 		return envSubstitutor.replace(str).trim();
 	}
 	
-	public static String getXmlBaseFromOwlRdf(InputStream is) throws Exception {
-		String ret;
+	/**
+	 * Return from getXmlBaseFromOwlRdf
+	 *
+	 * @author 200001934
+	 *
+	 */
+	public static class OwlRdfInfo {
+		private String base = "";
+		private String version = "";
+		public String getBase() { return this.base; }
+		public String getVersion() { return this.version; }
+	}
+
+	/**
+	 * Get base and version.   Version is "" if empty or if missing.
+	 * @param is will be read and closed
+	 * @return
+	 * @throws Exception
+	 */
+	public static OwlRdfInfo getInfoFromOwlRdf(InputStream is) throws Exception {
+		OwlRdfInfo ret = new Utility.OwlRdfInfo();
 		
 		try {
-			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-			DocumentBuilder db = dbf.newDocumentBuilder();
-			Document document = db.parse(is);
+			// parse the input stream
+			DocumentBuilder db = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+			Document document;
+			try { document = db.parse(is); }
+			finally { is.close(); }
+			
+			// get xml:base attribute out of rdf:RDF
 			NodeList nList = document.getElementsByTagName("rdf:RDF");
 			Node rdfNode = nList.item(0);
 			Element rdfElem = (Element) rdfNode;
-			ret = rdfElem.getAttribute("xml:base");
-			if (ret == null || ret.isEmpty()) {
+			ret.base = rdfElem.getAttribute("xml:base");
+			if (ret.base == null || ret.base.isEmpty()) {
 				
 				// hack in an exception for commonly used at GE: SadlBaseModel.owl
-				ret = rdfElem.getAttribute("xmlns:sadlbasemodel");
-				if (ret == null || ret.isEmpty()) {
+				ret.base = rdfElem.getAttribute("xmlns:sadlbasemodel");
+				if (ret.base == null || ret.base.isEmpty()) {
 					throw new Exception("xml:base not found or empty");
 				} else {
-					ret = ret.split("#")[0];
+					ret.base = ret.base.split("#")[0];
 				}
 			}
+			
+			// find owl:Ontology's child owl:versionInfo, which might be missing
+			try {
+				rdfNode = document.getElementsByTagName("owl:Ontology").item(0);
+				nList = ((Element) rdfNode).getElementsByTagName("owl:versionInfo");
+				ret.version = nList.item(0).getChildNodes().item(0).getNodeValue();
+			} catch (Exception versionE) {
+				// missing
+				ret.version = "";
+			}
+			
+			
 		} catch (Exception e) {
 			throw new Exception("Error pulling <rdf:RDF xml:base from file ", e);
 		}

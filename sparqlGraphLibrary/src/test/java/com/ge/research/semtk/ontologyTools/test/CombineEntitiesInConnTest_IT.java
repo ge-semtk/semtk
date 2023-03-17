@@ -26,7 +26,7 @@ public class CombineEntitiesInConnTest_IT {
 	 * @throws Exception
 	 */
 	private void combineAndCheck(String csvResultsResource, String [] matchErrTab) throws Exception {
-		JobTracker tracker = new JobTracker(TestGraph.getSei());
+		JobTracker tracker = TestGraph.getJobTracker();
 		String jobId = JobTracker.generateJobId();
 		CombineEntitiesInConnThread combiner = new CombineEntitiesInConnThread(
 				tracker, IntegrationTestUtility.getResultsClient(), jobId, 

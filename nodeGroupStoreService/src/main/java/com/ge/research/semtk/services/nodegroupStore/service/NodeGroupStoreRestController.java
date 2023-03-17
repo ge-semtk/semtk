@@ -48,6 +48,7 @@ import com.ge.research.semtk.springutillib.properties.AuthorizationProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.springutillib.properties.NodegroupStoreProperties;
+import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
@@ -64,6 +65,7 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.nodegroupStore.NgStore;
 import com.ge.research.semtk.services.nodegroupStore.NgStore.StoredItemTypes;
+import com.ge.research.semtk.servlet.utility.StartupUtilities;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 
 @RestController
@@ -90,7 +92,9 @@ public class NodeGroupStoreRestController {
 	private AuthorizationProperties auth_prop;
 	@Autowired
 	private ServicesGraphProperties servicesgraph_prop;
-
+	@Autowired
+	private OntologyInfoServiceProperties oinfo_props;
+	
 	private static final String SERVICE_NAME="nodeGroupStore";
 	
 	@PostConstruct
@@ -104,33 +108,15 @@ public class NodeGroupStoreRestController {
 		// and each one validated
 		// then put demo nodegroup into store
 		servicesgraph_prop.validateWithExit();
-
+		oinfo_props.validateWithExit();
+		
 		// upload model in case it has changed
-		SparqlEndpointInterface modelSei = this.getStoreModelSei();
-		byte owl [] = Utility.getResourceAsBytes(NgStore.class, "/semantics/OwlModels/prefabNodeGroup.owl");
-		
-		/* try many times / several minutes to reach triplestore */
-		int retries = 100;
-		while (retries > 0) {
-			try {
-				AuthorizationManager.setSemtkSuper();
-				modelSei.clearPrefix("http://research.ge.com/semtk/prefabNodeGroup");
-				modelSei.uploadOwl(owl);
-				retries = 0;
-			} catch (HttpHostConnectException e) {
-				retries -= 1;
-			} finally {
-				AuthorizationManager.clearSemtkSuper();
-			}
-		}
-		
-		setupDemo();
-	}
-	
-	private void setupDemo() {
+
+		StartupUtilities.updateOwlIfNeeded(this.getStoreModelSei(), oinfo_props.getClient(), getClass(), "/semantics/OwlModels/prefabNodeGroup.owl");
+
 		LocalLogger.logToStdOut("loading demo...");
 		try {
-			DemoSetupThread thread = new DemoSetupThread(this.getStoreDataSei(), servicesgraph_prop.buildSei());
+			DemoSetupThread thread = new DemoSetupThread(this.getStoreDataSei(), servicesgraph_prop.buildSei(), oinfo_props.getClient());
 			thread.start();
 		} catch (Exception e) {
 			LocalLogger.printStackTrace(new Exception("Error setting up demo", e));

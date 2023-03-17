@@ -40,6 +40,7 @@ import com.ge.research.semtk.querygen.client.QueryGenClientConfig;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.client.RestClientConfig;
+import com.ge.research.semtk.servlet.utility.StartupUtilities;
 import com.ge.research.semtk.sparqlX.BadQueryException;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -153,10 +154,8 @@ public class DispatchServiceManager {
 			SparqlEndpointInterface sei = servicesGraphConnection.getModelInterface(0);
 			
 			// load the owl if needed, so that nodegroups will work
-			InputStream owlStream = DispatchServiceManager.class.getResourceAsStream("/semantics/OwlModels/sparqlEdcServices.owl");
 		
-			OntologyInfo.uploadOwlModelIfNeeded(sei, owlStream);
-			owlStream.close();
+			StartupUtilities.updateOwlIfNeeded(sei, oInfoClient, DispatchServiceManager.class, "/semantics/OwlModels/sparqlEdcServices.owl");
 			
 			// run the queries to build static mnemonics cache
 			DispatchServiceManager.edcTypeCache = SparqlGraphJson.executeSelectToTable(

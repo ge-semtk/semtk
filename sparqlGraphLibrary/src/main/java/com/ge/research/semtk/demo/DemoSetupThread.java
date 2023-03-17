@@ -6,12 +6,14 @@ import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.edc.JobTracker;
+import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.dataset.Dataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.services.nodegroupStore.NgStore;
+import com.ge.research.semtk.servlet.utility.StartupUtilities;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -20,13 +22,15 @@ import com.ge.research.semtk.utility.Utility;
 public class DemoSetupThread extends Thread {
 	private SparqlEndpointInterface demoSei = null;
 	private SparqlEndpointInterface storeSei = null;
+	private OntologyInfoClient oInfoClient = null;
 	public static String GRAPH = "http://semtk/demo";
 	
 
-	public DemoSetupThread(SparqlEndpointInterface storeSei, SparqlEndpointInterface servicesSei) {
+	public DemoSetupThread(SparqlEndpointInterface storeSei, SparqlEndpointInterface servicesSei, OntologyInfoClient oInfoClient) {
 		this.storeSei = storeSei;
 		this.demoSei = servicesSei;
 		this.demoSei.setGraph(GRAPH);
+		this.oInfoClient = oInfoClient;
 	}
 	
 	public void run() {
@@ -66,11 +70,9 @@ public class DemoSetupThread extends Thread {
 			store.insertNodeGroup(sgJsonJson, connJson, "demoNodegroup", "demo comments", "semTK");
 	
 			// load demo model owl
-			InputStream owlStream = JobTracker.class.getResourceAsStream("/semantics/OwlModels/hardware.owl");
-			OntologyInfo.uploadOwlModelIfNeeded(demoSei, owlStream);
-			owlStream = JobTracker.class.getResourceAsStream("/semantics/OwlModels/testconfig.owl");
-			OntologyInfo.uploadOwlModelIfNeeded(demoSei, owlStream);
-			
+			StartupUtilities.updateOwlIfNeeded(demoSei, oInfoClient, getClass(), "/semantics/OwlModels/hardware.owl");
+			StartupUtilities.updateOwlIfNeeded(demoSei, oInfoClient, getClass(), "/semantics/OwlModels/testconfig.owl");
+
 			// ingest demo csv
 			demoSei.clearPrefix("http://demo/prefix");  // extra safe.  No clear graph inside nodegroup store
 			String data = Utility.getResourceAsString(this, "demoNodegroup_data.csv");

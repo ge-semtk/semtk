@@ -82,6 +82,6 @@ public class LoadTrackerTest_IT {
 	
 	
 	LoadTracker buildLoadTracker() throws Exception {
-		return new LoadTracker(TestGraph.getSei(), TestGraph.getSei(), TestGraph.getUsername(), TestGraph.getPassword());
+		return new LoadTracker(TestGraph.getSei(), TestGraph.getSei(), TestGraph.getUsername(), TestGraph.getPassword(), IntegrationTestUtility.getOntologyInfoClient());
 	}
 }

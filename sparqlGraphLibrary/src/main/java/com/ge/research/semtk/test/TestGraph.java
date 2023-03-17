@@ -39,6 +39,7 @@ import org.json.simple.parser.JSONParser;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.belmont.runtimeConstraints.SupportedOperations;
+import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.load.DataLoader;
 import com.ge.research.semtk.load.dataset.CSVDataset;
@@ -310,10 +311,10 @@ public class TestGraph {
 	 */
 	public static void syncOwlToItsGraph(String owlFilename) throws Exception {
 		
-		String base = Utility.getXmlBaseFromOwlRdf(new FileInputStream(owlFilename));
+		Utility.OwlRdfInfo fileInfo = Utility.getInfoFromOwlRdf(new FileInputStream(owlFilename));
 		
 		SparqlEndpointInterface sei = getSei();
-		sei.setGraph(base);
+		sei.setGraph(fileInfo.getBase());
 		sei.clearGraph();
 		
 		Path path = Paths.get(owlFilename);
@@ -325,9 +326,9 @@ public class TestGraph {
 	}
 	
 	public static void clearSyncedGraph(String owlFilename) throws Exception {
-		String base = Utility.getXmlBaseFromOwlRdf(new FileInputStream(owlFilename));
+		Utility.OwlRdfInfo fileInfo = Utility.getInfoFromOwlRdf(new FileInputStream(owlFilename));
 		SparqlEndpointInterface sei = getSei();
-		sei.setGraph(base);
+		sei.setGraph(fileInfo.getBase());
 		sei.clearGraph();
 	}
 	
@@ -643,4 +644,7 @@ public class TestGraph {
 		return Utility.zipFolderToTempFile(tmpDir.toPath()).toFile();
 	}
 	
+	public static JobTracker getJobTracker() throws Exception {
+		return new JobTracker(getSei());
+	}
 }

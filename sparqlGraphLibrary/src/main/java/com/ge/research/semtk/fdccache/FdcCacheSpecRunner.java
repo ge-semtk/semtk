@@ -40,6 +40,7 @@ import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.servlet.utility.StartupUtilities;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.SparqlToXUtils;
@@ -95,14 +96,7 @@ public class FdcCacheSpecRunner extends Thread {
 		// load the owl to services graph if needed, so that nodegroups will work
 		if (FdcCacheSpecRunner.firstContruct) {
 			
-			InputStream owlStream = FdcCacheSpecRunner.class.getResourceAsStream("/semantics/OwlModels/fdcCacheSpec.owl");
-			try {
-				AuthorizationManager.setSemtkSuper();
-				OntologyInfo.uploadOwlModelIfNeeded(servicesSei, owlStream);
-			} finally {
-				AuthorizationManager.clearSemtkSuper();
-			}
-			owlStream.close();
+			StartupUtilities.updateOwlIfNeeded(servicesSei, oInfoClient, getClass(), "/semantics/OwlModels/fdcCacheSpec.owl");
 			FdcCacheSpecRunner.firstContruct = false;
 		}
 		

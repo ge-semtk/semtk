@@ -226,6 +226,20 @@ public class SparqlToXUtils {
 			  subjectRegex);
   }
   
+  /*
+   * Will return nothing if ontology isn't loaded.
+   * Row with ontology and possibly empty version if ontology IS loaded.
+   */
+  public static String generateGetVersionOfOntology(SparqlEndpointInterface sei, String base) {
+	  return String.format(
+			  "SELECT ?subject ?version from <" + sei.getGraph() + "> WHERE { \n" 
+			  + "VALUES ?subject { <%s> } \n"
+			  + "?subject a <http://www.w3.org/2002/07/owl#Ontology> . \n"
+			  + "optional { ?subject <http://www.w3.org/2002/07/owl#versionInfo> ?version . } \n"
+			  + "} ", 
+			  base);
+  }
+  
   public static String generateDropGraphSparql(SparqlEndpointInterface sei) {
 	  return "DROP GRAPH <" + sei.getGraph() + ">";
   }

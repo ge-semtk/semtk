@@ -26,18 +26,16 @@ import java.io.InputStream;
 
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashSet;
 
-import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.belmont.Returnable;
 import com.ge.research.semtk.belmont.ValueConstraint;
-
+import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
-import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.servlet.utility.StartupUtilities;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.XSDSupportedType;
@@ -57,18 +55,20 @@ public class LoadTracker {
 	SparqlGraphJson sgjson = null;
 	String dbUser = null;
 	String dbPassword = null;
+	private OntologyInfoClient oInfoClient = null;
 
 	
 	public static String CLEAR = "ClearGraph";	
 
-	public LoadTracker (SparqlEndpointInterface modelSei, SparqlEndpointInterface dataSei, String dbUser, String dbPassword) throws Exception {
+	public LoadTracker (SparqlEndpointInterface modelSei, SparqlEndpointInterface dataSei, String dbUser, String dbPassword, OntologyInfoClient oInfoClient) throws Exception {
 		// make this thread safe
 		this.modelSei = modelSei.copy();
 		this.dataSei = dataSei.copy();
 		this.dbUser = dbUser;
 		this.dbPassword = dbPassword;
+		this.oInfoClient = oInfoClient;
 		
-		LoadTracker.uploadOwlModelIfNeeded(this);
+		this.uploadOwlModelIfNeeded(this);
 		
 		this.sgjson = new SparqlGraphJson(Utility.getResourceAsJson(this, "/nodegroups/LoadTracker.json"));
 		this.sgjson.setSparqlConn(new SparqlConnection("loadTrackConn", modelSei, dataSei));
@@ -213,38 +213,17 @@ public class LoadTracker {
 		long timeStampSeconds = instant.getEpochSecond();
 		return timeStampSeconds;  
 	}
-	
-	/**
-	 * Make sure the latest owl is in the model
-	 * @param tracker
-	 * @throws Exception
-	 */
-	public void updateOwlModel() throws Exception {
-		InputStream owlStream = LoadTracker.class.getResourceAsStream("/semantics/OwlModels/loadLog.owl");
-		this.getModelSei().updateOwlModel(owlStream);
-		owlStream.close();
-	}
 
 	/**
 	 * If needed, upload model to given tracker's model sei
 	 * @param tracker
 	 * @throws Exception
 	 */
-	private static void uploadOwlModelIfNeeded(LoadTracker tracker) throws Exception {
+	private void uploadOwlModelIfNeeded(LoadTracker tracker) throws Exception {
 		
 		if (LoadTracker.firstConstruct) {
-		
-			try {
-				AuthorizationManager.setSemtkSuper();
-
-				InputStream owlStream = LoadTracker.class.getResourceAsStream("/semantics/OwlModels/loadLog.owl");
-				OntologyInfo.uploadOwlModelIfNeeded(tracker.getModelSei(), owlStream);
-				owlStream.close();
-				
-				LoadTracker.firstConstruct = false;
-			} finally {
-				AuthorizationManager.clearSemtkSuper();
-			}
+			StartupUtilities.updateOwlIfNeeded(tracker.getModelSei(), this.oInfoClient, getClass(), "/semantics/OwlModels/loadLog.owl");
+			LoadTracker.firstConstruct = false;
 		}
 	}
 	

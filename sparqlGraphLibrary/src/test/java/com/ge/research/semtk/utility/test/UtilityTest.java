@@ -261,5 +261,18 @@ public class UtilityTest {
 			assertTrue(e.getMessage().contains("manifestttt: is not defined in the schema and the schema does not allow additional properties"));
 		}
 	}
+	
+	@Test
+	public void testGetFromRdf() throws Exception {
+		
+		Utility.OwlRdfInfo info = Utility.getInfoFromOwlRdf(getClass().getResourceAsStream("/Pet.owl"));
+		assertEquals("http://research.ge.com/kdl/pet", info.getBase());
+		assertEquals("1", info.getVersion());
+		
+		info = Utility.getInfoFromOwlRdf(getClass().getResourceAsStream("/SimpleBoolean.owl"));
+		assertEquals("http://SimpleBoolean", info.getBase());
+		assertEquals("", info.getVersion());
+		
+	}
 
 }

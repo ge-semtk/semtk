@@ -31,6 +31,7 @@ import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.OntologyName;
 import com.ge.research.semtk.ontologyTools.OntologyPath;
 import com.ge.research.semtk.resultSet.Table;
+import com.ge.research.semtk.servlet.utility.StartupUtilities;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -94,14 +95,7 @@ public class FdcServiceManager {
 	public static void cacheFdcConfig(SparqlEndpointInterface extConfigSei, OntologyInfoClient oInfoClient) throws Exception {
 
 		// load the owl if needed, so that nodegroups will work
-		InputStream owlStream = DispatchServiceManager.class.getResourceAsStream("/semantics/OwlModels/fdcServices.owl");
-		try {
-			AuthorizationManager.setSemtkSuper();
-			OntologyInfo.uploadOwlModelIfNeeded(extConfigSei, owlStream);
-		} finally {
-			AuthorizationManager.clearSemtkSuper();
-		}
-		owlStream.close();
+		StartupUtilities.updateOwlIfNeeded(extConfigSei, oInfoClient, FdcServiceManager.class, "/semantics/OwlModels/fdcServices.owl");
 
 		// build static cache
 		FdcServiceManager.lastCacheMillis = 0;

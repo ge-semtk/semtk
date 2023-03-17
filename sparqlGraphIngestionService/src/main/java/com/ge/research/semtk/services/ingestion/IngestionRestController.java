@@ -149,14 +149,12 @@ public class IngestionRestController {
 		try {
 			if (!loadTrackRegion.isEmpty() && !loadTrackS3Bucket.isEmpty()) {
 				trackBucket = new S3Connector(loadTrackRegion, loadTrackS3Bucket);
-				tracker = new LoadTracker(servicesgraph_prop.buildSei(), servicesgraph_prop.buildSei(), prop.getSparqlUserName(), prop.getSparqlPassword());
-				tracker.updateOwlModel();
+				tracker = new LoadTracker(servicesgraph_prop.buildSei(), servicesgraph_prop.buildSei(), prop.getSparqlUserName(), prop.getSparqlPassword(), oinfo_props.getClient());
 				tracker.test();
 				
 			} else if (!loadTrackFolder.isEmpty()) {
 				trackBucket = new DirectoryConnector(loadTrackFolder);
-				tracker = new LoadTracker(servicesgraph_prop.buildSei(), servicesgraph_prop.buildSei(), prop.getSparqlUserName(), prop.getSparqlPassword());
-				tracker.updateOwlModel();
+				tracker = new LoadTracker(servicesgraph_prop.buildSei(), servicesgraph_prop.buildSei(), prop.getSparqlUserName(), prop.getSparqlPassword(),  oinfo_props.getClient());
 				tracker.test();
 			}
 		} catch (Exception e) {

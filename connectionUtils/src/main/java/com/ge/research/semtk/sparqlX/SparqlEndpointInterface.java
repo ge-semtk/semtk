@@ -495,6 +495,21 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	/**
+	 * Test if ontology is loaded and get version
+	 * @param base
+	 * @return Version of "" or string if ontology is loaded;  Null if ontology is not loaded.
+	 * @throws Exception
+	 */
+	public String getVersionOfOntologyLoaded(String base) throws Exception {
+		Table tab = this.executeToTable(SparqlToXUtils.generateGetVersionOfOntology(this, base));
+		if (tab.getNumRows() == 0) {
+			return null;
+		} else {
+			return tab.getCellAsString(0, "version");
+		}
+	}
+	
+	/**
 	 * Create a SPARQLEndpointInterface and execute a query
 	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * @param server
@@ -779,7 +794,7 @@ public abstract class SparqlEndpointInterface {
 		try {
 			return executeQuery(sparql, resType);
 		} catch (Exception e) {
-			throw new Exception("Failure executing test query: " + e.toString());
+			throw new Exception("Failure executing test query to " + this.graph + "\n" + e.toString());
 		}
 	}
 	
@@ -1784,27 +1799,25 @@ public abstract class SparqlEndpointInterface {
 		return newType;
 	}
 	
-	
-	public void uploadOwlModelNoClear(byte [] owl) throws Exception {
+	/**
+	 * WARNING - this will confuse the oinfo service if you upload to a model graph
+	 *           you need to uncache it with the oinfo client
+	 *           
+	 * TODO - this needs to be streaming for large files.  OK for owl created by SADL.
+	 * @param is - will be read and closed
+	 * 
+	 * @throws Exception
+	 */
+	public void uploadOwl(InputStream is) throws Exception {
+		byte [] owl;
+		try {
+			owl = IOUtils.toByteArray(is);
+		} finally { is.close(); }
+		
 		JSONObject retJson = this.executeAuthUploadOwl(owl);
 		SimpleResultSet res = SimpleResultSet.fromJson(retJson);
 		res.throwExceptionIfUnsuccessful();
 	}
-	
-	/**
-	 * 
-	 * See "internal use" note
-	 * @param owlInputStream
-	 * @throws Exception
-	 */
-	public void updateOwlModel(InputStream owlInputStream) throws Exception {
-		
-		byte [] owl = IOUtils.toByteArray(owlInputStream);
-		String base = Utility.getXmlBaseFromOwlRdf(new ByteArrayInputStream(owl));
-		this.clearPrefix(base);
-		this.uploadOwlModelNoClear(owl);
-	}
-
 
 	public abstract SparqlEndpointInterface copy() throws Exception;
 	
