@@ -17,7 +17,6 @@
 package com.ge.research.semtk.load.config;
 
 import java.io.File;
-import java.io.PrintWriter;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -25,6 +24,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Logger;
 import com.ge.research.semtk.utility.Utility;
 
 /**
@@ -79,9 +79,9 @@ public class LoadOwlConfig extends YamlConfig {
 	 * @param modelGraph		a model graph (optional - overrides if present)
 	 * @param server 			triple store location
 	 * @param serverTypeString 	triple store type
-	 * @param progressWriter 	writer for reporting progress
+	 * @param logger		 	logger for reporting progress (may be null)
 	 */
-	public void load(String modelGraph, String server, String serverType, SparqlQueryClient queryClient, PrintWriter progressWriter) throws Exception {
+	public void load(String modelGraph, String server, String serverType, SparqlQueryClient queryClient, Logger logger) throws Exception {
 		try {
 			// use modelGraph from method parameter if present.  Else use from config YAML if present.  Else use default.
 			modelGraph = (modelGraph != null) ? modelGraph : (this.getModelgraph() != null ? this.getModelgraph() : this.defaultModelGraph );
@@ -90,7 +90,9 @@ public class LoadOwlConfig extends YamlConfig {
 			// upload each OWL file to model graph
 			for(String fileStr : this.getFiles()) {
 				File file = new File(this.baseDir, fileStr);
-				writeProgress("Load OWL " + new File(this.baseDir).getName() + File.separator + file.getName() + " to " + modelGraph, progressWriter);
+				if(logger != null) {
+					logger.info("Load OWL " + new File(this.baseDir).getName() + File.separator + file.getName() + " to " + modelGraph);
+				}
 				SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(serverType, server, modelGraph, username, password);
 				queryClient.setSei(sei);
 				queryClient.uploadOwl(file);

@@ -17,7 +17,6 @@
 package com.ge.research.semtk.load.config;
 
 import java.io.File;
-import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -29,6 +28,7 @@ import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Logger;
 import com.ge.research.semtk.utility.Utility;
 
 /**
@@ -124,9 +124,9 @@ public class LoadDataConfig extends YamlConfig {
 	 * @param serverTypeString 	triple store type
 	 * @param clear				if true, clears before loading
 	 * @param ingestClient	    Ingestor rest client
-	 * @param progressWriter 	writer for reporting progress
+	 * @param logger 			logger for reporting progress (may be null)
 	 */
-	public void load(String modelGraph, LinkedList<String> dataGraphs, String server, String serverType, boolean clear, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, SparqlQueryClient queryClient, PrintWriter progressWriter) throws Exception {
+	public void load(String modelGraph, LinkedList<String> dataGraphs, String server, String serverType, boolean clear, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, SparqlQueryClient queryClient, Logger logger) throws Exception {
 		try {
 
 			// determine which model/data graphs to use
@@ -154,11 +154,11 @@ public class LoadDataConfig extends YamlConfig {
 			// execute each step
 			for(IngestionStep step : this.getSteps()) {
 				if(step instanceof CsvByClassIngestionStep) {
-					((CsvByClassIngestionStep)step).run(conn, ingestClient, ngeClient, progressWriter);
+					((CsvByClassIngestionStep)step).run(conn, ingestClient, ngeClient, logger);
 				}else if(step instanceof CsvByNodegroupIngestionStep) {
-					((CsvByNodegroupIngestionStep)step).run(conn, ngeClient, progressWriter);
+					((CsvByNodegroupIngestionStep)step).run(conn, ngeClient, logger);
 				}else if(step instanceof OwlIngestionStep) {
-					((OwlIngestionStep)step).run(conn, progressWriter);
+					((OwlIngestionStep)step).run(conn, logger);
 				}else {
 					throw new Exception("Unrecognized ingestion step");		// should not get here
 				}
@@ -206,12 +206,16 @@ public class LoadDataConfig extends YamlConfig {
 		public String getClazz() {
 			return clazz;
 		}
-		public void run(SparqlConnection conn, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
-			writeProgress("Load CSV " + getDisplayableFilePath() + " as class " + clazz, progressWriter);
+		public void run(SparqlConnection conn, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, Logger logger) throws Exception {
+			if(logger != null) {
+				logger.info("Load CSV " + getDisplayableFilePath() + " as class " + clazz);
+			}
 			String jobId = ingestClient.execFromCsvUsingClassTemplate(clazz, null, Files.readString(getFile().toPath()), conn, false, null);
 			if(ingestClient.getWarnings() != null) {
 				for (String warning : ingestClient.getWarnings()) {
-					writeProgress("Load CSV warning: " + warning, progressWriter);
+					if(logger != null) {
+						logger.warning(warning);
+					}
 				}
 			}
 			ngeClient.waitForCompletion(jobId);
@@ -231,8 +235,10 @@ public class LoadDataConfig extends YamlConfig {
 		public String getNodegroupId() {
 			return nodegroupId;
 		}
-		public void run(SparqlConnection conn, NodeGroupExecutionClient ngeClient, PrintWriter progressWriter) throws Exception {
-			writeProgress("Load CSV " + getDisplayableFilePath() + " using nodegroup \"" + nodegroupId + "\"", progressWriter);
+		public void run(SparqlConnection conn, NodeGroupExecutionClient ngeClient, Logger logger) throws Exception {
+			if(logger != null) {
+				logger.info("Load CSV " + getDisplayableFilePath() + " using nodegroup \"" + nodegroupId + "\"");
+			}
 			ngeClient.dispatchIngestFromCsvStringsByIdSync(this.nodegroupId, Files.readString(getFile().toPath()), conn);
 		}
 	}
@@ -242,12 +248,14 @@ public class LoadDataConfig extends YamlConfig {
 		public OwlIngestionStep(String baseDir, String owlPath) {
 			super(baseDir, owlPath);
 		}
-		public void run(SparqlConnection conn, PrintWriter progressWriter) throws Exception {
+		public void run(SparqlConnection conn, Logger logger) throws Exception {
 			if(conn.getDataInterfaceCount() != 1) {
 				throw new Exception("Error: cannot load OWL because 0 or multiple data interfaces are specified");
 			}
 			SparqlEndpointInterface sei = conn.getDataInterface(0);
-			writeProgress("Load OWL " + getDisplayableFilePath() + " to " + sei.getGraph(), progressWriter);
+			if(logger != null) {
+				logger.info("Load OWL " + getDisplayableFilePath() + " to " + sei.getGraph());
+			}
 			sei.uploadOwl(Files.readAllBytes(getFile().toPath()));  // OK to use SEI (instead of client) because uploading data (not model)
 		}
 	}

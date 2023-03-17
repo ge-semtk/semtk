@@ -19,6 +19,7 @@
 package com.ge.research.semtk.standaloneExecutables;
 
 import com.ge.research.semtk.utility.LocalLogger;
+import com.ge.research.semtk.utility.Logger;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreConfig;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 
@@ -49,7 +50,7 @@ public class StoreNodeGroup {
 		NodeGroupStoreRestClient client = new NodeGroupStoreRestClient(config);
 		try {
 			PrintWriter out = new PrintWriter(System.out);
-			client.loadStoreDataCsv(csvFile, sparqlConnOverrideFile, out);
+			client.loadStoreDataCsv(csvFile, sparqlConnOverrideFile, new Logger(out));
 			out.close();
 		} catch(Exception e){
 			LocalLogger.printStackTrace(e);
