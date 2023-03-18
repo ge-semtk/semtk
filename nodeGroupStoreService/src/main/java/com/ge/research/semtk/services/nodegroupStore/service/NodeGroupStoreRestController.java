@@ -432,7 +432,31 @@ public class NodeGroupStoreRestController {
 	    	HeadersManager.clearHeaders();
 	    }
 	}
-	
+
+	/**
+	 * Delete all nodegroups from the store
+	 */
+	@Operation(summary="Delete all nodegroups from the store.")
+	@CrossOrigin
+	@RequestMapping(value={"/deleteAllStoredNodeGroups"}, method=RequestMethod.POST)
+	public JSONObject deleteAllStoredNodeGroups(@RequestHeader HttpHeaders headers) throws Exception {
+		HeadersManager.setHeaders(headers);
+		try {
+			SimpleResultSet retval = null;
+			NgStore store = new NgStore(this.getStoreDataSei());
+			try{
+				store.deleteAllNodeGroups();
+				retval = new SimpleResultSet(true);
+			}catch(Exception e){
+				LocalLogger.logToStdErr("Failure deleting all nodegroups: " + e.getMessage());
+				retval = new SimpleResultSet(false);
+				retval.addRationaleMessage(e.getMessage());
+			}
+			return retval.toJson();
+		} finally {
+			HeadersManager.clearHeaders();
+	    }
+	}
 
 	/**
 	 * Rename a stored item.

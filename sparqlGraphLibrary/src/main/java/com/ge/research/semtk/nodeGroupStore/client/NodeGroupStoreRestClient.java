@@ -19,6 +19,8 @@ package com.ge.research.semtk.nodeGroupStore.client;
 
 import java.io.File;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 
 import org.json.simple.JSONObject;
 
@@ -268,6 +270,22 @@ public class NodeGroupStoreRestClient extends RestClient {
 	}
 
 	/**
+	 * Delete all nodegroups from the store
+	 */
+	public SimpleResultSet deleteAllStoredNodeGroups() throws Exception {
+		SimpleResultSet retval = null;
+		conf.setServiceEndpoint("nodeGroupStore/deleteAllStoredNodeGroups");
+		try{
+			retval = SimpleResultSet.fromJson((JSONObject) this.execute());
+			retval.throwExceptionIfUnsuccessful();
+		} finally{
+			// reset conf
+			conf.setServiceEndpoint(null);
+		}
+		return retval;
+	}
+
+	/**
 	 * Process a store_data.csv file
 	 * @param csvFileName
 	 * @param sparqlConnOverrideFile - override all the nodegroup connections
@@ -334,5 +352,13 @@ public class NodeGroupStoreRestClient extends RestClient {
 		// store it
 		SimpleResultSet r = this.executeStoreItem(ngId, ngComments, ngOwner, ngJson, itemType, overwriteFlag);
 		r.throwExceptionIfUnsuccessful("Error while storing nodegroup");
+	}
+
+	/**
+	 * Get a list of IDs of items in the store
+	 */
+	public List<String> getStoredItemIds(NgStore.StoredItemTypes itemType) throws Exception {
+		Table storedItemMetadata = executeGetStoredItemsMetadata(itemType).getTable();
+		return Arrays.asList(storedItemMetadata.getColumn("ID"));
 	}
 }

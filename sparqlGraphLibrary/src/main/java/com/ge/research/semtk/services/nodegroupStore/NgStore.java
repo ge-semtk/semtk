@@ -203,10 +203,20 @@ public class NgStore {
 		return this.executeQuery(this.genSparqlGetStoredItemMetadata(itemType));
 	}
 	
+	/**
+	 * Delete a nodegroup
+	 */
 	public void deleteNodeGroup(String id) throws Exception {
 		this.executeConfirmQuery(this.genSparqlDeleteNodeGroup(id));
 	}
-	
+
+	/**
+	 * Delete all nodegroups
+	 */
+	public void deleteAllNodeGroups() throws Exception {
+		this.executeConfirmQuery(this.genSparqlDeleteAllNodeGroups());
+	}
+
 	/**
 	 * Delete any type of stored item
 	 */
@@ -374,8 +384,8 @@ public class NgStore {
 		return retval;
 	}
 
-	private String genSparqlDeleteNodeGroup(String jobId) {
-		String rdf10ValuesClause = "VALUES ?jobId { \"" + jobId + "\" \"" + jobId + "\"^^<http://www.w3.org/2001/XMLSchema#string>} . ";
+	private String genSparqlDeleteNodeGroup(String id) {
+		String rdf10ValuesClause = "VALUES ?ID { \"" + id + "\" \"" + id + "\"^^<http://www.w3.org/2001/XMLSchema#string>} . ";
 
 		String ret = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 				"PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
@@ -385,7 +395,7 @@ public class NgStore {
 				"  ?SemTkStringChunk ?pred2 ?obj2 . "    + 
 				"} WHERE { " +
 				"  ?PrefabNodeGroup ?pred ?obj." +
-				"  ?PrefabNodeGroup prefabNodeGroup:ID ?jobId . " + 
+				"  ?PrefabNodeGroup prefabNodeGroup:ID ?ID . " +
 				rdf10ValuesClause +
                 "  ?PrefabNodeGroup prefabNodeGroup:originalConnection ?SemTkConnection . " +
 				"  optional { " +
@@ -399,6 +409,27 @@ public class NgStore {
 		return ret;
 	}
 	
+	private String genSparqlDeleteAllNodeGroups() {
+		String ret = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
+				"PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> " +
+				"WITH <" + this.dataGraph + "> DELETE { " +
+				"  ?PrefabNodeGroup ?pred ?obj." +
+                "  ?SemTkConnection ?pred1 ?obj1. " +
+				"  ?SemTkStringChunk ?pred2 ?obj2 . "    +
+				"} WHERE { " +
+				"  ?PrefabNodeGroup ?pred ?obj." +
+                "  ?PrefabNodeGroup prefabNodeGroup:originalConnection ?SemTkConnection . " +
+				"  optional { " +
+                "     ?SemTkConnection ?pred1 ?obj1. " +
+				"  } " +
+                "  optional { " +
+				"     ?PrefabNodeGroup prefabNodeGroup:stringChunk ?SemTkStringChunk. " +
+				"     ?SemTkStringChunk ?pred2 ?obj2 . "    +
+				"  } " +
+				"}";
+		return ret;
+	}
+
 	private String genSparqlDeleteStringBlob(String id) {
 		String rdf10ValuesClause = "VALUES ?ID { \"" + id + "\" \"" + id + "\" } . ";
 

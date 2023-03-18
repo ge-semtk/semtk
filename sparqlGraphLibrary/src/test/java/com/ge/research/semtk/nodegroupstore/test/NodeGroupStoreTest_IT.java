@@ -30,11 +30,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
+import com.ge.research.semtk.nodeGroupStore.client.DoesNotExistException;
 import com.ge.research.semtk.nodeGroupStore.client.NodeGroupStoreRestClient;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.services.nodegroupStore.NgStore;
+import com.ge.research.semtk.services.nodegroupStore.NgStore.StoredItemTypes;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
@@ -63,7 +65,6 @@ public class NodeGroupStoreTest_IT {
 		nodeGroupStoreClient = IntegrationTestUtility.getNodeGroupStoreRestClient(); // instantiate client, with configurations from properties file
 		
 		IntegrationTestUtility.cleanupNodegroupStore(nodeGroupStoreClient, CREATOR);
-
 	}
 	
 	@AfterClass
@@ -73,15 +74,48 @@ public class NodeGroupStoreTest_IT {
     } 
 	
 	/**
-	 * Store a nodegroup
+	 * Test storing and deleting a nodegroup
 	 */
 	@Test
-	public void testStoreNodegroup() throws Exception{
+	public void testStoreAndDeleteNodegroup() throws Exception{
+
+		// delete if exists
+		try {
+			nodeGroupStoreClient.deleteStoredNodeGroup(ID);
+		}catch(DoesNotExistException e) {
+		}
+		assertFalse(nodeGroupStoreClient.getStoredItemIds(StoredItemTypes.PrefabNodeGroup).contains(ID));
+
+		// store
 		result = nodeGroupStoreClient.executeStoreNodeGroup(ID, COMMENTS, CREATOR, NG_JSON);
-		assertTrue(result.getSuccess());		
+		assertTrue(result.getSuccess());
+		assertTrue(nodeGroupStoreClient.getStoredItemIds(StoredItemTypes.PrefabNodeGroup).contains(ID));
+
+		// delete
 		nodeGroupStoreClient.deleteStoredNodeGroup(ID);	// delete when done
+		assertFalse(nodeGroupStoreClient.getStoredItemIds(StoredItemTypes.PrefabNodeGroup).contains(ID));
 	}
 	
+	/**
+	 * Test storing and deleting a nodegroup
+	 */
+	@Test
+	public void testDeleteAllNodegroups() throws Exception{
+
+		nodeGroupStoreClient.deleteAllStoredNodeGroups();
+		assertEquals(0, nodeGroupStoreClient.getStoredItemIds(StoredItemTypes.PrefabNodeGroup).size());
+
+		// store some nodegrups
+		nodeGroupStoreClient.executeStoreNodeGroup(ID + "a", COMMENTS, CREATOR, NG_JSON);
+		nodeGroupStoreClient.executeStoreNodeGroup(ID + "b", COMMENTS, CREATOR, NG_JSON);
+		nodeGroupStoreClient.executeStoreNodeGroup(ID + "c", COMMENTS, CREATOR, NG_JSON);
+		assertEquals(3, nodeGroupStoreClient.getStoredItemIds(StoredItemTypes.PrefabNodeGroup).size());
+
+		// delete all
+		nodeGroupStoreClient.deleteAllStoredNodeGroups();
+		assertEquals(0, nodeGroupStoreClient.getStoredItemIds(StoredItemTypes.PrefabNodeGroup).size());
+	}
+
 	/**
 	 * Ensure fails when sending null nodegroup
 	 * (Need try/catch here because fails with exception in client)
@@ -194,7 +228,7 @@ public class NodeGroupStoreTest_IT {
 	 * Ensure that nodegroups are looked up by exact match (e.g. not regex)
 	 */
 	@Test
-	public void test_NodegroupIdExactMatch() throws Exception{
+	public void testNodegroupIdExactMatch() throws Exception{
 		String ID2 = ID + "2";
 		try{
 			SimpleResultSet ret = null;

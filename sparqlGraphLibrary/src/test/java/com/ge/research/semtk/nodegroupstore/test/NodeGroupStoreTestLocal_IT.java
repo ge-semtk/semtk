@@ -24,7 +24,7 @@ public class NodeGroupStoreTestLocal_IT {
 	public static void setup() {
 		IntegrationTestUtility.authenticateJunit();
 	}
-	
+
 	@Test
 	/**
 	 * Insert, get, delete a nodegroup
@@ -52,6 +52,24 @@ public class NodeGroupStoreTestLocal_IT {
 		String sparql = "select ?s ?p ?o from <" + TestGraph.getDataset() + "> where { ?s ?p ?o . } limit 10 ";
 		Table t = TestGraph.execTableSelect(sparql);
 		assertTrue("Dangling triples in store after delete.", t.getNumRows() == 0);
+	}
+
+	@Test
+	public void testDeleteAll() throws Exception{
+		TestGraph.clearGraph();
+		NgStore store = new NgStore(TestGraph.getSei());
+		assertEquals(store.getStoredItemIdList(StoredItemTypes.PrefabNodeGroup).getNumRows(), 0);
+
+		// add nodegroups
+		SparqlGraphJson sgjson = new SparqlGraphJson(Utility.getResourceAsJson(this, "/sampleBattery.json"));
+		store.insertNodeGroup(sgjson.toJson(), sgjson.getSparqlConnJson(), "Nodegroup A", "junit_comments", "junit");
+		store.insertNodeGroup(sgjson.toJson(), sgjson.getSparqlConnJson(), "Nodegroup B", "junit_comments", "junit");
+		store.insertNodeGroup(sgjson.toJson(), sgjson.getSparqlConnJson(), "Nodegroup C", "junit_comments", "junit");
+		assertEquals(store.getStoredItemIdList(StoredItemTypes.PrefabNodeGroup).getNumRows(), 3);
+
+		// delete all
+		store.deleteAllNodeGroups();
+		assertEquals(store.getStoredItemIdList(StoredItemTypes.PrefabNodeGroup).getNumRows(), 0);
 	}
 	
 	@Test
@@ -150,6 +168,7 @@ public class NodeGroupStoreTestLocal_IT {
 		assertTrue("Comments with line return did not return properly", t.getCellAsString(0, "comments").equals(COMMENTS));
 				
 	}
+
 	@Test
 	/**
 	 * Insert, get, delete a nodegroup
