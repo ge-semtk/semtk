@@ -32,14 +32,8 @@ import com.ge.research.semtk.sparqlX.SparqlToXUtils;
 import com.ge.research.semtk.utility.Utility;
 
 /**
- * Store nodegroups in triplestore graph "sei"
- * 
- * It can also store generic StoredItems, of which Report and PrefabNodeGroup are subtypes.
- * 
- * Deleting and retrieving the contents of PrefabNodeGroups require different operations than other StoredItems.
- * 
+ * Stores items (e.g. nodegroups, reports) in triplestore
  * @author 200001934
- *
  */
 public class NgStore {
 	
@@ -55,9 +49,6 @@ public class NgStore {
 	 
 	/**
 	 * Get sgJson or null
-	 * @param id
-	 * @return
-	 * @throws Exception
 	 */
 	public SparqlGraphJson getNodegroup(String id) throws Exception {
 		Table tbl = this.getNodegroupTable(id);
@@ -71,19 +62,13 @@ public class NgStore {
 			JSONObject json = (JSONObject) jParse.parse(ngJSONstr); 
 			SparqlGraphJson sgJson = new SparqlGraphJson(json);
 			return sgJson;
-			
 		} else {
 			return null;
 		}
-			
 	}
 	
 	/**
 	 * Return any type of stored item
-	 * @param id
-	 * @param blobType
-	 * @return
-	 * @throws Exception
 	 */
 	public String getStoredItem(String id, StoredItemTypes blobType) throws Exception {
 		Table tbl = this.getStoredItemTable(id, blobType);
@@ -108,11 +93,6 @@ public class NgStore {
 
 	/**
 	 * Return item as a table.  Column will be NodeGroup or stringChunk
-	 * @param id
-	 * @param blobType
-	 * @param suFlag
-	 * @return
-	 * @throws Exception
 	 */
 	public Table getStoredItemTable(String id, StoredItemTypes blobType)  throws Exception {
 		if (blobType == StoredItemTypes.PrefabNodeGroup) 
@@ -146,7 +126,6 @@ public class NgStore {
 			int col = retTable.getColumnIndex("NodeGroup");
 			retTable.setCell(0, col, ngStr.toString());
 		}
-
 		
 		return retTable;
 	}
@@ -175,9 +154,7 @@ public class NgStore {
 			retTable.addRow(row0);
 			retTable.setCell(0, "stringChunk", SparqlToXUtils.unescapeFromSparql(blob.toString()));		
 		}
-		
-		return retTable;
-		
+		return retTable;	
 	}
 
 	// use getStoredItemIdList()
@@ -214,7 +191,6 @@ public class NgStore {
 		return this.executeQuery(this.genSparqlGetStoredItemMetadata(StoredItemTypes.PrefabNodeGroup));
 	}
 		
-		
 	public Table getStoredItemIdList(StoredItemTypes itemType) throws Exception {
 		return this.executeQuery(this.genSparqlGetStoredItemIdList(itemType));
 	}
@@ -223,11 +199,9 @@ public class NgStore {
 		return this.executeQuery(this.genSparqlGetFullStoredItemList(itemType));
 	}
 	
-	
 	public Table getStoredItemMetadata(StoredItemTypes itemType) throws Exception {
 		return this.executeQuery(this.genSparqlGetStoredItemMetadata(itemType));
 	}
-	
 	
 	public void deleteNodeGroup(String id) throws Exception {
 		this.executeConfirmQuery(this.genSparqlDeleteNodeGroup(id));
@@ -235,9 +209,6 @@ public class NgStore {
 	
 	/**
 	 * Delete any type of stored item
-	 * @param id
-	 * @param blobType
-	 * @throws Exception
 	 */
 	public void deleteStoredItem(String id, StoredItemTypes blobType) throws Exception {
 		if (blobType == StoredItemTypes.PrefabNodeGroup) 
@@ -303,7 +274,6 @@ public class NgStore {
 		this.sei.executeQueryAndConfirm(sparql);
 	}
 	
-	
 	// get sparql queries for getting the needed info. 
 	private ArrayList<String> genSparqlGetNodegroupById(String id){
 		ArrayList<String> ret = new ArrayList<String>();
@@ -356,10 +326,6 @@ public class NgStore {
 		return query;
 	}
 	
-	
-	
-	
-	
 	private String genSparqlGetFullStoredItemList(StoredItemTypes itemType){
 		String retval = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
 						"SELECT distinct ?ID ?NodeGroup ?comments " +
@@ -372,7 +338,6 @@ public class NgStore {
 						"}";
 		return retval;
 	}
-
 	
 	private String genSparqlGetStoredItemIdList(StoredItemTypes itemType){
 		String retval = "PREFIX prefabNodeGroup:<http://research.ge.com/semtk/prefabNodeGroup#> " +
@@ -408,8 +373,6 @@ public class NgStore {
 						"}";
 		return retval;
 	}
-	
-
 
 	private String genSparqlDeleteNodeGroup(String jobId) {
 		String rdf10ValuesClause = "VALUES ?jobId { \"" + jobId + "\" \"" + jobId + "\"^^<http://www.w3.org/2001/XMLSchema#string>} . ";
@@ -453,7 +416,6 @@ public class NgStore {
 				"}";
 		return ret;
 	}
-
 
 	/**
 	 * Generate SPARQL to rename a nodegroup
@@ -536,7 +498,6 @@ public class NgStore {
 		return ret;
 	}
 
-	
 	/**
 	 * 
 	 * @param blob - MUST BE already made safe with something like SparqlToXUtils.escapeForSparql(blob);
@@ -549,8 +510,6 @@ public class NgStore {
 	 */
 	private ArrayList<String> genSparqlInsertStringBlob(String blob, StoredItemTypes blobType, String id, String comments, String creator) throws Exception {
 		final int SPLIT = 20000;
-		
-		// extract the connJson
 		
 		ArrayList<String> ret = new ArrayList<String>();
 		String uri = "generateSparqlInsert:semtk_blob_" +  UUID.randomUUID().toString();
@@ -598,10 +557,6 @@ public class NgStore {
 	
 	/**
 	 * Split a string at given split point, but shorter if last char would be a backslash
-	 * @param chunk
-	 * @param split
-	 * @return
-	 * @throws Exception
 	 */
 	private static String[] getNextChunk(String value, int split) throws Exception {
 
@@ -631,7 +586,6 @@ public class NgStore {
 		ret = ret.replaceAll("\\\\/", "/");  // don't escape forward slash in sparql
 		return ret;
 	}
-
 	
 	public static Table createEmptyStoreCsvTable() throws Exception {
 		Table outTable = new Table(

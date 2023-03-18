@@ -20,7 +20,6 @@ package com.ge.research.semtk.nodegroupstore.test;
 import static org.junit.Assert.*;
 
 import java.io.File;
-import java.io.PrintWriter;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.UUID;
@@ -98,7 +97,6 @@ public class NodeGroupStoreTest_IT {
 		}
 		assertTrue(exceptionThrown);
 	}
-	
 	
 	/**
 	 * Ensure fails when sending null/empty id

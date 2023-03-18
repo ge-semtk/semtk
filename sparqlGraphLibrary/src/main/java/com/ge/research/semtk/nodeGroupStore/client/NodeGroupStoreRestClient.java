@@ -39,12 +39,10 @@ public class NodeGroupStoreRestClient extends RestClient {
 	
 	@Override
 	public void buildParametersJSON() throws Exception {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	public void handleEmptyResponse() throws Exception {
-		// TODO Auto-generated method stub
 	}
 
 	public NodeGroupStoreRestClient (NodeGroupStoreConfig config) {
@@ -111,7 +109,6 @@ public class NodeGroupStoreRestClient extends RestClient {
 		}
 		
 		return retval;
-		
 	}
 	
 	/**
@@ -171,6 +168,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 		
 		return retval;		
 	}
+
 	public SimpleResultSet executeStoreNodeGroup(String proposedId, String comments, String creator, JSONObject nodeGroupJSON) throws Exception {
 		return this.executeStoreItem(proposedId, comments, creator, nodeGroupJSON, null);
 	}
@@ -178,6 +176,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 	public SimpleResultSet executeStoreItem(String proposedId, String comments, String creator, JSONObject nodeGroupJSON, NgStore.StoredItemTypes itemType) throws Exception {
 		return this.executeStoreItem(proposedId, comments, creator, nodeGroupJSON, itemType, false);
 	}
+
 	@SuppressWarnings({ "unchecked" })
 	public SimpleResultSet executeStoreItem(String proposedId, String comments, String creator, JSONObject nodeGroupJSON, NgStore.StoredItemTypes itemType, boolean overwriteFlag) throws Exception {
 		SimpleResultSet retval = null;
@@ -231,6 +230,7 @@ public class NodeGroupStoreRestClient extends RestClient {
 	public SimpleResultSet deleteStoredNodeGroup(String nodeGroupID) throws DoesNotExistException, Exception{
 		return deleteStoredItem(nodeGroupID, NgStore.StoredItemTypes.PrefabNodeGroup);
 	}
+
 	/**
 	 * 
 	 * @param nodeGroupID
@@ -334,6 +334,5 @@ public class NodeGroupStoreRestClient extends RestClient {
 		// store it
 		SimpleResultSet r = this.executeStoreItem(ngId, ngComments, ngOwner, ngJson, itemType, overwriteFlag);
 		r.throwExceptionIfUnsuccessful("Error while storing nodegroup");
-
 	}
 }

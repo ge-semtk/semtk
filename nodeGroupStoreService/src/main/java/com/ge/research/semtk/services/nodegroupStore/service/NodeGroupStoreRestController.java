@@ -17,14 +17,12 @@
 
 package com.ge.research.semtk.services.nodegroupStore.service;
 
-import java.io.InputStream;
 import java.util.ArrayList;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
-import org.apache.http.conn.HttpHostConnectException;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,9 +52,7 @@ import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
 import com.ge.research.semtk.demo.DemoSetupThread;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
-import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.utility.LocalLogger;
-import com.ge.research.semtk.utility.Utility;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -281,6 +277,8 @@ public class NodeGroupStoreRestController {
 	    	HeadersManager.clearHeaders();
 	    }
 	}
+
+
 	@Operation(
 			summary="Get a table of info about stored items of a given type.",
 			description="More general version of /getNodeGroupMetadata."
@@ -309,6 +307,8 @@ public class NodeGroupStoreRestController {
 	    	HeadersManager.clearHeaders();
 	    }
 	}
+
+
 	@Operation(
 			summary="Get a table of info about stored nodegroups.",
 			description="Legacy.  Use /getStoredItemsMetadata."
@@ -326,8 +326,7 @@ public class NodeGroupStoreRestController {
 				retval.addResults(tab);
 				retval.setSuccess(true);
 			}
-			catch(Exception e){
-				// something went wrong. report and exit. 
+			catch(Exception e){ 
 				retval.setSuccess(false);
 				retval.addRationaleMessage(SVC_ENDPOINT_NAME, e);
 			} 
@@ -367,20 +366,14 @@ public class NodeGroupStoreRestController {
 					retval = new TableResultSet(true); 
 
 					retval.addResults(rtci.getConstrainedItemsDescription());
-					
-
 				} else {
 					retval = new TableResultSet(false);
 					retval.addRationaleMessage(SVC_ENDPOINT_NAME, "Nodegroup was not found: " + requestBody.getId());
 				}
-	
 			}
 			catch(Exception e){
-				// something went wrong. report and exit. 
-	
 				LocalLogger.logToStdErr("a failure was encountered during the retrieval of runtime constraints: " + 
 						e.getMessage());
-	
 				retval = new TableResultSet(false);
 				retval.addRationaleMessage(SVC_ENDPOINT_NAME, "Nodegroup was not found: " + requestBody.getId());
 			}
@@ -392,6 +385,7 @@ public class NodeGroupStoreRestController {
 	}
 	
 	/**
+	 * Delete a nodegroup or item
 	 * This method uses a static delete query. it would be better to use a local nodegroup and have belmont 
 	 * generate a deletion query itself. 
 	 * @param requestBody - defaults to nodegroup
@@ -403,12 +397,9 @@ public class NodeGroupStoreRestController {
 	public JSONObject deleteStoredNodeGroup(@RequestBody @Valid StoredItemRequest requestBody, @RequestHeader HttpHeaders headers) throws Exception {
 		HeadersManager.setHeaders(headers);
 		try {
-			SimpleResultSet retval = null;
-	
+			SimpleResultSet retval = null;	
 			NgStore store = new NgStore(this.getStoreDataSei());
 
-			
-			
 			try{
 				// check that the ID does not already exist. if it does, fail.
 				Table instanceTable = store.getStoredItemTable(requestBody.getId(), requestBody.getItemType());
@@ -470,7 +461,6 @@ public class NodeGroupStoreRestController {
 
 
     private SparqlEndpointInterface getStoreDataSei() throws Exception{
-
         SparqlEndpointInterface ret = SparqlEndpointInterface.getInstance(    
                 prop.getSparqlConnType(), 
                 prop.getSparqlConnServerAndPort(), 
@@ -478,12 +468,10 @@ public class NodeGroupStoreRestController {
                 servicesgraph_prop.getEndpointUsername(),
                 servicesgraph_prop.getEndpointPassword()
                 );
-
         return ret;
     }
     
     private SparqlEndpointInterface getStoreModelSei() throws Exception{
-
         SparqlEndpointInterface ret = SparqlEndpointInterface.getInstance(    
                 prop.getSparqlConnType(), 
                 prop.getSparqlConnServerAndPort(), 
@@ -491,7 +479,6 @@ public class NodeGroupStoreRestController {
                 servicesgraph_prop.getEndpointUsername(),
                 servicesgraph_prop.getEndpointPassword()
                 );
-
         return ret;
     }
 	
