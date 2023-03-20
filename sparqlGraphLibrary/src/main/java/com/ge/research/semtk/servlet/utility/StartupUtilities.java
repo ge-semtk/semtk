@@ -2,6 +2,8 @@ package com.ge.research.semtk.servlet.utility;
 
 import java.io.InputStream;
 
+import org.apache.http.conn.HttpHostConnectException;
+
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -9,7 +11,7 @@ import com.ge.research.semtk.utility.Utility;
 
 public class StartupUtilities {
 	private static final int OINFO_SERVICE_TIMEOUT = 60000;
-	private static final int TRIPLESTORE_TIMEOUT = 20000;
+	private static final int TRIPLESTORE_TIMEOUT = 90000;
 	
 	/**
 	 * Reads the owl file
@@ -24,7 +26,7 @@ public class StartupUtilities {
 	 * @return - boolean: was anything uploaded
 	 * @throws Exception
 	 */
-	public static boolean updateOwlIfNeeded(SparqlEndpointInterface sei, OntologyInfoClient oInfoClient, @SuppressWarnings("rawtypes") Class c, String resourceName ) throws Exception {
+	public static boolean updateOwlIfNeeded(SparqlEndpointInterface sei, OntologyInfoClient oInfoClient, @SuppressWarnings("rawtypes") Class c, String resourceName ) throws  Exception {
 		// try to clear base and upload owl
 		// for timeout sec
 		long timeout = System.currentTimeMillis() + TRIPLESTORE_TIMEOUT;
@@ -35,7 +37,19 @@ public class StartupUtilities {
 		
 		
 		// check if correct version is already loaded
-		String version = sei.getVersionOfOntologyLoaded(info.getBase());
+		String version = null;
+		
+		while (true) {
+			try {
+				version = sei.getVersionOfOntologyLoaded(info.getBase());
+				break;
+			} catch (HttpHostConnectException e) {
+				if (System.currentTimeMillis() > timeout) {
+					throw new Exception("Can't connect to triplestore: " + sei.getServerAndPort() + " graph: " + sei.getGraph());
+				}
+			}
+		}
+		
 		if (version == null || !version.equals(info.getVersion())) {
 			
 			// try til timeout or success to clear and upload correct version
