@@ -39,21 +39,21 @@ public class StartupUtilitiesTest_IT {
 		OntologyInfoClient oInfoClient = IntegrationTestUtility.getOntologyInfoClient();
 		SparqlEndpointInterface sei = TestGraph.getSei();
 
-		Utility.OwlRdfInfo fileInfo = Utility.getInfoFromOwlRdf(getClass().getResourceAsStream("/pet.owl"));
+		Utility.OwlRdfInfo fileInfo = Utility.getInfoFromOwlRdf(getClass().getResourceAsStream("/Pet.owl"));
 		// test that null is returned when ontology is not yet loaded
 		assertEquals("Version from triplestore is not null when graph is empty", 
 				null, sei.getVersionOfOntologyLoaded(fileInfo.getBase()));
 		
 		// load ontology with a version 1
-		StartupUtilities.updateOwlIfNeeded(sei, oInfoClient, getClass(), "/pet.owl");
+		StartupUtilities.updateOwlIfNeeded(sei, oInfoClient, getClass(), "/Pet.owl");
 		// test that version is returned
 		assertEquals("Version number from triplestore does not match version in owl", 
 				fileInfo.getVersion(), sei.getVersionOfOntologyLoaded(fileInfo.getBase()));
 		
 		// now try version 2
 		int triples = sei.getNumTriples();
-		fileInfo = Utility.getInfoFromOwlRdf(getClass().getResourceAsStream("/pet2.owl"));
-		StartupUtilities.updateOwlIfNeeded(sei, oInfoClient, getClass(), "/pet2.owl");
+		fileInfo = Utility.getInfoFromOwlRdf(getClass().getResourceAsStream("/Pet2.owl"));
+		StartupUtilities.updateOwlIfNeeded(sei, oInfoClient, getClass(), "/Pet2.owl");
 		// version should have changed
 		assertEquals("Version number from triplestore does not match version in owl", 
 				fileInfo.getVersion(), sei.getVersionOfOntologyLoaded(fileInfo.getBase()));
