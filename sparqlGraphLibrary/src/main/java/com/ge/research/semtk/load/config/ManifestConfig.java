@@ -17,6 +17,7 @@
 package com.ge.research.semtk.load.config;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.LinkedList;
 
 import org.apache.commons.math3.util.Pair;
@@ -321,17 +322,28 @@ public class ManifestConfig extends YamlConfig {
 	}
 
 	/**
-	 * Gets the default top-level manifest file in an unzipped ingestion package
+	 * Gets the top-level manifest file in an unzipped ingestion package.
+	 * This could be baseDir/manifest.yaml OR baseDir/someDir/manifest.yaml, provided that someDir is the only item in baseDir
+	 *
 	 * @param baseDir the directory of the unzipped ingestion package
 	 * @return the file, if it exists
 	 * @throws Exception if the file is not found
 	 */
 	public static File getTopLevelManifestFile(File baseDir) throws Exception {
-		File manifestFile = new File(baseDir.getAbsoluteFile() + File.separator + ManifestConfig.DEFAULT_FILE_NAME);
-		if(!manifestFile.exists()) {
-			throw new Exception(ManifestConfig.DEFAULT_FILE_NAME + " does not exist in " + baseDir);
+
+		String[] topLevelEntries = baseDir.list();
+
+		if(Arrays.asList(topLevelEntries).contains(ManifestConfig.DEFAULT_FILE_NAME)) {
+			// manifest.yaml found at top level
+			return new File(baseDir.getAbsoluteFile() + File.separator + ManifestConfig.DEFAULT_FILE_NAME);
+		}else if(topLevelEntries.length == 1) {
+			// if top level consists of a single directory, then look for manifest.yaml there
+			File f = new File(baseDir.getAbsoluteFile() + File.separator + topLevelEntries[0] + File.separator + ManifestConfig.DEFAULT_FILE_NAME);
+			if(f.exists()) {
+				return f;
+			}
 		}
-		return manifestFile;
+		throw new Exception("Top-level " + ManifestConfig.DEFAULT_FILE_NAME + " does not exist in " + baseDir);
 	}
 
 
