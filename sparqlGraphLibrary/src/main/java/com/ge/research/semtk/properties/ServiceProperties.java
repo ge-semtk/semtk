@@ -17,6 +17,10 @@
 
 package com.ge.research.semtk.properties;
 
+
+import com.ge.research.semtk.services.client.RestClient;
+import com.ge.research.semtk.services.client.RestClientConfig;
+
 /**
  * Properties to connect to a service
  */
@@ -51,5 +55,8 @@ public abstract class ServiceProperties extends Properties {
 	public void setProtocol(String protocol) {
 		this.protocol = protocol;
 	}
-	
+    public RestClient getClient() throws Exception {
+        RestClient client = new RestClient(new RestClientConfig(protocol, server, port, "none_yet"));
+        return client;
+    }
 }
