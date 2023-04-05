@@ -134,6 +134,25 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 			assertEquals(dataSei.getNumTriples(), 0);
 			assertEquals(dataFallbackSei.getNumTriples(), NUM_EXPECTED_TRIPLES);
 
+			// test specifying allowed graphs, where graphs to be loaded are present in the allowed graphs
+			LinkedList<String> allowedGraphs = new LinkedList<String>(Arrays.asList(modelSei.getGraph(), dataSei.getGraph()));
+			loadOwlConfig.setAllowedGraphs(allowedGraphs);
+			loadDataConfig.setAllowedGraphs(allowedGraphs);
+			loadOwlConfig.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);  // loads OWL
+			loadDataConfig.load(modelSei.getGraph(), new LinkedList<String>(Arrays.asList(dataSei.getGraph())), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
+
+			// test specifying allowed graphs, where graphs to be loaded are NOT present in the allowed graphs
+			try {
+				allowedGraphs = new LinkedList<String>(Arrays.asList(modelSei.getGraph(), dataSei.getGraph() + "-123"));
+				loadOwlConfig.setAllowedGraphs(allowedGraphs);
+				loadDataConfig.setAllowedGraphs(allowedGraphs);
+				loadOwlConfig.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);  // loads OWL
+				loadDataConfig.load(modelSei.getGraph(), new LinkedList<String>(Arrays.asList(dataSei.getGraph())), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
+				fail();
+			}catch(Exception e) {
+				assertTrue(e.getMessage().contains(dataSei.getGraph() + " is not in list of allowed graphs: [" + modelSei.getGraph() + ", " + dataSei.getGraph() + "-123]"));
+			}
+
 		}finally {
 			clearGraphs();
 		}

@@ -53,6 +53,7 @@ public class LoadOwlConfig extends YamlConfig {
 
 	private String modelgraph;   // schema supports multiple model graphs, but functionality not needed
 	private LinkedList<String> files = new LinkedList<String>();
+	private LinkedList<String> allowedGraphs;	// if not null, only allow loads to these graphs
 
 	/**
 	 * Get methods
@@ -73,6 +74,9 @@ public class LoadOwlConfig extends YamlConfig {
 	public void addFile(String file) {
 		this.files.add(file);
 	}
+	public void setAllowedGraphs(LinkedList<String> allowedGraphs) {
+		this.allowedGraphs = allowedGraphs;
+	}
 
 	/**
 	 * Ingest the OWL files
@@ -86,6 +90,7 @@ public class LoadOwlConfig extends YamlConfig {
 			// use modelGraph from method parameter if present.  Else use from config YAML if present.  Else use default.
 			modelGraph = (modelGraph != null) ? modelGraph : (this.getModelgraph() != null ? this.getModelgraph() : this.defaultModelGraph );
 			if(modelGraph == null) { throw new Exception ("No model graph found"); }
+			if(allowedGraphs != null && !allowedGraphs.contains(modelGraph)) { throw new Exception("Cannot load from " + getFileName() + " in " + getBaseDir() + ": " + modelGraph + " is not in list of allowed graphs: " + allowedGraphs); }
 
 			// upload each OWL file to model graph
 			for(String fileStr : this.getFiles()) {

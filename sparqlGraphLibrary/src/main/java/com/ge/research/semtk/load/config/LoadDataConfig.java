@@ -40,6 +40,7 @@ public class LoadDataConfig extends YamlConfig {
 	private LinkedList<IngestionStep> steps = new LinkedList<IngestionStep>();
 	private String modelgraph;   			// schema supports multiple model graphs, but functionality not needed
 	private LinkedList<String> datagraphs;
+	private LinkedList<String> allowedGraphs;	// if not null, only allow loads to these graphs
 
 	/**
 	 * Constructor
@@ -114,6 +115,9 @@ public class LoadDataConfig extends YamlConfig {
 		}
 		this.datagraphs.add(datagraph);
 	}
+	public void setAllowedGraphs(LinkedList<String> allowedGraphs) {
+		this.allowedGraphs = allowedGraphs;
+	}
 
 	
 	/**
@@ -140,6 +144,7 @@ public class LoadDataConfig extends YamlConfig {
 			SparqlConnection conn = new SparqlConnection();
 			conn.addModelInterface(serverType, server, modelGraph);
 			for(String dg : dataGraphs) {
+				if(allowedGraphs != null && !allowedGraphs.contains(dg)) { throw new Exception("Cannot load data from " + getFileName() + " in " + getBaseDir()  + ": " + dg + " is not in list of allowed graphs: " + allowedGraphs); }
 				conn.addDataInterface(serverType, server, dg);
 			}
 
