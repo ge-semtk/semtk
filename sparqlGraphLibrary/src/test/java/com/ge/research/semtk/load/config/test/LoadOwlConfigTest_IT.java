@@ -22,8 +22,9 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.io.PrintWriter;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.LinkedList;
 
 import org.junit.Test;
 
@@ -111,6 +112,19 @@ public class LoadOwlConfigTest_IT extends YamlConfigTest {
 			config.load(null, TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
 			assertEquals(modelSei.getNumTriples(), 0);
 			assertEquals(modelFallbackSei.getNumTriples(), NUM_EXPECTED_TRIPLES);
+
+			// test specifying allowed graphs, where graphs to be loaded are present in the allowed graphs
+			config.setAllowedGraphs(new LinkedList<String>(Arrays.asList(modelSei.getGraph())));
+			config.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
+
+			// test specifying allowed graphs, where graphs to be loaded are NOT present in the allowed graphs
+			config.setAllowedGraphs(new LinkedList<String>(Arrays.asList(modelSei.getGraph() + "-123")));
+			try {
+				config.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
+				fail();
+			}catch(Exception e) {
+				assertTrue(e.getMessage().contains(modelSei.getGraph() + " is not in list of allowed graphs: [" + modelSei.getGraph() + "-123]"));
+			}
 
 		}catch(Exception e) {
 			throw e;

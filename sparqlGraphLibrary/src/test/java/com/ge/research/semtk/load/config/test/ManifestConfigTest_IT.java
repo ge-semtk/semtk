@@ -17,10 +17,10 @@
 package com.ge.research.semtk.load.config.test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeTrue;
 
 import java.io.File;
-import java.io.PrintWriter;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.util.Pair;
@@ -119,6 +119,52 @@ public class ManifestConfigTest_IT {
 			assertEquals("Number of triples loaded to data graph", NUM_EXPECTED_TRIPLES_DATA, dataSeiFromYaml.getNumTriples());
 			assertEquals("Number of triples loaded to default graph", NUM_EXPECTED_TRIPLES_MODEL + NUM_EXPECTED_TRIPLES_DATA + NUM_NET_CHANGE_ENTITY_RESOLUTION_TRIPLES, defaultGraphSei.getNumTriples());
 
+		}finally{
+			if(tempDir != null) { FileUtils.deleteDirectory(tempDir); }
+			reset();
+		}
+	}
+
+	/**
+	 * Confirm error if sub-manifest footprint is not a subset of parent manifest footprint
+	 */
+	@Test
+	public void testLoadManifest_ErrorIfSubmanifestFootprintNotSubset() throws Exception{
+		File tempDir = null;
+		try {
+			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/config/IngestionPackage-SubManifestFootprintNotSubset.zip");
+			ManifestConfig manifest = new ManifestConfig(ManifestConfig.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
+			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), true, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
+		}catch(Exception e) {
+			assertTrue(e.getMessage().contains("is not a subset of parent footprint"));
+		}finally{
+			if(tempDir != null) { FileUtils.deleteDirectory(tempDir); }
+			reset();
+		}
+	}
+
+	/**
+	 * Confirm error if try to load to a graph that is not in the footprint
+	 */
+	@Test
+	public void testLoadManifest_ErrorLoadToGraphNotInFootprint() throws Exception{
+		// Note: no copy to default graph, so don't have to limit to Fuseki only
+
+		// using generic fallbacks don't match the footprint
+		SparqlEndpointInterface modelFallbackSei_notUnique = TestGraph.getSei("http://junit/rack001/model");
+		SparqlEndpointInterface dataFallbackSei_notUnique = TestGraph.getSei("http://junit/rack001/data");
+
+		File tempDir = null;
+		try {
+			// get manifest from ingestion package, perform load
+			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/config/IngestionPackage.zip");
+			ManifestConfig manifest = new ManifestConfig(ManifestConfig.getTopLevelManifestFile(tempDir), modelFallbackSei_notUnique.getGraph(), dataFallbackSei_notUnique.getGraph());
+
+			// tries loading to fallback, which is not in the footprint
+			manifest.load(TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), true, true, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getNodeGroupStoreRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
+
+		}catch(Exception e) {
+			assertTrue(e.getMessage().contains(modelFallbackSei_notUnique.getGraph() + " is not in list of allowed graphs: ["));
 		}finally{
 			if(tempDir != null) { FileUtils.deleteDirectory(tempDir); }
 			reset();

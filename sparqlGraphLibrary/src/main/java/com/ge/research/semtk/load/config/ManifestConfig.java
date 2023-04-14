@@ -242,12 +242,14 @@ public class ManifestConfig extends YamlConfig {
 				// load via an owl ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
 				LoadOwlConfig config = new LoadOwlConfig(stepFile, this.defaultModelGraph);
+				config.setAllowedGraphs(getGraphsFootprint());
 				config.load(null, server, serverTypeString, queryClient, logger);
 
 			}else if(type == StepType.DATA) {
 				// load content using CSV ingestion YAML
 				File stepFile = new File(baseDir, (String)step.getValue());
 				LoadDataConfig config = new LoadDataConfig(stepFile, this.defaultModelGraph, this.defaultDataGraph);
+				config.setAllowedGraphs(getGraphsFootprint());
 				config.load(null, null, server, serverTypeString, false, ingestClient, ngeClient, queryClient, logger);
 
 			}else if(type == StepType.NODEGROUPS) {
@@ -263,6 +265,9 @@ public class ManifestConfig extends YamlConfig {
 				// load content using sub-manifest
 				File stepFile = new File(baseDir, (String)step.getValue());
 				ManifestConfig subManifest = new ManifestConfig(stepFile, defaultModelGraph, defaultDataGraph);
+				if(!getGraphsFootprint().containsAll(subManifest.getGraphsFootprint())){  // require sub-manifest footprint to be subset of parent footprint
+					throw new Exception("Sub-manifest footprint " + subManifest.getGraphsFootprint() + " is not a subset of parent footprint " + getGraphsFootprint());
+				}
 				subManifest.load(server, serverTypeString, false, false, ingestClient, ngeClient, ngStoreClient, queryClient, logger);
 
 			}else if(type == StepType.COPYGRAPH) {

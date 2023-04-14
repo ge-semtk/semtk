@@ -12,6 +12,7 @@ import com.ge.research.semtk.utility.Utility;
  */
 public abstract class YamlConfig {
 
+	protected String fileName;				// the YAML file name
 	protected String baseDir;				// the directory containing the YAML file
 	protected String defaultModelGraph;		// load to this model graph if not otherwise specified
 	protected String defaultDataGraph;		// load to this data graph if not otherwise specified
@@ -23,9 +24,10 @@ public abstract class YamlConfig {
 	 * Constructor
 	 */
 	public YamlConfig(File yamlFile, File schemaFile, String defaultModelGraph, String defaultDataGraph) throws Exception {
-		setBaseDir(yamlFile.getParent());
-		setDefaultModelGraph(defaultModelGraph);
-		setDefaultDataGraph(defaultDataGraph);
+		this.fileName = yamlFile.getName();
+		this.baseDir = yamlFile.getParent();
+		this.defaultModelGraph = defaultModelGraph;
+		this.defaultDataGraph = defaultDataGraph;
 
 		// validate manifest YAML against schema
 		String yamlStr = Utility.getStringFromFilePath(yamlFile.getAbsolutePath());
@@ -38,6 +40,9 @@ public abstract class YamlConfig {
 	/**
 	 * Get methods
 	 */
+	public String getFileName() {
+		return fileName;
+	}
 	public String getBaseDir() {
 		return baseDir;
 	}
@@ -46,19 +51,6 @@ public abstract class YamlConfig {
 	}
 	public String getDefaultDataGraph() {
 		return defaultDataGraph;
-	}
-
-	/**
-	 * Set methods
-	 */
-	protected void setBaseDir(String baseDir) {
-		this.baseDir = baseDir;
-	}
-	protected void setDefaultModelGraph(String defaultModelGraph) {
-		this.defaultModelGraph = defaultModelGraph;
-	}
-	protected void setDefaultDataGraph(String defaultDataGraph) {
-		this.defaultDataGraph = defaultDataGraph;
 	}
 
 	/**

@@ -59,6 +59,7 @@ public class Logger {
 
 	// log the message
 	private void log(String s, Levels level) {
+		s = s.replaceAll("\n", " ");  // remove newlines, to keep the message intact and associated with its level
 		printWriter.println(level.name() + ": " + s);
 		printWriter.flush();
 	}
