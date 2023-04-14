@@ -28,7 +28,8 @@ import java.util.regex.Pattern;
 public enum SparqlResultTypes {
 	TABLE,			// expect tabular results (e.g. for select queries)
 	GRAPH_JSONLD,  	// expect graph results (e.g. for construct queries)
-	// GRAPH_TURTLE	// in the future may support multiple result types for a graph
+	GRAPH_TURTLE,	// valid for graph (construct queries)
+	N_TRIPLES,      // n-triples
 	CONFIRM, 		// expect a confirmation message (e.g. "inserted 5 tuples", "cleared graph")
 	RDF,            // 
 	HTML;           // e.g. uploading owl to strange endpoint

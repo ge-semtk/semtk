@@ -51,6 +51,7 @@ import com.ge.research.semtk.utility.Utility;
  */
 public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 
+	// change for fuseki
 	protected static final String CONTENTTYPE_X_JSON_LD = "application/ld+json";
 
 	public FusekiSparqlEndpointInterface(String server, String graph)	throws Exception {
@@ -85,7 +86,7 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 
 		List<NameValuePair> params = new ArrayList<NameValuePair>(3);
 		
-		if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.GRAPH_JSONLD || resultType == SparqlResultTypes.RDF) { 
+		if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.GRAPH_JSONLD || resultType == SparqlResultTypes.RDF || resultType == SparqlResultTypes.N_TRIPLES) { 
 			params.add(new BasicNameValuePair("query", query));
 		} else {
 			params.add(new BasicNameValuePair("update", query));
@@ -117,7 +118,9 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 			return CONTENTTYPE_HTML; 
 		}  else if (resultType == SparqlResultTypes.RDF) { 
 			return CONTENTTYPE_RDF; 
-		} 
+		}  else if (resultType == SparqlResultTypes.N_TRIPLES) {
+			return CONTENTTYPE_N_TRIPLES;
+		}
 		
 		// fail and throw an exception if the value was not valid.
 		throw new Exception("Cannot get Fuseki content type for query type " + resultType);
@@ -134,7 +137,7 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * Build a POST URL
 	 */
 	public String getPostURL(SparqlResultTypes resultType) {
-		if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.GRAPH_JSONLD || resultType == SparqlResultTypes.RDF ) { 
+		if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.GRAPH_JSONLD || resultType == SparqlResultTypes.RDF || resultType == SparqlResultTypes.N_TRIPLES) { 
 			return String.format("%s:%s/%s", this.server, this.port, this.endpoint);
 		}else {
 			return String.format("%s:%s/%s/update", this.server, this.port, this.endpoint);	
@@ -226,7 +229,13 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 	 */
 	@Override
 	public JSONObject handleEmptyResponse(SparqlResultTypes resultType) throws Exception {
-		throw new Exception("Fuseki query returned empty response");
+		if (resultType == SparqlResultTypes.N_TRIPLES) {
+			JSONObject ret = new JSONObject();
+			ret.put("N_TRIPLES", "");
+			return ret;
+		} else {
+			throw new Exception("Fuseki query returned empty response");
+		}
 	}
 	
 	@Override

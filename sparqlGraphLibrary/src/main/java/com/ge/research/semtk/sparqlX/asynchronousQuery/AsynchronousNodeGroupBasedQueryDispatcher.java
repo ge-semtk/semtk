@@ -233,6 +233,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 			GeneralResultSet genResult = null;
 			
 			if(	resType == SparqlResultTypes.GRAPH_JSONLD ||
+					resType == SparqlResultTypes.N_TRIPLES ||
 					resType == SparqlResultTypes.CONFIRM ||
 					resType == SparqlResultTypes.TABLE ||
 					resType == SparqlResultTypes.RDF) {
@@ -256,7 +257,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 				if (resType == SparqlResultTypes.GRAPH_JSONLD) {
 					LocalLogger.logToStdErr("Query returned JSON-LD");
 					this.sendResultsToService(genResult.getResultsJSON());
-				} else if(resType == SparqlResultTypes.RDF) {
+				} else if(resType == SparqlResultTypes.RDF || resType == SparqlResultTypes.N_TRIPLES) {
 					// RDF results store as json blobs with { "RDF": "<OWL>...</OWL>" }
 					this.sendResultsToService(genResult.getResultsJSON());
 					
@@ -279,6 +280,8 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 					Table tab = new Table(colnames, coltypes, rows);
 					LocalLogger.logToStdErr("Query returned " + tab.getNumRows() + " results.");
 					this.sendResultsToService(tab);
+				} else {
+					throw new Exception("Unknown query type: no results written: " + resType);
 				}
 				this.updateStatus(100);		// work's done
 			}

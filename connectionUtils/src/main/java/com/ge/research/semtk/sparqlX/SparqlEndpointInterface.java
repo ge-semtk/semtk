@@ -130,6 +130,8 @@ public abstract class SparqlEndpointInterface {
 	protected static final String CONTENTTYPE_LD_JSON = "application/ld+json";
 	protected static final String CONTENTTYPE_HTML = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
 	protected static final String CONTENTTYPE_RDF = "application/rdf+xml";
+	protected static final String CONTENTTYPE_N_TRIPLES = "application/n-triples";
+
 	
 	private static final int MAX_QUERY_TRIES = 4;
 
@@ -592,6 +594,10 @@ public abstract class SparqlEndpointInterface {
 			resultSet = new SimpleResultSet();
 		}else if (resultType == SparqlResultTypes.RDF) {
 			resultSet = new SimpleResultSet();
+		}else if (resultType == SparqlResultTypes.N_TRIPLES) {
+			resultSet = new SimpleResultSet();
+		}else {
+			throw new Exception("Unsupported resultType: " + resultType);
 		}
 		
 		// execute the query
@@ -1205,6 +1211,16 @@ public abstract class SparqlEndpointInterface {
 			}
 			JSONObject res = new JSONObject();
 			res.put(SparqlResultTypes.RDF.toString(), responseTxt);
+			return res;
+			
+		} else if (resultType==SparqlResultTypes.N_TRIPLES) {
+			String firstLine = responseTxt.split("[\\n\\r]+")[0];
+			firstLine = firstLine.trim();
+			if (!firstLine.startsWith("<") || !firstLine.endsWith(".")) {
+				throw new Exception("n-triple error: " + responseTxt);
+			}
+			JSONObject res = new JSONObject();
+			res.put(SparqlResultTypes.N_TRIPLES.toString(), responseTxt);
 			return res;
 		}
 		
