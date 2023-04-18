@@ -16,7 +16,7 @@ define([	// properly require.config'ed
 	VisJsHelper.BLANK_NODE = "blank_node";
 	VisJsHelper.DATA_NODE = "data";
 	VisJsHelper.BLANK_NODE_REGEX ="^(nodeID://|_:)";
-	
+		
     VisJsHelper.createCanvasDiv = function(id) {
         var canvasdiv = document.createElement("div");
         canvasdiv.id= id;
@@ -264,6 +264,163 @@ define([	// properly require.config'ed
                 }
             }
         }
+    };
+    
+    // optLabelIdFlag - instead of "normal formatting", Label nodes with the id (URI)
+    // optSkipSAClassFlag - skip triples like "Dog #type owl#class" on main SPARQLgraph display
+    //                      these triples can slip in when expanding a node.
+    VisJsHelper.addTriple = function(triple, nodeDict, edgeList, optLabelIdFlag, optSkipSAClassFlag) {
+		var s = triple[0];
+		var p = triple[1];
+		var o = triple[2];
+		var oType = null;
+		
+		// shorten uri for viewers if optLabelIdFlag
+		var formatUri = function(uri) {
+			return (optLabelIdFlag ? uri.split("/").slice(-1)[0] : uri);
+		}
+		
+		// clean up triples removing <> and quotes, etc.
+		if (s.startsWith("<")) 
+			s = s.slice(1,-1)  
+		if (p.startsWith("<"))    
+			p = p.slice(1,-1)     
+		
+		
+		// if o is quoted, make it double-quotes
+		if (o.startsWith("'")) {
+			o[o.indexOf("'")] = "\"";
+			o[o.lastIndexOf("'")] = "\"";
+		}
+		
+		// process o into o and oType
+		// oType is "uri", typed by suffix, or BLANK_NODE
+		if (o.startsWith("<")) {
+			o = o.slice(1,-1);
+			oType = "uri";         // untyped URI
+			
+			if (optSkipSAClassFlag) {
+				if (p.toLowerCase().endsWith("#type") && o.toLowerCase().endsWith("owl#class")) {
+					return;
+				}
+			}
+		} else if (o.startsWith("\"") ) {
+			prev = o;
+			o = prev.slice(1, prev.lastIndexOf("\""));   // strips off "" and possibly "@english or ^^my#type
+			oType = prev.slice(prev.lastIndexOf("\"") + 1, )
+			if (oType.startsWith("^^"))
+				oType = oType.slice(2,)
+			else {
+				// nothing or @language both mean string
+				oType = "string"
+			}
+		} else if (o.match(VisJsHelper.BLANK_NODE_REGEX)) {
+			oType = VisJsHelper.BLANK_NODE;
+		}
+		
+		// based on optLabelIdFlag:  figure out where type and uri go
+		var type_field = optLabelIdFlag ? "title" : "label";
+		var uri_field = optLabelIdFlag ? "label" : "title";
+		var UNTYPED = "untyped";
+		
+		// make sure subject exists
+		if (nodeDict[s] === undefined) {
+			nodeDict[s] = { id: s , group: UNTYPED }
+			nodeDict[s][uri_field] = formatUri(s);
+		}
+			
+		if (p.endsWith("#type")) {
+			
+			// node type
+			longType = o;
+			shortType = o.indexOf("#")>-1 ? o.split("#").slice(-1,)[0] : o;
+			
+			if (nodeDict[s][type_field] === undefined) {
+				nodeDict[s][type_field] = shortType;
+			} else {
+				// split, sort, uniquify types
+				var types = nodeDict[s][type_field].split(",");
+				types.push(shortType);
+				types = [...new Set(types)]
+				types.sort()
+				nodeDict[s][type_field] = types.join(",");
+			}
+        	nodeDict[s][uri_field] = formatUri(s);
+        	
+        	if (nodeDict[s]["group"] === undefined || nodeDict[s]["group"] === VisJsHelper.BLANK_NODE || nodeDict[s]["group"] === UNTYPED ) {
+        		nodeDict[s]["group"] = longType;
+        	} else {
+				// split, sort, uniqifty types
+				types = nodeDict[s]["group"].split(",");
+				types.push(longType);
+				types = [...new Set(types)]
+				types.sort()
+				nodeDict[s]["group"] = types.join(",");
+			}
+		} else {
+			// edge
+			var predName = (p.indexOf("#") > -1) ? p.split("#")[1] : p;
+			
+			if (oType == "uri") {
+				// edge to uri
+				
+				// make sure object exists
+				if (nodeDict[o] === undefined) {
+					// populate the object uri into id, and either label or title
+					nodeDict[o] = { id: o }
+					nodeDict[o][uri_field] = formatUri(o);		
+				}
+				
+				edgeList.push({
+                            id: s + "-" + predName  +"-" + o,  // prevent duplicate edges
+                            from: s,
+                            to: o,
+                            label: predName,
+                            arrows: 'to',
+                            color: {inherit: false},
+                            //group: key      // removed this not sure what it is supposed to be for edges
+                        });
+			} else {
+                // edge to a data data or blank
+
+                // get value and type:
+                // sometimes { @value: 35, @type: integer } and sometimes just "35" or 35
+				var obj_uri;
+				
+				// If we're not in special lablIdFlag mode AND blank node has slipped in as an object
+				// stop exploration here
+				// (blank nodes are not consistent across queries)
+				if (oType == VisJsHelper.BLANK_NODE) {
+					obj_uri = "_:blank";
+
+				} else {
+					obj_lab = o;
+				}
+				
+                var g = (oType == VisJsHelper.BLANK_NODE) ? VisJsHelper.BLANK_NODE : VisJsHelper.DATA_NODE;
+                // allow typing blank nodes if optLabelIdFlag
+                g = (optLabelIdFlag && nodeDict[o] && nodeDict[o]["group"]) ? nodeDict[o]["group"] : g;
+
+                nodeDict[o] = {
+                    id : triple[2],
+                    label : (oType == VisJsHelper.BLANK_NODE) ? "_:blank" : o,
+                    title : (oType == VisJsHelper.BLANK_NODE) ? o : oType,
+                    group: g,
+                };
+
+                // add the edge
+                //console.log(j["@id"]+"-"+predName+"-"+val);
+                edgeList.push({
+                    id: s + "-" + predName + "-" + o,   // prevent duplicate edges
+                    from: s,
+                    to: triple[2],
+                    label: predName,
+                    arrows: 'to',
+                    color: {inherit: false},
+                    group: p
+                });
+            }
+		}
     };
 
 	/*

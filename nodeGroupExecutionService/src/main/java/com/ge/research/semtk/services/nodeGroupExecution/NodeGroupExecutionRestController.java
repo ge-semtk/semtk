@@ -1038,13 +1038,14 @@ public class NodeGroupExecutionRestController {
 			ResultsClient resClient = results_prop.getClient();
 			
 			ConnectedDataConstructor constructor = new ConnectedDataConstructor(
-					requestBody.getInstanceVal(), requestBody.buildInstanceType(),
+					requestBody.getInstanceVal(), requestBody.buildInstanceType(), requestBody.getResultType(),
 					conn, this.retrieveOInfo(conn), getJobTracker(), resClient);
 			
 			constructor.start();
 			
 			retval.setSuccess(true);
 			retval.addResult(SimpleResultSet.JOB_ID_RESULT_KEY, constructor.getJobId());
+			retval.addResult(SimpleResultSet.RESULT_TYPE_KEY, requestBody.getResultType().toString());
 			
 		} catch(Exception e){
 			retval.setSuccess(false);

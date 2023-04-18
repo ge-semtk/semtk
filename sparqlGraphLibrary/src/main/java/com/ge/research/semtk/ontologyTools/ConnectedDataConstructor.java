@@ -9,6 +9,7 @@ import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.sparqlToXLib.SparqlToXLibUtil;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.XSDSupportedType;
 import com.ge.research.semtk.utility.LocalLogger;
 
@@ -16,6 +17,7 @@ public class ConnectedDataConstructor extends Thread {
 	
 	private String instanceVal = null;
 	private XSDSupportedType instanceType = null;
+	private SparqlResultTypes resultType = SparqlResultTypes.GRAPH_JSONLD;
 	private SparqlConnection conn = null;
 	private OntologyInfo oInfo = null;
 	private JobTracker tracker = null;
@@ -34,10 +36,15 @@ public class ConnectedDataConstructor extends Thread {
 	 * @param resClient - "
 	 * @throws Exception 
 	 */
-	public ConnectedDataConstructor(String instanceVal, XSDSupportedType instanceType, SparqlConnection conn, OntologyInfo oInfo, JobTracker tracker, ResultsClient resClient) throws Exception {
+	public ConnectedDataConstructor(String instanceVal, XSDSupportedType instanceType, SparqlResultTypes resultType, SparqlConnection conn, OntologyInfo oInfo, JobTracker tracker, ResultsClient resClient) throws Exception {
 		
 		this.instanceVal = instanceVal;
 		this.instanceType = instanceType;
+		this.resultType = resultType;
+		
+		if (resultType != SparqlResultTypes.GRAPH_JSONLD && resultType != SparqlResultTypes.N_TRIPLES)
+			throw new Exception("Unsupported result type: " + resultType.toString());
+		
 		this.conn = conn;
 		this.oInfo = oInfo;
 		this.tracker = tracker;
@@ -49,27 +56,14 @@ public class ConnectedDataConstructor extends Thread {
 		this.resClient = resClient;
 	}
 	
-	public ConnectedDataConstructor(String instanceVal, XSDSupportedType instanceType, SparqlConnection conn) throws Exception {
-		this(instanceVal, instanceType, conn, null, null, null);
+	public ConnectedDataConstructor(String instanceVal, XSDSupportedType instanceType, SparqlResultTypes resultType, SparqlConnection conn) throws Exception {
+		this(instanceVal, instanceType, resultType, conn, null, null, null);
 	}
 
 	public String getJobId() {
 		return this.jobId;
 	}
-	public JSONObject queryJsonLd() throws Exception {
-		JSONObject ret = null;
-		
-		if (this.oInfo == null) {
-			this.oInfo = new OntologyInfo(this.conn);
-		}
-		String sparql = SparqlToXLibUtil.generateConstructConnected(this.conn, this.oInfo, this.instanceVal, this.instanceType);
-		ret = this.conn.getDefaultQueryInterface().executeQueryToJsonLd(sparql);
-		
-		// TODO: use oInfo to clean stuff out
-		
-		return ret;
-	}
-	
+
     public void run() {
     	
     	try {
@@ -80,10 +74,21 @@ public class ConnectedDataConstructor extends Thread {
     		
     		this.tracker.setJobPercentComplete(this.jobId, 10, "Querying data");
     		
-    		JSONObject jObj = this.queryJsonLd();
-    		
     		tracker.setJobPercentComplete(this.jobId, 90, "Storing results");
-    		resClient.execStoreGraphResults(this.jobId, jObj);
+    		
+    		if (this.oInfo == null) {
+    			this.oInfo = new OntologyInfo(this.conn);
+    		}
+    		String sparql = SparqlToXLibUtil.generateConstructConnected(this.conn, this.oInfo, this.instanceVal, this.instanceType);
+    		
+    		if (this.resultType == SparqlResultTypes.GRAPH_JSONLD) {
+	    		resClient.execStoreGraphResults(this.jobId, this.conn.getDefaultQueryInterface().executeQueryToJsonLd(sparql));
+	    		
+    		} else if (this.resultType == SparqlResultTypes.N_TRIPLES) {
+    			JSONObject jObj = new JSONObject();
+    			jObj.put(SparqlResultTypes.N_TRIPLES.toString(), this.conn.getDefaultQueryInterface().executeQueryToNtriples(sparql));
+	    		resClient.execStoreGraphResults(this.jobId, jObj);
+    		} 
     		
     		this.tracker.setJobSuccess(this.jobId);
     		

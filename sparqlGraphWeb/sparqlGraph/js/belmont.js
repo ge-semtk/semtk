@@ -1829,6 +1829,7 @@ SemanticNodeGroup.RT_JSONLD = "GRAPH_JSONLD";
 SemanticNodeGroup.RT_CONFIRM = "CONFIRM";
 SemanticNodeGroup.RT_OWLRDF = "RDF";
 SemanticNodeGroup.RT_HTML = "HTML";
+SemanticNodeGroup.RT_NTRIPLES = "N_TRIPLES";
 
 SemanticNodeGroup.FUNCTION_MIN = 0;
 SemanticNodeGroup.FUNCTION_MAX = 1;

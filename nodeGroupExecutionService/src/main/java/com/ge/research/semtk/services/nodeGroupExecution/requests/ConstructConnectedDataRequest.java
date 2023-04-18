@@ -16,6 +16,7 @@
  */
 
 package com.ge.research.semtk.services.nodeGroupExecution.requests;
+import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.XSDSupportedType;
 import com.ge.research.semtk.springutilib.requests.SparqlConnectionRequest;
 
@@ -24,18 +25,25 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 public class ConstructConnectedDataRequest extends SparqlConnectionRequest {
     
-    @Schema(
-            required = true,
+    @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             example = "http://path#this")
     private String instanceVal;
     
-    @Schema(
-            required = false,
+    @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED,
             example = "node_uri")
     private String instanceType = null;
+    
+    @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED,  
+    		description = "Defaults to json-ld",
+    		example = "N_TRIPLES")
+	public SparqlResultTypes resultType = SparqlResultTypes.GRAPH_JSONLD;  
 
  
-    public String getInstanceVal() {
+    public SparqlResultTypes getResultType() {
+		return resultType;
+	}
+
+	public String getInstanceVal() {
 		return instanceVal;
 	}
     

@@ -62,6 +62,10 @@ define([	// properly require.config'ed   bootstrap-modal
             isJsonLdResults : function () {
                 return this.xhr.hasOwnProperty("@graph") || this.xhr.hasOwnProperty("@id") || this.xhr.hasOwnProperty("@context") || JSON.stringify(this.xhr) === "{}";
             },
+            
+            isNtriplesResults : function () {
+                return this.xhr.hasOwnProperty("N_TRIPLES");
+            },
 
 			getColumnName : function (x) {
 				return this.getTable().col_names[x];
@@ -116,6 +120,20 @@ define([	// properly require.config'ed   bootstrap-modal
                 }
                 return graphArr;
             },
+            
+            getNtriplesText : function() {
+				return this.xhr["N_TRIPLES"];
+			},
+			
+			getNtriplesArray : function() {
+				ret = []
+				for (let line of this.getNtriplesText().split("\n") ) {
+					f = line.replace(/\s*\.\s*$/, "").split(" ");
+					if (f[0] && f[1])
+						ret.push([ f[0], f[1], f.slice(2,).join(" ") ]);
+				}
+				return ret;
+			},
 
             // use json-ld @context to expand a json-ld array
             expandJsonArrWithContext : function(jArr) {

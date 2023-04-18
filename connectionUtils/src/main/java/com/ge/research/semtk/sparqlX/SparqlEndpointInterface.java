@@ -621,6 +621,19 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	/**
+	 * 
+	 * WARNING:  see INTERNAL USE notes at top of this file
+	 * @param query
+	 * @return
+	 * @throws Exception
+	 */
+	public String executeQueryToNtriples(String query) throws Exception {
+		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(query, SparqlResultTypes.N_TRIPLES);
+		res.throwExceptionIfUnsuccessful();
+		return (String) res.getResult(SparqlResultTypes.N_TRIPLES.toString());
+	}
+	
+	/**
 	 * Execute query to table
 	 * WARNING:  see INTERNAL USE notes at top of this file
 	 * @param query

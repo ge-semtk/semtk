@@ -279,36 +279,47 @@ define([	// properly require.config'ed   bootstrap-modal
             **   You can build a jobIdCallback with one of the
             **   MsiClientNodeGroupExec.build___Callback() functions
             */
+            /* deprecated: use execAsyncDisatchQueryFromNodeGroup */
             execAsyncDispatchConstructFromNodeGroup : function(nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
                 this.runAsyncNodegroup("dispatchConstructFromNodegroup",
                                         nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
             },
+            
+            /* deprecated: use execAsyncDisatchQueryFromNodeGroup */
             execAsyncDispatchSelectFromNodeGroup : function(nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
                 this.runAsyncNodegroup("dispatchSelectFromNodegroup",
                                         nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
             },
-            execAsyncDispatchQueryFromNodeGroup : function(nodegroup, conn, queryType, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
-                var data = JSON.stringify ({
-                    "jsonRenderedNodeGroup": JSON.stringify(nodegroup.toJson()),
-                    "sparqlConnection":      JSON.stringify(conn.toJson()),
-                    "queryType" : queryType,
-                    "runtimeConstraints":    (typeof runtimeConstraints == "undefined" || runtimeConstraints == null) ? "" : JSON.stringify(runtimeConstraints.toJson()),
-                    "externalDataConnectionConstraints": (typeof edcConstraints == "undefined" || edcConstraints == null) ? "" : JSON.stringify(edcConstraints.toJson())
-                });
+            /* === latest: replaces others === 
+            ** execute query from a nodegroup
+            ** query
+            */            
+            execAsyncDispatchQueryFromNodeGroup : function(nodegroup, optConn, jobIdCallback, optFailureCallback, optQueryType, optResultType, optRuntimeConstraints, optEdcConstraints, optTargetId, optFlags) {
+                
+                var data = {};
+                data["jsonRenderedNodeGroup"] = JSON.stringify(nodegroup.toJson());
+                
+                if (optQueryType) data["queryType"] = optQueryType;
+                if (optResultType) data["resultType"] = optResultType;
+                if (optConn) data["sparqlConnection"] = JSON.stringify(optConn.toJson());
+                if (optFlags) data["flags"] = optFlags;
+                if (optTargetId) data["targetObjectSparqlId"] = optTargetId;
+				if (optRuntimeConstraints) data["runtimeConstraints"] = JSON.stringify(optRuntimeConstraints.toJson());
+				if (optEdcConstraints) data["externalDataConnectionConstraints"] = JSON.stringify(optEdcConstraints.toJson());
 
-				this.runAsync("dispatchQueryFromNodegroup", data, jobIdCallback, failureCallback);
+				this.runAsync("dispatchQueryFromNodegroup", JSON.stringify(data), jobIdCallback, optFailureCallback);
             },
-
+            /* deprecated: use execAsyncDisatchQueryFromNodeGroup */
             execAsyncDispatchDeleteFromNodeGroup : function(nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
                 this.runAsyncNodegroup("dispatchDeleteFromNodegroup",
                                         nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
             },
-
+            /* deprecated: use execAsyncDisatchQueryFromNodeGroup */
             execAsyncDispatchCountFromNodeGroup : function(nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
                 this.runAsyncNodegroup("dispatchCountFromNodegroup",
                                         nodegroup, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
             },
-
+            /* deprecated: use execAsyncDisatchQueryFromNodeGroup */
             execAsyncDispatchFilterFromNodeGroup : function(nodegroup, conn, sparqlId, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback) {
                 this.runAsyncNodegroupSparqlId("dispatchFilterFromNodegroup",
                                         nodegroup, sparqlId, conn, edcConstraints, runtimeConstraints, jobIdCallback, failureCallback);
@@ -352,10 +363,11 @@ define([	// properly require.config'ed   bootstrap-modal
                                     sei, jobIdCallback, failureCallback);
             },
 
-            execAsyncConstructConnectedData : function(instanceVal, instanceType, conn, jobIdCallback, failureCallback) {
+            execAsyncConstructConnectedData : function(instanceVal, instanceType, resultType, conn, jobIdCallback, failureCallback) {
                 var data = JSON.stringify ({
                     "instanceVal" : instanceVal,
                     "instanceType": instanceType,
+                    "resultType": resultType,
                     "conn": JSON.stringify(conn.toJson())
                 });
 

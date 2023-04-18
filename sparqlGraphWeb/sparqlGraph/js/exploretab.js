@@ -763,10 +763,10 @@ define([	// properly require.config'ed
             	IIDXHelper.progressBarCreate(this.progressDiv, "progress-info progress-striped active");
                 IIDXHelper.progressBarSetPercent(this.progressDiv, 0, "");
                 this.busy(true);
-				client.execAsyncDispatchRawSparql(sparql, gConn, jsonLdCallback, failureCallback, "GRAPH_JSONLD");
+				client.execAsyncDispatchRawSparql(sparql, gConn, jsonLdCallback, failureCallback, SemanticNodeGroup.RT_NTRIPLES);
 			},
 			
-			drawOntologyDetailCallback : function (jsonLdResults) {
+			drawOntologyDetailCallback : function (res) {
 				IIDXHelper.progressBarSetPercent(this.progressDiv, 90);
                	
 				var network = this.networkHash[ExploreTab.MODE_ONTOLOGY_DETAIL];
@@ -776,16 +776,29 @@ define([	// properly require.config'ed
 				network.deleteSelected();
 				
 				// add new
-	            var jsonLd = jsonLdResults.getGraphResultsJsonArr(false, false, false);
 	            var edgeList = [];
 	            var nodeDict = {};
-	            for (var i=0; i < jsonLd.length; i++) {
-	                VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList, true);
-	                if (i % 20 == 0) {
-	                    network.body.data.nodes.update(Object.values(nodeDict));
-	                    network.body.data.edges.update(edgeList);
-	                }
+	            
+	            if (res.isJsonLdResults()) {
+		            var jsonLd = res.getGraphResultsJsonArr(false, false, false);
+		            for (var i=0; i < jsonLd.length; i++) {
+		                VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList, true);
+		                if (i % 20 == 0) {
+		                    network.body.data.nodes.update(Object.values(nodeDict));
+		                    network.body.data.edges.update(edgeList);
+		                }
+		            }
+		       	} else if (res.isNtriplesResults()) {
+					triples = res.getNtriplesArray();
+					for (var i=0; i < triples.length; i++) {
+	                	VisJsHelper.addTriple(triples[i], nodeDict, edgeList, true, false);
+	            		if (i % 20 == 0) {
+		                    network.body.data.nodes.update(Object.values(nodeDict));
+		                    network.body.data.edges.update(edgeList);
+		                }
+		            }
 	            }
+
 	            network.body.data.nodes.update(Object.values(nodeDict));
 	            network.body.data.edges.update(edgeList);
 	

@@ -2041,20 +2041,31 @@
                                                                             this.checkForCancel.bind(this),
                                                                             g.service.status.url,
                                                                             g.service.results.url);
+            var ntriplesCallback = MsiClientNodeGroupExec.buildJsonLdCallback(queryNtriplesCallback,
+                                                                            asyncFailureCallback,
+                                                                            setStatusProgressBar.bind(this, "Running Query"),
+                                                                            this.checkForCancel.bind(this),
+                                                                            g.service.status.url,
+                                                                            g.service.results.url);
             setStatusProgressBar("Running Query", 1);
             switch (gNodeGroup.getQueryType()) {
     			case SemanticNodeGroup.QT_DISTINCT:
-                    client.execAsyncDispatchSelectFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
+                    client.execAsyncDispatchQueryFromNodeGroup(gNodeGroup, gConn, csvJsonCallback, asyncFailureCallback, SemanticNodeGroup.QT_SELECT, SemanticNodeGroup.RT_TABLE, rtConstraints);
+
                     break;
     			case SemanticNodeGroup.QT_COUNT:
-                    client.execAsyncDispatchCountFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
+                    client.execAsyncDispatchQueryFromNodeGroup(gNodeGroup, gConn, csvJsonCallback, asyncFailureCallback, SemanticNodeGroup.QT_COUNT, SemanticNodeGroup.RT_TABLE, rtConstraints);
+
                     break;
                 case SemanticNodeGroup.QT_CONSTRUCT:
                     // Results service has trouble protecting the browser memory on CONSTRUCT queries
                     // so use a different strategy of putting a limit on the query
                     var realLimit = gNodeGroup.getLimit();
                     gNodeGroup.setLimit(Math.min(realLimit, RESULTS_MAX_ROWS));
-                    client.execAsyncDispatchConstructFromNodeGroup(gNodeGroup, gConn, null, rtConstraints, jsonLdCallback, asyncFailureCallback);
+                    
+                    //client.execAsyncDispatchQueryFromNodeGroup(gNodeGroup, gConn, jsonLdCallback, asyncFailureCallback, SemanticNodeGroup.QT_CONSTRUCT, SemanticNodeGroup.RT_JSONLD, rtConstraints);
+                    client.execAsyncDispatchQueryFromNodeGroup(gNodeGroup, gConn, ntriplesCallback, asyncFailureCallback, SemanticNodeGroup.QT_CONSTRUCT, SemanticNodeGroup.RT_NTRIPLES, rtConstraints);
+
                     gNodeGroup.setLimit(realLimit);
                     break;
     			case SemanticNodeGroup.QT_DELETE:
@@ -2068,7 +2079,7 @@
                     break;
                 case SemanticNodeGroup.QT_ASK:
                 	// newer generic endpoint could be used by others above
-                	client.execAsyncDispatchQueryFromNodeGroup(gNodeGroup, gConn, SemanticNodeGroup.QT_ASK, null, rtConstraints, csvJsonCallback, asyncFailureCallback);
+                	client.execAsyncDispatchQueryFromNodeGroup(gNodeGroup, gConn, csvJsonCallback, asyncFailureCallback, SemanticNodeGroup.QT_ASK, null, rtConstraints);
                     break;
                 default:
                     throw new Error("Internal error: Unknown query type.");
@@ -2085,14 +2096,20 @@
 
     		var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.service.status.url, g.service.results.url, g.longTimeoutMsec);
 
-             var csvJsonCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(RESULTS_MAX_ROWS,
+            var csvJsonCallback = MsiClientNodeGroupExec.buildCsvUrlSampleJsonCallback(RESULTS_MAX_ROWS,
                                                                                       queryTableResCallback,
                                                                                       asyncFailureCallback,
                                                                                       setStatusProgressBar.bind(this, "Running Query"),
                                                                                       this.checkForCancel.bind(this),
                                                                                       g.service.status.url,
                                                                                       g.service.results.url);
-                        var jsonLdCallback = MsiClientNodeGroupExec.buildJsonLdCallback(queryJsonLdCallback,
+           	var jsonLdCallback = MsiClientNodeGroupExec.buildJsonLdCallback(queryJsonLdCallback,
+                                                                            asyncFailureCallback,
+                                                                            setStatusProgressBar.bind(this, "Running Query"),
+                                                                            this.checkForCancel.bind(this),
+                                                                            g.service.status.url,
+                                                                            g.service.results.url);
+            var ntriplesCallback = MsiClientNodeGroupExec.buildJsonLdCallback(queryNtriplesCallback,
                                                                             asyncFailureCallback,
                                                                             setStatusProgressBar.bind(this, "Running Query"),
                                                                             this.checkForCancel.bind(this),
@@ -2113,11 +2130,13 @@
 
                 ModalIidx.okCancel("Delete query", "Query may write / delete triples.<br>Confirm you want to run this query.", okCallback, "Run Query", cancelCallback);
             
-            } else if (sel.options[sel.selectedIndex].value == SemanticNodeGroup.QT_CONSTRUCT ){
+            } else if (sel.options[sel.selectedIndex].value == SemanticNodeGroup.QT_CONSTRUCT){
 	 			// query type menu is set to CONSTRUCT
 	 			// another way:  sparql.toLowerCase().indexOf("construct") > -1
-                client.execAsyncDispatchRawSparql(sparql, gConn, jsonLdCallback, asyncFailureCallback, "GRAPH_JSONLD");
-            
+                
+                //client.execAsyncDispatchRawSparql(sparql, gConn, jsonLdCallback, asyncFailureCallback, "GRAPH_JSONLD");
+                client.execAsyncDispatchRawSparql(sparql, gConn, jsonLdCallback, ntriplesCallback, SemanticNodeGroup.RT_NTRIPLES);
+
             } else {
                 client.execAsyncDispatchRawSparql(sparql, gConn, csvJsonCallback, asyncFailureCallback, "TABLE");
             }
@@ -2312,6 +2331,28 @@
             guiResultsNonEmpty();
         });
     };
+    
+    var queryNtriplesCallback = function(triplesResults) {
+        require(['sparqlgraph/js/iidxhelper'], function(IIDXHelper) {
+
+            var anchor = IIDXHelper.buildAnchorWithCallback(    "result_ntriples.txt",
+                                                                function (res) {
+                                                                    var str = res.getNtriplesText();
+                                                                    IIDXHelper.downloadFile(str, "result_ntriples.txt",  "application/text");
+                                                                }.bind(this, triplesResults)
+                                                            );
+
+            var linkdom = document.createElement("span");
+            linkdom.innerHTML =  "Download json: ";
+            linkdom.appendChild(anchor);
+
+            setStatus("");
+            displayConstructResults(triplesResults, linkdom);
+
+            guiUnDisableAll();
+            guiResultsNonEmpty();
+        });
+    };
 
     /**
      * Put json-ld results into a visjs display
@@ -2329,19 +2370,34 @@
                 function(IIDXHelper, ModalIidx, VisJsHelper, vis) {
 	
             var div = document.getElementById("resultsParagraph");
-
-            if (! res.isJsonLdResults()) {
-                div.innerHTML =  "<b>Error:</b> Results returned from service are not JSON-LD";
+			
+			var downloadStr = "";
+			var downloadType = "";
+			var triplesArr = null;
+			
+			if (res.isJsonLdResults()) {
+				var rawJsonArr = res.getGraphResultsJsonArr();
+				if (rawJsonArr.length >= RESULTS_MAX_ROWS) {
+	                div.innerHTML =  "<span class='label label-warning'>Graphing first " + RESULTS_MAX_ROWS.toString() + " data points. </span>";
+	            }
+	            
+	            downloadStr = JSON.stringify(rawJsonArr, null, 4);
+	            downloadFilename = "results.json";
+	            downloadType = "text/json;charset=utf8";
+	            
+	        } else if (res.isNtriplesResults()) {
+				triples = res.getNtriplesArray();
+				if (triples.length >= RESULTS_MAX_ROWS) {
+	                div.innerHTML =  "<span class='label label-warning'>Graphing first " + RESULTS_MAX_ROWS.toString() + " data points. </span>";
+	            }
+		 		downloadStr = res.getNtriplesText();
+	            downloadFilename = "results_triples.txt";
+	            downloadType = "text/plain;charset=utf8";
+	            
+	        } else {
+				div.innerHTML =  "<b>Error:</b> Results returned from service are not JSON-LD";
                 return;
-            }
-			
-			
-			var rawJsonArr = res.getGraphResultsJsonArr();
-			if (rawJsonArr.length >= RESULTS_MAX_ROWS) {
-                div.innerHTML =  "<span class='label label-warning'>Graphing first " + RESULTS_MAX_ROWS.toString() + " data points. </span>";
-            }
-            
-            var jsonDownloadStr = JSON.stringify(rawJsonArr, null, 4);
+			}
 
             // make a menu button bar
             var editDom = document.createElement("span");
@@ -2373,9 +2429,9 @@
 	        }
            	
             var headerTable = IIDXHelper.buildResultsHeaderTable(
-                (jsonDownloadStr === "{}") ? "No results returned" : linkdom,
+                (downloadStr === "{}" || downloadStr === "") ? "No results returned" : linkdom,
                 [ "Save JSON" ] ,
-                [ IIDXHelper.downloadFile.bind(IIDXHelper, jsonDownloadStr, "results.json", "text/json;charset=utf8") ],
+                [ IIDXHelper.downloadFile.bind(IIDXHelper, downloadStr, downloadFilename, downloadType) ],
                 editDom
             );
             div.appendChild(headerTable);
@@ -2433,9 +2489,15 @@
 			myScrollIntoViewIfNeeded(div);
 			
             // add data
-            var jsonLd = res.getGraphResultsJsonArr(true, true, true);
-            jsonLd.slice(0, RESULTS_MAX_ROWS);
-			addDataToNetwork(network, jsonLd, nodeDict, edgeList);
+            if (res.isJsonLdResults()) {
+	            var jsonLd = res.getGraphResultsJsonArr(true, true, true);
+				
+				addDataToNetwork(network, jsonLd.slice(0, RESULTS_MAX_ROWS), nodeDict, edgeList);
+				
+			} else if (res.isNtriplesResults()) {
+				
+				addDataToNetwork(network, triples.slice(0, RESULTS_MAX_ROWS), nodeDict, edgeList);
+        	}
         });
     };
     
@@ -2475,24 +2537,29 @@
     // use setTimeout to keep UI updates smooth
     // update progress bar
     //
-    var addDataToNetwork = function(network, jsonLd, nodeDict, edgeList, optStart) {
+    var addDataToNetwork = function(network, jsonLdOrTriples, nodeDict, edgeList, optStart) {
 		require(['sparqlgraph/js/modaliidx', 'sparqlgraph/js/msiclientnodegroupservice', 'sparqlgraph/js/visjshelper'
 					    ], function(ModalIidx, MsiClientNodeGroupService, VisJsHelper) {
 			var CHUNK_SIZE = 400;
 			var thisStart = optStart || 0;
-			var nextStart = Math.min(jsonLd.length, thisStart + CHUNK_SIZE);
+			var nextStart = Math.min(jsonLdOrTriples.length, thisStart + CHUNK_SIZE);
 			
-			setStatusProgressBar("Rendering results graph", 100 * thisStart/jsonLd.length);
+			var triplesFlag = Array.isArray(jsonLdOrTriples[thisStart]);
+			setStatusProgressBar("Rendering results graph", 100 * thisStart/jsonLdOrTriples.length);
 			for (var i=thisStart; i < nextStart; i++) {
-				VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList);
+				if (triplesFlag) {
+					VisJsHelper.addTriple(jsonLdOrTriples[i], nodeDict, edgeList, false, true);
+				} else {
+					VisJsHelper.addJsonLdObject(jsonLdOrTriples[i], nodeDict, edgeList);
+				}
 			}
 			
 			network.body.data.nodes.update(Object.values(nodeDict));
 	        network.body.data.edges.update(edgeList);
 	        
-	        if (! gCancelled && nextStart < jsonLd.length) {
+	        if (! gCancelled && nextStart < jsonLdOrTriples.length) {
 				// recurse
-	        	setTimeout(addDataToNetwork.bind(this, network, jsonLd, nodeDict, edgeList, nextStart), 1);
+	        	setTimeout(addDataToNetwork.bind(this, network, jsonLdOrTriples, nodeDict, edgeList, nextStart), 1);
 	        } else {
 				if (gCancelled) {
 					ModalIidx.alert("Cancelled", "Rendering of network cancelled by user.<br>Network is incomplete.");
@@ -2607,8 +2674,8 @@
 
             networkBusy(canvasDiv, true);
             var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.longTimeoutMsec);
-            var jsonLdCallback = MsiClientNodeGroupExec.buildJsonLdCallback(
-                constructExpandCallbackGotJson.bind(this, canvasDiv, network),
+            var resultsCallback = MsiClientNodeGroupExec.buildJsonLdCallback(
+                constructExpandCallbackGotResults.bind(this, canvasDiv, network),
                 networkFailureCallback.bind(this, canvasDiv),
                 function() {}, // no status updates
                 function() {}, // no check for cancel
@@ -2623,33 +2690,45 @@
 					ModalIidx.alert("Blank node error", "Can not expand a blank node returned from a previous query.")
 				} else if (classUri == VisJsHelper.DATA_NODE) {
                     var instanceUri = id;
-                    client.execAsyncConstructConnectedData(instanceUri, null, gConn, jsonLdCallback, networkFailureCallback.bind(this, canvasDiv));
+                    client.execAsyncConstructConnectedData(instanceUri, null, SemanticNodeGroup.RT_NTRIPLES, gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
 
                 } else {
                     // get classname and instance name with ':' prefex expanded out to full '#' uri
                     var instanceUri = id;
-                    client.execAsyncConstructConnectedData(instanceUri, "node_uri", gConn, jsonLdCallback, networkFailureCallback.bind(this, canvasDiv));
+                    client.execAsyncConstructConnectedData(instanceUri, "node_uri", SemanticNodeGroup.RT_NTRIPLES, gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
                 }
             }
         });
     };
 
-    var constructExpandCallbackGotJson = function(canvasDiv, network, res) {
+    var constructExpandCallbackGotResults = function(canvasDiv, network, res) {
         require(['sparqlgraph/js/modaliidx',
                  'sparqlgraph/js/visjshelper'],
                  function (ModalIidx, VisJsHelper) {
-            if (! res.isJsonLdResults()) {
-                ModalIidx.alert("NodeGroup Exec Service Failure", "<b>Error:</b> Results returned from service are not JSON-LD");
+	
+			var nodeDict = {};   // dictionary of nodes with @id as the key
+            var edgeList = [];
+            
+            if (res.isJsonLdResults()) {
+		
+	            var jsonLd = res.getGraphResultsJsonArr(true, true, true);
+	            for (var i=0; i < jsonLd.length; i++) {
+	                VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList);
+	            }
+	            
+	        } else if (res.isNtriplesResults()) {
+				triples = res.getNtriplesArray();
+				for (var i=0; i < triples.length; i++) {
+					
+	                VisJsHelper.addTriple(triples[i], nodeDict, edgeList, false, true);
+	            }
+	            
+	        } else {
+                ModalIidx.alert("NodeGroup Exec Service Failure", "<b>Error:</b> Results returned from service are not JSON-LD or N_TRIPLES");
                 return;
             }
 
-            // add data
-            var jsonLd = res.getGraphResultsJsonArr(true, true, true);
-            var nodeDict = {};   // dictionary of nodes with @id as the key
-            var edgeList = [];
-            for (var i=0; i < jsonLd.length; i++) {
-                VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList);
-            }
+            
             network.body.data.nodes.update(Object.values(nodeDict));
             network.body.data.edges.update(edgeList);
             networkBusy(canvasDiv, false);
