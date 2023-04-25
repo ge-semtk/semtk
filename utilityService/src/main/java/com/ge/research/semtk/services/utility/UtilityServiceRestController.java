@@ -21,6 +21,8 @@ import java.io.File;
 import java.io.PrintWriter;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.zip.ZipInputStream;
 
 import javax.annotation.PostConstruct;
@@ -82,6 +84,8 @@ public class UtilityServiceRestController {
 	
  	private static final String SERVICE_NAME = "utilityService";
 
+	private ReentrantLock lock;
+ 	
 	@Autowired
 	private AuthorizationProperties auth_prop; 
 	@Autowired
@@ -111,6 +115,8 @@ public class UtilityServiceRestController {
 		query_prop.validateWithExit();
 		query_credentials_prop.validateWithExit();
 		servicesgraph_prop.validateWithExit();
+		
+		lock = new ReentrantLock();
 	}
 	
 	/**
@@ -421,8 +427,11 @@ public class UtilityServiceRestController {
 				throw new Exception("Cannot find a top-level manifest in " + ingestionPackageZipFile.getOriginalFilename());
 			}
 			ManifestConfig manifest = new ManifestConfig(manifestFile, defaultModelGraph, defaultDataGraph);
-			manifest.load(serverAndPort, serverType, clear, true, ingest_prop.getClient(), ngexec_prop.getClient(), ngstore_prop.getClient(), getSparqlQueryClient(), responseLogger);
-
+			if(lock.tryLock(30, TimeUnit.SECONDS)) { // don't allow multiple loads to be performed at once.  Wait a short time to acquire the lock
+				manifest.load(serverAndPort, serverType, clear, true, ingest_prop.getClient(), ngexec_prop.getClient(), ngstore_prop.getClient(), getSparqlQueryClient(), responseLogger);
+			}else {
+				throw new Exception("Another ingestion package load is in progress");
+			}
 			responseLogger.info("Load complete");
 			LocalLogger.logToStdOut(SERVICE_NAME + " " + ENDPOINT_NAME + " completed");
 
@@ -430,16 +439,13 @@ public class UtilityServiceRestController {
 			responseLogger.error(e.getMessage());
 			LocalLogger.printStackTrace(e);
 		}finally {
+			if(lock.isHeldByCurrentThread()) {
+				lock.unlock(); // release the lock
+			}
 			try {
-				if(responseWriter != null) {
-					responseWriter.close();
-				}
-				if(zipInputStream != null) {
-					zipInputStream.close();
-				}
-				if(tempDir != null) {
-					FileUtils.deleteDirectory(tempDir);
-				}
+				if(responseWriter != null) { responseWriter.close(); }
+				if(zipInputStream != null) { zipInputStream.close();	}
+				if(tempDir != null) { FileUtils.deleteDirectory(tempDir); }
 			}catch(Exception e) {
 				LocalLogger.printStackTrace(e);
 			}
