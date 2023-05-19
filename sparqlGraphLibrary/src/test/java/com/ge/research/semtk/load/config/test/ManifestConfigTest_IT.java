@@ -61,7 +61,7 @@ public class ManifestConfigTest_IT {
 		File tempDir = null;
 		try {
 			// get manifest from ingestion package, perform load
-			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/config/IngestionPackage.zip");
+			tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "config/IngestionPackage.zip");
 			ManifestConfig manifest = new ManifestConfig(ManifestConfig.getTopLevelManifestFile(tempDir), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
 
 			reset();

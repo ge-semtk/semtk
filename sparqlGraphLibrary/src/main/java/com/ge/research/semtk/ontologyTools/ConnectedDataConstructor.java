@@ -1,5 +1,7 @@
 package com.ge.research.semtk.ontologyTools;
 
+import java.util.AbstractCollection;
+
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
@@ -18,6 +20,10 @@ public class ConnectedDataConstructor extends Thread {
 	private String instanceVal = null;
 	private XSDSupportedType instanceType = null;
 	private SparqlResultTypes resultType = SparqlResultTypes.GRAPH_JSONLD;
+	private int limit = -1;
+	private AbstractCollection<String> classList;
+	private boolean isListWhite;
+	private boolean isListSuperclasses;
 	private SparqlConnection conn = null;
 	private OntologyInfo oInfo = null;
 	private JobTracker tracker = null;
@@ -36,11 +42,15 @@ public class ConnectedDataConstructor extends Thread {
 	 * @param resClient - "
 	 * @throws Exception 
 	 */
-	public ConnectedDataConstructor(String instanceVal, XSDSupportedType instanceType, SparqlResultTypes resultType, SparqlConnection conn, OntologyInfo oInfo, JobTracker tracker, ResultsClient resClient) throws Exception {
+	public ConnectedDataConstructor(String instanceVal, XSDSupportedType instanceType, SparqlResultTypes resultType, int limit, AbstractCollection<String> classList, boolean isListWhite, boolean isListSuperclasses, SparqlConnection conn, OntologyInfo oInfo, JobTracker tracker, ResultsClient resClient) throws Exception {
 		
 		this.instanceVal = instanceVal;
 		this.instanceType = instanceType;
 		this.resultType = resultType;
+		this.limit = limit;
+		this.classList = classList;
+		this.isListWhite = isListWhite;
+		this.isListSuperclasses = isListSuperclasses;
 		
 		if (resultType != SparqlResultTypes.GRAPH_JSONLD && resultType != SparqlResultTypes.N_TRIPLES)
 			throw new Exception("Unsupported result type: " + resultType.toString());
@@ -54,10 +64,6 @@ public class ConnectedDataConstructor extends Thread {
 		}
 		this.headerTable = ThreadAuthenticator.getThreadHeaderTable();
 		this.resClient = resClient;
-	}
-	
-	public ConnectedDataConstructor(String instanceVal, XSDSupportedType instanceType, SparqlResultTypes resultType, SparqlConnection conn) throws Exception {
-		this(instanceVal, instanceType, resultType, conn, null, null, null);
 	}
 
 	public String getJobId() {
@@ -79,8 +85,8 @@ public class ConnectedDataConstructor extends Thread {
     		if (this.oInfo == null) {
     			this.oInfo = new OntologyInfo(this.conn);
     		}
-    		String sparql = SparqlToXLibUtil.generateConstructConnected(this.conn, this.oInfo, this.instanceVal, this.instanceType);
-    		
+    		String sparql = SparqlToXLibUtil.generateConstructConnected(this.conn, this.oInfo, this.instanceVal, this.instanceType, this.limit, this.classList, this.isListWhite, this.isListSuperclasses);
+
     		if (this.resultType == SparqlResultTypes.GRAPH_JSONLD) {
 	    		resClient.execStoreGraphResults(this.jobId, this.conn.getDefaultQueryInterface().executeQueryToJsonLd(sparql));
 	    		

@@ -367,7 +367,6 @@ public class ValueConstraint {
 	 * @throws Exception
 	 */
 	//  Use sei version to get optimization (avoid de-optimized virtuoso version)
-	@Deprecated
 	public static String buildFilterInConstraint(String sparqlId, ArrayList<String> valList, HashSet<XSDSupportedType> valTypes) throws Exception{
 		return buildFilterInConstraint(sparqlId, valList, valTypes, null);
 	}
@@ -404,6 +403,7 @@ public class ValueConstraint {
 		
 		return "FILTER (" + sparqlId + " IN ( " + String.join(", ", list) + ")) ";
 	}
+
 	
 	/**
 	 * Build a FILTER IN clause

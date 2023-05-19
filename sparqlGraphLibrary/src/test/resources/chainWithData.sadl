@@ -1,0 +1,19 @@
+uri "http://kdl.ge.com/junit/chain" alias chain version "$Revision:$ Last modified on   $Date:$".
+
+ChainSuper is a top-level class.
+LinkSuper is a top-level class.
+
+Chain is a type of ChainSuper,
+	described by chainName with a single value of type string,
+	described by firstLink with a single value of type Link.
+	
+Link is a type of LinkSuper,
+	described by linkName with a single value of type string,
+	described by nextLink with a single value of type Link.
+	
+
+link3 is a Link with linkName "link3".	
+link2 is a Link with linkName "link2" with nextLink link3.
+link1 is a Link with linkName "link1" with nextLink link2.
+
+chain1 is a Chain with chainName "chain1" with firstLink link1.

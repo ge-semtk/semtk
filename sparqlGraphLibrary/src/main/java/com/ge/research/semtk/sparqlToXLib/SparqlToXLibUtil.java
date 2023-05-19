@@ -40,7 +40,7 @@ import com.ge.research.semtk.sparqlX.XSDSupportedType;
  */
 public class SparqlToXLibUtil {
 	public static final String TYPE_PROP = "http://www.w3.org/1999/02/22-rdf-syntax-ns#type";
-	private static final String BLANK_NODE_REGEX = "^(nodeID://|_:)";
+	
 	/**
 	 * FROM or USING clause logic
 	 * Generates clauses if this.conn has
@@ -250,7 +250,6 @@ public class SparqlToXLibUtil {
 			sparql.append("OFFSET " + String.valueOf(offsetOverride) + "\n");
 		}
 		
-		System.out.println(sparql.toString());
 		return sparql.toString();
 	}
 	
@@ -424,42 +423,111 @@ public class SparqlToXLibUtil {
 		return sparql.toString();
 	}
 
-	public static String generateConstructConnected(SparqlConnection conn, OntologyInfo oInfo, String instance, XSDSupportedType instanceType) throws Exception {
+	/**
+	 * Generate query to get connected items.  Get type relationship for any new instances returned.
+	 * @param conn
+	 * @param oInfo
+	 * @param instance - the target instance
+	 * @param instanceType - type of the target instance
+	 * @param limit - max number of triples to return
+	 * @param classList - list of classes to blacklist or whitelist from returned data
+	 * @param listIsWhite - boolean : is classList a whitelist (else it must be blacklist)
+	 * @param listIsSuperclasses - boolean : does classList represent superclasses (else class must match exactly)
+	 * @return string : sparql query
+	 * @throws Exception
+	 */
+	public static String generateConstructConnected(SparqlConnection conn, OntologyInfo oInfo, String instance, XSDSupportedType instanceType, int limit, AbstractCollection<String> classList, boolean listIsWhite, boolean listIsSuperclasses ) throws Exception {
 		
+		String limitClause = (limit > 0) ? String.format(" LIMIT %d", limit) : "";
+		String typeFilter = "";
+		
+		String oTypeClause = "";
+		String sTypeClause = "";
+		
+		/*** set up the triple clauses ***/
+		String oTripleClause = "";
+		String sTripleClause = "";
 		if (instanceType == null) {
-
+            /**** val is piece of data of unknown type ****/
 			// try to guess whether type matters (only if it is a date
 			ArrayList<String> rdf11vals = XSDSupportedType.buildPossibleRDF11Values(instance);
 
 			String values = ValueConstraint.buildValuesConstraint("?o", rdf11vals);
-			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st.  } \n" +
-			generateSparqlFromOrUsing("", "FROM", conn, oInfo) +
-			"WHERE { " + 
-			values + ". ?s ?p ?o . \n"  +
-			"OPTIONAL { ?s a ?st } \n" +
-			"}";
+			oTripleClause = values + ". ?s ?p ?o . \n";
+			sTripleClause = "INTERNAL ERROR";
 			
-		} else if (instanceType.isURI()) {
+		} else {
+			/**** val is a URI ****/
 			String val = instanceType.buildRDF11ValueString(instance);
 
-			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st. ?o a ?ot } \n" +
-			generateSparqlFromOrUsing("", "FROM", conn, oInfo) +
-			"WHERE { " + 
-			"{ BIND ( " + val + " as ?s) . ?s ?p ?o } \n" +
-			"UNION \n" +
-					"{ BIND ( " + val + " as ?o) . ?s ?p ?o } \n" +
-					"OPTIONAL { ?s a ?st } \n" +
-					"OPTIONAL { ?o a ?ot } \n" +
-					"}";
+			sTripleClause = "BIND ( " + val + " as ?s) . ?s ?p ?o . ";
+			oTripleClause = "BIND ( " + val + " as ?o) . ?s ?p ?o . ";
+		} 
+		
+		/*** Add filters by classList ****/
+		if (classList == null || classList.size() == 0) {
+			sTypeClause = oTripleClause + " OPTIONAL { ?s a ?st } . ";
+			oTypeClause = sTripleClause + " OPTIONAL { ?o a ?ot } . ";
 		} else {
-			String val = instanceType.buildRDF11ValueString(instance);
+			
+			// expand class list if listIsSuperclasses
+			ArrayList<String> fullList = new ArrayList<String>();
+			
+			if (listIsSuperclasses) {
+				HashSet<String> classSet = new HashSet<String>();
+				classSet.addAll(classList);
+				for (String c : classList) {
+					classSet.addAll(oInfo.getSubclassNames(c));
+				}
+				fullList.addAll(classSet);
+			} else {
+				fullList.addAll(classList);
+			}
+			
+			
+			// build class list constraint
+			String sFilter = "";
+			String oFilter = "";
+			if (listIsWhite) {
+				sFilter = ValueConstraint.buildFilterInConstraint("?st", fullList, XSDSupportedType.asSet(XSDSupportedType.URI));
+				oFilter = ValueConstraint.buildFilterInConstraint("?ot", fullList, XSDSupportedType.asSet(XSDSupportedType.URI));
+			} else {
+				sFilter = ValueConstraint.buildFilterNotInConstraint("?st", fullList, XSDSupportedType.asSet(XSDSupportedType.URI));
+				oFilter = ValueConstraint.buildFilterNotInConstraint("?ot", fullList, XSDSupportedType.asSet(XSDSupportedType.URI));
+			}
+
+			sTypeClause = String.format("{ %s FILTER NOT EXISTS { ?s a ?throwawayST }} UNION { %s ?s a ?st . %s } ", oTripleClause, oTripleClause, sFilter);
+			oTypeClause = String.format("{ %s FILTER NOT EXISTS { ?o a ?throwawayOT }} UNION { %s ?o a ?ot . %s } ", sTripleClause, sTripleClause, oFilter);
+
+		}
+		
+		if (instanceType == null) {
+            /**** val is piece of data of unknown type ****/
+
+			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st.  } \n" +
+					generateSparqlFromOrUsing("", "FROM", conn, oInfo) +
+					"WHERE { " + 
+						sTypeClause + " \n" +
+					"} " + limitClause;
+			
+		} else if (instanceType.isURI()) {
+			/**** val is a URI ****/
+
+			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st. ?o a ?ot } \n" +
+					generateSparqlFromOrUsing("", "FROM", conn, oInfo) +
+					"WHERE { {  \n" + 
+							 oTypeClause + " \n" +
+						"} UNION {\n" +
+							 sTypeClause + " \n" +
+						"} }" + limitClause;
+		} else {
+			/**** val is piece of data with known type ****/
 			
 			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st.  } \n" +
 					generateSparqlFromOrUsing("", "FROM", conn, oInfo) +
 					"WHERE { " + 
-					"BIND ( " + val + " as ?o) . ?s ?p ?o . \n" +
-					"OPTIONAL { ?s a ?st } \n" +
-					"}";
+						sTypeClause + " \n" +
+					"} " + limitClause;
 		} 
 	}
 
@@ -536,7 +604,7 @@ public class SparqlToXLibUtil {
 	public static String genDomainFilterStatement(String varName, String domain, String clause) {
 		if (domain == null || domain.isEmpty()) {
 			// remove blank nodes
-			String ret = "filter (!regex(str(?" + varName + "),'" + BLANK_NODE_REGEX + "') " + clause + ") ";
+			String ret = "filter (!regex(str(?" + varName + "),'" + SparqlToXUtils.BLANK_NODE_REGEX + "') " + clause + ") ";
 			return ret;
 			
 		} else {
@@ -549,7 +617,7 @@ public class SparqlToXLibUtil {
 	
 	public static String genBlankNodeFilterStatement(String varName, boolean flag) {	
 		String var = !varName.startsWith("?") ? ("?" + varName) : varName;
-		String ret = "filter (" + (flag?"":"!") + "regex(str(" + var + "),'" + BLANK_NODE_REGEX + "')) ";
+		String ret = "filter (" + (flag?"":"!") + "regex(str(" + var + "),'" + SparqlToXUtils.BLANK_NODE_REGEX + "')) ";
 		return ret;
 	}
 	

@@ -23,14 +23,18 @@ import java.io.InputStream;
 import java.net.ConnectException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.ge.research.semtk.services.client.RestClientConfig;
+import com.ge.research.semtk.sparqlX.SparqlResultTypes;
+
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
 import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.connutil.EndpointNotFoundException;
 import com.ge.research.semtk.load.dataset.CSVDataset;
+import com.ge.research.semtk.ontologyTools.Triple;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
@@ -266,6 +270,7 @@ public class ResultsClient extends RestClient implements Runnable {
 		}
 	}	
 	
+	
 	public InputStream execStreamJsonBobResult(String jobId) throws ConnectException, EndpointNotFoundException, Exception {
 		this.parametersJSON.clear();
 				
@@ -282,6 +287,21 @@ public class ResultsClient extends RestClient implements Runnable {
 		}
 	}	
 		
+	public ArrayList<Triple> getNTriplesResult(String jobId) throws Exception {
+		JSONObject j = this.execGetBlobResult(jobId);
+		String triples = (String) j.get(SparqlResultTypes.N_TRIPLES.name());
+		ArrayList<Triple> ret = new ArrayList<Triple>();
+		if (triples.length() > 0) {
+			String [] lines = triples.split("\n");
+			for (String l : lines) {
+				String [] f = l.split(" ");
+				String o = String.join(" ", Arrays.copyOfRange(f, 2, f.length));
+				ret.add(new Triple(f[0], f[1], o));
+			}
+		}
+		return ret;
+		
+	}
 	// table support
 	
 	/**
