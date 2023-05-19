@@ -402,7 +402,7 @@ define([	// properly require.config'ed
                 g = (optLabelIdFlag && nodeDict[o] && nodeDict[o]["group"]) ? nodeDict[o]["group"] : g;
 
                 nodeDict[o] = {
-                    id : triple[2],
+                    id : o,
                     label : (oType == VisJsHelper.BLANK_NODE) ? "_:blank" : o,
                     title : (oType == VisJsHelper.BLANK_NODE) ? o : oType,
                     group: g,
@@ -413,7 +413,7 @@ define([	// properly require.config'ed
                 edgeList.push({
                     id: s + "-" + predName + "-" + o,   // prevent duplicate edges
                     from: s,
-                    to: triple[2],
+                    to: o,
                     label: predName,
                     arrows: 'to',
                     color: {inherit: false},
