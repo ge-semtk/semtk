@@ -45,6 +45,7 @@ public class ConnectedDataConstructorTest_IT {
 		
 		// normal
 		ConnectedDataConstructor c = new ConnectedDataConstructor("http://kdl.ge.com/junit/chain#link1", XSDSupportedType.URI, SparqlResultTypes.N_TRIPLES, -1, null, false, false, 
+				null,
 				TestGraph.getSparqlConn(), TestGraph.getOInfo(), 
 				tracker, resClient );
 		c.run();
@@ -52,9 +53,22 @@ public class ConnectedDataConstructorTest_IT {
 		ArrayList<Triple> triples = resClient.getNTriplesResult(c.getJobId());
 		assertEquals("Normal ConnectedDataConstructor returned wrong number of triples", 7, triples.size());
 		
-		
+		// extran pred
+		ArrayList<String> xList = new ArrayList<String>();
+		xList.add("http://kdl.ge.com/junit/chain#linkName");
+		c = new ConnectedDataConstructor("http://kdl.ge.com/junit/chain#link1", XSDSupportedType.URI, SparqlResultTypes.N_TRIPLES, -1, null, false, false, 
+				xList,
+				TestGraph.getSparqlConn(), TestGraph.getOInfo(), 
+				tracker, resClient );
+		c.run();
+		tracker.waitForSuccess(c.getJobId(), 60);
+		triples = resClient.getNTriplesResult(c.getJobId());
+		assertEquals("Normal ConnectedDataConstructor returned wrong number of triples", 8, triples.size());
+		assertTrue("extra predicate was not returned ", tripleString(triples).contains("\"link2\""));
+
 		// empty
 		c = new ConnectedDataConstructor("http://kdl.ge.com/junit/chain#link7", XSDSupportedType.URI, SparqlResultTypes.N_TRIPLES, -1, null, false, false, 
+				null,
 				TestGraph.getSparqlConn(), TestGraph.getOInfo(), 
 				tracker, resClient );
 		c.run();
@@ -64,6 +78,7 @@ public class ConnectedDataConstructorTest_IT {
 		
 		// blank node
 		c = new ConnectedDataConstructor("_:Blank234lkmsdfhblank", XSDSupportedType.URI, SparqlResultTypes.N_TRIPLES, -1, null, false, false, 
+				null,
 				TestGraph.getSparqlConn(), TestGraph.getOInfo(), 
 				tracker, resClient );
 		c.run();
@@ -78,6 +93,7 @@ public class ConnectedDataConstructorTest_IT {
 		linkList.add("http://kdl.ge.com/junit/chain#LinkSuper");
 			
 		c = new ConnectedDataConstructor("http://kdl.ge.com/junit/chain#link1", XSDSupportedType.URI, SparqlResultTypes.N_TRIPLES, -1, chainList, true, true, 
+				null,
 				TestGraph.getSparqlConn(), TestGraph.getOInfo(), 
 				tracker, resClient );
 		c.run();
@@ -89,6 +105,7 @@ public class ConnectedDataConstructorTest_IT {
 		// whitelist w/o superclass
 			
 		c = new ConnectedDataConstructor("http://kdl.ge.com/junit/chain#link1", XSDSupportedType.URI, SparqlResultTypes.N_TRIPLES, -1, chainList, true, false, 
+				null,
 				TestGraph.getSparqlConn(), TestGraph.getOInfo(), 
 				tracker, resClient );
 		c.run();
@@ -98,6 +115,7 @@ public class ConnectedDataConstructorTest_IT {
 
 		// blacklist			
 		c = new ConnectedDataConstructor("http://kdl.ge.com/junit/chain#link1", XSDSupportedType.URI, SparqlResultTypes.N_TRIPLES, -1, chainList, false, true, 
+				null,
 				TestGraph.getSparqlConn(), TestGraph.getOInfo(), 
 				tracker, resClient );
 		c.run();
@@ -108,6 +126,7 @@ public class ConnectedDataConstructorTest_IT {
 
 		// blacklist w/o superclass			
 		c = new ConnectedDataConstructor("http://kdl.ge.com/junit/chain#link1", XSDSupportedType.URI, SparqlResultTypes.N_TRIPLES, -1, chainList, false, false, 
+				null,
 				TestGraph.getSparqlConn(), TestGraph.getOInfo(), 
 				tracker, resClient );
 		c.run();
@@ -117,6 +136,7 @@ public class ConnectedDataConstructorTest_IT {
 		
 		// limit
 		c = new ConnectedDataConstructor("http://kdl.ge.com/junit/chain#link1", XSDSupportedType.URI, SparqlResultTypes.N_TRIPLES, 4, chainList, false, true, 
+				null,
 				TestGraph.getSparqlConn(), TestGraph.getOInfo(), 
 				tracker, resClient );
 		c.run();
@@ -127,6 +147,7 @@ public class ConnectedDataConstructorTest_IT {
 		
 		// string
 		c = new ConnectedDataConstructor("link1", XSDSupportedType.STRING, SparqlResultTypes.N_TRIPLES, -1, null, false, false, 
+				null,
 				TestGraph.getSparqlConn(), TestGraph.getOInfo(), 
 				tracker, resClient );
 		c.run();
@@ -136,6 +157,7 @@ public class ConnectedDataConstructorTest_IT {
 		
 		// string untyped
 		c = new ConnectedDataConstructor("link1", null, SparqlResultTypes.N_TRIPLES, -1, null, false, false, 
+				null,
 				TestGraph.getSparqlConn(), TestGraph.getOInfo(), 
 				tracker, resClient );
 		c.run();

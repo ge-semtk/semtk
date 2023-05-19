@@ -293,7 +293,7 @@ public class ValueConstraint {
 	 * @throws Exception
 	 */
 	//  Use sei version to get optimization (avoid de-optimized virtuoso version)
-	@Deprecated
+	
 	public static String buildValuesConstraint(String sparqlId, ArrayList<String> valList, HashSet<XSDSupportedType> valTypes) throws Exception{
 		return buildValuesConstraint(sparqlId, valList, valTypes, null);
 	}

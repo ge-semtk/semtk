@@ -24,6 +24,7 @@ public class ConnectedDataConstructor extends Thread {
 	private AbstractCollection<String> classList;
 	private boolean isListWhite;
 	private boolean isListSuperclasses;
+	private AbstractCollection<String> extraPredicatesList;
 	private SparqlConnection conn = null;
 	private OntologyInfo oInfo = null;
 	private JobTracker tracker = null;
@@ -42,7 +43,7 @@ public class ConnectedDataConstructor extends Thread {
 	 * @param resClient - "
 	 * @throws Exception 
 	 */
-	public ConnectedDataConstructor(String instanceVal, XSDSupportedType instanceType, SparqlResultTypes resultType, int limit, AbstractCollection<String> classList, boolean isListWhite, boolean isListSuperclasses, SparqlConnection conn, OntologyInfo oInfo, JobTracker tracker, ResultsClient resClient) throws Exception {
+	public ConnectedDataConstructor(String instanceVal, XSDSupportedType instanceType, SparqlResultTypes resultType, int limit, AbstractCollection<String> classList, boolean isListWhite, boolean isListSuperclasses, AbstractCollection<String> extraPredicatesList, SparqlConnection conn, OntologyInfo oInfo, JobTracker tracker, ResultsClient resClient) throws Exception {
 		
 		this.instanceVal = instanceVal;
 		this.instanceType = instanceType;
@@ -51,6 +52,7 @@ public class ConnectedDataConstructor extends Thread {
 		this.classList = classList;
 		this.isListWhite = isListWhite;
 		this.isListSuperclasses = isListSuperclasses;
+		this.extraPredicatesList = extraPredicatesList;
 		
 		if (resultType != SparqlResultTypes.GRAPH_JSONLD && resultType != SparqlResultTypes.N_TRIPLES)
 			throw new Exception("Unsupported result type: " + resultType.toString());
@@ -85,7 +87,7 @@ public class ConnectedDataConstructor extends Thread {
     		if (this.oInfo == null) {
     			this.oInfo = new OntologyInfo(this.conn);
     		}
-    		String sparql = SparqlToXLibUtil.generateConstructConnected(this.conn, this.oInfo, this.instanceVal, this.instanceType, this.limit, this.classList, this.isListWhite, this.isListSuperclasses);
+    		String sparql = SparqlToXLibUtil.generateConstructConnected(this.conn, this.oInfo, this.instanceVal, this.instanceType, this.limit, this.classList, this.isListWhite, this.isListSuperclasses, this.extraPredicatesList);
 
     		if (this.resultType == SparqlResultTypes.GRAPH_JSONLD) {
 	    		resClient.execStoreGraphResults(this.jobId, this.conn.getDefaultQueryInterface().executeQueryToJsonLd(sparql));

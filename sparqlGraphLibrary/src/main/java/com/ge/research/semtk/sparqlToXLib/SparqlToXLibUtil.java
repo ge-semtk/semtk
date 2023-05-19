@@ -436,7 +436,7 @@ public class SparqlToXLibUtil {
 	 * @return string : sparql query
 	 * @throws Exception
 	 */
-	public static String generateConstructConnected(SparqlConnection conn, OntologyInfo oInfo, String instance, XSDSupportedType instanceType, int limit, AbstractCollection<String> classList, boolean listIsWhite, boolean listIsSuperclasses ) throws Exception {
+	public static String generateConstructConnected(SparqlConnection conn, OntologyInfo oInfo, String instance, XSDSupportedType instanceType, int limit, AbstractCollection<String> classList, boolean listIsWhite, boolean listIsSuperclasses, AbstractCollection<String> extraPredicatesList) throws Exception {
 		
 		String limitClause = (limit > 0) ? String.format(" LIMIT %d", limit) : "";
 		String typeFilter = "";
@@ -444,6 +444,17 @@ public class SparqlToXLibUtil {
 		String oTypeClause = "";
 		String sTypeClause = "";
 		
+		/*** extra predicates ***/
+		String extraSClause = null;
+		String extraOClause = null;
+		if (extraPredicatesList != null && extraPredicatesList.size() > 0) {
+			ArrayList<String> aList = new ArrayList<String>();
+			aList.addAll(extraPredicatesList);
+			String xpConstraint = ValueConstraint.buildValuesConstraint("?xp", aList, XSDSupportedType.asSet(XSDSupportedType.URI));
+			extraSClause = String.format("OPTIONAL { ?s ?xp ?xs. %s } .\n", xpConstraint);
+			extraOClause = String.format("OPTIONAL { ?o ?xp ?xo. %s } .\n", xpConstraint);
+		}
+
 		/*** set up the triple clauses ***/
 		String oTripleClause = "";
 		String sTripleClause = "";
@@ -453,18 +464,18 @@ public class SparqlToXLibUtil {
 			ArrayList<String> rdf11vals = XSDSupportedType.buildPossibleRDF11Values(instance);
 
 			String values = ValueConstraint.buildValuesConstraint("?o", rdf11vals);
-			oTripleClause = values + ". ?s ?p ?o . \n";
+			oTripleClause = values + ". ?s ?p ?o . \n" + ((extraSClause != null) ? extraSClause : "");
 			sTripleClause = "INTERNAL ERROR";
 			
 		} else {
 			/**** val is a URI ****/
 			String val = instanceType.buildRDF11ValueString(instance);
 
-			sTripleClause = "BIND ( " + val + " as ?s) . ?s ?p ?o . ";
-			oTripleClause = "BIND ( " + val + " as ?o) . ?s ?p ?o . ";
+			sTripleClause = "BIND ( " + val + " as ?s) . ?s ?p ?o .\n" + ((extraOClause != null) ? extraOClause : "");
+			oTripleClause = "BIND ( " + val + " as ?o) . ?s ?p ?o .\n" + ((extraSClause != null) ? extraSClause : "");
 		} 
 		
-		/*** Add filters by classList ****/
+		/*** Add filters by classList, using the triple clauses above ****/
 		if (classList == null || classList.size() == 0) {
 			sTypeClause = oTripleClause + " OPTIONAL { ?s a ?st } . ";
 			oTypeClause = sTripleClause + " OPTIONAL { ?o a ?ot } . ";
@@ -504,7 +515,7 @@ public class SparqlToXLibUtil {
 		if (instanceType == null) {
             /**** val is piece of data of unknown type ****/
 
-			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st.  } \n" +
+			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st. ?s ?xp ?xs. } \n" +
 					generateSparqlFromOrUsing("", "FROM", conn, oInfo) +
 					"WHERE { " + 
 						sTypeClause + " \n" +
@@ -513,7 +524,7 @@ public class SparqlToXLibUtil {
 		} else if (instanceType.isURI()) {
 			/**** val is a URI ****/
 
-			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st. ?o a ?ot } \n" +
+			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st. ?o a ?ot. ?s ?xp ?xs. ?o ?xp ?xo. } \n" +
 					generateSparqlFromOrUsing("", "FROM", conn, oInfo) +
 					"WHERE { {  \n" + 
 							 oTypeClause + " \n" +
@@ -523,7 +534,7 @@ public class SparqlToXLibUtil {
 		} else {
 			/**** val is piece of data with known type ****/
 			
-			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st.  } \n" +
+			return  "CONSTRUCT { ?s ?p ?o.  ?s a ?st.  ?s ?xp ?xs. } \n" +
 					generateSparqlFromOrUsing("", "FROM", conn, oInfo) +
 					"WHERE { " + 
 						sTypeClause + " \n" +
