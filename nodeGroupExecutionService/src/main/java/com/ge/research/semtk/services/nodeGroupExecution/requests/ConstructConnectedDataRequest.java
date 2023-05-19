@@ -64,7 +64,7 @@ public class ConstructConnectedDataRequest extends SparqlConnectionRequest {
     @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED,  
     		description = "extra predicates in addition to #type to return for each class instance",
     		example = "['uri://ontology#MyPred', 'uri://ontology#YourPred']")
-	public List<String> extraPredicateList = null;
+	public List<String> extraPredicatesList = null;
 
  
     public SparqlResultTypes getResultType() {
@@ -98,20 +98,20 @@ public class ConstructConnectedDataRequest extends SparqlConnectionRequest {
 	}
 	
 	public HashSet<String> getExtraPredicatesList() {
-		if (this.extraPredicateList == null)
+		if (this.extraPredicatesList == null)
 			return null;
 		else {
 			HashSet<String> ret = new HashSet<String>();
-			ret.addAll(this.extraPredicateList);
+			ret.addAll(this.extraPredicatesList);
 			return ret;
 		}
 	}
 
-	public boolean isListWhite() {
+	public boolean getIsListWhite() {
 		return isListWhite;
 	}
 
-	public boolean isListSuperclasses() {
+	public boolean getIsListSuperclasses() {
 		return isListSuperclasses;
 	}
 

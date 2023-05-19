@@ -1039,7 +1039,7 @@ public class NodeGroupExecutionRestController {
 			
 			ConnectedDataConstructor constructor = new ConnectedDataConstructor(
 					requestBody.getInstanceVal(), requestBody.buildInstanceType(), requestBody.getResultType(), requestBody.getLimit(),
-					requestBody.getClassList(), requestBody.isListWhite(), requestBody.isListSuperclasses(),
+					requestBody.getClassList(), requestBody.getIsListWhite(), requestBody.getIsListSuperclasses(),
 					requestBody.getExtraPredicatesList(),
 					conn, this.retrieveOInfo(conn), getJobTracker(), resClient);
 			
