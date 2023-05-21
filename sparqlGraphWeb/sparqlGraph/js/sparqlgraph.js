@@ -54,7 +54,9 @@
 
     var RESULTS_MAX_ROWS = 5000; // 5000 sample rows
     var ALLOW_CIRCULAR_NODEGROUPS = true;
-
+	var CONSTRUCT_CONNECT_WARN = 100;
+	var CONSTRUCT_CONNECT_MAX = 1000;
+	
     // READY FUNCTION
     $('document').ready(function(){
 		setupTabs();
@@ -2690,12 +2692,12 @@
 					ModalIidx.alert("Blank node error", "Can not expand a blank node returned from a previous query.")
 				} else if (classUri == VisJsHelper.DATA_NODE) {
                     var instanceUri = id;
-                    client.execAsyncConstructConnectedData(instanceUri, null, SemanticNodeGroup.RT_NTRIPLES, gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
+                    client.execAsyncConstructConnectedData(instanceUri, null, SemanticNodeGroup.RT_NTRIPLES, CONSTRUCT_CONNECT_MAX, gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
 
                 } else {
                     // get classname and instance name with ':' prefex expanded out to full '#' uri
                     var instanceUri = id;
-                    client.execAsyncConstructConnectedData(instanceUri, "node_uri", SemanticNodeGroup.RT_NTRIPLES, gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
+                    client.execAsyncConstructConnectedData(instanceUri, "node_uri", SemanticNodeGroup.RT_NTRIPLES, CONSTRUCT_CONNECT_MAX, gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
                 }
             }
         });
@@ -2710,18 +2712,43 @@
             var edgeList = [];
             
             if (res.isJsonLdResults()) {
-		
+		        // TODO: if reverting to JSON, duplicate the size-checking from N_TRIPLES below.
 	            var jsonLd = res.getGraphResultsJsonArr(true, true, true);
 	            for (var i=0; i < jsonLd.length; i++) {
 	                VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList);
 	            }
 	            
 	        } else if (res.isNtriplesResults()) {
+				loadTriples = function(nodeDict, edgeList, canvasDiv, network, triples) {
+					for (var i=0; i < triples.length; i++) {			
+		                VisJsHelper.addTriple(triples[i], nodeDict, edgeList, false, true);
+		            }
+		            network.body.data.nodes.update(Object.values(nodeDict));
+		            network.body.data.edges.update(edgeList);
+		            networkBusy(canvasDiv, false);
+				}.bind(this, nodeDict, edgeList, canvasDiv, network);
+				
 				triples = res.getNtriplesArray();
-				for (var i=0; i < triples.length; i++) {
-					
-	                VisJsHelper.addTriple(triples[i], nodeDict, edgeList, false, true);
-	            }
+				if (triples.length < CONSTRUCT_CONNECT_WARN) {
+					loadTriples(triples);
+				} else if (triples.length < CONSTRUCT_CONNECT_MAX) {
+					ModalIidx.choose("Large number of nodes returned", 
+					    "A large number of data was returned: " + triples.length + " nodes and edges<br>This could overload your browser.<br>", 
+						["load " + CONSTRUCT_CONNECT_WARN, "load " + triples.length, "cancel"],
+						[function() {loadTriples(triples.slice(0, CONSTRUCT_CONNECT_WARN));} ,
+						 function() {loadTriples(triples);} ,
+						 function(){}]
+					);
+				} else {
+					ModalIidx.choose("Large number of nodes returned", 
+					    "Too much data was returned >" + CONSTRUCT_CONNECT_MAX + " nodes and edges<br>This would overload your browser.<br>", 
+						["load " + CONSTRUCT_CONNECT_WARN, "load " + CONSTRUCT_CONNECT_MAX, "cancel"],
+						[function() {loadTriples(triples.slice(0, CONSTRUCT_CONNECT_WARN));} ,
+						 function() {loadTriples(triples);} ,
+						 function(){}]
+						 );
+				}
+				
 	            
 	        } else {
                 ModalIidx.alert("NodeGroup Exec Service Failure", "<b>Error:</b> Results returned from service are not JSON-LD or N_TRIPLES");

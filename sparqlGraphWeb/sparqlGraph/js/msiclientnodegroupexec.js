@@ -363,11 +363,12 @@ define([	// properly require.config'ed   bootstrap-modal
                                     sei, jobIdCallback, failureCallback);
             },
 
-            execAsyncConstructConnectedData : function(instanceVal, instanceType, resultType, conn, jobIdCallback, failureCallback) {
+            execAsyncConstructConnectedData : function(instanceVal, instanceType, resultType, limit, conn, jobIdCallback, failureCallback) {
                 var data = JSON.stringify ({
                     "instanceVal" : instanceVal,
                     "instanceType": instanceType,
                     "resultType": resultType,
+                    "limit" : limit,
                     "conn": JSON.stringify(conn.toJson())
                 });
 
