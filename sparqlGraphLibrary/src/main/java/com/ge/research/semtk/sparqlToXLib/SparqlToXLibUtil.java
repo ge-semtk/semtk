@@ -438,7 +438,8 @@ public class SparqlToXLibUtil {
 	 */
 	public static String generateConstructConnected(SparqlConnection conn, OntologyInfo oInfo, String instance, XSDSupportedType instanceType, int limit, AbstractCollection<String> classList, boolean listIsWhite, boolean listIsSuperclasses, AbstractCollection<String> extraPredicatesList) throws Exception {
 		
-		String limitClause = (limit > 0) ? String.format(" LIMIT %d", limit) : "";
+		// three triples per line, try to get limit close.  3X limit will come back.  Make sure > LIMIT is returned if it is activated.
+		String limitClause = (limit > 0) ? String.format(" LIMIT %d", Math.floor((limit+2)/3)) : "";
 		String typeFilter = "";
 		
 		String oTypeClause = "";
