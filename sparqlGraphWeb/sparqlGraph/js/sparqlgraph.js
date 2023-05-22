@@ -2719,6 +2719,8 @@
 	            }
 	            
 	        } else if (res.isNtriplesResults()) {
+		
+				// Load function for after we've tested size and chopped it down if needed
 				loadTriples = function(nodeDict, edgeList, canvasDiv, network, triples) {
 					for (var i=0; i < triples.length; i++) {			
 		                VisJsHelper.addTriple(triples[i], nodeDict, edgeList, false, true);
@@ -2731,7 +2733,9 @@
 				triples = res.getNtriplesArray();
 				if (triples.length < CONSTRUCT_CONNECT_WARN) {
 					loadTriples(triples);
+					
 				} else if (triples.length < CONSTRUCT_CONNECT_MAX) {
+					// "Warning zone" : user can load none, some, or all
 					ModalIidx.choose("Large number of nodes returned", 
 					    "A large number of data was returned: " + triples.length + " nodes and edges<br>This could overload your browser.<br>", 
 						["load " + CONSTRUCT_CONNECT_WARN, "load " + triples.length, "cancel"],
@@ -2740,11 +2744,12 @@
 						 function(){}]
 					);
 				} else {
+					// "Danger zone" : user can load none, small, or medium.  All were not returned so they can't be loaded.'
 					ModalIidx.choose("Large number of nodes returned", 
 					    "Too much data was returned >" + CONSTRUCT_CONNECT_MAX + " nodes and edges<br>This would overload your browser.<br>", 
 						["load " + CONSTRUCT_CONNECT_WARN, "load " + CONSTRUCT_CONNECT_MAX, "cancel"],
 						[function() {loadTriples(triples.slice(0, CONSTRUCT_CONNECT_WARN));} ,
-						 function() {loadTriples(triples);} ,
+						 function() {loadTriples(triples.slice(0, CONSTRUCT_CONNECT_MAX ));} ,   // truncate further since back-end can overshoot
 						 function(){}]
 						 );
 				}
