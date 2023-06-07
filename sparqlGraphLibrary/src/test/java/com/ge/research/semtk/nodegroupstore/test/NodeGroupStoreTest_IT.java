@@ -279,11 +279,19 @@ public class NodeGroupStoreTest_IT {
 
 	@Test 
 	public void testLoadStoreDataCsv() throws Exception {
-		IntegrationTestUtility.cleanupNodegroupStore("junit");
 		try {
 			File tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/store_data.zip");
+			
+			// csv without item type column
+			IntegrationTestUtility.cleanupNodegroupStore("junit");
 			nodeGroupStoreClient.loadStoreDataCsv(Paths.get(tempDir.getAbsolutePath(), "store_data.csv").toString(), null, null);
 	    	assertEquals(4, IntegrationTestUtility.countItemsInStoreByCreator("junit"));
+	    	
+	    	// csv with item type column
+	    	IntegrationTestUtility.cleanupNodegroupStore("junit");
+			nodeGroupStoreClient.loadStoreDataCsv(Paths.get(tempDir.getAbsolutePath(), "store_data_with_item_type_col.csv").toString(), null, null);
+	    	assertEquals(4, IntegrationTestUtility.countItemsInStoreByCreator("junit"));
+	    	
 		} finally {
 			try {
 				IntegrationTestUtility.cleanupNodegroupStore("junit");

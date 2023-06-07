@@ -85,6 +85,6 @@ public class StoreDataCsvReader extends StoreDataCsv {
 	
 	// optional column defaults to null
 	public StoredItemTypes getItemType() { 
-		return this.colHash.containsKey("itemtype") ? NgStore.StoredItemTypes.valueOf(parsedLine[colHash.get("itemtype")]) : null;
+		return this.colHash.containsKey("itemtype") ? NgStore.StoredItemTypes.valueOf(parsedLine[colHash.get("itemtype")].trim()) : null;
 	}
 }
