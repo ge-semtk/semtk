@@ -91,8 +91,6 @@
                 ],
                 function (ExploreTab, MappingTab, ModalIidx, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupService, MsiClientNodeGroupStore, MsiClientQuery, NodegroupRenderer, ReportTab, UndoManager, UploadTab) {
 
-	    	console.log(".ready()");
-
             gUndoManager = new UndoManager();
 
 	    	// create the modal dialogue
@@ -229,7 +227,6 @@
 	    	// gReady is at the end of the ready function
 	    	//        and tells us everything is loaded.
 	   	    gReady = true;
-	   	    console.log("Ready");
 	   	    logEvent("SG Page Load");
 
             if (g.customization.startupDialogHtml != 'none' && g.customization.startupDialogHtml.length > 2) {
@@ -3556,7 +3553,6 @@
     // Just changed (or maybe changed) the nodegroup.
     // Save states
     var saveUndoState = function() {
-        console.log("undo SAVE");
         gUndoManager.saveState(gNodeGroup.toJson())
         updateUndoButtons();
     };
