@@ -134,6 +134,18 @@ public class ConnectedDataConstructorTest_IT {
 		triples = resClient.getNTriplesResult(c.getJobId());
 		assertEquals("Blanklist w/o superclass ConnectedDataConstructor returned wrong number of triples", 7, triples.size());
 		
+		// blacklist http://www.w3.org/2002/07/owl#Class
+		ArrayList<String> owlClassList = new ArrayList<String>();
+		chainList.add("http://www.w3.org/2002/07/owl#Class");
+		c = new ConnectedDataConstructor("http://kdl.ge.com/junit/chain#link1", XSDSupportedType.URI, SparqlResultTypes.N_TRIPLES, -1, chainList, false, false, 
+				null,
+				TestGraph.getSparqlConn(), TestGraph.getOInfo(), 
+				tracker, resClient );
+		c.run();
+		tracker.waitForSuccess(c.getJobId(), 60);
+		triples = resClient.getNTriplesResult(c.getJobId());
+		assertEquals("Blanklist w/o superclass ConnectedDataConstructor returned wrong number of triples", 7, triples.size());
+		
 		// limit
 		c = new ConnectedDataConstructor("http://kdl.ge.com/junit/chain#link1", XSDSupportedType.URI, SparqlResultTypes.N_TRIPLES, 4, chainList, false, true, 
 				null,
