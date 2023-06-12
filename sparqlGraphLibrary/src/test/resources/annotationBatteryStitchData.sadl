@@ -1,0 +1,31 @@
+uri "http://kdl.ge.com/junit/stitchable" alias stitchable version "$Revision:$ Last modified on   $Date:$".
+
+import "http://kdl.ge.com/batterydemo".
+
+
+cell1a is a Cell,
+	with id "c1a",
+	with cellId "cell1a",
+	with color red.
+	
+cell1b is a Cell,
+	with id "c1b",
+	with cellId "cell1b",
+	with color red.
+	
+cellShared is a Cell,
+	with id "cshare",
+	with cellId "cellShared",
+	with color blue.
+	
+battery1 is a Battery,
+	with id "b1",
+	with name "battery1",
+	with cell cell1a,
+	with cell cell1b
+	with cell cellShared.
+	
+battery2 is a Battery,
+	with id "b2",
+	with name "battery2",
+	with cell cellShared.

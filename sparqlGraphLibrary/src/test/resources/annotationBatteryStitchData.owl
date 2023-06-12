@@ -1,0 +1,50 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:annotBattery="http://kdl.ge.com/batterydemo#"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:stitchable="http://kdl.ge.com/junit/stitchable#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xml:base="http://kdl.ge.com/junit/stitchable">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="/batterydemo"/>
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <owl:versionInfo>$Revision:$ Last modified on   $Date:$</owl:versionInfo>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'annotationBatteryStitchData.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <annotBattery:Battery rdf:ID="battery1">
+    <annotBattery:cell>
+      <annotBattery:Cell rdf:ID="cellShared">
+        <annotBattery:color rdf:resource="/batterydemo#blue"/>
+        <annotBattery:cellId>cellShared</annotBattery:cellId>
+        <annotBattery:id>cshare</annotBattery:id>
+      </annotBattery:Cell>
+    </annotBattery:cell>
+    <annotBattery:cell>
+      <annotBattery:Cell rdf:ID="cell1b">
+        <annotBattery:color rdf:resource="/batterydemo#red"/>
+        <annotBattery:cellId>cell1b</annotBattery:cellId>
+        <annotBattery:id>c1b</annotBattery:id>
+      </annotBattery:Cell>
+    </annotBattery:cell>
+    <annotBattery:cell>
+      <annotBattery:Cell rdf:ID="cell1a">
+        <annotBattery:color rdf:resource="/batterydemo#red"/>
+        <annotBattery:cellId>cell1a</annotBattery:cellId>
+        <annotBattery:id>c1a</annotBattery:id>
+      </annotBattery:Cell>
+    </annotBattery:cell>
+    <annotBattery:name>battery1</annotBattery:name>
+    <annotBattery:id>b1</annotBattery:id>
+  </annotBattery:Battery>
+  <annotBattery:Battery rdf:ID="battery2">
+    <annotBattery:cell rdf:resource="#cellShared"/>
+    <annotBattery:name>battery2</annotBattery:name>
+    <annotBattery:id>b2</annotBattery:id>
+  </annotBattery:Battery>
+</rdf:RDF>
