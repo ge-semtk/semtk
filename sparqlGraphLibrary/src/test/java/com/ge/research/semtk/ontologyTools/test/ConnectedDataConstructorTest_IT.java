@@ -125,6 +125,7 @@ public class ConnectedDataConstructorTest_IT {
 		assertFalse("Blacklist returned chain ", tripleString(triples).contains("#Chain"));
 
 		// blacklist w/o superclass			
+		// TODO: does nothing there are no Chain Super objects
 		c = new ConnectedDataConstructor("http://kdl.ge.com/junit/chain#link1", XSDSupportedType.URI, SparqlResultTypes.N_TRIPLES, -1, chainList, false, false, 
 				null,
 				TestGraph.getSparqlConn(), TestGraph.getOInfo(), 
@@ -132,9 +133,10 @@ public class ConnectedDataConstructorTest_IT {
 		c.run();
 		tracker.waitForSuccess(c.getJobId(), 60);
 		triples = resClient.getNTriplesResult(c.getJobId());
-		assertEquals("Blanklist w/o superclass ConnectedDataConstructor returned wrong number of triples", 7, triples.size());
+		assertEquals("Blacklist w/o superclass ConnectedDataConstructor returned wrong number of triples", 7, triples.size());
 		
 		// blacklist http://www.w3.org/2002/07/owl#Class
+		// removes two triples:  link1 a Link   and   Link a owl#Class
 		ArrayList<String> owlClassList = new ArrayList<String>();
 		chainList.add("http://www.w3.org/2002/07/owl#Class");
 		c = new ConnectedDataConstructor("http://kdl.ge.com/junit/chain#link1", XSDSupportedType.URI, SparqlResultTypes.N_TRIPLES, -1, chainList, false, false, 
@@ -144,7 +146,7 @@ public class ConnectedDataConstructorTest_IT {
 		c.run();
 		tracker.waitForSuccess(c.getJobId(), 60);
 		triples = resClient.getNTriplesResult(c.getJobId());
-		assertEquals("Blanklist w/o superclass ConnectedDataConstructor returned wrong number of triples", 7, triples.size());
+		assertEquals("Blanklist w/o superclass ConnectedDataConstructor returned wrong number of triples", 5, triples.size());
 		
 		// limit
 		c = new ConnectedDataConstructor("http://kdl.ge.com/junit/chain#link1", XSDSupportedType.URI, SparqlResultTypes.N_TRIPLES, 4, chainList, false, true, 
