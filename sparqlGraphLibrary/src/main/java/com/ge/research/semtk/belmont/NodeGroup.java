@@ -70,7 +70,8 @@ public class NodeGroup {
 		ASK,
 	}
 	
-	public static String[] FUNCTION_NAMES = new String [] {"MAX", "MIN", "SUM", "COUNT", "AVG", "SAMPLE", "GROUP_CONCAT"};
+	public static String COUNT_FUNCTION = "COUNT";
+	public static String[] FUNCTION_NAMES = new String [] {"MAX", "MIN", "SUM", COUNT_FUNCTION, "AVG", "SAMPLE", "GROUP_CONCAT"};
 	public static String ORPHAN_URI = "orphan-uri";
 	
 	private static final String JSON_KEY_NODELIST = "sNodeList";
@@ -2215,8 +2216,19 @@ public class NodeGroup {
 			Hashtable<String,String> clauseHash = new Hashtable<String,String>();
 			HashSet<String> doneIds = new HashSet<String>();
 			
-			// generate all the clauses into a hash by sparqlID
 			ArrayList<Returnable> items = this.getReturnedItems();
+			
+			// count how many COUNT functions so we know whether to use distinct
+			// 1 count is normal
+			// >1 counts become COUNT(DISTINCT(
+			int countFunctionCount = 0;
+			for (Returnable item : items) {
+				if (item.getFunctions().contains(COUNT_FUNCTION)) {
+					countFunctionCount ++;
+				}
+			}
+			
+			// generate all the clauses into a hash by sparqlID
 			for (Returnable item : items) {
 				if (item.getIsReturned()) {
 					clauseHash.put(item.getSparqlID(), item.getSparqlID());
@@ -2228,7 +2240,11 @@ public class NodeGroup {
 					clauseHash.put(item.getBinding(), item.getBinding());
 				}
 				for (String f : item.getFunctions()) {
-					clauseHash.put(item.getFunctionSparqlID(f), "(" + f + "(" + item.getBindingOrSparqlID() + ") AS " + item.getFunctionSparqlID(f) + ")");
+					if (f.equals(COUNT_FUNCTION) && countFunctionCount > 1) {
+						clauseHash.put(item.getFunctionSparqlID(f), "( COUNT ( DISTINCT (" + item.getBindingOrSparqlID() + ")) AS " + item.getFunctionSparqlID(f) + ")");
+					} else {
+						clauseHash.put(item.getFunctionSparqlID(f), "(" + f + "("          + item.getBindingOrSparqlID() + ") AS " + item.getFunctionSparqlID(f) + ")");
+					}
 				}
 			}
 			
