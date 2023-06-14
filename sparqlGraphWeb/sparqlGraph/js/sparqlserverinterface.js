@@ -151,6 +151,8 @@ SparqlServerInterface.prototype = {
 		if(optFixDefaultGraph && this.graph == SparqlServerInterface.SEMTK_DEFAULT_GRAPH_NAME){
 			if(this.getServerType() == SparqlServerInterface.FUSEKI_SERVER)
 				return SparqlServerInterface.FUSEKI_DEFAULT_GRAPH_NAME;
+			else
+				throw new Error("Not yet supporting default graph on " + this.getServerType());
 		}
 		return this.graph;
 	},
