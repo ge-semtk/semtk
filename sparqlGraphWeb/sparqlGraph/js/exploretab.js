@@ -746,7 +746,7 @@ define([	// properly require.config'ed
 				}.bind(this);
 				
 				var failureCallback = function(msg) {
-					ModalIidx.alert.bind(this, "Construct query failed:" + msg);
+					ModalIidx.alert("Construct query failed", msg);
 					this.busy(false);
                     IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
                 	IIDXHelper.progressBarRemove(this.progressDiv);                                           
