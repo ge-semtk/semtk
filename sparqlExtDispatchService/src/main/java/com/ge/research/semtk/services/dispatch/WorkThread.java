@@ -87,7 +87,7 @@ public class WorkThread extends Thread {
 				this.dispatcher.execute(externalConstraintsJson, queryFlags, this.myQT, this.myRT, targetObjectSparqlID);
 			}	
 		} catch (Exception e) {
-			LocalLogger.printStackTrace(e);		
+			LocalLogger.printStackTrace(e);  // swallow error, since dispatcher set the status to failed
 		}
 	
     	this.dispatcher = null;

@@ -157,7 +157,7 @@ public enum XSDSupportedType {
 			// Prefix:myinstance             - no <>
 			// http://hi/there               - needs <>
 			// http://unprefixed#myinstance  - needs <>
-			if ((val.contains("://") || SparqlToXUtils.BLANK_NODE_PATTERN.matcher(val).find()) && ! val.startsWith("<") ) { 
+			if ((val.contains("://") || SparqlToXUtils.isBlankNode(val)) && ! val.startsWith("<") ) { 
 				return "<" + val + "> "; 
 
 			} else {

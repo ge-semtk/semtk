@@ -399,7 +399,7 @@ OntologyInfo.getSadlRangeList = function() {
 OntologyInfo.getConstructOntologyQuery = function(conn) {
 	var from = "";
 	for (var i=0; i < conn.getModelInterfaceCount(); i++) {
-		from = from + " FROM <" + conn.getModelInterface(i).getGraph() + "> ";
+		from = from + " FROM <" + conn.getModelInterface(i).getGraph(true) + "> ";
 	}
 	
 	return "CONSTRUCT { ?s ?p ?o } " + from + " WHERE { ?s ?p ?o }" ;

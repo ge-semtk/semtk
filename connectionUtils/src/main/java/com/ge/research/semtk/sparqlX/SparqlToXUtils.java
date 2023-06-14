@@ -32,6 +32,15 @@ public class SparqlToXUtils {
 	public static final String UNRESERVED_URI_CHARS = "0123456789-_ABCDEFJHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.~";
 	public static final String BLANK_NODE_REGEX = "^(nodeID://|_:)";
 	public static final Pattern BLANK_NODE_PATTERN = Pattern.compile(BLANK_NODE_REGEX);
+	
+	
+	/**
+	 * Determine if a given node string represents a blank node
+	 */
+	public static boolean isBlankNode(String s) {
+		return SparqlToXUtils.BLANK_NODE_PATTERN.matcher(s).find();
+	}
+	
 	// check that the passed Sparql query references the appropriate manadate columns in the return.
 	public static void validateSparqlQuery(String query, String[] requiredCols) throws IOException {
 		
