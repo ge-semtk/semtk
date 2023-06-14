@@ -216,7 +216,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		this.jobTracker.incrementPercentComplete(this.jobID, 1, 10);
 		try{
 			LocalLogger.logToStdErr("Job " + this.jobID + ": AsynchronousNodeGroupExecutor.executePlainSparqlQuery() start");
-			LocalLogger.logToStdErr("Execute SPARQL on " + this.querySei.getGetURL() + "\n" + sparqlQuery);
+			LocalLogger.logToStdErr("Execute SPARQL on " + this.querySei.getServerAndPort() + "\n" + sparqlQuery);
 			
 			GeneralResultSet genResult = null;
 

@@ -17,10 +17,6 @@
 
 package com.ge.research.semtk.services.nodeGroupExecution.requests;
 
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
-
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 
@@ -47,6 +43,4 @@ public class DispatchRawSparqlRequestBody {
 	public SparqlResultTypes getResultType() {
 		return this.resultType;
 	}
-
-	
 }
