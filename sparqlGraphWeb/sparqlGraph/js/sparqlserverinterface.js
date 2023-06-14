@@ -51,6 +51,9 @@ SparqlServerInterface.FUSEKI_SERVER = "fuseki";
 SparqlServerInterface.NEPTUNE_SERVER = "neptune";
 SparqlServerInterface.VIRTUOSO_SERVER = "virtuoso";
 
+SparqlServerInterface.SEMTK_DEFAULT_GRAPH_NAME = "uri://DefaultGraph";
+SparqlServerInterface.FUSEKI_DEFAULT_GRAPH_NAME = "urn:x-arq:DefaultGraph";
+
 SparqlServerInterface.TABLE_RESULTS = 0;
 SparqlServerInterface.GRAPH_RESULTS = 1;
 
@@ -144,7 +147,11 @@ SparqlServerInterface.prototype = {
 	},
 
 
-	getGraph : function() {
+	getGraph : function(optFixDefaultGraph) {
+		if(optFixDefaultGraph && this.graph == SparqlServerInterface.SEMTK_DEFAULT_GRAPH_NAME){
+			if(this.getServerType() == SparqlServerInterface.FUSEKI_SERVER)
+				return SparqlServerInterface.FUSEKI_DEFAULT_GRAPH_NAME;
+		}
 		return this.graph;
 	},
 

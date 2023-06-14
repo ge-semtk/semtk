@@ -1215,7 +1215,6 @@ public abstract class SparqlEndpointInterface {
 		}
 		
 		// check for RDF first, return { "rdf": "<rdf ....    >" } 
-		
 		if (resultType==SparqlResultTypes.RDF) {
 			String beginning = responseTxt.length() > 100 ? responseTxt.substring(0,100) : responseTxt;
 			beginning = beginning.trim();
@@ -1226,11 +1225,19 @@ public abstract class SparqlEndpointInterface {
 			res.put(SparqlResultTypes.RDF.toString(), responseTxt);
 			return res;
 			
+		// check for N-Triples
 		} else if (resultType==SparqlResultTypes.N_TRIPLES) {
-			String firstLine = responseTxt.split("[\\n\\r]+")[0];
-			firstLine = firstLine.trim();
-			if (!firstLine.startsWith("<") || !firstLine.endsWith(".")) {
-				throw new Exception("n-triple error: " + responseTxt);
+			try {
+				String firstLine = responseTxt.split("[\\n\\r]+")[0].trim();	// expect this to be first triple
+				if(!firstLine.endsWith(".")) {
+					throw new Exception();	// first line does not end with .
+				}
+				String firstElement = firstLine.trim().split(" ")[0].trim(); 	// expect this to be subject of the first triple
+				if (!firstElement.startsWith("<") && !SparqlToXUtils.isBlankNode(firstElement)) {
+					throw new Exception(); 	// first element doesn't look like a triple subject
+				}
+			}catch(Exception e) {
+				throw new Exception("non-n-triple response, starting with: " + responseTxt.substring(0, Math.min(200, responseTxt.length())));
 			}
 			JSONObject res = new JSONObject();
 			res.put(SparqlResultTypes.N_TRIPLES.toString(), responseTxt);

@@ -36,7 +36,7 @@ import com.ge.research.semtk.test.TestGraph;
 
 
 public class SparqlToXUtilsTest {
-
+	
 	
 	@Test
 	public void testIsLegalURI() throws Exception {
@@ -84,7 +84,13 @@ public class SparqlToXUtilsTest {
 		String expected = "DELETE { ?x ?y ?z. } WHERE { ?x ?y ?z  FILTER ( strstarts(str(?x), \"http://prefix\") || strstarts(str(?y), \"http://prefix\") || strstarts(str(?z), \"http://prefix\") ).}";
 		assertTrue(sparql.replaceAll("\\s+", " ").contains(expected.replaceAll("\\s+", " ")));
 		assertTrue(sparql.contains("WITH <" + sei.getGraph() + ">"));
-
+	}
+	
+	@Test
+	public void testIsBlankNode() {
+		assertTrue(SparqlToXUtils.isBlankNode("_:B3521f6c9X2D5549X2D41d0X2Dbfc6X2D460393459d00"));
+		assertTrue(SparqlToXUtils.isBlankNode("nodeID://b10006"));
+		assertFalse(SparqlToXUtils.isBlankNode("<uri://semtk#51383adb-a352-4323-8e61-a2f436099740>"));
 	}
 	
 }
