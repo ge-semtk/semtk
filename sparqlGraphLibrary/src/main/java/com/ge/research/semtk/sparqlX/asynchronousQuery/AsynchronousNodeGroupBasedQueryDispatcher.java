@@ -194,16 +194,14 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	
 	
 	/**
-	 * the work failed. let the callers know via the status service. 
+	 * Update job tracker for failure
 	 * @param rationale
 	 */
 	protected void updateStatusToFailed(String rationale) {
-		try{
+		try {
 			this.jobTracker.setJobFailure(this.jobID, rationale != null ? rationale : "Exception with e.getMessage()==null");
-			LocalLogger.logToStdErr("wrote failure message to status service");
-		}
-		catch(Exception eee){
-			LocalLogger.logToStdErr("failed to write failure message to status service");
+		} catch (Exception eee) {
+			LocalLogger.logToStdErr("Error updating job tracker for failure");
 		}
 	}
 	
@@ -217,13 +215,12 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 	public void executePlainSparqlQuery(String sparqlQuery, SparqlResultTypes resType) throws Exception{
 		this.jobTracker.incrementPercentComplete(this.jobID, 1, 10);
 		try{
-
 			LocalLogger.logToStdErr("Job " + this.jobID + ": AsynchronousNodeGroupExecutor.executePlainSparqlQuery() start");
-			LocalLogger.logToStdErr("Execute SPARQL on graph " + this.querySei.getGraph() + ": " + sparqlQuery);
+			LocalLogger.logToStdErr("Execute SPARQL on " + this.querySei.getGetURL() + "\n" + sparqlQuery);
 			
-			// run the actual query and get a result. 
 			GeneralResultSet genResult = null;
-			
+
+			// execute the query
 			if(	resType == SparqlResultTypes.GRAPH_JSONLD ||
 					resType == SparqlResultTypes.N_TRIPLES ||
 					resType == SparqlResultTypes.CONFIRM ||
@@ -234,6 +231,7 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 				throw new Exception("Unsupported result type: " + resType.toString());
 			}
 			
+			// process the results
 			if (genResult.getSuccess()) {
 				
 				// uncache SEI if delete query
@@ -276,8 +274,9 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 					throw new Exception("Unknown query type: no results written: " + resType);
 				}
 				this.updateStatus(100);		// work's done
+
 			} else {
-				this.updateStatusToFailed("Query client returned error to dispatch client: \n" + genResult.getRationaleAsString("\n"));
+				this.updateStatusToFailed("Error executing SPARQL query:\n" + genResult.getRationaleAsString("\n"));
 			}
 			
 			LocalLogger.logToStdErr("Job " + this.jobID + ": AsynchronousNodeGroupExecutor.executePlainSparqlQuery() end");
