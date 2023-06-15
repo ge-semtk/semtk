@@ -293,7 +293,7 @@ define([	// properly require.config'ed
                 IIDXHelper.appendSpace(td);
 
                 // clear
-                var but = IIDXHelper.createButton("Clear", this.clearNetwork.bind(this));
+                var but = IIDXHelper.createButton("Clear", function () {this.clearNetwork();}.bind(this));
                 td.appendChild(but);
             },
 
