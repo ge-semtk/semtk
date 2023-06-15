@@ -2372,7 +2372,7 @@
 			
 			var downloadStr = "";
 			var downloadType = "";
-			var triplesArr = null;
+			var triples = null;
 			
 			if (res.isJsonLdResults()) {
 				var rawJsonArr = res.getGraphResultsJsonArr();
@@ -2394,7 +2394,7 @@
 	            downloadType = "text/plain;charset=utf8";
 	            
 	        } else {
-				div.innerHTML =  "<b>Error:</b> Results returned from service are not JSON-LD";
+				div.innerHTML =  "<b>Error:</b> Results returned from service are not JSON-LD or N-triples";
                 return;
 			}
 
@@ -2490,15 +2490,47 @@
             // add data
             if (res.isJsonLdResults()) {
 	            var jsonLd = res.getGraphResultsJsonArr(true, true, true);
-				
 				addDataToNetwork(network, jsonLd.slice(0, RESULTS_MAX_ROWS), nodeDict, edgeList);
-				
 			} else if (res.isNtriplesResults()) {
-				
-				addDataToNetwork(network, triples.slice(0, RESULTS_MAX_ROWS), nodeDict, edgeList);
+				truncatedTriples = triples.slice(0, RESULTS_MAX_ROWS);
+				if(truncatedTriples.length < triples.length){				// if triples were in fact truncated
+					truncatedTriples = removeTypeless(truncatedTriples);	// don't add any nodes without types
+				}
+				addDataToNetwork(network, truncatedTriples, nodeDict, edgeList);
         	}
         });
     };
+    
+    // for a given set of triples, remove any whose subject or object does not have a type
+    var removeTypeless = function(triples){
+		var typedUris = [];
+		var ret = [];
+		var s, p, o = undefined;
+		require(['sparqlgraph/js/visjshelper'], function(VisJsHelper) {
+			// pass 1: get a list of which URIs have types
+			for (var triple of triples) {
+				s = triple[0];
+				p = triple[1];
+				if (VisJsHelper.isTypePredicate(p)) {
+					typedUris.push(s);	// if the predicate is "type", add the subject to the list
+				}
+			}
+			// pass 2: only keep the triple if any subject/object URIs had types
+			for (var triple of triples) {
+				[s, p, o] = triple;
+				if (VisJsHelper.isTypePredicate(p)) {
+					ret.push(triple);
+				} else if (typedUris.includes(s)) {
+					if (o.startsWith("<") && !typedUris.includes(o)) {
+						// it's a URI but type not present - don't add it
+					} else {
+						ret.push(triple);
+					}
+				}
+			}
+		});
+		return ret;
+	}
     
     // scroll into view if the top isn't already showing
     var myScrollIntoViewIfNeeded = function (el) {
@@ -2519,8 +2551,7 @@
 		var diff = window.pageYOffset - posY;
 		diff = Math.max(-CHUNK, -diff);
 		diff = Math.min(CHUNK, diff);
-		
-		console.log("posY: " + posY + " scrollY: " + window.pageYOffset + " diff: " + diff);
+
 		var oldScrollY = window.pageYOffset;
 		window.scrollBy(0, diff);
 		
@@ -2756,7 +2787,7 @@
                 ModalIidx.alert("NodeGroup Exec Service Failure", "<b>Error:</b> Results returned from service are not JSON-LD or N_TRIPLES");
                 return;
             }
-
+            
             
             network.body.data.nodes.update(Object.values(nodeDict));
             network.body.data.edges.update(edgeList);

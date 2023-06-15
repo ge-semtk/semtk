@@ -300,7 +300,7 @@ define([	// properly require.config'ed
 			oType = "uri";         // untyped URI
 			
 			if (optSkipSAClassFlag) {
-				if (p.toLowerCase().endsWith("#type") && o.toLowerCase().endsWith("owl#class")) {
+				if (this.isTypePredicate(p) && o.toLowerCase().endsWith("owl#class")) {
 					return;
 				}
 			}
@@ -329,7 +329,7 @@ define([	// properly require.config'ed
 			nodeDict[s][uri_field] = formatUri(s);
 		}
 			
-		if (p.endsWith("#type")) {
+		if (this.isTypePredicate(p)) {
 			
 			// node type
 			longType = o;
@@ -449,6 +449,14 @@ define([	// properly require.config'ed
 		// .group holds the Uri
 		var g = n.body.data.nodes._data[nodeId].group;
 		return (g == VisJsHelper.BLANK_NODE || g == VisJsHelper.DATA_NODE) ? null : g;
+    };
+
+    /**
+	 * Determines if a string is a type predicate.  May include angled brackets or not. 
+	 * (e.g. <http://www.w3.org/1999/02/22-rdf-syntax-ns#type>)
+	 */
+    VisJsHelper.isTypePredicate = function(p) {
+        return p.toLowerCase().endsWith("#type") || p.toLowerCase().endsWith("#type>");
     };
    
     /*
