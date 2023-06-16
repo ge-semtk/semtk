@@ -157,7 +157,14 @@ define([	// properly require.config'ed
                         }
                     },
                     manipulation: {
-                        enabled: false,   // turn off built-in editing
+                        enabled: true,   
+                        initiallyActive: false,
+                        addNode: false,
+                        addEdge: false,
+                        editEdge: false,
+                        
+                        deleteNode: true,
+                        deleteEdge: true
                     }
                 };
 
