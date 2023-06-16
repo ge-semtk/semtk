@@ -105,7 +105,7 @@ public class StitchingThread extends Thread {
 	private void stitch(Table tab, StitchingStep step) throws Exception {
 		
 		if (this.stitched == null) {
-			this.stitched = tab;
+			this.stitched = tab.copy();
 			
 		} else {
 			String [] keyColumns = step.getKeyColumns();
