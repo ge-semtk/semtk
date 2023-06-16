@@ -129,60 +129,54 @@ public class StitchingThread extends Thread {
 				}
 			}
 			
-			// build performance-enhancing colMap of tab col's positions in newly expanded this.stitched
-			Hashtable<String, Integer> colMap = new Hashtable<String,Integer>();
-			for (String col : tab.getColumnNames()) {
-				colMap.put(col, this.stitched.getColumnIndex(col));
-			}
-			
 			ArrayList<ArrayList<String>> newRows = new ArrayList<ArrayList<String>>();
 			
 			// for each stitched row : look for matches in tab
 			for (int stitchRow=0; stitchRow < this.stitched.getNumRows(); stitchRow++) {
 				// make a mini-table of matching rows from tab
-				Table match = tab.getSubsetWhereMatches(keyColumns[0], this.stitched.getCell(stitchRow,  keyColumns[0]));
+				Table tabMatch = tab.getSubsetWhereMatches(keyColumns[0], this.stitched.getCell(stitchRow,  keyColumns[0]));
 				for (int i=1; i < keyColumns.length; i++) {
-					match = match.getSubsetWhereMatches(keyColumns[i], this.stitched.getCell(stitchRow,  keyColumns[i]));
+					tabMatch = tabMatch.getSubsetWhereMatches(keyColumns[i], this.stitched.getCell(stitchRow,  keyColumns[i]));
 				}
 				
-				if (match.getNumRows() > 0) {
+				if (tabMatch.getNumRows() > 0) {
 					// sub in values from first matching row
-					for (int matchCol=0; matchCol < match.getNumColumns(); matchCol++) {
-						this.stitched.setCell(stitchRow, colMap.get(match.getColumnNames()[matchCol]), match.getCell(0,matchCol));
+					for (String colName : tabMatch.getColumnNames()) {
+						this.stitched.setCell(stitchRow, colName, tabMatch.getCell(0, colName));
 					}
 					
 					// make new rows for rest of matching rows
-					for (int matchRow=1; matchRow < match.getNumRows(); matchRow++) {
-						ArrayList<String> newRow = new ArrayList<String>();
+					for (int tabMatchRow=1; tabMatchRow < tabMatch.getNumRows(); tabMatchRow++) {
+						ArrayList<String> newStitchedRow = new ArrayList<String>();
 						// copy target row in stitched
-						newRow.addAll(this.stitched.getRow(stitchRow));
+						newStitchedRow.addAll(this.stitched.getRow(stitchRow));
 						// substitute in all values from matched row
-						for (int matchCol=0; matchCol < match.getNumColumns(); matchCol++) {
-							newRow.set(colMap.get(match.getColumnNames()[matchCol]), match.getCell(matchRow, matchCol));
+						for (String colName : tabMatch.getColumnNames()) {
+							newStitchedRow.set(this.stitched.getColumnIndex(colName), tabMatch.getCell(tabMatchRow, colName));
 						}
-						newRows.add(newRow);
+						newRows.add(newStitchedRow);
 					}
 				}
 			}
 			
-			// for each  tab row  :  append it to stitched if it hasn't matched anything
+			// for each  tab row  : if it wasn't stitched,  append it instead
 			for (int tabRow=0; tabRow < tab.getNumRows(); tabRow++) {
 				// make a mini-table of matching rows from stitched
-				Table match = this.stitched.getSubsetWhereMatches(keyColumns[0], tab.getCell(tabRow, keyColumns[0]));
+				Table stitchMatch = this.stitched.getSubsetWhereMatches(keyColumns[0], tab.getCell(tabRow, keyColumns[0]));
 				for (int i=1; i < keyColumns.length; i++) {
-					match = match.getSubsetWhereMatches(keyColumns[i], tab.getCell(tabRow,  keyColumns[i]));
+					stitchMatch = stitchMatch.getSubsetWhereMatches(keyColumns[i], tab.getCell(tabRow,  keyColumns[i]));
 				}
-				// if tab didn't match anything in stitched, copy it over
-				if (match.getNumRows() == 0) {
-					ArrayList<String> newRow = new ArrayList<String>();
+				// if tab row doesn't match anything in stitched, copy it over
+				if (stitchMatch.getNumRows() == 0) {
+					ArrayList<String> newStitchedRow = new ArrayList<String>();
 					for (int i=0; i < this.stitched.getNumColumns(); i++) {
-						newRow.add("");
+						newStitchedRow.add("");
 					}
 					// substitute in all values unmatched row in tab
-					for (int tabCol=0; tabCol < tab.getNumColumns(); tabCol++) {
-						newRow.set(colMap.get(tab.getColumnNames()[tabCol]), tab.getCell(tabRow, tabCol));
+					for (String colName : tab.getColumnNames()) {
+						newStitchedRow.set(this.stitched.getColumnIndex(colName), tab.getCell(tabRow, colName));
 					}
-					newRows.add(newRow);
+					newRows.add(newStitchedRow);
 				}
 			}
 			
