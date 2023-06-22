@@ -181,8 +181,8 @@ define([	// properly require.config'ed   bootstrap-modal
                 var ngStatusSuccessCallback = function() {
 
                     // callback for results service
-                    var ngResultsSuccessCallback = function (jsonLdCallback, percentCallback, results) {
-                        jsonLdCallback(results);
+                    var ngResultsSuccessCallback = function (jsonBlobCallback, percentCallback, results) {
+                        jsonBlobCallback(results);
                     };
 
                     // send json results to jsonLdCallback
