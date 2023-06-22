@@ -202,7 +202,7 @@ define([	// properly require.config'ed
                         if (typeof objectId !== "string") {
                             throw "VisJsHelper can not determine object of predicate " + predName + " found " + o;
                         }
-                        // add edge to a jsonLd object
+                        // add edge
                         //console.log(j["@id"]+"-"+predName+"-"+objectId);
 
                         edgeList.push({

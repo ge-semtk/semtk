@@ -137,16 +137,12 @@ define([	// properly require.config'ed   bootstrap-modal
 
 
         /*
-         * just like buildCsvUrlSampleJsonCallback except there is no JsonLD version of buildCsvUrlSampleJsonCallback(),
-         *   so you may need to use this.  Be careful that the query has a LIMIT so the browser doesn't have memory issues.
-         * EXCEPT:
-         *    no max rows or csv URL - The results service can't safely split up json the way it does tables
-         *    jsonLdCallback(jsonLdRes)
-         *
-         *    THIS ONE MAY CRASH YOUR BROWSER WITH MEMORY OVERFLOW
-         *     make sure your query has a LIMIT
+         * Similar to buildCsvUrlSampleJsonCallback except for JSON-LD or N-triples. 
+		 * Note:
+         *    - no max rows or csv URL - The results service can't safely split up json the way it does tables
+         *    - only use queries with LIMIT, to avoid memory overflow issues
          */
-        MsiClientNodeGroupExec.buildJsonLdCallback = function(jsonLdCallback, failureCallback, percentCallback, checkForCancelCallback, statusUrl, resultUrl) {
+        MsiClientNodeGroupExec.buildJsonLdOrTriplesCallback = function(jsonLdOrTriplesCallback, failureCallback, percentCallback, checkForCancelCallback, statusUrl, resultUrl) {
 
             // callback for the nodegroup execution service to send jobId
             var ngExecJobIdCallback = function(jobId) {
@@ -155,13 +151,13 @@ define([	// properly require.config'ed   bootstrap-modal
                 var ngStatusSuccessCallback = function() {
 
                     // callback for results service
-                    var ngResultsSuccessCallback = function (jsonLdCallback, percentCallback, results) {
-                        jsonLdCallback(results);
+                    var ngResultsSuccessCallback = function (jsonLdOrTriplesCallback, percentCallback, results) {
+                        jsonLdOrTriplesCallback(results);
                     };
 
-                    // send json results to jsonLdCallback
+                    // send json-ld or triple results to jsonLdOrTriplesCallback
                     var resultsClient = new MsiClientResults(resultUrl, jobId, failureCallback);
-                    resultsClient.execGetJsonLdRes( ngResultsSuccessCallback.bind(this, jsonLdCallback, percentCallback) );
+                    resultsClient.execGetJsonLdOrTriplesRes( ngResultsSuccessCallback.bind(this, jsonLdOrTriplesCallback, percentCallback) );
 
                 }.bind(this);
 

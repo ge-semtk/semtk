@@ -1028,7 +1028,7 @@ define([	// properly require.config'ed
                         if (! nodegroup) throw new Error("Report section['graph'] is missing field 'nodegroup'");
 
                         var ngExecClient = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url);
-                        var graphCallback = MsiClientNodeGroupExec.buildJsonLdCallback(this.graphGetGraphCallback.bind(this, ngDiv),
+                        var graphCallback = MsiClientNodeGroupExec.buildJsonLdOrTriplesCallback(this.graphGetGraphCallback.bind(this, ngDiv),
                                                                                          this.failureCallback.bind(this, ngDiv),
                                                                                          this.statusCallback.bind(this, ngDiv),
                                                                                          this.checkForCancelCallback.bind(this, ngDiv),
