@@ -975,44 +975,42 @@ define([	// properly require.config'ed
         return anchor;
     };
 
-    // Build a standard header for SPARQLgraph results
+    // Build a header for SPARQLgraph results
     //
-    // header - html link(s) results is standard.  This goes top left
-    // menuLabelList and menuCallbackList - standard menu.  This goes top right
-    // optFormDom - additional controls to be centered
-    IIDXHelper.buildResultsHeaderTable = function (header, menuLabelList, menuCallbackList, optFormDom) {
-        var menuDiv = IIDXHelper.buildMenuDiv(menuLabelList, menuCallbackList);
+    // controlsDom - items to control the results display (top left)
+    // moreHtmlOrDom - additional information as HTML or DOM (e.g. "only graphing first X points")
+    // menuLabelList and menuCallbackList - dropdown menu (e.g. to download results)  (top right)
+    IIDXHelper.buildResultsHeaderTable = function (controlsDom, moreHtmlOrDom, menuLabelList, menuCallbackList) {
 
-        // header Table
         var headerTable = document.createElement("table");
         headerTable.width = "100%";
-
         var tr = document.createElement("tr");
         var td;
 
-        // header cell
-        td = document.createElement("td");
-        td.align="left";
-
-        // header can be html or dom
-        if (typeof(header) == "string") {
-            td.innerHTML = header;
-        } else {
-            td.appendChild(header);
-        }
-        tr.appendChild(td);
-
-        // chooser dom
-        if (optFormDom) {
+        // add controls
+        if (controlsDom) {
             td = document.createElement("td");
-            td.appendChild(optFormDom);
+            td.appendChild(controlsDom);
             tr.appendChild(td);
         }
-
-        // menu cell
+        
+        // add middle element
         td = document.createElement("td");
-        td.appendChild(menuDiv);
+        td.align="right";
+        // header can be html or dom
+        if (typeof(moreHtmlOrDom) == "string") {
+            td.innerHTML = moreHtmlOrDom;
+        } else {
+            td.appendChild(moreHtmlOrDom);
+        }
         tr.appendChild(td);
+
+        // add menu
+        td = document.createElement("td");
+        td.appendChild(IIDXHelper.buildMenuDiv(menuLabelList, menuCallbackList));
+        tr.appendChild(td);
+        
+        // done
         headerTable.appendChild(tr);
         return headerTable;
     };

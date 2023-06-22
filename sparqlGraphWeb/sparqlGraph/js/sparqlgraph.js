@@ -16,8 +16,6 @@
  ** limitations under the License.
  */
 
-
-
     var gOTree = null;
     var gOInfo = null;
     var gConn = null;
@@ -40,7 +38,6 @@
     var gMappingTab = null;
     var gUploadTab = null;
     var gReady = false;
-
 	
     var gNodeGroupName = "";          // set in nodeGroupChanged.  Read anywhere
     var gNodeGroupChangedFlag = false;  // set in nodeGroupChanged.  Read anywhere
@@ -60,13 +57,11 @@
     // READY FUNCTION
     $('document').ready(function(){
 		setupTabs();
-		
+
     	setTabButton("upload-tab-but", true);
     	setTabButton("mapping-tab-but", true);
         setTabButton("explore-tab-but", true);
         setTabButton("report-tab-but", true);
-
-    	// checkBrowser();
 
     	initDynatree();
 
@@ -78,7 +73,6 @@
                   'sparqlgraph/js/modalstoredialog',
                   'sparqlgraph/js/msiclientnodegroupservice',
                   'sparqlgraph/js/msiclientnodegroupstore',
-                  'sparqlgraph/js/msiclientquery',
                   'sparqlgraph/js/nodegrouprenderer',
                   'sparqlgraph/js/reporttab',
                   'sparqlgraph/js/undomanager',
@@ -89,7 +83,7 @@
 
 	              'local/sparqlgraphlocal'
                 ],
-                function (ExploreTab, MappingTab, ModalIidx, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupService, MsiClientNodeGroupStore, MsiClientQuery, NodegroupRenderer, ReportTab, UndoManager, UploadTab) {
+                function (ExploreTab, MappingTab, ModalIidx, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupService, MsiClientNodeGroupStore, NodegroupRenderer, ReportTab, UndoManager, UploadTab) {
 
             gUndoManager = new UndoManager();
 
@@ -150,7 +144,6 @@
                                     user || "",
                                     function(u) {localStorage.setItem("SPARQLgraph_user", u);});
                                     
-
 	        // load last connection
 	        var conn = gLoadDialog.getLastConnectionInvisibly();
 	        
@@ -217,15 +210,13 @@
             gStoreDialog = new ModalStoreDialog(user || "",
                                                      g.service.nodeGroupStore.url);
 
-
             resizeWindow();
 	        window.onresize = resizeWindow;
 
             authenticate(document.getElementById("nav-but-span"));
 
             // SINCE CODE PRE-DATES PROPER USE OF REQUIRE.JS THROUGHOUT...
-	    	// gReady is at the end of the ready function
-	    	//        and tells us everything is loaded.
+	    	// gReady is at the end of the ready function and tells us everything is loaded.
 	   	    gReady = true;
 	   	    logEvent("SG Page Load");
 
@@ -244,13 +235,11 @@
 														checkServices("Some services did not respond at start-up. Retrying...<hr>"); 
 												    }
 												 });
-
 		});
     });
 
 	/* 
 		URL used to launch SPARQLgraph contains a nodegroupId to run now
-	  
 		@param {SparqlConnection} conn -  the connection from last session OR the connection URL parameter OR null
 		@param {str} connStr - conn URL param, or falsey
 		@param {str} nodegroupId - nodegroup Id
@@ -266,18 +255,14 @@
 	};
 	
 	/* 
-		Now that correct or no override conn is loaded,
-		continue running nodegroupId at startup
-
+		Now that correct or no override conn is loaded, continue running nodegroupId at startup
 		@param {str} nodegroupId - nodegroupId
 		@param {str} constraintsStr - constraints string, or falsey
 		@param {boolean} runFlag = should the nodegroup be run
-
 	*/
 	var runQueryFromUrl1= function(nodegroupId, constraintsStr, runFlag) {
 		 require(	[ 'sparqlgraph/js/msiclientnodegroupstore',
 					], function (MsiClientNodeGroupStore) {
-						  
 			var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
 	        mq.getStoredItemByIdToStr(nodegroupId, MsiClientNodeGroupStore.TYPE_NODEGROUP, runQueryFromUrl2.bind(this, nodegroupId, constraintsStr, runFlag));
 		});
@@ -285,12 +270,10 @@
 	
 	/* 
 		Load nodegroup, keeping current connection if any, and run
-
 		@param {str} constraintsStr - constraints string, or falsey
 		@param {str} nodegroupId - nodegroupId
 		@param {boolean} runFlag = should the nodegroup be run
 		@param {str} jsonStr - the nodegroup json as str
-		
 	*/
 	var runQueryFromUrl2= function(nodegroupId, constraintsStr, runFlag, jsonStr) {
 		
@@ -313,7 +296,6 @@
 	
 	/* 
 		URL used to launch SPARQLgraph contains a nodegroupId to run now
-	  
 		@param {SparqlConnection} conn -  the connection from last session OR the connection URL parameter OR null
 		@param {str} connStr - conn URL param, or falsey
 		@param {str} reportId - reportId Id
@@ -328,17 +310,13 @@
 	};
 	
 	/* 
-		Now that correct or no override conn is loaded,
-		continue running reportId at startup
-
+		Now that correct or no override conn is loaded, continue running reportId at startup
 		@param {str} reportId - nodegroupId
 		@param {boolean} runFlag = should the nodegroup be run
-
 	*/
 	var runReportFromUrl1= function(reportId, runFlag) {
 		 require(	[ 'sparqlgraph/js/msiclientnodegroupstore',
 					], function (MsiClientNodeGroupStore) {
-						  
 			var mq = new MsiClientNodeGroupStore(g.service.nodeGroupStore.url);
 	        mq.getStoredItemByIdToStr(reportId, MsiClientNodeGroupStore.TYPE_REPORT, runReportFromUrl2.bind(this, reportId, runFlag));
 		});
@@ -346,12 +324,10 @@
 	
 	/* 
 		Load report, keeping current connection if any, and run
-
 		@param {str} constraintsStr - constraints string, or falsey
 		@param {str} nodegroupId - nodegroupId
 		@param {boolean} runFlag = should the nodegroup be run
 		@param {str} jsonStr - the nodegroup json as str
-		
 	*/
 	var runReportFromUrl2= function(reportId, runFlag, jsonStr) {
 		//$("#tabs").tabs();  // make sure they're initialized
@@ -363,9 +339,7 @@
 		if (runFlag) {
 			gReportTab.drawReport(JSON.parse(jsonStr));
 		}
-
 	};
-	
 	
 	var getUrlParameter = function getUrlParameter(sParam) {
 	    var sPageURL = window.location.search.substring(1);
@@ -390,14 +364,6 @@
                 doRedo();
             }
         }
-    };
-
-    var checkBrowser = function() {
-     	// Detect Browser
-    	//var isFirefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-        //if (! isFirefox) {
-        //	logAndAlert("This application uses right-clicks, which may be blocked by this browser.<br>Firefox is recommended.")
-        //}
     };
 
     /*
@@ -456,9 +422,7 @@
         else{
             // not found
             logAndAlert("Only classes can be dropped on the graph.");
-
         }
-
     };
 
     var findAllPathsCallback = function(addClassStr, simpleRes) {
@@ -466,7 +430,6 @@
         var pathWarnings = simpleRes.getSimpleResultField("pathWarnings");
 
         if (pathListJson.length == 0) {
-
             gNodeGroup.addNode(addClassStr, gOInfo);
             saveUndoState();
             nodeGroupChanged(true);
@@ -523,6 +486,7 @@
             }
         }
     }
+    
     /**
      * Add a node via path from anchorSNode
      * If there is no anchorSNode then just add path.startClass
@@ -532,7 +496,6 @@
     	var path = val[0];
     	var anchorNode = val[1];
     	var singleLoopFlag = val[2];
-
 
     	if (anchorNode == null) {
     		gNodeGroup.addNode(path.getStartClassName(), gOInfo);
@@ -565,8 +528,6 @@
         require([ 'sparqlgraph/dynatree-1.2.5/jquery.dynatree',
                   'sparqlgraph/js/ontologytree',
 	            ], function () {
-
-
 
             // Attach the dynatree widget to an existing <div id="tree"> element
             // and pass the tree options as an argument to the dynatree() function:
@@ -604,12 +565,9 @@
                     }
                 },
 
-
                 persist: false,    // true causes a cookie error with large trees
             });
-
             gOTree = new OntologyTree($("#treeDiv").dynatree("getTree"));
-
         });
   	};
 
@@ -644,12 +602,7 @@
 
     	if (subClassUris.length == 1) {
     		return callback(classUri);
-
-    	} else {
-
     	}
-
-
     };
 	
 	var getTemplateDialogCallback =function (classUri, sgjsonJson) {
@@ -665,15 +618,12 @@
 				});
 	};
 	
-	
     // application-specific property editing
     var launchPropertyItemDialog = function (propItem, snodeID) {
         checkQueryTextUnsavedThen(launchPropertyItemDialog1.bind(this, propItem, snodeID));
     };
 
     var launchPropertyItemDialog1 = function (propItem, snodeID) {
-
-
     	require([ 'sparqlgraph/js/modaliidx',
                   'sparqlgraph/js/modalitemdialog',
                   'sparqlgraph/js/modalinvaliditemdialog',
@@ -739,7 +689,6 @@
                         dialog.show();
                     }
 
-
                 } else {
                     raisePropItemDialog();
                 }
@@ -761,9 +710,8 @@
             var oClass = gOInfo.getClass(snode.getURI());
             var oProp = oClass.getProperty(nItem.getURI());
             if (oProp != null) {
-                require(['sparqlgraph/js/modaliidx',
-                         'sparqlgraph/js/msiclientnodegroupservice'],
-                         function (ModalIidx, MsiClientNodeGroupService) {
+                require(['sparqlgraph/js/modaliidx'],
+                         function (ModalIidx) {
 					var oRange = oProp.getRange(oClass, gOInfo);
                     var correctRange = oRange.getDisplayString(false);
                     var correctRangeAbbrev = oRange.getDisplayString(true);
@@ -789,7 +737,6 @@
                                                             );
                     dialog.show();
                 });
-
             }
         } else {
             launchLinkBuilder2(snode, nItem);
@@ -884,9 +831,6 @@
 	var linkEditorCallback = function(snode, nItem, targetSNode, data, optionalMinusVal, qualifierVal, union, unionReverse, deleteMarkerVal, deleteFlag) {
         require([ 'sparqlgraph/js/modallinkdialog',
                          ], function (ModalLinkDialog) {
-
-
-
             // optionalFlag
     		nItem.setOptionalMinus(targetSNode, optionalMinusVal);
             nItem.setQualifier(targetSNode, qualifierVal);
@@ -900,7 +844,6 @@
             } else {
                 gNodeGroup.addToUnion(union, snode, nItem, targetSNode, unionReverse);
             }
-
 
     		// deleteFlag
     		if (deleteFlag) {
@@ -922,10 +865,9 @@
 
 
     var launchSNodeMenuDialog1 = function (snodeItem) {
-        require([ 'sparqlgraph/js/modalitemdialog',
-                  'sparqlgraph/js/modalinvaliditemdialog',
+        require([ 'sparqlgraph/js/modalinvaliditemdialog',
                   'sparqlgraph/js/msiclientnodegroupservice',
-              ], function (ModalItemDialog, ModalInvalidItemDialog, MsiClientNodeGroupService) {
+              ], function (ModalInvalidItemDialog, MsiClientNodeGroupService) {
 
             	// Changing a node's type uses the functionality built for validating an invalid node type
                 var ngClient = new MsiClientNodeGroupService(g.service.nodeGroup.url);
@@ -1089,8 +1031,6 @@
         require([ 'sparqlgraph/js/modalitemdialog',
                 ], function (ModalItemDialog) {
 
-
-
             // update the binding or sparqlID based on varName and returnFalg
             if (propItem.getSparqlID() == "") {
                 gNodeGroup.changeSparqlID(propItem, varName);
@@ -1120,7 +1060,6 @@
                 gNodeGroup.addToUnion(union, gNodeGroup.getPropertyItemParentSNode(propItem), propItem);
             }
 
-
             propItem.setIsRuntimeConstrained(rtConstrainedFlag);
             propItem.setConstraints(constraintStr);
             propItem.setIsMarkedForDeletion(delMarker);
@@ -1137,7 +1076,6 @@
 
             // Note: ModalItemDialog validates that sparqlID is legal
 
-
             // update the binding or sparqlID based on varName and returnFalg
             if (varName == snodeItem.getSparqlID()) {
                 // varname is sparqlID: shut off binding
@@ -1149,7 +1087,6 @@
                 snodeItem.setIsReturned(false);
             }
             gNodeGroup.setIsReturned(varName, returnFlag);
-
             snodeItem.setIsTypeReturned(returnTypeFlag);
 
             // union
@@ -1260,11 +1197,8 @@
     	var callback = (typeof optCallback === "undefined") ? function(){} : optCallback;
 
     	require(['sparqlgraph/js/msiclientontologyinfo',
-                 'sparqlgraph/js/msiclientquery',
-    	         'sparqlgraph/js/backcompatutils',
     	         'jquery',
-    	         'jsonp'], function(MsiClientOntologyInfo, MsiClientQuery, BCUtils) {
-
+    	         'jsonp'], function(MsiClientOntologyInfo) {
 
 	    	// Clean out existing GUI
 	    	clearEverything();
@@ -1325,7 +1259,6 @@
                  'sparqlgraph/js/msiclientnodegroupservice'],
     	            function (MsiClientNodeGroupExec, MsiClientNodeGroupService) {
 
-
             // translate itemOrId into item
             var item;
             if (typeof itemOrId == "string") {
@@ -1352,7 +1285,6 @@
             runNodegroup.setLimit(0);
             runNodegroup.setOffset(0);
 
-
             if (getQuerySource() == "DIRECT") {
                 // Generate sparql and run via query interface
 
@@ -1360,7 +1292,6 @@
                 var sparqlCallback = function (cn, resCallback, failCallback, sparql) {
                     var ssi = cn.getDefaultQueryInterface();
                     ssi.executeAndParseToSuccess(sparql, resCallback, failCallback );
-
                 }.bind(this, conn, msiOrQsResultCallback, failureCallback);
 
                 // generate sparql and send to sparqlCallback
@@ -1386,14 +1317,12 @@
 
                 statusCallback(1);
                 execClient.execAsyncDispatchFilterFromNodeGroup(runNodegroup, conn, runId, null, rtConstraints, jsonCallback, failureCallback);
-
             }
         });
     };
 
     var doQueryLoadFile = function (file) {
     	var r = new FileReader();
-
     	r.onload = function (name) {
                 checkAnythingUnsavedThen(doQueryLoadJsonStr.bind(this, r.result, name));
 
@@ -1492,7 +1421,6 @@
 
 			try {
 				var conn = sgJson.getSparqlConn();
-
 			} catch (e) {
 				logAndAlert("Error reading connection from JSON file.\n" + e);
 				console.log(e.stack);
@@ -1536,9 +1464,7 @@
             } else {
                 doQueryLoadFile2(sgJson, optNgName, optSkipValidation);
             }
-
 		});
-
     };
 
     /*
@@ -1546,9 +1472,8 @@
      * part of doQueryLoadJsonStr callback chain
      */
     var doQueryLoadConn = function(sgJson, conn, optNgName, optSkipValidation, optCallback) {
-    	require(['sparqlgraph/js/sparqlgraphjson',
-                 'sparqlgraph/js/modaliidx'],
-                function(SparqlGraphJson, ModalIidx) {
+    	require(['sparqlgraph/js/modaliidx'],
+                function(ModalIidx) {
 
             var existName = gLoadDialog.connectionIsKnown(conn, true);     // true: make this selected in cookies
 
@@ -1571,7 +1496,6 @@
                                             }
                                  ]
                                 );
-
             } else {
                 // conn already exists in cookies.  Use the name in cookies, so we don't get duplicates
                 conn.setName(existName);
@@ -1580,9 +1504,7 @@
                 // now load the right connection, then load the file
                 doLoadConnectionCall();
             }
-
 		});
-
     };
 
     /**
@@ -1676,7 +1598,6 @@
         }
 
         // do either way
-
         gNodeGroup = new SemanticNodeGroup();
         gNodeGroup.addJson(nodegroupJson);
         nodeGroupChanged(false, newNgName);
@@ -1751,7 +1672,7 @@
 				var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), deflateFlag, gPlotSpecsHandler);
 
 				// name for downloaded file
-				var filename;
+				var fileName;
 				if( gNodeGroupName ) {
 					if (!gNodeGroupChangedFlag) {
 						fileName = gNodeGroupName + ".json";
@@ -1789,7 +1710,6 @@
             sIcon.className = "icon-circle-blank";
             dIcon.className = "icon-circle";
         }
-
         guiUpdateGraphRunButton();
     };
 
@@ -1801,7 +1721,6 @@
    	};
 
    	var fileDrop = function (evt) {
-
    		if (! gReady) {
    			console.log("Ignoring file drop because I'm not ready.");
    			noOpHandler(evt);
@@ -1822,8 +1741,6 @@
         } else {
             logAndAlert("Can't handle drop of file with unrecognized filename extenstion:" + files[0].name)
         }
-
-
    	};
 
     var doTest = function () {
@@ -1847,7 +1764,6 @@
                 });
             }
         };
-
         getUser(gotUser.bind(this, buttonParent));
     };
 
@@ -1860,7 +1776,6 @@
                 console.log("/user did not return a name: \n" + x);
                 callback(null);
             }
-
         };
         var failure = function(x) {
             console.log("/user callback failed");
@@ -1875,7 +1790,6 @@
     	         function (ModalOrderByDialog) {
 
             var callback = function (x) {
-
                 gNodeGroup.setOrderBy(x);
                 saveUndoState();
                 nodeGroupChanged(true);
@@ -1892,7 +1806,6 @@
     	         function (ModalGroupByDialog) {
 
             var callback = function (x) {
-
                 gNodeGroup.setGroupBy(x);
                 saveUndoState();
                 nodeGroupChanged(true);
@@ -1907,9 +1820,8 @@
 	// ping all services
 	// send (possibly empty) list of down services to servicesPingCallback(list)
 	var checkServicesOnce = function (servicesPingCallback) {
-        require(['sparqlgraph/js/microserviceinterface',
-                 'sparqlgraph/js/modaliidx'],
-    	         function (MicroServiceInterface, ModalIidx) {
+        require(['sparqlgraph/js/microserviceinterface'],
+    	         function (MicroServiceInterface) {
 
 			var urlsDownList = [];
 			var urlsPinged = 0;
@@ -1937,7 +1849,6 @@
             }
         });
     };
-
 
     var gStopChecking = true;
 
@@ -1997,9 +1908,7 @@
             // launch service for each
             gStopChecking = false;
             setTimeout(checkAll, 1);   // make the first call async
-
         });
-
     };
 
     var doCancel = function() {
@@ -2083,9 +1992,7 @@
                 default:
                     throw new Error("Internal error: Unknown query type.");
 			}
-
     	});
-
     };
 
     var runQueryText = function () {
@@ -2139,7 +2046,6 @@
             } else {
                 client.execAsyncDispatchRawSparql(sparql, gConn, csvJsonCallback, asyncFailureCallback, "TABLE");
             }
-
     	});
     };
 
@@ -2163,15 +2069,9 @@
                     'sparqlgraph/js/modalplotsdialog',
                     'sparqlgraph/js/msiclientresults',
                     'sparqlgraph/js/msiclientnodegroupservice',
-                    'sparqlgraph/js/plotlyplotter',
                     'sparqlgraph/js/sparqlgraphjson'
                 ],
-                function(IIDXHelper, ModalIidx, ModalPlotsDialog, MsiClientResults, MsiClientNodeGroupService, PlotlyPlotter, SparqlGraphJson) {
-            var headerHtml = "";
-            if (tableResults.getRowCount() >= RESULTS_MAX_ROWS) {
-                headerHtml = "<span class='label label-warning'>Showing first " + RESULTS_MAX_ROWS.toString() + " rows. </span> ";
-            }
-            headerHtml += "Full csv: <a href='" + fullURL + "' download>"+ csvFilename + "</a>";
+                function(IIDXHelper, ModalIidx, ModalPlotsDialog, MsiClientResults, MsiClientNodeGroupService, SparqlGraphJson) {
 
             tableResults.setLocalUriFlag(! getQueryShowNamespace());
             tableResults.setEscapeHtmlFlag(true);
@@ -2182,8 +2082,6 @@
 
             var resultsPara = document.getElementById("resultsParagraph");
             var resultsDiv = document.createElement("div");
-
-
 
             var plotter = null;
             var select = undefined;
@@ -2244,18 +2142,24 @@
 
             var butPlots = IIDXHelper.createIconButton("icon-picture", plotsLauncher, ["btn"], undefined, "Plots");
 
-            // assemble the span
-            var span = document.createElement("span");
-            span.style.margin="2";
+            // assemble the controls (options for tables/plots)
+            var resultsControls = document.createElement("span");
+            resultsControls.style.margin="2";
             select.style.margin="0";
-            span.appendChild(select);
-            span.appendChild(document.createTextNode(" "));
-            span.appendChild(butPlots);
-            span.appendChild(document.createTextNode(" "));
-            span.appendChild(butColOrder);
+            resultsControls.appendChild(select);
+            resultsControls.appendChild(document.createTextNode(" "));
+            resultsControls.appendChild(butPlots);
+            resultsControls.appendChild(document.createTextNode(" "));
+            resultsControls.appendChild(butColOrder);
+
+			// create warning if needed
+            var warningHtml = "";
+            if (tableResults.getRowCount() >= RESULTS_MAX_ROWS) {
+                warningHtml = "<span class='label label-warning'>Showing first " + RESULTS_MAX_ROWS.toString() + " rows</span> ";
+            }
 
             // add header to results
-            var headerTable = IIDXHelper.buildResultsHeaderTable(headerHtml, ["Save table csv"], [tableResults.tableDownloadCsv.bind(tableResults)], span);
+            var headerTable = IIDXHelper.buildResultsHeaderTable(resultsControls, warningHtml, ["Download results as CSV"], [IIDXHelper.downloadUrl.bind(IIDXHelper, fullURL)]);
             resultsPara.innerHTML = "";
             resultsPara.appendChild(headerTable);
             resultsPara.appendChild(resultsDiv);
@@ -2309,6 +2213,7 @@
         });
     };
 
+	// TODO expect this code to be removed soon, not updating it
     var queryJsonLdCallback = function(jsonLdResults) {
         require(['sparqlgraph/js/iidxhelper'], function(IIDXHelper) {
 
@@ -2332,35 +2237,19 @@
     };
     
     var queryNtriplesCallback = function(triplesResults) {
-        require(['sparqlgraph/js/iidxhelper'], function(IIDXHelper) {
-
-            var anchor = IIDXHelper.buildAnchorWithCallback(    "result_ntriples.txt",
-                                                                function (res) {
-                                                                    var str = res.getNtriplesText();
-                                                                    IIDXHelper.downloadFile(str, "result_ntriples.txt",  "application/text");
-                                                                }.bind(this, triplesResults)
-                                                            );
-
-            var linkdom = document.createElement("span");
-            linkdom.innerHTML =  "Download json: ";
-            linkdom.appendChild(anchor);
-
-            setStatus("");
-            displayConstructResults(triplesResults, linkdom);
-
-            guiUnDisableAll();
-            guiResultsNonEmpty();
-        });
+		setStatus("");
+		displayConstructResults(triplesResults);
+		guiUnDisableAll();
+		guiResultsNonEmpty();
     };
 
     /**
-     * Put json-ld results into a visjs display
+     * Put construct results into a visjs display
      *
      * params:
-     *    res - json results
-     *    linkdom - standard SPARQLgraph link to download results
+     *    res - construct results
      */
-    var displayConstructResults = function (res, linkdom) {
+    var displayConstructResults = function (res) {
 		
         require(['sparqlgraph/js/iidxhelper',
                  'sparqlgraph/js/modaliidx',
@@ -2373,65 +2262,64 @@
 			var downloadStr = "";
 			var downloadType = "";
 			var triples = null;
+			var warningHtml = "";
 			
 			if (res.isJsonLdResults()) {
-				var rawJsonArr = res.getGraphResultsJsonArr();
+				throw new Error("Don't expect to hit this code, will be removed soon"); // TODO
+/*				var rawJsonArr = res.getGraphResultsJsonArr();
 				if (rawJsonArr.length >= RESULTS_MAX_ROWS) {
-	                div.innerHTML =  "<span class='label label-warning'>Graphing first " + RESULTS_MAX_ROWS.toString() + " data points. </span>";
+	                div.innerHTML =  "<span class='label label-warning'>Showing first " + RESULTS_MAX_ROWS.toString() + " data points. </span>";
 	            }
 	            
 	            downloadStr = JSON.stringify(rawJsonArr, null, 4);
 	            downloadFilename = "results.json";
-	            downloadType = "text/json;charset=utf8";
+	            downloadType = "text/json;charset=utf8";*/
 	            
 	        } else if (res.isNtriplesResults()) {
 				triples = res.getNtriplesArray();
 				if (triples.length >= RESULTS_MAX_ROWS) {
-	                div.innerHTML =  "<span class='label label-warning'>Graphing first " + RESULTS_MAX_ROWS.toString() + " data points. </span>";
+	                warningHtml = "<span class='label label-warning'>Showing first " + RESULTS_MAX_ROWS.toString() + " data points</span>";
 	            }
 		 		downloadStr = res.getNtriplesText();
 	            downloadFilename = "results_triples.txt";
 	            downloadType = "text/plain;charset=utf8";
 	            
 	        } else {
-				div.innerHTML =  "<b>Error:</b> Results returned from service are not JSON-LD or N-triples";
+				warningHtml =  "<b>Error:</b> Results returned from service are not JSON-LD or N-triples";
                 return;
 			}
 
-            // make a menu button bar
-            var editDom = document.createElement("span");
-            editDom.appendChild(document.createTextNode("Results: "));
+            // create menu button bar
+            var resultsControls = document.createElement("span");
             var removeButton = IIDXHelper.createIconButton("icon-trash", function(){}, ["btn","btn-danger"], undefined, "Remove", "Remove selected item(s) from this display" );
             removeButton.disabled = true;
-            editDom.appendChild(removeButton);
-            IIDXHelper.appendSpace(editDom);
-            
+            resultsControls.appendChild(removeButton);
+            IIDXHelper.appendSpace(resultsControls);
             var expandButton = IIDXHelper.createIconButton("icon-sitemap", function(){}, ["btn"], undefined, "Expand", "Add all connected instance data" );
             expandButton.disabled = true;
-            editDom.appendChild(expandButton);
-            IIDXHelper.appendSpace(editDom);
-       
+            resultsControls.appendChild(expandButton);
+            IIDXHelper.appendSpace(resultsControls);       
             var buildButton = IIDXHelper.createIconButton("icon-gears", function(){}, ["btn"], undefined, "Build", "Build a new nodegroup from selected item(s)" );
             buildButton.disabled = true;
-            editDom.appendChild(buildButton);
-
+            resultsControls.appendChild(buildButton);
 			// new feature section
 			var NG_BUTTON_FEATURE=false;
 			if (NG_BUTTON_FEATURE) {
 				for (var i=0; i < 5; i++) {
-					IIDXHelper.appendSpace(editDom);
+					IIDXHelper.appendSpace(resultsControls);
 				}
-				editDom.appendChild(document.createTextNode("Nodegroup: "));
+				resultsControls.appendChild(document.createTextNode("Nodegroup: "));
 	            var addToNgButton = IIDXHelper.createIconButton("icon-plus", function(){}, ["btn"], undefined, "Add", "Add to nodegroup" );
 	            addToNgButton.disabled = true;
-	            editDom.appendChild(addToNgButton);
+	            resultsControls.appendChild(addToNgButton);
 	        }
            	
+           	// create header
             var headerTable = IIDXHelper.buildResultsHeaderTable(
-                (downloadStr === "{}" || downloadStr === "") ? "No results returned" : linkdom,
-                [ "Save JSON" ] ,
-                [ IIDXHelper.downloadFile.bind(IIDXHelper, downloadStr, downloadFilename, downloadType) ],
-                editDom
+				resultsControls,
+                (downloadStr === "{}" || downloadStr === "") ? "No results returned" : warningHtml,
+                [ "Download results as triples" ],
+                [ IIDXHelper.downloadFile.bind(IIDXHelper, downloadStr, downloadFilename, downloadType) ]
             );
             div.appendChild(headerTable);
             var hr = document.createElement("hr");
@@ -2568,8 +2456,8 @@
     // update progress bar
     //
     var addDataToNetwork = function(network, jsonLdOrTriples, nodeDict, edgeList, optStart) {
-		require(['sparqlgraph/js/modaliidx', 'sparqlgraph/js/msiclientnodegroupservice', 'sparqlgraph/js/visjshelper'
-					    ], function(ModalIidx, MsiClientNodeGroupService, VisJsHelper) {
+		require(['sparqlgraph/js/modaliidx', 'sparqlgraph/js/visjshelper'
+					    ], function(ModalIidx, VisJsHelper) {
 			var CHUNK_SIZE = 400;
 			var thisStart = optStart || 0;
 			var nextStart = Math.min(jsonLdOrTriples.length, thisStart + CHUNK_SIZE);
@@ -2688,7 +2576,6 @@
 			var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, buildQueryFailure.bind(this));
             client.execBuildNodeGroup(gConn, nodesParam, edgesParam, constructBuildNodeGroupCallback1);
        });
-
     };
     
     var constructBuildNodeGroupCallback1 = function(sgjson) {
@@ -2781,13 +2668,11 @@
 						 function(){}]
 						 );
 				}
-				
 	            
 	        } else {
                 ModalIidx.alert("NodeGroup Exec Service Failure", "<b>Error:</b> Results returned from service are not JSON-LD or N_TRIPLES");
                 return;
             }
-            
             
             network.body.data.nodes.update(Object.values(nodeDict));
             network.body.data.edges.update(edgeList);
@@ -2821,9 +2706,7 @@
 
             var sgJson = new SparqlGraphJson(gConn, gNodeGroup, gMappingTab.getImportSpec(), true, gPlotSpecsHandler);
             gStoreDialog.launchStoreDialog(JSON.stringify(sgJson.toJson()), gNodeGroupName, doneCallback);
-
         });
-
   	};
 
   	var doLayout = function() {
@@ -2845,7 +2728,6 @@
 		// for sparqlgraph we always want raw HTML in the results.  No links or markup, etc.
 		return ret + SparqlServerResult.prototype.ESCAPE_HTML;
     };
-
 
     // returns "DIRECT", or "SERVICES"
     var getQuerySource = function () {
@@ -2956,7 +2838,6 @@
                 // put it back to the old value
                 document.getElementById("SGQueryLimit").value = gNodeGroup.getLimit().toString();
             });
-
     };
 
     var onchangePathFindingMode = function() {
@@ -2998,7 +2879,6 @@
             function() {
                 document.getElementById("SGQueryType").selectedIndex = gQueryTypeIndex;
             });
-
     };
 
     //
@@ -3144,7 +3024,6 @@
 			    	        ], function(MsiClientNodeGroupService) {
 
             logEvent("SG Build");
-            var sparql = "";
             var client = new MsiClientNodeGroupService(g.service.nodeGroup.url, buildQueryFailure.bind(this));
             switch (gNodeGroup.getQueryType()) {
             case SemanticNodeGroup.QT_DISTINCT:
@@ -3182,9 +3061,7 @@
         } else {
             guiQueryEmpty();
         }
-		
 		successCallback();
-
     };
 
     var buildQueryFailure = function (msgHtml, sparqlMsgOrCallback) {
@@ -3197,9 +3074,7 @@
     	         function (ModalIidx) {
 					ModalIidx.alert("Query Generation Failed", msgHtml, false, sparqlMsgOrCallback);
 				});
-
         }
-
         document.getElementById('queryText').value = "";
         guiQueryEmpty();
     };
@@ -3244,17 +3119,12 @@
      * top-level call back to execute raw SPARQL
      */
     var runQuery = function () {
-
     	var query = document.getElementById("queryText").value;
-
 		if (query.length < 1) {
 			logAndAlert("Can't run empty query.  Use 'build' button first.");
-
 		} else {
-
 			logEvent("SG Run Query", "sparql", query);
 			clearResults();
-
             if (getQuerySource() == "DIRECT") {
                 runQueryDirect(query);
             } else {
@@ -3268,32 +3138,27 @@
         setStatusProgressBar("running DIRECT query...", 50);
         guiDisableAll();
 
-        require(['sparqlgraph/js/sparqlserverinterface',
-                ], function(SparqlServerInterface) {
+		var failureCallback = function(html) {
+			logAndAlert(html);
+			setStatus("");
+			guiUnDisableAll();
+		}
 
-            var failureCallback = function (html) {
-                logAndAlert(html);
-                setStatus("");
-                guiUnDisableAll();
-            }
+		var successCallback = function(sparqlServerResult) {
+			logEvent("SG Display Query Results", "rows", sparqlServerResult.getRowCount());
 
-            var successCallback = function (sparqlServerResult) {
-                logEvent("SG Display Query Results", "rows", sparqlServerResult.getRowCount());
+			if (getQuerySource() == "DIRECT") {
+				sparqlServerResult.putSparqlResultsDatagridInDiv(document.getElementById("resultsParagraph"),
+					null,
+					getNamespaceFlag());
+			}
 
-                if (getQuerySource() == "DIRECT") {
-                    sparqlServerResult.putSparqlResultsDatagridInDiv(   document.getElementById("resultsParagraph"),
-                                                                        null,
-                                                                        getNamespaceFlag());
-                }
+			guiResultsNonEmpty();
+			setStatus("");
+			guiUnDisableAll();
 
-                guiResultsNonEmpty();
-                setStatus("");
-                guiUnDisableAll();
-
-            }
-
-            gConn.getDefaultQueryInterface().executeAndParseToSuccess(sparql, successCallback, failureCallback);
-        });
+		}
+		gConn.getDefaultQueryInterface().executeAndParseToSuccess(sparql, successCallback, failureCallback);
     };
 
 
@@ -3306,13 +3171,10 @@
 
 		if (results.isSuccess()) {
 			var res = results.getRsData(0,0);
-
 			gQueryResults = null;
 			guiResultsEmpty();
-
 			document.getElementById("resultsParagraph").innerHTML = 	'<div class="alert alert-info"> <strong>Query Response</strong><p>' + res + '</div>';
-		}
-		else {
+		} else {
 			logAndAlert(results.getStatusMessage());
 		}
 	};
@@ -3338,9 +3200,7 @@
     	document.getElementById("btnGraphClear").disabled = false;
     	document.getElementById("SGOrderBy").disabled = false;
         document.getElementById("SGGroupBy").disabled = false;
-
     };
-
 
     var giuGraphEmpty = function () {
         document.getElementById("btnExpandAll").disabled = true;
@@ -3393,7 +3253,6 @@
         for (var i = 0; i < buttons.length; i++) {
             if (buttons[i].id && buttons[i].id.length > 0) {
                 disableHash[buttons[i].id] = buttons[i].disabled;
-
                 buttons[i].disabled = (opposite.indexOf(buttons[i].id) == -1);
             }
         }
@@ -3444,7 +3303,6 @@
         nodeGroupChanged(false, "");
     	clearQuery();
     	giuGraphEmpty();
-
     };
 
     var clearMappingTab = function () {
@@ -3456,7 +3314,6 @@
     	clearNodeGroup();
     	guiTreeEmpty();  //guiTreeEmpty();
     	clearMappingTab();
-
     };
 
     var clearEverything = function () {
@@ -3499,7 +3356,7 @@
 		$("#tabs").tabs("option", "active", index); 
 	};
 		
-
+	// make tab appear selected/not
     var setTabButton = function(id, onTabFlag) {
         var but = this.document.getElementById(id);
         but.disabled = onTabFlag;
@@ -3512,6 +3369,7 @@
 
 	var tabSparqlGraphActivated = function() {
 		gCurrentTab = g.tab.query;
+		
         setTabButton("query-tab-but", true);
         setTabButton("explore-tab-but", false);
  		setTabButton("mapping-tab-but", false);
@@ -3520,8 +3378,6 @@
 
         gExploreTab.releaseFocus();
 	};
-
-
 
     var tabMappingActivated = function() {
 		gCurrentTab = g.tab.mapping;
@@ -3533,11 +3389,10 @@
         setTabButton("report-tab-but", false);
 
         gExploreTab.releaseFocus();
-
 		gMappingTab.updateNodegroup(gNodeGroup, gConn);
-
         resizeWindow();
 	};
+
     var tabExploreActivated = function() {
         gCurrentTab = g.tab.explore;
 
@@ -3564,7 +3419,6 @@
 		// make sure gMappingTab has the same nodegroup in it before passing to UploadTab
 		gMappingTab.updateNodegroup(gNodeGroup, gConn);
 		gUploadTab.setNodeGroup(gConn, gNodeGroup, gNodeGroupName, gOInfo, gMappingTab, gOInfoLoadTime);
-
 	};
 
     var tabReportActivated = function() {
@@ -3577,7 +3431,6 @@
         setTabButton("report-tab-but", true);
 
         gExploreTab.releaseFocus();
-
 	};
 
 
@@ -3622,6 +3475,7 @@
         document.getElementById("btnUndo").disabled = (gUndoManager.getUndoSize() < 1);
         document.getElementById("btnRedo").disabled = (gUndoManager.getRedoSize() < 1);
     }
+
     //
     // Build a callback which uses the status and results service to get to completion.
     //     callback parameter:  simpleResults with jobID
@@ -3629,7 +3483,6 @@
     // successCallback: called by resultsCall
     // resultsCall: a resultsClient function that takes a callback(successJson) as parameter
     //            e.g. MsiClientResults.prototype.execGetJsonBlobRes
-
     buildStatusResultsCallback = function(successCallback, resultsCall, MsiClientStatus, MsiClientResults, MsiResultSet, optLoPercent, optHiPercent) {
 
         var failureCallback = this.asyncFailureCallback.bind(this);
@@ -3664,8 +3517,6 @@
                 var statusClient = new MsiClientStatus(g.service.status.url, jobId, failureCallback);
                 statusClient.execAsyncWaitUntilDone(statusSuccessCallback, checkForCancelCallback, progressCallback);
             }
-
         };
-
         return simpleResCallback;
     };
