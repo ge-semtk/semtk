@@ -36,7 +36,6 @@ public class RestrictionChecker {
 	private OntologyInfo oInfo = null;
 	private Table cardinalityTable = null;
 	private JobTracker tracker = null;
-	private String jobId = null;
 	private int startPercent = 0;
 	private int endPercent = 100;
 	
@@ -46,14 +45,9 @@ public class RestrictionChecker {
 
 	/**
 	 * This class checks restrictions outside of query and ingestion process.
-	 * e.g. cardinality is either impossible (e.g. min) or too expensive (e.g. max) to check during ingestion
-	 *                     and meaningless during a SELECT
+	 * e.g. cardinality is impossible (e.g. min) or too expensive (e.g. max) to check during ingestion, and meaningless during a SELECT
 	 *                     
-	 * It may also re-run oinfo restrictions (more needed for SELECT and INSERT)
-	 * just to double-check nothing slipped by.
-	 * 
-	 * @param conn
-	 * @param oInfo
+	 * It may also re-run oinfo restrictions to confirm nothing missed during query/ingestion.
 	 */
 	public RestrictionChecker(SparqlConnection conn, OntologyInfo oInfo) throws Exception {
 		this(conn, oInfo, null, null, 0, 100);
@@ -80,14 +74,16 @@ public class RestrictionChecker {
 	}
 	
 	/**
-	 * Generate a table of cardinaltiy violations
-	 * @return
-	 * @throws Exception
+	 * Generate a table of cardinality violations
 	 */
 	public Table checkCardinality() throws Exception {
 		return this.checkCardinality(0);
 	}
 
+	/**
+	 * Generate a table of cardinality violations
+	 * @param maxRows maximum number of rows to return
+	 */
 	public Table checkCardinality(int maxRows) throws Exception {
 		int percent = this.startPercent;
 		
@@ -98,7 +94,6 @@ public class RestrictionChecker {
 		}
 		
 		this.queryCardinalityRestrictions();
-		
 		
 		HashSet<String> COUNT_FUNC = new HashSet<String>();
 		COUNT_FUNC.add("COUNT");
@@ -124,7 +119,7 @@ public class RestrictionChecker {
 			else if (this.isExact(restriction)) 
 				negOp = "!=";
 			else {
-				LocalLogger.logToStdOut("ModelRestrictions.java warning: model contains unrecognized cardinality restriction: " + restriction);
+				LocalLogger.logToStdOut("RestrictionChecker.java warning: model contains unrecognized cardinality restriction: " + restriction);
 				continue;
 			}
 				
@@ -144,6 +139,7 @@ public class RestrictionChecker {
 		return retTable;
 	}
 	
+	// determines whether given restriction text indicates max/min/exact restriction
 	private boolean isMax(String restriction) {
 		return restriction.equals("maxcardinality") || restriction.endsWith("maxqualifiedcardinality");
 	}
@@ -153,6 +149,7 @@ public class RestrictionChecker {
 	private boolean isExact(String restriction) {
 		return restriction.endsWith("cardinality") || restriction.endsWith("qualifiedcardinality");
 	}
+
 	/**
 	 * Populate cardinalityTable with all cardinality restrictions in the model connection
 	 * @throws Exception
@@ -165,10 +162,10 @@ public class RestrictionChecker {
 	
 	/**
 	 * Would n instances of property propUri satisfy all existing cardinality rules for classUris
-	 * @param classUris - array of one or more classes to which a particular instance belongs
-	 * @param propUri
-	 * @param n
-	 * @return
+	 * @param classUris array of one or more classes to which a particular instance belongs
+	 * @param propUri	the property
+	 * @param n			the number to check
+	 * @return			true or false
 	 * @throws Exception
 	 */
 	public boolean satisfiesCardinality(String[] classUris, String propUri, int n) throws Exception {
@@ -179,7 +176,6 @@ public class RestrictionChecker {
 		return true;
 	}
 
-		
 	public boolean satisfiesCardinality(String classUri, String propUri, int n) throws Exception {
 		if (this.cardinalityTable == null)
 			this.queryAndBuildCardinalityHashes();
@@ -199,10 +195,10 @@ public class RestrictionChecker {
 	}
 	
 	/**
-	 * Does a cardinality restriction apply
-	 * @param classUris - array of one or more classes to which a particular instance belongs
-	 * @param propUri
-	 * @return
+	 * Determines whether a cardinality restriction is present for a given class/property
+	 * @param classUris array of one or more classes to which a particular instance belongs
+	 * @param propUri	the property
+	 * @return			true or false
 	 * @throws Exception
 	 */
 	public boolean hasCardinalityRestriction(String[] classUris, String propUri) throws Exception {
@@ -217,13 +213,11 @@ public class RestrictionChecker {
 	public boolean hasCardinalityRestriction(String classUri, String propUri) throws Exception {
 		if (this.cardinalityTable == null)
 			this.queryAndBuildCardinalityHashes();
-		
 		String key = this.buildKey(classUri, propUri);
-		
 		return this.minHash.containsKey(key) || this.maxHash.containsKey(key) || this.exactHash.containsKey(key);
 	}
 	
-	
+	// populate maxHash, minHash, exactHash
 	private void queryAndBuildCardinalityHashes() throws Exception {
 		this.queryCardinalityRestrictions();
 		
@@ -232,9 +226,9 @@ public class RestrictionChecker {
 		
 			String className = this.cardinalityTable.getCell(i, 0);
 			String propName = this.cardinalityTable.getCell(i, 1);
-			String restriction = new OntologyName(this.cardinalityTable.getCell(i, 2).toLowerCase()).getLocalName();
-	
+			String restriction = new OntologyName(this.cardinalityTable.getCell(i, 2).toLowerCase()).getLocalName();	
 			int limit = this.cardinalityTable.getCellAsInt(i, 3);
+
 			HashSet<String> classNames = this.oInfo.getSubclassNames(className);
 			classNames.add(className);
 			
@@ -260,12 +254,13 @@ public class RestrictionChecker {
 						this.exactHash.put(key, limit);
 				}
 			} else {
-				LocalLogger.logToStdOut("ModelRestrictions.java warning: model contains unrecognized cardinality restriction: " + restriction);
+				LocalLogger.logToStdOut("RestrictionChecker.java warning: model contains unrecognized cardinality restriction: " + restriction);
 				continue;
 			}
 		}
 	}
 	
+	// generate a key to use in the hashes
 	private String buildKey(String className, String propName) {
 		return className + ":" + propName;
 	}
