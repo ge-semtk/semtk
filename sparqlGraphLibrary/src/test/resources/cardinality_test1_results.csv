@@ -3,6 +3,10 @@ http://Cardinality#Cardinal,http://Cardinality#atLeast1Data,mincardinality,1,htt
 http://Cardinality#Cardinal,http://Cardinality#atLeast1Data,mincardinality,1,http://Cardinality#sub0,0
 http://Cardinality#Cardinal,http://Cardinality#atLeast1Object,mincardinality,1,http://Cardinality#card0,0
 http://Cardinality#Cardinal,http://Cardinality#atLeast1Object,mincardinality,1,http://Cardinality#sub0,0
+http://Cardinality#Cardinal,http://Cardinality#atMost1Data,maxcardinality,1,http://Cardinality#sub2,2
+http://Cardinality#Cardinal,http://Cardinality#atMost1Data,maxcardinality,1,http://Cardinality#card2,2
+http://Cardinality#Cardinal,http://Cardinality#atMost1Object,maxcardinality,1,http://Cardinality#sub2,2
+http://Cardinality#Cardinal,http://Cardinality#atMost1Object,maxcardinality,1,http://Cardinality#card2,2
 http://Cardinality#Cardinal,http://Cardinality#exactly1Data,cardinality,1,http://Cardinality#sub2,2
 http://Cardinality#Cardinal,http://Cardinality#exactly1Data,cardinality,1,http://Cardinality#card2,2
 http://Cardinality#Cardinal,http://Cardinality#exactly1Data,cardinality,1,http://Cardinality#card0,0

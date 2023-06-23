@@ -36,8 +36,8 @@ public class RestrictionCheckerTest_IT {
 			assertFalse(checker.hasCardinalityRestriction(theClass, "http://Cardinality#anyObject"));
 			assertTrue(checker.hasCardinalityRestriction(theClass, "http://Cardinality#atLeast1Data"));
 			assertTrue(checker.hasCardinalityRestriction(theClass, "http://Cardinality#atLeast1Object"));
-			//assertTrue(checker.hasCardinalityRestriction(theClass, "http://Cardinality#atMost1Data")); 	// TODO test fails, need to correct the model
-			//assertTrue(checker.hasCardinalityRestriction(theClass, "http://Cardinality#atMost1Object"));	// TODO test fails, need to correct the model
+			assertTrue(checker.hasCardinalityRestriction(theClass, "http://Cardinality#atMost1Data"));
+			assertTrue(checker.hasCardinalityRestriction(theClass, "http://Cardinality#atMost1Object"));
 			assertTrue(checker.hasCardinalityRestriction(theClass, "http://Cardinality#exactly1Data"));
 			assertTrue(checker.hasCardinalityRestriction(theClass, "http://Cardinality#exactly1Object"));
 			assertTrue(checker.hasCardinalityRestriction(theClass, "http://Cardinality#range12Data"));
@@ -52,6 +52,7 @@ public class RestrictionCheckerTest_IT {
 		assertFalse(checker.satisfiesCardinality("http://Cardinality#Cardinal", "http://Cardinality#atLeast1Data", 0));
 		assertTrue(checker.satisfiesCardinality("http://Cardinality#Cardinal", "http://Cardinality#atLeast1Data", 1));
 		assertTrue(checker.satisfiesCardinality("http://Cardinality#Cardinal", "http://Cardinality#atLeast1Data", 2));
+		assertFalse(checker.satisfiesCardinality("http://Cardinality#Cardinal", "http://Cardinality#atMost1Data", 2));
 		
 		// test violations table
 		Table violationsTable = checker.checkCardinality();

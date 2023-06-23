@@ -4,6 +4,8 @@ Value is a class.
 val1 is a Value.
 val2 is a Value.
 
+// =====================================================================================
+
 // test cardinality of data and object properties
 Cardinal is a class,
 	described by anyData with values of type int,
@@ -30,6 +32,8 @@ exactly1Data of Cardinal has exactly 1 value.
 exactly1Object of Cardinal has exactly 1 value.
 atLeast1Data of Cardinal has at least 1 value.
 atLeast1Object of Cardinal has at least 1 value.
+atMost1Data of Cardinal has at most 1 value.
+atMost1Object of Cardinal has at most 1 value.
 range12Data of Cardinal has at least 1 value.
 range12Data of Cardinal has at most 2 values.
 range12Object of Cardinal has at least 1 value.
@@ -78,6 +82,8 @@ card2 (note "instance with two of each property") is a Cardinal,
 	has atMost1Object val2,
 	has range12Data 2,
 	has range12Object val2.
+
+// =====================================================================================
 	
 // Repeat with all the same properties but no restrictions on their use in this class 
 UnrestrictedCardinal is a class,
@@ -142,6 +148,8 @@ unrest2 (note "instance with two of each property") is a UnrestrictedCardinal,
 	has range12Data 2,
 	has range12Object val2.
 
+// =====================================================================================
+
 // Repeat for a subclass
 SubCardinal is a type of Cardinal.
 
@@ -189,6 +197,8 @@ sub2 (note "instance with two of each property") is a SubCardinal,
 	has range12Data 2,
 	has range12Object val2.
 
+// =====================================================================================
+
 // Add restrictions to a subclass
 RestrictTheUnrestricted is a type of UnrestrictedCardinal.
 // Note:   SADL Feature	3.5.0.202112051741	
@@ -201,6 +211,8 @@ exactly1Data of RestrictTheUnrestricted has exactly 1 value.
 exactly1Object of RestrictTheUnrestricted has exactly 1 value.
 atLeast1Data of RestrictTheUnrestricted has at least 1 value.
 atLeast1Object of RestrictTheUnrestricted has at least 1 value.
+atMost1Data of RestrictTheUnrestricted has at most 1 value.
+atMost1Object of RestrictTheUnrestricted has at most 1 value.
 range12Data of RestrictTheUnrestricted has at least 1 value.
 range12Data of RestrictTheUnrestricted has at most 2 values.
 range12Object of RestrictTheUnrestricted has at least 1 value.
