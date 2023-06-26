@@ -1,0 +1,34 @@
+uri "http://Cardinality" alias card.
+
+// =====================================================================================
+
+// Superclass
+Cardinal is a class,
+	described by code with values of type int.
+code of Cardinal has at least 2 values.
+
+card1 is a Cardinal, 
+	has code 1.
+
+card2 is a Cardinal, 
+	has code 1,
+	has code 2.
+
+// =====================================================================================
+
+// Subclass that imposes a stricter cardinality restriction
+StricterCardinal is a type of Cardinal.
+code of StricterCardinal has at least 4 values.
+
+strictercard1 is a StricterCardinal, 
+	has code 1.
+
+strictercard2 is a StricterCardinal, 
+	has code 1,
+	has code 2.
+	
+strictercard4 is a StricterCardinal, 
+	has code 1,
+	has code 2,
+	has code 3,
+	has code 4.

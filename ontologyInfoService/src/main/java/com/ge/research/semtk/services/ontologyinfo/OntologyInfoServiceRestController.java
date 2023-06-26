@@ -472,7 +472,7 @@ public class OntologyInfoServiceRestController {
 					
 					OntologyInfo oInfo = oInfoCache.get(conn);
 					RestrictionChecker checker = new RestrictionChecker(conn, oInfo, tracker, jobId, 0, 100);
-					Table violationTab = checker.checkCardinality(requestBody.getMaxRows());
+					Table violationTab = checker.getCardinalityViolations(requestBody.getMaxRows());
 					rclient.execStoreTableResults(jobId, violationTab);
 					tracker.setJobSuccess(jobId);
 					

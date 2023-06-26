@@ -30,11 +30,11 @@ import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.utility.LocalLogger;
 
 public class RestrictionChecker {
-	
+
 	private SparqlConnection modelConn = null;
 	private SparqlConnection dataConn = null;
 	private OntologyInfo oInfo = null;
-	private Table cardinalityTable = null;
+	private Table cardinalityRestrictionsTable = null;
 	private JobTracker tracker = null;
 	private int startPercent = 0;
 	private int endPercent = 100;
@@ -71,29 +71,30 @@ public class RestrictionChecker {
 		}
 		
 		this.oInfo = oInfo;
+		
+		// query for restrictions, create hashes
+		this.queryAndBuildCardinalityHashes();
 	}
 	
 	/**
 	 * Generate a table of cardinality violations
 	 */
-	public Table checkCardinality() throws Exception {
-		return this.checkCardinality(0);
+	public Table getCardinalityViolations() throws Exception {
+		return this.getCardinalityViolations(0);
 	}
 
 	/**
 	 * Generate a table of cardinality violations
 	 * @param maxRows maximum number of rows to return
 	 */
-	public Table checkCardinality(int maxRows) throws Exception {
+	public Table getCardinalityViolations(int maxRows) throws Exception {
+
+		// update tracker
 		int percent = this.startPercent;
-		
-		// get restrictions
 		if (this.tracker != null) {
 			this.tracker.setJobPercentComplete("Querying cardinality restrictions", percent);
 			percent += (this.endPercent - percent) / 10;
 		}
-		
-		this.queryCardinalityRestrictions();
 		
 		HashSet<String> COUNT_FUNC = new HashSet<String>();
 		COUNT_FUNC.add("COUNT");
@@ -101,15 +102,14 @@ public class RestrictionChecker {
 		Table retTable = new Table(new String[] {"class", "property", "restriction", "limit", "subject", "actual_cardinality"}, new String[] {"string", "string", "string", "integer", "string", "integer"} );
 		
 		// run a query to check each restriction
-		for (int i=0; i < this.cardinalityTable.getNumRows(); i++) {
+		for (int i=0; i < this.cardinalityRestrictionsTable.getNumRows(); i++) {
 			if (this.tracker != null) {
-				this.tracker.setJobPercentComplete("Checking cardinality restrictions", percent + (this.endPercent - percent) * (i / this.cardinalityTable.getNumRows()));
+				this.tracker.setJobPercentComplete("Checking cardinality restrictions", percent + (this.endPercent - percent) * (i / this.cardinalityRestrictionsTable.getNumRows()));
 			}
-			String className = this.cardinalityTable.getCell(i, 0);
-			String propName = this.cardinalityTable.getCell(i, 1);
-			String restriction = new OntologyName(this.cardinalityTable.getCell(i, 2).toLowerCase()).getLocalName();
-	
-			int limit = this.cardinalityTable.getCellAsInt(i, 3);
+			String className = this.cardinalityRestrictionsTable.getCell(i, 0);
+			String propName = this.cardinalityRestrictionsTable.getCell(i, 1);
+			String restriction = new OntologyName(this.cardinalityRestrictionsTable.getCell(i, 2).toLowerCase()).getLocalName();
+			int limit = this.cardinalityRestrictionsTable.getCellAsInt(i, 3);
 			
 			String negOp = null;
 			if (this.isMax(restriction)) 
@@ -151,13 +151,13 @@ public class RestrictionChecker {
 	}
 
 	/**
-	 * Populate cardinalityTable with all cardinality restrictions in the model connection
+	 * Get all cardinality restrictions in the model connection
 	 * @throws Exception
 	 */
-	private void queryCardinalityRestrictions() throws Exception {
+	private Table getCardinalityRestrictions() throws Exception {
 		String query = SparqlToXLibUtil.generateGetCardinalityRestrictions(this.modelConn, this.oInfo);
 		SparqlEndpointInterface sei = this.modelConn.getDefaultQueryInterface();
-		this.cardinalityTable = sei.executeToTable(query);
+		return sei.executeToTable(query);
 	}
 	
 	/**
@@ -177,9 +177,6 @@ public class RestrictionChecker {
 	}
 
 	public boolean satisfiesCardinality(String classUri, String propUri, int n) throws Exception {
-		if (this.cardinalityTable == null)
-			this.queryAndBuildCardinalityHashes();
-		
 		String key = this.buildKey(classUri, propUri);
 		
 		Integer min = this.minHash.get(key);
@@ -211,23 +208,23 @@ public class RestrictionChecker {
 	}
 
 	public boolean hasCardinalityRestriction(String classUri, String propUri) throws Exception {
-		if (this.cardinalityTable == null)
-			this.queryAndBuildCardinalityHashes();
 		String key = this.buildKey(classUri, propUri);
 		return this.minHash.containsKey(key) || this.maxHash.containsKey(key) || this.exactHash.containsKey(key);
 	}
 	
-	// populate maxHash, minHash, exactHash
+	// populate cardinalityRestrictionsTable, maxHash, minHash, exactHash
 	private void queryAndBuildCardinalityHashes() throws Exception {
-		this.queryCardinalityRestrictions();
 		
-		// run a query to check each restriction
-		for (int i=0; i < this.cardinalityTable.getNumRows(); i++) {
+		// populate restriction table
+		this.cardinalityRestrictionsTable = getCardinalityRestrictions();
 		
-			String className = this.cardinalityTable.getCell(i, 0);
-			String propName = this.cardinalityTable.getCell(i, 1);
-			String restriction = new OntologyName(this.cardinalityTable.getCell(i, 2).toLowerCase()).getLocalName();	
-			int limit = this.cardinalityTable.getCellAsInt(i, 3);
+		// populate hashes using restriction table
+		for (int i=0; i < this.cardinalityRestrictionsTable.getNumRows(); i++) {
+		
+			String className = this.cardinalityRestrictionsTable.getCell(i, 0);
+			String propName = this.cardinalityRestrictionsTable.getCell(i, 1);
+			String restriction = new OntologyName(this.cardinalityRestrictionsTable.getCell(i, 2).toLowerCase()).getLocalName();	
+			int limit = this.cardinalityRestrictionsTable.getCellAsInt(i, 3);
 
 			HashSet<String> classNames = this.oInfo.getSubclassNames(className);
 			classNames.add(className);
@@ -264,4 +261,5 @@ public class RestrictionChecker {
 	private String buildKey(String className, String propName) {
 		return className + ":" + propName;
 	}
+
 }

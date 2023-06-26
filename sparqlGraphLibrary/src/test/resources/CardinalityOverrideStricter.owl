@@ -1,0 +1,73 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:card="http://Cardinality#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+  <owl:Ontology rdf:about="http://Cardinality">
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'CardinalityOverrideStricter.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:about="http://Cardinality#Cardinal">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >2</owl:minCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://Cardinality#code"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+  </owl:Class>
+  <owl:Class rdf:about="http://Cardinality#StricterCardinal">
+    <rdfs:subClassOf>
+      <owl:Restriction>
+        <owl:minCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+        >4</owl:minCardinality>
+        <owl:onProperty>
+          <owl:DatatypeProperty rdf:about="http://Cardinality#code"/>
+        </owl:onProperty>
+      </owl:Restriction>
+    </rdfs:subClassOf>
+    <rdfs:subClassOf rdf:resource="http://Cardinality#Cardinal"/>
+  </owl:Class>
+  <owl:DatatypeProperty rdf:about="http://Cardinality#code">
+    <rdfs:domain rdf:resource="http://Cardinality#Cardinal"/>
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#int"/>
+  </owl:DatatypeProperty>
+  <card:Cardinal rdf:about="http://Cardinality#card2">
+    <card:code rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:code>
+    <card:code rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:code>
+  </card:Cardinal>
+  <card:Cardinal rdf:about="http://Cardinality#card1">
+    <card:code rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:code>
+  </card:Cardinal>
+  <card:StricterCardinal rdf:about="http://Cardinality#strictercard1">
+    <card:code rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:code>
+  </card:StricterCardinal>
+  <card:StricterCardinal rdf:about="http://Cardinality#strictercard4">
+    <card:code rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >4</card:code>
+    <card:code rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >3</card:code>
+    <card:code rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:code>
+    <card:code rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:code>
+  </card:StricterCardinal>
+  <card:StricterCardinal rdf:about="http://Cardinality#strictercard2">
+    <card:code rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >2</card:code>
+    <card:code rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
+    >1</card:code>
+  </card:StricterCardinal>
+</rdf:RDF>

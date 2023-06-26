@@ -20,7 +20,7 @@ public class RestrictionCheckerTest_IT {
 	}
 	
 	@Test
-	public void cardinalityTest() throws Exception {
+	public void testCardinality() throws Exception {
 		
 		// setup
 		TestGraph.clearGraph();
@@ -30,7 +30,7 @@ public class RestrictionCheckerTest_IT {
 		RestrictionChecker checker = new RestrictionChecker(conn, oInfo);
 		
 		// test whether restrictions are present
-		String[] classes = {"http://Cardinality#Cardinal", "http://Cardinality#SubCardinal"};
+		String[] classes = {"http://Cardinality#Cardinal", "http://Cardinality#SubCardinal"};  // these two should have identical restrictions
 		for(String theClass : classes) {
 			assertFalse(checker.hasCardinalityRestriction(theClass, "http://Cardinality#anyData"));
 			assertFalse(checker.hasCardinalityRestriction(theClass, "http://Cardinality#anyObject"));
@@ -45,6 +45,8 @@ public class RestrictionCheckerTest_IT {
 			assertTrue(checker.hasCardinalityRestriction(theClass, "http://Cardinality#singleData"));
 			assertTrue(checker.hasCardinalityRestriction(theClass, "http://Cardinality#singleObject"));
 		}
+		assertFalse(checker.hasCardinalityRestriction("http://Cardinality#Unrestricted", "http://Cardinality#exactly1Data"));
+		assertTrue(checker.hasCardinalityRestriction("http://Cardinality#RestrictTheUnrestricted", "http://Cardinality#exactly1Data"));
 		
 		// test if number satisfies cardinality
 		assertTrue(checker.satisfiesCardinality("http://Cardinality#Cardinal", "http://Cardinality#anyData", 500));
@@ -55,8 +57,31 @@ public class RestrictionCheckerTest_IT {
 		assertFalse(checker.satisfiesCardinality("http://Cardinality#Cardinal", "http://Cardinality#atMost1Data", 2));
 		
 		// test violations table
-		Table violationsTable = checker.checkCardinality();
+		Table violationsTable = checker.getCardinalityViolations();
 		IntegrationTestUtility.compareResults(violationsTable.toCSVString(), this, "cardinality_test1_results.csv");  // csv file contains expected violations
+
 	}
 
+	@Test
+	public void testOverrideStricter() throws Exception {
+		
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "CardinalityOverrideStricter.owl");
+		SparqlConnection conn = TestGraph.getSparqlConn();
+		OntologyInfo oInfo = new OntologyInfo(conn);
+		RestrictionChecker checker = new RestrictionChecker(conn, oInfo);
+		
+		// superclass requires at least 2 codes.  subclass requires at least 4 codes
+		assertTrue(checker.hasCardinalityRestriction("http://Cardinality#Cardinal", "http://Cardinality#code"));
+		assertTrue(checker.hasCardinalityRestriction("http://Cardinality#StricterCardinal", "http://Cardinality#code"));
+		assertTrue(checker.satisfiesCardinality("http://Cardinality#Cardinal", "http://Cardinality#code", 2));
+		assertFalse(checker.satisfiesCardinality("http://Cardinality#StricterCardinal", "http://Cardinality#code", 2));
+		assertTrue(checker.satisfiesCardinality("http://Cardinality#StricterCardinal", "http://Cardinality#code", 4));
+		
+		// note table has 2 entries for subclass: one for superclass, one for subclass
+		Table violationsTable = checker.getCardinalityViolations();
+		IntegrationTestUtility.compareResults(violationsTable.toCSVString(), this, "cardinality_testStricter_results.csv");  // csv file contains expected violations
+	}
+	
 }
