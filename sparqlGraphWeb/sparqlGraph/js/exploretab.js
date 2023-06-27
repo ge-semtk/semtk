@@ -757,7 +757,7 @@ define([	// properly require.config'ed
                 	IIDXHelper.progressBarRemove(this.progressDiv);                                           
 				}.bind(this);
 				
- 				var jsonLdCallback = MsiClientNodeGroupExec.buildJsonLdCallback(
+ 				var triplesCallback = MsiClientNodeGroupExec.buildJsonLdOrTriplesCallback(
 																this.drawOntologyDetailCallback.bind(this),
                                                                 failureCallback,
                                                                 progressCallback,
@@ -768,7 +768,7 @@ define([	// properly require.config'ed
             	IIDXHelper.progressBarCreate(this.progressDiv, "progress-info progress-striped active");
                 IIDXHelper.progressBarSetPercent(this.progressDiv, 0, "");
                 this.busy(true);
-				client.execAsyncDispatchRawSparql(sparql, gConn, jsonLdCallback, failureCallback, SemanticNodeGroup.RT_NTRIPLES);
+				client.execAsyncDispatchRawSparql(sparql, gConn, triplesCallback, failureCallback, SemanticNodeGroup.RT_NTRIPLES);
 			},
 			
 			drawOntologyDetailCallback : function (res) {
@@ -784,16 +784,7 @@ define([	// properly require.config'ed
 	            var edgeList = [];
 	            var nodeDict = {};
 	            
-	            if (res.isJsonLdResults()) {
-		            var jsonLd = res.getGraphResultsJsonArr(false, false, false);
-		            for (var i=0; i < jsonLd.length; i++) {
-		                VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList, true);
-		                if (i % 20 == 0) {
-		                    network.body.data.nodes.update(Object.values(nodeDict));
-		                    network.body.data.edges.update(edgeList);
-		                }
-		            }
-		       	} else if (res.isNtriplesResults()) {
+	            if (res.isNtriplesResults()) {
 					triples = res.getNtriplesArray();
 					for (var i=0; i < triples.length; i++) {
 	                	VisJsHelper.addTriple(triples[i], nodeDict, edgeList, true, false);
@@ -802,7 +793,10 @@ define([	// properly require.config'ed
 		                    network.body.data.edges.update(edgeList);
 		                }
 		            }
-	            }
+	            } else {
+                	ModalIidx.alert("Failure", "<b>Error:</b> Results returned from service are not N_TRIPLES");
+                	return;
+            	}
 
 	            network.body.data.nodes.update(Object.values(nodeDict));
 	            network.body.data.edges.update(edgeList);

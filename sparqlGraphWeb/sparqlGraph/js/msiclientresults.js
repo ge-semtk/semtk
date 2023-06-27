@@ -83,12 +83,11 @@ define([	// properly require.config'ed   bootstrap-modal
                 this.msi.postToEndpoint("getTableResultsJson", JSON.stringify(data), "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 
             },
-
-            execGetJsonLdRes : function (successCallback) {
+            
+            // TODO currently use endpoint getJsonLdResults to get either JSON_LD or N-triples.  Rework REST services to make N-triples explicit 
+            execGetJsonLdOrTriplesRes : function (successCallback) {
                 var data = this.getJobIdData();
-
                 this.msi.postToEndpoint("getJsonLdResults", JSON.stringify(data), "application/json", successCallback, this.optFailureCallback, this.optTimeout);
-
             },
 
             execGetJsonBlobRes : function (successCallback) {

@@ -1943,13 +1943,7 @@
                                                                                      g.service.status.url,
                                                                                      g.service.results.url);
 
-            var jsonLdCallback = MsiClientNodeGroupExec.buildJsonLdCallback(queryJsonLdCallback,
-                                                                            asyncFailureCallback,
-                                                                            setStatusProgressBar.bind(this, "Running Query"),
-                                                                            this.checkForCancel.bind(this),
-                                                                            g.service.status.url,
-                                                                            g.service.results.url);
-            var ntriplesCallback = MsiClientNodeGroupExec.buildJsonLdCallback(queryNtriplesCallback,
+            var ntriplesCallback = MsiClientNodeGroupExec.buildJsonLdOrTriplesCallback(displayTriples,
                                                                             asyncFailureCallback,
                                                                             setStatusProgressBar.bind(this, "Running Query"),
                                                                             this.checkForCancel.bind(this),
@@ -1971,7 +1965,6 @@
                     var realLimit = gNodeGroup.getLimit();
                     gNodeGroup.setLimit(Math.min(realLimit, RESULTS_MAX_ROWS));
                     
-                    //client.execAsyncDispatchQueryFromNodeGroup(gNodeGroup, gConn, jsonLdCallback, asyncFailureCallback, SemanticNodeGroup.QT_CONSTRUCT, SemanticNodeGroup.RT_JSONLD, rtConstraints);
                     client.execAsyncDispatchQueryFromNodeGroup(gNodeGroup, gConn, ntriplesCallback, asyncFailureCallback, SemanticNodeGroup.QT_CONSTRUCT, SemanticNodeGroup.RT_NTRIPLES, rtConstraints);
 
                     gNodeGroup.setLimit(realLimit);
@@ -2009,13 +2002,8 @@
                                                                                       this.checkForCancel.bind(this),
                                                                                       g.service.status.url,
                                                                                       g.service.results.url);
-           	var jsonLdCallback = MsiClientNodeGroupExec.buildJsonLdCallback(queryJsonLdCallback,
-                                                                            asyncFailureCallback,
-                                                                            setStatusProgressBar.bind(this, "Running Query"),
-                                                                            this.checkForCancel.bind(this),
-                                                                            g.service.status.url,
-                                                                            g.service.results.url);
-            var ntriplesCallback = MsiClientNodeGroupExec.buildJsonLdCallback(queryNtriplesCallback,
+
+            var ntriplesCallback = MsiClientNodeGroupExec.buildJsonLdOrTriplesCallback(displayTriples,
                                                                             asyncFailureCallback,
                                                                             setStatusProgressBar.bind(this, "Running Query"),
                                                                             this.checkForCancel.bind(this),
@@ -2040,9 +2028,7 @@
 	 			// query type menu is set to CONSTRUCT
 	 			// another way:  sparql.toLowerCase().indexOf("construct") > -1
                 
-                //client.execAsyncDispatchRawSparql(sparql, gConn, jsonLdCallback, asyncFailureCallback, "GRAPH_JSONLD");
-                client.execAsyncDispatchRawSparql(sparql, gConn, jsonLdCallback, ntriplesCallback, SemanticNodeGroup.RT_NTRIPLES);
-
+                client.execAsyncDispatchRawSparql(sparql, gConn, ntriplesCallback, asyncFailureCallback, SemanticNodeGroup.RT_NTRIPLES);
             } else {
                 client.execAsyncDispatchRawSparql(sparql, gConn, csvJsonCallback, asyncFailureCallback, "TABLE");
             }
@@ -2212,44 +2198,24 @@
             networkBusy(canvas, false);
         });
     };
-
-	// TODO expect this code to be removed soon, not updating it
-    var queryJsonLdCallback = function(jsonLdResults) {
-        require(['sparqlgraph/js/iidxhelper'], function(IIDXHelper) {
-
-            var anchor = IIDXHelper.buildAnchorWithCallback(    "results.json",
-                                                                function (res) {
-                                                                    var str = JSON.stringify(res.getGraphResultsJsonArr(), null, 4);
-                                                                    IIDXHelper.downloadFile(str, "results.json",  "application/json");
-                                                                }.bind(this, jsonLdResults)
-                                                            );
-
-            var linkdom = document.createElement("span");
-            linkdom.innerHTML =  "Download json: ";
-            linkdom.appendChild(anchor);
-
-            setStatus("");
-            displayConstructResults(jsonLdResults, linkdom);
-
-            guiUnDisableAll();
-            guiResultsNonEmpty();
-        });
-    };
     
-    var queryNtriplesCallback = function(triplesResults) {
+    /*
+     * Display triples (as a graph)
+	 */
+    var displayTriples = function(triplesResults) {
 		setStatus("");
-		displayConstructResults(triplesResults);
+		displayTriplesGraph(triplesResults);
 		guiUnDisableAll();
 		guiResultsNonEmpty();
     };
 
     /**
-     * Put construct results into a visjs display
+     * Put construct results (triples) into a visjs display
      *
      * params:
-     *    res - construct results
+     *    res - construct results containing triples
      */
-    var displayConstructResults = function (res) {
+    var displayTriplesGraph = function (res) {
 		
         require(['sparqlgraph/js/iidxhelper',
                  'sparqlgraph/js/modaliidx',
@@ -2264,18 +2230,7 @@
 			var triples = null;
 			var warningHtml = "";
 			
-			if (res.isJsonLdResults()) {
-				throw new Error("Don't expect to hit this code, will be removed soon"); // TODO
-/*				var rawJsonArr = res.getGraphResultsJsonArr();
-				if (rawJsonArr.length >= RESULTS_MAX_ROWS) {
-	                div.innerHTML =  "<span class='label label-warning'>Showing first " + RESULTS_MAX_ROWS.toString() + " data points. </span>";
-	            }
-	            
-	            downloadStr = JSON.stringify(rawJsonArr, null, 4);
-	            downloadFilename = "results.json";
-	            downloadType = "text/json;charset=utf8";*/
-	            
-	        } else if (res.isNtriplesResults()) {
+			if (res.isNtriplesResults()) {
 				triples = res.getNtriplesArray();
 				if (triples.length >= RESULTS_MAX_ROWS) {
 	                warningHtml = "<span class='label label-warning'>Showing first " + RESULTS_MAX_ROWS.toString() + " data points</span>";
@@ -2285,7 +2240,7 @@
 	            downloadType = "text/plain;charset=utf8";
 	            
 	        } else {
-				warningHtml =  "<b>Error:</b> Results returned from service are not JSON-LD or N-triples";
+				warningHtml =  "<b>Error:</b> Results returned from service are not N-triples";
                 return;
 			}
 
@@ -2375,17 +2330,12 @@
 
 			myScrollIntoViewIfNeeded(div);
 			
-            // add data
-            if (res.isJsonLdResults()) {
-	            var jsonLd = res.getGraphResultsJsonArr(true, true, true);
-				addDataToNetwork(network, jsonLd.slice(0, RESULTS_MAX_ROWS), nodeDict, edgeList);
-			} else if (res.isNtriplesResults()) {
-				truncatedTriples = triples.slice(0, RESULTS_MAX_ROWS);
-				if(truncatedTriples.length < triples.length){				// if triples were in fact truncated
-					truncatedTriples = removeTypeless(truncatedTriples);	// don't add any nodes without types
-				}
-				addDataToNetwork(network, truncatedTriples, nodeDict, edgeList);
-        	}
+            // add triples data to graph
+			truncatedTriples = triples.slice(0, RESULTS_MAX_ROWS);
+			if(truncatedTriples.length < triples.length){				// if triples were in fact truncated
+				truncatedTriples = removeTypeless(truncatedTriples);	// don't add any nodes without types
+			}
+			addDataToNetwork(network, truncatedTriples, nodeDict, edgeList);
         });
     };
     
@@ -2451,33 +2401,28 @@
 	}
 	
     //
-    // add data to network one CHUNK_SIZE at a time
+    // Add triples data to network one CHUNK_SIZE at a time
     // use setTimeout to keep UI updates smooth
     // update progress bar
     //
-    var addDataToNetwork = function(network, jsonLdOrTriples, nodeDict, edgeList, optStart) {
+    var addDataToNetwork = function(network, triples, nodeDict, edgeList, optStart) {
 		require(['sparqlgraph/js/modaliidx', 'sparqlgraph/js/visjshelper'
 					    ], function(ModalIidx, VisJsHelper) {
 			var CHUNK_SIZE = 400;
 			var thisStart = optStart || 0;
-			var nextStart = Math.min(jsonLdOrTriples.length, thisStart + CHUNK_SIZE);
+			var nextStart = Math.min(triples.length, thisStart + CHUNK_SIZE);
 			
-			var triplesFlag = Array.isArray(jsonLdOrTriples[thisStart]);
-			setStatusProgressBar("Rendering results graph", 100 * thisStart/jsonLdOrTriples.length);
+			setStatusProgressBar("Rendering results graph", 100 * thisStart/triples.length);
 			for (var i=thisStart; i < nextStart; i++) {
-				if (triplesFlag) {
-					VisJsHelper.addTriple(jsonLdOrTriples[i], nodeDict, edgeList, false, true);
-				} else {
-					VisJsHelper.addJsonLdObject(jsonLdOrTriples[i], nodeDict, edgeList);
-				}
+				VisJsHelper.addTriple(triples[i], nodeDict, edgeList, false, true);
 			}
 			
 			network.body.data.nodes.update(Object.values(nodeDict));
 	        network.body.data.edges.update(edgeList);
 	        
-	        if (! gCancelled && nextStart < jsonLdOrTriples.length) {
+	        if (! gCancelled && nextStart < triples.length) {
 				// recurse
-	        	setTimeout(addDataToNetwork.bind(this, network, jsonLdOrTriples, nodeDict, edgeList, nextStart), 1);
+	        	setTimeout(addDataToNetwork.bind(this, network, triples, nodeDict, edgeList, nextStart), 1);
 	        } else {
 				if (gCancelled) {
 					ModalIidx.alert("Cancelled", "Rendering of network cancelled by user.<br>Network is incomplete.");
@@ -2591,7 +2536,7 @@
 
             networkBusy(canvasDiv, true);
             var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.longTimeoutMsec);
-            var resultsCallback = MsiClientNodeGroupExec.buildJsonLdCallback(
+            var resultsCallback = MsiClientNodeGroupExec.buildJsonLdOrTriplesCallback(
                 constructExpandCallbackGotResults.bind(this, canvasDiv, network),
                 networkFailureCallback.bind(this, canvasDiv),
                 function() {}, // no status updates
@@ -2626,14 +2571,7 @@
 			var nodeDict = {};   // dictionary of nodes with @id as the key
             var edgeList = [];
             
-            if (res.isJsonLdResults()) {
-		        // TODO: if reverting to JSON, duplicate the size-checking from N_TRIPLES below.
-	            var jsonLd = res.getGraphResultsJsonArr(true, true, true);
-	            for (var i=0; i < jsonLd.length; i++) {
-	                VisJsHelper.addJsonLdObject(jsonLd[i], nodeDict, edgeList);
-	            }
-	            
-	        } else if (res.isNtriplesResults()) {
+            if (res.isNtriplesResults()) {
 		
 				// Load function for after we've tested size and chopped it down if needed
 				loadTriples = function(nodeDict, edgeList, canvasDiv, network, triples) {
@@ -2670,7 +2608,7 @@
 				}
 	            
 	        } else {
-                ModalIidx.alert("NodeGroup Exec Service Failure", "<b>Error:</b> Results returned from service are not JSON-LD or N_TRIPLES");
+                ModalIidx.alert("NodeGroup Exec Service Failure", "<b>Error:</b> Results returned from service are not N_TRIPLES");
                 return;
             }
             
