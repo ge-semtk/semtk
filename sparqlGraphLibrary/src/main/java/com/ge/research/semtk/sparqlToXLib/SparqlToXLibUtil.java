@@ -670,6 +670,34 @@ public class SparqlToXLibUtil {
 	}
 	
 	/**
+	 * Count instances of given class (including subclasses)
+	 * @param conn - data connections
+	 * @param oInfo
+	 * @param className - class or null
+	 * @return - sparql that will count instances
+	 * @throws Exception
+	 */
+	public static String generateCountInstances(SparqlConnection conn, OntologyInfo oInfo, String className) throws Exception {
+		StringBuffer sparql = new StringBuffer();
+		sparql.append("SELECT DISTINCT (COUNT(?subject) AS ?subject_COUNT)  \n");
+		sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
+		sparql.append("WHERE { \n");
+		
+		sparql.append("  ?subject a ?subject_class . ");
+		ArrayList<String> classNames = new ArrayList<String>();
+		classNames.addAll(oInfo.getSubclassNames(className));
+		
+		sparql.append("  " + ValueConstraint.buildBestSubclassConstraint(
+				"?subject_class", 
+				className,
+				classNames, 
+				conn.getDefaultQueryInterface()) + " .\n");
+		
+		sparql.append("} \n");
+		return sparql.toString();
+	}
+	
+	/**
 	 * Add all incoming and outgoing triples of duplicateURI to targetURI
 	 * @param conn
 	 * @param targetURI

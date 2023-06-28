@@ -23,6 +23,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.ArrayList;
 
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
@@ -37,6 +38,10 @@ import com.ge.research.semtk.test.TestGraph;
 
 public class SparqlToXUtilsTest_IT {
 
+	@BeforeClass
+	public static void setup() throws Exception {
+		IntegrationTestUtility.authenticateJunit();
+	}
 	
 	@Test
 	public void testGetInstanceData_IT() throws Exception {
@@ -72,5 +77,22 @@ public class SparqlToXUtilsTest_IT {
 		assertEquals("wrong predicate count", 6, resTab.getCellAsInt(0, 0));
 		
 		
+	}
+	
+	@Test
+	public void testCountInstances() throws Exception {
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "/animalSubProps.owl");
+		TestGraph.uploadOwlResource(this, "/animalsToCombineData.owl");
+		
+		String query = SparqlToXLibUtil.generateCountInstances(TestGraph.getSparqlConn(), TestGraph.getOInfo(), "http://AnimalSubProps#Tiger");
+		Table resTab = TestGraph.execTableSelect(query);
+		assertEquals("Wrong number of rows ", 1, resTab.getNumRows());
+		assertEquals("Wrong number of cols ", 1, resTab.getNumColumns());
+		assertEquals("Wrong number of Tigers ", 6, resTab.getCellAsInt(0, 0));
+		
+		query = SparqlToXLibUtil.generateCountInstances(TestGraph.getSparqlConn(), TestGraph.getOInfo(), "http://AnimalSubProps#Animal");
+		resTab = TestGraph.execTableSelect(query);
+		assertEquals("Wrong number of Tigers ", 7, resTab.getCellAsInt(0, 0));
 	}
 }
