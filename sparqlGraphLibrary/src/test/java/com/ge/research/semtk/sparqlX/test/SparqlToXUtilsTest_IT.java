@@ -82,8 +82,8 @@ public class SparqlToXUtilsTest_IT {
 	@Test
 	public void testCountInstances() throws Exception {
 		TestGraph.clearGraph();
-		TestGraph.uploadOwlResource(this, "/animalSubProps.owl");
-		TestGraph.uploadOwlResource(this, "/animalsToCombineData.owl");
+		TestGraph.uploadOwlResource(this, "animalSubProps.owl");
+		TestGraph.uploadOwlResource(this, "animalsToCombineData.owl");
 		
 		String query = SparqlToXLibUtil.generateCountInstances(TestGraph.getSparqlConn(), TestGraph.getOInfo(), "http://AnimalSubProps#Tiger");
 		Table resTab = TestGraph.execTableSelect(query);
