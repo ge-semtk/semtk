@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Set;
 
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
 import com.ge.research.semtk.auth.HeaderTable;
@@ -45,6 +46,7 @@ public class StitchingThread extends Thread {
 	private String jobId = null;
 	
 	private Table stitched = null;
+	private Hashtable<String, HashSet<String>> newColumnNames = null;
 	/**
 	 * @throws Exception 
 
@@ -85,6 +87,8 @@ public class StitchingThread extends Thread {
 				this.stitch(tab, step);
 			}
 			
+			this.finalizeStitchedTable();
+			
 			this.resultsClient.execStoreTableResults(this.jobId, this.stitched);
 			this.tracker.setJobSuccess(jobId);
 
@@ -101,26 +105,59 @@ public class StitchingThread extends Thread {
 			}
 		}
 	}
-
+	
+	// for junit
+	public Table testStitchTable(Table tab, StitchingStep step) throws Exception {
+		this.stitch(tab, step);
+		this.tracker.setJobSuccess(jobId);
+		return this.stitched;
+	}
+	
+	public void testFinalizeStitchedTable() throws Exception{
+		this.finalizeStitchedTable();
+	}
+	
+	/**
+	 * @param tab - table to be stitched.  WARNING: col names may be modified
+	 * @param step
+	 * @throws Exception
+	 */
 	private void stitch(Table tab, StitchingStep step) throws Exception {
+		boolean AUTO_DETECT_KEYS = false;
 		
 		if (this.stitched == null) {
+			// first table: copy it in
 			this.stitched = tab.copy();
 			
-		} else {
-			String [] keyColumns = step.getKeyColumns();
+			// change all the column names and save new name in newColumnNames
+			this.newColumnNames = new Hashtable<String, HashSet<String>>();
+			for (String tabColName : tab.getColumnNames()) {
+				HashSet<String> set = new HashSet<String>();
+				String newName = tabColName + '-' + step.getNodegroupId();
+				set.add(newName);
+				this.newColumnNames.put(tabColName, set);
+				this.stitched.changeColumnName(tabColName, newName);
+			}
 			
-			// error check
-			for (String keyCol : keyColumns) {
-				if (this.stitched.getColumnIndex(keyCol) < 0) {
-					throw new Exception("Stitching " + step.getNodegroupId() + "failed: stitched table is missing key column: " + keyCol);
-				}
-				if (tab.getColumnIndex(keyCol) < 0) {
-					throw new Exception("Stitching " + step.getNodegroupId() + "failed: new table is missing key column: " + keyCol);
+		} else {
+			ArrayList<String> keyColumns = new ArrayList<String>();
+			keyColumns.addAll(Arrays.asList(step.getKeyColumns()));
+			
+			// EXPERIMENT: calculate keyColumns instead of getting them from step
+			//             any column that has the same name
+			if (AUTO_DETECT_KEYS) {
+				keyColumns.clear();
+				for (String tabCol : tab.getColumnNames()) {
+					if (this.stitched.getColumnIndex(tabCol) > -1) {
+						keyColumns.add(tabCol);
+					}
 				}
 			}
 			
-			// add column names to stitched
+			
+			this.uniquifyColumnNames(keyColumns, step.getNodegroupId(), tab);
+			
+			// add all new column names to stitched
 			String tabColNames[] = tab.getColumnNames();
 			String tabColTypes[] = tab.getColumnTypes();
 			for (int i=0; i < tabColNames.length; i++) {
@@ -134,9 +171,9 @@ public class StitchingThread extends Thread {
 			// for each stitched row : look for matches in tab
 			for (int stitchRow=0; stitchRow < this.stitched.getNumRows(); stitchRow++) {
 				// make a mini-table of matching rows from tab
-				Table tabMatch = tab.getSubsetWhereMatches(keyColumns[0], this.stitched.getCell(stitchRow,  keyColumns[0]));
-				for (int i=1; i < keyColumns.length; i++) {
-					tabMatch = tabMatch.getSubsetWhereMatches(keyColumns[i], this.stitched.getCell(stitchRow,  keyColumns[i]));
+				Table tabMatch = tab.getSubsetWhereMatches(keyColumns.get(0), this.stitched.getCell(stitchRow,  keyColumns.get(0)));
+				for (int i=1; i < keyColumns.size(); i++) {
+					tabMatch = tabMatch.getSubsetWhereMatches(keyColumns.get(i), this.stitched.getCell(stitchRow,  keyColumns.get(i)));
 				}
 				
 				if (tabMatch.getNumRows() > 0) {
@@ -162,9 +199,9 @@ public class StitchingThread extends Thread {
 			// for each  tab row  : if it wasn't stitched,  append it instead
 			for (int tabRow=0; tabRow < tab.getNumRows(); tabRow++) {
 				// make a mini-table of matching rows from stitched
-				Table stitchMatch = this.stitched.getSubsetWhereMatches(keyColumns[0], tab.getCell(tabRow, keyColumns[0]));
-				for (int i=1; i < keyColumns.length; i++) {
-					stitchMatch = stitchMatch.getSubsetWhereMatches(keyColumns[i], tab.getCell(tabRow,  keyColumns[i]));
+				Table stitchMatch = this.stitched.getSubsetWhereMatches(keyColumns.get(0), tab.getCell(tabRow, keyColumns.get(0)));
+				for (int i=1; i < keyColumns.size(); i++) {
+					stitchMatch = stitchMatch.getSubsetWhereMatches(keyColumns.get(i), tab.getCell(tabRow,  keyColumns.get(i)));
 				}
 				// if tab row doesn't match anything in stitched, copy it over
 				if (stitchMatch.getNumRows() == 0) {
@@ -180,9 +217,82 @@ public class StitchingThread extends Thread {
 				}
 			}
 			
-			// add all the new rows to stitched
+			// add all the new rows to stitched table
 			for (ArrayList<String> newRow : newRows) {
 				this.stitched.addRow(newRow);
+			}
+		}
+	}
+	/**
+	 * Change unstitched column names in tab to "colName-nodegroupId"
+	 * If needed, change a stitched column name in this.stitched back from "colName-nodegroupId" to "colName"
+	 * @param keyColumns
+	 * @param tab
+	 * @return Hashtable<old>=new   of name changes in tab
+	 * @throws Exception
+	 */
+	private void uniquifyColumnNames(ArrayList<String> keyColumns, String nodegroupId, Table tab) throws Exception {
+		//
+		// Check all the incoming column names:
+		//    if it IS NOT STITCHED then change the name to "columnName-nodegroupId"
+		//    	(it it only happens once for columnName, we'll change it back at the end)
+		//    if it IS STITCHED then make sure it is in the stitched table already
+		//
+				
+		for (String tabColName : tab.getColumnNames()) {
+		
+			if (keyColumns.contains(tabColName)) {
+				// it is a keyColumn.
+				if (this.stitched.getColumnIndex(tabColName) == -1) {
+					// it has not been stitched yet
+					HashSet<String> newNames = this.newColumnNames.get(tabColName);
+					
+					if (newNames == null) {
+						throw new Exception("Stitching " + nodegroupId + "failed: key column has not been seen in previous tables: " + tabColName);
+					} else if (newNames.size() > 1) {
+						throw new Exception("Stitching " + nodegroupId + "failed: key column is unstitched in previous tables: " + tabColName);
+					} else {
+						// leave the tab colName alone.
+						// change this.stitched column name back to it's original name 
+						//		and delete it's entry in this.newColumnNames
+						for (String onlyNewName : this.newColumnNames.get(tabColName)) {
+							this.stitched.changeColumnName(onlyNewName, tabColName);
+						}
+						this.newColumnNames.remove(tabColName);
+					}
+				}  // else it is already fine: column is in this.stitched table with it's original name already
+				
+			} else {
+				// it is not a keyColumn
+				// so change tab colName to "colName-nodeGroupId"
+				String newName = tabColName + '-' + nodegroupId;
+				tab.changeColumnName(tabColName, newName);
+				
+				// and save the old/new mapping in this.newColumnNames
+				if (this.newColumnNames.containsKey(tabColName)) {
+					this.newColumnNames.get(tabColName).add(newName);
+				} else {
+					HashSet<String> set = new HashSet<String>();
+					set.add(newName);
+					this.newColumnNames.put(tabColName, set);
+				}
+			}
+		}
+		return;
+	}
+	
+	/**
+	 * Stitching process as changed every unstitched column name to "colName-nodegroupId"
+	 * Change any unstitched column names that only appeared in one table back to their original names
+	 * @throws Exception
+	 */
+	private void finalizeStitchedTable() throws Exception {
+		for (String origName : this.newColumnNames.keySet()) {
+			HashSet<String> newNames = this.newColumnNames.get(origName);
+			if (newNames.size() == 1) {
+				for (String onlyNewName : this.newColumnNames.get(origName)) {
+					this.stitched.changeColumnName(onlyNewName, origName);
+				}
 			}
 		}
 	}

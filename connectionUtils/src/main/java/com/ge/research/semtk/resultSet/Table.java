@@ -1365,5 +1365,12 @@ public class Table {
 		return true;
 	}
 
+	public void changeColumnName(String colName, String newName) throws Exception {
+		int c = this.getColumnIndexOrError(colName);
+		this.columnNames[c] = newName;
+		this.columnPositionInfo.remove(colName);
+		this.columnPositionInfo.put(newName, c);
+	}
+
 	
 }
