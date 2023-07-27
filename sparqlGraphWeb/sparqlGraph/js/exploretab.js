@@ -45,6 +45,7 @@ define([	// properly require.config'ed
 			// shimmed
          	'sparqlgraph/dynatree-1.2.5/jquery.dynatree',
             'sparqlgraph/js/ontologytree',
+            'sparqlgraph/js/restrictiontree',            
             'sparqlgraph/js/belmont'
 
 		],
@@ -68,26 +69,22 @@ define([	// properly require.config'ed
             this.conn = null;
             this.oTree = null;
 
-            this.controlDivHash = this.initControlDivHash();
-            this.canvasDivHash = this.initCanvasDivHash();
+            this.controlDivHash = this.initControlDivHash();  	// left-hand pane for each mode	(usually contains a tree)
+            this.canvasDivHash = this.initCanvasDivHash();		// right-hand pane for each mode (usually contains a network)
             this.configDivHash = this.initConfigDivHash();
-            this.networkHash = this.initNetworkHash();
+            this.networkHash = this.initNetworkHash();			// network for each mode
 
             this.busyFlag = false;
             this.ignoreSelectFlag = false;
-
             this.cancelFlag = false;
 
             this.initTopControlForm();
             this.initControlDivs();
-
             this.initBottomButtonDiv();
 
             this.progressDiv = document.createElement("div");
             this.progressDiv.id = "etProgressDiv";
             this.botomButtonDiv.appendChild(this.progressDiv);
-
-
         };
 
 		ExploreTab.MAX_LAYOUT_ELEMENTS = 100;
@@ -95,10 +92,12 @@ define([	// properly require.config'ed
         ExploreTab.MODE_ONTOLOGY_DETAIL = "Ontology Detail";
         ExploreTab.MODE_INSTANCE = "Instance Data";
         ExploreTab.MODE_STATS = "Instance Counts";
-        ExploreTab.MODES = [ExploreTab.MODE_ONTOLOGY_CLASSES, ExploreTab.MODE_ONTOLOGY_DETAIL, ExploreTab.MODE_INSTANCE, ExploreTab.MODE_STATS ];
+        ExploreTab.MODE_RESTRICTIONS = "Restrictions";
+        ExploreTab.MODES = [ExploreTab.MODE_ONTOLOGY_CLASSES, ExploreTab.MODE_ONTOLOGY_DETAIL, ExploreTab.MODE_INSTANCE, ExploreTab.MODE_STATS, ExploreTab.MODE_RESTRICTIONS];
 
 		ExploreTab.prototype = {
 
+			// initialize left-hand pane for each mode
             initControlDivHash : function() {
                 this.controlDivHash = {};
                 for (var m of ExploreTab.MODES) {
@@ -108,6 +107,7 @@ define([	// properly require.config'ed
                 return this.controlDivHash;
             },
 
+			// initialize right-hand pane for each mode
             initCanvasDivHash : function() {
                 this.canvasDivHash = {};
                 for (var m of ExploreTab.MODES) {
@@ -126,11 +126,16 @@ define([	// properly require.config'ed
                 return this.configDivHash;
             },
 
+			// initialize network for each mode
             initNetworkHash : function() {
                 this.networkHash = {};
                 for (var m of ExploreTab.MODES) {
-                    this.networkHash[m] = new vis.Network(this.canvasDivHash[m], {}, this.getDefaultOptions(m));
+					this.networkHash[m] = new vis.Network(this.canvasDivHash[m], {}, this.getDefaultOptions(m));
                 }
+                
+                // in restriction mode, enable double-click to expand node
+            	this.networkHash[ExploreTab.MODE_RESTRICTIONS].on('doubleClick', VisJsHelper.expandSelectedNodes.bind(this, this.canvasDivHash[ExploreTab.MODE_RESTRICTIONS], this.networkHash[ExploreTab.MODE_RESTRICTIONS]));
+                
                 return this.networkHash;
             },
 
@@ -270,7 +275,7 @@ define([	// properly require.config'ed
                 var bold = document.createElement("b");
                 td.appendChild(bold);
                 bold.innerHTML = "Explore mode: ";
-                var select = IIDXHelper.createSelect("etSelect", [ExploreTab.MODE_ONTOLOGY_CLASSES, ExploreTab.MODE_ONTOLOGY_DETAIL, ExploreTab.MODE_INSTANCE, ExploreTab.MODE_STATS], [ExploreTab.MODE_ONTOLOGY_CLASSES]);
+                var select = IIDXHelper.createSelect("etSelect", [ExploreTab.MODE_ONTOLOGY_CLASSES, ExploreTab.MODE_ONTOLOGY_DETAIL, ExploreTab.MODE_INSTANCE, ExploreTab.MODE_STATS, ExploreTab.MODE_RESTRICTIONS], [ExploreTab.MODE_ONTOLOGY_CLASSES]);
                 select.onchange = this.draw.bind(this);
                 td.appendChild(select);
 
@@ -302,25 +307,19 @@ define([	// properly require.config'ed
                 td.appendChild(but);
             },
 
-            // add controls to empty control divs
+            /**
+			 * Initialize control divs (left-hand panes) for all modes
+			 */
             initControlDivs : function() {
-                    this.initControlDivInstance();
-                    this.initControlDivOntologyClasses();
-                    this.initControlDivOntologyDetail();
-                    this.initControlDivStats();
+				this.initControlDiv_InstanceMode();
+				this.initControlDiv_OntologyClassesMode();
+				this.initControlDiv_OntologyDetailMode();
+				this.initControlDiv_StatsMode();
+				this.initControlDiv_RestrictionsMode();
             },
 
-            initControlDivStats : function() {
-                var div = this.controlDivHash[ExploreTab.MODE_STATS];
-                div.style.margin="1ch";
-
-                var h = document.createElement("h3");
-                div.appendChild(h);
-                h.innerHTML = ExploreTab.MODE_STATS;
-                div.appendChild(IIDXHelper.buildList(["Number of predicates connecting each exact class.","Color by namespace."]));
-            },
-
-            initControlDivOntologyClasses : function() {
+			// Initialize control div for ontology classes mode
+            initControlDiv_OntologyClassesMode : function() {
                 var div = this.controlDivHash[ExploreTab.MODE_ONTOLOGY_CLASSES];
                 div.style.margin="1ch";
                 var h = document.createElement("h3");
@@ -329,7 +328,8 @@ define([	// properly require.config'ed
                 div.appendChild(IIDXHelper.buildList(["Show superclass relationships.","Color by namespace."]));
             },
             
-            initControlDivOntologyDetail : function() {
+            // Initialize control div for ontology detail mode
+            initControlDiv_OntologyDetailMode : function() {
                 var div = this.controlDivHash[ExploreTab.MODE_ONTOLOGY_DETAIL];
                 div.style.margin="1ch";
                 var h = document.createElement("h3");
@@ -338,77 +338,104 @@ define([	// properly require.config'ed
                 div.appendChild(IIDXHelper.buildList(["Show all raw triples in the ontology graph(s).","Color by type."]));
             },
 
-            initControlDivInstance : function() {
+			// Initialize control div for instance data mode
+            initControlDiv_InstanceMode : function() {
                 // INSTANCE
                 var div = this.controlDivHash[ExploreTab.MODE_INSTANCE];
                 div.style.margin="1ch";
 
+				// add search bar, expand/collapse buttons
                 var dom = IIDXHelper.createSearchDiv(this.doSearch, this);
-
                 var but = IIDXHelper.createIconButton("icon-folder-open", this.doExpand.bind(this), undefined, undefined, undefined, "Expand all");
                 but.style.marginLeft = "1ch";
                 dom.appendChild(but);
-
                 but = IIDXHelper.createIconButton("icon-folder-close", this.doCollapse.bind(this), undefined, undefined, undefined, "Collapse all");
                 but.style.marginLeft = "1ch";
                 dom.appendChild(but);
-
                 div.appendChild(dom);
 
+				// add dropdown for single vs subtree mode
                 var hform1 = IIDXHelper.buildHorizontalForm(true)
                 div.appendChild(hform1);
-
                 var select = IIDXHelper.createSelect("etTreeSelect", [["single",2], ["sub-tree",3]], ["multi"], false, "input-small");
                 select.onchange = function() {
                     this.oTree.tree.options.selectMode = parseInt(document.getElementById("etTreeSelect").value);
                 }.bind(this);
-
                 hform1.appendChild(document.createTextNode(" select mode:"));
                 hform1.appendChild(select);
-                this.initDynaTree();
+                
+                // initialize network
+                this.initDynaTree_InstanceMode();
+            },
+            
+            // Initialize control div for stats mode
+            initControlDiv_StatsMode : function() {
+                var div = this.controlDivHash[ExploreTab.MODE_STATS];
+                div.style.margin="1ch";
+
+                var h = document.createElement("h3");
+                div.appendChild(h);
+                h.innerHTML = ExploreTab.MODE_STATS;
+                div.appendChild(IIDXHelper.buildList(["Number of predicates connecting each exact class.","Color by namespace."]));
+            },
+            
+            // Initialize control div for restrictions mode
+            initControlDiv_RestrictionsMode : function() {
+                var div = this.controlDivHash[ExploreTab.MODE_RESTRICTIONS];
+                div.style.margin="1ch";
+                
+                // add 2 dropdowns
+                // add dropdown to show violations only (exceeds maximum cardinality) or also incomplete data (does not meet minimum cardinality)
+                var modeSelectDropdown = IIDXHelper.createSelect("restrictionTreeModeSelect", [["violations only",0], ["violations and incomplete data",1]], ["multi"], false, "input-large");
+                modeSelectDropdown.onchange = function() {
+					this.restrictionTree.setExceedsOnlyMode(parseInt(document.getElementById("restrictionTreeModeSelect").value) == 0);
+                    this.restrictionTree.draw();
+                }.bind(this);
+				// add dropdown to pick sort option
+                var sortSelectDropdown = IIDXHelper.createSelect("restrictionTreeSortSelect", [["class",0], ["count",1], ["percentage",2]], ["multi"], false, "input-small");
+                sortSelectDropdown.onchange = function() {
+                    this.restrictionTree.setSortMode(parseInt(document.getElementById("restrictionTreeSortSelect").value));
+                    this.restrictionTree.sort();
+                }.bind(this);
+                var hform = IIDXHelper.buildHorizontalForm(true)
+                div.appendChild(hform);
+                hform.appendChild(document.createTextNode(" Show:"));
+                hform.appendChild(modeSelectDropdown);
+                hform.appendChild(document.createTextNode("   Sort by:"));
+                hform.appendChild(sortSelectDropdown);
+                
+                // initialize network
+                this.initDynaTree_RestrictionsMode();
+                this.restrictionTree.setSortMode(0);  // set sort to default
             },
 
             /*
              * Initialize an empty dynatree into this.controlDivHash[ExploreTab.MODE_INSTANCE]
              */
-			initDynaTree : function() {
+			initDynaTree_InstanceMode : function() {
 
                 this.controlDivParent.innerHtml = "";
                 this.controlDivParent.appendChild(this.controlDivHash[ExploreTab.MODE_INSTANCE]);
                 var treeSelector = "#" + this.controlDivHash[ExploreTab.MODE_INSTANCE].id;
                 $(treeSelector).dynatree({
+
                     onSelect: function(flag, node) {
-                        this.selectedNodeCallback(flag, node);
+                        this.modifyNetwork_InstanceMode(flag, node);
                     }.bind(this),
-
-                    onDblClick: function(node) {
-                        // A DynaTreeNode object is passed to the activation handler
-                        // Note: we also get this event, if persistence is on, and the page is reloaded.
-                        // console.log("You double-clicked " + node.data.title);
-                    }.bind(this),
-
-                    dnd: {
-                        onDragStart: function(node) {
-                            // no drag and drop on explore tab
-                            return false;
-                        }.bind(this),
-
-                        onDragStop: function(node, x, y, z, aa) {
-
-                        }.bind(this)
-                    },
 
                     persist: false,    // true causes a cookie error with large trees
                     selectMode: 2,    // 1 single, 2 multi, 3 multi hierarchical
                     checkbox: true,
-
                 });
 
                 this.oTree = new OntologyTree($(treeSelector).dynatree("getTree"));
-
             },
 
-            selectedNodeCallback : function (flag, node) {
+			/**
+			 * For instance mode, modify network to match selected tree nodes
+			 * (flag is true if node selected, false if node deselected)
+			 */
+            modifyNetwork_InstanceMode : function (flag, node) {
 
                 if (this.ignoreSelectFlag) return;
 
@@ -420,7 +447,6 @@ define([	// properly require.config'ed
                 if (this.getMode() != ExploreTab.MODE_INSTANCE) return;
 
                 var workList = [];
-
                 if (this.oTree.tree.options.selectMode == 3) {
                     workList = this.oTree.getPropertyPairsFamily(node);
                 } else {
@@ -431,11 +457,70 @@ define([	// properly require.config'ed
                 }
 
                 if (flag) {
-                    this.addInstanceData(workList);
+                    this.addInstanceData(workList);		// add instance data to graph
                 } else {
-                    this.deleteInstanceData(workList);
+                    this.deleteInstanceData(workList);	// remove instance data from graph
                 }
             },
+
+            /*
+             * Initialize an empty dynatree into this.controlDivHash[ExploreTab.MODE_RESTRICTIONS]
+             */
+			initDynaTree_RestrictionsMode : function() {
+
+                this.controlDivParent.innerHtml = "";
+                this.controlDivParent.appendChild(this.controlDivHash[ExploreTab.MODE_RESTRICTIONS]);
+                var treeSelector = "#" + this.controlDivHash[ExploreTab.MODE_RESTRICTIONS].id;
+                $(treeSelector).dynatree({
+
+                    onSelect: function(flag, node) {
+						this.modifyNetwork_RestrictionsMode(flag, node); // user selects/deselects a node
+                    }.bind(this),
+                    
+                    persist: false,    	// true causes a cookie error with large trees
+                    selectMode: 1,    	// 1 single, 2 multi, 3 multi hierarchical
+                    checkbox: true,
+                });
+
+                this.restrictionTree = new RestrictionTree($(treeSelector).dynatree("getTree"));
+                this.restrictionTree.setExceedsOnlyMode(true);  // to match initial state of dropdown
+            },
+            
+			/**
+			 * For restrictions mode, construct network when user selects a URI.  Clear the network if user de-selects a URI.
+			 * flag - true if selected, false if de-selected
+			 * node - the node containing the uri
+			 */
+            modifyNetwork_RestrictionsMode : function (flag, node) {
+
+				const canvasDiv = this.canvasDivHash[ExploreTab.MODE_RESTRICTIONS];
+				const network = this.networkHash[ExploreTab.MODE_RESTRICTIONS];
+
+				if(!flag){
+					// URI was de-selected, clear the network (tree allows only one URI selected at a time)
+					this.clearNetwork();
+					return;	
+				}
+				this.clearNetwork(); // clear any prior network (tree allows only one URI selected at a time)
+				VisJsHelper.networkBusy(canvasDiv, true);
+
+				var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.longTimeoutMsec);
+				var resultsCallback = MsiClientNodeGroupExec.buildJsonLdOrTriplesCallback(
+					VisJsHelper.addTriples.bind(this, canvasDiv, network),  // add triples to graph
+					networkFailureCallback.bind(this, canvasDiv),
+					function() { }, // no status updates
+					function() { }, // no check for cancel
+					g.service.status.url,
+					g.service.results.url
+				);
+
+				// query to construct the instance with relevant predicates
+				const uri = node.data.title;
+				const classUri = node.data.classUri;
+				const predicate = node.data.predicate;
+				client.execAsyncConstructInstanceWithPredicates(uri, classUri, [predicate],	gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
+            },
+
 
             // main section of buttons along the bottom.
             // Should have controls that are useful for all modes
@@ -538,48 +623,74 @@ define([	// properly require.config'ed
 
             // Retrieve the correct control and canvas divs and show them
             // Draw if empty, otherwise presume what is there is ok.
-            draw : function() {
+			draw: function() {
 
-                // display correct controls and canvas
-                this.controlDivParent.innerHTML = "";
-                this.controlDivParent.appendChild(this.controlDivHash[this.getMode()]);
-                this.canvasDivParent.innerHTML = "";
-                this.canvasDivParent.appendChild(this.canvasDivHash[this.getMode()]);
+				// display correct controls and canvas
+				this.controlDivParent.innerHTML = "";
+				this.controlDivParent.appendChild(this.controlDivHash[this.getMode()]);
+				this.canvasDivParent.innerHTML = "";
+				this.canvasDivParent.appendChild(this.canvasDivHash[this.getMode()]);
 
-                // if network is empty it might never have been drawn yet.
-                // if it is supposed to be empty then this is cheap.
-                // Either way, redraw.
-                if (this.networkHash[this.getMode()].body.data.nodes.getIds().length == 0) {
+				// if network is empty it might never have been drawn yet.
+				// if it is supposed to be empty then this is cheap.
+				// Either way, redraw.
+				if (this.networkHash[this.getMode()].body.data.nodes.getIds().length == 0) {
 
-                    if (this.getMode() == ExploreTab.MODE_ONTOLOGY_CLASSES) {
-                        this.drawOntologyClasses();
+					if (this.getMode() == ExploreTab.MODE_ONTOLOGY_CLASSES) {
 
-                    } else if (this.getMode() == ExploreTab.MODE_ONTOLOGY_DETAIL) {
+						this.drawOntologyClasses();
+						this.updateGraphInfoBar(); // update nodes/predicate count
+
+					} else if (this.getMode() == ExploreTab.MODE_ONTOLOGY_DETAIL) {
+
 						this.drawOntologyDetail();
+						this.updateGraphInfoBar(); // update nodes/predicate count
+
 					} else if (this.getMode() == ExploreTab.MODE_INSTANCE) {
-                        this.oTree.showAll();
-                        var workList = this.oTree.getSelectedPropertyPairs();
 
-                        // add selected classes as lists [className]
-                        var classList = this.oTree.getSelectedClassNames();
-                        for (var c of classList) {
-                            workList.push([c]);
-                        }
-                        this.addInstanceData(workList);
+						this.oTree.showAll();
+						var workList = this.oTree.getSelectedPropertyPairs();
 
-                    } else {  // ExploreTab.MODE_STATS
-                        var client = new MsiClientOntologyInfo(this.oInfoClientURL, ModalIidx.alert.bind(this, "Error"));
-                        var drawStatsCallback = this.buildStatusResultsCallback(
-                            this.drawPredicateStats.bind(this),
-                            MsiClientResults.prototype.execGetJsonBlobRes
-                        );
-                        client.execGetPredicateStats(gConn, drawStatsCallback);
-                    }
-                    this.networkHash[this.getMode()].fit();
+						// add selected classes as lists [className]
+						var classList = this.oTree.getSelectedClassNames();
+						for (var c of classList) {
+							workList.push([c]);
+						}
+						this.addInstanceData(workList);
+						this.updateGraphInfoBar(); // update nodes/predicate count
 
-                }
-                this.updateInfo();
-            },
+					} else if (this.getMode() == ExploreTab.MODE_STATS) {
+
+						var client = new MsiClientOntologyInfo(this.oInfoClientURL, ModalIidx.alert.bind(this, "Error"));
+						var drawStatsCallback = this.buildStatusResultsCallback(
+							this.drawPredicateStats.bind(this),
+							MsiClientResults.prototype.execGetJsonBlobRes
+						);
+						client.execGetPredicateStats(gConn, drawStatsCallback);
+						this.updateGraphInfoBar(); // update nodes/predicate count
+
+					} else if (this.getMode() == ExploreTab.MODE_RESTRICTIONS) {
+
+						this.clearGraphInfoBar();	// remove nodes/predicates info bar
+
+						if(this.restrictionTree.isEmpty()){ // if tree is empty, then populate it, else leave as is
+							
+							const MAX_RESTRICTION_ROWS = 5000;  // max (concise format) rows
+							
+							// query for restriction violations and display them in tree
+							var client = new MsiClientOntologyInfo(this.oInfoClientURL, ModalIidx.alert.bind(this, "Error"));
+							var cardinalityCallback = this.buildStatusResultsCallback(
+								this.restrictionTree.draw.bind(this.restrictionTree),
+								MsiClientResults.prototype.execGetTableResultsJsonTableRes,
+								MAX_RESTRICTION_ROWS
+							);
+							client.execGetCardinalityViolations(gConn, MAX_RESTRICTION_ROWS, true, cardinalityCallback);
+						}
+					}
+
+					this.networkHash[this.getMode()].fit();  // fit the graph to the canvas
+				}
+			},
 
             // https://stackoverflow.com/questions/12043187/how-to-check-if-hex-color-is-too-black
             // 40 or less is pretty black
@@ -591,7 +702,6 @@ define([	// properly require.config'ed
                 var b = (rgb >>  0) & 0xff;  // extract blue
 
                 var luma = 0.2126 * r + 0.7152 * g + 0.0722 * b; // per ITU-R BT.709
-
                 return luma
             },
 
@@ -683,7 +793,7 @@ define([	// properly require.config'ed
                 this.networkHash[ExploreTab.MODE_STATS].body.data.nodes.add(nodeData);
                 this.networkHash[ExploreTab.MODE_STATS].body.data.edges.add(edgeData);
 
-                this.updateInfo();
+                this.updateGraphInfoBar();
             },
 
            drawOntologyClasses : function () {
@@ -737,7 +847,7 @@ define([	// properly require.config'ed
                 this.networkHash[ExploreTab.MODE_ONTOLOGY_CLASSES].body.data.nodes.add(nodeData);
                 this.networkHash[ExploreTab.MODE_ONTOLOGY_CLASSES].body.data.edges.add(edgeData);
 
-                this.updateInfo();
+                this.updateGraphInfoBar();
 
             },
             
@@ -806,7 +916,7 @@ define([	// properly require.config'ed
             	this.busy(false);
                 IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
                	IIDXHelper.progressBarRemove(this.progressDiv);    
-                this.updateInfo();
+                this.updateGraphInfoBar();
             },
 
             // add instance data returned by from /dispatchSelectInstanceData REST call
@@ -830,6 +940,7 @@ define([	// properly require.config'ed
                         return "";
                     }
                 };
+ 
                 var nodetitle = function (uri, classnames) {
                     var classList = classnames.split(',');
                     for (var i=0; i < classList.length; i++) {
@@ -837,7 +948,6 @@ define([	// properly require.config'ed
                     }
                     return "<strong>" + classList.toString() + "</strong><br>" + local(uri);
                 };
-
 
                 // efficiently (?) grab columns by name only once
                 // two styles of table possible
@@ -856,7 +966,6 @@ define([	// properly require.config'ed
                 var nodeHash = {};
                 var edgeList = [];
 
-                //console.log("Adding to nodeJs START");
                 for (var i=0; i < rows.length; i++) {
                     // read a row describing a triple
                     var s = rows[i][0];
@@ -902,17 +1011,14 @@ define([	// properly require.config'ed
                 }
                 this.networkHash[ExploreTab.MODE_INSTANCE].body.data.nodes.update(nodeList);
                 this.networkHash[ExploreTab.MODE_INSTANCE].body.data.edges.update(edgeList);
-                this.updateInfo();
-                //console.log("Adding to nodeJs END");
-
+                this.updateGraphInfoBar();
             },
 
             // delete worklist items from the Network
             //
             deleteInstanceData(workList) {
 
-
-                this.updateInfo();
+                this.updateGraphInfoBar();
                 this.stopLayout();
 
                 if (!workList || workList.length == 0) {
@@ -925,8 +1031,7 @@ define([	// properly require.config'ed
 
                 var vNodesLostEdgesList = [];
                 var vEdgesToDelete = [];
-
-                var START = performance.now();
+                
                 var i = 0;
                 // first pass: remove edges
                 for (var w of workList) {
@@ -962,9 +1067,6 @@ define([	// properly require.config'ed
                     }
                 }
                 this.networkHash[ExploreTab.MODE_INSTANCE].body.data.edges.remove(vEdgesToDelete);
-
-                //console.log("1st pass time: " + (performance.now() - START));
-                START = performance.now();
 
                 // count edges for each node
                 var edgeCountHash = {};
@@ -1003,9 +1105,6 @@ define([	// properly require.config'ed
                     }
                 }
 
-                //console.log("2nd pass time: " + (performance.now() - START));
-                START = performance.now();
-
                 var vNodesToRemove = [];
                 var vNodesLostEdgesSet = new Set(vNodesLostEdgesList);
                 // third pass: remove orphan nodes
@@ -1024,12 +1123,11 @@ define([	// properly require.config'ed
                     }
                 }
                 this.networkHash[ExploreTab.MODE_INSTANCE].body.data.nodes.remove(vNodesToRemove);
-                //console.log("3rd pass time: " + (performance.now() - START));
 
                 IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
                 IIDXHelper.progressBarRemove(this.progressDiv);
                 this.busy(false);
-                this.updateInfo();
+                this.updateGraphInfoBar();
                 this.startLayout();
             },
 
@@ -1043,11 +1141,6 @@ define([	// properly require.config'ed
                     this.networkHash[m].body.data.nodes.clear();
                     this.networkHash[m].body.data.edges.clear();
                 }
-
-                // if (this.network !== null) {
-                //    this.network.destroy();
-                // }
-
             },
 
             // query and add instance data based on the ontologyTree
@@ -1055,9 +1148,8 @@ define([	// properly require.config'ed
             addInstanceData : function (workList) {
                 var LIMIT = 1000;
                 var OFFSET = 0;
-                var CALL_NOW = 0;
 
-                this.updateInfo();
+                this.updateGraphInfoBar();
 
                 if (!workList || workList.length == 0) {
                     return;
@@ -1065,8 +1157,6 @@ define([	// properly require.config'ed
 
                 this.cancelFlag = false;
                 this.busy(true);
-
-
 
                 var workIndex = 0;
 
@@ -1084,12 +1174,8 @@ define([	// properly require.config'ed
                 };
 
                 var instanceDataCallback = function(tableRes) {
-                    var elapsed = performance.now() - CALL_NOW;
-                    //console.log("query time: " + elapsed);
 
                     this.addToNetwork(tableRes);
-                    elapsed = performance.now() - CALL_NOW;
-                    //console.log("query & work: " + elapsed);
 
                     if (tableRes.getRowCount() < LIMIT) {
                         workIndex += 1;
@@ -1100,16 +1186,12 @@ define([	// properly require.config'ed
                     }
 
                     if (workIndex < workList.length && ! this.cancelFlag) {
-                        var asyncCallback0 = MsiClientNodeGroupExec.buildFullJsonCallback(
-                                                                                             instanceDataCallback.bind(this),
+                        var asyncCallback0 = MsiClientNodeGroupExec.buildFullJsonCallback(	 instanceDataCallback.bind(this),
                                                                                              failureCallback.bind(this),
                                                                                              function(){},
                                                                                              checkForCancelCallback.bind(this),
                                                                                              g.service.status.url,
                                                                                              g.service.results.url);
-
-                        CALL_NOW = performance.now();
-
                         if (workList[workIndex].length == 2) {
                             this.oTree.activateByPropertyPair(workList[workIndex]);
                             client.execAsyncDispatchSelectInstanceDataPredicates(this.conn, [workList[workIndex]], LIMIT, OFFSET, false, asyncCallback0, failureCallback.bind(this));
@@ -1120,7 +1202,6 @@ define([	// properly require.config'ed
 
                     } else {
                         // done
-                        // handle predicates
                         IIDXHelper.progressBarSetPercent(this.progressDiv, 100);
                         IIDXHelper.progressBarRemove(this.progressDiv);
                         this.busy(false);
@@ -1128,8 +1209,7 @@ define([	// properly require.config'ed
                     }
                 };
 
-                var asyncCallback = MsiClientNodeGroupExec.buildFullJsonCallback(
-                                                                                     instanceDataCallback.bind(this),
+                var asyncCallback = MsiClientNodeGroupExec.buildFullJsonCallback(	 instanceDataCallback.bind(this),
                                                                                      failureCallback.bind(this),
                                                                                      function(){},
                                                                                      checkForCancelCallback.bind(this),
@@ -1138,7 +1218,6 @@ define([	// properly require.config'ed
 
                 IIDXHelper.progressBarCreate(this.progressDiv, "progress-info progress-striped active", this.butSetCancelFlag.bind(this));
                 IIDXHelper.progressBarSetPercent(this.progressDiv, 0, "Querying instance data");
-                CALL_NOW = performance.now();
 
                 if (workList[workIndex].length == 2) {
                     this.oTree.activateByPropertyPair(workList[workIndex]);
@@ -1148,17 +1227,21 @@ define([	// properly require.config'ed
                     client.execAsyncDispatchSelectInstanceDataSubjects(this.conn, [workList[workIndex][0]], LIMIT, OFFSET, false, asyncCallback, failureCallback.bind(this));
                 }
 
-                this.updateInfo();
-
+                this.updateGraphInfoBar();
             },
 
-            updateInfo : function () {
+			// display nodes/predicates count under the graph
+            updateGraphInfoBar : function () {
                 this.infospan.innerHTML = "nodes: " + this.networkHash[this.getMode()].body.data.nodes.getIds().length + "  predicates: " + this.networkHash[this.getMode()].body.data.edges.getIds().length;
             },
+            // remove the node/predicates count from under the graph
+            clearGraphInfoBar : function () {
+				this.infospan.innerHTML = "";
+			},
 
             // Build a callback for single 1-100 job
             // Creates the progressBar, and
-            buildStatusResultsCallback : function(successCallback, resultsCall) {
+            buildStatusResultsCallback : function(successCallback, resultsCall, optMaxRows) {
 
                 var failureCallback = function(msg) {
                     ModalIidx.alert("Alert", msg);
@@ -1193,7 +1276,11 @@ define([	// properly require.config'ed
                                 200);
                             }.bind(this);
                             var resultsClient = new MsiClientResults(g.service.results.url, jobId);
-                            resultsCall.bind(resultsClient)(resultsSuccessCallback);
+							if (typeof optMaxRows === "undefined") {
+								resultsCall.bind(resultsClient)(resultsSuccessCallback);
+							} else {
+								resultsCall.bind(resultsClient)(optMaxRows, resultsSuccessCallback);
+							}
                         }.bind(this);
 
                         progressCallback("", 1);

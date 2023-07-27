@@ -1,0 +1,4 @@
+class,property,restriction,limit,instance_count,property_count,subject_list
+http://Cardinality#Cardinal,http://Cardinality#code,mincardinality,2,5,1,"[""http:\/\/Cardinality#card1"",""http:\/\/Cardinality#strictercard1""]"
+http://Cardinality#StricterCardinal,http://Cardinality#code,mincardinality,4,3,1,"[""http:\/\/Cardinality#strictercard1""]"
+http://Cardinality#StricterCardinal,http://Cardinality#code,mincardinality,4,3,2,"[""http:\/\/Cardinality#strictercard2""]"

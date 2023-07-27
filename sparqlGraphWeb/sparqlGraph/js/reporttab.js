@@ -917,7 +917,7 @@ define([	// properly require.config'ed
                                                                                                 this.failureCallback.bind(this, spDiv),
                                                                                                 this.statusCallback.bind(this, spDiv),
                                                                                                 this.checkForCancelCallback.bind(this, spDiv));
-                            client.execGetCardinalityViolations(this.conn, ReportTab.MAX_ROWS, tableCallback);
+                            client.execGetCardinalityViolations(this.conn, ReportTab.MAX_ROWS, false, tableCallback);
                         } else {
                             throw new Error("Report 'special.id' has unknown value value: " + id);
                         }
@@ -1366,7 +1366,7 @@ define([	// properly require.config'ed
                         "<li><b>restriction</b> - type of restriction</li>" +
                         "<li><b>limit</b> - cardinality limit declared in the model and violated in the data</li>" +
                         "<li><b>subject</b> - the instance of the class which violates the restriction</li>" +
-                        "<li><b>class</b> - the actual cardinality of <b>property</b> for this <b>subject</b></li>" +
+                        "<li><b>property_count</b> - the actual cardinality of <b>property</b> for this <b>subject</b></li>" +
                         "</list>"
                     ));
 

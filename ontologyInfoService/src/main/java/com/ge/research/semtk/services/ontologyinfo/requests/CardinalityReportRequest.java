@@ -23,15 +23,23 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 public class CardinalityReportRequest extends SparqlConnectionRequest {
 
-    @Schema(
-    		name = "maxRows",
+    @Schema(name = "maxRows",
     		description = "Return only this many violations (e.g. protect browser memory)",
             required = false,
             example = "1000")
     private int maxRows = 0;
  
+	@Schema(name = "conciseFormat",
+			description = "Return using format that reduces redundant data and adds class instance count column",
+			required = false)
+	public boolean conciseFormat = false;    
+    
     public int getMaxRows() {
 		return this.maxRows;
 	}
+    
+    public boolean getConciseFormat() {
+    	return this.conciseFormat;
+    }
 
 }

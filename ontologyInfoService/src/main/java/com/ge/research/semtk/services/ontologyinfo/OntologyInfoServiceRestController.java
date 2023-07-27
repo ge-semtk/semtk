@@ -471,9 +471,10 @@ public class OntologyInfoServiceRestController {
 					HeadersManager.setHeaders(headers);
 					
 					OntologyInfo oInfo = oInfoCache.get(conn);
-					RestrictionChecker checker = new RestrictionChecker(conn, oInfo, tracker, jobId, 0, 100);
-					Table violationTab = checker.getCardinalityViolations(requestBody.getMaxRows());
-					rclient.execStoreTableResults(jobId, violationTab);
+					RestrictionChecker checker = new RestrictionChecker(conn, oInfo, tracker, jobId, 1, 99);
+					Table table = checker.getCardinalityViolations(requestBody.getMaxRows(), requestBody.getConciseFormat());
+					
+					rclient.execStoreTableResults(jobId, table);
 					tracker.setJobSuccess(jobId);
 					
 				} catch (Exception e) {
@@ -486,12 +487,10 @@ public class OntologyInfoServiceRestController {
 				}
 			}).start();
 			
-			
 			retval.addJobId(jobId);
 			retval.addResultType(SparqlResultTypes.TABLE);
 			retval.setSuccess(true);
-		}
-		catch (Exception e) {
+		} catch (Exception e) {
 			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
 			retval.setSuccess(false);
 			LocalLogger.printStackTrace(e);

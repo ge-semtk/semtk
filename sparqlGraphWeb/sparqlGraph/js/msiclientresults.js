@@ -109,7 +109,7 @@ define([	// properly require.config'ed   bootstrap-modal
                     data.appendDownloadHeaders = true;
                 }
 
-                this.msi.postToEndpoint("getTableResultsCsv", SON.stringify(data), "application/json", successCallback, this.optFailureCallback, this.optTimeout);
+                this.msi.postToEndpoint("getTableResultsCsv", JSON.stringify(data), "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 
             },
 

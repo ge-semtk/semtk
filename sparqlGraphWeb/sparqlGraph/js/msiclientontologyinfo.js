@@ -148,10 +148,11 @@ define([	// properly require.config'ed   bootstrap-modal
 
 		
 			// Get cardinality violations
-            execGetCardinalityViolations : function (conn, maxRows, successCallback) {
+            execGetCardinalityViolations : function (conn, maxRows, conciseFormat, successCallback) {
                 var myData = JSON.stringify ({
 					"conn" : JSON.stringify(conn.toJson()),
-					"maxRows" : maxRows
+					"maxRows" : maxRows,
+					"conciseFormat" : conciseFormat
 				});
 
 				this.msi.postToEndpoint("getCardinalityViolations", myData, "application/json", successCallback, this.optFailureCallback, this.optTimeout);

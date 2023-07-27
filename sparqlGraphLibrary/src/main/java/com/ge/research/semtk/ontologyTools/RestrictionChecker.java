@@ -19,8 +19,11 @@
 package com.ge.research.semtk.ontologyTools;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Hashtable;
+
+import org.json.simple.JSONArray;
 
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.resultSet.Table;
@@ -36,13 +39,24 @@ public class RestrictionChecker {
 	private OntologyInfo oInfo = null;
 	private Table cardinalityRestrictionsTable = null;
 	private JobTracker tracker = null;
+	private String jobId = null;
 	private int startPercent = 0;
 	private int endPercent = 100;
 	
 	private Hashtable<String,Integer> maxHash = new Hashtable<String,Integer>();
 	private Hashtable<String,Integer> minHash = new Hashtable<String,Integer>();
 	private Hashtable<String,Integer> exactHash = new Hashtable<String,Integer>();
-
+	
+	// table column headers
+	private String COL_CLASS = "class";
+	private String COL_PROPERTY = "property";
+	private String COL_RESTRICTION = "restriction";
+	private String COL_LIMIT = "limit";
+	private String COL_SUBJECT = "subject";
+	private String COL_PROPERTYCOUNT = "property_count";
+	private String COL_SUBJECTLIST = "subject_list";
+	private String COL_INSTANCECOUNT = "instance_count";
+	
 	/**
 	 * This class checks restrictions outside of query and ingestion process.
 	 * e.g. cardinality is impossible (e.g. min) or too expensive (e.g. max) to check during ingestion, and meaningless during a SELECT
@@ -54,6 +68,12 @@ public class RestrictionChecker {
 	}
 	
 	public RestrictionChecker(SparqlConnection conn, OntologyInfo oInfo, JobTracker tracker, String jobId, int percentStart, int percentEnd) throws Exception {
+		
+		this.tracker = tracker;
+		this.jobId = jobId;
+		this.startPercent = percentStart;
+		this.endPercent = percentEnd;
+		
 		// conn with only the model : set data(0) to model(0)
 		this.modelConn = new SparqlConnection();
 		this.modelConn.setName("model");
@@ -80,32 +100,42 @@ public class RestrictionChecker {
 	 * Generate a table of cardinality violations
 	 */
 	public Table getCardinalityViolations() throws Exception {
-		return this.getCardinalityViolations(0);
+		return this.getCardinalityViolations(0, false);
+	}
+	
+	/**
+	 * Generate a table of cardinality violations
+	 * @param conciseFormat return table in format that reduces redundant data and adds class instance count column
+	 */
+	public Table getCardinalityViolations(boolean conciseFormat) throws Exception {
+		return this.getCardinalityViolations(0, conciseFormat);
 	}
 
 	/**
 	 * Generate a table of cardinality violations
-	 * @param maxRows maximum number of rows to return
+	 * @param maxRows maximum number of violation rows
+	 * @param conciseFormat return table in format that reduces redundant data and adds class instance count column
 	 */
-	public Table getCardinalityViolations(int maxRows) throws Exception {
-
-		// update tracker
-		int percent = this.startPercent;
-		if (this.tracker != null) {
-			this.tracker.setJobPercentComplete("Querying cardinality restrictions", percent);
-			percent += (this.endPercent - percent) / 10;
-		}
+	public Table getCardinalityViolations(int maxRows, boolean conciseFormat) throws Exception {
 		
 		HashSet<String> COUNT_FUNC = new HashSet<String>();
 		COUNT_FUNC.add("COUNT");
 	
-		Table retTable = new Table(new String[] {"class", "property", "restriction", "limit", "subject", "actual_cardinality"}, new String[] {"string", "string", "string", "integer", "string", "integer"} );
+		// create return table to populate
+		Table retTable = new Table(new String[] {COL_CLASS, COL_PROPERTY, COL_RESTRICTION, COL_LIMIT, COL_SUBJECT, COL_PROPERTYCOUNT}, new String[] {"string", "string", "string", "integer", "string", "integer"} );
 		
+		boolean hitMaxRows = false;
 		// run a query to check each restriction
 		for (int i=0; i < this.cardinalityRestrictionsTable.getNumRows(); i++) {
+
+			if(hitMaxRows) { break; }
+			
+			// update job status
 			if (this.tracker != null) {
-				this.tracker.setJobPercentComplete("Checking cardinality restrictions", percent + (this.endPercent - percent) * (i / this.cardinalityRestrictionsTable.getNumRows()));
+				int currentPercent = (int)(this.startPercent + (this.endPercent - this.startPercent) * (((double)i) / this.cardinalityRestrictionsTable.getNumRows()));
+				this.tracker.setJobPercentComplete(jobId, currentPercent, "Querying cardinality restrictions");
 			}
+
 			String className = this.cardinalityRestrictionsTable.getCell(i, 0);
 			String propName = this.cardinalityRestrictionsTable.getCell(i, 1);
 			String restriction = new OntologyName(this.cardinalityRestrictionsTable.getCell(i, 2).toLowerCase()).getLocalName();
@@ -131,12 +161,90 @@ public class RestrictionChecker {
 				
 				// return if hit maxRows
 				if (maxRows > 0 && retTable.getNumRows() >= maxRows) {
-					return retTable;
+					hitMaxRows = true;
+					break;
 				}
 			}
 		}
-		// return if finished without hitting maxRows
+		
+		// return table in concise or original format
+		if(conciseFormat) {
+			return applyConciseFormat(retTable);
+		} else {
+			return retTable;
+		}
+	}
+	
+	
+	/**
+	 * Apply concise formatting to cardinality violations table
+	 * @param violationsTable table in original format
+	 * @return table in concise format
+	 */
+	private Table applyConciseFormat(Table violationsTable) throws Exception {
+		
+		// structure for return table
+		Table retTable = new Table(new String[] {COL_CLASS, COL_PROPERTY, COL_RESTRICTION, COL_LIMIT, COL_INSTANCECOUNT, COL_PROPERTYCOUNT, COL_SUBJECTLIST}, new String[] {"string", "string", "string", "integer", "integer", "integer", "string"} );
+		Table retTableSubset = retTable.copy();		// use return table subsets to achieve desired sorting
+		
+		// for each class in the violations table
+		for(String clazz : violationsTable.getColumnUniqueValues(COL_CLASS)) {
+			Table violationsForClass = violationsTable.getSubsetWhereMatches(COL_CLASS, clazz);	// subset of violations for this class
+			int instanceCount = getInstanceCount(clazz);
+			
+			// for each class+property in the violations table
+			for(String property : violationsForClass.getColumnUniqueValues(COL_PROPERTY)) {
+				Table violationsForClassAndProperty = violationsForClass.getSubsetWhereMatches(COL_PROPERTY, property);  // subset of violations for this class+property
+
+				// get restriction (expect all rows here to have same restriction)
+				String[] tmp = violationsForClassAndProperty.getColumnUniqueValues(COL_RESTRICTION);
+				if(tmp.length > 1)
+					throw new Exception("Unexpectedly got multiple unique restrictions for " + clazz + " and " + property);
+				String restriction = tmp[0];
+				
+				// get limit (expect all rows here to have same limit)
+				tmp = violationsForClassAndProperty.getColumnUniqueValues(COL_LIMIT);
+				if(tmp.length > 1)
+					throw new Exception("Unexpectedly got multiple unique limits for " + clazz + " and " + property);
+				int limit = Integer.valueOf(tmp[0]).intValue();
+				
+				// create map of property count => list of subjects violating the restriction with this number of properties
+				// e.g. 0 => subject1, subject2 if subject1 and subject 2 both offend by having 0 of these properties
+				Hashtable<Integer, ArrayList<String>> propertyCountHash = new Hashtable<Integer, ArrayList<String>>();				
+				for(ArrayList<String> row : violationsForClassAndProperty.getRows()){
+					String subject = row.get(4);					// URI of subject
+					Integer propertyCount = Integer.valueOf(row.get(5));	// actual number of properties that this subject has
+					ArrayList<String> uriList = propertyCountHash.get(propertyCount);
+					if(uriList == null) {
+						propertyCountHash.put(propertyCount, new ArrayList<>(Arrays.asList(subject)));  // new list with just the single subject
+					}else {
+						uriList.add(subject);	// add this subject to the existing list
+					}
+				}
+				
+				// for each propertyCount entry, add row to table
+				for(Integer i : propertyCountHash.keySet()) {
+					String uriListJson = JSONArray.toJSONString(propertyCountHash.get(i));
+					retTableSubset.addRow(new String[] {clazz, property, restriction, Integer.toString(limit), Integer.toString(instanceCount), Integer.toString(i), uriListJson});
+				}
+				
+				// sort the results subset table and add it to the results table
+				retTableSubset.sortByColumnInt(COL_PROPERTYCOUNT);
+				retTable.append(retTableSubset);
+				retTableSubset.clearRows();
+			}
+		}
 		return retTable;
+	}
+	
+	// gets the number of instances (including subclasses) present in the dataset
+	private int getInstanceCount(String className) throws Exception {
+		String sparql = SparqlToXLibUtil.generateCountInstances(dataConn, oInfo, className);
+		try {
+			return this.dataConn.getDefaultQueryInterface().executeToTable(sparql).getCellAsInt(0, 0);
+		}catch(Exception e) {
+			throw new Exception("Unexpected result querying for instance count: " + e.getMessage());
+		}
 	}
 	
 	// determines whether given restriction text indicates max/min/exact restriction

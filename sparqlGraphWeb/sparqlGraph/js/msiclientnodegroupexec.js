@@ -367,8 +367,17 @@ define([	// properly require.config'ed   bootstrap-modal
                     "limit" : limit,
                     "conn": JSON.stringify(conn.toJson())
                 });
-
                 this.runAsync("constructConnectedData", data, jobIdCallback, failureCallback);
+            },
+            
+            execAsyncConstructInstanceWithPredicates : function(instanceUri, instanceClassUri, predicateList, conn, jobIdCallback, failureCallback) {
+                var data = JSON.stringify ({
+                    "instanceUri" : instanceUri,
+                    "instanceClassUri": instanceClassUri,
+                    "predicateList": predicateList,
+                    "conn": JSON.stringify(conn.toJson())
+                });
+                this.runAsync("constructInstanceWithPredicates", data, jobIdCallback, failureCallback);
             },
             /* ===================================================================================== */
 

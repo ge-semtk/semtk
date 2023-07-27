@@ -1,4 +1,4 @@
-class,property,restriction,limit,subject,actual_cardinality
+class,property,restriction,limit,subject,property_count
 http://Cardinality#Cardinal,http://Cardinality#atLeast1Data,mincardinality,1,http://Cardinality#card0,0
 http://Cardinality#Cardinal,http://Cardinality#atLeast1Data,mincardinality,1,http://Cardinality#sub0,0
 http://Cardinality#Cardinal,http://Cardinality#atLeast1Object,mincardinality,1,http://Cardinality#card0,0

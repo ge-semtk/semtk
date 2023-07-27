@@ -58,8 +58,17 @@ public class RestrictionCheckerTest_IT {
 		
 		// test violations table
 		Table violationsTable = checker.getCardinalityViolations();
+		assertEquals(violationsTable.getNumRows(), 36);
 		IntegrationTestUtility.compareResults(violationsTable.toCSVString(), this, "cardinality_test1_results.csv");  // csv file contains expected violations
 
+		// test violations table with row max
+		violationsTable = checker.getCardinalityViolations(10, false);
+		assertEquals(violationsTable.getNumRows(), 10);
+		
+		// test violations table in concise format
+		violationsTable = checker.getCardinalityViolations(true);
+		assertEquals(violationsTable.getNumRows(), 22);
+		IntegrationTestUtility.compareResults(violationsTable.toCSVString(), this, "cardinality_test1_results_concise.csv");  // csv file contains expected violations in concise format
 	}
 
 	@Test
@@ -80,8 +89,14 @@ public class RestrictionCheckerTest_IT {
 		assertTrue(checker.satisfiesCardinality("http://Cardinality#StricterCardinal", "http://Cardinality#code", 4));
 		
 		// note table has 2 entries for subclass: one for superclass, one for subclass
-		Table violationsTable = checker.getCardinalityViolations();
+		Table violationsTable = checker.getCardinalityViolations(false);
+		assertEquals(violationsTable.getNumRows(), 4);
 		IntegrationTestUtility.compareResults(violationsTable.toCSVString(), this, "cardinality_testStricter_results.csv");  // csv file contains expected violations
+		
+		// test violations table in concise format
+		violationsTable = checker.getCardinalityViolations(true);
+		assertEquals(violationsTable.getNumRows(), 3);
+		IntegrationTestUtility.compareResults(violationsTable.toCSVString(), this, "cardinality_testStricter_results_concise.csv");  // csv file contains expected violations in concise format
 	}
 	
 }

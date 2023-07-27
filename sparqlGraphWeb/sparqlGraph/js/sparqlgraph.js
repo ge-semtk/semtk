@@ -51,8 +51,6 @@
 
     var RESULTS_MAX_ROWS = 5000; // 5000 sample rows
     var ALLOW_CIRCULAR_NODEGROUPS = true;
-	var CONSTRUCT_CONNECT_WARN = 100;
-	var CONSTRUCT_CONNECT_MAX = 1000;
 	
     // READY FUNCTION
     $('document').ready(function(){
@@ -2184,18 +2182,12 @@
         gNodeGroup.setColumnOrder(colNames);
     };
 
-    // simplified status callback for quick-ish network operations
-    var networkBusy = function(canvasDiv, flag) {
-        var canvas = canvasDiv.getElementsByTagName("canvas")[0];
-        canvas.style.cursor = (flag ? "wait" : "");
-    };
-
     var networkFailureCallback = function (canvas, html) {
-        require(['sparqlgraph/js/modaliidx'],
-                function(ModalIidx) {
-
+        require(['sparqlgraph/js/modaliidx',
+        		 'sparqlgraph/js/visjshelper'],
+                function(ModalIidx, VisJsHelper) {
             ModalIidx.alert("Service Failure", html);
-            networkBusy(canvas, false);
+            VisJsHelper.networkBusy(canvas, false);
         });
     };
     
@@ -2323,8 +2315,8 @@
             }.bind(this, network));
 
             // button callbacks
-            network.on('doubleClick', this.constructExpandCallback.bind(this, res, canvasDiv, network));
-            expandButton.onclick = this.constructExpandCallback.bind(this, res, canvasDiv, network);
+            network.on('doubleClick', VisJsHelper.expandSelectedNodes.bind(this, canvasDiv, network));
+            expandButton.onclick = VisJsHelper.expandSelectedNodes.bind(this, canvasDiv, network);
             buildButton.onclick = this.constructBuildNodegroupCallback.bind(this, network);
             removeButton.onclick = this.constructRemoveCallback.bind(this, network);
 
@@ -2528,96 +2520,6 @@
 	 	var ngJsonStr = JSON.stringify(sgjson.toJson());
 		checkAnythingUnsavedThen(doQueryLoadJsonStr.bind(this, ngJsonStr, name));
 	};
-
-    // user clicked to add to CONSTRUCT graph
-    var constructExpandCallback = function(origRes, canvasDiv, network) {
-        require(['sparqlgraph/js/modaliidx', 'sparqlgraph/js/msiclientnodegroupexec', 'sparqlgraph/js/visjshelper'
-			    ], function(ModalIidx, MsiClientNodeGroupExec, VisJsHelper) {
-
-            networkBusy(canvasDiv, true);
-            var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.longTimeoutMsec);
-            var resultsCallback = MsiClientNodeGroupExec.buildJsonLdOrTriplesCallback(
-                constructExpandCallbackGotResults.bind(this, canvasDiv, network),
-                networkFailureCallback.bind(this, canvasDiv),
-                function() {}, // no status updates
-                function() {}, // no check for cancel
-                g.service.status.url,
-                g.service.results.url);
-            var idList = network.getSelectedNodes();
-            var classList = [];
-            for (var id of idList) {
-                var classUri = network.body.data.nodes.get(id).group;
-             	if (classUri == VisJsHelper.BLANK_NODE) {
-					networkBusy(canvasDiv, false);
-					ModalIidx.alert("Blank node error", "Can not expand a blank node returned from a previous query.")
-				} else if (classUri == VisJsHelper.DATA_NODE) {
-                    var instanceUri = id;
-                    client.execAsyncConstructConnectedData(instanceUri, null, SemanticNodeGroup.RT_NTRIPLES, CONSTRUCT_CONNECT_MAX, gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
-
-                } else {
-                    // get classname and instance name with ':' prefex expanded out to full '#' uri
-                    var instanceUri = id;
-                    client.execAsyncConstructConnectedData(instanceUri, "node_uri", SemanticNodeGroup.RT_NTRIPLES, CONSTRUCT_CONNECT_MAX, gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
-                }
-            }
-        });
-    };
-
-    var constructExpandCallbackGotResults = function(canvasDiv, network, res) {
-        require(['sparqlgraph/js/modaliidx',
-                 'sparqlgraph/js/visjshelper'],
-                 function (ModalIidx, VisJsHelper) {
-	
-			var nodeDict = {};   // dictionary of nodes with @id as the key
-            var edgeList = [];
-            
-            if (res.isNtriplesResults()) {
-		
-				// Load function for after we've tested size and chopped it down if needed
-				loadTriples = function(nodeDict, edgeList, canvasDiv, network, triples) {
-					for (var i=0; i < triples.length; i++) {			
-		                VisJsHelper.addTriple(triples[i], nodeDict, edgeList, false, true);
-		            }
-		            network.body.data.nodes.update(Object.values(nodeDict));
-		            network.body.data.edges.update(edgeList);
-		            networkBusy(canvasDiv, false);
-				}.bind(this, nodeDict, edgeList, canvasDiv, network);
-				
-				triples = res.getNtriplesArray();
-				if (triples.length < CONSTRUCT_CONNECT_WARN) {
-					loadTriples(triples);
-					
-				} else if (triples.length < CONSTRUCT_CONNECT_MAX) {
-					// "Warning zone" : user can load none, some, or all
-					ModalIidx.choose("Large number of nodes returned", 
-					    "A large number of data was returned: " + triples.length + " nodes and edges<br>This could overload your browser.<br>", 
-						["load " + CONSTRUCT_CONNECT_WARN, "load " + triples.length, "cancel"],
-						[function() {loadTriples(triples.slice(0, CONSTRUCT_CONNECT_WARN));} ,
-						 function() {loadTriples(triples);} ,
-						 function(){}]
-					);
-				} else {
-					// "Danger zone" : user can load none, small, or medium.  All were not returned so they can't be loaded.'
-					ModalIidx.choose("Large number of nodes returned", 
-					    "Too much data was returned >" + CONSTRUCT_CONNECT_MAX + " nodes and edges<br>This would overload your browser.<br>", 
-						["load " + CONSTRUCT_CONNECT_WARN, "load " + CONSTRUCT_CONNECT_MAX, "cancel"],
-						[function() {loadTriples(triples.slice(0, CONSTRUCT_CONNECT_WARN));} ,
-						 function() {loadTriples(triples.slice(0, CONSTRUCT_CONNECT_MAX ));} ,   // truncate further since back-end can overshoot
-						 function(){}]
-						 );
-				}
-	            
-	        } else {
-                ModalIidx.alert("NodeGroup Exec Service Failure", "<b>Error:</b> Results returned from service are not N_TRIPLES");
-                return;
-            }
-            
-            network.body.data.nodes.update(Object.values(nodeDict));
-            network.body.data.edges.update(edgeList);
-            networkBusy(canvasDiv, false);
-        });
-
-    };
 
 	// has evolved to either retrieve or delete items from store
    	var doRetrieveFromNGStore = function() {

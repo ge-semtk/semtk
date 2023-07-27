@@ -10,12 +10,23 @@ define([	// properly require.config'ed
 		],
         function(ModalIidx, IIDXHelper, $, vis) {
 
+	var ADD_TRIPLES_WARN = 100;     // when adding triples to graph, warn if this many
+	var ADD_TRIPLES_MAX = 1000;     // when adding triples to graph, disallow more than this many
+
     var VisJsHelper = function () {
     };
 
 	VisJsHelper.BLANK_NODE = "blank_node";
 	VisJsHelper.DATA_NODE = "data";
 	VisJsHelper.BLANK_NODE_REGEX ="^(nodeID://|_:)";
+
+	/**
+	 * Show/remove wait cursor for network
+	 */
+    VisJsHelper.networkBusy = function(canvasDiv, flag) {
+        var canvas = canvasDiv.getElementsByTagName("canvas")[0];
+        canvas.style.cursor = (flag ? "wait" : "");
+    };
 		
     VisJsHelper.createCanvasDiv = function(id) {
         var canvasdiv = document.createElement("div");
@@ -265,6 +276,101 @@ define([	// properly require.config'ed
             }
         }
     };
+
+    /**
+	 * Expand the selected nodes in a graph
+	 * canvasDiv - the canvas div containing the network
+	 * network - the network
+	 */
+    VisJsHelper.expandSelectedNodes = function(canvasDiv, network) {
+        require(['sparqlgraph/js/modaliidx', 'sparqlgraph/js/msiclientnodegroupexec'
+			    ], function(ModalIidx, MsiClientNodeGroupExec) {
+
+            VisJsHelper.networkBusy(canvasDiv, true);
+            var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.longTimeoutMsec);
+            var resultsCallback = MsiClientNodeGroupExec.buildJsonLdOrTriplesCallback(
+                VisJsHelper.addTriples.bind(this, canvasDiv, network), // add triples to graph
+                networkFailureCallback.bind(this, canvasDiv),
+                function() {}, // no status updates
+                function() {}, // no check for cancel
+                g.service.status.url,
+                g.service.results.url);
+            var idList = network.getSelectedNodes();
+            for (var id of idList) {
+                var classUri = network.body.data.nodes.get(id).group;
+             	if (classUri == VisJsHelper.BLANK_NODE) {
+					VisJsHelper.networkBusy(canvasDiv, false);
+					ModalIidx.alert("Blank node error", "Can not expand a blank node returned from a previous query.")
+				} else if (classUri == VisJsHelper.DATA_NODE) {
+                    var instanceUri = id;
+                    client.execAsyncConstructConnectedData(instanceUri, null, SemanticNodeGroup.RT_NTRIPLES, ADD_TRIPLES_MAX, gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
+                } else {
+                    // get classname and instance name with ':' prefix expanded out to full '#' uri
+                    var instanceUri = id;
+                    client.execAsyncConstructConnectedData(instanceUri, "node_uri", SemanticNodeGroup.RT_NTRIPLES, ADD_TRIPLES_MAX, gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
+                }
+            }
+        });
+    };
+
+	/**
+	 * Add triples to a graph.  
+	 * If triples exceed warn/max threshold(s), allow user to load subset or full set.
+	 * 
+	 * canvasDiv - the canvas div containing the network
+	 * network - the network
+	 * triplesRes - a results object containing n-triples
+	 */
+	VisJsHelper.addTriples = function(canvasDiv, network, triplesRes) {
+	
+		var nodeDict = {};   // dictionary of nodes with @id as the key
+		var edgeList = [];
+
+		if (triplesRes.isNtriplesResults()) {
+
+			// Load function for after we've tested size and chopped it down if needed
+			loadTriples = function(nodeDict, edgeList, canvasDiv, network, triples) {
+				for (var i = 0; i < triples.length; i++) {
+					VisJsHelper.addTriple(triples[i], nodeDict, edgeList, false, true);
+				}
+				network.body.data.nodes.update(Object.values(nodeDict));
+				network.body.data.edges.update(edgeList);
+				VisJsHelper.networkBusy(canvasDiv, false);
+			}.bind(this, nodeDict, edgeList, canvasDiv, network);
+
+			triples = triplesRes.getNtriplesArray();
+			if (triples.length < ADD_TRIPLES_WARN) {
+				loadTriples(triples);
+
+			} else if (triples.length < ADD_TRIPLES_MAX) {
+				// "Warning zone" : user can load none, some, or all
+				ModalIidx.choose("Large number of nodes returned",
+					"A large number of data was returned: " + triples.length + " nodes and edges<br>This could overload your browser.<br>",
+					["load " + ADD_TRIPLES_WARN, "load " + triples.length, "cancel"],
+					[function() { loadTriples(triples.slice(0, ADD_TRIPLES_WARN)); },
+					function() { loadTriples(triples); },
+					function() { }]
+				);
+			} else {
+				// "Danger zone" : user can load none, small, or medium.  All were not returned so they can't be loaded.'
+				ModalIidx.choose("Large number of nodes returned",
+					"Too much data was returned >" + ADD_TRIPLES_MAX + " nodes and edges<br>This would overload your browser.<br>",
+					["load " + ADD_TRIPLES_WARN, "load " + ADD_TRIPLES_MAX, "cancel"],
+					[function() { loadTriples(triples.slice(0, ADD_TRIPLES_WARN)); },
+					function() { loadTriples(triples.slice(0, ADD_TRIPLES_MAX)); },   // truncate further since back-end can overshoot
+					function() { }]
+				);
+			}
+		} else {
+			ModalIidx.alert("NodeGroup Exec Service Failure", "<b>Error:</b> Results returned from service are not N_TRIPLES");
+			return;
+		}
+
+		network.body.data.nodes.update(Object.values(nodeDict));
+		network.body.data.edges.update(edgeList);
+		VisJsHelper.networkBusy(canvasDiv, false);
+    };
+
     
     // optLabelIdFlag - instead of "normal formatting", Label nodes with the id (URI)
     // optSkipSAClassFlag - skip triples like "Dog #type owl#class" on main SPARQLgraph display
