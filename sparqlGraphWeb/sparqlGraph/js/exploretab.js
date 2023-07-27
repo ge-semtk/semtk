@@ -36,6 +36,7 @@ define([	// properly require.config'ed
             'sparqlgraph/js/msiclientresults',
             'sparqlgraph/js/msiresultset',
             'sparqlgraph/js/ontologyinfo',
+            'sparqlgraph/js/restrictiontree',
             'sparqlgraph/js/visjshelper',
 
          	'jquery',
@@ -45,13 +46,12 @@ define([	// properly require.config'ed
 			// shimmed
          	'sparqlgraph/dynatree-1.2.5/jquery.dynatree',
             'sparqlgraph/js/ontologytree',
-            'sparqlgraph/js/restrictiontree',            
             'sparqlgraph/js/belmont'
 
 		],
 
     // TODO: this isn't leveraging VisJsHelper properly.  Code duplication.
-	function(IIDXHelper, ModalIidx, MsiClientNodeGroupExec, MsiClientOntologyInfo, MsiClientStatus, MsiClientResults, MsiResultSet, OntologyInfo, VisJsHelper, $, vis) {
+	function(IIDXHelper, ModalIidx, MsiClientNodeGroupExec, MsiClientOntologyInfo, MsiClientStatus, MsiClientResults, MsiResultSet, OntologyInfo, RestrictionTree, VisJsHelper, $, vis) {
 
 
 		//============ local object  ExploreTab =============
