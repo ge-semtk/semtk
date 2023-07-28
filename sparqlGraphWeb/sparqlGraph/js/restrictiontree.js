@@ -148,7 +148,8 @@ define([	// properly require.config'ed
 					id: id,
 					tooltip: tooltip,
 					isFolder: isFolder,
-					hideCheckbox: isFolder  // only want checkboxes on leaf nodes
+					hideCheckbox: isFolder,  // only want checkboxes on leaf nodes
+					icon: false
 				});
 				
 				return this.getNode(id);
@@ -262,6 +263,16 @@ define([	// properly require.config'ed
 						this.setNodeAttribute(node4, "classUri", className);	// used for constructing
 						this.setNodeAttribute(node4, "predicate", predicate);  	// used for constructing
 					}
+				}
+				
+				// if no tree entries, then add a "none" entry
+				if(!this.tree.getRoot().hasChildren()){				
+					this.tree.getRoot().addChild({
+						title: "None",
+						isFolder: false,
+						hideCheckbox: true,  // don't need a checkbox
+						icon: false
+					});
 				}
 				
 				// sort the tree

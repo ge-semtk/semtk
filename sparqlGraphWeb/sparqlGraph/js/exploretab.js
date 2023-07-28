@@ -237,6 +237,7 @@ define([	// properly require.config'ed
                 this.oInfo = new OntologyInfo(oInfo.toJson());  // deepCopy
                 this.oTree.setOInfo(this.oInfo);
 
+				this.restrictionTree.clear();
                 this.clearNetwork(ExploreTab.MODES);
             },
 
@@ -384,25 +385,40 @@ define([	// properly require.config'ed
                 var div = this.controlDivHash[ExploreTab.MODE_RESTRICTIONS];
                 div.style.margin="1ch";
                 
-                // add 2 dropdowns
-                // add dropdown to show violations only (exceeds maximum cardinality) or also incomplete data (does not meet minimum cardinality)
+                // add 2 dropdowns, using a table for formatting
+                // dropdown to show violations only (exceeds maximum cardinality) or also incomplete data (does not meet minimum cardinality)
                 var modeSelectDropdown = IIDXHelper.createSelect("restrictionTreeModeSelect", [["violations only",0], ["violations and incomplete data",1]], ["multi"], false, "input-large");
                 modeSelectDropdown.onchange = function() {
 					this.restrictionTree.setExceedsOnlyMode(parseInt(document.getElementById("restrictionTreeModeSelect").value) == 0);
                     this.restrictionTree.draw();
                 }.bind(this);
-				// add dropdown to pick sort option
-                var sortSelectDropdown = IIDXHelper.createSelect("restrictionTreeSortSelect", [["class",0], ["count",1], ["percentage",2]], ["multi"], false, "input-small");
+				// dropdown to pick sort option
+                var sortSelectDropdown = IIDXHelper.createSelect("restrictionTreeSortSelect", [["class",0], ["count",1], ["percentage",2]], ["multi"], false, "input-large");
                 sortSelectDropdown.onchange = function() {
                     this.restrictionTree.setSortMode(parseInt(document.getElementById("restrictionTreeSortSelect").value));
                     this.restrictionTree.sort();
-                }.bind(this);
-                var hform = IIDXHelper.buildHorizontalForm(true)
-                div.appendChild(hform);
-                hform.appendChild(document.createTextNode(" Show:"));
-                hform.appendChild(modeSelectDropdown);
-                hform.appendChild(document.createTextNode("   Sort by:"));
-                hform.appendChild(sortSelectDropdown);
+                }.bind(this);                
+                var table = document.createElement("table");
+				col = document.createElement("col");
+				col.style.width = "25%";
+				table.appendChild(col);
+                tr = document.createElement("tr");
+                td1 = document.createElement("td");
+                td1.innerHTML = "Show:";
+                tr.append(td1);
+                td2 = document.createElement("td");
+                td2.append(modeSelectDropdown);
+                tr.append(td2);
+                table.appendChild(tr);
+                tr2 = document.createElement("tr");
+                td1 = document.createElement("td");
+                td1.innerHTML = "Sort by:";
+                tr2.append(td1);
+                td2 = document.createElement("td");
+                td2.append(sortSelectDropdown);
+                tr2.append(td2);
+                table.appendChild(tr2);          
+                div.appendChild(table);
                 
                 // initialize network
                 this.initDynaTree_RestrictionsMode();
