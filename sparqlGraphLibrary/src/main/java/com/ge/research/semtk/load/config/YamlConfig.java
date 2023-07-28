@@ -1,6 +1,7 @@
 package com.ge.research.semtk.load.config;
 
 import java.io.File;
+import java.util.LinkedList;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -75,4 +76,26 @@ public abstract class YamlConfig {
 		return null;
 	}
 
+	/**
+	 * Utility method for a node that may be a string or a string array.
+	 * Returns a list containing the items from the string or string array.
+	 */
+	protected static LinkedList<String> getAsStringList(JsonNode node) throws Exception {
+		LinkedList<String> ret = new LinkedList<String>();
+		if(node == null) {
+			return null;
+		}else if(node.isTextual()) {
+			ret.add(node.asText()); // array with single element
+		}else if(node.isArray()){
+			ArrayNode array = (ArrayNode)node;
+			for(int i = 0; i < array.size(); i++) {
+				if(array.get(i).getNodeType() != JsonNodeType.STRING) {
+					throw new Exception("Expected an array of strings for this node: " + node.toString());
+				}
+				ret.add(array.get(i).asText());
+			}
+		}
+		return ret;
+	}
+	
 }

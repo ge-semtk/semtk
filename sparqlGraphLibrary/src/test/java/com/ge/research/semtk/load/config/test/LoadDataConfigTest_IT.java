@@ -58,7 +58,7 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 		assertTrue(((CsvByClassIngestionStep)config.getSteps().get(0)).getFilePath().endsWith("woodchucks.csv"));
 		assertEquals(((CsvByClassIngestionStep)config.getSteps().get(1)).getClazz(), "http://animals/woodland#HEDGEHOG");
 		assertTrue(((CsvByClassIngestionStep)config.getSteps().get(1)).getFilePath().endsWith("hedgehogs.csv"));
-		assertEquals(config.getModelgraph(), null);
+		assertEquals(config.getModelgraphs(), null);
 		assertEquals(config.getDatagraphs().size(), 1);
 		assertEquals(config.getDatagraphs().get(0), "http://junit/animals/data");
 
@@ -72,10 +72,12 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 		assertEquals(config.getDatagraphs().get(0), "http://junit/animals/data");
 		assertEquals(config.getDatagraphs().get(1), "http://junit/animals/data2");
 		assertEquals(config.getDatagraphs().get(2), "http://junit/animals/data3");
-
-		// this config has a model-graph
+		
+		// this config has (multiple) model graphs
 		config = new LoadDataConfig(Utility.getResourceAsTempFile(this, "/config/load_data_config_4.yaml"), modelFallbackSei.getGraph(), dataFallbackSei.getGraph());
-		assertEquals(config.getModelgraph(), "http://junit/animals/model");
+		assertEquals(config.getModelgraphs().size(), 2);
+		assertEquals(config.getModelgraphs().get(0), "http://junit/animals/model");
+		assertEquals(config.getModelgraphs().get(1), "http://junit/animals/model2");
 	}
 
 	@Test
@@ -113,7 +115,7 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 			// Case 1: if load() data graph parameter, then confirm loads there
 			clearGraphs();
 			loadOwlConfig.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);  // loads OWL
-			loadDataConfig.load(modelSei.getGraph(), new LinkedList<String>(Arrays.asList(dataSei.getGraph())), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
+			loadDataConfig.load(new LinkedList<String>(Arrays.asList(modelSei.getGraph())), new LinkedList<String>(Arrays.asList(dataSei.getGraph())), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
 			assertEquals(dataSei.getNumTriples(), NUM_EXPECTED_TRIPLES);
 			assertEquals(dataFallbackSei.getNumTriples(), 0);
 
@@ -139,7 +141,7 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 			loadOwlConfig.setAllowedGraphs(allowedGraphs);
 			loadDataConfig.setAllowedGraphs(allowedGraphs);
 			loadOwlConfig.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);  // loads OWL
-			loadDataConfig.load(modelSei.getGraph(), new LinkedList<String>(Arrays.asList(dataSei.getGraph())), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
+			loadDataConfig.load(new LinkedList<String>(Arrays.asList(modelSei.getGraph())), new LinkedList<String>(Arrays.asList(dataSei.getGraph())), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
 
 			// test specifying allowed graphs, where graphs to be loaded are NOT present in the allowed graphs
 			try {
@@ -147,7 +149,7 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 				loadOwlConfig.setAllowedGraphs(allowedGraphs);
 				loadDataConfig.setAllowedGraphs(allowedGraphs);
 				loadOwlConfig.load(modelSei.getGraph(), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);  // loads OWL
-				loadDataConfig.load(modelSei.getGraph(), new LinkedList<String>(Arrays.asList(dataSei.getGraph())), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
+				loadDataConfig.load(new LinkedList<String>(Arrays.asList(modelSei.getGraph())), new LinkedList<String>(Arrays.asList(dataSei.getGraph())), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
 				fail();
 			}catch(Exception e) {
 				assertTrue(e.getMessage().contains(dataSei.getGraph() + " is not in list of allowed graphs: [" + modelSei.getGraph() + ", " + dataSei.getGraph() + "-123]"));
@@ -178,7 +180,7 @@ public class LoadDataConfigTest_IT extends YamlConfigTest{
 			// load data by nodegroup
 			File tempDir = TestGraph.unzipAndUniquifyJunitGraphs(this, "/config/LoadDataConfig-byNodegroup.zip");
 			LoadDataConfig loadDataConfig = new LoadDataConfig(Paths.get(tempDir.getAbsolutePath(), "import.yaml").toFile(), TestGraph.getSei().getGraph(), TestGraph.getSei().getGraph());
-			loadDataConfig.load(TestGraph.getSei().getGraph(), new LinkedList<String>(Arrays.asList(TestGraph.getSei().getGraph())), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
+			loadDataConfig.load(new LinkedList<String>(Arrays.asList(TestGraph.getSei().getGraph())), new LinkedList<String>(Arrays.asList(TestGraph.getSei().getGraph())), TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), false, IntegrationTestUtility.getIngestorRestClient(), IntegrationTestUtility.getNodeGroupExecutionRestClient(), IntegrationTestUtility.getSparqlQueryAuthClient(), null);
 			assertEquals(TestGraph.getSei().getNumTriples(), 334);
 
 		} finally{

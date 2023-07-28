@@ -38,7 +38,7 @@ import com.ge.research.semtk.utility.Utility;
 public class LoadDataConfig extends YamlConfig {
 
 	private LinkedList<IngestionStep> steps = new LinkedList<IngestionStep>();
-	private String modelgraph;   			// schema supports multiple model graphs, but functionality not needed
+	private LinkedList<String> modelgraphs;
 	private LinkedList<String> datagraphs;
 	private LinkedList<String> allowedGraphs;	// if not null, only allow loads to these graphs
 
@@ -71,10 +71,10 @@ public class LoadDataConfig extends YamlConfig {
 			}
 		}
 
-		// add model graph (may be either String or array size 1 to support pre-existing schema)
-		setModelgraph(getStringOrFirstArrayEntry(configNode.get("model-graphs")));
+		// add model graphs (from either String or String array)
+		setModelgraphs(getAsStringList(configNode.get("model-graphs")));
 
-		// add data graph
+		// add data graphs
 		if(configNode.has("data-graph")){
 			addDatagraph(configNode.get("data-graph").asText());
 		}
@@ -91,8 +91,8 @@ public class LoadDataConfig extends YamlConfig {
 	public LinkedList<IngestionStep> getSteps(){
 		return steps;
 	}
-	public String getModelgraph() {
-		return modelgraph;
+	public LinkedList<String> getModelgraphs() {
+		return modelgraphs;
 	}
 	public LinkedList<String> getDatagraphs() {
 		return datagraphs;
@@ -103,8 +103,8 @@ public class LoadDataConfig extends YamlConfig {
 	public void addStep(IngestionStep step) {
 		this.steps.add(step);
 	}
-	public void setModelgraph(String modelgraph) {
-		this.modelgraph = modelgraph;
+	public void setModelgraphs(LinkedList<String> modelgraphs) {
+		this.modelgraphs = modelgraphs;
 	}
 	public void setDataGraphs(LinkedList<String> datagraphs) {
 		this.datagraphs = datagraphs;
@@ -122,27 +122,30 @@ public class LoadDataConfig extends YamlConfig {
 	
 	/**
 	 * Ingest data
-	 * @param modelGraph		a model graph (optional)
-	 * @param dataGraphs		a data graph (optional)
-	 * @param server 			triple store location
-	 * @param serverTypeString 	triple store type
-	 * @param clear				if true, clears before loading
-	 * @param ingestClient	    Ingestor rest client
-	 * @param logger 			logger for reporting progress (may be null)
+	 * @param modelGraphs      model graphs (optional)
+	 * @param dataGraphs       data graphs (optional)
+	 * @param server           triple store location
+	 * @param serverTypeString triple store type
+	 * @param clear            if true, clears before loading
+	 * @param ingestClient     Ingestor rest client
+	 * @param logger           logger for reporting progress (may be null)
 	 */
-	public void load(String modelGraph, LinkedList<String> dataGraphs, String server, String serverType, boolean clear, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, SparqlQueryClient queryClient, Logger logger) throws Exception {
+	public void load(LinkedList<String> modelGraphs, LinkedList<String> dataGraphs, String server, String serverType, boolean clear, IngestorRestClient ingestClient, NodeGroupExecutionClient ngeClient, SparqlQueryClient queryClient, Logger logger) throws Exception {
 		try {
 
 			// determine which model/data graphs to use
 			// use if provided as method parameter, else use from config YAML, else use default
-			modelGraph = (modelGraph != null) ? modelGraph : (this.getModelgraph() != null ? this.getModelgraph() : this.defaultModelGraph );
+			modelGraphs = (modelGraphs != null) ? modelGraphs : (this.getModelgraphs() != null ? this.getModelgraphs() : new LinkedList<String>(Arrays.asList(this.defaultModelGraph)) );
 			dataGraphs = (dataGraphs != null) ? dataGraphs : (this.getDatagraphs() != null ? this.getDatagraphs() : new LinkedList<String>(Arrays.asList(this.defaultDataGraph)) );
-			if(modelGraph == null) { throw new Exception ("No model graph found"); }
+			if(modelGraphs == null || modelGraphs.isEmpty()) { throw new Exception ("No model graph found"); }
 			if(dataGraphs == null || dataGraphs.isEmpty()) { throw new Exception ("No data graph found"); }
 
 			// create a connection
 			SparqlConnection conn = new SparqlConnection();
-			conn.addModelInterface(serverType, server, modelGraph);
+			for(String mg : modelGraphs) {
+				if(allowedGraphs != null && !allowedGraphs.contains(mg)) { throw new Exception("Cannot load model from " + getFileName() + " in " + getBaseDir()  + ": " + mg + " is not in list of allowed graphs: " + allowedGraphs); }
+				conn.addModelInterface(serverType, server, mg);
+			}
 			for(String dg : dataGraphs) {
 				if(allowedGraphs != null && !allowedGraphs.contains(dg)) { throw new Exception("Cannot load data from " + getFileName() + " in " + getBaseDir()  + ": " + dg + " is not in list of allowed graphs: " + allowedGraphs); }
 				conn.addDataInterface(serverType, server, dg);

@@ -1,5 +1,6 @@
 model-graphs:
 - http://junit/animals/model
+- http://junit/animals/model2
 data-graph: http://junit/animals/data
 ingestion-steps:
 - {class: "http://animals/woodland#WOODCHUCK", csv: "woodchucks.csv"}
