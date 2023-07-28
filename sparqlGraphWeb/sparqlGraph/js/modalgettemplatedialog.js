@@ -47,6 +47,9 @@ define([	// properly require.config'ed
 			this.classSelect = IIDXHelper.createSelect(noId, textVals, [], false, "input-xlarge");
 			this.classSelect.size = 4;
 			this.idRegexInput = IIDXHelper.createTextInput(noId, "input-xlarge");	
+			this.idRegexInput.value = "identifier";   // default REST param value: making it explicit
+			this.dataClassRegexInput = IIDXHelper.createTextInput(noId, "input-xlarge");	
+			this.dataClassRegexInput.value = "#Measurement$";   // default REST param value: making it explicit
 			this.okCallback = function(){throw new Error("this.okCallback is not set");};
 		};
 
@@ -65,10 +68,11 @@ define([	// properly require.config'ed
 				// already confirmed by validateCallback()
 				var classUri = IIDXHelper.getSelectValues(this.classSelect)[0];
 				var idRegex = this.idRegexInput.value;
+				var dataClassRegex = this.dataClassRegexInput.value;
 				var okCallback2 = function(sgJsonJson) {
 						this.okCallback(classUri, sgJsonJson);
 				}.bind(this);
-				this.iClient.execGetClassTemplate(classUri, this.conn, idRegex, okCallback2);  
+				this.iClient.execGetClassTemplate(classUri, this.conn, idRegex, dataClassRegex, okCallback2);  
 			},
 			
 			validateCallback : function() {
@@ -94,6 +98,7 @@ define([	// properly require.config'ed
  				fieldset.appendChild(IIDXHelper.buildControlGroup("class: ", this.classSelect, "Retrieve this class' template nodegroup"));
  				fieldset.appendChild(document.createElement("br"));
  				fieldset.appendChild(IIDXHelper.buildControlGroup("id regex: ", this.idRegexInput, "Regex to identify unique id properties"));
+ 				fieldset.appendChild(IIDXHelper.buildControlGroup("data class regex: ", this.dataClassRegexInput, "Regex to identify classes to treat as data"));
  				
      			div.appendChild(form);
      			

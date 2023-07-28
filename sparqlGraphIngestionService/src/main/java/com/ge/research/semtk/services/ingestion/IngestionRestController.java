@@ -250,7 +250,7 @@ public class IngestionRestController {
 		SparqlGraphJson sgjson = null;
 		try {
 			
-			IngestionNodegroupBuilder builder = this.buildTemplate(requestBody.buildConnection(), requestBody.getClassURI(), requestBody.getIdRegex());
+			IngestionNodegroupBuilder builder = this.buildTemplate(requestBody.buildConnection(), requestBody.getClassURI(), requestBody.getIdRegex(), requestBody.getDataClassRegex());
 			sgjson = builder.getSgjson();
 			
 		} catch (Exception e) {
@@ -281,7 +281,7 @@ public class IngestionRestController {
 		
 		try {
 			
-			IngestionNodegroupBuilder builder = this.buildTemplate(requestBody.buildConnection(), requestBody.getClassURI(), requestBody.getIdRegex());
+			IngestionNodegroupBuilder builder = this.buildTemplate(requestBody.buildConnection(), requestBody.getClassURI(), requestBody.getIdRegex(), requestBody.getDataClassRegex());
 			SimpleResultSet result = new SimpleResultSet(true);
 			result.addResult("sgjson", builder.getSgjson().toJson());
 			result.addResult("csv", builder.getCsvTemplate());
@@ -303,12 +303,13 @@ public class IngestionRestController {
 	 * @return
 	 * @throws Exception
 	 */
-	private IngestionNodegroupBuilder buildTemplate(SparqlConnection conn, String classURI, String idRegex) throws Exception {
+	private IngestionNodegroupBuilder buildTemplate(SparqlConnection conn, String classURI, String idRegex, String dataClassRegex) throws Exception {
 		// get oInfo from the service (hopefully cached)
 		OntologyInfo oInfo = oinfo_props.getClient().getOntologyInfo(conn);
 		
 		IngestionNodegroupBuilder builder = new IngestionNodegroupBuilder(classURI, conn, oInfo);
 		builder.setIdRegex(idRegex); 
+		builder.setDataClassRegex(dataClassRegex);
 		builder.build();
 		return builder;
 	}

@@ -23,29 +23,43 @@ import javax.validation.constraints.NotNull;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 
+
+//  Note: fields copy-pasted between here and IngestionFromStringsAndClassRequestBody
+//  due to lack of java multiple inheritance
 
 public class GetClassTemplateRequestBody {
 	@NotNull
 	@Schema(
 			name = "classURI",
-			required = true,
+			requiredMode = RequiredMode.REQUIRED,
 			example = "http://myprefix#className")
 	public String classURI;
 	
 	@NotNull
 	@Schema(
 			name = "connection",
-			required = true,
+			requiredMode = RequiredMode.REQUIRED,
 			example = "{ connection json }")
 	private String connection;
 
 	@Schema(
 			name = "idRegex",
-			required = false,
+			requiredMode = RequiredMode.NOT_REQUIRED,
 			example = "identifier")
 	private String idRegex = "identifier";
 	
+	@Schema(
+			name = "dataClassRegex",
+			requiredMode = RequiredMode.NOT_REQUIRED,
+			example = "#Measurement$")
+	private String dataClassRegex = "#Measurement$";
+	
+	public String getDataClassRegex() {
+		return dataClassRegex;
+	}
+
 	public String getClassURI() {
 		return classURI;
 	}

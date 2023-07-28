@@ -39,12 +39,15 @@ define([	// properly require.config'ed   bootstrap-modal
 
 
 		MsiClientIngestion.prototype = {
-			execGetClassTemplate(uri, conn, idRegex, successJsonCallback) {
+			execGetClassTemplate(uri, conn, idRegex, dataClassRegex, successJsonCallback) {
 				var data = {}
 				data.connection = JSON.stringify(conn.toJson());
 				data.classURI = uri;
 				if (idRegex && idRegex.length > 0) {
 					data.idRegex = idRegex;
+				}
+				if (dataClassRegex && dataClassRegex.length > 0) {
+					data.dataClassRegex = dataClassRegex;
 				}
 				callback = function(msiRes) {
 					successJsonCallback(msiRes.getSimpleResultField("sgjson"));

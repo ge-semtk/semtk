@@ -58,7 +58,12 @@ public class IngestionNodegroupBuilder {
 	private StringBuilder csvTemplate;
 	private StringBuilder csvTypes;
 	private String idRegex = null;
+	private String dataClassRegex = null;
 	
+	public void setDataClassRegex(String dataClassRegex) {
+		this.dataClassRegex = dataClassRegex;
+	}
+
 	/**
 	 * 
 	 * @param className
@@ -129,6 +134,12 @@ public class IngestionNodegroupBuilder {
 			ispecBuilder.addTypeRestriction(node.getSparqlID());
 			ispecBuilder.addColumn(colName);
 			ispecBuilder.addMappingToTypeRestriction(node.getSparqlID(), ispecBuilder.buildMappingWithCol(colName, new String [] {transformId}));
+			// add to csvTemplate
+			csvTemplate.append(colName + ",");		
+			csvTypes.append("string,");  
+			
+			// wow: URI lookup by type as the identifier seems very unusual.
+			//      Leaving this in case it was put here for a reason.
 			if (this.idRegex != null &&  Pattern.compile(this.idRegex).matcher(colName).find()) {
 				ispecBuilder.addURILookupToTypeRestriction(node.getSparqlID(), node.getSparqlID());
 				ispecBuilder.addLookupMode(node.getSparqlID(), ImportSpec.LOOKUP_MODE_CREATE_IF_MISSING);
@@ -166,62 +177,132 @@ public class IngestionNodegroupBuilder {
 		for (NodeItem nItem : node.getNodeItemList()) {
 			
 			for (String rangeUri : nItem.getRangeUris()) {
-				// Add object property node to nodegroup (optional) and importSpec
+				
+				// Add object property range node to nodegroup (optional), and to importSpec
 				String rangeKeyname =  new OntologyName(rangeUri).getLocalName();
 				Node objNode = nodegroup.addNode(rangeUri, node, null, nItem.getUriConnectBy());
 				nItem.setOptionalMinus(objNode, NodeItem.OPTIONAL_TRUE);
 				
-				ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_ERR_IF_MISSING);
-
-//  we might want to re-add this for a different "flavor" of auto-generated nodegroups
-//
-//				if (oInfo.hasSubclass(className)) {
-//					// If node has subclasses then NO_CREATE ("error if missing")
-//					// This will create the need for ingestion order to matter:  linked items must be ingested first.
-//					ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_NO_CREATE);
-//				} else {
-//					// If node has NO subclasses then we may create it.
-//					ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_CREATE);
-//				}
-				
-				// give it a name, e.g.: verifies_ENTITY
-				String objNodeName = nItem.getKeyName() + "_" + rangeKeyname;
-				nodegroup.setBinding(objNode, objNodeName);
-				
-				// set data property matching ID_REGEX returned
-				for (PropertyItem pItem : objNode.getPropertyItems()) {
-					if (this.idRegex != null &&  Pattern.compile(this.idRegex).matcher(pItem.getKeyName()).find()) {
-						// set the lookup ID to be returned
-						// but not optional (link to node is optional instead)
+				if (this.dataClassRegex != null && Pattern.compile(this.dataClassRegex).matcher(rangeUri).find()) {
+					// range of this object property is a data class
+					
+					ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_CREATE_IF_MISSING);
+					
+					// give it a name, e.g.: thickness_value
+					for (PropertyItem pItem : objNode.getPropertyItems()) {
+						String propName = nItem.getKeyName() + "_" + pItem.getKeyName();
+						
+						// set up prop in nodegroup
+						propName = nodegroup.changeSparqlID(pItem, propName);
 						nodegroup.setIsReturned(pItem, true);
+						pItem.setOptMinus(PropertyItem.OPT_MINUS_OPTIONAL);
 						
-						// give ID_REGEX property a meaningful sparqlID
-						String sparqlID;
-						if (nItem.getRangeUris().size() > 1) {
-							// complex range: include the class
-							sparqlID = nItem.getKeyName() + "_" + rangeKeyname + "_" + pItem.getKeyName();
-							
-						} else {
-							// 'default'
-							sparqlID = nItem.getKeyName() + "_" + pItem.getKeyName();
-						}
-						String propId = nodegroup.changeSparqlID(pItem, sparqlID);
-						
-						
-						
-						// add to importspec, using it to look up parent node
+						// add to import spec
 						ispecBuilder.addProp(objNode.getSparqlID(), pItem.getUriRelationship());
-						ispecBuilder.addURILookup(objNode.getSparqlID(), pItem.getUriRelationship(), objNode.getSparqlID());
-						
-						// add the column and mapping to the importspec
-						String colName = buildColName(propId);
+						String colName = buildColName(propName);
 						ispecBuilder.addColumn(colName);
 						ispecBuilder.addMapping(objNode.getSparqlID(), pItem.getUriRelationship(), ispecBuilder.buildMappingWithCol(colName, new String [] {transformId}));
 						
+						// add to csvTemplate
+						csvTemplate.append(colName + ",");		
+						csvTypes.append(pItem.getValueTypesString(" ") + ",");  
+					}
+					
+					for (NodeItem measNItem: objNode.getNodeItemList()) {
+						
+						if (measNItem.getRangeUris().size() == 1) {
+							String measNItemRange = "";
+							for (String s : measNItem.getRangeUris()) {
+								measNItemRange = s;
+							}
+							if (this.oInfo.classIsEnumeration(measNItemRange)) {
+								// found enumerated nodeItem in a Measurement
+								
+								String measObjName = nItem.getKeyName() + "_" + measNItem.getKeyName();
+								
+								// add yet another node off the Measurement
+								
+								// add to nodegroup
+								Node measObjNode = nodegroup.addNode(measNItemRange, objNode, null, measNItem.getUriConnectBy());
+								measNItem.setOptionalMinus(measObjNode, NodeItem.OPTIONAL_TRUE);
+								nodegroup.changeSparqlID(measObjNode, measObjName);
+								nodegroup.setIsReturned(measObjNode, true); 
+								
+								// add to import spec
+								ispecBuilder.addNode(measObjNode.getSparqlID(), measNItemRange, ImportSpec.LOOKUP_MODE_CREATE_IF_MISSING);
+								String colName = buildColName(measObjName);
+								ispecBuilder.addColumn(colName);
+								ispecBuilder.addMapping(measObjNode.getSparqlID(), ispecBuilder.buildMappingWithCol(colName, new String [] {transformId}));
+								
+								// add to csvTemplate
+								csvTemplate.append(colName + ",");		
+								csvTypes.append("string,");  
+							}
+						}
+							
+					}
+					
+				} else {
+					// normal object property with id
+					
+					
+					// give node a name, e.g.: verifies_ENTITY
+					String objNodeName = nItem.getKeyName() + "_" + rangeKeyname;
+					nodegroup.changeSparqlID(objNode, objNodeName);
+					
+					// add node to importSpec
+					ispecBuilder.addNode(objNode.getSparqlID(), objNode.getUri(), ImportSpec.LOOKUP_MODE_ERR_IF_MISSING);
+					
+					
+					if (this.oInfo.classIsEnumeration(rangeUri)) {
+						// node is already in importSpec
+						// add the column and mapping to the importspec
+						String colName = buildColName(objNodeName);
+						ispecBuilder.addColumn(colName);
+						ispecBuilder.addMapping(objNode.getSparqlID(), ispecBuilder.buildMappingWithCol(colName, new String [] {transformId}));
+						
 						// add to csvTemplate and csvTypes
 						csvTemplate.append(colName + ",");
-						csvTypes.append(pItem.getValueTypesString(" ") + ","); 
-						break;
+						csvTypes.append("uri,"); 
+						
+					} else {
+						// set first data property matching ID_REGEX returned
+						boolean foundId = false;
+						for (PropertyItem pItem : objNode.getPropertyItems()) {
+							if (this.idRegex != null &&  Pattern.compile(this.idRegex).matcher(pItem.getKeyName()).find()) {
+								// set the lookup ID to be returned
+								// but not optional (link to node is optional instead)
+								nodegroup.setIsReturned(pItem, true);
+								
+								// give ID_REGEX property a meaningful sparqlID
+								String sparqlID;
+								if (nItem.getRangeUris().size() > 1) {
+									// complex range: include the class
+									sparqlID = nItem.getKeyName() + "_" + rangeKeyname + "_" + pItem.getKeyName();
+									
+								} else {
+									// 'default'
+									sparqlID = nItem.getKeyName() + "_" + pItem.getKeyName();
+								}
+								String propId = nodegroup.changeSparqlID(pItem, sparqlID);
+								
+								// add to importspec, using it to look up parent node
+								ispecBuilder.addProp(objNode.getSparqlID(), pItem.getUriRelationship());
+								ispecBuilder.addURILookup(objNode.getSparqlID(), pItem.getUriRelationship(), objNode.getSparqlID());
+								
+								// add the column and mapping to the importspec
+								String colName = buildColName(propId);
+								ispecBuilder.addColumn(colName);
+								ispecBuilder.addMapping(objNode.getSparqlID(), pItem.getUriRelationship(), ispecBuilder.buildMappingWithCol(colName, new String [] {transformId}));
+								
+								// add to csvTemplate and csvTypes
+								csvTemplate.append(colName + ",");
+								csvTypes.append(pItem.getValueTypesString(" ") + ","); 
+								foundId = true;
+								break;
+							}
+						}
+						if (!foundId) throw new Exception("Can't add " + nItem.getKeyName() + " " + rangeKeyname + " node:  it must either match the data class regex, or contain a data property that matches id regex");
 					}
 				}
 			}
