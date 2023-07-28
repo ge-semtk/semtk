@@ -350,9 +350,8 @@ public class NodeGroupExecutionClientTest_IT {
 				// ingest cells from template
 				String res = nodeGroupExecutionClient.dispatchIngestFromCsvStringsByClassTemplateSync(CELL, "cellId", "cellId\ncell1a\ncell1b\n", TestGraph.getSparqlConn());
 				ArrayList<String> warnings =  nodeGroupExecutionClient.getWarnings();
-				if (warnings != null && warnings.size() != 0) {
-					assertTrue("Unexpected ingest warnings on CELL: " + warnings, false);
-				}
+				assertEquals("Missing exactly one warning about color_Color", 1, warnings.size());
+				assertTrue("Warning doesn't mention missing column color_Color", warnings.get(0).toLowerCase().contains("color_color"));
 				
 				// ingest batteries from template
 				res = nodeGroupExecutionClient.dispatchIngestFromCsvStringsByClassTemplateSync(BATTERY, "name|cellId", "name,cell_cellId,extra\nbattery1,cell1a,extra1\nbattery1,cell1b,extra2\n", TestGraph.getSparqlConn());

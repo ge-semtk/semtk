@@ -221,6 +221,7 @@ public class IngestionNodegroupBuilder {
 								String measObjName = nItem.getKeyName() + "_" + measNItem.getKeyName();
 								
 								// add yet another node off the Measurement
+								// no backwards compatibility:  not checking the Enumerated type for idRegex
 								
 								// add to nodegroup
 								Node measObjNode = nodegroup.addNode(measNItemRange, objNode, null, measNItem.getUriConnectBy());
@@ -265,45 +266,47 @@ public class IngestionNodegroupBuilder {
 						csvTemplate.append(colName + ",");
 						csvTypes.append("uri,"); 
 						
-					} else {
-						// set first data property matching ID_REGEX returned
-						boolean foundId = false;
-						for (PropertyItem pItem : objNode.getPropertyItems()) {
-							if (this.idRegex != null &&  Pattern.compile(this.idRegex).matcher(pItem.getKeyName()).find()) {
-								// set the lookup ID to be returned
-								// but not optional (link to node is optional instead)
-								nodegroup.setIsReturned(pItem, true);
+					} 
+					// } else { is gone:  for backwards compatibility we're also checking enumerated classes for ID_REGEX
+				
+					// set first data property matching ID_REGEX returned
+					boolean foundId = false;
+					for (PropertyItem pItem : objNode.getPropertyItems()) {
+						if (this.idRegex != null &&  Pattern.compile(this.idRegex).matcher(pItem.getKeyName()).find()) {
+							// set the lookup ID to be returned
+							// but not optional (link to node is optional instead)
+							nodegroup.setIsReturned(pItem, true);
+							
+							// give ID_REGEX property a meaningful sparqlID
+							String sparqlID;
+							if (nItem.getRangeUris().size() > 1) {
+								// complex range: include the class
+								sparqlID = nItem.getKeyName() + "_" + rangeKeyname + "_" + pItem.getKeyName();
 								
-								// give ID_REGEX property a meaningful sparqlID
-								String sparqlID;
-								if (nItem.getRangeUris().size() > 1) {
-									// complex range: include the class
-									sparqlID = nItem.getKeyName() + "_" + rangeKeyname + "_" + pItem.getKeyName();
-									
-								} else {
-									// 'default'
-									sparqlID = nItem.getKeyName() + "_" + pItem.getKeyName();
-								}
-								String propId = nodegroup.changeSparqlID(pItem, sparqlID);
-								
-								// add to importspec, using it to look up parent node
-								ispecBuilder.addProp(objNode.getSparqlID(), pItem.getUriRelationship());
-								ispecBuilder.addURILookup(objNode.getSparqlID(), pItem.getUriRelationship(), objNode.getSparqlID());
-								
-								// add the column and mapping to the importspec
-								String colName = buildColName(propId);
-								ispecBuilder.addColumn(colName);
-								ispecBuilder.addMapping(objNode.getSparqlID(), pItem.getUriRelationship(), ispecBuilder.buildMappingWithCol(colName, new String [] {transformId}));
-								
-								// add to csvTemplate and csvTypes
-								csvTemplate.append(colName + ",");
-								csvTypes.append(pItem.getValueTypesString(" ") + ","); 
-								foundId = true;
-								break;
+							} else {
+								// 'default'
+								sparqlID = nItem.getKeyName() + "_" + pItem.getKeyName();
 							}
+							String propId = nodegroup.changeSparqlID(pItem, sparqlID);
+							
+							// add to importspec, using it to look up parent node
+							ispecBuilder.addProp(objNode.getSparqlID(), pItem.getUriRelationship());
+							ispecBuilder.addURILookup(objNode.getSparqlID(), pItem.getUriRelationship(), objNode.getSparqlID());
+							
+							// add the column and mapping to the importspec
+							String colName = buildColName(propId);
+							ispecBuilder.addColumn(colName);
+							ispecBuilder.addMapping(objNode.getSparqlID(), pItem.getUriRelationship(), ispecBuilder.buildMappingWithCol(colName, new String [] {transformId}));
+							
+							// add to csvTemplate and csvTypes
+							csvTemplate.append(colName + ",");
+							csvTypes.append(pItem.getValueTypesString(" ") + ","); 
+							foundId = true;
+							break;
 						}
-						if (!foundId) throw new Exception("Can't add " + nItem.getKeyName() + " " + rangeKeyname + " node:  it must either match the data class regex, or contain a data property that matches id regex");
 					}
+					if (!this.oInfo.classIsEnumeration(rangeUri) && !foundId) throw new Exception("Can't add " + nItem.getKeyName() + " " + rangeKeyname + " node:  it must either match the data class regex, or contain a data property that matches id regex");
+			
 				}
 			}
 		}
