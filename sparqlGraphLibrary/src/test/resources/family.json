@@ -1,0 +1,326 @@
+{
+	"version": 3,
+	"sparqlConn": {
+		"name": "Junit fuseki",
+		"domain": "",
+		"enableOwlImports": true,
+		"model": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/G17K1VQ3E/200001934/both"
+			}
+		],
+		"data": [
+			{
+				"type": "fuseki",
+				"url": "http://localhost:3030/JUNIT",
+				"graph": "http://junit/G17K1VQ3E/200001934/both"
+			}
+		]
+	},
+	"sNodeGroup": {
+		"version": 20,
+		"limit": 0,
+		"offset": 0,
+		"sNodeList": [
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://Family#name",
+						"Constraints": "",
+						"SparqlID": "?parent_name",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"fullURIName": "http://Family#Parent",
+				"SparqlID": "?Parent",
+				"isReturned": true,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			},
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://Family#name",
+						"Constraints": "",
+						"SparqlID": "?friend_name",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"fullURIName": "http://Family#Person",
+				"SparqlID": "?Person_1",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE",
+				"binding": "?Friend",
+				"isBindingReturned": true
+			},
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://Family#name",
+						"Constraints": "",
+						"SparqlID": "?child_name",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [],
+				"fullURIName": "http://Family#Person",
+				"SparqlID": "?Person_0",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE",
+				"binding": "?Child",
+				"isBindingReturned": true
+			},
+			{
+				"propList": [
+					{
+						"valueTypes": [
+							"string"
+						],
+						"rangeURI": "http://www.w3.org/2001/XMLSchema#string",
+						"UriRelationship": "http://Family#name",
+						"Constraints": "",
+						"SparqlID": "?name",
+						"isReturned": true,
+						"optMinus": 0,
+						"isRuntimeConstrained": false,
+						"instanceValues": [],
+						"isMarkedForDeletion": false
+					}
+				],
+				"nodeList": [
+					{
+						"SnodeSparqlIDs": [
+							"?Person_0"
+						],
+						"OptionalMinus": [
+							1
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"range": [
+							"http://Family#Person"
+						],
+						"ConnectBy": "hasChild",
+						"Connected": true,
+						"UriConnectBy": "http://Family#hasChild"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Person_1"
+						],
+						"OptionalMinus": [
+							1
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"range": [
+							"http://Family#Person"
+						],
+						"ConnectBy": "hasFriend",
+						"Connected": true,
+						"UriConnectBy": "http://Family#hasFriend"
+					},
+					{
+						"SnodeSparqlIDs": [
+							"?Parent"
+						],
+						"OptionalMinus": [
+							1
+						],
+						"Qualifiers": [
+							""
+						],
+						"DeletionMarkers": [
+							false
+						],
+						"range": [
+							"http://Family#Parent"
+						],
+						"ConnectBy": "hasParent",
+						"Connected": true,
+						"UriConnectBy": "http://Family#hasParent"
+					}
+				],
+				"fullURIName": "http://Family#Person",
+				"SparqlID": "?Person",
+				"isReturned": false,
+				"isRuntimeConstrained": false,
+				"valueConstraint": "",
+				"instanceValue": null,
+				"deletionMode": "NO_DELETE"
+			}
+		],
+		"orderBy": [],
+		"groupBy": [],
+		"unionHash": {},
+		"columnOrder": []
+	},
+	"importSpec": {
+		"version": "1",
+		"baseURI": "",
+		"columns": [
+			{
+				"colId": "col_0",
+				"colName": "name"
+			},
+			{
+				"colId": "col_1",
+				"colName": "Child"
+			},
+			{
+				"colId": "col_2",
+				"colName": "child_name"
+			},
+			{
+				"colId": "col_3",
+				"colName": "Parent"
+			},
+			{
+				"colId": "col_4",
+				"colName": "parent_name"
+			},
+			{
+				"colId": "col_5",
+				"colName": "Friend"
+			},
+			{
+				"colId": "col_6",
+				"colName": "friend_name"
+			}
+		],
+		"dataValidator": [],
+		"texts": [],
+		"transforms": [],
+		"nodes": [
+			{
+				"sparqlID": "?Person",
+				"type": "http://Family#Person",
+				"URILookupMode": "createIfMissing",
+				"mapping": [],
+				"props": [
+					{
+						"URIRelation": "http://Family#name",
+						"URILookup": [
+							"?Person"
+						],
+						"mapping": [
+							{
+								"colId": "col_0"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Person_0",
+				"type": "http://Family#Person",
+				"URILookupMode": "noCreate",
+				"mapping": [
+					{
+						"colId": "col_1"
+					}
+				],
+				"props": [
+					{
+						"URIRelation": "http://Family#name",
+						"URILookup": [
+							"?Person_0"
+						],
+						"mapping": [
+							{
+								"colId": "col_2"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Person_1",
+				"type": "http://Family#Person",
+				"mapping": [
+					{
+						"colId": "col_5"
+					}
+				],
+				"props": [
+					{
+						"URIRelation": "http://Family#name",
+						"mapping": [
+							{
+								"colId": "col_6"
+							}
+						]
+					}
+				]
+			},
+			{
+				"sparqlID": "?Parent",
+				"type": "http://Family#Parent",
+				"URILookupMode": "noCreate",
+				"mapping": [
+					{
+						"colId": "col_3"
+					}
+				],
+				"props": [
+					{
+						"URIRelation": "http://Family#name",
+						"URILookup": [
+							"?Parent"
+						],
+						"mapping": [
+							{
+								"colId": "col_4"
+							}
+						]
+					}
+				]
+			}
+		]
+	},
+	"plotSpecs": []
+}

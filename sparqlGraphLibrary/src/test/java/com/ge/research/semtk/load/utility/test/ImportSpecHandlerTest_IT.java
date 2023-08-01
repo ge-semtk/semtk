@@ -30,8 +30,10 @@ import static org.junit.Assert.*;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.PropertyItem;
 import com.ge.research.semtk.load.utility.ImportSpecHandler;
+import com.ge.research.semtk.load.utility.IngestionNodegroupBuilder;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
+import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 
@@ -67,6 +69,226 @@ public class ImportSpecHandlerTest_IT {
 		handler.setHeaders(new ArrayList<String>(Arrays.asList("battery", "color", "Cell", "birthday")));
 		pItems = handler.getUndeflatablePropItems(nodegroup);
 		assertTrue(pItems.size() == 3);
+	}
+
+	// Test Import edge cases.
+	//
+	// Test combinations where node is both looked up by a property and passed in as a URI:
+	//    URI lookup -> empty data, missing, success
+	//    Node URI -> empty, illegal, success
+	//  where "success" in both might be same or might be different values
+	//
+	//  Enumerated and non-enumerated
+	// 
+	//  Model:
+	//    Person is lookup by name create if missing
+	//    Parent is enum, looked by by name error if missing
+	//    Child is looked up by name, error if missing
+	//    Friend has no lookups.
+	@Test
+	public void test_UriLookupAndNodeUri() throws Exception {
+		// load test data
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "Family.owl");		
+				
+		String csv;
+		Table tab;
+		int rows;
+	
+		// empty uri and lookup-by-name, no lookup on the friend
+		// no-op.  no errors.
+		csv = "name, Friend, friend_name\n" +
+			  "Dad,,\n";
+		TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+		tab = TestGraph.execSelectFromResource(this.getClass(), "/family.json");
+		assertEquals("Wrong number of rows returned: \n" + tab.toCSVString(), 6, tab.getNumRows());
+		
+		// empty uri and lookup-by-name, is lookup on child
+		// no-op. no errors.
+		csv = "name, Child, child_name\n" +
+			  "Dad,,\n";
+		TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+		tab = TestGraph.execSelectFromResource(this.getClass(), "/family.json");
+		assertEquals("Wrong number of rows returned: \n" + tab.toCSVString(), 6, tab.getNumRows());
+		
+		// empty uri. lookup-by-name of Greg, is lookup on child
+		// insert relationship
+		csv = "name, Child, child_name\n" +
+			  "Dad,,Greg\n";
+		TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+		tab = TestGraph.execSelectFromResource(this.getClass(), "/family.json");
+		tab.sortByAllCols();
+		assertEquals("Wrong number of rows returned: " + tab.toCSVString(), 6, tab.getNumRows());
+		assertEquals("Did not insert child: \n" + tab.toCSVString(), "Greg", tab.getCell(1, 2));
+		
+		// uri: Anthony. lookup-by-name: none on Friend
+		// insert relationship
+		csv = "name, Friend, friend_name\n" +
+			  "Dad,http://Family#Anthony,\n";
+		TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+		tab = TestGraph.execSelectFromResource(this.getClass(), "/family.json");
+		tab.sortByAllCols();
+		assertEquals("Wrong number of rows returned: " + tab.toCSVString(), 6, tab.getNumRows());
+		assertEquals("Did not insert friend: \n" + tab.toCSVString(), "Anthony", tab.getCell(1, 4));
+		
+		// uri: Greg. lookup-by-name: Empty on child
+		// insert relationship
+		csv = "name, Child, child_name\n" +
+			  "Mom,http://Family#Greg,\n";
+		TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+		tab = TestGraph.execSelectFromResource(this.getClass(), "/family.json");
+		tab.sortByAllCols();
+		assertEquals("Wrong number of rows returned: " + tab.toCSVString(), 6, tab.getNumRows());
+		assertEquals("Did not insert child: \n" + tab.toCSVString(), "Greg", tab.getCell(4, 2));
+		
+		
+		// uri: Greg. lookup-by-name: Greg
+		// insert relationship
+		csv = "name, Child, child_name\n" +
+			  "Anthony,http://Family#Greg,Greg\n";
+		TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+		tab = TestGraph.execSelectFromResource(this.getClass(), "/family.json");
+		tab.sortByAllCols();
+		assertEquals("Wrong number of rows returned: " + tab.toCSVString(), 6, tab.getNumRows());
+		assertEquals("Did not insert child: \n" + tab.toCSVString(), "Greg", tab.getCell(0, 2));
+		
+		// uri: Greg. lookup-by-name: Jeff   
+		// ERROR
+		csv = "name, Child, child_name\n" +
+			  "Anthony,http://Family#Greg,Jeff\n";
+		try {
+			TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+			fail("Missing expected exception when uri lookup does not match uri");
+		} catch (Exception e) {
+			assertTrue("Exception is missing 'Greg'", e.getMessage().contains("Greg"));
+			assertTrue("Exception is missing 'Jeff'", e.getMessage().contains("Jeff"));
+		}
+		
+		// uri: Bad. lookup-by-name: none on Friend 
+		// ERROR
+		csv = "name, Friend, friend_name\n" +
+			  "Dad,http://Family#Anthony^,\n";
+		try {
+			TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+			fail("Missing expected exception on bad URI format");
+		} catch (Exception e) {
+			
+			assertTrue("Exception is missing 'Anthony^'", e.getMessage().contains("Anthony^"));
+		}
+		
+		// uri: Bad. lookup-by-name: empty on Child 
+		// ERROR
+		csv = "name, Child, child_name\n" +
+			  "Dad,http://Family#Anthony^,\n";
+		try {
+			TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+			fail("Missing expected exception on bad URI format");
+		} catch (Exception e) {
+			
+			assertTrue("Exception is missing 'Anthony^'", e.getMessage().contains("Anthony^"));
+		}
+		
+		// uri: Bad. lookup-by-name: Anthony on Child
+		// ERROR
+		csv = "name, Child, child_name\n" +
+			  "Dad,http://Family#Anthony^,Anthony\n";
+		try {
+			TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+			fail("Missing expected exception on bad URI format");
+		} catch (Exception e) {
+			
+			assertTrue("Exception is missing 'Anthony^'", e.getMessage().contains("Anthony^"));
+		}
+		
+	}
+	
+	// Repeat tests above with enumerated class Parent instead of Child
+	@Test
+	public void test_UriLookupAndNodeUriEnum() throws Exception {
+		// load test data
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "Family.owl");		
+				
+		String csv;
+		Table tab;
+		int rows;
+	
+		
+		// empty uri and lookup-by-name, is lookup on Parent
+		// no-op. no errors.
+		csv = "name, Parent, parent_name\n" +
+			  "Greg,,\n";
+		TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+		tab = TestGraph.execSelectFromResource(this.getClass(), "/family.json");
+		assertEquals("Wrong number of rows returned: \n" + tab.toCSVString(), 6, tab.getNumRows());
+		
+		// empty uri. lookup-by-name of Dad, is lookup on Parent
+		// insert relationship
+		csv = "name, Parent, parent_name\n" +
+			  "Greg,,Dad\n";
+		TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+		tab = TestGraph.execSelectFromResource(this.getClass(), "/family.json");
+		tab.sortByAllCols();
+		assertEquals("Wrong number of rows returned: " + tab.toCSVString(), 6, tab.getNumRows());
+		assertEquals("Did not insert parent: \n" + tab.toCSVString(), "Dad", tab.getCell(2, 6));
+		
+		// uri: Dad. lookup-by-name: Empty on parent
+		// insert relationship
+		csv = "name, Parent, parent_name\n" +
+			  "Jeff,http://Family#Dad,\n";
+		TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+		tab = TestGraph.execSelectFromResource(this.getClass(), "/family.json");
+		tab.sortByAllCols();
+		assertEquals("Wrong number of rows returned: " + tab.toCSVString(), 6, tab.getNumRows());
+		assertEquals("Did not insert child: \n" + tab.toCSVString(), "Dad", tab.getCell(3, 6));
+		
+		
+		// uri: Greg. lookup-by-name: Greg
+		// insert relationship
+		csv = "name, Parent, parent_name\n" +
+			  "Anthony,http://Family#Dad,Dad\n";
+		TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+		tab = TestGraph.execSelectFromResource(this.getClass(), "/family.json");
+		tab.sortByAllCols();
+		assertEquals("Wrong number of rows returned: " + tab.toCSVString(), 6, tab.getNumRows());
+		assertEquals("Did not insert child: \n" + tab.toCSVString(), "Dad", tab.getCell(0, 6));
+		
+		// uri: Greg. lookup-by-name: Jeff   
+		// ERROR
+		csv = "name, Parent, parent_name\n" +
+			  "Anthony,http://Family#Mom,Dad\n";
+		try {
+			TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+			fail("Missing expected exception when uri lookup does not match uri");
+		} catch (Exception e) {
+			assertTrue("Exception is missing 'Mom'", e.getMessage().contains("Mom"));
+			assertTrue("Exception is missing 'Dad'", e.getMessage().contains("Dad"));
+		}
+		
+		
+		// uri: Bad. lookup-by-name: empty on Child 
+		// ERROR
+		csv = "name, Parent, parent_name\n" +
+				"Anthondy,http://Family#Dad^,\n";
+		try {
+			TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+			fail("Missing expected exception on bad URI format");
+		} catch (Exception e) {
+			
+			assertTrue("Exception is missing 'Dad^'", e.getMessage().contains("Dad^"));
+		}
+		
+		// uri: Bad. lookup-by-name: Anthony on Child
+		// ERROR
+		csv = "name, Parent, parent_name\n" +
+			  "Anthony,http://Family#Dad^,Dad\n";
+		try {
+			TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+			fail("Missing expected exception on bad URI format");
+		} catch (Exception e) {
+			
+			assertTrue("Exception is missing 'Dad^'", e.getMessage().contains("Dad^"));
+		}		
 	}
 
 }

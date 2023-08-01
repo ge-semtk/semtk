@@ -256,7 +256,9 @@ public class IngestionNodegroupBuilder {
 					
 					
 					if (this.oInfo.classIsEnumeration(rangeUri)) {
-						// node is already in importSpec
+						// node is already in importSpec: set returned
+						nodegroup.setIsReturned(objNode, true);
+						
 						// add the column and mapping to the importspec
 						String colName = buildColName(objNodeName);
 						ispecBuilder.addColumn(colName);

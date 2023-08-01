@@ -1,0 +1,17 @@
+uri "http://Family".
+
+Person is a class,
+	described by name with a single value of type string,
+	described by hasChild with values of type Person,
+	described by hasParent with values of type Parent,
+	described by hasFriend with values of type Person.
+
+Parent is a type of Person, must be one of {Mom, Dad}.
+
+Mom is a Parent with name "Mom".
+Dad is a Parent with name "Dad".
+
+Jeff is a Person with name "Jeff".
+Murray is a Person with name "Murray".
+Greg is a Person with name "Greg".
+Anthony is a Person with name "Anthony".

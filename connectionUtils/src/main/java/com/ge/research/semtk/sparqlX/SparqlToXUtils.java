@@ -408,6 +408,7 @@ public class SparqlToXUtils {
 		}
 		
 		try	{
+			// strangely '!' is a legal URI character but SPARQL chokes on it.
 			new URI(uri);
 			return true;
 		} catch (Exception e) {

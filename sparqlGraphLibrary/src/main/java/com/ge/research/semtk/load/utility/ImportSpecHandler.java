@@ -861,23 +861,36 @@ public class ImportSpecHandler {
 		} else {
 
 			// ---- node ----
-
-			// Mapping is invalid if URI has already been looked up. Return.
-			if (node.getInstanceValue() != null)
-				return;
-
-			// if build string is null
+			
 			if (builtString.length() < 1) {
-				node.setInstanceValue(null);
+				// empty URI in built string
+				return;
 			}
-
-			// use built string
+			
+			String uri = this.uriResolver.getInstanceUriWithPrefix(node.getFullUriName(), builtString);
+			if (!SparqlToXUtils.isLegalURI(uri)) 
+				// invalid URI in built string
+				
+				// pre aug 2023 this exception was skipped if node was already looked up.
+				throw new Exception("Attempting to insert ill-formed URI: " + uri);
+			
 			else {
-				String uri = this.uriResolver.getInstanceUriWithPrefix(node.getFullUriName(), builtString);
-				if (!SparqlToXUtils.isLegalURI(uri)) {
-					throw new Exception("Attempting to insert ill-formed URI: " + uri);
+				// valid URI in built string
+				
+				if (node.getInstanceValue() != null && 
+					!node.getInstanceValue().equals(EMPTY_LOOKUP) &&
+					!node.getInstanceValue().equals(uri))
+					throw new Exception("Attempting to insert URI: " + uri + " on URI already looked up: " + node.getInstanceValue());
+				
+				else {
+					//  always inserted valid URI if node was empty
+					
+					//  aug 2023 newer functionality when node also has a lookup
+					//    will insert if lookup failed
+					//    will insert again (no-op) if built URI and looked-up are equal
+					
+					node.setInstanceValue(uri);
 				}
-				node.setInstanceValue(uri);
 			}
 		}
 	}
