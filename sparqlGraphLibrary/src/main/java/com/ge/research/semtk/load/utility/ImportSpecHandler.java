@@ -879,8 +879,9 @@ public class ImportSpecHandler {
 				
 				if (node.getInstanceValue() != null && 
 					!node.getInstanceValue().equals(EMPTY_LOOKUP) &&
-					!node.getInstanceValue().equals(uri))
-					throw new Exception("Attempting to insert URI: " + uri + " on URI already looked up: " + node.getInstanceValue());
+					!node.getInstanceValue().equals(UriCache.NOT_FOUND))
+					// if lookup succeeded, do nothing with URI
+					return;
 				
 				else {
 					//  always inserted valid URI if node was empty

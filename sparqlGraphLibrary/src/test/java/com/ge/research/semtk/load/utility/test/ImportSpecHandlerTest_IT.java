@@ -153,17 +153,16 @@ public class ImportSpecHandlerTest_IT {
 		assertEquals("Did not insert child: \n" + tab.toCSVString(), "Greg", tab.getCell(0, 2));
 		
 		// uri: Greg. lookup-by-name: Jeff   
-		// ERROR
+		// ignore the Node URI since lookup succeeded
 		csv = "name, Child, child_name\n" +
-			  "Anthony,http://Family#Greg,Jeff\n";
-		try {
-			TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
-			fail("Missing expected exception when uri lookup does not match uri");
-		} catch (Exception e) {
-			assertTrue("Exception is missing 'Greg'", e.getMessage().contains("Greg"));
-			assertTrue("Exception is missing 'Jeff'", e.getMessage().contains("Jeff"));
-		}
+			  "Greg,http://Family#Jeff,Anthony\n";
 		
+		TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+		tab = TestGraph.execSelectFromResource(this.getClass(), "/family.json");
+		tab.sortByAllCols();
+		assertEquals("Wrong number of rows returned: " + tab.toCSVString(), 6, tab.getNumRows());
+		assertEquals("Did not insert lookup child: \n" + tab.toCSVString(), "Anthony", tab.getCell(2, 2));
+
 		// uri: Bad. lookup-by-name: none on Friend 
 		// ERROR
 		csv = "name, Friend, friend_name\n" +
@@ -254,16 +253,16 @@ public class ImportSpecHandlerTest_IT {
 		assertEquals("Did not insert child: \n" + tab.toCSVString(), "Dad", tab.getCell(0, 6));
 		
 		// uri: Greg. lookup-by-name: Jeff   
-		// ERROR
+		// ignore the Node URI since lookup succeeded
 		csv = "name, Parent, parent_name\n" +
-			  "Anthony,http://Family#Mom,Dad\n";
-		try {
-			TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
-			fail("Missing expected exception when uri lookup does not match uri");
-		} catch (Exception e) {
-			assertTrue("Exception is missing 'Mom'", e.getMessage().contains("Mom"));
-			assertTrue("Exception is missing 'Dad'", e.getMessage().contains("Dad"));
-		}
+			  "Greg,http://Family#Mom,Dad\n";
+		
+		TestGraph.ingestCsvString(this.getClass(), "/family.json", csv);
+		tab = TestGraph.execSelectFromResource(this.getClass(), "/family.json");
+		tab.sortByAllCols();
+		assertEquals("Wrong number of rows returned: " + tab.toCSVString(), 6, tab.getNumRows());
+		assertEquals("Did not insert lookup child: \n" + tab.toCSVString(), "Dad", tab.getCell(2, 6));
+
 		
 		
 		// uri: Bad. lookup-by-name: empty on Child 
