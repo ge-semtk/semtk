@@ -94,6 +94,33 @@ public class OntologyInfoClient extends RestClient {
 	}
 	
 	/**
+	 * Executes a call to get cardinality violations
+	 * @param conn 			the connection
+	 * @param maxRows 		maximum number of violations to return (-1 for no max)
+	 * @param conciseFormat	return using format that reduces redundant data and adds class instance count column
+	 * @return 				jobId
+	 * @throws 				Exception
+	 */
+	public String execGetCardinalityViolations(SparqlConnection conn, int maxRows, boolean conciseFormat) throws ConnectException, EndpointNotFoundException, Exception {
+		this.parametersJSON.put("conn", conn.toJson().toJSONString());
+		this.parametersJSON.put("maxRows", maxRows);
+		this.parametersJSON.put("conciseFormat", conciseFormat);
+		conf.setServiceEndpoint("ontologyinfo/getCardinalityViolations");
+		
+		try {
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
+			res.throwExceptionIfUnsuccessful();
+			return res.getJobId();
+		} finally {
+			// reset conf and parametersJSON
+			this.parametersJSON.remove("conn");
+			this.parametersJSON.remove("maxRows");
+			this.parametersJSON.remove("conciseFormat");
+			conf.setServiceEndpoint(null);
+		}
+	}	
+	
+	/**
 	 * 
 	 * @throws Exception
 	 */
