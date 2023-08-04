@@ -34,6 +34,7 @@ import com.ge.research.semtk.edc.client.OntologyInfoClient;
 import com.ge.research.semtk.edc.client.OntologyInfoClientConfig;
 import com.ge.research.semtk.edc.client.StatusClient;
 import com.ge.research.semtk.edc.client.StatusClientConfig;
+import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
 import com.ge.research.semtk.ontologyTools.PredicateStats;
@@ -163,17 +164,39 @@ public class OntologyInfoClientTest_IT {
 		SimpleResultSet res = qClient.uploadOwl(new File("src/test/resources/sampleBattery.owl"));
 		res.throwExceptionIfUnsuccessful();
 		oInfo = client.getOntologyInfo(conn);
-		assertEquals("query client uploadOwl didn't update oInfo cache", 3, oInfo.getNumberOfClasses());
-		
-		
+		assertEquals("query client uploadOwl didn't update oInfo cache", 3, oInfo.getNumberOfClasses());	
 	}
 	
 	@Test
 	public void testGetPredicateStats() throws Exception {
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this.getClass(), "sampleBattery.owl");
+		PredicateStats stats = TestGraph.getPredicateStats();		
+	}
+	
+	@Test
+	public void testGetCardinalityViolations() throws Exception {
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "Cardinality.owl");	// load Cardinal.sadl : the classes, restrictions, and instance data	
+		String jobId;
+		CSVDataset result;
 		
-		PredicateStats stats = TestGraph.getPredicateStats();
+		// no max rows
+		jobId = this.getClient().execGetCardinalityViolations(TestGraph.getSparqlConn(), -1, false);
+		IntegrationTestUtility.getStatusClient(jobId).waitForCompletionSuccess();
+		result = IntegrationTestUtility.getResultsClient().getTableResultsCSV(jobId, 999999);
+		assertEquals(result.getNumRows(), 36);
 		
+		// max rows
+		jobId = this.getClient().execGetCardinalityViolations(TestGraph.getSparqlConn(), 10, false);
+		IntegrationTestUtility.getStatusClient(jobId).waitForCompletionSuccess();
+		result = IntegrationTestUtility.getResultsClient().getTableResultsCSV(jobId, 999999);
+		assertEquals(result.getNumRows(), 10);
+		
+		// max rows and concise format
+		jobId = this.getClient().execGetCardinalityViolations(TestGraph.getSparqlConn(), -1, true);
+		IntegrationTestUtility.getStatusClient(jobId).waitForCompletionSuccess();
+		result = IntegrationTestUtility.getResultsClient().getTableResultsCSV(jobId, 999999);
+		assertEquals(result.getNumRows(), 22);
 	}
 }
