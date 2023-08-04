@@ -179,24 +179,22 @@ public class OntologyInfoClientTest_IT {
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "Cardinality.owl");	// load Cardinal.sadl : the classes, restrictions, and instance data	
 		String jobId;
-		CSVDataset result;
+		Table table;
 		
 		// no max rows
 		jobId = this.getClient().execGetCardinalityViolations(TestGraph.getSparqlConn(), -1, false);
-		IntegrationTestUtility.getStatusClient(jobId).waitForCompletionSuccess();
-		result = IntegrationTestUtility.getResultsClient().getTableResultsCSV(jobId, 999999);
-		assertEquals(result.getNumRows(), 36);
+		table = IntegrationTestUtility.getNodeGroupExecutionRestClient().waitForJobAndGetTable(jobId);
+		assertEquals(table.getNumRows(), 36);
 		
 		// max rows
 		jobId = this.getClient().execGetCardinalityViolations(TestGraph.getSparqlConn(), 10, false);
-		IntegrationTestUtility.getStatusClient(jobId).waitForCompletionSuccess();
-		result = IntegrationTestUtility.getResultsClient().getTableResultsCSV(jobId, 999999);
-		assertEquals(result.getNumRows(), 10);
+		table = IntegrationTestUtility.getNodeGroupExecutionRestClient().waitForJobAndGetTable(jobId);
+		assertEquals(table.getNumRows(), 10);
 		
 		// max rows and concise format
 		jobId = this.getClient().execGetCardinalityViolations(TestGraph.getSparqlConn(), -1, true);
-		IntegrationTestUtility.getStatusClient(jobId).waitForCompletionSuccess();
-		result = IntegrationTestUtility.getResultsClient().getTableResultsCSV(jobId, 999999);
-		assertEquals(result.getNumRows(), 22);
+		table = IntegrationTestUtility.getNodeGroupExecutionRestClient().waitForJobAndGetTable(jobId);
+		assertEquals(table.getNumRows(), 22);
+
 	}
 }
