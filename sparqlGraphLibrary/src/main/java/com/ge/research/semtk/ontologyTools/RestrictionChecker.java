@@ -113,7 +113,7 @@ public class RestrictionChecker {
 
 	/**
 	 * Generate a table of cardinality violations
-	 * @param maxRows maximum number of violation rows
+	 * @param maxRows maximum number of violations to return (-1 for no max)
 	 * @param conciseFormat return table in format that reduces redundant data and adds class instance count column
 	 */
 	public Table getCardinalityViolations(int maxRows, boolean conciseFormat) throws Exception {
