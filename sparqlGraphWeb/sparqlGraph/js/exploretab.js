@@ -603,6 +603,11 @@ define([	// properly require.config'ed
                 var sel = document.getElementById("etSelect");
                 sel.selectedIndex = 0;
             },
+            
+            setModeToRestrictions : function() {
+                var sel = document.getElementById("etSelect");
+                sel.selectedIndex = 4;
+            },
 
             butSetCancelFlag : function() {
                 this.cancelFlag = true;
@@ -639,7 +644,7 @@ define([	// properly require.config'ed
 
             // Retrieve the correct control and canvas divs and show them
             // Draw if empty, otherwise presume what is there is ok.
-			draw: function() {
+			draw : function() {
 
 				// display correct controls and canvas
 				this.controlDivParent.innerHTML = "";

@@ -171,7 +171,8 @@
 			var constraintsStr = getUrlParameter("constraints");
 			var runFlagStr = getUrlParameter("runFlag");  // defaults to true, next line
 	        var runFlag = (! runFlagStr) || runFlagStr.toLowerCase() == "true" || runFlagStr.toLowerCase() == "t";
-	        
+	        var restrictionsFlag = getUrlParameter("exploreRestrictions");
+	        // check for params, executing first that matches.
 	        if (nodegroupId) {
 				// give error if both nodegroup and report are specified.
 				if (reportId) {
@@ -181,7 +182,10 @@
 				// run a nodegroup at startup
 				runQueryFromUrl(conn, connStr, nodegroupId, constraintsStr, runFlag);
 				
-            } else if (reportId) {
+            } else if (restrictionsFlag) {
+				exploreRestrictions(conn);
+				
+			} else if (reportId) {
 				runReportFromUrl(conn, connStr, reportId, runFlag);
 				
 			} else if (conn) {
@@ -200,7 +204,7 @@
                                     }
                                   );
 
-            }
+            } 
 			// make sure Query Source and Type disables are reset
 			onchangeQueryType();
 
@@ -337,6 +341,17 @@
 		if (runFlag) {
 			gReportTab.drawReport(JSON.parse(jsonStr));
 		}
+	};
+	
+	var exploreRestrictions = function(conn) {
+		doLoadConnection(conn, exploreRestrictions2);
+	}
+	
+	var exploreRestrictions2 = function() {
+		setupTabs();
+		gExploreTab.setModeToRestrictions();
+		selectTab(3);
+		tabExploreActivated();
 	};
 	
 	var getUrlParameter = function getUrlParameter(sParam) {
