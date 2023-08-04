@@ -24,7 +24,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 public class CardinalityReportRequest extends SparqlConnectionRequest {
 
     @Schema(name = "maxRows",
-    		description = "Return only this many violations (e.g. protect browser memory)",
+    		description = "Return only this many violations, or -1 for no maximum",
             required = false,
             example = "1000")
     private int maxRows = 0;
