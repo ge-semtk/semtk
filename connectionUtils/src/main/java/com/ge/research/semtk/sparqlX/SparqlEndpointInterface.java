@@ -114,6 +114,7 @@ public abstract class SparqlEndpointInterface {
 	public final static String VIRTUOSO_SERVER = "virtuoso";
 	public final static String NEPTUNE_SERVER = "neptune";
 	public final static String BLAZEGRAPH_SERVER = "blazegraph";
+	public final static String MARKLOGIC_SERVER = "marklogic";
 	
 	public final static String JSON_KEY_TYPE = "type";
 	public final static String JSON_KEY_URL = "url";
@@ -131,6 +132,7 @@ public abstract class SparqlEndpointInterface {
 	protected static final String CONTENTTYPE_HTML = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8";
 	protected static final String CONTENTTYPE_RDF = "application/rdf+xml";
 	protected static final String CONTENTTYPE_N_TRIPLES = "application/n-triples";
+	protected static final String CONTENTTYPE_TURTLE = "text/turtle";
 
 	
 	private static final int MAX_QUERY_TRIES = 4;
@@ -390,7 +392,7 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	public static String [] getServerTypes() {
-		return new String [] {BLAZEGRAPH_SERVER, FUSEKI_SERVER, NEPTUNE_SERVER, VIRTUOSO_SERVER};
+		return new String [] {BLAZEGRAPH_SERVER, FUSEKI_SERVER, MARKLOGIC_SERVER, NEPTUNE_SERVER, VIRTUOSO_SERVER};
 	}
 
 	/**
@@ -440,7 +442,10 @@ public abstract class SparqlEndpointInterface {
 			return new VirtuosoSparqlEndpointInterface(server, graph, user, password);				
 			
 		}else if(serverTypeString.equalsIgnoreCase(FUSEKI_SERVER)){
-			return new FusekiSparqlEndpointInterface(server, graph, user, password);				
+			return new FusekiSparqlEndpointInterface(server, graph, user, password);
+			
+		}else if(serverTypeString.equalsIgnoreCase(MARKLOGIC_SERVER)){
+			return new MarkLogicSparqlEndpointInterface(server, graph, user, password);
 			
 		}else if(serverTypeString.equalsIgnoreCase(NEPTUNE_SERVER)){
 			return new NeptuneSparqlEndpointInterface(server, graph, user, password);				
