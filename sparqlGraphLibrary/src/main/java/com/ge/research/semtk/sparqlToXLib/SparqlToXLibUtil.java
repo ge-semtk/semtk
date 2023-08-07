@@ -556,18 +556,32 @@ public class SparqlToXLibUtil {
 	 * @throws Exception
 	 */
 	public static String generateGetCardinalityRestrictions(SparqlConnection conn, OntologyInfo oInfo) throws Exception {
-		StringBuffer sparql = new StringBuffer();
-		sparql.append("SELECT DISTINCT ?class ?property ?restriction ?limit  \n");
-		sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
-		sparql.append("WHERE { \n");
-		sparql.append("  ?r  a <http://www.w3.org/2002/07/owl#Restriction>. \n");
-		sparql.append("  ?r <http://www.w3.org/2002/07/owl#onProperty> ?property.  \n");
-		// note:  very weird that the class is subClassOf the restriction -Paul
-		sparql.append("  OPTIONAL { ?class <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?r. }  \n");   
-		sparql.append("  ?r  ?restriction ?limit. \n");
-		sparql.append("  FILTER REGEX (str(?restriction), \"ardinality\" ). \n");  
-		sparql.append("} ORDER BY ?class ?property ?restriction \n");
-		return sparql.toString();
+		String ret = "PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n"
+				+ "PREFIX owl:<http://www.w3.org/2002/07/owl#>  \n"
+				+ " \n"
+				+ "SELECT DISTINCT ?class ?property ?restriction ?limit   \n"
+				+ " \n"
+				+ generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n"
+				+ " \n"
+				+ "WHERE {  \n"
+				+ "  ?r  a <http://www.w3.org/2002/07/owl#Restriction>.  \n"
+				+ "  ?r <http://www.w3.org/2002/07/owl#onProperty> ?property.   \n"
+				+ "  OPTIONAL {  \n"
+				+ "      { \n"
+				+ "           ?class <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?r.  \n"
+				+             genBlankNodeFilterStatement("?class", false) + "\n"
+				+ "       } union { \n"
+				+ "            ?un <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?r . \n"
+				+ "            ?un owl:unionOf ?list . \n"
+				+ "            ?list rdf:rest* ?item . \n"
+				+ "            ?item rdf:first ?class. \n"
+				+ "       } \n"
+				+ "   }   \n"
+				+ "  ?r  ?restriction ?limit.  \n"
+				+ "  FILTER REGEX (str(?restriction), \"ardinality\" ).  \n"
+				+ "} ORDER BY ?class ?property ?restriction  \n"
+				;
+		return ret;
 	}
 	
 	/**
@@ -577,14 +591,14 @@ public class SparqlToXLibUtil {
 	 * @param domain
 	 * @return
 	 */
-	public static String generateGetDatatypeRestriction(String graphName, String domain){
+	public static String generateGetDatatypeRestriction(String graphName, String domain, SparqlConnection conn, OntologyInfo oInfo) throws Exception {
 
 		// SADL makes datatypes either owl:onDatatype or a union of objects w/o the onDatatype predicate (curious)
 		String retval = "PREFIX rdf:<http://www.w3.org/1999/02/22-rdf-syntax-ns#> \n" +
                 		"PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> \n" +
 						"PREFIX owl:<http://www.w3.org/2002/07/owl#> \n" +
 						"SELECT DISTINCT ?dataType ?equivType ?r_pred ?r_obj \n" +
-						"		FROM <http://junit/GG2NQYY2E/200001934/both> \n" +
+						generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n" +
 						"WHERE { \n" +
 						"	?dataType rdf:type rdfs:Datatype . \n" +
 						genDomainFilterStatement("dataType", domain, "") + "\n" +

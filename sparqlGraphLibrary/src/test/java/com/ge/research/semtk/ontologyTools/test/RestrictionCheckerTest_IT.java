@@ -99,4 +99,35 @@ public class RestrictionCheckerTest_IT {
 		IntegrationTestUtility.compareResults(violationsTable.toCSVString(), this, "cardinality_testStricter_results_concise.csv");  // csv file contains expected violations in concise format
 	}
 	
+	@Test
+	public void testWithSadlDescribesUnion() throws Exception {
+		// testing this type of SADL:
+		//    myProp describes { This or That } with a single value of type string.
+		
+		// setup
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "CardinalityDescUnion.owl");
+		SparqlConnection conn = TestGraph.getSparqlConn();
+		OntologyInfo oInfo = new OntologyInfo(conn);
+		RestrictionChecker checker = new RestrictionChecker(conn, oInfo);
+		
+		// check both restrictions
+		assertTrue(checker.hasCardinalityRestriction("http://CardinalityDescUnion#Class1", "http://CardinalityDescUnion#uProp"));
+		assertTrue(checker.hasCardinalityRestriction("http://CardinalityDescUnion#Class1", "http://CardinalityDescUnion#uProp"));
+		
+		// check  restrictions are exactly 1
+		assertTrue("1 did not satisfy 'exactly 1' cardinality", checker.satisfiesCardinality("http://CardinalityDescUnion#Class1", "http://CardinalityDescUnion#uProp", 1));
+		assertFalse("2 did satisfied 'exactly 1' cardinality", checker.satisfiesCardinality("http://CardinalityDescUnion#Class1", "http://CardinalityDescUnion#uProp", 2));
+		assertFalse("0 did satisfied 'exactly 1' cardinality", checker.satisfiesCardinality("http://CardinalityDescUnion#Class1", "http://CardinalityDescUnion#uProp", 0));
+		assertTrue("1 did not satisfy 'exactly 1' cardinality", checker.satisfiesCardinality("http://CardinalityDescUnion#Class2", "http://CardinalityDescUnion#uProp", 1));
+		assertFalse("2 did satisfied 'exactly 1' cardinality", checker.satisfiesCardinality("http://CardinalityDescUnion#Class2", "http://CardinalityDescUnion#uProp", 2));
+		assertFalse("0 did satisfied 'exactly 1' cardinality", checker.satisfiesCardinality("http://CardinalityDescUnion#Class2", "http://CardinalityDescUnion#uProp", 0));
+
+		// find one violation on Class2
+		Table violationsTable = checker.getCardinalityViolations(false);
+		assertEquals(violationsTable.getNumRows(), 1);
+		assertTrue(violationsTable.getCell(0, 0).endsWith("#Class2"));
+		
+	}
+	
 }
