@@ -152,12 +152,13 @@ public class NodeGroupStoreRestController {
 				
 				if (requestBody.getItemType() == StoredItemTypes.PrefabNodeGroup) {
 					// insert nodegroup (in legacy fashion)
-					JSONObject sgJsonJson = requestBody.getJsonNodeGroup();			// changed to allow for more dynamic nodegroup actions. 
+					JSONObject sgJsonJson = requestBody.buildNodeGroupJson();			// changed to allow for more dynamic nodegroup actions. 
 					SparqlGraphJson sgJson = new SparqlGraphJson(sgJsonJson);
 					JSONObject connJson = sgJson.getSparqlConnJson();
 					if(connJson == null){
 						throw new Exception("Item '" + requestBody.getName() + "' does not contain a valid connection block. it is possible that only the node group itself was passed. please check that complete input is sent.");
 					}
+					
 		
 					store.insertNodeGroup(sgJsonJson, connJson, requestBody.getName(), requestBody.getComments(), requestBody.getCreator());
 				
