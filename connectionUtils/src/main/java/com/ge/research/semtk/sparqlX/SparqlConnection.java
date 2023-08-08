@@ -254,10 +254,12 @@ public class SparqlConnection {
 	 * @throws Exception
 	 */
 	public void fromString(String jsonText) throws Exception {
+		if(jsonText == null) {
+			throw new Exception("Cannot instantiate SparqlConnection: connection json string is null");
+		}
 		JSONParser parser = new JSONParser();
 		JSONObject jObj = (JSONObject) parser.parse(jsonText);
 		fromJson(jObj);
-
 	}
 	
 	/**
