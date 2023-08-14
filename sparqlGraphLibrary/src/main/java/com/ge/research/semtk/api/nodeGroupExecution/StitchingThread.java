@@ -36,6 +36,7 @@ public class StitchingThread extends Thread {
 	private HeaderTable headerTable = null;
 	
 	private StitchingStep steps[];
+	private HashSet<String> commonCols;
 	private SparqlConnection conn = null;
 	private NodeGroupStoreRestClient storeClient = null;
 	private DispatchRestClient dispatchClient = null;
@@ -52,12 +53,13 @@ public class StitchingThread extends Thread {
 
 	 */
 	public StitchingThread(
-			StitchingStep [] steps, SparqlConnection conn, 
+			StitchingStep [] steps, HashSet<String> commonCols, SparqlConnection conn, 
 			NodeGroupStoreRestClient storeClient, DispatchRestClient dispatchClient, ResultsClient resultsClient, 
 			SparqlEndpointInterface servicesSei, String jobId) throws Exception {
 	
 		this.headerTable = ThreadAuthenticator.getThreadHeaderTable();
 		this.steps = steps;
+		this.commonCols = commonCols;
 		this.conn = conn;
 		this.storeClient = storeClient;
 		this.dispatchClient = dispatchClient;
@@ -123,7 +125,6 @@ public class StitchingThread extends Thread {
 	 * @throws Exception
 	 */
 	private void stitch(Table tab, StitchingStep step) throws Exception {
-		boolean AUTO_DETECT_KEYS = false;
 		
 		if (this.stitched == null) {
 			// first table: copy it in
@@ -132,32 +133,25 @@ public class StitchingThread extends Thread {
 			// change all the column names and save new name in newColumnNames
 			this.newColumnNames = new Hashtable<String, HashSet<String>>();
 			for (String tabColName : tab.getColumnNames()) {
-				HashSet<String> set = new HashSet<String>();
-				String newName = tabColName + '-' + step.getNodegroupId();
-				set.add(newName);
-				this.newColumnNames.put(tabColName, set);
-				this.stitched.changeColumnName(tabColName, newName);
+				if (!this.commonCols.contains(tabColName)) {
+					HashSet<String> set = new HashSet<String>();
+					String newName =  tabColName + '-' + step.getNodegroupId();
+					set.add(newName);
+					this.newColumnNames.put(tabColName, set);
+					this.stitched.changeColumnName(tabColName, newName);
+				}
 			}
 			
 		} else {
 			ArrayList<String> keyColumns = new ArrayList<String>();
 			keyColumns.addAll(Arrays.asList(step.getKeyColumns()));
 			
-			// EXPERIMENT: calculate keyColumns instead of getting them from step
-			//             any column that has the same name
-			if (AUTO_DETECT_KEYS) {
-				keyColumns.clear();
-				for (String tabCol : tab.getColumnNames()) {
-					if (this.stitched.getColumnIndex(tabCol) > -1) {
-						keyColumns.add(tabCol);
-					}
-				}
-			}
+			// Note: here is where you could try auto-detecting key columns
 			
-			
+			// appends "-ngname" to non-keys and non-commonCols
 			this.uniquifyColumnNames(keyColumns, step.getNodegroupId(), tab);
 			
-			// add all new column names to stitched
+			// add any column name in tab that isn't yet in stitched
 			String tabColNames[] = tab.getColumnNames();
 			String tabColTypes[] = tab.getColumnTypes();
 			for (int i=0; i < tabColNames.length; i++) {
@@ -168,7 +162,7 @@ public class StitchingThread extends Thread {
 			
 			ArrayList<ArrayList<String>> newRows = new ArrayList<ArrayList<String>>();
 			
-			// for each stitched row : look for matches in tab
+			// for each row in stitched : look for matches in new tab
 			for (int stitchRow=0; stitchRow < this.stitched.getNumRows(); stitchRow++) {
 				// make a mini-table of matching rows from tab
 				Table tabMatch = tab.getSubsetWhereMatches(keyColumns.get(0), this.stitched.getCell(stitchRow,  keyColumns.get(0)));
@@ -179,7 +173,16 @@ public class StitchingThread extends Thread {
 				if (tabMatch.getNumRows() > 0) {
 					// sub in values from first matching row
 					for (String colName : tabMatch.getColumnNames()) {
-						this.stitched.setCell(stitchRow, colName, tabMatch.getCell(0, colName));
+						if (this.commonCols.contains(colName)) {
+							// handle commonCols
+							String existVal = this.stitched.getCell(stitchRow, colName);
+							String newVal = tabMatch.getCell(0, colName);
+							this.stitched.setCell(stitchRow, colName, this.calculateCommonCol(existVal, newVal, colName));
+							
+						} else {
+							// copy rest in : keycol values overwrite identical, normal col values are set
+							this.stitched.setCell(stitchRow, colName, tabMatch.getCell(0, colName));
+						}
 					}
 					
 					// make new rows for rest of matching rows
@@ -189,7 +192,15 @@ public class StitchingThread extends Thread {
 						newStitchedRow.addAll(this.stitched.getRow(stitchRow));
 						// substitute in all values from matched row
 						for (String colName : tabMatch.getColumnNames()) {
-							newStitchedRow.set(this.stitched.getColumnIndex(colName), tabMatch.getCell(tabMatchRow, colName));
+							if (this.commonCols.contains(colName)) {
+								// handle commonCols
+								String existVal = this.stitched.getCell(stitchRow, colName);
+								String newVal = tabMatch.getCell(0, colName);
+								this.stitched.setCell(stitchRow, colName, this.calculateCommonCol(existVal, newVal, colName));
+								
+							} else {
+								newStitchedRow.set(this.stitched.getColumnIndex(colName), tabMatch.getCell(tabMatchRow, colName));
+							}
 						}
 						newRows.add(newStitchedRow);
 					}
@@ -223,9 +234,34 @@ public class StitchingThread extends Thread {
 			}
 		}
 	}
+	
 	/**
-	 * Change unstitched column names in tab to "colName-nodegroupId"
-	 * If needed, change a stitched column name in this.stitched back from "colName-nodegroupId" to "colName"
+	 * Returns the proper value to set a commonCol.
+	 * @param existVal - current value
+	 * @param newVal - proposed new value
+	 * @param colName
+	 * @return
+	 * @throws Exception - if existVal and newVal are both nonBlank, and aren't equal
+	 */
+	private String calculateCommonCol(String existVal, String newVal, String colName) throws Exception {
+		if (existVal.isBlank()) {
+			if (!newVal.isBlank()) {
+				// exist is blank, new is not:  add it
+				return newVal;
+			}
+			// both are blank: do nothing
+		} else {
+			// exist and new are non-blank:  make sure they match
+			if (!newVal.isBlank() && !newVal.equals(existVal)) {
+				throw new Exception("CommonCol " + colName + " values don't match: " + existVal + "," + newVal);
+			}
+			// exist is non-blank, new is blank: do nothing
+		}
+		return existVal;
+	}
+	/**
+	 * Change unstitched and non-commonCol column names in tab to "colName-nodegroupId"
+	 * As new stitching cols appear, change a column name in this.stitched back from "colName-nodegroupId" to "colName"
 	 * @param keyColumns
 	 * @param tab
 	 * @return Hashtable<old>=new   of name changes in tab
@@ -234,9 +270,9 @@ public class StitchingThread extends Thread {
 	private void uniquifyColumnNames(ArrayList<String> keyColumns, String nodegroupId, Table tab) throws Exception {
 		//
 		// Check all the incoming column names:
-		//    if it IS NOT STITCHED then change the name to "columnName-nodegroupId"
+		//    if it IS NOT A KEY_COL then change the name to "columnName-nodegroupId"
 		//    	(it it only happens once for columnName, we'll change it back at the end)
-		//    if it IS STITCHED then make sure it is in the stitched table already
+		//    if it IS A KEY_COL then make sure it is in the stitched table already
 		//
 				
 		for (String tabColName : tab.getColumnNames()) {
@@ -262,8 +298,9 @@ public class StitchingThread extends Thread {
 					}
 				}  // else it is already fine: column is in this.stitched table with it's original name already
 				
-			} else {
-				// it is not a keyColumn
+			} else if (! this.commonCols.contains(tabColName)) {
+			
+				// it is not a keyColumn nor commonCol
 				// so change tab colName to "colName-nodeGroupId"
 				String newName = tabColName + '-' + nodegroupId;
 				tab.changeColumnName(tabColName, newName);

@@ -4,6 +4,7 @@ import static org.junit.Assert.*;
 
 import java.util.List;
 import java.util.Arrays;
+import java.util.HashSet;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -61,7 +62,7 @@ public class StitchingTest_IT {
 				new StitchingStep(ngPrefix + "annotationBatteryIdCellId", new String [] { "id" })
 				};
 		String jobId = JobTracker.generateJobId();
-		StitchingThread thread = new StitchingThread(steps, TestGraph.getSparqlConn(), 
+		StitchingThread thread = new StitchingThread(steps, new HashSet<String>(), TestGraph.getSparqlConn(),
 				IntegrationTestUtility.getNodeGroupStoreRestClient(),
 				IntegrationTestUtility.getDispatchRestClient(),
 				IntegrationTestUtility.getResultsClient(),
@@ -83,7 +84,7 @@ public class StitchingTest_IT {
 				new StitchingStep(ngPrefix + "annotationBatteryIdName", new String [] { "id" })
 				};
 		String jobId = JobTracker.generateJobId();
-		StitchingThread thread = new StitchingThread(steps, TestGraph.getSparqlConn(), 
+		StitchingThread thread = new StitchingThread(steps, new HashSet<String>(), TestGraph.getSparqlConn(), 
 				IntegrationTestUtility.getNodeGroupStoreRestClient(),
 				IntegrationTestUtility.getDispatchRestClient(),
 				IntegrationTestUtility.getResultsClient(),
@@ -102,7 +103,7 @@ public class StitchingTest_IT {
 	public void unitTestStitch() throws Exception {
 
 		String jobId = JobTracker.generateJobId();
-		StitchingThread thread = new StitchingThread(null, TestGraph.getSparqlConn(), 
+		StitchingThread thread = new StitchingThread(null, new HashSet<String>(), TestGraph.getSparqlConn(), 
 				IntegrationTestUtility.getNodeGroupStoreRestClient(),
 				IntegrationTestUtility.getDispatchRestClient(),
 				IntegrationTestUtility.getResultsClient(),
@@ -142,7 +143,7 @@ public class StitchingTest_IT {
 	public void unitTestStitchCombinatorial() throws Exception {
 
 		String jobId = JobTracker.generateJobId();
-		StitchingThread thread = new StitchingThread(null, TestGraph.getSparqlConn(), 
+		StitchingThread thread = new StitchingThread(null, new HashSet<String>(), TestGraph.getSparqlConn(), 
 				IntegrationTestUtility.getNodeGroupStoreRestClient(),
 				IntegrationTestUtility.getDispatchRestClient(),
 				IntegrationTestUtility.getResultsClient(),
@@ -194,7 +195,7 @@ public class StitchingTest_IT {
 	public void unitTestStitchMultipleCols() throws Exception {
 
 		String jobId = JobTracker.generateJobId();
-		StitchingThread thread = new StitchingThread(null, TestGraph.getSparqlConn(), 
+		StitchingThread thread = new StitchingThread(null, new HashSet<String>(), TestGraph.getSparqlConn(), 
 				IntegrationTestUtility.getNodeGroupStoreRestClient(),
 				IntegrationTestUtility.getDispatchRestClient(),
 				IntegrationTestUtility.getResultsClient(),
@@ -249,7 +250,7 @@ public class StitchingTest_IT {
 	public void unitTestStitchDuplicateCol() throws Exception {
 
 		String jobId = JobTracker.generateJobId();
-		StitchingThread thread = new StitchingThread(null, TestGraph.getSparqlConn(), 
+		StitchingThread thread = new StitchingThread(null, new HashSet<String>(), TestGraph.getSparqlConn(), 
 				IntegrationTestUtility.getNodeGroupStoreRestClient(),
 				IntegrationTestUtility.getDispatchRestClient(),
 				IntegrationTestUtility.getResultsClient(),
@@ -299,7 +300,7 @@ public class StitchingTest_IT {
 	public void unitTestStitchFailures() throws Exception {
 
 		String jobId = JobTracker.generateJobId();
-		StitchingThread thread = new StitchingThread(null, TestGraph.getSparqlConn(), 
+		StitchingThread thread = new StitchingThread(null, new HashSet<String>(), TestGraph.getSparqlConn(), 
 				IntegrationTestUtility.getNodeGroupStoreRestClient(),
 				IntegrationTestUtility.getDispatchRestClient(),
 				IntegrationTestUtility.getResultsClient(),
@@ -348,4 +349,96 @@ public class StitchingTest_IT {
 		} catch (Exception e) {}
 	}
 		
+	@Test
+	public void unitTestCommonCol() throws Exception {
+
+		String jobId = JobTracker.generateJobId();
+		
+		// commonCol
+		HashSet<String> commonCol = new HashSet<String>();
+		commonCol.add("common");
+		
+		StitchingThread thread = new StitchingThread(null, commonCol, TestGraph.getSparqlConn(), 
+				IntegrationTestUtility.getNodeGroupStoreRestClient(),
+				IntegrationTestUtility.getDispatchRestClient(),
+				IntegrationTestUtility.getResultsClient(),
+				IntegrationTestUtility.getServicesSei(),
+				jobId);
+		Table t;
+		StitchingStep s;
+		Table res;
+		// table 1
+		t = Table.fromCsvData(
+				"col1, col2, common\n" +
+			    "11, 12,one\n" +
+				"21, 22,\n" +
+			    "31, 32,\n");
+		s = new StitchingStep("ng1", null);
+		thread.testStitchTable(t, s );
+		
+		// table 2
+		t = Table.fromCsvData(
+				"col1, col3, common\n" +
+			    "11, 13,\n" +
+				"21, 23,two\n" +
+			    "31, 33,\n");
+		
+		s = new StitchingStep("ng2", new String[] {"col1"} );
+		res = thread.testStitchTable(t, s );
+		
+		// test results
+		thread.testFinalizeStitchedTable();
+		for (String c : new String [] {"col1", "col2", "col3", "common"} ) {
+			assertTrue("Missing column " + c, res.getColumnIndex(c) > -1);
+		}
+		// check two cells
+		assertEquals("Cell(0,0)", res.getCellAsInt(0, "col1"), 11);
+		assertEquals("Cell(1,2)", res.getCellAsInt(1, "col3"), 23);
+		
+		// check common col
+		assertEquals("commonCol filled by first query", "one", res.getCellAsString(0, "common"));
+		assertEquals("commonCol filled by first query", "two", res.getCellAsString(1, "common"));
+		assertEquals("commonCol filled by first query", "", res.getCellAsString(2, "common"));
+
+	}
+	
+	@Test
+	public void unitTestCommonColError() throws Exception {
+
+		String jobId = JobTracker.generateJobId();
+		
+		// commonCol
+		HashSet<String> commonCol = new HashSet<String>();
+		commonCol.add("common");
+		
+		StitchingThread thread = new StitchingThread(null, commonCol, TestGraph.getSparqlConn(), 
+				IntegrationTestUtility.getNodeGroupStoreRestClient(),
+				IntegrationTestUtility.getDispatchRestClient(),
+				IntegrationTestUtility.getResultsClient(),
+				IntegrationTestUtility.getServicesSei(),
+				jobId);
+		Table t;
+		StitchingStep s;
+		Table res;
+		// table 1
+		t = Table.fromCsvData(
+				"col1, col2, common\n" +
+			    "31, 32,one\n");
+		s = new StitchingStep("ng1", null);
+		thread.testStitchTable(t, s );
+		
+		// table 2
+		t = Table.fromCsvData(
+				"col1, col3, common\n" +
+			    "31, 33,two\n");
+		
+		s = new StitchingStep("ng2", new String[] {"col1"} );
+		
+		try {
+			res = thread.testStitchTable(t, s );
+			assertTrue("Missing expected error which commonCol values mismatch", false);
+		} catch (Exception e) {
+			assertTrue("Wrong error message when commonCol values mismatch", e.getMessage().contains("two"));
+		}
+	}
 }
