@@ -85,7 +85,7 @@ public class StitchByIdRequestBody extends SparqlConnRequestBody {
 	 * @throws ParseException
 	 * @throws Exception
 	 */
-	public HashSet<String> getCommonCol() throws ParseException, Exception  {
+	public HashSet<String> buildCommonCol() throws ParseException, Exception  {
 		JSONObject jObj = (JSONObject) (new JSONParser()).parse(this.steps);
 
 		JSONArray commonCols = (JSONArray) jObj.get("commonCol");
