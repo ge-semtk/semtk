@@ -759,7 +759,7 @@ public abstract class SparqlEndpointInterface {
 				
 				} else if (tryCount >= MAX_QUERY_TRIES) {
 					LocalLogger.logToStdOut (String.format("SPARQL query failed after %d tries.  Giving up.", tryCount));
-					LocalLogger.logToStdErr(e.getMessage());
+					LocalLogger.printStackTrace(e);
 					throw e;
 					
 				} else {	
@@ -935,9 +935,7 @@ public abstract class SparqlEndpointInterface {
 				LocalLogger.logElapsedToStdOut("query timer", startTime);
 			}
 			
-				
-			entity = response_http.getEntity();
-			String responseTxt = EntityUtils.toString(entity, "UTF-8");
+			String responseTxt = this.getResponseText(response_http);
 		
 			// parse response
 			return this.parseResponse(resultType, responseTxt);
@@ -946,6 +944,18 @@ public abstract class SparqlEndpointInterface {
 				EntityUtils.consume(entity);
 			}
 		}
+	}
+	
+	/**
+	 * Get the response text.
+	 * Null entity will throw an error.
+	 * Triplestores that return null entities for empty results need to override.
+	 * @param response
+	 * @return
+	 * @throws Exception
+	 */
+	protected String getResponseText(HttpResponse response) throws Exception {
+		return EntityUtils.toString(response.getEntity());
 	}
 	
 	/**
@@ -1156,13 +1166,13 @@ public abstract class SparqlEndpointInterface {
 	 */
 	protected void addHeaders(HttpPost httppost, SparqlResultTypes resultType) throws Exception {
 		
-		httppost.addHeader("Accept", this.getContentType(resultType));
+		httppost.addHeader("Accept", this.getAccept(resultType));
 		httppost.addHeader("X-Sparql-default-graph", this.getGraph());
 	}
 	
 	protected void addHeaders(HttpURLConnection conn, SparqlResultTypes resultType) throws Exception {
 		
-		conn.setRequestProperty("Accept", this.getContentType(resultType));
+		conn.setRequestProperty("Accept", this.getAccept(resultType));
 		conn.setRequestProperty("X-Sparql-default-graph", this.getGraph());
 	}
 	
@@ -1170,7 +1180,7 @@ public abstract class SparqlEndpointInterface {
 		// add params
 		List<NameValuePair> params = new ArrayList<NameValuePair>(3);
 		params.add(new BasicNameValuePair("query", query));
-		params.add(new BasicNameValuePair("format", this.getContentType(resultType)));
+		params.add(new BasicNameValuePair("format", this.getAccept(resultType)));
 		params.add(new BasicNameValuePair("default-graph-uri", this.getGraph()));
 		
 		if (this.getTimeoutPostParamName() != null && this.getTimeoutPostParamValue() != null) {
@@ -1455,9 +1465,9 @@ public abstract class SparqlEndpointInterface {
 		// buid resultsFormat
 		String resultsFormat = null;
 		if(resultType == null){
-			resultsFormat = this.getContentType(getDefaultResultType());
+			resultsFormat = this.getAccept(getDefaultResultType());
 		} else {
-			resultsFormat = this.getContentType(resultType);
+			resultsFormat = this.getAccept(resultType);
 		}
 		
 		HttpHost targetHost = this.buildHttpHost();
@@ -1543,9 +1553,9 @@ public abstract class SparqlEndpointInterface {
 	/**
 	 * Get a results content type to be set in the HTTP header.
 	 */
-	protected String getContentType(SparqlResultTypes resultType) throws Exception{
+	protected String getAccept(SparqlResultTypes resultType) throws Exception{
 		if (resultType == null) {
-			return this.getContentType(getDefaultResultType());
+			return this.getAccept(getDefaultResultType());
 			
 		} else if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.CONFIRM) { 
 			return CONTENTTYPE_SPARQL_QUERY_RESULT_JSON; 

@@ -30,7 +30,7 @@ public class SparqlToXUtils {
 	static final Pattern PATTERN_BAD_FIRST_CHAR = Pattern.compile("#[^a-zA-Z0-9]");
 	public static final String BLANK_NODE_PREFIX = "nodeID://";
 	public static final String UNRESERVED_URI_CHARS = "0123456789-_ABCDEFJHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz.~";
-	public static final String BLANK_NODE_REGEX = "^(nodeID://|_:)";
+	public static final String BLANK_NODE_REGEX = "(^nodeID://|^_:|/semantics/blank/)";
 	public static final Pattern BLANK_NODE_PATTERN = Pattern.compile(BLANK_NODE_REGEX);
 	
 	

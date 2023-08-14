@@ -1,5 +1,5 @@
 # Dump of graph <http://research.ge.com/test/popmusic/data>, as of 2017-05-10 09:34:28.993633
-@base <> .
+@base <http://music> .
 @prefix rdf:	<http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
 @prefix ns1:	<belmont/generateSparqlInsert#> .
 @prefix ns2:	<http://com.ge.research/knowledge/test/popMusic#> .

@@ -84,7 +84,7 @@ public class SparqlEndpointInterfaceTest_IT {
 		SparqlEndpointInterface sei = TestGraph.getSei();
 		byte[] ttlBytes = Utility.getResourceAsBytes(this, "musicTestDataset_2017.q2.ttl");
 		SimpleResultSet resultSet = SimpleResultSet.fromJson(sei.executeUploadTurtle(ttlBytes));
-		assertTrue(resultSet.getSuccess());
+		assertTrue(resultSet.getRationaleAsString("\n"), resultSet.getSuccess());
 		assertEquals(215, sei.getNumTriples());
 	}
 

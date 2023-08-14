@@ -453,7 +453,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	@Override
 	protected void addHeaders(HttpPost httppost, SparqlResultTypes resultType) throws Exception {
 		
-		httppost.addHeader("Accept", this.getContentType(resultType));
+		httppost.addHeader("Accept", this.getAccept(resultType));
 		
 		// Added for AWS V4 Signing
 		httppost.addHeader("Content-type", "application/x-www-form-urlencoded");
@@ -462,7 +462,7 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	@Override
 	protected void addHeaders(HttpURLConnection conn, SparqlResultTypes resultType) throws Exception {
 		
-		conn.setRequestProperty("Accept", this.getContentType(resultType));
+		conn.setRequestProperty("Accept", this.getAccept(resultType));
 		conn.setRequestProperty("Content-type", "application/x-www-form-urlencoded");
 	}
 
@@ -543,10 +543,10 @@ public class NeptuneSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * Get a results content type to be set in the HTTP header.
 	 */
 	@Override
-	protected String getContentType(SparqlResultTypes resultType) throws Exception{
+	protected String getAccept(SparqlResultTypes resultType) throws Exception{
 		
 		if (resultType == null) {
-			return this.getContentType(getDefaultResultType());
+			return this.getAccept(getDefaultResultType());
 			
 		} else if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.CONFIRM) { 
 			return CONTENTTYPE_SPARQL_QUERY_RESULT_JSON; 

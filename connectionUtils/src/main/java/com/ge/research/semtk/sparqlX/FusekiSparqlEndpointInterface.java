@@ -91,7 +91,6 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 		} else {
 			params.add(new BasicNameValuePair("update", query));
 		}
-		//params.add(new BasicNameValuePair("format", this.getContentType(resultType)));
 
 		// timeout 
 		if (this.getTimeoutPostParamName() != null && this.getTimeoutPostParamValue() != null) {
@@ -107,9 +106,9 @@ public class FusekiSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * Override identical function of parent because some of the CONTENTTYPE_ constants are overridden
 	 */
 	@Override
-	protected String getContentType(SparqlResultTypes resultType) throws Exception{
+	protected String getAccept(SparqlResultTypes resultType) throws Exception{
 		if (resultType == null) {
-			return this.getContentType(getDefaultResultType());
+			return this.getAccept(getDefaultResultType());
 		} else if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.CONFIRM) { 
 			return CONTENTTYPE_SPARQL_QUERY_RESULT_JSON; 
 		} else if (resultType == SparqlResultTypes.GRAPH_JSONLD) { 

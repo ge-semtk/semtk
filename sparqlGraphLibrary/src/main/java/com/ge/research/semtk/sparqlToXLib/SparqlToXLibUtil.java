@@ -621,7 +621,7 @@ public class SparqlToXLibUtil {
 			
 		} else {
 			// old-fashioned domain filter
-			String ret = "filter (regex(str(?" + varName + "),'^" + domain + "') " + clause + ") ";
+			String ret = "filter (regex(str(?" + varName + "),'^" + domain + "') " + clause + ") . " + genBlankNodeFilterStatement(varName, false) + " ";
 			return ret;
 			
 		}

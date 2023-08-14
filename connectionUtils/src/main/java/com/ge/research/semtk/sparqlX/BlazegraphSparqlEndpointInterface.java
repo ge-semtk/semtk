@@ -121,13 +121,13 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 	 */
 	protected void addHeaders(HttpPost httppost, SparqlResultTypes resultType) throws Exception {
 		
-		httppost.addHeader("Accept", this.getContentType(resultType));
+		httppost.addHeader("Accept", this.getAccept(resultType));
 		httppost.addHeader("Content-type", "application/x-www-form-urlencoded; charset=UTF-8");
 		// not recognized by blazegraph: httppost.addHeader("X-Sparql-default-graph", this.graph);
 
 	}
 	protected void addHeaders(HttpURLConnection conn, SparqlResultTypes resultType) throws Exception {
-		conn.setRequestProperty("Accept", this.getContentType(resultType));
+		conn.setRequestProperty("Accept", this.getAccept(resultType));
 		conn.setRequestProperty("Content-type", "application/x-www-form-urlencoded; charset=UTF-8");
 	}
 	/**
@@ -136,9 +136,9 @@ public class BlazegraphSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * in Blazegraph, this is used for the "Accept" header, not "Content-type"
 	 */
 	@Override
-	protected String getContentType(SparqlResultTypes resultType) throws Exception{
+	protected String getAccept(SparqlResultTypes resultType) throws Exception{
 		if (resultType == null) {
-			return this.getContentType(getDefaultResultType());
+			return this.getAccept(getDefaultResultType());
 			
 		} else if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.CONFIRM) { 
 			return CONTENTTYPE_SPARQL_QUERY_RESULT_JSON; 
