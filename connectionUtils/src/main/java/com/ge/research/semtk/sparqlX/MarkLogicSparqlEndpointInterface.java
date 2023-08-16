@@ -18,7 +18,11 @@
 
 package com.ge.research.semtk.sparqlX;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
 import java.text.SimpleDateFormat;
@@ -27,6 +31,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
+import org.apache.commons.compress.utils.FileNameUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -59,7 +65,9 @@ import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
+import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Utility;
+import com.github.jsonldjava.shaded.com.google.common.io.Files;
 
 /**
  * Interface to MarkLogic SPARQL endpoint
@@ -136,94 +144,170 @@ public class MarkLogicSparqlEndpointInterface extends SparqlEndpointInterface {
 	public String getPostURL(SparqlResultTypes resultType) {
 		return String.format("%s:%s/v1/graphs/sparql", this.server, this.port);
 	}
-	
 	@Override 
 	public JSONObject executeUploadTurtle(byte[] turtle) throws AuthorizationException, Exception {
-		return this.executeUpload(turtle, "file.ttl");
+		File tempFile = File.createTempFile("upload", ".ttl", null);
+		
+		try {
+			try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+				fos.write(turtle);
+			}
+			return mlcp(tempFile);
+		} finally {
+			FileUtils.deleteQuietly(tempFile);
+		}
 	}
 	
 	@Override 
 	/** Main entry point from query service **/
 	public JSONObject executeAuthUploadTurtle(byte[] turtle) throws AuthorizationException, Exception {
-		return this.executeUpload(turtle, "file.ttl");
+		return this.executeUploadTurtle(turtle);
 	}
 	
 	@Override 
 	/** Main entry point from query service **/
-	public JSONObject executeAuthUploadOwl(byte[] turtle) throws AuthorizationException, Exception {
-		return this.executeUpload(turtle, "file.owl");
+	public JSONObject executeAuthUploadOwl(byte[] owl) throws AuthorizationException, Exception {
+		File tempFile = File.createTempFile("upload", ".owl", null);
+		
+		try {
+			try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+				fos.write(owl);
+			}
+			return mlcp(tempFile);
+
+		} finally {
+			FileUtils.deleteQuietly(tempFile);
+		}
 	}
 	
 	@Override
 	/** Default upload of OWL.  Errors if bytes are not OWL **/
 	public JSONObject executeUpload(byte[] owl) throws AuthorizationException, Exception {
-		return this.executeUpload(owl, "file.owl");
-	}
-	
-	private JSONObject executeUpload(byte[] owl, String filename) throws AuthorizationException, Exception {
-		EntityBuilder builder = EntityBuilder.create();
-
-		builder.setBinary(owl);
-		HttpEntity entity = builder.build();
-
-		return this.executeAuthUpload(entity, filename);
+		return this.executeAuthUploadOwl(owl);
 	}
 	
 	@Override
 	public JSONObject executeAuthUploadStreamed(InputStream is, String filename) throws AuthorizationException, Exception {
-		EntityBuilder builder = EntityBuilder.create();
-
-		builder.setStream(is);
-		HttpEntity entity = builder.build();
-		return this.executeAuthUpload(new BufferedHttpEntity(entity), filename);
-	}
-	
-	/**
-	 * Main function for auth uploading
-	 */
-	private JSONObject executeAuthUpload(HttpEntity entity, String filename) throws AuthorizationException, Exception {
-		this.authorizeUpload();
+		File tempFile = File.createTempFile("upload", "." + FileNameUtils.getExtension(filename), null);
 		
-		HttpHost targetHost = this.buildHttpHost();
-        HttpClient httpclient = this.buildHttpClient(targetHost.getSchemeName());
-		BasicHttpContext localcontext = this.buildHttpContext(targetHost);
-		
-		// PARAMS: graph param is in URL
-		HttpPost httppost = new HttpPost(this.getUploadURL());
-		
-		// HEADERS: content - type
-		if (filename.toLowerCase().endsWith(".owl"))
-			httppost.addHeader("content-type", CONTENTTYPE_RDF);
-		else if (filename.toLowerCase().endsWith(".ttl"))
-			httppost.addHeader("content-type", CONTENTTYPE_TURTLE);
-		else if (filename.toLowerCase().endsWith(".nt"))
-			httppost.addHeader("content-type", CONTENTTYPE_N_TRIPLES);
-
-		// TODO else see what happens when there is no header.  Can MarkLogic figure it out?
-		// TODO how do you specifiy the database
-		httppost.setEntity(entity);
-		
-		executeTestQuery();
-
-		HttpResponse response_http = httpclient.execute(targetHost, httppost, localcontext);
-
-		String responseTxt = this.getResponseText(response_http);  
-		SimpleResultSet ret = new SimpleResultSet();
-		
-		if(responseTxt.isEmpty()) {
-			// marklogic returned nothing
-			ret.setSuccess(true);
-		} else if (responseTxt.matches("^/triplestore.*xml$")) {
-			// marklogic returned an xml file name -ish thing
-			ret.setMessage(responseTxt);
-			ret.setSuccess(true);
-		} else {
-			ret.setSuccess(false);
-			ret.addRationaleMessage("MarkLogicEndpointInterface.executeUpload", responseTxt);
+		try {
+			// copy is to tempfile
+			try (FileOutputStream fos = new FileOutputStream(tempFile)) {
+				byte[] buffer = new byte[1024];
+			    int bytesRead;
+			    while ((bytesRead = is.read(buffer)) != -1)
+			    {
+			        fos.write(buffer, 0, bytesRead);
+			    }
+			}
+			
+			is.close();
+			return mlcp(tempFile);
+		} finally {
+			FileUtils.deleteQuietly(tempFile);
 		}
-		
-		return ret.toJson();
-	}
+	}	
+	
+// ---------------------------------------------------------------
+//  Aug 2023 MarkLogic reports this endpoint is buggy.
+//  These public functions go with the buggy endpoint functions
+//  which are also commented out below
+// ---------------------------------------------------------------
+//
+//	@Override 
+//	public JSONObject executeUploadTurtle(byte[] turtle) throws AuthorizationException, Exception {
+//		return this.executeUpload(turtle, "file.ttl");
+//	}
+//	
+//	@Override 
+//	/** Main entry point from query service **/
+//	public JSONObject executeAuthUploadTurtle(byte[] turtle) throws AuthorizationException, Exception {
+//		return this.executeUpload(turtle, "file.ttl");
+//	}
+//	
+//	@Override 
+//	/** Main entry point from query service **/
+//	public JSONObject executeAuthUploadOwl(byte[] turtle) throws AuthorizationException, Exception {
+//		return this.executeUpload(turtle, "file.owl");
+//	}
+//	
+//	@Override
+//	/** Default upload of OWL.  Errors if bytes are not OWL **/
+//	public JSONObject executeUpload(byte[] owl) throws AuthorizationException, Exception {
+//		return this.executeUpload(owl, "file.owl");
+//	}
+//	
+//	@Override
+//	public JSONObject executeAuthUploadStreamed(InputStream is, String filename) throws AuthorizationException, Exception {
+//		EntityBuilder builder = EntityBuilder.create();
+//
+//		builder.setStream(is);
+//		HttpEntity entity = builder.build();
+//		return this.executeAuthUpload(new BufferedHttpEntity(entity), filename);
+//	}
+	
+// ---------------------------------------------------------------
+//  Aug 2023 MarkLogic reports this endpoint is buggy.
+//  Some urls are translated  http://prefix/#classname
+//  And some are  translated  http://prefix#classname
+//  ..within the same upload.  So there are broken triples.
+// ---------------------------------------------------------------
+//
+//	private JSONObject executeUpload(byte[] owl, String filename) throws AuthorizationException, Exception {
+//		EntityBuilder builder = EntityBuilder.create();
+//
+//		builder.setBinary(owl);
+//		HttpEntity entity = builder.build();
+//
+//		return this.executeAuthUpload(entity, filename);
+//	}
+//	
+//	/**
+//	 * Main function for auth uploading
+//	 */
+//	private JSONObject executeAuthUpload(HttpEntity entity, String filename) throws AuthorizationException, Exception {
+//		this.authorizeUpload();
+//		
+//		HttpHost targetHost = this.buildHttpHost();
+//        HttpClient httpclient = this.buildHttpClient(targetHost.getSchemeName());
+//		BasicHttpContext localcontext = this.buildHttpContext(targetHost);
+//		
+//		// PARAMS: graph param is in URL
+//		HttpPost httppost = new HttpPost(this.getUploadURL());
+//		
+//		// HEADERS: content - type
+//		if (filename.toLowerCase().endsWith(".owl"))
+//			httppost.addHeader("content-type", CONTENTTYPE_RDF);
+//		else if (filename.toLowerCase().endsWith(".ttl"))
+//			httppost.addHeader("content-type", CONTENTTYPE_TURTLE);
+//		else if (filename.toLowerCase().endsWith(".nt"))
+//			httppost.addHeader("content-type", CONTENTTYPE_N_TRIPLES);
+//
+//		// TODO else see what happens when there is no header.  Can MarkLogic figure it out?
+//		// TODO how do you specifiy the database
+//		httppost.setEntity(entity);
+//		
+//		executeTestQuery();
+//
+//		HttpResponse response_http = httpclient.execute(targetHost, httppost, localcontext);
+//
+//		String responseTxt = this.getResponseText(response_http);  
+//		SimpleResultSet ret = new SimpleResultSet();
+//		
+//		if(responseTxt.isEmpty()) {
+//			// marklogic returned nothing
+//			ret.setSuccess(true);
+//		} else if (responseTxt.matches("^/triplestore.*xml$")) {
+//			// marklogic returned an xml file name -ish thing
+//			ret.setMessage(responseTxt);
+//			ret.setSuccess(true);
+//		} else {
+//			ret.setSuccess(false);
+//			ret.addRationaleMessage("MarkLogicEndpointInterface.executeUpload", responseTxt);
+//		}
+//		
+//		return ret.toJson();
+//	}
 	
 	/**
 	 * Return a context with digest Auth if there is a userName, otherwise null context
@@ -437,5 +521,58 @@ public class MarkLogicSparqlEndpointInterface extends SparqlEndpointInterface {
 	
 	protected void throwExceptionIfClearGraphFailed(SimpleResultSet res) throws Exception {
 		// Marklogic handles this fine in parseResponse
+	}
+	
+	/**
+	 * Upload the file and delete it using locally installed MLCP from MarkLogic
+	 * since the rest interface has a bug with randomly slashing URI's  http://prefix/#item
+	 *                                                                               ^
+	 * @param tempFile
+	 * @return
+	 */
+	private JSONObject mlcp(File tempFile) throws Exception {
+
+		String MLCP_COMMAND = "C:\\Users\\200001934\\mlcp-11.0.3\\bin\\mlcp.bat";
+		
+		String command = MLCP_COMMAND  
+				+ " import"
+				+ " -host " + this.getServerWithoutProtocol() 
+				+ " -username " + this.getUserName()
+				+ " -password " + this.getPassword()
+				+ " -output_graph " + this.getGraph()
+				+ " -input_file_type rdf "
+				+ " -input_file_path " + tempFile.getAbsolutePath();
+				
+				
+		// TODO: will this work on N_TRIPLES ?
+		// TODO: won't work with https?
+		
+		Runtime rt = Runtime.getRuntime();
+		
+		Process pr = rt.exec(command);
+
+		BufferedReader input = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+
+		String line=null;
+		StringBuffer output = new StringBuffer();
+		while((line=input.readLine()) != null) {
+			output.append(line + "\n");
+		}
+
+		int exitVal = pr.waitFor();
+		
+		String outputStr = output.toString();
+		
+		SimpleResultSet simple = new SimpleResultSet();
+		if (exitVal==0 && !outputStr.contains("FATAL")) {
+			simple.setSuccess(true);
+			simple.setMessage(outputStr);
+		} else {
+			simple.setSuccess(false);
+			simple.setMessage("MLCP ingestion failed");
+			simple.addRationaleMessage("MarkLogicSparqlEndpoint.mlcp()", outputStr);
+		}
+		
+		return simple.toJson();
 	}
 }
