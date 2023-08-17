@@ -71,6 +71,7 @@ import com.ge.research.semtk.springutillib.properties.AuthorizationProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.NeptuneS3Properties;
 import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
+import com.ge.research.semtk.springutillib.properties.QueryServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.springutillib.properties.NodegroupStoreProperties;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -114,6 +115,8 @@ public class SparqlQueryServiceRestController {
 	    response.addHeader("Access-Control-Max-Age", "3600");
 	}
 	@Autowired
+	QueryServiceProperties query_props;
+	@Autowired
 	OntologyInfoServiceProperties oinfo_props;
 	@Autowired
 	private NeptuneS3Properties neptune_prop;
@@ -134,6 +137,7 @@ public class SparqlQueryServiceRestController {
 		AuthorizationManager.authorizeWithExit(auth_prop);
 		oinfo_props.validateWithExit();
 		neptune_prop.validateWithExit();
+		query_props.validateWithExit();
 		servicesgraph_prop.validateWithExit();
 	}
 	
@@ -650,8 +654,14 @@ public class SparqlQueryServiceRestController {
 			if (serverType == null || serverType.trim().isEmpty() ) throw new Exception("serverType is empty.");
 
 			// force auth interface even if none was provided.  Some don't need it.
-			String nonEmptyUser = (user==null || user.isBlank()) ? "no-user" : user;
-			String nonEmptyPassword = (password==null || password.isBlank()) ? "no-password" : password;
+			// 1. provided user/password
+			// 2. properties file
+			// 3. fake one
+			String nonEmptyUser = (user==null || user.isBlank()) ? query_props.getUser() : user;
+			String nonEmptyPassword = (password==null || password.isBlank()) ? query_props.getPassword() : password;
+			nonEmptyUser = (user==null || user.isBlank()) ? "nonempty-user" : user;
+			nonEmptyPassword = (password==null || password.isBlank()) ? "nonempty-password" : password;
+			
 			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, graph, nonEmptyUser, nonEmptyPassword);
 
 			SimpleResultSet sResult = this.uploadFile(sei, multiFile.getInputStream(), multiFile.getOriginalFilename());

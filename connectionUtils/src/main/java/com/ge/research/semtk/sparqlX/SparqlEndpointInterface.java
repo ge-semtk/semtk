@@ -324,12 +324,12 @@ public abstract class SparqlEndpointInterface {
 	}
 	
 	public String getUserName() {
-		return userName;
+		return userName==null?"":userName;
 	}
 
 
 	public String getPassword() {
-		return password;
+		return password==null?"":password;
 	}
 
 	public void setGraph(String graph) {

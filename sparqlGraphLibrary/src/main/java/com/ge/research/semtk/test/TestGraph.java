@@ -170,7 +170,7 @@ public class TestGraph {
 	 * @throws Exception 
 	 */
 	public static String getUsername() throws Exception{
-		return IntegrationTestUtility.get("sparqlendpoint.username");
+		return IntegrationTestUtility.get("testgraph.username");
 	}
 	
 	/**
@@ -178,7 +178,7 @@ public class TestGraph {
 	 * @throws Exception 
 	 */
 	public static String getPassword() throws Exception{
-		return IntegrationTestUtility.get("sparqlendpoint.password");
+		return IntegrationTestUtility.get("testgraph.password");
 	}
 	
 	/**

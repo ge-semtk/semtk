@@ -98,7 +98,7 @@ public class LoadOwlConfig extends YamlConfig {
 				if(logger != null) {
 					logger.info("Load OWL " + new File(this.baseDir).getName() + File.separator + file.getName() + " to " + modelGraph);
 				}
-				SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(serverType, server, modelGraph, username, password);
+				SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(serverType, server, modelGraph);
 				queryClient.setSei(sei);
 				queryClient.uploadOwl(file);
 			}

@@ -59,7 +59,7 @@ public class IngestorRestClientTest_IT {
 		int ingestionServicePort = IntegrationTestUtility.getInt("ingestionservice.port");
 		irc   = new IngestorRestClient(new IngestorClientConfig(serviceProtocol, ingestionServiceServer, ingestionServicePort));
 
-		sgJson_TestGraph = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/testTransforms.json");
+		sgJson_TestGraph = TestGraph.getSparqlGraphJsonFromResource(IngestorRestClientTest_IT.class, "/testTransforms.json");
 		sgJsonString_TestGraph = sgJson_TestGraph.getJson().toJSONString();   // template as a string
 	}
 
@@ -76,7 +76,7 @@ public class IngestorRestClientTest_IT {
 	public void testIngest() throws Exception{				
 		
 		TestGraph.clearGraph();
-		TestGraph.uploadOwl("src/test/resources/testTransforms.owl");
+		TestGraph.uploadOwlResource(this, "/testTransforms.owl");
 		
 		assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
 		irc.execIngestionFromCsv(sgJsonString_TestGraph, DATA);	// load data

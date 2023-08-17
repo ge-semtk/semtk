@@ -619,7 +619,17 @@ public class IngestionRestController {
 			this.overrideBaseURI(sgJson, trackFlag, overrideBaseURI, trackKey);
 			// get a CSV data set to use in the load. 
 			Dataset ds = new CSVDataset(dataFileContent, true);
-			DataLoader dl = new DataLoader(sgJson, ds, prop.getSparqlUserName(), prop.getSparqlPassword());
+			
+			// TODO: OLD SECURITY
+			// now only happens if there is no user/password (pulls from props)
+			String user = sgJson.getSparqlConn().getInsertInterface().getUserName();
+			String pass = sgJson.getSparqlConn().getInsertInterface().getPassword();
+			if (user==null || user.isEmpty()) user = prop.getSparqlUserName();
+			if (pass==null || pass.isEmpty()) pass = prop.getSparqlPassword();
+			
+			DataLoader dl = new DataLoader(sgJson, ds, user, pass);
+			
+			
 			dl.overrideMaxThreads(prop.getMaxThreads());
 			JSONArray w = dl.getWarningsJson();
 			if (w.size() > 0) 

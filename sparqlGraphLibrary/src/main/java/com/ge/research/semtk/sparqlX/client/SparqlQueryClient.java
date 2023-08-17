@@ -116,7 +116,8 @@ public class SparqlQueryClient extends RestClient {
 	
 	/**
 	 * Clear all
-	 * TODO could have made this simply execute(). Chose dropGraph() to reduce accidental drops.
+	 * Returns: SimpleResultSet where success might be true or false (FAILURE)
+	 *          so try: clearAll().throwExceptionIfUnsuccessful()
 	 */
 	public SimpleResultSet clearAll() throws Exception{
 		this.overrideConfEndpoint("clearAll");

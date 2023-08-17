@@ -177,19 +177,22 @@ public class IntegrationTestUtility{
 	/**
 	 * Get a SparqlQueryClient using the integration test properties.
 	 */
-	public static SparqlQueryClient getSparqlQueryClient(String serviceEndpoint, String sparqlServer, String dataset) throws Exception{
-		return new SparqlQueryClient(new SparqlQueryClientConfig(get("protocol"), get("sparqlqueryservice.server"), getInt("sparqlqueryservice.port"), serviceEndpoint, sparqlServer, get("sparqlendpoint.type"), dataset));
+	public static SparqlQueryClient getSparqlQueryClient(String serviceEndpoint) throws Exception{
+		return new SparqlQueryClient(
+				new SparqlQueryClientConfig(
+						get("protocol"), get("sparqlqueryservice.server"), getInt("sparqlqueryservice.port"), 
+						serviceEndpoint, 
+						TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), TestGraph.getDataset()));
 	}
 	
-	/**
-	 * Get a SparqlQueryClient using the integration test properties.
-	 */
-	public static SparqlQueryClient getSparqlQueryAuthClient(String serviceEndpoint, String sparqlServer, String dataset) throws Exception{
-		return new SparqlQueryClient(new SparqlQueryAuthClientConfig(get("protocol"), get("sparqlqueryservice.server"), getInt("sparqlqueryservice.port"), serviceEndpoint, sparqlServer, get("sparqlendpoint.type"), dataset, get("sparqlendpoint.username"), get("sparqlendpoint.password")));
-	}
 	
-	public static SparqlQueryClient getSparqlQueryAuthClient() throws Exception{
-		return new SparqlQueryClient(new SparqlQueryAuthClientConfig(get("protocol"), get("sparqlqueryservice.server"), getInt("sparqlqueryservice.port"), "/sparqlQueryService/query", get("sparqlendpoint.server"), get("sparqlendpoint.type"), TestGraph.getDataset(), get("sparqlendpoint.username"), get("sparqlendpoint.password")));
+	public static SparqlQueryClient getSparqlQueryAuthClient(String serviceEndpoint) throws Exception{
+		return new SparqlQueryClient(
+				new SparqlQueryAuthClientConfig(
+						get("protocol"), get("sparqlqueryservice.server"), getInt("sparqlqueryservice.port"), 
+						"/sparqlQueryService/query", 
+						TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), TestGraph.getDataset(), 
+						TestGraph.getUsername(), TestGraph.getPassword()));
 	}
 
 	public static OntologyInfoClient getOntologyInfoClient() throws Exception{

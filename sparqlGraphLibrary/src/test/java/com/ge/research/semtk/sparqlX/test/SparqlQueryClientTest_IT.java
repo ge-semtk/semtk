@@ -43,7 +43,7 @@ public class SparqlQueryClientTest_IT {
 		try {
 			TestGraph.clearGraph();
 			File owlFile = Utility.getResourceAsTempFile(this, "Pet.owl");	
-			SparqlQueryClient client = IntegrationTestUtility.getSparqlQueryAuthClient("/sparqlQueryService/uploadOwl", TestGraph.getSparqlServer(), TestGraph.getDataset());
+			SparqlQueryClient client = IntegrationTestUtility.getSparqlQueryAuthClient("/sparqlQueryService/uploadOwl");
 			SimpleResultSet result = client.uploadOwl(owlFile);
 			assertTrue(result.getRationaleAsString("\n"), result.getSuccess());
 			assertEquals("Number of triples loaded via OWL file", 53, TestGraph.getNumTriples());
@@ -57,7 +57,7 @@ public class SparqlQueryClientTest_IT {
 		try {
 			TestGraph.clearGraph();
 			File ttlFile = Utility.getResourceAsTempFile(this, "musicTestDataset_2017.q2.ttl");	
-			SparqlQueryClient client = IntegrationTestUtility.getSparqlQueryAuthClient("/sparqlQueryService/uploadTurtle", TestGraph.getSparqlServer(), TestGraph.getDataset());
+			SparqlQueryClient client = IntegrationTestUtility.getSparqlQueryAuthClient("/sparqlQueryService/uploadTurtle");
 			SimpleResultSet result = client.uploadTurtle(ttlFile);
 			assertTrue(result.getRationaleAsString("\n"), result.getSuccess());
 			assertEquals("Number of triples loaded via TTL file", 215, TestGraph.getNumTriples());
@@ -71,7 +71,7 @@ public class SparqlQueryClientTest_IT {
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(getClass(), "Pet.owl");
 		assertEquals(53, TestGraph.getNumTriples());
-		SparqlQueryClient client = IntegrationTestUtility.getSparqlQueryClient("/sparqlQueryService/dropGraph", TestGraph.getSparqlServer(), TestGraph.getDataset());
+		SparqlQueryClient client = IntegrationTestUtility.getSparqlQueryClient("/sparqlQueryService/dropGraph");
 		client.dropGraph();
 		assertEquals(0, TestGraph.getNumTriples());
 	}

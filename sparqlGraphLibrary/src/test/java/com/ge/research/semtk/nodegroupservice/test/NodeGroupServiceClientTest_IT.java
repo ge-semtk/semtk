@@ -55,6 +55,10 @@ public class NodeGroupServiceClientTest_IT {
 							IntegrationTestUtility.get("protocol"), 
 							IntegrationTestUtility.get("nodegroupservice.server"), 
 							IntegrationTestUtility.getInt("nodegroupservice.port")));
+			
+			TestGraph.clearGraph();
+			TestGraph.initGraphWithData(NodeGroupServiceClientTest_IT.class, "sampleBattery");
+			//TestGraph.uploadOwlResource(NodeGroupServiceClientTest_IT.class, "sampleBattery.owl");
 		}
 		
 		@AfterClass
@@ -264,7 +268,7 @@ public class NodeGroupServiceClientTest_IT {
 				Table t = execClient.dispatchSelectFromNodeGroup(sgJson);
 				
 				// test result
-				assertEquals("Wrong number of columns", t.getNumColumns(), 1);
+				assertEquals("Wrong number of columns", 1, t.getNumColumns());
 				assertTrue("Wrong column name", t.getColumnNames()[0].equals("Name"));
 				
 			} finally {
@@ -300,9 +304,6 @@ public class NodeGroupServiceClientTest_IT {
 		@Test
 		public void getImportColumns() throws Exception{				
 			
-			TestGraph.clearGraph();
-			TestGraph.uploadOwlResource(this, "sampleBattery.owl");
-			
 			// get a nodegroup
 			SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
 			
@@ -317,8 +318,7 @@ public class NodeGroupServiceClientTest_IT {
 		
 		@Test
 		public void getSampleImportCSV() throws Exception{				
-			TestGraph.clearGraph();
-			TestGraph.uploadOwlResource(this, "sampleBattery.owl");
+			
 			// get a nodegroup
 			SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/sampleBattery.json");
 			

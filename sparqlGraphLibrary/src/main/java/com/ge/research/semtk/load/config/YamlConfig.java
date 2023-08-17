@@ -18,8 +18,6 @@ public abstract class YamlConfig {
 	protected String defaultModelGraph;		// load to this model graph if not otherwise specified
 	protected String defaultDataGraph;		// load to this data graph if not otherwise specified
 	protected JsonNode configNode;			// this file as a JsonNode
-	protected String username = "YamlConfigUser";    // no user or password functionality yet.
-	protected String password = "YamlConfigPassword";
 
 	/**
 	 * Constructor

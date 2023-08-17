@@ -75,7 +75,12 @@ public abstract class AsynchronousNodeGroupBasedQueryDispatcher {
 		// get nodegroup and sei from json
 		this.queryNodeGroup = sgJson.getNodeGroup();
 		this.querySei = sgJson.getSparqlConn().getDefaultQueryInterface();
-		this.querySei.setUserAndPassword(extConfigSei.getUserName(), extConfigSei.getPassword());
+		
+		// This old hack can't be correct. 
+		// Wrapped it with isEmpty() at least...
+		if (querySei.getUserName().isEmpty()) {
+			this.querySei.setUserAndPassword(extConfigSei.getUserName(), extConfigSei.getPassword());
+		}
 		
 		SparqlConnection nodegroupConn = sgJson.getSparqlConn();
 		this.domain = nodegroupConn.getDomain();

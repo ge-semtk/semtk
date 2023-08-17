@@ -551,7 +551,7 @@ public class DataLoader implements Runnable {
 		worker.join();
 		Exception e = worker.getException();
 		if (e != null) {
-			throw new Exception(exceptionHeader, e);
+			throw new Exception(exceptionHeader + e.getMessage());
 		}
 	}
 	
@@ -636,7 +636,10 @@ public class DataLoader implements Runnable {
 	 */
 	public void run() {
 		if (this.asyncPrecheck == null || this.asyncSkipIngest == null || this.sClient == null || this.rClient == null) {
-			this.asyncFailure(new Exception("Internal error: ran async data load without first calling setupAsyncRun()"));
+			if (this.sClient == null)
+				LocalLogger.logToStdErr("Internal error: ran async data load without first calling setupAsyncRun()");
+			else
+				this.asyncFailure(new Exception("Internal error: ran async data load without first calling setupAsyncRun()"), this.sClient.getJobId());
 		
 		// perform the load
 		} else {
@@ -665,15 +668,19 @@ public class DataLoader implements Runnable {
 				}
 				
 			} catch (Exception e) {
-				this.asyncFailure(e);
+				this.asyncFailure(e, jobId);
 			}
 		}
 	}
 	
-	public void asyncFailure(Exception e) {
+	public void asyncFailure(Exception e, String jobId) {
 		try {
 			LocalLogger.printStackTrace(e);
-			this.sClient.execSetFailure(e.getMessage());
+			
+			Table t = new Table( new String [] { "Internal Error" } );
+			t.addRow( new String [] { e.getMessage() });
+			rClient.execStoreTableResults(jobId, t);
+			this.sClient.execSetFailure("Internal Error");
 			
 		} catch (Exception ee) {
 			// we're out of luck if we can't tell the status service what happened

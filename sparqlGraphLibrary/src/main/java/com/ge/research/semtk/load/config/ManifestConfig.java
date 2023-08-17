@@ -228,8 +228,8 @@ public class ManifestConfig extends YamlConfig {
 				if(logger != null) {
 					logger.info("Clear graph " + g);
 				}
-				queryClient.setSei(SparqlEndpointInterface.getInstance(serverTypeString, server, g, username, password));
-				queryClient.clearAll();
+				queryClient.setSei(SparqlEndpointInterface.getInstance(serverTypeString, server, g));
+				queryClient.clearAll().throwExceptionIfUnsuccessful("Graph: " + g);
 			}
 			// no need to delete nodegroups, they will get overwritten below
 		}
@@ -294,8 +294,8 @@ public class ManifestConfig extends YamlConfig {
 					if(logger != null) {
 						logger.info("Clear graph " + copyToGraph);
 					}
-					queryClient.setSei(SparqlEndpointInterface.getInstance(serverTypeString, server, copyToGraph, username, password));
-					queryClient.clearAll();
+					queryClient.setSei(SparqlEndpointInterface.getInstance(serverTypeString, server, copyToGraph));
+					queryClient.clearAll().throwExceptionIfUnsuccessful("Graph: " + copyToGraph);
 				}
 				for(String graph : this.getGraphsFootprint()) {  // copy each model/data footprint graph to the given graph
 					if(logger != null) {
