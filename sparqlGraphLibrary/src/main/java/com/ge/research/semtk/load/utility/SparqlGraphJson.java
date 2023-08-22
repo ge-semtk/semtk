@@ -454,6 +454,29 @@ public class SparqlGraphJson {
 		return conn.getDefaultQueryInterface().executeQueryToGraph(query);
 	}
 	
+	public static String executeConstructToNTriplesStr(JSONObject sgJsonJson, SparqlConnection conn, OntologyInfoClient oInfoClient) throws Exception {
+		SparqlGraphJson sgjson = new SparqlGraphJson(sgJsonJson);
+		sgjson.setSparqlConn(conn);
+		
+		String query;
+		if (oInfoClient != null) 
+			query = sgjson.getNodeGroupNoInflateNorValidate(oInfoClient).generateSparqlConstruct();
+		else 
+			query=sgjson.getNodeGroup().generateSparqlConstruct();		
+		return conn.getDefaultQueryInterface().executeQueryToNTriplesStr(query);
+	}
+	public static Table executeConstructToNTriplesTable(JSONObject sgJsonJson, SparqlConnection conn, OntologyInfoClient oInfoClient) throws Exception {
+		SparqlGraphJson sgjson = new SparqlGraphJson(sgJsonJson);
+		sgjson.setSparqlConn(conn);
+		String query;
+		if (oInfoClient != null) 
+			query = sgjson.getNodeGroupNoInflateNorValidate(oInfoClient).generateSparqlConstruct();
+		else 
+			query=sgjson.getNodeGroup().generateSparqlConstruct();
+		
+		return conn.getDefaultQueryInterface().executeQueryToNTriplesTable(query);
+	}
+	
 	/**
 	 * Execute a select query from a JSON representation of SparqlGraphJson and an override connection
 	 * @param sgJsonJson

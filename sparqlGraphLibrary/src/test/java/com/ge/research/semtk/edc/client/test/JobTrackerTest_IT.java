@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
 
+import org.apache.commons.io.FileUtils;
 import org.json.simple.JSONObject;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -66,7 +67,7 @@ public class JobTrackerTest_IT {
 		for (String id : jobIds) {
 			tracker.deleteJob(id);
 		}
-		tempFolder.delete();
+		FileUtils.deleteQuietly(tempFolder);
 	}
 	
 	private static void registerJob(String jobId) {

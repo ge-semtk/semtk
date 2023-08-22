@@ -133,6 +133,7 @@ public abstract class SparqlEndpointInterface {
 	protected static final String CONTENTTYPE_RDF = "application/rdf+xml";
 	protected static final String CONTENTTYPE_N_TRIPLES = "application/n-triples";
 	protected static final String CONTENTTYPE_TURTLE = "text/turtle";
+	protected static final String CONTENTTYPE_RDF_JSON = "application/rdf+json";
 
 	
 	private static final int MAX_QUERY_TRIES = 4;
@@ -632,10 +633,31 @@ public abstract class SparqlEndpointInterface {
 	 * @return
 	 * @throws Exception
 	 */
-	public String executeQueryToNtriples(String query) throws Exception {
+	public String executeQueryToNTriplesStr(String query) throws Exception {
 		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(query, SparqlResultTypes.N_TRIPLES);
 		res.throwExceptionIfUnsuccessful();
 		return (String) res.getResult(SparqlResultTypes.N_TRIPLES.toString());
+	}
+	
+	public Table executeQueryToNTriplesTable(String query) throws Exception {
+		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(query, SparqlResultTypes.N_TRIPLES);
+		res.throwExceptionIfUnsuccessful();
+		String tripleStr = res.getResult(SparqlResultTypes.N_TRIPLES.toString());
+		Table tab = new Table(new String [] { "s", "p", "o" });
+		
+		// if anything is returned, parse it into s p o
+		if (!tripleStr.isBlank()) {
+			for (String row : tripleStr.split("[\\n\\r]+")) {
+				// remove trailing .
+				String row1 = row.replaceAll("\\s*\\.\\s*$", "");  
+				// split.  first two won't have spaces in them
+				String [] cell = row1.split(" ");
+				// add a row that rejoins any accidental splitting of the object
+				tab.addRow(new String [] { cell[0], cell[1], String.join(" ", Arrays.copyOfRange(cell, 2, cell.length)) } );
+			}
+		}
+		return tab;
+		
 	}
 	
 	/**

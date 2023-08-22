@@ -401,6 +401,33 @@ public class MarkLogicSparqlEndpointInterface extends SparqlEndpointInterface {
 	}
 	
 	/**
+	 * Get a results content type to be set in the HTTP header.
+	 * MarkLogic docs:
+	 *   https://docs.marklogic.com/guide/semantics/REST#id_81353
+	 */
+	@Override
+	protected String getAccept(SparqlResultTypes resultType) throws Exception{
+		if (resultType == null) {
+			return this.getAccept(getDefaultResultType());
+			
+		} else if (resultType == SparqlResultTypes.TABLE || resultType == SparqlResultTypes.CONFIRM) { 
+			return CONTENTTYPE_SPARQL_QUERY_RESULT_JSON; 
+			
+		} else if (resultType == SparqlResultTypes.GRAPH_JSONLD) { 
+			// MarkLogic will not do JSON-LD
+			return CONTENTTYPE_RDF_JSON; 
+		} else if (resultType == SparqlResultTypes.HTML) { 
+			return CONTENTTYPE_HTML; 
+		} else if (resultType == SparqlResultTypes.RDF) { 
+			return CONTENTTYPE_RDF; 
+		} else if (resultType == SparqlResultTypes.N_TRIPLES) {
+			return CONTENTTYPE_N_TRIPLES;
+		}
+		
+		// fail and throw an exception if the value was not valid.
+		throw new DontRetryException("Cannot get content type for query type " + resultType);
+	}
+	/**
 	 * Handle an empty response
 	 * @throws Exception 
 	 */

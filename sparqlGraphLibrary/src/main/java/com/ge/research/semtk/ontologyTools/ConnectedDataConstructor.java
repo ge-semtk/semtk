@@ -94,7 +94,7 @@ public class ConnectedDataConstructor extends Thread {
 	    		
     		} else if (this.resultType == SparqlResultTypes.N_TRIPLES) {
     			JSONObject jObj = new JSONObject();
-    			jObj.put(SparqlResultTypes.N_TRIPLES.toString(), this.conn.getDefaultQueryInterface().executeQueryToNtriples(sparql));
+    			jObj.put(SparqlResultTypes.N_TRIPLES.toString(), this.conn.getDefaultQueryInterface().executeQueryToNTriplesStr(sparql));
 	    		resClient.execStoreGraphResults(this.jobId, jObj);
     		} 
     		

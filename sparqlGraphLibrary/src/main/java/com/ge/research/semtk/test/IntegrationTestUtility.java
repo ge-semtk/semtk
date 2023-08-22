@@ -177,6 +177,14 @@ public class IntegrationTestUtility{
 	/**
 	 * Get a SparqlQueryClient using the integration test properties.
 	 */
+	public static SparqlQueryClient getSparqlQueryClient() throws Exception{
+		return getSparqlQueryClient("/sparqlQueryService/query");
+	}
+	public static SparqlQueryClient getSparqlQueryAuthClient() throws Exception{
+		return getSparqlQueryAuthClient("/sparqlQueryService/query");
+	}
+
+
 	public static SparqlQueryClient getSparqlQueryClient(String serviceEndpoint) throws Exception{
 		return new SparqlQueryClient(
 				new SparqlQueryClientConfig(

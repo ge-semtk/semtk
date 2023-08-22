@@ -2449,12 +2449,16 @@ public class NodeGroup {
 		// Process for all types except QUERY_CONSTRUCT with ! isConstructed
 		if (clauseType != ClauseTypes.CONSTRUCT_LEADER || snode.getIsConstructed()) {
 			// This is the type-constraining statement for any type that needs
-			// NOTE: this is at the top due to a Virtuoso bug
-			sparql.append(this.generateSparqlTypeClause(snode, tab, clauseType));
-					
+			// NOTE: this is at the top due to a Virtuoso bug	
+			
+			// will error if there's no TypeClause, so used forceFlag=true above
 			// add binding unless it's a CONSTRUCT
 			if (snode.getBinding() != null && clauseType != ClauseTypes.CONSTRUCT_LEADER) {
+				// force type clause if there's a binding coming
+				sparql.append(this.generateSparqlTypeClause(snode, tab, clauseType, true));
 				sparql.append(tab + "BIND(" + snode.getSparqlID() + " as " +  snode.getBinding() + ") .\n" );
+			} else {
+				sparql.append(this.generateSparqlTypeClause(snode, tab, clauseType, false));
 			}
 			
 			// PropItems: generate sparql for property and constraints
@@ -2481,6 +2485,9 @@ public class NodeGroup {
 					sparql.append(tab + constraintStr + " . \n");
 				}
 			}
+			
+			// later BIND spot
+						
 		}
 
 		// recursive process of NodeItem subtree  
@@ -2861,6 +2868,9 @@ public class NodeGroup {
 	 * @throws Exception
 	 */
 	private String generateSparqlTypeClause(Node node, String tab, ClauseTypes clauseType) throws Exception  {
+		return generateSparqlTypeClause(node, tab, clauseType, false);
+	}
+	private String generateSparqlTypeClause(Node node, String tab, ClauseTypes clauseType, boolean forceFlag) throws Exception  {
 		String retval = "";
 		
 		// Do incoming and outgoing properties define the type of this Node
@@ -2888,7 +2898,8 @@ public class NodeGroup {
 				
 		// skip if type isn't returned, not CONSTRUCT, and incoming range gives us the type
 		// added nodeHasOnlyOptionals so we don't accidentally have a {} that starts with optional
-		if (constrainedByIncoming && 
+		if (!forceFlag &&
+				constrainedByIncoming && 
 				!this.nodeHasOnlyOptionals(node) &&
 				!node.getIsTypeReturned()) {
 			if (clauseType == ClauseTypes.CONSTRUCT_WHERE)  {
