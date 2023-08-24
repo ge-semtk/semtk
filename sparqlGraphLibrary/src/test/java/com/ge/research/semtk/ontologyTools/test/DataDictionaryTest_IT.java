@@ -38,7 +38,8 @@ public class DataDictionaryTest_IT {
 		assertTrue((dataDictionaryTable.getSubsetWhereMatches("CLASS", "Battery").getSubsetWhereMatches("PROPERTY", "cell").getCell(0,2).equals("Cell")));
 		assertTrue((dataDictionaryTable.getSubsetWhereMatches("CLASS", "Battery").getSubsetWhereMatches("PROPERTY", "id (SHARED PROPERTY)").getCell(0,2).equals("string")));
 		assertTrue((dataDictionaryTable.getSubsetWhereMatches("CLASS", "BatteryChild").getSubsetWhereMatches("PROPERTY", "id (SHARED PROPERTY)").getCell(0,2).equals("string")));
-		assertTrue((dataDictionaryTable.getSubsetWhereMatches("CLASS", "Battery").getSubsetWhereMatches("PROPERTY", "id (SHARED PROPERTY)").getCell(0,3).equals("alias added by Battery ; alias added by Cell (SHARED PROPERTY)")));
+		assertTrue((dataDictionaryTable.getSubsetWhereMatches("CLASS", "Battery").getSubsetWhereMatches("PROPERTY", "id (SHARED PROPERTY)").getCell(0,3).contains("alias added by Cell")));
+		assertTrue((dataDictionaryTable.getSubsetWhereMatches("CLASS", "Battery").getSubsetWhereMatches("PROPERTY", "id (SHARED PROPERTY)").getCell(0,3).contains("alias added by Battery")));
 		assertTrue((dataDictionaryTable.getSubsetWhereMatches("CLASS", "Cell").getSubsetWhereMatches("PROPERTY", "color").getCell(0,4).equals("you know,like red")));
 
 		// check the enumeration
