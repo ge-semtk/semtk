@@ -1054,11 +1054,7 @@ public abstract class SparqlEndpointInterface {
 	 * @throws Exception
 	 */
 	protected void throwExceptionIfClearGraphFailed(SimpleResultSet res) throws Exception {
-		String s = res.getMessage();
-        String sLower = s.toLowerCase();
-        if (sLower.contains("fail") || sLower.contains("error")){
-        	throw new Exception(s);
-        }
+        this.throwExceptionOnMessage(res);
 	}
 	
 	/**
@@ -1072,7 +1068,16 @@ public abstract class SparqlEndpointInterface {
 		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(SparqlToXUtils.generateDeletePrefixQuery(this, prefix), SparqlResultTypes.CONFIRM);
 		res.throwExceptionIfUnsuccessful();
 		
-        String s = res.getMessage();
+        this.throwExceptionOnMessage(res);
+	}
+	
+	/**
+	 * Throw exception if @Message indicates an error
+	 * @param res
+	 * @throws Exception
+	 */
+	protected void throwExceptionOnMessage(SimpleResultSet res) throws Exception {
+		String s = res.getMessage();
         String sLower = s.toLowerCase();
         if (sLower.contains("fail") || sLower.contains("error")){
         	throw new Exception(s);
@@ -1089,12 +1094,7 @@ public abstract class SparqlEndpointInterface {
 	public void createGraph() throws Exception {
 		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(SparqlToXUtils.generateCreateGraphSparql(this), SparqlResultTypes.CONFIRM);
 		res.throwExceptionIfUnsuccessful();
-		
-        String s = res.getMessage();
-        String sLower = s.toLowerCase();
-        if (sLower.contains("fail") || sLower.contains("error")){
-        	throw new Exception(s);
-        }
+        this.throwExceptionOnMessage(res);
 	}
 	
 	/**
@@ -1107,12 +1107,7 @@ public abstract class SparqlEndpointInterface {
 	public void dropGraph() throws Exception {
 		SimpleResultSet res = (SimpleResultSet) this.executeQueryAndBuildResultSet(SparqlToXUtils.generateDropGraphSparql(this), SparqlResultTypes.CONFIRM);
 		res.throwExceptionIfUnsuccessful();
-		
-        String s = res.getMessage();
-        String sLower = s.toLowerCase();
-        if (sLower.contains("fail") || sLower.contains("error")){
-        	throw new Exception(s);
-        }
+        this.throwExceptionOnMessage(res);
 	}
 	
 	/**
