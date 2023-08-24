@@ -23,6 +23,7 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.net.URL;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.UUID;
@@ -36,7 +37,6 @@ import org.junit.rules.TemporaryFolder;
 
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
-import com.google.common.io.Files;
 import com.ge.research.semtk.edc.JobTracker;
 import com.ge.research.semtk.edc.resultsStorage.TableResultsStorage;
 import com.ge.research.semtk.properties.SemtkEndpointProperties;
@@ -57,7 +57,7 @@ public class JobTrackerTest_IT {
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(JobTrackerTest_IT.class, "serviceJob.owl");
 		
-		tempFolder = Files.createTempDir();
+		tempFolder = Files.createTempDirectory("JobTrackerTest_IT").toFile();
 		trstore = new TableResultsStorage(tempFolder.getPath());
 	}
 	
