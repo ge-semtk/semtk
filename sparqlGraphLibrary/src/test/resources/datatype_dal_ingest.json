@@ -117,7 +117,9 @@
 				"deletionMode": "NO_DELETE"
 			}
 		],
-		"orderBy": [],
+		"orderBy": [{
+				"sparqlID": "?dal"
+			}],
 		"groupBy": [],
 		"unionHash": {},
 		"columnOrder": []
