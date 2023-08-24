@@ -350,14 +350,16 @@ public class MarkLogicSparqlEndpointInterface extends SparqlEndpointInterface {
 	
 	@Override
 	protected JSONObject parseResponse(SparqlResultTypes resultType, String responseTxt) throws Exception {
-		if (responseTxt.contains("errorResponse")) {
+		JSONObject responseObj;
+		try {
+			responseObj = (JSONObject) new JSONParser().parse(responseTxt);
+		} catch(Exception e) {
+			return this.handleNonJSONResponse(responseTxt, resultType);
+		}
+		
+		if (responseObj.containsKey("errorResponse")) {
 			// MarkLogic errors are inside JSON errorResponse
-			JSONObject responseObj;
-			try {
-				responseObj = (JSONObject) new JSONParser().parse(responseTxt);
-			} catch(Exception e) {
-				return this.handleNonJSONResponse(responseTxt, resultType);
-			}
+			
 			
 			// parse the errorResponse
 			String abbrevResponse = responseTxt.length() > 1000 ? responseTxt.substring(0,1000): responseTxt;
@@ -377,7 +379,7 @@ public class MarkLogicSparqlEndpointInterface extends SparqlEndpointInterface {
 			if (message.contains(MSG_CLEAR_NONEXIST_GRAPH)) {
 				throw new DontRetryException(message.substring(message.lastIndexOf("No such")));
 			} else {
-				throw new DontRetryException("MarkLogic returned error response: " + abbrevResponse);
+				throw new DontRetryException("MarkLogic returned error response: " + message);
 			}
 			
 		}
@@ -445,7 +447,23 @@ public class MarkLogicSparqlEndpointInterface extends SparqlEndpointInterface {
 			throw new Exception("MarkLogic query returned empty response");
 		}
 	}
-	
+	/**
+	 * Throw exception if @Message indicates an error.  MarkLogic messages can be empty.
+	 * @param res
+	 * @throws Exception
+	 */
+	@Override
+	protected void throwExceptionOnMessage(SimpleResultSet res) throws Exception {
+		try {
+			String s = res.getMessage();
+	        String sLower = s.toLowerCase();
+	        if (sLower.contains("fail") || sLower.contains("error")){
+	        	throw new Exception(s);
+	        }
+		} catch (Exception e) {
+			// missing message means no error in MarkLogic
+		}
+	}
 	@Override
 	public JSONObject handleNonJSONResponse(String responseTxt, SparqlResultTypes resulttype) throws DontRetryException, Exception {
 
