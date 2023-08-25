@@ -219,7 +219,7 @@ public class TestGraph {
 	/**
 	 * Execute a select query
 	 */
-	public static Table execTableSelect(String query) throws Exception {
+	public static Table execQueryToTable(String query) throws Exception {
 		SparqlEndpointInterface sei = getSei();
 		TableResultSet res = (TableResultSet) sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.TABLE);
 		res.throwExceptionIfUnsuccessful();
@@ -243,42 +243,43 @@ public class TestGraph {
 	/**
 	 * Execute a construct query
 	 */
-	public static JSONArray execJsonConstruct(SparqlGraphJson sgJson) throws Exception {
-		return SparqlGraphJson.executeConstructToJson(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
+
+	public static JSONArray execConstructToJsonLD(SparqlGraphJson sgJson) throws Exception {
+		return SparqlGraphJson.executeConstructToJsonLD(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
 	}
-	public static JSONArray execJsonConstruct(NodeGroup ng) throws Exception {
+	public static JSONArray execConstructToJsonLD(NodeGroup ng) throws Exception {
 		SparqlGraphJson sgJson = new SparqlGraphJson(ng, getSparqlConn());
-		return SparqlGraphJson.executeConstructToJson(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
+		return SparqlGraphJson.executeConstructToJsonLD(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
 	}
-	public static Table execJsonConstructNT(NodeGroup ng) throws Exception {
+	public static Table execConstructToNT(NodeGroup ng) throws Exception {
 		SparqlGraphJson sgJson = new SparqlGraphJson(ng, getSparqlConn());
 		return SparqlGraphJson.executeConstructToNTriplesTable(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
 	}
-	public static Table execJsonConstructNTUninflated(NodeGroup ng) throws Exception {
+	public static Table execConstructToNTUninflated(NodeGroup ng) throws Exception {
 		SparqlGraphJson sgJson = new SparqlGraphJson(ng, getSparqlConn());
 		return SparqlGraphJson.executeConstructToNTriplesTable(sgJson.toJson(), getSparqlConn(), null);
 	}
-	public static JSONArray execJsonConstruct(JSONObject sgJsonJson, OntologyInfoClient oInfoClient) throws Exception {
-		return SparqlGraphJson.executeConstructToJson(sgJsonJson, getSparqlConn(), oInfoClient);
+	public static JSONArray execConstructToJsonLD(JSONObject sgJsonJson, OntologyInfoClient oInfoClient) throws Exception {
+		return SparqlGraphJson.executeConstructToJsonLD(sgJsonJson, getSparqlConn(), oInfoClient);
 	}
-	public static Table execJsonConstructNT(JSONObject sgJsonJson, OntologyInfoClient oInfoClient) throws Exception {
+	public static Table execConstructToNT(JSONObject sgJsonJson, OntologyInfoClient oInfoClient) throws Exception {
 		return SparqlGraphJson.executeConstructToNTriplesTable(sgJsonJson, getSparqlConn(), oInfoClient);
 	}
-	public static JSONArray execConstructFromResource(Object o, String resourceName) throws Exception {
-		return execConstructFromResource(o.getClass(), resourceName);
+	public static JSONArray execConstructToJsonLDFromResource(Object o, String resourceName) throws Exception {
+		return execConstructToJsonLDFromResource(o.getClass(), resourceName);
 	}
 	@SuppressWarnings("rawtypes")
-	public static JSONArray execConstructFromResource(Class c, String resourceName) throws Exception {
+	public static JSONArray execConstructToJsonLDFromResource(Class c, String resourceName) throws Exception {
 		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(c, resourceName);
-		return execJsonConstruct(sgjson.toJson(), IntegrationTestUtility.getOntologyInfoClient());
+		return execConstructToJsonLD(sgjson.toJson(), IntegrationTestUtility.getOntologyInfoClient());
 	}
-	public static Table execConstructNTFromResource(Object o, String resourceName) throws Exception {
-		return execConstructNTFromResource(o.getClass(), resourceName);
+	public static Table execConstructToNTFromResource(Object o, String resourceName) throws Exception {
+		return execConstructToNTFromResource(o.getClass(), resourceName);
 	}
 	@SuppressWarnings("rawtypes")
-	public static Table execConstructNTFromResource(Class c, String resourceName) throws Exception {
+	public static Table execConstructToNTFromResource(Class c, String resourceName) throws Exception {
 		SparqlGraphJson sgjson = TestGraph.getSparqlGraphJsonFromResource(c, resourceName);
-		return execJsonConstructNT(sgjson.toJson(), IntegrationTestUtility.getOntologyInfoClient());
+		return execConstructToNT(sgjson.toJson(), IntegrationTestUtility.getOntologyInfoClient());
 	}
 	
 

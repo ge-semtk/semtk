@@ -447,11 +447,15 @@ public class SparqlGraphJson {
 	 * @return Table
 	 * @throws Exception
 	 */
-	public static JSONArray executeConstructToJson(JSONObject sgJsonJson, SparqlConnection conn, OntologyInfoClient oInfoClient) throws Exception {
+	public static JSONArray executeConstructToJsonLD(JSONObject sgJsonJson, SparqlConnection conn, OntologyInfoClient oInfoClient) throws Exception {
 		SparqlGraphJson sgjson = new SparqlGraphJson(sgJsonJson);
 		sgjson.setSparqlConn(conn);
 		String query = sgjson.getNodeGroupNoInflateNorValidate(oInfoClient).generateSparqlConstruct();
 		return conn.getDefaultQueryInterface().executeQueryToGraph(query);
+	}
+	@Deprecated  // bad name
+	public static JSONArray executeConstructToJson(JSONObject sgJsonJson, SparqlConnection conn, OntologyInfoClient oInfoClient) throws Exception {
+		return SparqlGraphJson.executeConstructToJsonLD(sgJsonJson, conn, oInfoClient);
 	}
 	
 	public static String executeConstructToNTriplesStr(JSONObject sgJsonJson, SparqlConnection conn, OntologyInfoClient oInfoClient) throws Exception {

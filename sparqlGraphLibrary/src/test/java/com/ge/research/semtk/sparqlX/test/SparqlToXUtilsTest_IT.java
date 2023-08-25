@@ -54,12 +54,12 @@ public class SparqlToXUtilsTest_IT {
 		ArrayList<String> classList = new ArrayList<String>();
 		classList.add("http://kdl.ge.com/batterydemo#Color");
 		String query = SparqlToXLibUtil.generateSelectInstanceDataSubjects(conn, oInfo,classList, -1, -1, false);
-		Table resTab = TestGraph.execTableSelect(query);
+		Table resTab = TestGraph.execQueryToTable(query);
 		assertEquals(resTab.toCSVString() + "\nWrong number of rows.", 3, resTab.getNumRows());
 		
 		// count query
 		query = SparqlToXLibUtil.generateSelectInstanceDataSubjects(conn, oInfo,classList, -1, -1, true);
-		resTab = TestGraph.execTableSelect(query);
+		resTab = TestGraph.execQueryToTable(query);
 		assertEquals("wrong subject count", 3, resTab.getCellAsInt(0, 0));
 		
 		
@@ -68,12 +68,12 @@ public class SparqlToXUtilsTest_IT {
 		predList.add(new String [] {"http://kdl.ge.com/batterydemo#Battery", "http://kdl.ge.com/batterydemo#cell"});
 		predList.add(new String [] {"http://kdl.ge.com/batterydemo#Battery", "http://kdl.ge.com/batterydemo#name"});
 		query = SparqlToXLibUtil.generateSelectInstanceDataPredicates(conn, oInfo, predList, -1, -1, false);
-		resTab = TestGraph.execTableSelect(query);
+		resTab = TestGraph.execQueryToTable(query);
 		assertEquals(resTab.toCSVString() + "\nWrong number of rows.", 6, resTab.getNumRows());
 		
 		// get just the count
 		query = SparqlToXLibUtil.generateSelectInstanceDataPredicates(conn, oInfo, predList, -1, -1, true);
-		resTab = TestGraph.execTableSelect(query);
+		resTab = TestGraph.execQueryToTable(query);
 		assertEquals("wrong predicate count", 6, resTab.getCellAsInt(0, 0));
 		
 		
@@ -86,13 +86,13 @@ public class SparqlToXUtilsTest_IT {
 		TestGraph.uploadOwlResource(this, "/AnimalsToCombineData.owl");
 		
 		String query = SparqlToXLibUtil.generateCountInstances(TestGraph.getSparqlConn(), TestGraph.getOInfo(), "http://AnimalSubProps#Tiger");
-		Table resTab = TestGraph.execTableSelect(query);
+		Table resTab = TestGraph.execQueryToTable(query);
 		assertEquals("Wrong number of rows ", 1, resTab.getNumRows());
 		assertEquals("Wrong number of cols ", 1, resTab.getNumColumns());
 		assertEquals("Wrong number of Tigers ", 6, resTab.getCellAsInt(0, 0));
 		
 		query = SparqlToXLibUtil.generateCountInstances(TestGraph.getSparqlConn(), TestGraph.getOInfo(), "http://AnimalSubProps#Animal");
-		resTab = TestGraph.execTableSelect(query);
+		resTab = TestGraph.execQueryToTable(query);
 		assertEquals("Wrong number of Tigers ", 7, resTab.getCellAsInt(0, 0));
 	}
 }

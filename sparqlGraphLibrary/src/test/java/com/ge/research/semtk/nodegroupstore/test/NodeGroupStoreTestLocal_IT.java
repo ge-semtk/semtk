@@ -50,7 +50,7 @@ public class NodeGroupStoreTestLocal_IT {
 		
 		// check for dangling triples
 		String sparql = "select ?s ?p ?o from <" + TestGraph.getDataset() + "> where { ?s ?p ?o . } limit 10 ";
-		Table t = TestGraph.execTableSelect(sparql);
+		Table t = TestGraph.execQueryToTable(sparql);
 		assertTrue("Dangling triples in store after delete.", t.getNumRows() == 0);
 	}
 
@@ -199,7 +199,7 @@ public class NodeGroupStoreTestLocal_IT {
 		
 		// check for dangling triples
 		String sparql = "select ?s ?p ?o from <" + TestGraph.getDataset() + "> where { ?s ?p ?o . } limit 10 ";
-		Table t = TestGraph.execTableSelect(sparql);
+		Table t = TestGraph.execQueryToTable(sparql);
 		assertTrue("Dangling triples in store after delete.", t.getNumRows() == 0);
 	}
 	
@@ -282,7 +282,7 @@ public class NodeGroupStoreTestLocal_IT {
 		
 		// check for dangling triples
 		String sparql = "select ?s ?p ?o from <" + TestGraph.getDataset() + "> where { ?s ?p ?o . } limit 10 ";
-		Table t = TestGraph.execTableSelect(sparql);
+		Table t = TestGraph.execQueryToTable(sparql);
 		assertTrue("Dangling triples in store after delete.", t.getNumRows() == 0);
 	}
 

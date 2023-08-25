@@ -116,7 +116,7 @@ public class PathExplorerTest_IT {
 		Node airport = ng.addNode("http://research.ge.com/semtk/fdcSample/test#Airport", TestGraph.getOInfo());
 		airport.setIsReturned(true);
 		ng.setLimit(2);
-		Table airportTable = TestGraph.execTableSelect(ng.generateSparqlSelect());
+		Table airportTable = TestGraph.execQueryToTable(ng.generateSparqlSelect());
 		String airportUri1 = airportTable.getCell(0, 0);
 		String airportUri2 = airportTable.getCell(1, 0);
 		
@@ -164,7 +164,7 @@ public class PathExplorerTest_IT {
 		ng.setLimit(2);
 		String query = ng.generateSparqlSelect();
 		
-		Table airportTable = TestGraph.execTableSelect(query);
+		Table airportTable = TestGraph.execQueryToTable(query);
 		String airportUri1 = airportTable.getCell(0, 0);
 		String airportUri2 = airportTable.getCell(1, 0);
 		

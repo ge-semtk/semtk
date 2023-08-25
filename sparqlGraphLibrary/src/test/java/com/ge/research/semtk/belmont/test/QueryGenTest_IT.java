@@ -160,7 +160,7 @@ public class QueryGenTest_IT {
 		tiger.setIsReturned(true);
 		tiger.setIsTypeReturned(true);
 		
-		Table tab = TestGraph.execTableSelect(ng.generateSparqlSelect());
+		Table tab = TestGraph.execQueryToTable(ng.generateSparqlSelect());
 		
 		assertEquals(2, tab.getNumRows());
 		assertEquals(2, tab.getNumColumns());
@@ -391,21 +391,21 @@ public class QueryGenTest_IT {
 		PropertyItem pItem = ng.getNode(0).getPropertyItemBySparqlID("?chainDesc");
 		
 		pItem.setOptMinus(PropertyItem.OPT_MINUS_NONE);
-		Table tab = TestGraph.execJsonConstructNT(ng);
+		Table tab = TestGraph.execConstructToNT(ng);
 		
 		assertEquals("JSON-LD has wrong number of elements", 1, countInstances(tab));
 		assertEquals("Wrong number of chainDesc attributes", 1, countAttributes(tab, "chainDesc", "descA"));
 		
 		// OPTIONAL
 		pItem.setOptMinus(PropertyItem.OPT_MINUS_OPTIONAL);
-		tab = TestGraph.execJsonConstructNT(ng);
+		tab = TestGraph.execConstructToNT(ng);
 		
 		assertEquals("JSON-LD has wrong number of elements", 2,  countInstances(tab));
 		assertEquals("Wrong number of chainDesc->descA attributes", 1, countAttributes(tab, "chainDesc", "descA"));
 		
 		// MINUS
 		pItem.setOptMinus(PropertyItem.OPT_MINUS_MINUS);
-		tab = TestGraph.execJsonConstructNT(ng);
+		tab = TestGraph.execConstructToNT(ng);
 
 		
 		assertEquals("JSON-LD has wrong number of elements", 1, countInstances(tab));
@@ -426,7 +426,7 @@ public class QueryGenTest_IT {
 		// virtuoso is unreliable with CONSTRUCT
 		assumeFalse(TestGraph.getSei().getServerType().equals(SparqlEndpointInterface.VIRTUOSO_SERVER));
 
-		Table tab = TestGraph.execConstructNTFromResource(this.getClass(), "/animalSubPropsCatNItemUnion.json");
+		Table tab = TestGraph.execConstructToNTFromResource(this.getClass(), "/animalSubPropsCatNItemUnion.json");
 
 		// try it as construct:  subject to virtuoso incomplete results problem.  assume away if needed
 		assertEquals("JSON-LD has wrong number of elements", 4, countInstances(tab));
@@ -453,7 +453,7 @@ public class QueryGenTest_IT {
 		// virtuoso is unreliable with CONSTRUCT
 		assumeFalse(TestGraph.getSei().getServerType().equals(SparqlEndpointInterface.VIRTUOSO_SERVER));
 
-		Table tab = TestGraph.execConstructNTFromResource(this.getClass(), "/chain_node_minus_union.json");
+		Table tab = TestGraph.execConstructToNTFromResource(this.getClass(), "/chain_node_minus_union.json");
 
 
 		// try it as construct:  subject to virtuoso incomplete results problem.  assume away if needed
@@ -493,7 +493,7 @@ public class QueryGenTest_IT {
 		// Each has their version of name bound to ?name
 		// Link names need to contain "orphan" and chain names need to contain "B"  (sharing bound variables)
 
-		Table tab = TestGraph.execConstructNTFromResource(this.getClass(), "/chainUnionProperties.json");
+		Table tab = TestGraph.execConstructToNTFromResource(this.getClass(), "/chainUnionProperties.json");
 
 		// try it as construct:  subject to virtuoso incomplete results problem.  assume away if needed
 		assertEquals("JSON-LD has wrong number of elements", 2, countInstances(tab));
@@ -523,7 +523,7 @@ public class QueryGenTest_IT {
 		// Each has their version of name bound to ?name
 		// Link names need to contain "orphan" and chain names need to contain "B"  (sharing bound variables)
 		
-		Table tab = TestGraph.execConstructNTFromResource(this.getClass(), "/chainUnionNodes.json");
+		Table tab = TestGraph.execConstructToNTFromResource(this.getClass(), "/chainUnionNodes.json");
 		
 		// try it as construct:  subject to virtuoso incomplete results problem.  assume away if needed
 		assertEquals("JSON-LD has wrong number of elements", 3, countInstances(tab));
@@ -579,7 +579,7 @@ public class QueryGenTest_IT {
 				
 		// Prevent recurrence of bug in CONSTRUCT when nodes have bindings
 
-		Table tab = TestGraph.execConstructNTFromResource(this.getClass(), "chain_construct_where1.json");
+		Table tab = TestGraph.execConstructToNTFromResource(this.getClass(), "chain_construct_where1.json");
 		String tabStr = tab.toCSVString();
 		
 		assertEquals("Construct returned wrong number of items", 4, countInstances(tab));
@@ -638,7 +638,7 @@ public class QueryGenTest_IT {
 	private static void testCatHasChildrenConstruct(NodeGroup ng) throws Exception {
 		// make sure oInfo is associated
 		ng.noInflateNorValidate(TestGraph.getOInfo());
-		Table tab = TestGraph.execJsonConstructNT(ng);
+		Table tab = TestGraph.execConstructToNT(ng);
 		
 		// run construct:  subject to virtuoso incomplete results problem.  assume away if needed
 		assertEquals("JSON-LD has wrong number of elements", 8, countInstances(tab));
@@ -651,7 +651,7 @@ public class QueryGenTest_IT {
 		// try without oInfo
 		ng.getSparqlConnection().setOwlImportsEnabled(false);
 		ng.noInflateNorValidate(null);
-		tab = TestGraph.execJsonConstructNTUninflated(ng);
+		tab = TestGraph.execConstructToNTUninflated(ng);
 		
 		// no oInfo will not use sub properties, so results are empty
 		// if this is fixed, then you'd get the same results as above.
@@ -672,7 +672,7 @@ public class QueryGenTest_IT {
 		assertEquals("Table has wrong number of rows", 3, res.getNumRows());
 
 		// try it as construct:  subject to virtuoso incomplete results problem.  assume away if needed
-		Table tab = TestGraph.execConstructNTFromResource(this.getClass(), "animalSubPropsCatHasDemon.json");
+		Table tab = TestGraph.execConstructToNTFromResource(this.getClass(), "animalSubPropsCatHasDemon.json");
 		assertEquals("JSON-LD has wrong number of elements", 4, countInstances(tab));
 	}
 	
@@ -689,7 +689,7 @@ public class QueryGenTest_IT {
 		assertEquals("Table has wrong number of rows", 2, res.getNumRows());
 		
 		// try it as construct:  subject to virtuoso incomplete results problem.  assume away if needed
-		Table tab = TestGraph.execConstructNTFromResource(this.getClass(), "animalSubPropsScaryNames.json");
+		Table tab = TestGraph.execConstructToNTFromResource(this.getClass(), "animalSubPropsScaryNames.json");
 		assertEquals("JSON-LD has wrong number of elements", 2, countInstances(tab));
 		
 		assertFalse("Construct query returned a super prop name Richard", tab.toCSVString().contains("Richard"));
@@ -784,7 +784,7 @@ public class QueryGenTest_IT {
 		ng1.setIsReturned(node, true);
 		ng1.orderByAll();
 		
-		Table tab = TestGraph.execTableSelect(ng1.generateSparqlSelect());
+		Table tab = TestGraph.execQueryToTable(ng1.generateSparqlSelect());
 		String instanceUri = tab.getCell(0, 0);
 		
 		NodeGroup ng = NodeGroup.createConstructAllConnected(
@@ -792,7 +792,7 @@ public class QueryGenTest_IT {
 							TestGraph.getSparqlConn(), TestGraph.getOInfo(), TestGraph.getPredicateStats()
 							);
 		
-		Table tab2 = TestGraph.execJsonConstructNT(ng);
+		Table tab2 = TestGraph.execConstructToNT(ng);
 		String res = tab2.toCSVString();
 		for (String lookup : new String [] {"battA", "red", "cellId", "color", "\"cell200\""}) {
 			assertTrue("Results are missing: " + lookup, res.contains(lookup));
@@ -814,7 +814,7 @@ public class QueryGenTest_IT {
 		ng1.setIsReturned(battNode, true);
 		ng1.orderByAll();
 		
-		Table tab = TestGraph.execTableSelect(ng1.generateSparqlSelect());
+		Table tab = TestGraph.execQueryToTable(ng1.generateSparqlSelect());
 		String instanceUri = tab.getCell(0, 0);
 		
 		NodeGroup ng = NodeGroup.createConstructAllConnected(
@@ -822,7 +822,7 @@ public class QueryGenTest_IT {
 							TestGraph.getSparqlConn(), TestGraph.getOInfo(), TestGraph.getPredicateStats()
 							);
 		
-		Table tab2 = TestGraph.execJsonConstructNT(ng);
+		Table tab2 = TestGraph.execConstructToNT(ng);
 		String res2 = tab2.toCSVString();
 		for (String lookup : new String [] {"Cell_cell300", "battA", "1966", "Cell_cell200", "1979"}) {
 			assertTrue("Results are missing: " + lookup, res2.contains(lookup));
@@ -883,7 +883,7 @@ public class QueryGenTest_IT {
 		String nodeGroupJSONPath = String.format("%s/nodegroup-dag.json", NON_TREE_GRAPHS_DIR);
 		
 		NodeGroup ng = TestGraph.getNodeGroupFromResource(this, nodeGroupJSONPath);
-		Table tab = TestGraph.execTableSelect(ng.generateSparqlSelect());
+		Table tab = TestGraph.execQueryToTable(ng.generateSparqlSelect());
 
 		// We expect exactly one result
 		assertEquals(1, tab.getNumRows());
@@ -895,7 +895,7 @@ public class QueryGenTest_IT {
 		
 		NodeGroup ng = TestGraph.getNodeGroupFromResource(this, nodeGroupJSONPath);
 
-		Table tab = TestGraph.execTableSelect(ng.generateSparqlSelect());
+		Table tab = TestGraph.execQueryToTable(ng.generateSparqlSelect());
 
 		// We expect exactly two results
 		assertEquals(2, tab.getNumRows());

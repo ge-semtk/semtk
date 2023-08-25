@@ -374,7 +374,7 @@ public class OntologyInfoTests_IT {
 		SparqlGraphJson sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/owl_import_leaf.json");
 		sgJson.setSparqlConn(conn);
 		String query = sgJson.getNodeGroup(oInfo).generateSparqlSelect();
-		Table table = TestGraph.execTableSelect(query);
+		Table table = TestGraph.execQueryToTable(query);
 	
 		assertEquals("wrong number of rows returned by:\n" + query, 5, table.getNumRows());
 		
@@ -382,7 +382,7 @@ public class OntologyInfoTests_IT {
 		sgJson = TestGraph.getSparqlGraphJsonFromFile("src/test/resources/owl_import_imported_select.json");
 		sgJson.setSparqlConn(conn);
 		query = sgJson.getNodeGroup(oInfo).generateSparqlSelect();
-		table = TestGraph.execTableSelect(query);
+		table = TestGraph.execQueryToTable(query);
 	
 		assertEquals("wrong number of rows returned by:\n" + query, 5, table.getNumRows());
 	}
