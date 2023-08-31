@@ -370,6 +370,11 @@ public class IntegrationTestUtility{
 				
 				
 				if (! actualVal.equals(expectedVal)) {
+					
+					// allow triplestores to report 50.0 as 50
+					if ((actualVal + ".0").equals(expectedVal))
+						return;
+								
 					fail("At return line " + String.valueOf(i) + " expected val '" + expectedVal + "' did not match actual '" + actualVal + "'");
 				}
 			}

@@ -27,8 +27,10 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Writer;
+import java.net.Authenticator;
 import java.net.ConnectException;
 import java.net.HttpURLConnection;
+import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.net.URLStreamHandler;
@@ -996,13 +998,20 @@ public abstract class SparqlEndpointInterface {
 		
 		URL url = new URL(this.getPostURL(resultType));
 		HttpURLConnection conn;
+		
 		if (this.isAuth()) {
+			String u = this.userName;
+			String p = this.password;
 			conn = (HttpURLConnection) url.openConnection();
-			// MISSING: basic auth logic from this.buildHttpContext(targetHost);
+			conn.setAuthenticator(new Authenticator() {
+			    protected PasswordAuthentication getPasswordAuthentication() {
+			        return new PasswordAuthentication (u, p.toCharArray());
+			    }
+			});
 		} else {
 			conn = (HttpURLConnection) url.openConnection();
 		}
-		conn.setRequestMethod("POST");
+		conn.setRequestMethod("POST");  // doSetOutput(true); will also trigger POST
 	
 		this.addHeaders(conn, resultType);
 		conn.setDoOutput(true);
@@ -1234,7 +1243,7 @@ public abstract class SparqlEndpointInterface {
 	 * Parse the response to JSON and send  for results parsing
 	 * @param resultType
 	 * @param responseTxt
-	 * @return
+	 * @return Json with one of RDF, NTRIPLES, @message, @table or json-ld @graph
 	 * @throws Exception
 	 */
 	protected JSONObject parseResponse(SparqlResultTypes resultType, String responseTxt) throws Exception {
@@ -1291,7 +1300,7 @@ public abstract class SparqlEndpointInterface {
 
 		} else {
 			// Normal path: get results
-			return this.getResultsFromResponse(responseObj, resultType);
+			return this.getResultsFromJson(responseObj, resultType);
 		}
 	}
 
@@ -1593,11 +1602,11 @@ public abstract class SparqlEndpointInterface {
 	 * 
 	 * @param responseObj - JSONObject or JSONArray
 	 * @param resultType
-	 * @return JSONObject with @table, @message, or a jsonld structure
+	 * @return JSONObject with @table, @message or a jsonld structure or rdf
 	 * @throws Exception
 	 */
 	@SuppressWarnings("unchecked")
-	protected JSONObject getResultsFromResponse(Object responseObj, SparqlResultTypes resultType) throws Exception{
+	protected JSONObject getResultsFromJson(Object responseObj, SparqlResultTypes resultType) throws Exception{
 		
 		JSONObject retval = null;		
 		
@@ -1625,6 +1634,7 @@ public abstract class SparqlEndpointInterface {
 			retval = getJsonldResponse(responseObj);
 		
 		} else if (resultType == SparqlResultTypes.RDF) {
+			// This doesn't seem right as RDF is handled above by parseResponse  -Paul
 			retval = (JSONObject) responseObj;
 			
 		} else {

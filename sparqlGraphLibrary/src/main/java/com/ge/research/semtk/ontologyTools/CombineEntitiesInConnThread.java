@@ -233,7 +233,7 @@ public class CombineEntitiesInConnThread extends Thread {
 			LocalLogger.printStackTrace(e);
 			try {
 				// Exceptions are reported via the async job status mechanism
-				this.errorTab.addRow(new String [] {"Internal error has occurred in Java back-end"});
+				this.errorTab.addRow(new String [] {"Internal error: " + e.toString()});
 				this.resultsClient.execStoreTableResults(this.jobId, this.errorTab);
 				this.tracker.setJobFailure(this.jobId, "Error during merge.  Incomplete merge occurred. \n" + e.getMessage());
 
@@ -403,7 +403,7 @@ public class CombineEntitiesInConnThread extends Thread {
 				+ "	        FILTER (?other1 != ?same_as) . \n"
 				+ "	    }\n"
  				+ "     filter not exists {\n"
-				+ "         " + this.duplicateClause("?other1", "?duplicate")
+				+ "         " + this.duplicateClause("?other2", "?duplicate")
 				+ "		    FILTER (?other2 != ?same_as) . \n"
 				+ "	    }\n"
 				+ "     ?target a ?target_type. \n"

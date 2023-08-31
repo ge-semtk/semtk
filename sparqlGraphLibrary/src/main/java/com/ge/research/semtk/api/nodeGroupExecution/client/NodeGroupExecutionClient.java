@@ -2387,11 +2387,10 @@ public class NodeGroupExecutionClient extends SharedIngestNgeClient {
 			String toServerAndPort, String toServerType, String toGraph) throws Exception {
 		String jobId = this.copyGraphAsyncToJobId(fromServerAndPort, fromServerType, fromGraph, toServerAndPort, toServerType, toGraph);
 		this.waitForCompletion(jobId);
-		if (this.getJobSuccess(jobId)) {
-			return this.getJobStatusMessage(jobId);
-		} else {
-			throw new Exception("Copy graph failed:\n" + this.getResultsTable(jobId).toCSVString());
-		}
+		
+		// Does fuseki put an error or success message inside the table?
+		return this.getJobStatusMessage(jobId);
+		
 	}
 	
 	@SuppressWarnings("unchecked")

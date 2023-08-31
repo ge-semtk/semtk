@@ -665,7 +665,7 @@ public class SparqlToXLibUtil {
 		sparql.append(" OPTIONAL { ?subject <" + predName + "> ?object } . \n");
 		sparql.append("} GROUP BY ?subject \n");
 		sparql.append("  HAVING ( ?object_COUNT " + op + " " + Integer.toString(limit) + " ) \n");
-		
+		sparql.append(" ORDER BY ?subject \n");
 		return sparql.toString();
 	}
 	

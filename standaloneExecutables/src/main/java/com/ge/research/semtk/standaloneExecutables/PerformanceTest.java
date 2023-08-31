@@ -55,6 +55,8 @@ public class PerformanceTest {
 	private static String serverType;
 	private static String serverURL;
 	private static long startTime;
+	private static String user;
+	private static String password;
 	private static SparqlEndpointInterface sei;
 	private static String whatToTest;
 	private final static boolean NO_PRECHECK = false;
@@ -82,6 +84,24 @@ public class PerformanceTest {
 		);
 		serverURLOpt.setRequired(true);
 		options.addOption(serverURLOpt);
+		
+		// option: user
+		String userArg = "user";
+		Option userOpt = new Option(
+			null, userArg, true,
+			"userName for triplestore"
+		);
+		userOpt.setRequired(false);
+		options.addOption(userOpt);
+		
+		// option: password
+		String passwordArg = "password";
+		Option passwordOpt = new Option(
+			null, passwordArg, true,
+			"password for triplestore"
+		);
+		passwordOpt.setRequired(false);
+		options.addOption(passwordOpt);
 
 		// option: resources
 		String resourcesArg = "resources";
@@ -219,6 +239,8 @@ public class PerformanceTest {
 			serverURL = cmd.getOptionValue(serverURLArg);
 			resourceFolder = cmd.getOptionValue(resourcesArg);
 			whatToTest = cmd.getOptionValue(testArg);
+			user = cmd.getOptionValue(userArg, "dba");
+			password = cmd.getOptionValue(passwordArg, "dba");
 		} catch (Exception e) {
 			System.out.println(e.getMessage());
 			(new HelpFormatter()).printHelp("PerformanceTest", options);
@@ -226,7 +248,7 @@ public class PerformanceTest {
 		}
 
 		String graph = "http://performance_test_0";
-		sei = SparqlEndpointInterface.getInstance(serverType, serverURL, graph, "dba", "dba");
+		sei = SparqlEndpointInterface.getInstance(serverType, serverURL, graph, user, password);
 		sei.setLogPerformance(LOG_QUERY_PERFORMANCE);
 		log("graph: " + graph);
 		if (!Files.exists(Paths.get(resourceFolder))) {
@@ -326,7 +348,7 @@ public class PerformanceTest {
 			Dataset ds0 = new CSVDataset(content, true);
 
 			// ingest
-			DataLoader dl0 = new DataLoader(sgJson, ds0, "dba", "dba");
+			DataLoader dl0 = new DataLoader(sgJson, ds0, user, password);
 			startTask(MessageFormat.format(
 				"{0} load {1,number,#} totaling, {2,number,#}",
 				taskName, passSize, currentPass * passSize
@@ -406,7 +428,7 @@ public class PerformanceTest {
 			// ingest rows
 			if (lastSec[0] < circuit_breaker_sec) {
 				Dataset ds1 = new CSVDataset(content1.toString(), true);
-				DataLoader dl1 = new DataLoader(sgJson1, ds1, "dba", "dba");
+				DataLoader dl1 = new DataLoader(sgJson1, ds1, user, password);
 				startTask("addBatteryDescriptions load simple, rows, " + rows_per_pass + ",total rows," + total_rows);
 				importAndCheck(dl1, PRECHECK);
 				lastSec[0] = endTask();
@@ -417,7 +439,7 @@ public class PerformanceTest {
 			// add descriptions
 			if (lastSec[1] < circuit_breaker_sec) {
 				Dataset ds2 = new CSVDataset(content2.toString(), true);
-				DataLoader dl2 = new DataLoader(sgJson2, ds2, "dba", "dba");
+				DataLoader dl2 = new DataLoader(sgJson2, ds2, user, password);
 				dl2.setLogPerformance(LOG_QUERY_PERFORMANCE);
 				startTask("addBatteryDescriptions load lookup class, rows," + rows_per_pass/2 + ",total rows," + total_rows);
 				importAndCheck(dl2, PRECHECK);
@@ -427,7 +449,7 @@ public class PerformanceTest {
 			// add descriptions superclass
 			if (lastSec[2] < circuit_breaker_sec) {
 				Dataset ds3 = new CSVDataset(content3.toString(), true);
-				DataLoader dl3 = new DataLoader(sgJson3, ds3, "dba", "dba");
+				DataLoader dl3 = new DataLoader(sgJson3, ds3, user, password);
 				dl3.setLogPerformance(LOG_QUERY_PERFORMANCE);
 				startTask("addBatteryDescriptions load lookup superclass, rows," + rows_per_pass /2 + ",total rows," + total_rows);
 				importAndCheck(dl3, PRECHECK);
@@ -553,7 +575,7 @@ public class PerformanceTest {
 
 		// load items
 		Dataset ds = new CSVDataset(content.toString(), true);
-		DataLoader loader = new DataLoader(sgJsonItemLoad, ds, "dba", "dba");
+		DataLoader loader = new DataLoader(sgJsonItemLoad, ds, user, password);
 		startTask("linkItems load items: " + numItems);
 		importAndCheck(loader, true);
 		endTask();
@@ -570,7 +592,7 @@ public class PerformanceTest {
 
 		// load links
 		ds = new CSVDataset(content.toString(), true);
-		loader = new DataLoader(sgJsonItemLoadLinks, ds, "dba", "dba");
+		loader = new DataLoader(sgJsonItemLoadLinks, ds, user, password);
 		loader.overrideMaxThreads(MAX_THREADS);
 		startTask("linkItems load links: " + numLinks);
 		importAndCheck(loader, true);
@@ -622,7 +644,7 @@ public class PerformanceTest {
 
 				// create ids
 				Dataset ds1 = new CSVDataset(content1.toString(), true);
-				DataLoader dl1 = new DataLoader(sgJson1, 8, ds1, "dba", "dba");
+				DataLoader dl1 = new DataLoader(sgJson1, 8, ds1, user, password);
 				dl1.overrideMaxThreads(threads);
 				dl1.overrideInsertQueryIdealSize(querySize);
 				startTask("addBatteryDescriptionsVaryingThreadsAndSize load simple " + pass_size + " total," + threads + "," + querySize + "," + (pass + 1) * pass_size);
@@ -631,7 +653,7 @@ public class PerformanceTest {
 
 				// add descriptions
 				Dataset ds2 = new CSVDataset(content2.toString(), true);
-				DataLoader dl2 = new DataLoader(sgJson2, 8, ds2, "dba", "dba");
+				DataLoader dl2 = new DataLoader(sgJson2, 8, ds2, user, password);
 				dl1.overrideMaxThreads(threads);
 				dl1.overrideInsertQueryIdealSize(querySize);
 				startTask("addBatteryDescriptionsVaryingThreadsAndSize load lookup " + pass_size + "total," + threads + "," + querySize + "," + (pass + 1) * pass_size);

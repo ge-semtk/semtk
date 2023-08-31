@@ -116,7 +116,7 @@ public class DataLoader implements Runnable {
 	
 	public DataLoader(SparqlGraphJson sgJson, Dataset ds, String username, String password) throws Exception{
 		this(sgJson);
-		this.setCredentials(username, password);
+		this.setDefaultCredentials(username, password);
 		this.setDataset(ds);
 		this.validateColumns(ds);
 	}
@@ -184,8 +184,9 @@ public class DataLoader implements Runnable {
 	}
 	
 
-	public void setCredentials(String user, String pass){
-		this.endpoint.setUserAndPassword(user, pass);
+	private void setDefaultCredentials(String user, String pass){
+		if (this.endpoint.getUserName() == null || this.endpoint.getUserName().isBlank())
+			this.endpoint.setUserAndPassword(user, pass);
 	}
 	
 	public void setDataset(Dataset ds) throws Exception{

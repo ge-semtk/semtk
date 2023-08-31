@@ -593,7 +593,7 @@ public class NodeGroupExecutionClientTest_IT {
 			// copy from this graph
 			TestGraph.clearGraph();
 			TestGraph.uploadOwlResource(this, "/sampleBattery.owl");
-			assertEquals(TestGraph.getNumTriples(), 50);
+			assertEquals(50, TestGraph.getNumTriples());
 
 			// copy to this graph
 			SparqlEndpointInterface toGraphSei = TestGraph.getSei(TestGraph.getDataset() + "/copy");
@@ -604,8 +604,8 @@ public class NodeGroupExecutionClientTest_IT {
 					TestGraph.getSparqlServer(), TestGraph.getSparqlServerType(), TestGraph.getDataset(),
 					toGraphSei.getServerAndPort(), toGraphSei.getServerType(), toGraphSei.getGraph());
 
-			assertTrue(statusMessage.contains("Successfully copied"));
-			assertEquals(toGraphSei.getNumTriples(), 50);	// assert populated after copy
+			assertTrue(statusMessage, statusMessage.contains("Successfully copied"));
+			assertEquals(50, toGraphSei.getNumTriples());	// assert populated after copy
 			IntegrationTestUtility.clearGraph(toGraphSei);
 		}
 		

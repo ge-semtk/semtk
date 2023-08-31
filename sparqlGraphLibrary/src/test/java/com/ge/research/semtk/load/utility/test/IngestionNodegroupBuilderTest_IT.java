@@ -104,8 +104,10 @@ public class IngestionNodegroupBuilderTest_IT {
 		assertEquals(dl.getLoadingErrorReportBrief(), 3, records);
 		
 		// use same sgJson to query data back out
-		batterySGJson.getNodeGroup().orderByAll();
+		
+		// batterySGJson.getNodeGroup().orderByAll();
 		Table roundTrip = TestGraph.execTableSelect(batterySGJson);
+		roundTrip.sortByAllCols();
 		assertEquals(3, roundTrip.getNumRows());
 		// name column
 		assertTrue(roundTrip.getCellAsString(0, 1).equals("batt1"));
@@ -181,8 +183,11 @@ public class IngestionNodegroupBuilderTest_IT {
 		int records = dl.importData(true);
 		assertEquals("Did not ingest proper number of rows", 2, records);
 		
-		batterySGJson.getNodeGroup().orderByAll();
+		// Does not work with Marklogic due to empty optional cells sorting to the end.  Use roundTrip.sortByAllCols().
+		// batterySGJson.getNodeGroup().orderByAll();
+		
 		Table roundTrip = TestGraph.execTableSelect(batterySGJson);
+		roundTrip.sortByAllCols();
 		assertEquals("wrong number of results", 2, roundTrip.getNumRows());
 		assertTrue(roundTrip.getCellAsString(0, "batteryId").equals("batt01"));
 		assertTrue(roundTrip.getCellAsString(0, "cell1_cellId").equals("cell0A"));

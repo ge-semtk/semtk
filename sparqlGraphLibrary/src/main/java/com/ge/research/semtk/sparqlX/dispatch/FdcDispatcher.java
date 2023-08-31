@@ -46,8 +46,8 @@ import com.ge.research.semtk.utility.LocalLogger;
 public class FdcDispatcher extends EdcDispatcher {
 	
 	private FdcServiceManager fdcServiceManager = null;
-	private String tmpGraphUser = null;
-	private String tmpGraphPassword = null;
+	private String servicesSeiUser = null;
+	private String servicesSeiPassword = null;
 	private SparqlEndpointInterface extConfigSei;
 	private OntologyInfoClient oInfoClient = null;
 	
@@ -63,8 +63,8 @@ public class FdcDispatcher extends EdcDispatcher {
 			this.fdcServiceManager = new FdcServiceManager(extConfigSei, this.queryNodeGroup, this.oInfo, jobId, this.querySei, oInfoClient);
 		}
 		
-		this.tmpGraphUser = extConfigSei.getUserName();
-		this.tmpGraphPassword = extConfigSei.getPassword();
+		this.servicesSeiUser = extConfigSei.getUserName();
+		this.servicesSeiPassword = extConfigSei.getPassword();
 		this.extConfigSei = extConfigSei;
 		this.oInfoClient = oInfoClient;
 	}
@@ -198,7 +198,7 @@ public class FdcDispatcher extends EdcDispatcher {
 					
 					sgJson.setSparqlConn(ingestConn);
 					boolean precheck = false;
-					DataLoader.loadFromCsvString(sgJson.getJson(), fdcCsv, this.tmpGraphUser, this.tmpGraphPassword, precheck);	
+					DataLoader.loadFromCsvString(sgJson.getJson(), fdcCsv, this.servicesSeiUser, this.servicesSeiPassword, precheck);	
 				}
 				percentComplete += 2 * statusIncrement; // 3 and 4 of FDC - finished ingestion
 			}
@@ -241,7 +241,13 @@ public class FdcDispatcher extends EdcDispatcher {
 	private SparqlEndpointInterface createTempSei() throws Exception {
 		SparqlEndpointInterface tempDataSei = querySei.copy();
 		tempDataSei.setGraph(querySei.getGraph() + "/FDC_" +  UUID.randomUUID().toString());     // "FDC_TEMP");  PEC TODO test
-		tempDataSei.setUserAndPassword(this.tmpGraphUser, this.tmpGraphPassword);
+		
+		// why would you take the servicesSei user and password and apply it to the tempDataSei which is a copy of the querySei
+		// just use a copy of what's in the querySei.
+		// for backwards compatibility, include this in an if statement
+		if (tempDataSei.getPassword() == null || tempDataSei.getPassword().isEmpty())
+			tempDataSei.setUserAndPassword(this.servicesSeiUser, this.servicesSeiPassword);
+		
 		tempDataSei.createGraph();
 		LocalLogger.logToStdOut("Using temp graph: " + tempDataSei.getGraph());
 		return tempDataSei;

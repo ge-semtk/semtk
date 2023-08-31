@@ -25,8 +25,8 @@ public class EndpointProperties extends Properties {
 
 	private String endpointType = "";
 	private String endpointUrl = "";
-	private String endpointUsername = "";
-	private String endpointPassword = "";
+	private String endpointUsername = null;
+	private String endpointPassword = null;
 	
 	public String getEndpointUsername() {
 		return endpointUsername;

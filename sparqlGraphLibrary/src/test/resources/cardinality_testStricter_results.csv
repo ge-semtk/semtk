@@ -1,5 +1,5 @@
 class,property,restriction,limit,subject,property_count
 http://Cardinality#Cardinal,http://Cardinality#code,mincardinality,2,http://Cardinality#card1,1
 http://Cardinality#Cardinal,http://Cardinality#code,mincardinality,2,http://Cardinality#strictercard1,1
-http://Cardinality#StricterCardinal,http://Cardinality#code,mincardinality,4,http://Cardinality#strictercard2,2
 http://Cardinality#StricterCardinal,http://Cardinality#code,mincardinality,4,http://Cardinality#strictercard1,1
+http://Cardinality#StricterCardinal,http://Cardinality#code,mincardinality,4,http://Cardinality#strictercard2,2

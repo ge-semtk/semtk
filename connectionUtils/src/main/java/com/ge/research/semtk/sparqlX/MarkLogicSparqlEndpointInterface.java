@@ -25,14 +25,18 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
 
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.apache.commons.compress.utils.FileNameUtils;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -60,6 +64,8 @@ import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.util.EntityUtils;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
 
 import com.ge.research.semtk.auth.AuthorizationException;
 import com.ge.research.semtk.resultSet.SimpleResultSet;
@@ -349,21 +355,34 @@ public class MarkLogicSparqlEndpointInterface extends SparqlEndpointInterface {
 	}
 	
 	@Override
+	/**
+	 * Parse the response to JSON and send  for results parsing
+	 * @param resultType
+	 * @param responseTxt
+	 * @return Json with one of RDF, NTRIPLES, @message, @table   (no json-ld)
+	 * @throws Exception
+	 */
 	protected JSONObject parseResponse(SparqlResultTypes resultType, String responseTxt) throws Exception {
 		JSONObject responseObj;
-		try {
-			responseObj = (JSONObject) new JSONParser().parse(responseTxt);
-		} catch(Exception e) {
-			return this.handleNonJSONResponse(responseTxt, resultType);
+		
+		if(responseTxt == null || responseTxt.trim().isEmpty()) {
+			// empty
+			return this.handleEmptyResponse(resultType); 
 		}
 		
-		if (responseObj.containsKey("errorResponse")) {
-			// MarkLogic errors are inside JSON errorResponse
+		// perform MarkLogic error checking : would be in json
+		JSONObject errResponse = null;
+		try {
+			responseObj = (JSONObject) new JSONParser().parse(responseTxt);
+			errResponse = (JSONObject) responseObj.get("errorResponse");
+		} catch(Exception e) {
+		}
 			
+		// if there is a marklogic json with an error, handle it here first
+		if (errResponse != null) {			
 			
-			// parse the errorResponse
+			// parse the json errorResponse
 			String abbrevResponse = responseTxt.length() > 1000 ? responseTxt.substring(0,1000): responseTxt;
-			JSONObject errResponse = (JSONObject) responseObj.get("errorResponse");
 			if (errResponse == null) 
 				throw new DontRetryException("Error response contained no 'errorResponse': " + abbrevResponse);
 
@@ -371,10 +390,6 @@ public class MarkLogicSparqlEndpointInterface extends SparqlEndpointInterface {
 			if (message == null) 
 				throw new DontRetryException("Error response contained no 'message': " + abbrevResponse);
 
-			Long statusCode = (Long) errResponse.get("statusCode");
-			if (statusCode == null) 
-				throw new DontRetryException("Error response contained no 'statusCode': " + abbrevResponse);
-	
 			// handle the parsed values
 			if (message.contains(MSG_CLEAR_NONEXIST_GRAPH)) {
 				throw new DontRetryException(message.substring(message.lastIndexOf("No such")));
@@ -382,8 +397,25 @@ public class MarkLogicSparqlEndpointInterface extends SparqlEndpointInterface {
 				throw new DontRetryException("MarkLogic returned error response: " + message);
 			}
 			
+		} else if (responseTxt.startsWith("<error")) {
+			// parse the xml error
+			String message = "";
+			try {
+				InputStream is = IOUtils.toInputStream(responseTxt, StandardCharsets.UTF_8);
+	
+				DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance(); 
+				Document doc = dbf.newDocumentBuilder().parse(is);
+				NodeList nodeList = doc.getElementsByTagName("message"); 
+				message = nodeList.item(0).getFirstChild().getNodeValue();
+			} catch (Exception e) {
+				throw new DontRetryException("Error reading xml error response from MarkLogic:" + responseTxt);
+			}
+			throw new DontRetryException("MarkLogic returned error response: " + message);
+
+		} else {
+			// no error, do the usual
+			return super.parseResponse(resultType, responseTxt);
 		}
-		return super.parseResponse(resultType, responseTxt);
 	}
 	
 	/**
@@ -441,7 +473,8 @@ public class MarkLogicSparqlEndpointInterface extends SparqlEndpointInterface {
 			return ret;
 		} else if (resultType == SparqlResultTypes.CONFIRM) {
 			JSONObject ret = new JSONObject();
-			// TODO this might need to be more than {}
+			// MarkLogic often returns nothing when successful
+			ret.put("@message", "Success.");   
 			return ret;
 		} else {
 			throw new Exception("MarkLogic query returned empty response");
@@ -579,6 +612,11 @@ public class MarkLogicSparqlEndpointInterface extends SparqlEndpointInterface {
 
 		String MLCP_COMMAND = "C:\\Users\\200001934\\mlcp-11.0.3\\bin\\mlcp.bat";
 		
+		String u = this.getUserName();
+		String p  = this.getPassword();
+		if (u == null || u.isBlank() || p==null || p.isBlank())
+			throw new Exception("mlcp upload requires username and password.");
+		
 		String command = MLCP_COMMAND  
 				+ " import"
 				+ " -host " + this.getServerWithoutProtocol() 
@@ -609,7 +647,7 @@ public class MarkLogicSparqlEndpointInterface extends SparqlEndpointInterface {
 		String outputStr = output.toString();
 		
 		SimpleResultSet simple = new SimpleResultSet();
-		if (exitVal==0 && !outputStr.contains("FATAL")) {
+		if (exitVal==0 && !outputStr.contains("FATAL") && !outputStr.contains("ERROR") ) {
 			simple.setSuccess(true);
 			simple.setMessage(outputStr);
 		} else {

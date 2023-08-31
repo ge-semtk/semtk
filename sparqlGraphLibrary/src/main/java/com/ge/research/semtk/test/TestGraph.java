@@ -225,6 +225,13 @@ public class TestGraph {
 		res.throwExceptionIfUnsuccessful();
 		return res.getResults();
 	}
+	public static Table executeQueryToNTTable(String query) throws Exception {
+		return getSei().executeQueryToNTriplesTable(query);
+	}
+	public static String executeQueryToRDF(String query) throws Exception {
+		return getSei().executeQueryToRdf(query);
+	}
+	
 	public static Table execTableSelect(SparqlGraphJson sgJson) throws Exception {
 		return SparqlGraphJson.executeSelectToTable(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
 	}
@@ -243,7 +250,7 @@ public class TestGraph {
 	/**
 	 * Execute a construct query
 	 */
-
+	
 	public static JSONArray execConstructToJsonLD(SparqlGraphJson sgJson) throws Exception {
 		return SparqlGraphJson.executeConstructToJsonLD(sgJson.toJson(), getSparqlConn(), IntegrationTestUtility.getOntologyInfoClient());
 	}

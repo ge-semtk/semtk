@@ -55,10 +55,10 @@ public class SparqlEndpointsRequestBody {
 	public String toGraph;
     
 	@Schema(required = false)
-	public String toUser = "user";
+	public String toUser = null;
     
 	@Schema(required = false)
-	public String toPassword = "password";
+	public String toPassword = null;
     
     
 	public String getFromServerAndPort() {

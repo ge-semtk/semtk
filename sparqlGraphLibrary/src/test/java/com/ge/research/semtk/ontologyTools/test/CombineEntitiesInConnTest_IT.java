@@ -85,7 +85,6 @@ public class CombineEntitiesInConnTest_IT {
 				"sub_item_b,item b \n" +
 				"sub_item_b,\"Sub Item B\" \n");
 
-		TestGraph.execQueryToTable("select ?x ?y ?z where { t }");
 		combineAndCheck("entity_res_results1.csv", null);
 		
 		// second attempt throws error "Nothing to combine

@@ -1725,6 +1725,7 @@ public class NodeGroupExecutionRestController {
 					
 				} catch (Exception e) {
 					try {
+						LocalLogger.printStackTrace(e);
 						tracker.setJobFailure(jobId, e.getMessage());
 					} catch (Exception ee) {
 						LocalLogger.logToStdErr(ENDPOINT_NAME + " error accessing job tracker");
