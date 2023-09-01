@@ -146,6 +146,8 @@ public class SparqlQueryClient extends RestClient {
 			retval.readJson(resultJSON);
 			return retval;
 		} finally {
+			this.fileParameter = null;
+			this.fileParameterName = null;
 			this.restoreConfEndpoint();
 		}
 	}

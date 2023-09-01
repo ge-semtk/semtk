@@ -711,8 +711,9 @@ public class QueryGenTest_IT {
 		Integer col0[] = new Integer [] { 2,3,4,5};
 		Integer col1[] = new Integer [] { 8,9,10,11};
 		for (int i=0; i< col0.length; i++ ) {
-			assertEquals("wrong vallue in cell column 0 row " + String.valueOf(i), (int) col0[i], res.getCellAsInt(i, 0));
-			assertEquals("wrong vallue in cell column 1 row " + String.valueOf(i), (int) col1[i], res.getCellAsInt(i, 1));
+			// actual values start as Double and cast to int.
+			assertEquals("wrong value in cell column 0 row " + String.valueOf(i), (int) col0[i], (int) Double.parseDouble(res.getCell(i, 0)));
+			assertEquals("wrong value in cell column 1 row " + String.valueOf(i), (int) col1[i], (int) Double.parseDouble(res.getCell(i, 1)));
 
 		}
 		

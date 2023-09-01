@@ -163,7 +163,7 @@ public class SparqlEndpointInterfaceTest_IT {
 		
 		rdf = TestGraph.executeQueryToRDF(constructEmpty);  // construct empty to RDF
 		for (String tag : rdf.split(">")) {
-			if (!tag.isBlank() && !tag.startsWith("<rdf:RDF") && !tag.startsWith("</rdf:RDF"))
+			if (!tag.isBlank() && !tag.strip().startsWith("<rdf:RDF") && !tag.strip().startsWith("</rdf:RDF"))
 				fail("construct to ntriples returned something: " + rdf);
 
 		}

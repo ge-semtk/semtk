@@ -74,6 +74,7 @@ public class UtilityClientTest_IT {
 
 			// check the response stream
 			assertTrue("Bad response:\n" + response, response.contains("INFO: Loading manifest for 'Entity Resolution'..."));
+			assertFalse("Bad response:\n" + response, response.contains("ERROR:"));
 			assertTrue(response.contains("INFO: Loading manifest for 'RACK ontology'..."));
 			assertTrue(response.matches("(.*)INFO: Clear graph http://junit/(.*)/rack001/model(.*)"));
 			assertTrue(response.matches("(.*)INFO: Clear graph http://junit/(.*)/rack001/data(.*)"));
