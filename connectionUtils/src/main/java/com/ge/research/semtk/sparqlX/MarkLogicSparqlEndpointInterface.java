@@ -81,7 +81,8 @@ import com.github.jsonldjava.shaded.com.google.common.io.Files;
 public class MarkLogicSparqlEndpointInterface extends SparqlEndpointInterface {
 
 	protected String database = null;
-	private final String MSG_CLEAR_NONEXIST_GRAPH = "No such RDF";
+	private final static String MSG_CLEAR_NONEXIST_GRAPH = "No such RDF";
+	private static String MARKLOGIC_MLCP_PATH = System.getenv("MARKLOGIC_MLCP_PATH");
 	/**
 	 * 
 	 * @param server  Optionally includes database.  e.g. http://localhost:8001/MY_DATABASE
@@ -610,14 +611,16 @@ public class MarkLogicSparqlEndpointInterface extends SparqlEndpointInterface {
 	 */
 	private JSONObject mlcp(File tempFile) throws Exception {
 
-		String MLCP_COMMAND = "C:\\Users\\200001934\\mlcp-11.0.3\\bin\\mlcp.bat";
+		//String MLCP_COMMAND = "C:\\Users\\200001934\\mlcp-11.0.3\\bin\\mlcp.bat";
+		if (MARKLOGIC_MLCP_PATH==null)
+			throw new Exception("SemTK config error: Missing $MARKLOGIC_MLCP_PATH environment variable.");
 		
 		String u = this.getUserName();
 		String p  = this.getPassword();
 		if (u == null || u.isBlank() || p==null || p.isBlank())
 			throw new Exception("mlcp upload requires username and password.");
 		
-		String command = MLCP_COMMAND  
+		String command = MARKLOGIC_MLCP_PATH  
 				+ " import"
 				+ " -host " + this.getServerWithoutProtocol() 
 				+ " -username " + this.getUserName()
