@@ -109,6 +109,7 @@ public class ValueConstraint {
 	public static String buildBestListConstraint(Returnable item, ArrayList<String> valList, SparqlEndpointInterface sei) throws Exception {
 		switch (sei.getServerType()) {
 		case SparqlEndpointInterface.NEPTUNE_SERVER:
+		case SparqlEndpointInterface.MARKLOGIC_SERVER:
 			return buildFilterInConstraint(item, valList, sei);
 			
 		case SparqlEndpointInterface.BLAZEGRAPH_SERVER:
@@ -122,6 +123,7 @@ public class ValueConstraint {
 	public static String buildBestListConstraint(String sparqlId, AbstractCollection<String> valList, AbstractCollection<XSDSupportedType> valTypes, SparqlEndpointInterface sei) throws Exception {
 		switch (sei.getServerType()) {
 		case SparqlEndpointInterface.NEPTUNE_SERVER:
+		case SparqlEndpointInterface.MARKLOGIC_SERVER:
 			return buildFilterInConstraint(sparqlId, valList, valTypes, sei);
 			
 		case SparqlEndpointInterface.BLAZEGRAPH_SERVER:
@@ -144,6 +146,7 @@ public class ValueConstraint {
 	public static String buildBestSubclassConstraint(String sparqlId, String className, ArrayList<String> subclassList, SparqlEndpointInterface sei) throws Exception {
 		switch (sei.getServerType()) {
 		case SparqlEndpointInterface.BLAZEGRAPH_SERVER:
+		case SparqlEndpointInterface.MARKLOGIC_SERVER:
 			return sparqlId + " rdfs:subClassOf* " +  className;
 					
 		case SparqlEndpointInterface.NEPTUNE_SERVER:
