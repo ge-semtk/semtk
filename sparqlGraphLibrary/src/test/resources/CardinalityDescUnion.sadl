@@ -1,0 +1,13 @@
+uri "http://CardinalityDescUnion".
+
+Class1 is a class.
+Class2 is a class.
+
+uProp describes { Class1 or Class2 } with a single value of type string.
+
+Instance1a is a Class1,
+	with uProp "first 1a".
+	
+Instance2a is a Class2,
+	with uProp "first 2a" ,
+	with uProp "second 2a".

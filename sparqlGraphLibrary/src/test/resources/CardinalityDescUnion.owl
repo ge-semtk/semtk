@@ -1,0 +1,45 @@
+<rdf:RDF
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:builtinfunctions="http://sadl.org/builtinfunctions#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:sadlimplicitmodel="http://sadl.org/sadlimplicitmodel#"
+    xmlns="http://CardinalityDescUnion#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:sadlbasemodel="http://sadl.org/sadlbasemodel#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
+  xml:base="http://CardinalityDescUnion">
+  <owl:Ontology rdf:about="">
+    <owl:imports rdf:resource="http://sadl.org/builtinfunctions"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlimplicitmodel"/>
+    <owl:imports rdf:resource="http://sadl.org/sadlbasemodel"/>
+    <rdfs:comment xml:lang="en">This ontology was created from a SADL file 'CardinalityDescUnion.sadl' and should not be directly edited.</rdfs:comment>
+  </owl:Ontology>
+  <owl:Class rdf:ID="Class2"/>
+  <owl:Class rdf:ID="Class1"/>
+  <owl:DatatypeProperty rdf:ID="uProp">
+    <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+    <rdfs:domain>
+      <owl:Class>
+        <rdfs:subClassOf>
+          <owl:Restriction>
+            <owl:onDataRange rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+            <owl:qualifiedCardinality rdf:datatype="http://www.w3.org/2001/XMLSchema#long"
+            >1</owl:qualifiedCardinality>
+            <owl:onProperty rdf:resource="#uProp"/>
+          </owl:Restriction>
+        </rdfs:subClassOf>
+        <owl:unionOf rdf:parseType="Collection">
+          <owl:Class rdf:about="#Class1"/>
+          <owl:Class rdf:about="#Class2"/>
+        </owl:unionOf>
+      </owl:Class>
+    </rdfs:domain>
+  </owl:DatatypeProperty>
+  <Class1 rdf:ID="Instance1a">
+    <uProp>first 1a</uProp>
+  </Class1>
+  <Class2 rdf:ID="Instance2a">
+    <uProp>second 2a</uProp>
+    <uProp>first 2a</uProp>
+  </Class2>
+</rdf:RDF>

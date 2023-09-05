@@ -2039,6 +2039,7 @@ public class NodeGroupExecutionRestController {
 
 			new StitchingThread(
 					requestBody.buildSteps(), 
+					requestBody.buildCommonCol(),
 					requestBody.buildSparqlConnection(),
 					ngstore_prop.getClient(), 
 					dispatch_prop.getClient(),
