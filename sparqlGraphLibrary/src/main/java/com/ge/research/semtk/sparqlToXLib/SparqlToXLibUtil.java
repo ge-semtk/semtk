@@ -646,6 +646,7 @@ public class SparqlToXLibUtil {
 	 */
 	public static String generateCheckCardinalityRestrictions(SparqlConnection conn, OntologyInfo oInfo, String className, String predName, String op, int limit) throws Exception {
 		StringBuffer sparql = new StringBuffer();
+		sparql.append("PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#> \n");
 		sparql.append("SELECT DISTINCT ?subject (COUNT(?object) AS ?object_COUNT)  \n");
 		sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
 		sparql.append("WHERE { \n");
@@ -679,6 +680,8 @@ public class SparqlToXLibUtil {
 	 */
 	public static String generateCountInstances(SparqlConnection conn, OntologyInfo oInfo, String className) throws Exception {
 		StringBuffer sparql = new StringBuffer();
+		sparql.append("PREFIX rdfs:<http://www.w3.org/2000/01/rdf-schema#>  \n"); 
+			
 		sparql.append("SELECT DISTINCT (COUNT(?subject) AS ?subject_COUNT)  \n");
 		sparql.append(generateSparqlFromOrUsing("", "FROM", conn, oInfo) + "\n");
 		sparql.append("WHERE { \n");

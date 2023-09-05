@@ -147,7 +147,7 @@ public class ValueConstraint {
 		switch (sei.getServerType()) {
 		case SparqlEndpointInterface.BLAZEGRAPH_SERVER:
 		case SparqlEndpointInterface.MARKLOGIC_SERVER:
-			return sparqlId + " rdfs:subClassOf* " +  className;
+			return sparqlId + " rdfs:subClassOf* " +  XSDSupportedType.URI.buildRDF11ValueString(className) + " ";
 					
 		case SparqlEndpointInterface.NEPTUNE_SERVER:
 		case SparqlEndpointInterface.FUSEKI_SERVER:
