@@ -639,24 +639,31 @@ public class MarkLogicSparqlEndpointInterface extends SparqlEndpointInterface {
 
 		BufferedReader input = new BufferedReader(new InputStreamReader(pr.getInputStream()));
 
-		String line=null;
-		StringBuffer output = new StringBuffer();
-		while((line=input.readLine()) != null) {
-			output.append(line + "\n");
+		String stdoutLine=null;
+		StringBuffer stdout = new StringBuffer();
+		while((stdoutLine=input.readLine()) != null) {
+			stdout.append(stdoutLine + "\n");
 		}
-
+		
+		String stderrLine=null;
+		input = new BufferedReader(new InputStreamReader(pr.getErrorStream()));
+		StringBuffer stderr = new StringBuffer();
+		while((stderrLine=input.readLine()) != null) {
+			stderr.append(stderrLine + "\n");
+		}
+		
 		int exitVal = pr.waitFor();
 		
-		String outputStr = output.toString();
-		
+		String outputStr = stdout.toString();
+		String errStr = stderr.toString();
 		SimpleResultSet simple = new SimpleResultSet();
-		if (exitVal==0 && !outputStr.contains("FATAL") && !outputStr.contains("ERROR") ) {
+		if (errStr.isBlank() ) {
 			simple.setSuccess(true);
-			simple.setMessage(outputStr);
+			simple.setMessage(stdoutLine); // last line of stdout
 		} else {
 			simple.setSuccess(false);
 			simple.setMessage("MLCP ingestion failed");
-			simple.addRationaleMessage("MarkLogicSparqlEndpoint.mlcp()", outputStr);
+			simple.addRationaleMessage("MarkLogicSparqlEndpoint.mlcp()", errStr);
 		}
 		
 		return simple.toJson();

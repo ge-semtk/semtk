@@ -657,10 +657,11 @@ public class SparqlQueryServiceRestController {
 			// 1. provided user/password
 			// 2. properties file
 			// 3. fake one
-			String nonEmptyUser = (user==null || user.isBlank()) ? query_props.getUser() : user;
+			String nonEmptyUser =     (user==null || user.isBlank())         ? query_props.getUser()     : user;
 			String nonEmptyPassword = (password==null || password.isBlank()) ? query_props.getPassword() : password;
-			nonEmptyUser = (user==null || user.isBlank()) ? "nonempty-user" : user;
-			nonEmptyPassword = (password==null || password.isBlank()) ? "nonempty-password" : password;
+			
+			nonEmptyUser =     (nonEmptyUser==null || nonEmptyUser.isBlank())         ? "nonempty-user"     : nonEmptyUser;
+			nonEmptyPassword = (nonEmptyPassword==null || nonEmptyPassword.isBlank()) ? "nonempty-password" : nonEmptyPassword;
 			
 			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, graph, nonEmptyUser, nonEmptyPassword);
 

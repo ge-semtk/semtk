@@ -38,8 +38,8 @@ define([	// properly require.config'ed   bootstrap-modal
 			this.data.serverAndPort = ssinterface.serverURL;
 			this.data.serverType = ssinterface.serverType;
 			this.data.graph = ssinterface.graph;
-			this.data.user = "dba";
-			this.data.password = "dba";
+			this.data.user = "";
+			this.data.password = "";
 
 		};
 
