@@ -43,7 +43,7 @@ import com.ge.research.semtk.resultSet.TableResultSet;
 
 public class IngestorRestClientTest_IT {
 	
-	private static IngestorRestClient irc = null;
+	private static IngestorRestClient ingestClient = null;
 	private static final String DATA = "cell,size in,lot,material,guy,treatment\ncellA,5,lot5,silver,Smith,spray\n";
 	
 	private static SparqlGraphJson sgJson_TestGraph;
@@ -57,7 +57,7 @@ public class IngestorRestClientTest_IT {
 		String serviceProtocol = IntegrationTestUtility.get("protocol");
 		String ingestionServiceServer = IntegrationTestUtility.get("ingestionservice.server");
 		int ingestionServicePort = IntegrationTestUtility.getInt("ingestionservice.port");
-		irc   = new IngestorRestClient(new IngestorClientConfig(serviceProtocol, ingestionServiceServer, ingestionServicePort));
+		ingestClient   = new IngestorRestClient(new IngestorClientConfig(serviceProtocol, ingestionServiceServer, ingestionServicePort));
 
 		sgJson_TestGraph = TestGraph.getSparqlGraphJsonFromResource(IngestorRestClientTest_IT.class, "/testTransforms.json");
 		sgJsonString_TestGraph = sgJson_TestGraph.getJson().toJSONString();   // template as a string
@@ -79,7 +79,8 @@ public class IngestorRestClientTest_IT {
 		TestGraph.uploadOwlResource(this, "/testTransforms.owl");
 		
 		assertEquals(TestGraph.getNumTriples(),123);	// get count before loading
-		irc.execIngestionFromCsv(sgJsonString_TestGraph, DATA);	// load data
+		ingestClient.execIngestionFromCsv(sgJsonString_TestGraph, DATA);	// load data
+		assertTrue(ingestClient.getLastResult().getRationaleAsString("\n"), ingestClient.getLastResultSuccess());
 		assertEquals(TestGraph.getNumTriples(),131);	// confirm loaded some triples
 	}
 	
@@ -112,11 +113,12 @@ public class IngestorRestClientTest_IT {
 		String sparql = SparqlToXUtils.generateCountTriplesSparql(seiOverride);
 		JSONObject resultJson = seiOverride.executeQuery(sparql, SparqlResultTypes.TABLE);			
 		Table table = Table.fromJson((JSONObject)resultJson.get(TableResultSet.TABLE_JSONKEY));		
-		assertEquals(table.getCell(0,0), "123");	// confirm that data was loaded to the override graph
+		assertEquals("123", table.getCell(0,0));	// confirm that data was loaded to the override graph
 		
 		// load the data
-		irc.execIngestionFromCsv(sgJsonString_TestGraph, DATA, sparqlConnectionOverride.toString());
-		
+		ingestClient.execIngestionFromCsv(sgJsonString_TestGraph, DATA, sparqlConnectionOverride.toString());
+		assertTrue(ingestClient.getLastResult().getRationaleAsString("\n"), ingestClient.getLastResultSuccess());
+
 		// confirm 0 triples loaded to test graph
 		assertEquals(TestGraph.getNumTriples(),0);	
 		
@@ -124,7 +126,7 @@ public class IngestorRestClientTest_IT {
 		sparql = SparqlToXUtils.generateCountTriplesSparql(seiOverride);
 		resultJson = seiOverride.executeQuery(sparql, SparqlResultTypes.TABLE);			
 		table = Table.fromJson((JSONObject)resultJson.get(TableResultSet.TABLE_JSONKEY));		
-		assertEquals(table.getCell(0,0), "131");	// confirm that data was loaded to the override graph
+		assertEquals("131", table.getCell(0,0));	// confirm that data was loaded to the override graph
 	}
 	
 }

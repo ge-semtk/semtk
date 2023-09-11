@@ -90,12 +90,12 @@ public class MarkLogicSparqlEndpointInterface extends SparqlEndpointInterface {
 	 * @throws Exception
 	 */
 	public MarkLogicSparqlEndpointInterface(String server, String graph) throws Exception {
-		super(server, graph, "test", "password");
+		super(server, graph, "", "");
 		
 	}
 
 	public MarkLogicSparqlEndpointInterface(String server, String graph, String user, String pass)	throws Exception {
-		super(server, graph, user!=null?user:"test", pass!=null?pass:"password");
+		super(server, graph, user, pass);
 
 	}
 	// For MarkLogic, we're storing the database in "endpoint"

@@ -245,7 +245,17 @@ public class SparqlConnection {
 	 * @throws Exception
 	 */
 	public static SparqlConnection deepCopy(SparqlConnection other) throws Exception {
-		return new SparqlConnection(other.toJson().toString());
+		SparqlConnection ret = new SparqlConnection(other.toJson().toString());
+		// copy passwords too
+		for (int i=0; i < other.getModelInterfaceCount(); i++) {
+			SparqlEndpointInterface osei = other.getModelInterface(i);
+			ret.modelInterfaces.get(i).setUserAndPassword(osei.getUserName(), osei.getPassword());
+		}
+		for (int i=0; i < other.getDataInterfaceCount(); i++) {
+			SparqlEndpointInterface osei = other.getDataInterface(i);
+			ret.dataInterfaces.get(i).setUserAndPassword(osei.getUserName(), osei.getPassword());
+		}
+		return ret;
 	}
 	
 	/**

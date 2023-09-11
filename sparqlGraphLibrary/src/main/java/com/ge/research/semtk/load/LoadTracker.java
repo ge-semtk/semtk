@@ -92,7 +92,7 @@ public class LoadTracker {
 	public void trackLoad(String fileKey, String fileName, SparqlEndpointInterface sei) throws Exception {
 		
 		int rows = DataLoader.loadFromCsvString(
-				this.sgjson.toJson(), 
+				this.sgjson, 
 				this.buildCsvString("load",fileKey, fileName, sei), 
 				this.dbUser, 
 				this.dbPassword, 
@@ -108,7 +108,7 @@ public class LoadTracker {
 	public void trackClear(SparqlEndpointInterface sei) throws Exception {
 		
 		int rows = DataLoader.loadFromCsvString(
-				this.sgjson.toJson(), 
+				this.sgjson, 
 				this.buildCsvString("clear", CLEAR, null, sei), 
 				this.dbUser, 
 				this.dbPassword, 
@@ -253,7 +253,7 @@ public class LoadTracker {
 		
 		// track this
 		int rows = DataLoader.loadFromCsvString(
-				this.sgjson.toJson(), 
+				this.sgjson, 
 				this.buildCsvString("undo",fileKey, "", sei), 
 				this.dbUser, 
 				this.dbPassword, 

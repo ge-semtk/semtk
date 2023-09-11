@@ -227,6 +227,7 @@ public class IngestionRestController {
 			//debug("fromCsvFileWithNewConnectionPrecheck", templateFile, dataFile, connection);
 			boolean pre_check = skipPrecheck == null || skipPrecheck == false;
 			boolean skip_ingest = skipIngest != null && skipIngest == true;
+			
 			SimpleResultSet retval = this.fromAnyCsvAsync(templateFile, dataFile, connection, true, 
 					pre_check, 
 					skip_ingest,
@@ -249,8 +250,8 @@ public class IngestionRestController {
 		// prepare everything with separate error handling
 		SparqlGraphJson sgjson = null;
 		try {
-			
-			IngestionNodegroupBuilder builder = this.buildTemplate(requestBody.buildConnection(), requestBody.getClassURI(), requestBody.getIdRegex(), requestBody.getDataClassRegex());
+			SparqlConnection conn = query_prop.setUserAndPasswordIfMissing(requestBody.buildConnection());
+			IngestionNodegroupBuilder builder = this.buildTemplate(conn, requestBody.getClassURI(), requestBody.getIdRegex(), requestBody.getDataClassRegex());
 			sgjson = builder.getSgjson();
 			
 		} catch (Exception e) {
@@ -281,7 +282,8 @@ public class IngestionRestController {
 		
 		try {
 			
-			IngestionNodegroupBuilder builder = this.buildTemplate(requestBody.buildConnection(), requestBody.getClassURI(), requestBody.getIdRegex(), requestBody.getDataClassRegex());
+			SparqlConnection conn = query_prop.setUserAndPasswordIfMissing(requestBody.buildConnection());
+			IngestionNodegroupBuilder builder = this.buildTemplate(conn, requestBody.getClassURI(), requestBody.getIdRegex(), requestBody.getDataClassRegex());
 			SimpleResultSet result = new SimpleResultSet(true);
 			result.addResult("sgjson", builder.getSgjson().toJson());
 			result.addResult("csv", builder.getCsvTemplate());
@@ -613,7 +615,9 @@ public class IngestionRestController {
 				String sparqlConnectionString = fromFiles ? new String(((MultipartFile)sparqlConnectionOverride).getBytes()) : (String)sparqlConnectionOverride;				
 				sgJson.setSparqlConn( new SparqlConnection(sparqlConnectionString));   				
 			}
-					
+			
+			sgJson = query_prop.setUserAndPasswordIfMissing(sgJson);
+			
 			String trackKey = UUID.randomUUID().toString();
 			String jobId = "job-" + UUID.randomUUID().toString();
 			this.overrideBaseURI(sgJson, trackFlag, overrideBaseURI, trackKey);
@@ -1031,7 +1035,8 @@ public class IngestionRestController {
 				String sparqlConnectionString = fromFiles ? new String(((MultipartFile)sparqlConnectionOverride).getBytes()) : (String)sparqlConnectionOverride;				
 				sgJson.setSparqlConn( new SparqlConnection(sparqlConnectionString));   				
 			}
-						
+			query_prop.setUserAndPasswordIfMissing(sgJson);
+			
 			if(logger != null){  
 				detailsToLog = LoggerRestClient.addDetails("template", templateContent, detailsToLog);
 			}

@@ -69,6 +69,7 @@ public class IngestionNodegroupBuilderTest_IT {
 						"null      , batt2, cell3\n";
 	
 		SparqlGraphJson batterySGJson = battryBuilder.getSgjson();
+		batterySGJson.setSparqlConn(TestGraph.getSparqlConn());
 		
 		Dataset ds = new CSVDataset(data, true);
 		DataLoader dl = new DataLoader(batterySGJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
@@ -85,6 +86,7 @@ public class IngestionNodegroupBuilderTest_IT {
 		cellBuilder.setIdRegex("(name|Id$)");
 		cellBuilder.build();
 		SparqlGraphJson cellSGJson = cellBuilder.getSgjson();
+		cellSGJson.setSparqlConn(TestGraph.getSparqlConn());
 		
 		assertTrue("Missing cellId column", cellBuilder.getCsvTemplate().contains("cellId"));
 		assertTrue("Missing color_Color column", cellBuilder.getCsvTemplate().contains("color_Color"));
@@ -145,7 +147,8 @@ public class IngestionNodegroupBuilderTest_IT {
 						"03/23/1966, batt2, DuraBattery,\n";
 	
 		SparqlGraphJson batterySGJson = battryBuilder.getSgjson();
-		
+		batterySGJson.setSparqlConn(TestGraph.getSparqlConn());
+
 		Dataset ds = new CSVDataset(data, true);
 		DataLoader dl = new DataLoader(batterySGJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		int records = dl.importData(true);
@@ -177,7 +180,8 @@ public class IngestionNodegroupBuilderTest_IT {
 						"batt02,cell0B,red\n";
 	
 		SparqlGraphJson batterySGJson = battryBuilder.getSgjson();
-		
+		batterySGJson.setSparqlConn(TestGraph.getSparqlConn());
+
 		Dataset ds = new CSVDataset(data, true);
 		DataLoader dl = new DataLoader(batterySGJson, ds, TestGraph.getUsername(), TestGraph.getPassword());
 		int records = dl.importData(true);

@@ -198,7 +198,7 @@ public class FdcDispatcher extends EdcDispatcher {
 					
 					sgJson.setSparqlConn(ingestConn);
 					boolean precheck = false;
-					DataLoader.loadFromCsvString(sgJson.getJson(), fdcCsv, this.servicesSeiUser, this.servicesSeiPassword, precheck);	
+					DataLoader.loadFromCsvString(sgJson, fdcCsv, this.servicesSeiUser, this.servicesSeiPassword, precheck);	
 				}
 				percentComplete += 2 * statusIncrement; // 3 and 4 of FDC - finished ingestion
 			}

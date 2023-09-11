@@ -172,7 +172,7 @@ public class SparqlQueryServiceRestController {
 		
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 			
-			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph());
+			sei = getSei(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), null, null);
 			resultSet = sei.executeQueryAndBuildResultSet(requestBody.query, SparqlResultTypes.valueOf(requestBody.resultType));
 			
 		} catch (Exception e) {			
@@ -214,7 +214,7 @@ public class SparqlQueryServiceRestController {
 
 		try{
 			
-			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), "");
+			sei = getSei(requestBody.getServerType(), requestBody.getServerAndPort(), "", null, null);
 
 			// get info for graphs
 			String query = SparqlToXUtils.generateSelectGraphInfo(sei, false);
@@ -293,7 +293,7 @@ public class SparqlQueryServiceRestController {
 			}
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 		
-			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
+			sei = getSei(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
 			resultSet = sei.executeQueryAndBuildResultSet(requestBody.query, SparqlResultTypes.valueOf(requestBody.resultType));
 			
 		} catch (Exception e) {			
@@ -324,7 +324,7 @@ public class SparqlQueryServiceRestController {
 		try {			
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 		
-			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
+			sei = getSei(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
 			uncache(sei);
 			String dropGraphQuery = SparqlToXUtils.generateDropGraphSparql(sei);
 			resultSet = sei.executeQueryAndBuildResultSet(dropGraphQuery, SparqlResultTypes.CONFIRM);
@@ -398,7 +398,7 @@ public class SparqlQueryServiceRestController {
 		try{
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 	
-			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
+			sei = getSei(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
 			query = SparqlToXUtils.generateDeletePrefixQuery(sei, requestBody.prefix);
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
 			uncache(sei);
@@ -452,7 +452,7 @@ public class SparqlQueryServiceRestController {
 		try{
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 	
-			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
+			sei = getSei(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
 			uncache(sei);
 			String query = SparqlToXUtils.generateDeleteModelTriplesQuery(sei, requestBody.prefixes, deleteBlankNodes);
 			resultSet = sei.executeQueryAndBuildResultSet(query, SparqlResultTypes.CONFIRM);
@@ -484,7 +484,7 @@ public class SparqlQueryServiceRestController {
 		try {			
 			requestBody.printInfo(); 	// print info to console			
 			requestBody.validate(); 	// check inputs 		
-			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
+			sei = getSei(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
 			sei.clearGraph();
 			uncache(sei);
 			resultSet = new SimpleResultSet(true);
@@ -517,7 +517,7 @@ public class SparqlQueryServiceRestController {
 		
 		try {			
 			requestBody.validate(); 	// check inputs 		
-			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
+			sei = getSei(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
 			return sei.downloadOwl();
 			
 		} catch (Exception e) {			
@@ -544,7 +544,7 @@ public class SparqlQueryServiceRestController {
 			requestBody.validate(); 	// check inputs 
 			resp.setHeader("Content-Disposition", "attachment; filename=download.owl");
 			resp.setCharacterEncoding("UTF-8");   // "UTF_8" was crashing 2/22/23 -Paul
-			sei = SparqlEndpointInterface.getInstance(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
+			sei = getSei(requestBody.getServerType(), requestBody.getServerAndPort(), requestBody.getGraph(), requestBody.getUser(), requestBody.getPassword());	
 			sei.downloadOwlStreamed(resp.getWriter());
 			
 		} catch (Exception e) {			
@@ -576,7 +576,7 @@ public class SparqlQueryServiceRestController {
 			String filename = graph.replaceFirst("\\w+://", "").replaceAll("[^a-zA-Z0-9-_\\.]", "_") + ".owl";
 			resp.setHeader("Content-Disposition", "attachment; filename=" + filename);
 			resp.setCharacterEncoding("UTF-8");
-			sei = SparqlEndpointInterface.getInstance(serverType, serverURL, graph, user, password);	
+			sei = getSei(serverType, serverURL, graph, user, password);	
 			sei.downloadOwlStreamed(resp.getWriter());
 			
 		} catch (Exception e) {			
@@ -653,17 +653,11 @@ public class SparqlQueryServiceRestController {
 			if (serverAndPort == null || serverAndPort.trim().isEmpty() ) throw new Exception("serverAndPort is empty.");
 			if (serverType == null || serverType.trim().isEmpty() ) throw new Exception("serverType is empty.");
 
-			// force auth interface even if none was provided.  Some don't need it.
-			// 1. provided user/password
-			// 2. properties file
-			// 3. fake one
-			String nonEmptyUser =     (user==null || user.isBlank())         ? query_props.getUser()     : user;
-			String nonEmptyPassword = (password==null || password.isBlank()) ? query_props.getPassword() : password;
-			
-			nonEmptyUser =     (nonEmptyUser==null || nonEmptyUser.isBlank())         ? "nonempty-user"     : nonEmptyUser;
-			nonEmptyPassword = (nonEmptyPassword==null || nonEmptyPassword.isBlank()) ? "nonempty-password" : nonEmptyPassword;
-			
-			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, graph, nonEmptyUser, nonEmptyPassword);
+			sei = getSei(serverType, serverAndPort, graph, null, null);
+			if (sei.getPassword() == null || sei.getPassword().isBlank()) {
+				// force auth for an unknown legacy reason
+				sei.setUserAndPassword("nonempty-user", "nonempty-password");
+			}
 
 			SimpleResultSet sResult = this.uploadFile(sei, multiFile.getInputStream(), multiFile.getOriginalFilename());
 			return sResult.toJson();
@@ -737,7 +731,7 @@ public class SparqlQueryServiceRestController {
 			// get graphName from owl
 			byte [] owlBytes = owlFile.getBytes();
 			Utility.OwlRdfInfo fileInfo = Utility.getInfoFromOwlRdf(new ByteArrayInputStream(owlBytes));
-			sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, fileInfo.getBase(), user, password);
+			sei = getSei(serverType, serverAndPort, fileInfo.getBase(), user, password);
 						
 			if (sei instanceof NeptuneSparqlEndpointInterface) {
 
@@ -803,5 +797,20 @@ public class SparqlQueryServiceRestController {
 			return true;
 		}
 		return false;
+	}
+	
+	/**
+	 * Get an sei where username and password default to the property settings if they're not provided
+	 * @param serverType
+	 * @param serverAndPort
+	 * @param graph
+	 * @param user
+	 * @param password
+	 * @return
+	 * @throws Exception
+	 */
+	private SparqlEndpointInterface getSei(String serverType, String serverAndPort, String graph, String user, String password) throws Exception {
+		SparqlEndpointInterface sei = SparqlEndpointInterface.getInstance(serverType, serverAndPort, graph, user, password);
+		return query_props.setUserAndPasswordIfMissing(sei);
 	}
 }

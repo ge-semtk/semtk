@@ -125,8 +125,8 @@ public class TestGraph {
 		conn.setName("JUnitTest");
 		
 		SparqlEndpointInterface sei = getSei();
-		conn.addDataInterface( sei.getServerType(), sei.getServerAndPort(), sei.getGraph());
-		conn.addModelInterface(sei.getServerType(), sei.getServerAndPort(), sei.getGraph());
+		conn.addDataInterface( sei.copy());
+		conn.addModelInterface(sei.copy());
 		return conn;
 	}
 	
@@ -137,8 +137,8 @@ public class TestGraph {
 		conn.setDomain(domain);   
 		
 		SparqlEndpointInterface sei = getSei();
-		conn.addDataInterface( sei.getServerType(), sei.getServerAndPort(), sei.getGraph());
-		conn.addModelInterface(sei.getServerType(), sei.getServerAndPort(), sei.getGraph());
+		conn.addDataInterface(sei);
+		conn.addModelInterface(sei);
 		return conn;
 	}
 	

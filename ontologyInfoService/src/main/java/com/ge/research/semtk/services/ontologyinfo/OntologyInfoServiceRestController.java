@@ -66,6 +66,7 @@ import com.ge.research.semtk.springutillib.properties.AuthorizationProperties;
 import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.LoggingProperties;
 import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
+import com.ge.research.semtk.springutillib.properties.QueryServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ResultsServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -87,6 +88,8 @@ public class OntologyInfoServiceRestController {
  	
 	@Autowired
 	private LoggingProperties log_prop;
+	@Autowired 
+	private QueryServiceProperties query_prop;
 	@Autowired
 	private ResultsServiceProperties results_props;
 	@Autowired
@@ -102,6 +105,7 @@ public class OntologyInfoServiceRestController {
 		env_prop.validateWithExit();
 		auth_prop.validateWithExit();
 		AuthorizationManager.authorizeWithExit(auth_prop);
+		query_prop.validateWithExit();
 		results_props.validateWithExit();
 		servicesgraph_props.validateWithExit();
 		log_prop.validateWithExit();
@@ -190,7 +194,7 @@ public class OntologyInfoServiceRestController {
 		SimpleResultSet retval = new SimpleResultSet();;
 		
 		try{
-			SparqlConnection conn = requestBody.buildSparqlConnection();
+			SparqlConnection conn = query_prop.setUserAndPasswordIfMissing(requestBody.buildSparqlConnection());
 			OntologyClass oClass = requestBody.buildClass();
 			OntologyInfo oInfo = oInfoCache.get(conn);
 			
@@ -246,7 +250,7 @@ public class OntologyInfoServiceRestController {
 		TableResultSet retval = new TableResultSet();
 		
 		try{
-			SparqlConnection conn = requestBody.buildSparqlConnection();
+			SparqlConnection conn = query_prop.setUserAndPasswordIfMissing(requestBody.buildSparqlConnection());
 			
 			retval.addResults(oInfoCache.get(conn).getUriLabelTable());
 			retval.setSuccess(true);
@@ -274,7 +278,7 @@ public class OntologyInfoServiceRestController {
 		TableResultSet retval = new TableResultSet();
 		
 		try{
-			SparqlConnection conn = requestBody.buildSparqlConnection();
+			SparqlConnection conn = query_prop.setUserAndPasswordIfMissing(requestBody.buildSparqlConnection());
 			SparqlEndpointInterface querySei = conn.getDefaultQueryInterface();
 			ArrayList<SparqlEndpointInterface> dataSeiList = conn.getDataInterfaces();
 			
@@ -312,7 +316,7 @@ public class OntologyInfoServiceRestController {
 		SimpleResultSet retval = null;
 		
 		try{
-			SparqlConnection conn = requestBody.buildSparqlConnection();
+			SparqlConnection conn = query_prop.setUserAndPasswordIfMissing(requestBody.buildSparqlConnection());
 			OntologyInfo oInfo = oInfoCache.get(conn);
 			JSONObject json = oInfo.toJson();
 			
@@ -340,7 +344,7 @@ public class OntologyInfoServiceRestController {
 		SimpleResultSet retval = new SimpleResultSet(false);
 
 		try {			
-			SparqlConnection conn = requestBody.buildSparqlConnection();
+			SparqlConnection conn = query_prop.setUserAndPasswordIfMissing(requestBody.buildSparqlConnection());
 			
 			oInfoCache.removeOverlapping(conn);
 			predStatsCache.removeOverlapping(conn);
@@ -368,7 +372,7 @@ public class OntologyInfoServiceRestController {
 		SimpleResultSet retval = new SimpleResultSet(false);
 
 		try {			
-			SparqlConnection conn = requestBody.buildSparqlConnection();
+			SparqlConnection conn = query_prop.setUserAndPasswordIfMissing(requestBody.buildSparqlConnection());
 			
 			oInfoCache.remove(conn);
 			
@@ -403,7 +407,7 @@ public class OntologyInfoServiceRestController {
 			JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
 			ResultsClient rclient = results_props.getClient();
 			
-			SparqlConnection conn = requestBody.buildSparqlConnection();
+			SparqlConnection conn = query_prop.setUserAndPasswordIfMissing(requestBody.buildSparqlConnection());
 			PredicateStats stats = this.predStatsCache.getIfCached(conn);
 			tracker.createJob(jobId);
 			
@@ -462,7 +466,7 @@ public class OntologyInfoServiceRestController {
 			JobTracker tracker = new JobTracker(servicesgraph_props.buildSei());
 			ResultsClient rclient = results_props.getClient();
 			
-			SparqlConnection conn = requestBody.buildSparqlConnection();
+			SparqlConnection conn = query_prop.setUserAndPasswordIfMissing(requestBody.buildSparqlConnection());
 			tracker.createJob(jobId);
 			
 			// spin up an async thread
@@ -513,7 +517,7 @@ public class OntologyInfoServiceRestController {
 		try {		
 		
 			
-			SparqlConnection conn = requestBody.buildSparqlConnection();
+			SparqlConnection conn = query_prop.setUserAndPasswordIfMissing(requestBody.buildSparqlConnection());
 			PredicateStats stats = this.predStatsCache.getIfCached(conn);
 			
 			if (stats != null) {
@@ -562,7 +566,7 @@ public class OntologyInfoServiceRestController {
 				try {
 					HeadersManager.setHeaders(headers);
 					
-					SparqlConnection conn = requestBody.buildSparqlConnection();				
+					SparqlConnection conn = query_prop.setUserAndPasswordIfMissing(requestBody.buildSparqlConnection());
 					OntologyInfo oInfo = oInfoCache.get(conn);
 					InstanceDictGenerator generator = new InstanceDictGenerator(conn, oInfo, requestBody.getMaxWords(), requestBody.getSpecificityLimit());
 					Table tab = generator.generate();

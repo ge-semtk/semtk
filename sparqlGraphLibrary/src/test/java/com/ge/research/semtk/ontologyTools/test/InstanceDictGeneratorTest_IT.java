@@ -22,6 +22,7 @@ import static org.junit.Assert.*;
 import java.util.ArrayList;
 
 import org.junit.AfterClass;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -80,18 +81,6 @@ public class InstanceDictGeneratorTest_IT {
 		tab = generator.generate();
 		// almost a no-op test : make sure nothing crashes
 		assertEquals("Wrong number of rows with specificity set to 1", 9, tab.getNumRows());
-	}
-	
-	@Test
-	public void manualOverride() throws Exception {
-		String connStr = 
-				"{\"name\":\"ML4M ipd leb1acdev\",\"domain\":\"\",\"enableOwlImports\":true,\"model\":[{\"type\":\"fuseki\",\"url\":\"http://leb1acdev.hpc.ge.com:3030/ML4M\",\"graph\":\"http://research.ge.com/ipd/model\"}],\"data\":[{\"type\":\"fuseki\",\"url\":\"http://leb1acdev.hpc.ge.com:3030/ML4M\",\"graph\":\"http://research.ge.com/ipd/data\"}]}\n";
-				//"{\"name\":\"RACK\",\"domain\":\"\",\"enableOwlImports\":false,\"model\":[{\"type\":\"fuseki\",\"url\":\"http://localhost:3030/RACK\",\"graph\":\"http://rack001/model\"}],\"data\":[{\"type\":\"fuseki\",\"url\":\"http://localhost:3030/RACK\",\"graph\":\"http://rack001/data\"}]}\n";
-		SparqlConnection conn = new SparqlConnection(connStr);
-		OntologyInfo oInfo = new OntologyInfo(conn);
-		InstanceDictGenerator generator = new InstanceDictGenerator(conn, oInfo, 2, 2);
-		Table tab = generator.generate();
-		System.out.println(tab.toCSVString());
 	}
 	
 }

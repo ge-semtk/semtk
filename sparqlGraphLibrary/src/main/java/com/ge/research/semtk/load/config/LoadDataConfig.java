@@ -24,6 +24,7 @@ import java.util.LinkedList;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.ge.research.semtk.api.nodeGroupExecution.client.NodeGroupExecutionClient;
 import com.ge.research.semtk.load.client.IngestorRestClient;
+import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
@@ -166,7 +167,7 @@ public class LoadDataConfig extends YamlConfig {
 				}else if(step instanceof CsvByNodegroupIngestionStep) {
 					((CsvByNodegroupIngestionStep)step).run(conn, ngeClient, logger);
 				}else if(step instanceof OwlIngestionStep) {
-					((OwlIngestionStep)step).run(conn, logger);
+					((OwlIngestionStep)step).run(conn, queryClient, logger);
 				}else {
 					throw new Exception("Unrecognized ingestion step");		// should not get here
 				}
@@ -256,7 +257,7 @@ public class LoadDataConfig extends YamlConfig {
 		public OwlIngestionStep(String baseDir, String owlPath) {
 			super(baseDir, owlPath);
 		}
-		public void run(SparqlConnection conn, Logger logger) throws Exception {
+		public void run(SparqlConnection conn, SparqlQueryClient queryClient, Logger logger) throws Exception {
 			if(conn.getDataInterfaceCount() != 1) {
 				throw new Exception("Error: cannot load OWL because 0 or multiple data interfaces are specified");
 			}
@@ -264,7 +265,12 @@ public class LoadDataConfig extends YamlConfig {
 			if(logger != null) {
 				logger.info("Load OWL " + getDisplayableFilePath() + " to " + sei.getGraph());
 			}
-			sei.uploadOwl(Files.readAllBytes(getFile().toPath()));  // OK to use SEI (instead of client) because uploading data (not model)
+			queryClient.setSei(conn.getDataInterface(0));
+			SimpleResultSet res = queryClient.uploadOwl(getFile());
+			res.throwExceptionIfUnsuccessful();
+			
+			// not ok to use SEI anymore due to security
+			//sei.uploadOwl(Files.readAllBytes(getFile().toPath()));  // OK to use SEI (instead of client) because uploading data (not model)
 		}
 	}
 

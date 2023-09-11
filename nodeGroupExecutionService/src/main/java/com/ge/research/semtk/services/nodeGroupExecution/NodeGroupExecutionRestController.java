@@ -122,6 +122,7 @@ import com.ge.research.semtk.springutillib.properties.DispatchServiceProperties;
 import com.ge.research.semtk.springutillib.properties.StatusServiceProperties;
 import com.ge.research.semtk.springutillib.properties.NodegroupStoreServiceProperties;
 import com.ge.research.semtk.springutillib.properties.OntologyInfoServiceProperties;
+import com.ge.research.semtk.springutillib.properties.QueryServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ResultsServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.utility.LocalLogger;
@@ -155,6 +156,8 @@ public class NodeGroupExecutionRestController {
 	private NodegroupStoreServiceProperties ngstore_prop;
 	@Autowired
 	private DispatchServiceProperties dispatch_prop;
+	@Autowired 
+	private QueryServiceProperties query_prop;
 	@Autowired
 	private ResultsServiceProperties results_prop;
 	@Autowired
@@ -172,6 +175,7 @@ public class NodeGroupExecutionRestController {
 		AuthorizationManager.authorizeWithExit(auth_prop);
 		ngstore_prop.validateWithExit();
 		dispatch_prop.validateWithExit();
+		query_prop.validateWithExit();
 		results_prop.validateWithExit();
 		status_prop.validateWithExit();
 		ingest_prop.validateWithExit();
@@ -531,7 +535,9 @@ public class NodeGroupExecutionRestController {
 			
 			NodeGroupExecutor ngExecutor = this.getExecutor(null );
 			
-			SparqlConnection connection = requestBody.buildSparqlConnection();			
+			SparqlConnection connection = requestBody.buildSparqlConnection();	
+			query_prop.setUserAndPasswordIfMissing(connection);
+			
 			// create a json object from the external data constraints. 
 			
 			// check if this is actually for a filter query
@@ -588,7 +594,7 @@ public class NodeGroupExecutionRestController {
 			if (connection == null || NodeGroupExecutor.isUseNodegroupConn(connection)) {
 				connection = sgJson.getSparqlConn();
 			}			
-			
+			query_prop.setUserAndPasswordIfMissing(connection);
 			String targetId = null;
 			if(requestBody instanceof FilterDispatchFromNodeGroupRequestBody){
 				// set the target ID
@@ -934,6 +940,7 @@ public class NodeGroupExecutionRestController {
 
 			try {
     			SparqlConnection conn = new SparqlConnection(requestBody.getConn());
+    			query_prop.setUserAndPasswordIfMissing(conn);
     			OntologyInfo oInfo = retrieveOInfo(conn);
     			ArrayList<String[]> pairsList = requestBody.buildPredicateListPairs();
     			if (pairsList.size() == 0) {
@@ -990,6 +997,7 @@ public class NodeGroupExecutionRestController {
 
 			try {
     			SparqlConnection conn = new SparqlConnection(requestBody.getConn());
+    			query_prop.setUserAndPasswordIfMissing(conn);
     			OntologyInfo oInfo = retrieveOInfo(conn);
     			ArrayList<String> classList = requestBody.getClassValues();
     			if (classList.size() == 0) {
@@ -1041,6 +1049,7 @@ public class NodeGroupExecutionRestController {
 		try {	
 			
 			SparqlConnection conn = requestBody.buildSparqlConnection();
+			query_prop.setUserAndPasswordIfMissing(conn);
 			ResultsClient resClient = results_prop.getClient();
 			
 			ConnectedDataConstructor constructor = new ConnectedDataConstructor(
@@ -1076,7 +1085,8 @@ public class NodeGroupExecutionRestController {
 		
 		try {
 			SparqlConnection conn = requestBody.buildSparqlConnection();
-
+			query_prop.setUserAndPasswordIfMissing(conn);
+			
 			// create a nodegroup: instance connecting to given predicates
 			NodeGroup ng = new NodeGroup();
 			Node node = ng.addNode(requestBody.getInstanceClassUri(), this.retrieveOInfo(conn));  // add node for given class URI
@@ -1173,7 +1183,8 @@ public class NodeGroupExecutionRestController {
 
 				// try to create a sparql connection
 				SparqlConnection connection = requestBody.buildSparqlConnection();			
-	
+				query_prop.setUserAndPasswordIfMissing(connection);
+    			
 				// dispatch the job. 
 				ngExecutor.dispatchRawSparql(connection, requestBody.getSparql(), requestBody.getResultType());
 				String id = ngExecutor.getJobID();
@@ -1217,7 +1228,8 @@ public class NodeGroupExecutionRestController {
 				NodeGroupExecutor ngExecutor = this.getExecutor(null );
 				// try to create a sparql connection
 				SparqlConnection connection = requestBody.buildSparqlConnection();			
-	
+				query_prop.setUserAndPasswordIfMissing(connection);
+    			
 				// dispatch the job. 
 				ngExecutor.dispatchRawSparqlUpdate(connection, requestBody.getSparql());
 				String id = ngExecutor.getJobID();
@@ -1262,9 +1274,7 @@ public class NodeGroupExecutionRestController {
 				SparqlEndpointInterface sei = requestBody.buildSei();
 				SparqlEndpointInterface jobSei = servicesgraph_props.buildSei();
 				
-				// PEC TODO security
-				// borrowing auth username password from the services graph
-				sei.setUserAndPassword(jobSei.getUserName(), jobSei.getPassword());
+				query_prop.setUserAndPasswordIfMissing(sei);
 				
 				ResultsClient resClient = results_prop.getClient();
 				
@@ -1322,6 +1332,8 @@ public class NodeGroupExecutionRestController {
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
 				SparqlGraphJson sparqlGraphJson = requestBody.buildSparqlGraphJson();
+				query_prop.setUserAndPasswordIfMissing(sparqlGraphJson);
+				
 				retval = nodeGroupExecutor.ingestFromNodegroupAndCsvString(requestBody.buildSparqlConnection(), sparqlGraphJson, requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
@@ -1358,6 +1370,7 @@ public class NodeGroupExecutionRestController {
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
 
 				SparqlGraphJson sparqlGraphJson = requestBody.buildSparqlGraphJson();
+				query_prop.setUserAndPasswordIfMissing(sparqlGraphJson);
 				String jobId = nodeGroupExecutor.ingestFromNodegroupAndCsvStringAsync(
 						requestBody.buildSparqlConnection(), 
 						sparqlGraphJson, 
@@ -1403,8 +1416,9 @@ public class NodeGroupExecutionRestController {
 			RecordProcessResults retval = null;
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
-
-				retval = nodeGroupExecutor.ingestFromNodegroupIdAndCsvString(requestBody.buildSparqlConnection(), requestBody.getNodegroupId(), requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
+				SparqlConnection conn = requestBody.buildSparqlConnection();
+				query_prop.setUserAndPasswordIfMissing(conn);
+				retval = nodeGroupExecutor.ingestFromNodegroupIdAndCsvString(conn, requestBody.getNodegroupId(), requestBody.getCsvContent(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 			}catch(Exception e){
 				LoggerRestClient.easyLog(logger, SERVICE_NAME, ENDPOINT_NAME + " exception", "message", e.toString());
 				retval = new RecordProcessResults(false);
@@ -1437,9 +1451,10 @@ public class NodeGroupExecutionRestController {
 			SimpleResultSet retval = null;
 			try{
 				NodeGroupExecutor nodeGroupExecutor = this.getExecutor(null);		
-
+				SparqlConnection conn = requestBody.buildSparqlConnection();
+				query_prop.setUserAndPasswordIfMissing(conn);
 				String jobId = nodeGroupExecutor.ingestFromNodegroupIdAndCsvStringAsync(
-						requestBody.buildSparqlConnection(), 
+						conn, 
 						requestBody.getNodegroupId(), 
 						requestBody.getCsvContent(), 
 						requestBody.getSkipPrecheck(),
@@ -1479,6 +1494,7 @@ public class NodeGroupExecutionRestController {
 		try {
 			// pass-through
 			IngestorRestClient iclient = ingest_prop.getClient();
+
 			String jobId = iclient.execFromCsvUsingClassTemplate(requestBody.getClassURI(), requestBody.getIdRegex(), requestBody.getData(), requestBody.getConnection(), requestBody.getTrackFlag(), requestBody.getOverrideBaseURI());
 			
 			// success: add jobId
@@ -1701,6 +1717,7 @@ public class NodeGroupExecutionRestController {
 					tracker.setJobPercentComplete(jobId, 10);
 					HeadersManager.setHeaders(headers);
 					SparqlEndpointInterface fromSei = requestBody.buildFromSei();
+					query_prop.setUserAndPasswordIfMissing(fromSei);
 					
 					// fromGraph to temp file
 					String filename = UUID.randomUUID().toString();
@@ -1714,6 +1731,8 @@ public class NodeGroupExecutionRestController {
 					
 					// temp file to toGraph
 					SparqlEndpointInterface toSei = requestBody.buildToSei();
+					query_prop.setUserAndPasswordIfMissing(toSei);
+					
 					InputStream fis = new FileInputStream(tempFile);
 					try  {
 						this.uploadFile(toSei, fis, "temp.owl"); 
@@ -1770,7 +1789,9 @@ public class NodeGroupExecutionRestController {
 				try {
 					// dispatch
 					JSONObject simpleResJson =  dispatchAnyJobById(requestBody, AutoGeneratedQueryTypes.CONSTRUCT, SparqlResultTypes.RDF);
-					waitThenStoreRdfToSei(jobId, (new SimpleResultSet(simpleResJson)).getJobId(), requestBody.buildResultsSei());
+					SparqlEndpointInterface sei = requestBody.buildResultsSei();
+					query_prop.setUserAndPasswordIfMissing(sei);
+					waitThenStoreRdfToSei(jobId, (new SimpleResultSet(simpleResJson)).getJobId(), sei);
 					
 				} catch (Exception e) {
 					try {
@@ -1817,7 +1838,9 @@ public class NodeGroupExecutionRestController {
 				try {
 					// dispatch
 					JSONObject simpleResJson =  dispatchAnyJobFromNodegroup(requestBody, AutoGeneratedQueryTypes.CONSTRUCT, SparqlResultTypes.RDF);
-					waitThenStoreRdfToSei(jobId, (new SimpleResultSet(simpleResJson)).getJobId(), requestBody.buildResultsSei());
+					SparqlEndpointInterface sei = requestBody.buildResultsSei();
+					query_prop.setUserAndPasswordIfMissing(sei);
+					waitThenStoreRdfToSei(jobId, (new SimpleResultSet(simpleResJson)).getJobId(), sei);
 					
 				} catch (Exception e) {
 					try {
@@ -1964,6 +1987,7 @@ public class NodeGroupExecutionRestController {
 			String jobId = JobTracker.generateJobId();
 			
 			SparqlConnection conn = requestBody.buildSparqlConnection();
+			query_prop.setUserAndPasswordIfMissing(conn);
 			
 			new CombineEntitiesTableThread(
 					tracker, results_prop.getClient(), jobId, this.retrieveOInfo(conn), conn, 
@@ -2001,8 +2025,7 @@ public class NodeGroupExecutionRestController {
 			String jobId = JobTracker.generateJobId();
 			
 			SparqlConnection conn = requestBody.buildSparqlConnection();
-			
-
+			query_prop.setUserAndPasswordIfMissing(conn);
 			new CombineEntitiesInConnThread(
 					tracker, results_prop.getClient(), jobId, this.retrieveOInfo(conn), conn, 
 					requestBody.getSameAsClassURI(), requestBody.getTargetPropURI(), requestBody.getDuplicatePropURI(),

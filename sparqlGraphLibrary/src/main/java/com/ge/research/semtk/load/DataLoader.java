@@ -816,14 +816,14 @@ public class DataLoader implements Runnable {
 		}
 	}
 	
-	public static int loadFromCsvString(JSONObject sgjsonJson, String csvData, String sparqlEndpointUser, String sparqlEndpointPassword, boolean precheck) throws Exception{
+	public static int loadFromCsvString(SparqlGraphJson sgjson, String csvData, String sparqlEndpointUser, String sparqlEndpointPassword, boolean precheck) throws Exception{
 		
 		Dataset dataset = new CSVDataset(csvData, true);
 		
 		
 		// load the data
 		try{
-			DataLoader loader = new DataLoader(sgjsonJson, dataset, sparqlEndpointUser, sparqlEndpointPassword);
+			DataLoader loader = new DataLoader(sgjson, dataset, sparqlEndpointUser, sparqlEndpointPassword);
 			
 			int recordsAdded = loader.importData(precheck);
 			LocalLogger.logToStdOut("Inserted " + recordsAdded + " records");
