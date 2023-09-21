@@ -21,7 +21,11 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.net.ConnectException;
 
+import org.apache.jena.shacl.validation.Severity;
+
 import com.ge.research.semtk.connutil.EndpointNotFoundException;
+import com.ge.research.semtk.resultSet.SimpleResultSet;
+import com.ge.research.semtk.sparqlX.SparqlConnection;
 
 /**
  * Client for UtilityService
@@ -39,6 +43,7 @@ public class UtilityClient extends RestClient {
 		conf.setServiceEndpoint(null);
 		this.parametersJSON.clear();
 		this.fileParameter = null;
+		this.fileParameterName = "file";
 	}
 
 	/**
@@ -76,4 +81,37 @@ public class UtilityClient extends RestClient {
 		}
 	}
 
+	
+	/**
+	 * Executes a call to run SHACL
+	 * @param shaclTtlFile		the SHACL file (in ttl format)
+	 * @param conn 				the connection
+	 * @param severity			return problems with this severity level or higher (Info, Warning, Violation)
+	 * @return 					jobId
+	 * @throws 					Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public String execGetShaclResults(File shaclTtlFile, SparqlConnection conn, Severity severity) throws Exception {
+		
+		if(!shaclTtlFile.exists()) {
+			throw new Exception("File does not exist: " + shaclTtlFile.getAbsolutePath());
+		}
+		
+		this.parametersJSON.clear();
+		this.fileParameter = shaclTtlFile;
+		this.fileParameterName = "shaclTtlFile";
+		this.parametersJSON.put("conn", conn.toJson().toJSONString());
+		this.parametersJSON.put("severity", severity.level().getLocalName()); // e.g. Info, Warning, Violation
+		conf.setServiceEndpoint("utility/getShaclResults");
+		this.conf.setMethod(RestClientConfig.Methods.POST);
+		
+		try {
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
+			res.throwExceptionIfUnsuccessful();
+			return res.getJobId();
+		} finally {
+			this.cleanUp();
+		}
+	}
+	
 }

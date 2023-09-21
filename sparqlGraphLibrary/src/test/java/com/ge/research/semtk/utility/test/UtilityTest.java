@@ -30,8 +30,10 @@ import java.util.zip.ZipInputStream;
 import java.util.HashSet;
 import java.util.Random;
 
+import org.json.simple.JSONObject;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
+import org.apache.jena.graph.Graph;
 
 import com.ge.research.semtk.utility.Utility;
 
@@ -275,4 +277,34 @@ public class UtilityTest {
 		
 	}
 
+	@Test
+	public void testJenaFunctions() throws Exception{
+		
+		// get Jena graph from TTL file
+		File file = Utility.getResourceAsTempFile(this, "musicTestDataset_2017.q2.ttl");
+		Graph g = Utility.getJenaGraphFromTurtle(new FileInputStream(file));
+		assertEquals(g.size(), 215);
+		
+		// get TTL file from Jena graph
+		String ttl = Utility.getTurtleFromJenaGraph(g);
+		assertTrue(ttl.contains("ns1:Kansas  rdf:type  ns2:Band;"));
+		assertEquals(ttl.length(), 10034);
+	}
+	
+	@Test
+	// TODO add a list
+	// TODO prove ignores order
+	public void testIsJsonEqual() throws Exception {
+		JSONObject o1 = new JSONObject();
+		o1.put("fruit", "apple");
+		o1.put("vegetable", "asparagus");
+		o1.put("protein", "beef");
+		
+		JSONObject o2 = new JSONObject();
+		o2.put("vegetable", "asparagus");
+		o2.put("protein", "beef");
+		o2.put("fruit", "apple");
+		
+		assertTrue(Utility.equals(o1, o2));
+	}
 }

@@ -565,6 +565,13 @@ define([	// properly require.config'ed
         return p.toLowerCase().endsWith("#type") || p.toLowerCase().endsWith("#type>");
     };
    
+	/**
+	 * Removes prefix from URI (e.g. http://item#description => description) if present
+	 */
+	VisJsHelper.stripPrefix = function(uri) {
+		return (uri.indexOf("#") > -1) ? uri.split("#")[1] : uri;
+	}
+
     /*
      * create a unique id with base name
      */

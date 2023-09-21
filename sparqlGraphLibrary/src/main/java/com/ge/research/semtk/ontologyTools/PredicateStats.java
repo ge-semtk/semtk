@@ -3,7 +3,6 @@ package com.ge.research.semtk.ontologyTools;
 import java.util.HashSet;
 import java.util.Hashtable;
 
-import org.apache.jena.atlas.json.JSON;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 

@@ -1,5 +1,5 @@
 /**
- ** Copyright 2016-2018 General Electric Company
+ ** Copyright 2016-2023 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,9 @@ package com.ge.research.semtk.sparqlX;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.apache.jena.graph.Graph;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdfconnection.RDFConnection;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -597,5 +600,36 @@ public class SparqlConnection {
 		}
 		ret.append(this.enableOwlImports ? "owlImports;" : "noImports;");
 		return ret.toString();
+	}
+	
+	
+	/**
+	 * Create a Jena Graph from this SparqlConnection
+	 */
+	public Graph getJenaGraph() {
+		ArrayList<String> fetched = new ArrayList<String>();
+		
+		Model model = null;
+		RDFConnection rdfConn = null;
+		try {
+			for(SparqlEndpointInterface sei : this.getAllInterfaces()) {
+				rdfConn = RDFConnection.connect(sei.getServerAndPort());
+				String graphName = sei.getGraph();
+				if(fetched.contains(sei.getServerAndPort() + graphName)) {
+					continue;  // skip if already fetched it (e.g. if model graph is the same as data graph)
+				}
+				Model m = rdfConn.fetch(graphName);
+				fetched.add(sei.getServerAndPort() + graphName);
+				if(model == null) {
+					model = m;
+				}else {
+					model.add(m);
+				}
+				rdfConn.close();
+			}
+			return model.getGraph();
+		}finally {
+			rdfConn.close();
+		}
 	}
 }

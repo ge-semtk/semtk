@@ -22,7 +22,6 @@ import java.util.HashSet;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.math.NumberUtils;
-import org.apache.jena.atlas.json.JSON;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;

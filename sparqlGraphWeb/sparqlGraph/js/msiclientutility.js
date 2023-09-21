@@ -43,6 +43,14 @@ define([	// properly require.config'ed   bootstrap-modal
                 });
 				this.msi.postAndCheckSuccess("processPlotSpec", data, "application/json", successCallback, this.optFailureCallback, this.optTimeout);
 			},
+			
+			execGetShaclResults : function (conn, shaclTtlFile, severity, successCallback) {
+				var formdata = new FormData();
+				formdata.append("conn", JSON.stringify(conn.toJson()));
+				formdata.append("shaclTtlFile", shaclTtlFile);
+				formdata.append("severity", severity);
+				this.msi.postToEndpoint("getShaclResults", formdata, MicroServiceInterface.FORM_CONTENT, successCallback, this.optFailureCallback, this.optTimeout);
+			},
 
 		};
 

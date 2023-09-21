@@ -32,11 +32,13 @@ define([	// properly require.config'ed
             'sparqlgraph/js/modaliidx',
             'sparqlgraph/js/msiclientnodegroupexec',
             'sparqlgraph/js/msiclientontologyinfo',
+            'sparqlgraph/js/msiclientutility',
             'sparqlgraph/js/msiclientstatus',
             'sparqlgraph/js/msiclientresults',
             'sparqlgraph/js/msiresultset',
             'sparqlgraph/js/ontologyinfo',
             'sparqlgraph/js/restrictiontree',
+            'sparqlgraph/js/shacltree',
             'sparqlgraph/js/visjshelper',
 
          	'jquery',
@@ -51,17 +53,18 @@ define([	// properly require.config'ed
 		],
 
     // TODO: this isn't leveraging VisJsHelper properly.  Code duplication.
-	function(IIDXHelper, ModalIidx, MsiClientNodeGroupExec, MsiClientOntologyInfo, MsiClientStatus, MsiClientResults, MsiResultSet, OntologyInfo, RestrictionTree, VisJsHelper, $, vis) {
+	function(IIDXHelper, ModalIidx, MsiClientNodeGroupExec, MsiClientOntologyInfo, MsiClientUtility, MsiClientStatus, MsiClientResults, MsiResultSet, OntologyInfo, RestrictionTree, ShaclTree, VisJsHelper, $, vis) {
 
 
 		//============ local object  ExploreTab =============
-		var ExploreTab = function(treediv, canvasdiv, buttondiv, topControlForm, oInfoClientURL) {
+		var ExploreTab = function(treediv, canvasdiv, buttondiv, topControlForm, oInfoClientURL, utilityClientURL) {
             this.controlDivParent = treediv;
             this.canvasDivParent = canvasdiv;
 
             this.botomButtonDiv = buttondiv;
             this.topControlForm = topControlForm;
             this.oInfoClientURL = oInfoClientURL;
+            this.utilityClientURL = utilityClientURL;
 
             this.infospan = document.createElement("span");
             this.infospan.style.marginRight = "3ch";
@@ -93,7 +96,8 @@ define([	// properly require.config'ed
         ExploreTab.MODE_INSTANCE = "Instance Data";
         ExploreTab.MODE_STATS = "Instance Counts";
         ExploreTab.MODE_RESTRICTIONS = "Restrictions";
-        ExploreTab.MODES = [ExploreTab.MODE_ONTOLOGY_CLASSES, ExploreTab.MODE_ONTOLOGY_DETAIL, ExploreTab.MODE_INSTANCE, ExploreTab.MODE_STATS, ExploreTab.MODE_RESTRICTIONS];
+        ExploreTab.MODE_SHACL = "SHACL Validation";
+        ExploreTab.MODES = [ExploreTab.MODE_ONTOLOGY_CLASSES, ExploreTab.MODE_ONTOLOGY_DETAIL, ExploreTab.MODE_INSTANCE, ExploreTab.MODE_STATS, ExploreTab.MODE_RESTRICTIONS, ExploreTab.MODE_SHACL];
 
 		ExploreTab.prototype = {
 
@@ -133,8 +137,9 @@ define([	// properly require.config'ed
 					this.networkHash[m] = new vis.Network(this.canvasDivHash[m], {}, this.getDefaultOptions(m));
                 }
                 
-                // in restriction mode, enable double-click to expand node
+                // in some modes, enable double-click to expand node
             	this.networkHash[ExploreTab.MODE_RESTRICTIONS].on('doubleClick', VisJsHelper.expandSelectedNodes.bind(this, this.canvasDivHash[ExploreTab.MODE_RESTRICTIONS], this.networkHash[ExploreTab.MODE_RESTRICTIONS]));
+            	this.networkHash[ExploreTab.MODE_SHACL].on('doubleClick', VisJsHelper.expandSelectedNodes.bind(this, this.canvasDivHash[ExploreTab.MODE_SHACL], this.networkHash[ExploreTab.MODE_SHACL]));
                 
                 return this.networkHash;
             },
@@ -238,6 +243,7 @@ define([	// properly require.config'ed
                 this.oTree.setOInfo(this.oInfo);
 
 				this.restrictionTree.clear();
+				this.shaclTree.clear();
                 this.clearNetwork(ExploreTab.MODES);
             },
 
@@ -276,7 +282,7 @@ define([	// properly require.config'ed
                 var bold = document.createElement("b");
                 td.appendChild(bold);
                 bold.innerHTML = "Explore mode: ";
-                var select = IIDXHelper.createSelect("etSelect", [ExploreTab.MODE_ONTOLOGY_CLASSES, ExploreTab.MODE_ONTOLOGY_DETAIL, ExploreTab.MODE_INSTANCE, ExploreTab.MODE_STATS, ExploreTab.MODE_RESTRICTIONS], [ExploreTab.MODE_ONTOLOGY_CLASSES]);
+                var select = IIDXHelper.createSelect("etSelect", [ExploreTab.MODE_ONTOLOGY_CLASSES, ExploreTab.MODE_ONTOLOGY_DETAIL, ExploreTab.MODE_INSTANCE, ExploreTab.MODE_STATS, ExploreTab.MODE_RESTRICTIONS, ExploreTab.MODE_SHACL], [ExploreTab.MODE_ONTOLOGY_CLASSES]);
                 select.onchange = this.draw.bind(this);
                 td.appendChild(select);
 
@@ -317,6 +323,7 @@ define([	// properly require.config'ed
 				this.initControlDiv_OntologyDetailMode();
 				this.initControlDiv_StatsMode();
 				this.initControlDiv_RestrictionsMode();
+				this.initControlDiv_ShaclMode();
             },
 
 			// Initialize control div for ontology classes mode
@@ -387,7 +394,7 @@ define([	// properly require.config'ed
                 
                 // add 2 dropdowns, using a table for formatting
                 // dropdown to show violations only (exceeds maximum cardinality) or also incomplete data (does not meet minimum cardinality)
-                var modeSelectDropdown = IIDXHelper.createSelect("restrictionTreeModeSelect", [["violations only",0], ["violations and incomplete data",1]], ["multi"], false, "input-large");
+                var modeSelectDropdown = IIDXHelper.createSelect("restrictionTreeModeSelect", [["violations only",0], ["violations and incomplete data",1]], ["violations and incomplete data"], false, "input-large");
                 modeSelectDropdown.onchange = function() {
 					this.restrictionTree.setExceedsOnlyMode(parseInt(document.getElementById("restrictionTreeModeSelect").value) == 0);
                     this.restrictionTree.draw();
@@ -397,32 +404,82 @@ define([	// properly require.config'ed
                 sortSelectDropdown.onchange = function() {
                     this.restrictionTree.setSortMode(parseInt(document.getElementById("restrictionTreeSortSelect").value));
                     this.restrictionTree.sort();
-                }.bind(this);                
-                var table = document.createElement("table");
-				col = document.createElement("col");
-				col.style.width = "25%";
-				table.appendChild(col);
-                tr = document.createElement("tr");
-                td1 = document.createElement("td");
-                td1.innerHTML = "Show:";
-                tr.append(td1);
-                td2 = document.createElement("td");
-                td2.append(modeSelectDropdown);
-                tr.append(td2);
-                table.appendChild(tr);
-                tr2 = document.createElement("tr");
-                td1 = document.createElement("td");
-                td1.innerHTML = "Sort by:";
-                tr2.append(td1);
-                td2 = document.createElement("td");
-                td2.append(sortSelectDropdown);
-                tr2.append(td2);
-                table.appendChild(tr2);          
-                div.appendChild(table);
+                }.bind(this);
+				var table = div.appendChild(document.createElement("table"));
+				table.appendChild(document.createElement("col"));
+				var tr = table.insertRow();
+				tr.insertCell().appendChild(document.createTextNode("Show:"));
+				tr.insertCell().appendChild(modeSelectDropdown);	// severity dropdown
+				tr = table.insertRow();
+				tr.insertCell().appendChild(document.createTextNode("Sort by:"));
+				tr.insertCell().appendChild(sortSelectDropdown);	// sort-by dropdown
                 
-                // initialize network
+                // initialize tree
                 this.initDynaTree_RestrictionsMode();
                 this.restrictionTree.setSortMode(0);  // set sort to default
+            },
+            
+			// Initialize control div for SHACL mode
+			initControlDiv_ShaclMode: function() {
+				var div = this.controlDivHash[ExploreTab.MODE_SHACL];
+				div.style.margin = "1ch";
+
+				// button to select SHACL rules file
+				var runSelectedShaclFile = function(e) {
+					// after user selects file, query for shacl results and display them in tree
+					if (e.target.files.length > 0) {		// If user hit cancel, then get 0 files here.  File picker disallows multiple files.					
+						var shaclCallback = this.buildStatusResultsCallback(
+							this.shaclTree.draw.bind(this.shaclTree),	// after retrieving table, draw the tree
+							MsiClientResults.prototype.execGetJsonBlobRes
+						).bind(this);
+
+						this.clearNetwork(); // clear the graph
+						this.shaclTree.clear();
+						var client = new MsiClientUtility(this.utilityClientURL, ModalIidx.alert.bind(this, "Error"));
+						client.execGetShaclResults(gConn, e.target.files[0], "Info", shaclCallback);
+						shaclTtlFileUploader.value = null;  // reset so that reload the same file triggers the change event
+					}
+				}.bind(this);
+				var shaclTtlFileUploader = document.createElement("input");
+				shaclTtlFileUploader.type = "file";
+				shaclTtlFileUploader.accept = ".ttl";  						// accept files with ttl extension only
+				shaclTtlFileUploader.style = "color: rgba(0, 0, 0, 0)";  	// hides the "No file chosen" text
+				shaclTtlFileUploader.addEventListener('change', runSelectedShaclFile, false);
+
+				// dropdown for severity
+				var modeSelectDropdown = IIDXHelper.createSelect("shaclTreeSeverityModeSelect", [
+					["violations only", ShaclTree.SEVERITYMODE_VIOLATION],
+					["violations & warnings", ShaclTree.SEVERITYMODE_WARNING],
+					["violations, warnings & info", ShaclTree.SEVERITYMODE_INFO]
+				], ["violations, warnings & info"], false, "input-large");
+				modeSelectDropdown.onchange = function() {
+					this.shaclTree.setSeverityMode(document.getElementById("shaclTreeSeverityModeSelect").value);
+					this.shaclTree.draw();
+				}.bind(this);
+
+				// dropdown to pick sort option
+				var sortSelectDropdown = IIDXHelper.createSelect("shaclTreeSortSelect", [["shape", 0], ["count", 1]], ["multi"], false, "input-large");
+				sortSelectDropdown.onchange = function() {
+					this.shaclTree.setSortMode(parseInt(document.getElementById("shaclTreeSortSelect").value));
+					this.shaclTree.sort();
+				}.bind(this);
+
+				// put the 3 elements above into a table
+				var table = div.appendChild(document.createElement("table"));
+				table.appendChild(document.createElement("col"));
+				var tr = table.insertRow();
+				tr.insertCell().appendChild(document.createTextNode("Select SHACL file:"));
+				tr.insertCell().appendChild(shaclTtlFileUploader);	// file uploader button
+				tr = table.insertRow();
+				tr.insertCell().appendChild(document.createTextNode("Show:"));
+				tr.insertCell().appendChild(modeSelectDropdown);	// severity dropdown
+				tr = table.insertRow();
+				tr.insertCell().appendChild(document.createTextNode("Sort by:"));
+				tr.insertCell().appendChild(sortSelectDropdown);	// sort-by dropdown
+
+				// initialize tree
+				this.initDynaTree_ShaclMode();
+				this.shaclTree.setSortMode(0);  // set sort to default
             },
 
             /*
@@ -488,20 +545,35 @@ define([	// properly require.config'ed
                 this.controlDivParent.appendChild(this.controlDivHash[ExploreTab.MODE_RESTRICTIONS]);
                 var treeSelector = "#" + this.controlDivHash[ExploreTab.MODE_RESTRICTIONS].id;
                 $(treeSelector).dynatree({
-
                     onSelect: function(flag, node) {
 						this.modifyNetwork_RestrictionsMode(flag, node); // user selects/deselects a node
                     }.bind(this),
-                    
                     persist: false,    	// true causes a cookie error with large trees
                     selectMode: 1,    	// 1 single, 2 multi, 3 multi hierarchical
                     checkbox: true,
                 });
-
                 this.restrictionTree = new RestrictionTree($(treeSelector).dynatree("getTree"));
-                this.restrictionTree.setExceedsOnlyMode(true);  // to match initial state of dropdown
             },
             
+			/*
+			 * Initialize an empty dynatree into this.controlDivHash[ExploreTab.MODE_SHACL]
+			 */
+			initDynaTree_ShaclMode: function() {
+
+				this.controlDivParent.innerHtml = "";
+				this.controlDivParent.appendChild(this.controlDivHash[ExploreTab.MODE_SHACL]);
+				var treeSelector = "#" + this.controlDivHash[ExploreTab.MODE_SHACL].id;
+				$(treeSelector).dynatree({
+					onSelect: function(flag, node) {
+						this.modifyNetwork_ShaclMode(flag, node); // user selects/deselects a node
+					}.bind(this),
+					persist: false,    	// true causes a cookie error with large trees
+					selectMode: 1,    	// 1 single, 2 multi, 3 multi hierarchical
+					checkbox: true,
+				});
+				this.shaclTree = new ShaclTree($(treeSelector).dynatree("getTree"));
+			},
+
 			/**
 			 * For restrictions mode, construct network when user selects a URI.  Clear the network if user de-selects a URI.
 			 * flag - true if selected, false if de-selected
@@ -536,6 +608,40 @@ define([	// properly require.config'ed
 				const predicate = node.data.predicate;
 				client.execAsyncConstructInstanceWithPredicates(uri, classUri, [predicate],	gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
             },
+
+			/**
+			 * For SHACL mode, construct network when user selects an offending item.  Clear the network if user de-selects.
+			 * flag - true if selected, false if de-selected
+			 * node - the node
+			 */
+			modifyNetwork_ShaclMode: function(flag, node) {
+
+				const canvasDiv = this.canvasDivHash[ExploreTab.MODE_SHACL];
+				const network = this.networkHash[ExploreTab.MODE_SHACL];
+
+				if (!flag) {
+					// URI was de-selected, clear the network (tree allows only one URI selected at a time)
+					this.clearNetwork();
+					return;
+				}
+				this.clearNetwork(); // clear any prior network (tree allows only one URI selected at a time)
+				VisJsHelper.networkBusy(canvasDiv, true);
+
+				var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.longTimeoutMsec);
+				var resultsCallback = MsiClientNodeGroupExec.buildJsonLdOrTriplesCallback(
+					VisJsHelper.addTriples.bind(this, canvasDiv, network),  // add triples to graph
+					networkFailureCallback.bind(this, canvasDiv),
+					function() { }, // no status updates
+					function() { }, // no check for cancel
+					g.service.status.url,
+					g.service.results.url
+				);
+
+				// construct all connected data
+				const nodeTitle = node.data.title;  	// this could be an instance URI or a literal
+				// TODO line below uses instance type "node_uri" even though the nodeTitle may be a literal.  Currently works for literal strings (e.g. "id0") but need to revisit.
+				client.execAsyncConstructConnectedData(nodeTitle, "node_uri", SemanticNodeGroup.RT_NTRIPLES, VisJsHelper.ADD_TRIPLES_MAX, gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
+			},
 
 
             // main section of buttons along the bottom.
@@ -707,6 +813,10 @@ define([	// properly require.config'ed
 							);
 							client.execGetCardinalityViolations(gConn, MAX_RESTRICTION_ROWS, true, cardinalityCallback);
 						}
+					} else if (this.getMode() == ExploreTab.MODE_SHACL) {
+
+						// don't draw anything, user must select a SHACL file
+						this.clearGraphInfoBar();	// remove nodes/predicates info bar
 					}
 
 					this.networkHash[this.getMode()].fit();  // fit the graph to the canvas

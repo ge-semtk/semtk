@@ -117,7 +117,8 @@
                                        document.getElementById("exploreCanvasDiv"),
                                        document.getElementById("exploreButtonDiv"),
                                        document.getElementById("exploreSearchForm"),
-                                       g.service.ontologyInfo.url
+                                       g.service.ontologyInfo.url,
+                                       g.service.utility.url
                                       );
             setTabButton("explore-tab-but", false);
 

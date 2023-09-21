@@ -19,7 +19,6 @@ import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 
-import org.apache.jena.atlas.json.JSON;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.junit.BeforeClass;

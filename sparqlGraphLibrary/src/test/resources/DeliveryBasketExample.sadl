@@ -1,0 +1,105 @@
+uri "http://DeliveryBasketExample" alias dbex.
+
+// ===================== model =================================
+
+Thing is a class,
+	described by identifier with a single value of type string.
+
+Fruit is a type of Thing.
+Peach is a type of Fruit.
+
+Address is a class,
+	described by recipientName with a single value of type string,
+	described by careOfName with a single value of type string,
+	described by zipCode with a single value of type int,
+	described by zipCodePlusFour with a single value of type string.  // e.g. "53217-1234"
+
+FruitBasket is a type of Thing,
+	described by includes with values of type Fruit,
+	described by capacity with a single value of type double,
+	described by packDate with a single value of type date,
+	described by expirationDate with a single value of type date.
+includes of FruitBasket has at most 3 values.
+
+Delivery is a class,
+	described by address with a single value of type Address,
+	described by includes with values of type FruitBasket.
+
+// ===================== instance data =================================
+
+// a basket with 1 fruit
+fruit1 is a Fruit
+	has identifier "fruit1".
+basket1 is a FruitBasket,
+	has identifier "basket1",
+ 	has includes fruit1,
+ 	has packDate "2023-01-01",
+ 	has expirationDate "2023-02-01".
+
+// a fruit with no basket
+peach1 is a Peach.			
+
+// a basket with no fruit
+basket3 is a FruitBasket,
+ 	has packDate "2023-01-01",
+ 	has expirationDate "1999-01-01". 	
+
+// a basket with a peach
+peach4 is a Peach.
+basket4 is a FruitBasket,
+	has includes peach4.
+ 		
+// a basket with 4 fruits
+peach100a is a Peach.
+peach100b is a Peach.
+peach100c is a Peach.
+fruit100d is a Fruit.
+basket100 is a FruitBasket,
+	has capacity 10,
+	has includes peach100a,
+	has includes peach100b,
+	has includes peach100c,
+	has includes fruit100d.
+
+// a basket with a small capacity...and a fruit squeezed into it anyway
+fruitSqueezed is a Fruit.
+basketTooSmall is a FruitBasket,
+	has includes fruitSqueezed,
+	has capacity 0.5.
+
+// two items with the same identifier
+fruit5 is a Fruit,
+ 	has identifier "id0".
+fruit6 is a Fruit,
+ 	has identifier "id0".
+
+// 2 baskets holding the same fruit 
+basket5 is a FruitBasket,
+	has includes fruit5.
+basket6 is a FruitBasket,
+	has includes fruit5.
+
+// an address
+address1 is a Address,
+	has recipientName "Rebecca Recipient",
+	has careOfName "Carey careof",
+	has zipCode 53217.
+
+// a delivery
+delivery1 is a Delivery,
+	has address address1,
+	has includes basket1.
+
+// a delivery with an address with no recipient
+addressWithoutRecipient is a Address,
+	has zipCode 10027.
+deliveryWithoutRecipient is a Delivery,
+	has address addressWithoutRecipient,
+	has includes basket3.
+
+// an address with both zips
+addressTwoZips is a Address,
+	has recipientName "Rex Recipient",
+	has careOfName "Rex Recipient",
+	has zipCode 53217,
+	has zipCodePlusFour "53217-1234".

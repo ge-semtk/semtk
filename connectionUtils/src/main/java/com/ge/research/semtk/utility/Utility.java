@@ -82,6 +82,12 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
+import org.apache.jena.graph.Graph;
+import org.apache.jena.rdf.model.Model;
+import org.apache.jena.rdf.model.ModelFactory;
+import org.apache.jena.riot.Lang;
+import org.apache.jena.riot.RDFDataMgr;
+import org.apache.jena.riot.RDFParser;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -345,6 +351,17 @@ public abstract class Utility {
 	    Arrays.sort(arr1Clone);
 	    Arrays.sort(arr2Clone);
 	    return Arrays.equals(arr1Clone, arr2Clone);
+	}
+	
+	/**
+	 * Determine if two JSONObjects are equivalent.
+	 * Ignores key order (but not JSONArray list order)
+	 */
+	public static boolean equals(JSONObject o1, JSONObject o2) throws Exception {
+		ObjectMapper mapper = new ObjectMapper();
+		JsonNode json1 = mapper.readTree(o1.toString());
+		JsonNode json2 = mapper.readTree(o2.toString());
+		return json1.equals(json2);
 	}
 	
 	public static String readFile(String path) throws IOException {
@@ -1190,5 +1207,36 @@ public abstract class Utility {
             }
         });
     }
+
+	/**
+	 * Create a Jena Graph from Turtle data
+	 * @param ttlInputStream Turtle data in an input stream
+	 * @return the Jena graph
+	 * @throws Exception
+	 */
+	public static Graph getJenaGraphFromTurtle(InputStream ttlInputStream) throws Exception {
+		try {
+			return RDFParser.source(ttlInputStream).lang(Lang.TTL).toGraph();
+		}catch(Exception e) {
+			throw new Exception("Error creating graph from Turtle: " + e.getMessage(), e);
+		}
+	}
 	
+	/**
+	 * Get a Turtle string for a given Jena Graph
+	 * @param graph the graph
+	 * @return the Turtle string
+	 */
+	public static String getTurtleFromJenaGraph(Graph graph) throws IOException {
+		OutputStream outputStream = null;
+		try {
+			Model model = ModelFactory.createModelForGraph(graph);
+			outputStream = new ByteArrayOutputStream();
+			RDFDataMgr.write(outputStream, model, Lang.TTL);
+		}finally {
+			outputStream.close();
+		}
+		return outputStream.toString();
+	}
+
 }

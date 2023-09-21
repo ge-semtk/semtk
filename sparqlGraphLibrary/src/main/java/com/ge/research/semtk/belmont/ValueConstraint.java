@@ -25,8 +25,6 @@ import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.jena.sparql.lang.SPARQLParserFactory;
-
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.sparqlX.XSDSupportedType;
 import com.ge.research.semtk.utility.Utility;

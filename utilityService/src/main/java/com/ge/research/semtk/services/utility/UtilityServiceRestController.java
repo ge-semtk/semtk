@@ -42,12 +42,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 import org.apache.commons.io.FileUtils;
+import org.apache.jena.shacl.validation.Severity;
 import org.json.simple.JSONObject;
 
 import com.ge.research.semtk.auth.AuthorizationManager;
 import com.ge.research.semtk.auth.ThreadAuthenticator;
 import com.ge.research.semtk.belmont.NodeGroup;
 import com.ge.research.semtk.belmont.runtimeConstraints.RuntimeConstraintManager;
+import com.ge.research.semtk.edc.JobTracker;
+import com.ge.research.semtk.edc.client.ResultsClient;
 import com.ge.research.semtk.load.config.ManifestConfig;
 import com.ge.research.semtk.load.utility.SparqlGraphJson;
 import com.ge.research.semtk.plotting.PlotlyPlotSpec;
@@ -57,6 +60,7 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
@@ -65,11 +69,13 @@ import com.ge.research.semtk.springutillib.properties.EnvironmentProperties;
 import com.ge.research.semtk.springutillib.properties.NodegroupExecutionServiceProperties;
 import com.ge.research.semtk.springutillib.properties.ServicesGraphProperties;
 import com.ge.research.semtk.springutillib.properties.QueryServiceUserPasswordProperties;
+import com.ge.research.semtk.springutillib.properties.ResultsServiceProperties;
 import com.ge.research.semtk.springutillib.properties.NodegroupStoreServiceProperties;
 import com.ge.research.semtk.springutillib.properties.QueryServiceProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Logger;
 import com.ge.research.semtk.utility.Utility;
+import com.ge.research.semtk.validate.ShaclRunner;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -102,6 +108,8 @@ public class UtilityServiceRestController {
 	private QueryServiceProperties query_prop;
 	@Autowired
 	private QueryServiceUserPasswordProperties query_credentials_prop;
+	@Autowired
+	private ResultsServiceProperties results_prop;
 	
 	@PostConstruct
     public void init() {
@@ -115,6 +123,7 @@ public class UtilityServiceRestController {
 		query_prop.validateWithExit();
 		query_credentials_prop.validateWithExit();
 		servicesgraph_prop.validateWithExit();
+		results_prop.validateWithExit();
 		
 		lock = new ReentrantLock();
 	}
@@ -452,7 +461,59 @@ public class UtilityServiceRestController {
 		}
 	}
 
+	@Operation(
+			summary="Use SHACL to validate the contents of a connection",
+			description="Async.  Returns a jobID."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/getShaclResults", method=RequestMethod.POST, consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
+	public JSONObject getShaclResults(	@RequestParam("shaclTtlFile") MultipartFile shaclTtlFile,
+										@RequestParam("conn") String connJsonStr,
+										@RequestParam("severity") Severity severity,
+										@RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "getShaclResults";
+		SimpleResultSet retval = new SimpleResultSet(false);
 
+		try {		
+			String jobId = JobTracker.generateJobId();
+			JobTracker tracker = new JobTracker(servicesgraph_prop.buildSei());
+			ResultsClient rclient = results_prop.getClient();
+			
+			tracker.createJob(jobId);
+			tracker.setJobPercentComplete(jobId, 1);
+			
+			// spin up an async thread
+			new Thread(() -> {
+				try {
+					HeadersManager.setHeaders(headers);
+					ShaclRunner shaclRunner = new ShaclRunner(shaclTtlFile.getInputStream(), new SparqlConnection(connJsonStr), tracker, jobId, 20, 80);
+					if(tracker != null) { tracker.setJobPercentComplete(jobId, 85, "Gathering SHACL results"); }
+					JSONObject resultsJson = shaclRunner.getResults(severity);
+					rclient.execStoreBlobResults(jobId, resultsJson);
+					tracker.setJobSuccess(jobId);
+				} catch (Exception e) {
+					try {
+						LocalLogger.printStackTrace(e);
+						tracker.setJobFailure(jobId, e.getMessage());
+					} catch (Exception ee) {
+						LocalLogger.logToStdErr(ENDPOINT_NAME + " error accessing job tracker");
+						LocalLogger.printStackTrace(ee);
+					}
+				}
+			}).start();
+			
+			retval.addJobId(jobId);
+			retval.addResultType(SparqlResultTypes.TABLE);
+			retval.setSuccess(true);
+		} catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+		return retval.toJson();		
+	}	
+	
 	/**
 	 * Determine if an EDC mnemonic exists in the services config
 	 */

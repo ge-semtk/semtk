@@ -1,0 +1,11 @@
+@prefix : <http://example.org> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix ns: <http://com.ge.research/knowledge/test/popMusic#> .
+:shape1 
+	a sh:NodeShape;
+	sh:targetClass ns:AlbumTrack;
+	sh:property [
+		sh:path 		ns:durationInSeconds;
+		sh:maxExclusive 300;
+	] .
