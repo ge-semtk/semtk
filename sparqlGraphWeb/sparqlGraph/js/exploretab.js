@@ -452,9 +452,14 @@ define([	// properly require.config'ed
 					["violations & warnings", ShaclTree.SEVERITYMODE_WARNING],
 					["violations, warnings & info", ShaclTree.SEVERITYMODE_INFO]
 				], ["violations, warnings & info"], false, "input-large");
-				modeSelectDropdown.onchange = function() {
-					this.shaclTree.setSeverityMode(document.getElementById("shaclTreeSeverityModeSelect").value);
-					this.shaclTree.draw();
+				modeSelectDropdown.onchange = function() {				
+					document.body.style.cursor="wait";	// re-drawing the tree may take a few seconds, show wait cursor
+					setTimeout(() => {   				// use setTimeout to give wait cursor a chance to appear
+						this.shaclTree.setSeverityMode(document.getElementById("shaclTreeSeverityModeSelect").value);
+						this.shaclTree.draw();					// redraw tree
+						this.clearNetwork(); 					// clear anything in the graph
+						document.body.style.cursor="default"; 	// remove wait cursor
+						}, 600);
 				}.bind(this);
 
 				// dropdown to pick sort option

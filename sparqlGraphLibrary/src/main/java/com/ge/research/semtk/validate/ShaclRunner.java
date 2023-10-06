@@ -278,8 +278,6 @@ public class ShaclRunner {
 	 * 
 	 * @param message 	the message to transform
 	 * @return 			a transformed message, or empty if could not transform it
-	 * 
-	 * TODO add more constraint types
 	 */
 	private String transformMessage(String message) {
 		
@@ -288,6 +286,9 @@ public class ShaclRunner {
 			Pattern pattern = null;  // note: need the () subpattern groupings for exec() to work
 			Matcher matcher = null;
 			
+			// =========== "Value Type Constraint Components"
+			
+			// sh:class
 			// ClassConstraint[<http://DeliveryBasketExample#Peach>]: Expected class :<http://DeliveryBasketExample#Peach> for <http://DeliveryBasketExample#fruit100d>
 			pattern = Pattern.compile("ClassConstraint\\[(.+)\\]: Expected class :(.+) for (.+)");
 			matcher = pattern.matcher(message);
@@ -295,6 +296,7 @@ public class ShaclRunner {
 				return "Expect " + matcher.group(3) + " to be an instance of " + matcher.group(2);
 			}
 	
+			// sh:datatype
 			// DatatypeConstraint[xsd:bool]: Expected xsd:bool : Actual xsd:string : Node "id0"
 			pattern = Pattern.compile("DatatypeConstraint(.+): Expected (.+) : Actual (.+) : Node (.+)");
 			matcher = pattern.matcher(message);
@@ -302,33 +304,52 @@ public class ShaclRunner {
 				return "Expect datatype " + matcher.group(2) + " (got " + matcher.group(4) + ", type " + matcher.group(3) + ")";
 			}
 			
-			// maxCount[3]: Invalid cardinality: expected max 3: Got count = 4
-			pattern = Pattern.compile("maxCount\\[(\\d+)\\]: Invalid cardinality: expected max (\\d+): Got count = (\\d+)");
+			// sh:nodeKind
+			// NodeKind[IRI] : Expected IRI for "10"
+			pattern = Pattern.compile("NodeKind\\[(.+)\\] : Expected (.+) for (.+)");
 			matcher = pattern.matcher(message);
 			if (matcher.matches()) {
-				return "Expect count <= " + matcher.group(2) + " (got " + matcher.group(3) + ")";
+				return "Expect node kind " + matcher.group(2) + " for " + matcher.group(3);
 			}
+			
+			// ===========  "Cardinality Constraint Components"
+			
+			// sh:minCount
 			// minCount[1]: Invalid cardinality: expected min 1: Got count = 0
 			pattern = Pattern.compile("minCount\\[(\\d+)\\]: Invalid cardinality: expected min (\\d+): Got count = (\\d+)");
 			matcher = pattern.matcher(message);
 			if (matcher.matches()) {
 				return "Expect count >= " + matcher.group(2) + " (got " + matcher.group(3) + ")";
 			}
+
+			// sh:maxCount
+			// maxCount[3]: Invalid cardinality: expected max 3: Got count = 4
+			pattern = Pattern.compile("maxCount\\[(\\d+)\\]: Invalid cardinality: expected max (\\d+): Got count = (\\d+)");
+			matcher = pattern.matcher(message);
+			if (matcher.matches()) {
+				return "Expect count <= " + matcher.group(2) + " (got " + matcher.group(3) + ")";
+			}
 	
+			// ===========  "Value Range Constraint Components"
+			
+			// sh:minInclusive, sh:minExclusive, sh:maxInclusive, sh:maxExclusive
 			// Data value "0.5"^^xsd:double is not greater than or equal to 1
-			// covers minInclusive, minExclusive, maxInclusive, maxExclusive
 			pattern = Pattern.compile("Data value \\\"(.+)\\\"\\^\\^xsd:(.+) is not (.+)");
 			matcher = pattern.matcher(message);
 			if (matcher.matches()) {
 				return "Expect a " + matcher.group(2) + " " + matcher.group(3) + " (got " + matcher.group(1) + ")";
 			}
+			
+			// ===========  "String-based Constraint Components"
 	
+			// sh:minLength
 			// MinLengthConstraint[5]: String too short: id0
 			pattern = Pattern.compile("MinLengthConstraint\\[(\\d+)\\]: String too short: (.+)");
 			matcher = pattern.matcher(message);
 			if (matcher.matches()) {
 				return "Expect string length >= " + matcher.group(1) + " (\"" + matcher.group(2) + "\")";
 			}			
+			// sh:maxLength
 			// MaxLengthConstraint[5]: String too long: id0
 			pattern = Pattern.compile("MaxLengthConstraint\\[(\\d+)\\]: String too long: (.+)");
 			matcher = pattern.matcher(message);
@@ -336,6 +357,7 @@ public class ShaclRunner {
 				return "Expect string length <= " + matcher.group(1) + " (\"" + matcher.group(2) + "\")";
 			}
 	
+			// sh:pattern
 			// Pattern[(.+)peach(.+)]: Does not match: 'http://DeliveryBasketExample#basket100'
 			pattern = Pattern.compile("Pattern\\[(.+)\\]: Does not match: '(.+)'");
 			matcher = pattern.matcher(message);
@@ -343,64 +365,120 @@ public class ShaclRunner {
 				return "Does not match pattern " + matcher.group(1) + ": \"" + matcher.group(2) + "\"";
 			}
 			
+			// TODO add sh:languageIn
+			// TODO add sh:uniqueLang
+			
+			// ===========  "Property Pair Constraint Components"
+			
+			// sh:equals
 			// Equals[<http://DeliveryBasketExample#careOfName>]: not equal: value node "Rebecca Recipient" is not in ["Carey careof"]
 			pattern = Pattern.compile("Equals\\[(.+)\\]: not equal(.+)");
 			matcher = pattern.matcher(message);
 			if (matcher.matches()) {
-				return "Expect to equal " + getLocalName(matcher.group(1)) + " (but does not)";
+				return "Expect to equal " + getLocalName(matcher.group(1));
 			}
 			
+			// sh:disjoint
+			// Disjoint[<http://DeliveryBasketExample#careOfName>]: not disjoint: "Unknown Addressee" is in ["Unknown Addressee"]
+			pattern = Pattern.compile("Disjoint\\[(.+)\\]: not disjoint(.+)");
+			matcher = pattern.matcher(message);
+			if (matcher.matches()) {
+				return "Expect to be disjoint with " + getLocalName(matcher.group(1));
+			}
+			
+			// sh:lessThan, sh:lessThanOrEquals
 			// LessThan[<http://DeliveryBasketExample#expirationDate>]: value node "2023-01-01"^^xsd:date is not less than "1999-01-01"^^xsd:date
 			// LessThanOrEquals[<http://DeliveryBasketExample#expirationDate>]: value node "2023-01-01"^^xsd:date is not less than or equal to "1999-01-01"^^xsd:date
 			pattern = Pattern.compile("LessThan(.*)\\[(.+)\\]: value node \"(.+)\"\\^\\^xsd:(.+) is not (.+) \"(.+)\"\\^\\^xsd:(.+)");
 			matcher = pattern.matcher(message);
 			if (matcher.matches()) {
-				return "Expect to be " + matcher.group(5) + " " + getLocalName(matcher.group(2)) + " (but is not)";
+				return "Expect to be " + matcher.group(5) + " " + getLocalName(matcher.group(2));
 			}
-	
+
+			// ===========  "Logical Constraint Components" (these take shapes as arguments)
+			
+			// sh:not
 			// Not[NodeShape[30e4dc59675ddbcdb75c01a2287258dc]] at focusNode http://DeliveryBasketExample#addressTwoZips
 			// Not[PropertyShape[e6e0b7919760c0c84e28e6a95804080a -> <http://DeliveryBasketExample#zipCodePlusFour>]] at focusNode <http://DeliveryBasketExample#addressTwoZips>
 			pattern = Pattern.compile("Not\\[(.+)");
 			matcher = pattern.matcher(message);
 			if (matcher.matches()) {
-				return "Expect to not conform to a shape, but it does";
+				return "Expect to not conform to the provided shape";
 			}	
 			
+			// sh:and
+			// And at focusNode <http://DeliveryBasketExample#basket1>
+			pattern = Pattern.compile("And at focusNode (.+)");
+			matcher = pattern.matcher(message);
+			if (matcher.matches()) {
+				return "Expect to conform to all provided shapes";
+			}
+			
+			// sh:or
+			// Or at focusNode <http://DeliveryBasketExample#basket1>
+			pattern = Pattern.compile("Or at focusNode (.+)");
+			matcher = pattern.matcher(message);
+			if (matcher.matches()) {
+				return "Expect to conform to at least one of the provided shapes";
+			}
+			
+			// sh:xone
 			// Xone has 2 conforming shapes at focusNode <http://DeliveryBasketExample#addressTwoZips>
 			pattern = Pattern.compile("Xone has (.+) conforming shapes at focusNode (.+)");	// confirmed works on 0 and 2
 			matcher = pattern.matcher(message);
 			if (matcher.matches()) {
-				return "Expect to conform to exactly one shape (but conforms to " + matcher.group(1) + ")";
+				return "Expect to conform to exactly one of the provided shapes (conforms to " + matcher.group(1) + ")";
 			}		
 			
+			// ===========  "Shape-based Components" (these take shapes as arguments)
+			
+			// sh:node
 			// Node[<http://DeliveryBasketExample#AtLeastOneRecipientShape>] at focusNode <http://DeliveryBasketExample#addressWithoutRecipient>
 			pattern = Pattern.compile("Node\\[(.+)\\] at focusNode (.+)");
 			matcher = pattern.matcher(message);
 			if (matcher.matches()) {
 				return "Expect to conform to shape " + getLocalName(matcher.group(1));
 			}
+			
+			// sh:property
+			// believe this would be used only in conjunction with another constraint (e.g. minCount to enforce path exists), whose messages are handled elsewhere
 	
+			// sh:qualifiedValueShape, sh:qualifiedMinCount
 			// QualifiedValueShape[2,_,false]: Min = 2 but got 1 validations
 			pattern = Pattern.compile("QualifiedValueShape\\[(.+)\\]: Min = (.+) but got (.+) validations");
 			matcher = pattern.matcher(message);
 			if (matcher.matches()) {
-				return "Expect at least " + matcher.group(2) + " items that conform to a shape, but got " + matcher.group(3);
+				return "Expect at least " + matcher.group(2) + " items that conform to a shape (got " + matcher.group(3) + ")";
 			}
+			// sh:qualifiedValueShape, sh:qualifiedMaxCount
 			// QualifiedValueShape[_,2,false]: Max = 2 but got 3 validations
 			pattern = Pattern.compile("QualifiedValueShape\\[(.+)\\]: Max = (.+) but got (.+) validations");
 			matcher = pattern.matcher(message);
 			if (matcher.matches()) {
-				return "Expect at most " + matcher.group(2) + " items that conform to a shape, but got " + matcher.group(3);
+				return "Expect at most " + matcher.group(2) + " items that conform to a shape (got " + matcher.group(3) + ")";
 			}
 			
+			// ===========  "Other Constraint Components"
+			
+			// sh:closed
 			// Closed[http://DeliveryBasketExample#includes] Property = rdf:type : Object = <http://DeliveryBasketExample#FruitBasket>
 			// Closed[http://DeliveryBasketExample#includes] Property = <http://DeliveryBasketExample#capacity> : Object = "10"^^xsd:double
 			pattern = Pattern.compile("Closed(.+) Property = (.+) : Object = (.+)");
 			matcher = pattern.matcher(message);
 			if (matcher.matches()) {
-				return "Expect to only have properties " + matcher.group(1) + " (but has " + matcher.group(2) + ")";
+				return "Expect to only have properties " + matcher.group(1) + " (has " + matcher.group(2) + ")";
 			}
-		
+			
+			// TODO add sh:hasValue
+
+			// sh:in
+			// InConstraint["53217"^^http://www.w3.org/2001/XMLSchema#int, "53211"^^http://www.w3.org/2001/XMLSchema#int ] : RDF term "10027"^^xsd:int not in expected values
+			pattern = Pattern.compile("InConstraint\\[(.+)\\] : RDF term (.+) not in expected values");
+			matcher = pattern.matcher(message);
+			if (matcher.matches()) {
+				return "Expect " + matcher.group(2) + " to be one of: " + matcher.group(1);
+			}
+
 		}catch(Exception e) {
 			LocalLogger.logToStdErr("Error transforming SHACL message '" + message + "': " + e);
 			LocalLogger.printStackTrace(e);

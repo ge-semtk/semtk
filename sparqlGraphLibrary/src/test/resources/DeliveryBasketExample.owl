@@ -189,28 +189,22 @@
   </owl:DatatypeProperty>
   <dbex:FruitBasket rdf:about="http://DeliveryBasketExample#basket4">
     <dbex:includes>
-      <dbex:Peach rdf:about="http://DeliveryBasketExample#peach4"/>
+      <dbex:Peach rdf:about="http://DeliveryBasketExample#peach4">
+        <dbex:identifier>p0</dbex:identifier>
+      </dbex:Peach>
     </dbex:includes>
   </dbex:FruitBasket>
-  <dbex:Peach rdf:about="http://DeliveryBasketExample#peach1"/>
-  <dbex:FruitBasket rdf:about="http://DeliveryBasketExample#basketTooSmall">
+  <dbex:Peach rdf:about="http://DeliveryBasketExample#peachWithoutBasket"/>
+  <dbex:FruitBasket rdf:about="http://DeliveryBasketExample#basketWithProblems">
     <dbex:capacity rdf:datatype="http://www.w3.org/2001/XMLSchema#double"
     >0.5</dbex:capacity>
     <dbex:includes>
-      <dbex:Fruit rdf:about="http://DeliveryBasketExample#fruitSqueezed"/>
-    </dbex:includes>
-  </dbex:FruitBasket>
-  <dbex:FruitBasket rdf:about="http://DeliveryBasketExample#basket6">
-    <dbex:includes>
-      <dbex:Fruit rdf:about="http://DeliveryBasketExample#fruit5">
-        <dbex:identifier>id0</dbex:identifier>
-      </dbex:Fruit>
-    </dbex:includes>
-  </dbex:FruitBasket>
-  <dbex:FruitBasket rdf:about="http://DeliveryBasketExample#basket100">
-    <dbex:includes>
       <dbex:Fruit rdf:about="http://DeliveryBasketExample#fruit100d"/>
     </dbex:includes>
+    <dbex:identifier>basket1</dbex:identifier>
+  </dbex:FruitBasket>
+  <dbex:FruitBasket rdf:about="http://DeliveryBasketExample#basket100">
+    <dbex:includes rdf:resource="http://DeliveryBasketExample#fruit100d"/>
     <dbex:includes>
       <dbex:Peach rdf:about="http://DeliveryBasketExample#peach100c"/>
     </dbex:includes>
@@ -225,7 +219,7 @@
   </dbex:FruitBasket>
   <dbex:Delivery rdf:about="http://DeliveryBasketExample#deliveryWithoutRecipient">
     <dbex:includes>
-      <dbex:FruitBasket rdf:about="http://DeliveryBasketExample#basket3">
+      <dbex:FruitBasket rdf:about="http://DeliveryBasketExample#basketWithoutFruit">
         <dbex:expirationDate rdf:datatype="http://www.w3.org/2001/XMLSchema#date"
         >1999-01-01</dbex:expirationDate>
         <dbex:packDate rdf:datatype="http://www.w3.org/2001/XMLSchema#date"
@@ -263,17 +257,11 @@
       </dbex:Address>
     </dbex:address>
   </dbex:Delivery>
-  <dbex:Fruit rdf:about="http://DeliveryBasketExample#fruit6">
-    <dbex:identifier>id0</dbex:identifier>
-  </dbex:Fruit>
-  <dbex:FruitBasket rdf:about="http://DeliveryBasketExample#basket5">
-    <dbex:includes rdf:resource="http://DeliveryBasketExample#fruit5"/>
-  </dbex:FruitBasket>
   <dbex:Address rdf:about="http://DeliveryBasketExample#addressTwoZips">
     <dbex:zipCodePlusFour>53217-1234</dbex:zipCodePlusFour>
     <dbex:zipCode rdf:datatype="http://www.w3.org/2001/XMLSchema#int"
     >53217</dbex:zipCode>
-    <dbex:careOfName>Rex Recipient</dbex:careOfName>
-    <dbex:recipientName>Rex Recipient</dbex:recipientName>
+    <dbex:careOfName>Unknown Addressee</dbex:careOfName>
+    <dbex:recipientName>Unknown Addressee</dbex:recipientName>
   </dbex:Address>
 </rdf:RDF>

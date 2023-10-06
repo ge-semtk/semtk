@@ -9,8 +9,10 @@
 @prefix dbex: <http://DeliveryBasketExample#> .
 
 ### A FruitBasket must include between 1 and 3 fruits
-### A FruitBasket expiration date must be later than pack date
-### A FruitBasket expiration date must be later or equal to than pack date
+### A FruitBasket pack date must be earlier than its expiration date (if exists)
+### A FruitBasket pack date must be earlier than or equal to its expiration date (if exists)
+### A FruitBasket pack date and expiration date must both be before Jan 15 2023 (if exists)
+### A FruitBasket pack date or expiration date must be before Jan 01 2000 (if exists)
 dbex:FruitBasketConforms
 	a sh:NodeShape;
 	sh:targetClass dbex:FruitBasket;
@@ -27,6 +29,26 @@ dbex:FruitBasketConforms
 		sh:path 				dbex:packDate;
 		sh:lessThanOrEquals 	dbex:expirationDate;
 	];
+	sh:and (
+		[
+			sh:path dbex:packDate;
+			sh:maxExclusive "2023-01-15"^^xsd:date;
+		]
+		[
+			sh:path dbex:expirationDate;
+			sh:maxExclusive "2023-01-15"^^xsd:date;
+		]
+	);
+	sh:or (
+		[
+			sh:path dbex:packDate;
+			sh:maxExclusive "2000-01-01"^^xsd:date;
+		]
+		[
+			sh:path dbex:expirationDate;
+			sh:maxExclusive "2000-01-01"^^xsd:date;
+		]
+	);
 	.
 
 ### An identifier of anything that FruitBasket includes (e.g. a Fruit) must have min length 5
@@ -57,7 +79,7 @@ dbex:FruitBasketIncludesAtLeastTwoPeaches
 	];
 	.
 	
-### A FruitBasket may include at most 2 peaches
+### A specific FruitBasket may include at most 2 peaches
 dbex:FruitBasketIncludesAtMostTwoPeaches
 	a sh:NodeShape;
 	sh:targetNode 		dbex:basket100;	
@@ -94,7 +116,7 @@ dbex:URIContainsPeach
 	sh:severity			sh:Info;
 	.
 
-### For anything that "includes" something, if it has a capacity it must be at least 1
+### For anything that "includes" something, capacity (if exists) must be at least 1
 ### Note: demonstrates targetSubjectsOf
 dbex:SomethingThatIncludesHasCapacity
 	a sh:NodeShape;
@@ -120,7 +142,8 @@ dbex:IdentifierIsUniqueAndMinLength5
 	.
 
 ### A specific FruitBasket cannot include more than 2 objects, and they must be Peaches
-### A specific FruitBasket's capacity must be an int
+### A specific FruitBasket's capacity (if exists) must be an int (for testing purposes only - does not match ontology)
+### A specific FruitBasket's capacity (if exists) must be an IRI (for testing purposes only - does not match ontology)
 dbex:Basket100HasTwoPeachesAndCapacity
 	a sh:NodeShape;
 	sh:targetNode 		dbex:basket100;
@@ -132,6 +155,7 @@ dbex:Basket100HasTwoPeachesAndCapacity
 	sh:property [
 		sh:path 		dbex:capacity;
 		sh:datatype 	xsd:int;
+		sh:nodeKind 	sh:IRI;
 	];
 	.
 
@@ -146,9 +170,10 @@ dbex:Basket100HasNoExtraProperties
 	];
 	.
 
-### An Address must conform to a shape (below) requiring that an address have at least 1 recipient
+### An Address must have at least 1 recipient
 ### An Address must have a zipCode or zipCodePlusFour, but not both
-### An Address recipient must be the same as care-of person
+### An Address recipient must be the same as the care-of person (both must exist or not)
+### An Address recipient must be different from the care-of person (both must exist or not)
 dbex:AddressConforms
 	a sh:NodeShape;
 	sh:targetClass 	dbex:Address;
@@ -172,6 +197,21 @@ dbex:AddressConforms
 		sh:equals 		dbex:careOfName;
 		sh:severity		sh:Warning;
 	];
+	sh:property [
+		sh:path 		dbex:recipientName;
+		sh:disjoint		dbex:careOfName;
+		sh:severity		sh:Warning;
+	];
+	.
+
+### An Address zip code must be one of 3 in a list
+dbex:AddressZipCodeConforms
+	a sh:NodeShape;
+	sh:targetClass 		dbex:Address;
+	sh:property [
+		sh:path 		dbex:zipCode;
+		sh:in			( "53217"^^xsd:int "53211"^^xsd:int "53207"^^xsd:int );
+	];
 	.
 
 ### An Address zip code cannot be 53217-1234
@@ -184,8 +224,9 @@ dbex:AddressIsNot53217-1234
 		sh:hasValue 	"53217-1234";
 	];
 	.
+	
 
-### An Address recipient and care-of person both must be of form "Firstname Lastname" (both capitalized)
+### An Address recipient and care-of person must be of form "Firstname Lastname" (if exists)
 ### Note: demonstrates a PropertyShape with a target
 ### Note: demonstrates alternative path
 dbex:AddressPersonsHaveFirstLastNameOnly
@@ -198,8 +239,8 @@ dbex:AddressPersonsHaveFirstLastNameOnly
 	];
 	.
 
-### A Delivery must have an address that conforms to a shape (below) requiring that an address have at least 1 recipient
-### The identifier of anything that is (recursively) included in the delivery must be at least length 10 (no error if identifier not present)
+### Any Delivery address must have at least 1 recipient
+### An identifier of anything that is (recursively) included in the delivery must be at least length 10 (if exists)
 ### Note: demonstrates one-or-more path
 dbex:DeliveryHasRecipientAndLongEnoughIdentifiers
 	a sh:NodeShape ;
@@ -216,7 +257,7 @@ dbex:DeliveryHasRecipientAndLongEnoughIdentifiers
 	.
 
 ### An instance must have at least 1 recipient
-### Note: this shape has no target - it is used in other shape-based constraints
+### Note: this shape has no target - it is used in shape-based constraints
 dbex:HasAtLeastOneRecipient
 	a sh:NodeShape;
 	sh:property [
@@ -225,23 +266,25 @@ dbex:HasAtLeastOneRecipient
 	];
 	.
 
-### An Address recipient name cannot contain 'Rex'
-### Note: this is a SPARQLConstraint.  It is followed by a prefix declaration needed in order for "dbex" to be recognized
-dbex:AddressRecipientIsNotRex
+
+### Shape using a SPARQL-based constraint
+### An Address recipient name cannot contain 'Unknown'
+dbex:AddressRecipientIsNotUnknown1
 	a sh:NodeShape ;
 	sh:targetClass dbex:Address;
 	sh:sparql [
 		a sh:SPARQLConstraint;
-		sh:message "Recipient name cannot contain 'Rex', but it does";
+		sh:message "Recipient name cannot contain 'unknown', but it does";
 		sh:prefixes dbex: ;
 		sh:select """
 			SELECT $this (dbex:recipientName AS ?path) ?value
 			WHERE {
 				$this dbex:recipientName ?value .
-				FILTER contains(?value,"Rex")
+				FILTER contains(lcase(?value), "unknown")
 			}
 			""" ;
 	] .
+### this prefix declaration is needed to recognize "dbex" in the SPARQL
 dbex:
 	a owl:Ontology ;
 	owl:imports sh: ;
@@ -249,4 +292,26 @@ dbex:
 		sh:prefix "dbex" ;
 		sh:namespace "http://DeliveryBasketExample#"^^xsd:anyURI ;
 	];
+	.
+
+### Shape using a SPARQL-based constraint component that implements reusable sh:substringNotPresent
+### An Address recipient name cannot contain 'Unknown'
+dbex:AddressRecipientIsNotUnknown2
+	a sh:NodeShape ;
+	sh:targetNode dbex:addressTwoZips;
+	sh:property [
+		sh:path 				dbex:recipientName;
+		sh:substringNotPresent 	"Unknown";
+	];
+	.
+dbex:SubstringNotPresentConstraintComponent
+	a sh:ConstraintComponent ;
+	sh:parameter [
+		sh:path sh:substringNotPresent;
+	];
+	sh:validator [
+		a sh:SPARQLAskValidator;
+		sh:message 	"Value contains substring '{$substringNotPresent}'";
+		sh:ask 		""" ASK { FILTER (!isBlank($value) && contains(lcase(?value),$substring)) } """;
+	]
 	.

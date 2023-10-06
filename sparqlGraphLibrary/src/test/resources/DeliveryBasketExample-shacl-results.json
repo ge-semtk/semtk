@@ -2,15 +2,39 @@
 	"reportEntries": [
 		{
 			"severity": "Violation",
+			"path": "",
+			"targetObject": "http:\/\/DeliveryBasketExample#FruitBasket",
+			"sourceShape": "http:\/\/DeliveryBasketExample#FruitBasketConforms",
+			"targetType": "targetClass",
+			"constraint": "Or",
+			"focusNode": "http:\/\/DeliveryBasketExample#basket1",
+			"message": "Or at focusNode <http:\/\/DeliveryBasketExample#basket1>",
+			"value": "http:\/\/DeliveryBasketExample#basket1",
+			"messageTransformed": "Expect to conform to at least one of the provided shapes"
+		},
+		{
+			"severity": "Violation",
+			"path": "",
+			"targetObject": "http:\/\/DeliveryBasketExample#FruitBasket",
+			"sourceShape": "http:\/\/DeliveryBasketExample#FruitBasketConforms",
+			"targetType": "targetClass",
+			"constraint": "And",
+			"focusNode": "http:\/\/DeliveryBasketExample#basket1",
+			"message": "And at focusNode <http:\/\/DeliveryBasketExample#basket1>",
+			"value": "http:\/\/DeliveryBasketExample#basket1",
+			"messageTransformed": "Expect to conform to all provided shapes"
+		},
+		{
+			"severity": "Violation",
 			"path": "<http:\/\/DeliveryBasketExample#packDate>",
 			"targetObject": "http:\/\/DeliveryBasketExample#FruitBasket",
 			"sourceShape": "http:\/\/DeliveryBasketExample#FruitBasketConforms",
 			"targetType": "targetClass",
 			"constraint": "LessThanOrEquals[<http:\/\/DeliveryBasketExample#expirationDate>]",
-			"focusNode": "http:\/\/DeliveryBasketExample#basket3",
+			"focusNode": "http:\/\/DeliveryBasketExample#basketWithoutFruit",
 			"message": "LessThanOrEquals[<http:\/\/DeliveryBasketExample#expirationDate>]: value node \"2023-01-01\"^^xsd:date is not less than or equal to \"1999-01-01\"^^xsd:date",
 			"value": "\"2023-01-01\"^^http:\/\/www.w3.org\/2001\/XMLSchema#date",
-			"messageTransformed": "Expect to be less than or equal to expirationDate (but is not)"
+			"messageTransformed": "Expect to be less than or equal to expirationDate"
 		},
 		{
 			"severity": "Violation",
@@ -19,10 +43,10 @@
 			"sourceShape": "http:\/\/DeliveryBasketExample#FruitBasketConforms",
 			"targetType": "targetClass",
 			"constraint": "LessThan[<http:\/\/DeliveryBasketExample#expirationDate>]",
-			"focusNode": "http:\/\/DeliveryBasketExample#basket3",
+			"focusNode": "http:\/\/DeliveryBasketExample#basketWithoutFruit",
 			"message": "LessThan[<http:\/\/DeliveryBasketExample#expirationDate>]: value node \"2023-01-01\"^^xsd:date is not less than \"1999-01-01\"^^xsd:date",
 			"value": "\"2023-01-01\"^^http:\/\/www.w3.org\/2001\/XMLSchema#date",
-			"messageTransformed": "Expect to be less than expirationDate (but is not)"
+			"messageTransformed": "Expect to be less than expirationDate"
 		},
 		{
 			"severity": "Violation",
@@ -31,7 +55,7 @@
 			"sourceShape": "http:\/\/DeliveryBasketExample#FruitBasketConforms",
 			"targetType": "targetClass",
 			"constraint": "minCount[1]",
-			"focusNode": "http:\/\/DeliveryBasketExample#basket3",
+			"focusNode": "http:\/\/DeliveryBasketExample#basketWithoutFruit",
 			"message": "minCount[1]: Invalid cardinality: expected min 1: Got count = 0",
 			"value": "",
 			"messageTransformed": "Expect count >= 1 (got 0)"
@@ -49,102 +73,6 @@
 			"messageTransformed": "Expect count <= 3 (got 4)"
 		},
 		{
-			"severity": "Violation",
-			"path": "<http:\/\/DeliveryBasketExample#address>",
-			"targetObject": "http:\/\/DeliveryBasketExample#Delivery",
-			"sourceShape": "http:\/\/DeliveryBasketExample#DeliveryHasRecipientAndLongEnoughIdentifiers",
-			"targetType": "targetClass",
-			"constraint": "Node[<http:\/\/DeliveryBasketExample#HasAtLeastOneRecipient>]",
-			"focusNode": "http:\/\/DeliveryBasketExample#deliveryWithoutRecipient",
-			"message": "Node[<http:\/\/DeliveryBasketExample#HasAtLeastOneRecipient>] at focusNode <http:\/\/DeliveryBasketExample#addressWithoutRecipient>",
-			"value": "http:\/\/DeliveryBasketExample#addressWithoutRecipient",
-			"messageTransformed": "Expect to conform to shape HasAtLeastOneRecipient"
-		},
-		{
-			"severity": "Info",
-			"path": "(<http:\/\/DeliveryBasketExample#includes>)+\/<http:\/\/DeliveryBasketExample#identifier>",
-			"targetObject": "http:\/\/DeliveryBasketExample#Delivery",
-			"sourceShape": "http:\/\/DeliveryBasketExample#DeliveryHasRecipientAndLongEnoughIdentifiers",
-			"targetType": "targetClass",
-			"constraint": "MinLengthConstraint[10]",
-			"focusNode": "http:\/\/DeliveryBasketExample#delivery1",
-			"message": "MinLengthConstraint[10]: String too short: basket1",
-			"value": "\"basket1\"",
-			"messageTransformed": "Expect string length >= 10 (\"basket1\")"
-		},
-		{
-			"severity": "Info",
-			"path": "(<http:\/\/DeliveryBasketExample#includes>)+\/<http:\/\/DeliveryBasketExample#identifier>",
-			"targetObject": "http:\/\/DeliveryBasketExample#Delivery",
-			"sourceShape": "http:\/\/DeliveryBasketExample#DeliveryHasRecipientAndLongEnoughIdentifiers",
-			"targetType": "targetClass",
-			"constraint": "MinLengthConstraint[10]",
-			"focusNode": "http:\/\/DeliveryBasketExample#delivery1",
-			"message": "MinLengthConstraint[10]: String too short: fruit1",
-			"value": "\"fruit1\"",
-			"messageTransformed": "Expect string length >= 10 (\"fruit1\")"
-		},
-		{
-			"severity": "Violation",
-			"path": "<http:\/\/DeliveryBasketExample#recipientName>",
-			"targetObject": "http:\/\/DeliveryBasketExample#Address",
-			"sourceShape": "http:\/\/DeliveryBasketExample#AddressRecipientIsNotRex",
-			"targetType": "targetClass",
-			"constraint": "SPARQL[PREFIX  dbex: <http:\/\/DeliveryBasketExample#>  SELECT  ?this (dbex:recipientName AS ?path) ?value WHERE {   ?this  dbex:recipientName  ?value FILTER contains(?value, \"Rex\") }]",
-			"focusNode": "http:\/\/DeliveryBasketExample#addressTwoZips",
-			"message": "Recipient name cannot contain 'Rex', but it does",
-			"value": "\"Rex Recipient\"",
-			"messageTransformed": ""
-		},
-		{
-			"severity": "Violation",
-			"path": "^<http:\/\/DeliveryBasketExample#includes>",
-			"targetObject": "http:\/\/DeliveryBasketExample#Fruit",
-			"sourceShape": "http:\/\/DeliveryBasketExample#FruitIsInABasket",
-			"targetType": "targetClass",
-			"constraint": "minCount[1]",
-			"focusNode": "http:\/\/DeliveryBasketExample#peach1",
-			"message": "minCount[1]: Invalid cardinality: expected min 1: Got count = 0",
-			"value": "",
-			"messageTransformed": "Expect count >= 1 (got 0)"
-		},
-		{
-			"severity": "Violation",
-			"path": "^<http:\/\/DeliveryBasketExample#includes>",
-			"targetObject": "http:\/\/DeliveryBasketExample#Fruit",
-			"sourceShape": "http:\/\/DeliveryBasketExample#FruitIsInABasket",
-			"targetType": "targetClass",
-			"constraint": "minCount[1]",
-			"focusNode": "http:\/\/DeliveryBasketExample#fruit6",
-			"message": "minCount[1]: Invalid cardinality: expected min 1: Got count = 0",
-			"value": "",
-			"messageTransformed": "Expect count >= 1 (got 0)"
-		},
-		{
-			"severity": "Violation",
-			"path": "^<http:\/\/DeliveryBasketExample#includes>",
-			"targetObject": "http:\/\/DeliveryBasketExample#Fruit",
-			"sourceShape": "http:\/\/DeliveryBasketExample#FruitIsInABasket",
-			"targetType": "targetClass",
-			"constraint": "maxCount[1]",
-			"focusNode": "http:\/\/DeliveryBasketExample#fruit5",
-			"message": "maxCount[1]: Invalid cardinality: expected max 1: Got count = 2",
-			"value": "",
-			"messageTransformed": "Expect count <= 1 (got 2)"
-		},
-		{
-			"severity": "Violation",
-			"path": "<http:\/\/DeliveryBasketExample#capacity>",
-			"targetObject": "http:\/\/DeliveryBasketExample#basket100",
-			"sourceShape": "http:\/\/DeliveryBasketExample#Basket100HasNoExtraProperties",
-			"targetType": "targetNode",
-			"constraint": "Closed[http:\/\/DeliveryBasketExample#includes][http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type]",
-			"focusNode": "http:\/\/DeliveryBasketExample#basket100",
-			"message": "Closed[http:\/\/DeliveryBasketExample#includes][http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type] Property = <http:\/\/DeliveryBasketExample#capacity> : Object = \"10\"^^xsd:double",
-			"value": "\"10\"^^http:\/\/www.w3.org\/2001\/XMLSchema#double",
-			"messageTransformed": "Expect to only have properties [http:\/\/DeliveryBasketExample#includes][http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type] (but has <http:\/\/DeliveryBasketExample#capacity>)"
-		},
-		{
 			"severity": "Warning",
 			"path": "<http:\/\/DeliveryBasketExample#includes>",
 			"targetObject": "http:\/\/DeliveryBasketExample#basket4",
@@ -157,6 +85,18 @@
 			"messageTransformed": ""
 		},
 		{
+			"severity": "Violation",
+			"path": "<http:\/\/DeliveryBasketExample#zipCode>",
+			"targetObject": "http:\/\/DeliveryBasketExample#Address",
+			"sourceShape": "http:\/\/DeliveryBasketExample#AddressZipCodeConforms",
+			"targetType": "targetClass",
+			"constraint": "InConstraint[\"53217\"^^http:\/\/www.w3.org\/2001\/XMLSchema#int, \"53211\"^^http:\/\/www.w3.org\/2001\/XMLSchema#int, \"53207\"^^http:\/\/www.w3.org\/2001\/XMLSchema#int]",
+			"focusNode": "http:\/\/DeliveryBasketExample#addressWithoutRecipient",
+			"message": "InConstraint[\"53217\"^^http:\/\/www.w3.org\/2001\/XMLSchema#int, \"53211\"^^http:\/\/www.w3.org\/2001\/XMLSchema#int, \"53207\"^^http:\/\/www.w3.org\/2001\/XMLSchema#int] : RDF term \"10027\"^^xsd:int not in expected values",
+			"value": "\"10027\"^^http:\/\/www.w3.org\/2001\/XMLSchema#int",
+			"messageTransformed": "Expect \"10027\"^^xsd:int to be one of: \"53217\"^^http:\/\/www.w3.org\/2001\/XMLSchema#int, \"53211\"^^http:\/\/www.w3.org\/2001\/XMLSchema#int, \"53207\"^^http:\/\/www.w3.org\/2001\/XMLSchema#int"
+		},
+		{
 			"severity": "Info",
 			"path": "",
 			"targetObject": "http:\/\/DeliveryBasketExample#basket100",
@@ -167,18 +107,6 @@
 			"message": "Pattern[(.+)peach(.+)]: Does not match: 'http:\/\/DeliveryBasketExample#basket100'",
 			"value": "http:\/\/DeliveryBasketExample#basket100",
 			"messageTransformed": "Does not match pattern (.+)peach(.+): \"http:\/\/DeliveryBasketExample#basket100\""
-		},
-		{
-			"severity": "Warning",
-			"path": "<http:\/\/DeliveryBasketExample#includes>",
-			"targetObject": "http:\/\/DeliveryBasketExample#basket100",
-			"sourceShape": "http:\/\/DeliveryBasketExample#FruitBasketIncludesAtMostTwoPeaches",
-			"targetType": "targetNode",
-			"constraint": "org.apache.jena.shacl.engine.constraint.ReportConstraint@XXXXXXXX",
-			"focusNode": "http:\/\/DeliveryBasketExample#basket100",
-			"message": "Must include at most 2 peaches",
-			"value": "",
-			"messageTransformed": ""
 		},
 		{
 			"severity": "Warning",
@@ -202,7 +130,19 @@
 			"focusNode": "http:\/\/DeliveryBasketExample#addressTwoZips",
 			"message": "Xone has 2 conforming shapes at focusNode <http:\/\/DeliveryBasketExample#addressTwoZips>",
 			"value": "http:\/\/DeliveryBasketExample#addressTwoZips",
-			"messageTransformed": "Expect to conform to exactly one shape (but conforms to 2)"
+			"messageTransformed": "Expect to conform to exactly one of the provided shapes (conforms to 2)"
+		},
+		{
+			"severity": "Warning",
+			"path": "<http:\/\/DeliveryBasketExample#recipientName>",
+			"targetObject": "http:\/\/DeliveryBasketExample#Address",
+			"sourceShape": "http:\/\/DeliveryBasketExample#AddressConforms",
+			"targetType": "targetClass",
+			"constraint": "Disjoint[<http:\/\/DeliveryBasketExample#careOfName>]",
+			"focusNode": "http:\/\/DeliveryBasketExample#addressTwoZips",
+			"message": "Disjoint[<http:\/\/DeliveryBasketExample#careOfName>]: not disjoint: \"Unknown Addressee\" is in [\"Unknown Addressee\"]",
+			"value": "\"Unknown Addressee\"",
+			"messageTransformed": "Expect to be disjoint with careOfName"
 		},
 		{
 			"severity": "Warning",
@@ -214,7 +154,7 @@
 			"focusNode": "http:\/\/DeliveryBasketExample#address1",
 			"message": "Equals[<http:\/\/DeliveryBasketExample#careOfName>]: not equal: value node \"Rebecca Recipient\" is not in [\"Carey careof\"]",
 			"value": "\"Rebecca Recipient\"",
-			"messageTransformed": "Expect to equal careOfName (but does not)"
+			"messageTransformed": "Expect to equal careOfName"
 		},
 		{
 			"severity": "Warning",
@@ -226,7 +166,7 @@
 			"focusNode": "http:\/\/DeliveryBasketExample#address1",
 			"message": "Equals[<http:\/\/DeliveryBasketExample#careOfName>]: not equal: value \"Carey careof\" is not in [\"Rebecca Recipient\"]",
 			"value": "\"Carey careof\"",
-			"messageTransformed": "Expect to equal careOfName (but does not)"
+			"messageTransformed": "Expect to equal careOfName"
 		},
 		{
 			"severity": "Violation",
@@ -241,64 +181,16 @@
 			"messageTransformed": "Expect to conform to shape HasAtLeastOneRecipient"
 		},
 		{
-			"severity": "Warning",
+			"severity": "Violation",
 			"path": "<http:\/\/DeliveryBasketExample#capacity>",
-			"targetObject": "http:\/\/DeliveryBasketExample#includes",
-			"sourceShape": "http:\/\/DeliveryBasketExample#SomethingThatIncludesHasCapacity",
-			"targetType": "targetSubjectsOf",
-			"constraint": "minInclusive[1]",
-			"focusNode": "http:\/\/DeliveryBasketExample#basketTooSmall",
-			"message": "Data value \"0.5\"^^xsd:double is not greater than or equal to 1",
-			"value": "\"0.5\"^^http:\/\/www.w3.org\/2001\/XMLSchema#double",
-			"messageTransformed": "Expect a double greater than or equal to 1 (got 0.5)"
-		},
-		{
-			"severity": "Violation",
-			"path": "",
-			"targetObject": "http:\/\/DeliveryBasketExample#identifier",
-			"sourceShape": "http:\/\/DeliveryBasketExample#IdentifierIsUniqueAndMinLength5",
-			"targetType": "targetObjectsOf",
-			"constraint": "MinLengthConstraint[5]",
-			"focusNode": "\"id0\"",
-			"message": "MinLengthConstraint[5]: String too short: id0",
-			"value": "\"id0\"",
-			"messageTransformed": "Expect string length >= 5 (\"id0\")"
-		},
-		{
-			"severity": "Violation",
-			"path": "^<http:\/\/DeliveryBasketExample#identifier>",
-			"targetObject": "http:\/\/DeliveryBasketExample#identifier",
-			"sourceShape": "http:\/\/DeliveryBasketExample#IdentifierIsUniqueAndMinLength5",
-			"targetType": "targetObjectsOf",
-			"constraint": "maxCount[1]",
-			"focusNode": "\"id0\"",
-			"message": "maxCount[1]: Invalid cardinality: expected max 1: Got count = 2",
-			"value": "",
-			"messageTransformed": "Expect count <= 1 (got 2)"
-		},
-		{
-			"severity": "Info",
-			"path": "<http:\/\/DeliveryBasketExample#includes>\/<http:\/\/DeliveryBasketExample#identifier>",
-			"targetObject": "http:\/\/DeliveryBasketExample#FruitBasket",
-			"sourceShape": "http:\/\/DeliveryBasketExample#FruitBasketIdentifierLength",
-			"targetType": "targetClass",
-			"constraint": "MinLengthConstraint[5]",
-			"focusNode": "http:\/\/DeliveryBasketExample#basket5",
-			"message": "MinLengthConstraint[5]: String too short: id0",
-			"value": "\"id0\"",
-			"messageTransformed": "Expect string length >= 5 (\"id0\")"
-		},
-		{
-			"severity": "Info",
-			"path": "<http:\/\/DeliveryBasketExample#includes>\/<http:\/\/DeliveryBasketExample#identifier>",
-			"targetObject": "http:\/\/DeliveryBasketExample#FruitBasket",
-			"sourceShape": "http:\/\/DeliveryBasketExample#FruitBasketIdentifierLength",
-			"targetType": "targetClass",
-			"constraint": "MinLengthConstraint[5]",
-			"focusNode": "http:\/\/DeliveryBasketExample#basket6",
-			"message": "MinLengthConstraint[5]: String too short: id0",
-			"value": "\"id0\"",
-			"messageTransformed": "Expect string length >= 5 (\"id0\")"
+			"targetObject": "http:\/\/DeliveryBasketExample#basket100",
+			"sourceShape": "http:\/\/DeliveryBasketExample#Basket100HasTwoPeachesAndCapacity",
+			"targetType": "targetNode",
+			"constraint": "NodeKind[IRI]",
+			"focusNode": "http:\/\/DeliveryBasketExample#basket100",
+			"message": "NodeKind[IRI] : Expected IRI for \"10\"^^xsd:double",
+			"value": "\"10\"^^http:\/\/www.w3.org\/2001\/XMLSchema#double",
+			"messageTransformed": "Expect node kind IRI for \"10\"^^xsd:double"
 		},
 		{
 			"severity": "Violation",
@@ -347,6 +239,162 @@
 			"message": "Zip code cannot be 53217-1234",
 			"value": "http:\/\/DeliveryBasketExample#addressTwoZips",
 			"messageTransformed": ""
+		},
+		{
+			"severity": "Violation",
+			"path": "<http:\/\/DeliveryBasketExample#address>",
+			"targetObject": "http:\/\/DeliveryBasketExample#Delivery",
+			"sourceShape": "http:\/\/DeliveryBasketExample#DeliveryHasRecipientAndLongEnoughIdentifiers",
+			"targetType": "targetClass",
+			"constraint": "Node[<http:\/\/DeliveryBasketExample#HasAtLeastOneRecipient>]",
+			"focusNode": "http:\/\/DeliveryBasketExample#deliveryWithoutRecipient",
+			"message": "Node[<http:\/\/DeliveryBasketExample#HasAtLeastOneRecipient>] at focusNode <http:\/\/DeliveryBasketExample#addressWithoutRecipient>",
+			"value": "http:\/\/DeliveryBasketExample#addressWithoutRecipient",
+			"messageTransformed": "Expect to conform to shape HasAtLeastOneRecipient"
+		},
+		{
+			"severity": "Info",
+			"path": "(<http:\/\/DeliveryBasketExample#includes>)+\/<http:\/\/DeliveryBasketExample#identifier>",
+			"targetObject": "http:\/\/DeliveryBasketExample#Delivery",
+			"sourceShape": "http:\/\/DeliveryBasketExample#DeliveryHasRecipientAndLongEnoughIdentifiers",
+			"targetType": "targetClass",
+			"constraint": "MinLengthConstraint[10]",
+			"focusNode": "http:\/\/DeliveryBasketExample#delivery1",
+			"message": "MinLengthConstraint[10]: String too short: basket1",
+			"value": "\"basket1\"",
+			"messageTransformed": "Expect string length >= 10 (\"basket1\")"
+		},
+		{
+			"severity": "Info",
+			"path": "(<http:\/\/DeliveryBasketExample#includes>)+\/<http:\/\/DeliveryBasketExample#identifier>",
+			"targetObject": "http:\/\/DeliveryBasketExample#Delivery",
+			"sourceShape": "http:\/\/DeliveryBasketExample#DeliveryHasRecipientAndLongEnoughIdentifiers",
+			"targetType": "targetClass",
+			"constraint": "MinLengthConstraint[10]",
+			"focusNode": "http:\/\/DeliveryBasketExample#delivery1",
+			"message": "MinLengthConstraint[10]: String too short: fruit1",
+			"value": "\"fruit1\"",
+			"messageTransformed": "Expect string length >= 10 (\"fruit1\")"
+		},
+		{
+			"severity": "Violation",
+			"path": "^<http:\/\/DeliveryBasketExample#includes>",
+			"targetObject": "http:\/\/DeliveryBasketExample#Fruit",
+			"sourceShape": "http:\/\/DeliveryBasketExample#FruitIsInABasket",
+			"targetType": "targetClass",
+			"constraint": "minCount[1]",
+			"focusNode": "http:\/\/DeliveryBasketExample#peachWithoutBasket",
+			"message": "minCount[1]: Invalid cardinality: expected min 1: Got count = 0",
+			"value": "",
+			"messageTransformed": "Expect count >= 1 (got 0)"
+		},
+		{
+			"severity": "Violation",
+			"path": "^<http:\/\/DeliveryBasketExample#includes>",
+			"targetObject": "http:\/\/DeliveryBasketExample#Fruit",
+			"sourceShape": "http:\/\/DeliveryBasketExample#FruitIsInABasket",
+			"targetType": "targetClass",
+			"constraint": "maxCount[1]",
+			"focusNode": "http:\/\/DeliveryBasketExample#fruit100d",
+			"message": "maxCount[1]: Invalid cardinality: expected max 1: Got count = 2",
+			"value": "",
+			"messageTransformed": "Expect count <= 1 (got 2)"
+		},
+		{
+			"severity": "Violation",
+			"path": "<http:\/\/DeliveryBasketExample#capacity>",
+			"targetObject": "http:\/\/DeliveryBasketExample#basket100",
+			"sourceShape": "http:\/\/DeliveryBasketExample#Basket100HasNoExtraProperties",
+			"targetType": "targetNode",
+			"constraint": "Closed[http:\/\/DeliveryBasketExample#includes][http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type]",
+			"focusNode": "http:\/\/DeliveryBasketExample#basket100",
+			"message": "Closed[http:\/\/DeliveryBasketExample#includes][http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type] Property = <http:\/\/DeliveryBasketExample#capacity> : Object = \"10\"^^xsd:double",
+			"value": "\"10\"^^http:\/\/www.w3.org\/2001\/XMLSchema#double",
+			"messageTransformed": "Expect to only have properties [http:\/\/DeliveryBasketExample#includes][http:\/\/www.w3.org\/1999\/02\/22-rdf-syntax-ns#type] (has <http:\/\/DeliveryBasketExample#capacity>)"
+		},
+		{
+			"severity": "Violation",
+			"path": "<http:\/\/DeliveryBasketExample#recipientName>",
+			"targetObject": "http:\/\/DeliveryBasketExample#addressTwoZips",
+			"sourceShape": "http:\/\/DeliveryBasketExample#AddressRecipientIsNotUnknown2",
+			"targetType": "targetNode",
+			"constraint": "org.apache.jena.shacl.engine.constraint.ReportConstraint@XXXXXXXX",
+			"focusNode": "http:\/\/DeliveryBasketExample#addressTwoZips",
+			"message": "Value contains substring 'Unknown'",
+			"value": "\"Unknown Addressee\"",
+			"messageTransformed": ""
+		},
+		{
+			"severity": "Warning",
+			"path": "<http:\/\/DeliveryBasketExample#includes>",
+			"targetObject": "http:\/\/DeliveryBasketExample#basket100",
+			"sourceShape": "http:\/\/DeliveryBasketExample#FruitBasketIncludesAtMostTwoPeaches",
+			"targetType": "targetNode",
+			"constraint": "org.apache.jena.shacl.engine.constraint.ReportConstraint@XXXXXXXX",
+			"focusNode": "http:\/\/DeliveryBasketExample#basket100",
+			"message": "Must include at most 2 peaches",
+			"value": "",
+			"messageTransformed": ""
+		},
+		{
+			"severity": "Violation",
+			"path": "<http:\/\/DeliveryBasketExample#recipientName>",
+			"targetObject": "http:\/\/DeliveryBasketExample#Address",
+			"sourceShape": "http:\/\/DeliveryBasketExample#AddressRecipientIsNotUnknown1",
+			"targetType": "targetClass",
+			"constraint": "SPARQL[PREFIX  dbex: <http:\/\/DeliveryBasketExample#>  SELECT  ?this (dbex:recipientName AS ?path) ?value WHERE {   ?this  dbex:recipientName  ?value FILTER contains(lcase(?value), \"unknown\") }]",
+			"focusNode": "http:\/\/DeliveryBasketExample#addressTwoZips",
+			"message": "Recipient name cannot contain 'unknown', but it does",
+			"value": "\"Unknown Addressee\"",
+			"messageTransformed": ""
+		},
+		{
+			"severity": "Warning",
+			"path": "<http:\/\/DeliveryBasketExample#capacity>",
+			"targetObject": "http:\/\/DeliveryBasketExample#includes",
+			"sourceShape": "http:\/\/DeliveryBasketExample#SomethingThatIncludesHasCapacity",
+			"targetType": "targetSubjectsOf",
+			"constraint": "minInclusive[1]",
+			"focusNode": "http:\/\/DeliveryBasketExample#basketWithProblems",
+			"message": "Data value \"0.5\"^^xsd:double is not greater than or equal to 1",
+			"value": "\"0.5\"^^http:\/\/www.w3.org\/2001\/XMLSchema#double",
+			"messageTransformed": "Expect a double greater than or equal to 1 (got 0.5)"
+		},
+		{
+			"severity": "Violation",
+			"path": "",
+			"targetObject": "http:\/\/DeliveryBasketExample#identifier",
+			"sourceShape": "http:\/\/DeliveryBasketExample#IdentifierIsUniqueAndMinLength5",
+			"targetType": "targetObjectsOf",
+			"constraint": "MinLengthConstraint[5]",
+			"focusNode": "\"p0\"",
+			"message": "MinLengthConstraint[5]: String too short: p0",
+			"value": "\"p0\"",
+			"messageTransformed": "Expect string length >= 5 (\"p0\")"
+		},
+		{
+			"severity": "Violation",
+			"path": "^<http:\/\/DeliveryBasketExample#identifier>",
+			"targetObject": "http:\/\/DeliveryBasketExample#identifier",
+			"sourceShape": "http:\/\/DeliveryBasketExample#IdentifierIsUniqueAndMinLength5",
+			"targetType": "targetObjectsOf",
+			"constraint": "maxCount[1]",
+			"focusNode": "\"basket1\"",
+			"message": "maxCount[1]: Invalid cardinality: expected max 1: Got count = 2",
+			"value": "",
+			"messageTransformed": "Expect count <= 1 (got 2)"
+		},
+		{
+			"severity": "Info",
+			"path": "<http:\/\/DeliveryBasketExample#includes>\/<http:\/\/DeliveryBasketExample#identifier>",
+			"targetObject": "http:\/\/DeliveryBasketExample#FruitBasket",
+			"sourceShape": "http:\/\/DeliveryBasketExample#FruitBasketIdentifierLength",
+			"targetType": "targetClass",
+			"constraint": "MinLengthConstraint[5]",
+			"focusNode": "http:\/\/DeliveryBasketExample#basket4",
+			"message": "MinLengthConstraint[5]: String too short: p0",
+			"value": "\"p0\"",
+			"messageTransformed": "Expect string length >= 5 (\"p0\")"
 		}
 	]
 }
