@@ -974,7 +974,7 @@ public abstract class Utility {
 			throw new Exception("Could find resource file: " + fileName);
 		}
 		File tempFile = File.createTempFile("resource", "." + FileNameUtils.getExtension(fileName));
-		tempFile.deleteOnExit();
+		//tempFile.deleteOnExit();  // TODO reinstate this after troubleshooting
 		FileUtils.copyInputStreamToFile(in, tempFile);
 		return tempFile;
 	}
