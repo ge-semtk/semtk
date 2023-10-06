@@ -204,16 +204,6 @@ dbex:AddressConforms
 	];
 	.
 
-### An Address zip code must be one of 3 in a list
-dbex:AddressZipCodeConforms
-	a sh:NodeShape;
-	sh:targetClass 		dbex:Address;
-	sh:property [
-		sh:path 		dbex:zipCode;
-		sh:in			( "53217"^^xsd:int "53211"^^xsd:int "53207"^^xsd:int );
-	];
-	.
-
 ### An Address zip code cannot be 53217-1234
 dbex:AddressIsNot53217-1234
 	a sh:NodeShape;
