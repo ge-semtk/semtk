@@ -21,8 +21,6 @@ import static org.junit.Assume.*;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.nio.file.Files;
-import java.util.List;
 
 import org.apache.jena.shacl.validation.Severity;
 import org.json.simple.JSONArray;
@@ -122,8 +120,6 @@ public class UtilityClientTest_IT {
 		assertTrue(response.contains("ERROR: Cannot find a top-level manifest"));
 	}
 
-	
-	// TODO reinstate after troubleshooting
 	@Test
 	public void testGetShaclResults() throws Exception {
 		TestGraph.clearGraph();
@@ -133,15 +129,6 @@ public class UtilityClientTest_IT {
 		String jobId;
 		JSONObject resultsJson;
 		JSONObject expectedJson = Utility.getResourceAsJson(this, "DeliveryBasketExample-shacl-results.json");
-		
-		// test error on leb1acdev
-		File ttlFile2 = Utility.getResourceAsTempFile(this, "DeliveryBasketExample-shacl.ttl");
-		List<String> lines = Files.readAllLines(ttlFile2.toPath());
-		System.err.println("DEBUG: first lines of " + ttlFile2.toPath().toString());
-		System.err.println(lines.get(0));
-		System.err.println(lines.get(1));
-		System.err.println(lines.get(2));
-		System.err.println(lines.get(3));
 		
 		// info level
 		jobId = client.execGetShaclResults(ttlFile, TestGraph.getSparqlConn(), Severity.Info);
