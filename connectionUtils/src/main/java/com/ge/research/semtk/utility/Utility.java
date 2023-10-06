@@ -976,6 +976,7 @@ public abstract class Utility {
 		File tempFile = File.createTempFile("resource", "." + FileNameUtils.getExtension(fileName));
 		//tempFile.deleteOnExit();  // TODO reinstate this after troubleshooting
 		FileUtils.copyInputStreamToFile(in, tempFile);
+		System.out.println("Wrote temp file to " + tempFile.getAbsolutePath() + ", temporarily not deleting it upon exit"); // TODO remove after troubleshooting
 		return tempFile;
 	}
 
