@@ -305,3 +305,13 @@ dbex:SubstringNotPresentConstraintComponent
 		sh:ask 		""" ASK { FILTER (!isBlank($value) && contains(lcase(?value),$substring)) } """;
 	]
 	.
+
+### An Address zip code must be one of 3 in a list
+dbex:AddressZipCodeConforms
+	a sh:NodeShape;
+	sh:targetClass 		dbex:Address;
+	sh:property [
+		sh:path 		dbex:zipCode;
+		sh:in			( "53217"^^xsd:integer "53217"^^xsd:int "53211"^^xsd:integer "53211"^^xsd:int );
+	];
+	.
