@@ -51,7 +51,6 @@ public class ShaclRunnerTest_IT {
 		// test at Info level
 		resultsJson = runner.getResults(Severity.Info);
 		expectedJson = Utility.getResourceAsJson(this, EXPECTED_RESULTS_FILE);
-		System.out.println(resultsJson);  // TODO REMOVE
 		assertEquals(((JSONArray)resultsJson.get(ShaclRunner.JSON_KEY_ENTRIES)).size(), ((JSONArray)expectedJson.get(ShaclRunner.JSON_KEY_ENTRIES)).size());
 		assertTrue(Utility.equals(resultsJson, expectedJson));
 		
