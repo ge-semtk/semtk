@@ -1280,7 +1280,7 @@ public class NodeGroupExecutionRestController {
 				
 				// create a new StoredQueryExecutor
 				SparqlExecutor sparqlExec = new SparqlExecutor(
-						SparqlToXUtils.generateClearGraphSparql(sei), 
+						SparqlExecutor.CLEAR_GRAPH, 
 						sei, 
 						servicesgraph_props.buildSei(), 
 						resClient);

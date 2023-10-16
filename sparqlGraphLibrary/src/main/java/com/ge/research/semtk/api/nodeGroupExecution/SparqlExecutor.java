@@ -18,6 +18,8 @@ public class SparqlExecutor extends Thread {
 	private String jobId = null;
 	private HeaderTable headerTable = null;
 	private JobTracker tracker = null;
+	
+	public static String CLEAR_GRAPH = "%CLEAR%";
 			
 	public SparqlExecutor(String sparql, SparqlEndpointInterface sei, SparqlEndpointInterface servicesSei, ResultsClient resClient) throws Exception {
 		this.sparql = sparql;
@@ -40,7 +42,20 @@ public class SparqlExecutor extends Thread {
 		try {
 			
 			this.tracker.setJobPercentComplete(this.jobId, 5);
-			SimpleResultSet res = (SimpleResultSet) sei.executeQueryAndBuildResultSet(this.sparql, SparqlResultTypes.CONFIRM);
+			SimpleResultSet res;
+			
+			if (this.sparql.equals(CLEAR_GRAPH)) {
+				// clear graph is special because some triplestores fail if graph is missing and some don't.
+				// Individual sei's catch and handle the error.
+				// semTK consistently returns success.
+				sei.clearGraph();
+				res = new SimpleResultSet(true);
+				res.setMessage("Cleared " + sei.getGraph());
+				
+			} else {
+				
+				res = (SimpleResultSet) sei.executeQueryAndBuildResultSet(this.sparql, SparqlResultTypes.CONFIRM);
+			}
 			
 			this.tracker.setJobPercentComplete(this.jobId, 80);
 			
