@@ -5,7 +5,7 @@
 # Sample use: backupFusekiDataset.sh MY_DATASET
 # Sample backup file produced: apache-jena-fuseki-4.5.0/run/backups/MY_DATASET_2023-10-12_06-57-45.nq.gz
 #
-# Returns non-zero error code if: Fuseki not running, wrong number of arguments, invalid dataset
+# Returns non-zero error code if: wrong number of arguments, Fuseki not running, blank/invalid credentials, invalid dataset 
 # If Fuseki is not password protected, then works with $USER and $PASSWORD undefined
 #
 
@@ -24,7 +24,15 @@ echo "Backup Fuseki dataset"
 echo "DATASET: $DATASET"
 
 # execute backup
+# if Fuseki not running, this command errors and script exits
 output_json=$(curl -s --user "$USER:$PASSWORD" -XPOST http://localhost:3030/$/backup/$DATASET)
+
+# handle blank response (e.g. if bad credentials)
+if [[ $output_json = "" ]]; then
+	echo "Backup failed"
+	exit 1;
+fi
+
 echo $output_json
 
 # check output
