@@ -19,8 +19,8 @@ fi
 
 DATASET=$1		# Fuseki dataset to back up
 
-# print arguments
 echo "Backup Fuseki dataset"
+echo "USER:    $USER"
 echo "DATASET: $DATASET"
 
 # execute backup
