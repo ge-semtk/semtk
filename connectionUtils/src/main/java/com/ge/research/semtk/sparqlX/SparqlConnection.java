@@ -28,6 +28,8 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 
+import com.ge.research.semtk.utility.LocalLogger;
+
 public class SparqlConnection {
 /**
  * SparqlConnection is a "SparqlGraph" connection consisting of multiple Sparql Endpoints
@@ -605,31 +607,45 @@ public class SparqlConnection {
 	
 	/**
 	 * Create a Jena Graph from this SparqlConnection
+	 * @throws Exception if nothing loaded from connection
 	 */
-	public Graph getJenaGraph() {
-		ArrayList<String> fetched = new ArrayList<String>();
-		
+	public Graph getJenaGraph() throws Exception {
+
 		Model model = null;
+		String serverAndPort = null;
+		String graphName = null;
 		RDFConnection rdfConn = null;
-		try {
-			for(SparqlEndpointInterface sei : this.getAllInterfaces()) {
-				rdfConn = RDFConnection.connect(sei.getServerAndPort());
-				String graphName = sei.getGraph();
-				if(fetched.contains(sei.getServerAndPort() + graphName)) {
-					continue;  // skip if already fetched it (e.g. if model graph is the same as data graph)
+		ArrayList<String> fetched = new ArrayList<String>();  // remember which graphs are already fetched, to avoid repeat	work (e.g. if data and model are using the same graph)
+
+		for (SparqlEndpointInterface sei : this.getAllInterfaces()) {
+
+			try {
+				serverAndPort = sei.getServerAndPort();
+				graphName = sei.getGraph();
+				if (fetched.contains(serverAndPort + graphName)) {
+					continue; // skip if already fetched it 
 				}
+				fetched.add(serverAndPort + graphName);
+
+				rdfConn = RDFConnection.connect(serverAndPort);
 				Model m = rdfConn.fetch(graphName);
-				fetched.add(sei.getServerAndPort() + graphName);
-				if(model == null) {
+				if (model == null) {
 					model = m;
-				}else {
+				} else {
 					model.add(m);
 				}
+			} catch (Exception e) {
+				// log but do not error (allow a subset of graphs in the connection to be nonexistent/empty)
+				LocalLogger.logToStdErr("Cannot get Jena graph from graph '" + graphName + "' in " + serverAndPort + " (graph may be empty)");
+			} finally {
 				rdfConn.close();
 			}
-			return model.getGraph();
-		}finally {
-			rdfConn.close();
+
 		}
+		// if nothing was loaded from the connection, error
+		if (model == null) {
+			throw new Exception("Cannot get Jena graph for this connection (all graphs may be empty)");
+		}
+		return model.getGraph();
 	}
 }
