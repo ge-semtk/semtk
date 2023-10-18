@@ -92,8 +92,6 @@ public class UtilityClient extends RestClient {
 	 */
 	@SuppressWarnings("unchecked")
 	public String execGetShaclResults(File shaclTtlFile, SparqlConnection conn, Severity severity) throws Exception {
-
-		Thread.sleep(5000); // TODO remove
 		
 		if(!shaclTtlFile.exists()) {
 			throw new Exception("File does not exist: " + shaclTtlFile.getAbsolutePath());

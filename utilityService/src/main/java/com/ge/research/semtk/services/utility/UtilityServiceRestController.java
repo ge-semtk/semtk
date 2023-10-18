@@ -504,7 +504,6 @@ public class UtilityServiceRestController {
 			}).start();
 			
 			retval.addJobId(jobId);
-			retval.addResultType(SparqlResultTypes.TABLE);
 			retval.setSuccess(true);
 		} catch (Exception e) {
 			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
