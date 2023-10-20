@@ -337,6 +337,54 @@ define([	// properly require.config'ed
 				network.body.data.edges.update(edgeList);
 				VisJsHelper.networkBusy(canvasDiv, false);
 			}.bind(this, nodeDict, edgeList, canvasDiv, network);
+		
+			// identify the triples that match the selected predicate(s) and display them
+			var displayTriplesWithSelectedPredicates = function(selectedPredicates) {  // selectedPredicates may be a string (if only 1 predicate selected) or a list of strings
+				var triplesSubset = [];
+				var selectedSubjectsAndObjects = [];
+				// pass 1: get triples with the selected predicate(s).  Also gather a list of subjects and objects for these triples.
+				for (var i = 0; i < triples.length; i++) {
+					if(triples[i][1] == selectedPredicates || selectedPredicates.includes(triples[i][1])){
+						triplesSubset.push(triples[i]);
+						selectedSubjectsAndObjects.push(triples[i][0]); // remember the subject, will need type for it
+						selectedSubjectsAndObjects.push(triples[i][2]);	// remember the object, will need type for it
+					}
+				}
+				// pass 2: add types for subjects/objects that will be displayed
+				for (var i = 0; i < triples.length; i++) {
+					if((selectedSubjectsAndObjects.includes(triples[i][0]) || selectedSubjectsAndObjects.includes(triples[i][2]))  && VisJsHelper.isTypePredicate(triples[i][1])){
+						triplesSubset.push(triples[i]);
+					}
+				}
+				// display the triples
+				loadTriples(triplesSubset);
+			}
+			
+			// show a dialog where the user can choose predicate(s).  Dialog shows list of predicates and # triples for each
+			showPredicateChoiceDialog = function(triples){
+				// get counts
+				var p = null;
+				predicateCountHash = {};
+				for (var i = 0; i < triples.length; i++) {
+					p = triples[i][1];
+					if(predicateCountHash[p] == null){
+						predicateCountHash[p] = 0;
+					}
+					predicateCountHash[p]++;
+				}	
+				// display predicates/counts in a dialog
+				var predicateChoiceList = [];
+				for (const [pred, count] of Object.entries(predicateCountHash)) {
+					if(!VisJsHelper.isTypePredicate(pred)){
+				 		predicateChoiceList.push([pred + " (" + count + " connections)", pred]);
+				 	}
+				}
+				ModalIidx.multiListDialog("Select predicates:",
+					"OK",
+					predicateChoiceList, [],
+					displayTriplesWithSelectedPredicates
+				);
+			}
 
 			triples = triplesRes.getNtriplesArray();
 			if (triples.length < ADD_TRIPLES_WARN) {
@@ -346,9 +394,10 @@ define([	// properly require.config'ed
 				// "Warning zone" : user can load none, some, or all
 				ModalIidx.choose("Large number of nodes returned",
 					"A large number of data was returned: " + triples.length + " nodes and edges<br>This could overload your browser.<br>",
-					["load " + ADD_TRIPLES_WARN, "load " + triples.length, "cancel"],
+					["load " + ADD_TRIPLES_WARN, "load " + triples.length, "choose predicates", "cancel"],
 					[function() { loadTriples(triples.slice(0, ADD_TRIPLES_WARN)); },
 					function() { loadTriples(triples); },
+					function() { showPredicateChoiceDialog(triples); },
 					function() { }]
 				);
 			} else {
