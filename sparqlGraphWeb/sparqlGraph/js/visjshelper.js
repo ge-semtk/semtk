@@ -296,6 +296,12 @@ define([	// properly require.config'ed
                 g.service.status.url,
                 g.service.results.url);
             var idList = network.getSelectedNodes();
+            if(idList.length > 1){
+				// when expanding, we show a dialog with choices about what to load for a given node (esp if over the triple limit).  Limit to expanding one node at a time.
+				ModalIidx.alert("Select a single node", "Cannot expand multiple nodes at once.");
+				VisJsHelper.networkBusy(canvasDiv, false);
+				return;
+			}
             for (var id of idList) {
                 var classUri = network.body.data.nodes.get(id).group;
              	if (classUri == VisJsHelper.BLANK_NODE) {
@@ -378,6 +384,7 @@ define([	// properly require.config'ed
 					if(!VisJsHelper.isTypePredicate(pred)){
 				 		predicateChoiceList.push([pred + " (" + count + " connections)", pred]);
 				 	}
+				 	predicateChoiceList.sort();
 				}
 				ModalIidx.multiListDialog("Select predicates:",
 					"OK",
@@ -391,22 +398,26 @@ define([	// properly require.config'ed
 				loadTriples(triples);
 
 			} else if (triples.length < ADD_TRIPLES_MAX) {
-				// "Warning zone" : user can load none, some, or all
+				// "Warning zone" : user can load none, all, or downselect by predicate
 				ModalIidx.choose("Large number of nodes returned",
-					"A large number of data was returned: " + triples.length + " nodes and edges<br>This could overload your browser.<br>",
-					["load " + ADD_TRIPLES_WARN, "load " + triples.length, "choose predicates", "cancel"],
-					[function() { loadTriples(triples.slice(0, ADD_TRIPLES_WARN)); },
-					function() { loadTriples(triples); },
+					triples.length + " nodes and edges were returned. This could overload your browser.<br>",
+					["load all " + triples.length, 
+					 "choose predicates to load", 
+					 "cancel"],
+					[function() { loadTriples(triples); },
 					function() { showPredicateChoiceDialog(triples); },
 					function() { }]
 				);
 			} else {
-				// "Danger zone" : user can load none, small, or medium.  All were not returned so they can't be loaded.'
+				// "Danger zone": All were not returned so they can't be loaded. User can load none, the returned subset, or the returned subset downselected by predicate. 
+				triples = triples.slice(0, ADD_TRIPLES_MAX)  // truncate further since back-end can overshoot
 				ModalIidx.choose("Large number of nodes returned",
-					"Too much data was returned >" + ADD_TRIPLES_MAX + " nodes and edges<br>This would overload your browser.<br>",
-					["load " + ADD_TRIPLES_WARN, "load " + ADD_TRIPLES_MAX, "cancel"],
-					[function() { loadTriples(triples.slice(0, ADD_TRIPLES_WARN)); },
-					function() { loadTriples(triples.slice(0, ADD_TRIPLES_MAX)); },   // truncate further since back-end can overshoot
+					"Over " + ADD_TRIPLES_MAX + " nodes and edges were returned. Using a subset so as not to overload your browser.<br>",
+					["load " + ADD_TRIPLES_MAX, 
+					 "choose predicates to load", 
+					 "cancel"],
+					[function() { loadTriples(triples); },
+					 function() { showPredicateChoiceDialog(triples); },
 					function() { }]
 				);
 			}
