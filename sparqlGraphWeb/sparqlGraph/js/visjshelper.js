@@ -395,6 +395,7 @@ define([	// properly require.config'ed
 
 			triples = triplesRes.getNtriplesArray();
 			if (triples.length < ADD_TRIPLES_WARN) {
+				// considered giving option to downselect by predicate here, but makes certain operations clumsy (e.g. clicking SHACL instance checkbox)
 				loadTriples(triples);
 
 			} else if (triples.length < ADD_TRIPLES_MAX) {
