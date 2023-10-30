@@ -296,6 +296,12 @@ define([	// properly require.config'ed
                 g.service.status.url,
                 g.service.results.url);
             var idList = network.getSelectedNodes();
+            if(idList.length > 1){
+				// when expanding, we show a dialog with choices about what to load for a given node (esp if over the triple limit).  Limit to expanding one node at a time.
+				ModalIidx.alert("Select a single node", "Cannot expand multiple nodes at once.");
+				VisJsHelper.networkBusy(canvasDiv, false);
+				return;
+			}
             for (var id of idList) {
                 var classUri = network.body.data.nodes.get(id).group;
              	if (classUri == VisJsHelper.BLANK_NODE) {
@@ -337,27 +343,82 @@ define([	// properly require.config'ed
 				network.body.data.edges.update(edgeList);
 				VisJsHelper.networkBusy(canvasDiv, false);
 			}.bind(this, nodeDict, edgeList, canvasDiv, network);
+		
+			// identify the triples that match the selected predicate(s) and display them
+			var displayTriplesWithSelectedPredicates = function(selectedPredicates) {  // selectedPredicates may be a string (if only 1 predicate selected) or a list of strings
+				var triplesSubset = [];
+				var selectedSubjectsAndObjects = [];
+				// pass 1: get triples with the selected predicate(s).  Also gather a list of subjects and objects for these triples.
+				for (var i = 0; i < triples.length; i++) {
+					if(triples[i][1] == selectedPredicates || selectedPredicates.includes(triples[i][1])){
+						triplesSubset.push(triples[i]);
+						selectedSubjectsAndObjects.push(triples[i][0]); // remember the subject, will need type for it
+						selectedSubjectsAndObjects.push(triples[i][2]);	// remember the object, will need type for it
+					}
+				}
+				// pass 2: add types for subjects/objects that will be displayed
+				for (var i = 0; i < triples.length; i++) {
+					if((selectedSubjectsAndObjects.includes(triples[i][0]) || selectedSubjectsAndObjects.includes(triples[i][2]))  && VisJsHelper.isTypePredicate(triples[i][1])){
+						triplesSubset.push(triples[i]);
+					}
+				}
+				// display the triples
+				loadTriples(triplesSubset);
+			}
+			
+			// show a dialog where the user can choose predicate(s).  Dialog shows list of predicates and # triples for each
+			showPredicateChoiceDialog = function(triples){
+				// get counts
+				var p = null;
+				predicateCountHash = {};
+				for (var i = 0; i < triples.length; i++) {
+					p = triples[i][1];
+					if(predicateCountHash[p] == null){
+						predicateCountHash[p] = 0;
+					}
+					predicateCountHash[p]++;
+				}	
+				// display predicates/counts in a dialog
+				var predicateChoiceList = [];
+				for (const [pred, count] of Object.entries(predicateCountHash)) {
+					if(!VisJsHelper.isTypePredicate(pred)){
+				 		predicateChoiceList.push([pred + " (" + count + " connections)", pred]);
+				 	}
+				 	predicateChoiceList.sort();
+				}
+				ModalIidx.multiListDialog("Select predicates:",
+					"OK",
+					predicateChoiceList, [],
+					displayTriplesWithSelectedPredicates
+				);
+			}
 
 			triples = triplesRes.getNtriplesArray();
 			if (triples.length < ADD_TRIPLES_WARN) {
+				// considered giving option to downselect by predicate here, but makes certain operations clumsy (e.g. clicking SHACL instance checkbox)
 				loadTriples(triples);
 
 			} else if (triples.length < ADD_TRIPLES_MAX) {
-				// "Warning zone" : user can load none, some, or all
+				// "Warning zone" : user can load none, all, or downselect by predicate
 				ModalIidx.choose("Large number of nodes returned",
-					"A large number of data was returned: " + triples.length + " nodes and edges<br>This could overload your browser.<br>",
-					["load " + ADD_TRIPLES_WARN, "load " + triples.length, "cancel"],
-					[function() { loadTriples(triples.slice(0, ADD_TRIPLES_WARN)); },
-					function() { loadTriples(triples); },
+					triples.length + " nodes and edges were returned. This could overload your browser.<br>",
+					["load all " + triples.length, 
+					 "choose predicates to load", 
+					 "cancel"],
+					[function() { loadTriples(triples); },
+					function() { showPredicateChoiceDialog(triples); },
 					function() { }]
 				);
 			} else {
-				// "Danger zone" : user can load none, small, or medium.  All were not returned so they can't be loaded.'
+				// "Danger zone": All were not returned so they can't be loaded. User can load none, the returned subset, or the returned subset downselected by predicate. 
+				triples = triples.slice(0, ADD_TRIPLES_MAX)  // truncate further since back-end can overshoot
 				ModalIidx.choose("Large number of nodes returned",
-					"Too much data was returned >" + ADD_TRIPLES_MAX + " nodes and edges<br>This would overload your browser.<br>",
-					["load " + ADD_TRIPLES_WARN, "load " + ADD_TRIPLES_MAX, "cancel"],
-					[function() { loadTriples(triples.slice(0, ADD_TRIPLES_WARN)); },
-					function() { loadTriples(triples.slice(0, ADD_TRIPLES_MAX)); },   // truncate further since back-end can overshoot
+					"Over " + ADD_TRIPLES_MAX + " nodes and edges were returned. Using a subset so as not to overload your browser.<br>",
+					["load " + ADD_TRIPLES_MAX, 
+					 "choose predicates to load", 
+					 "cancel"],
+					[function() { loadTriples(triples); },
+					 function() { showPredicateChoiceDialog(triples); },
 					function() { }]
 				);
 			}
