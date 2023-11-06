@@ -289,6 +289,9 @@ public class UtilityTest {
 		String ttl = Utility.getTurtleFromJenaGraph(g);
 		assertTrue(ttl.contains("ns1:Kansas  rdf:type  ns2:Band;"));
 		assertEquals(ttl.length(), 10034);
+		
+		// get triples from Jena graph
+		assertEquals(Utility.getTriplesFromJenaGraph(g).size(), 215);
 	}
 	
 	@Test
