@@ -122,7 +122,6 @@ public class UtilityClientTest_IT {
 	}
 
 	@Test
-	@Ignore  // TODO temporarily ignoring due to frequent intermittent failure ("Received empty response") in Jenkins build
 	public void testGetShaclResults() throws Exception {
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "DeliveryBasketExample.owl");

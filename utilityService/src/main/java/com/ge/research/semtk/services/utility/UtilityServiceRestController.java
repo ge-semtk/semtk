@@ -483,10 +483,13 @@ public class UtilityServiceRestController {
 			tracker.createJob(jobId);
 			tracker.setJobPercentComplete(jobId, 1);
 			
+			System.out.println("SHACL file name: " + shaclTtlFile.getName());	// TODO remove
+			
 			// spin up an async thread
 			new Thread(() -> {
 				try {
 					HeadersManager.setHeaders(headers);
+					System.out.println("SHACL file name (in thread): " + shaclTtlFile.getName());  // TODO remove
 					ShaclRunner shaclRunner = new ShaclRunner(shaclTtlFile.getInputStream(), new SparqlConnection(connJsonStr), tracker, jobId, 20, 80);
 					if(tracker != null) { tracker.setJobPercentComplete(jobId, 85, "Gathering SHACL results"); }
 					JSONObject resultsJson = shaclRunner.getResults(severity);
