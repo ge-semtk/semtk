@@ -19,6 +19,7 @@ package com.ge.research.semtk.services.utility;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -483,7 +484,11 @@ public class UtilityServiceRestController {
 			tracker.createJob(jobId);
 			tracker.setJobPercentComplete(jobId, 1);
 			
-			System.out.println("SHACL file name: " + shaclTtlFile.getName());	// TODO remove
+			// TODO remove
+			System.out.println("SHACL file name: " + shaclTtlFile.getName());
+			InputStream is = shaclTtlFile.getInputStream();
+			System.out.println("SHACL file bytes available: " + is.available());
+			is.close();
 			
 			// spin up an async thread
 			new Thread(() -> {
