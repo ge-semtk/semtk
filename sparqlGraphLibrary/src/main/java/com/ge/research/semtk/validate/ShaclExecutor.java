@@ -67,7 +67,7 @@ public class ShaclExecutor {
 	private static final String JSON_KEY_PATH = "path";						// the relevant path (e.g. <http://DeliveryBasketExample#holds>, ^<http://DeliveryBasketExample#holds>, <http://DeliveryBasketExample#holds>/<http://DeliveryBasketExample#identifier>, more)
 	private static final String JSON_KEY_CONSTRAINT = "constraint"; 		// the constraint (e.g. maxCount[3])
 	public static final String JSON_KEY_SEVERITY = "severity";				// Violation, Info, or Warning (e.g. from http://www.w3.org/ns/shacl#Violation)
-	private static final String JSON_KEY_FOCUSNODE = "focusNode";			// the offending item, could be URI or literal (e.g. http://DeliveryBasketExample#basket100)
+	public static final String JSON_KEY_FOCUSNODE = "focusNode";			// the offending item, could be URI or literal (e.g. http://DeliveryBasketExample#basket100)
 	private static final String JSON_KEY_VALUE = "value";					// sometimes populated (e.g. for failed DataType constraint)
 	private static final String JSON_KEY_MESSAGE = "message"; 				// a message (auto-generated unless defined in SHACL shape) e.g. "maxCount[1]: Invalid cardinality: expected max 1: Got count = 2".  No other way to get actual, so best practice is to let it auto-generate 
 	private static final String JSON_KEY_MESSAGETRANSFORMED = "messageTransformed"; 	// a message transformed to be more readable than the original 
@@ -484,7 +484,7 @@ public class ShaclExecutor {
 			LocalLogger.printStackTrace(e);
 		}
 		
-		LocalLogger.logToStdOut("No SHACL message transform applies: " + message);
+		//LocalLogger.logToStdOut("No SHACL message transform applies: " + message);
 		return "";
 	}
 	

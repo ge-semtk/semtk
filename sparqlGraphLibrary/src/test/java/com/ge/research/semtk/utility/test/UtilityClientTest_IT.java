@@ -26,10 +26,10 @@ import org.apache.jena.shacl.validation.Severity;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ge.research.semtk.load.config.test.ManifestConfigTest_IT;
+import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.services.client.UtilityClient;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
@@ -37,6 +37,7 @@ import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
 import com.ge.research.semtk.validate.ShaclExecutor;
+import com.ge.research.semtk.validate.ShaclBasedGarbageCollector;
 import com.ge.research.semtk.validate.test.ShaclExecutorTest_IT;
 
 public class UtilityClientTest_IT {
@@ -153,6 +154,18 @@ public class UtilityClientTest_IT {
 			assert(e.getMessage().contains("File does not exist"));
 		}
 		TestGraph.clearGraph();
+	}
+
+	@Test
+	public void testShaclBasedGarbageCollection() throws Exception {
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "DeliveryBasketExample.owl");
+		File ttlFile = Utility.getResourceAsTempFile(this, "DeliveryBasketExample-GarbageCollection-shacl.ttl");
+		String jobId = client.execPerformShaclBasedGarbageCollection(ttlFile, TestGraph.getSparqlConn());
+		IntegrationTestUtility.getStatusClient(jobId).waitForCompletion(jobId);
+		CSVDataset deletedUrisDataset = IntegrationTestUtility.getResultsClient().getTableResultsCSV(jobId, 99999);
+		assertEquals(deletedUrisDataset.getColumnIndex(ShaclBasedGarbageCollector.HEADER_DELETED_INSTANCES), 0);
+		assertEquals(deletedUrisDataset.getNumRows(), 10);  // 10 URIs garbage collected
 	}
 	
 	// clear graphs and nodegroup store

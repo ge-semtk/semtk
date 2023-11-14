@@ -91,12 +91,10 @@ public class UtilityClient extends RestClient {
 	 * @throws 					Exception
 	 */
 	@SuppressWarnings("unchecked")
-	public String execGetShaclResults(File shaclTtlFile, SparqlConnection conn, Severity severity) throws Exception {
-		
+	public String execGetShaclResults(File shaclTtlFile, SparqlConnection conn, Severity severity) throws Exception {		
 		if(!shaclTtlFile.exists()) {
 			throw new Exception("File does not exist: " + shaclTtlFile.getAbsolutePath());
-		}
-		
+		}		
 		this.parametersJSON.clear();
 		this.fileParameter = shaclTtlFile;
 		this.fileParameterName = "shaclTtlFile";
@@ -114,4 +112,32 @@ public class UtilityClient extends RestClient {
 		}
 	}
 	
+	
+	/**
+	 * Executes a call to run SHACL-based garbage collection
+	 * @param shaclTtlFile		the SHACL file (in ttl format)
+	 * @param conn 				the connection
+	 * @return 					jobId
+	 * @throws 					Exception
+	 */
+	@SuppressWarnings("unchecked")
+	public String execPerformShaclBasedGarbageCollection(File shaclTtlFile, SparqlConnection conn) throws Exception {
+		if(!shaclTtlFile.exists()) {
+			throw new Exception("File does not exist: " + shaclTtlFile.getAbsolutePath());
+		}
+		this.parametersJSON.clear();
+		this.fileParameter = shaclTtlFile;
+		this.fileParameterName = "shaclTtlFile";
+		this.parametersJSON.put("conn", conn.toJson().toJSONString());
+		conf.setServiceEndpoint("utility/performShaclBasedGarbageCollection");
+		this.conf.setMethod(RestClientConfig.Methods.POST);
+		
+		try {
+			SimpleResultSet res = this.executeWithSimpleResultReturn();
+			res.throwExceptionIfUnsuccessful();
+			return res.getJobId();
+		} finally {
+			this.cleanUp();
+		}
+	}
 }

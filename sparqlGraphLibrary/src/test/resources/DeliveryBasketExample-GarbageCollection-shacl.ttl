@@ -1,0 +1,22 @@
+###
+### Sample SHACL for garbage collection
+### Accompanies the model/data in DeliveryBasketExample.owl
+###
+
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+@prefix dbex: <http://DeliveryBasketExample#> .
+
+### 
+### Garbage collect violations: Fruit, FruitBasket, Address with no incoming links
+###
+dbex:IncomingLinks
+	a sh:NodeShape ;
+	sh:targetClass dbex:Fruit;
+	sh:targetClass dbex:FruitBasket;
+	sh:targetClass dbex:Address;
+	sh:sparql [
+		a sh:SPARQLConstraint;
+		sh:message "A {$type} has no incoming links";
+		sh:select """SELECT $this ?type WHERE { ?this a ?type . NOT EXISTS { ?s ?p $this } . }""" ;
+	] .
