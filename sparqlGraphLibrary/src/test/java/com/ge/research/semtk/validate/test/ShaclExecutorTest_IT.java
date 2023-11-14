@@ -32,16 +32,16 @@ import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
-import com.ge.research.semtk.validate.ShaclRunner;
+import com.ge.research.semtk.validate.ShaclExecutor;
 
-public class ShaclRunnerTest_IT {
+public class ShaclExecutorTest_IT {
 	
 	// test the processed results JSON
 	@Test
 	public void testResults() throws Exception{
 
-		ShaclRunner runner = getShaclRunnerForDeliveryBasketExample();
-		assertFalse("data conforms when it should not", runner.conforms());
+		ShaclExecutor executor = getShaclExecutorForDeliveryBasketExample();
+		assertFalse("data conforms when it should not", executor.conforms());
 
 		// compare results to expected results
 		final String EXPECTED_RESULTS_FILE = "DeliveryBasketExample-shacl-results.json";
@@ -49,21 +49,21 @@ public class ShaclRunnerTest_IT {
 		JSONObject expectedJson;
 		
 		// test at Info level
-		resultsJson = runner.getResults(Severity.Info);
+		resultsJson = executor.getResults(Severity.Info);
 		expectedJson = Utility.getResourceAsJson(this, EXPECTED_RESULTS_FILE);
-		assertEquals(((JSONArray)resultsJson.get(ShaclRunner.JSON_KEY_ENTRIES)).size(), ((JSONArray)expectedJson.get(ShaclRunner.JSON_KEY_ENTRIES)).size());
+		assertEquals(((JSONArray)resultsJson.get(ShaclExecutor.JSON_KEY_ENTRIES)).size(), ((JSONArray)expectedJson.get(ShaclExecutor.JSON_KEY_ENTRIES)).size());
 		assertTrue(Utility.equals(resultsJson, expectedJson));
 		
 		// test at Warning level
-		resultsJson = runner.getResults(Severity.Warning);
+		resultsJson = executor.getResults(Severity.Warning);
 		expectedJson = removeEntriesBelowSeverityLevel(Utility.getResourceAsJson(this, EXPECTED_RESULTS_FILE), Severity.Warning);
-		assertEquals(((JSONArray)resultsJson.get(ShaclRunner.JSON_KEY_ENTRIES)).size(), ((JSONArray)expectedJson.get(ShaclRunner.JSON_KEY_ENTRIES)).size());
+		assertEquals(((JSONArray)resultsJson.get(ShaclExecutor.JSON_KEY_ENTRIES)).size(), ((JSONArray)expectedJson.get(ShaclExecutor.JSON_KEY_ENTRIES)).size());
 		assertTrue(Utility.equals(resultsJson, expectedJson));
 		
 		// test at Violation level
-		resultsJson = runner.getResults(Severity.Violation);
+		resultsJson = executor.getResults(Severity.Violation);
 		expectedJson = removeEntriesBelowSeverityLevel(Utility.getResourceAsJson(this, EXPECTED_RESULTS_FILE), Severity.Violation);
-		assertEquals(((JSONArray)resultsJson.get(ShaclRunner.JSON_KEY_ENTRIES)).size(), ((JSONArray)expectedJson.get(ShaclRunner.JSON_KEY_ENTRIES)).size());
+		assertEquals(((JSONArray)resultsJson.get(ShaclExecutor.JSON_KEY_ENTRIES)).size(), ((JSONArray)expectedJson.get(ShaclExecutor.JSON_KEY_ENTRIES)).size());
 		assertTrue(Utility.equals(resultsJson, expectedJson));
 	}
 	
@@ -71,8 +71,8 @@ public class ShaclRunnerTest_IT {
 	@Test
 	public void testResultsRawTurtle() throws Exception {
 
-		ShaclRunner runner = getShaclRunnerForDeliveryBasketExample();
-		String resultsTurtle = runner.getResultsRawTurtle();  // turtle containing raw shape and validation result info
+		ShaclExecutor executor = getShaclExecutorForDeliveryBasketExample();
+		String resultsTurtle = executor.getResultsRawTurtle();  // turtle containing raw shape and validation result info
 
 		// load the turtle and query via SPARQL
 		TestGraph.clearGraph();
@@ -106,7 +106,7 @@ public class ShaclRunnerTest_IT {
 				"ORDER BY ?nodeShape";		
 	
 		Table res = TestGraph.execQueryToTable(query);
-		int expectedCount = ((JSONArray)Utility.getResourceAsJson(this, "DeliveryBasketExample-shacl-results.json").get(ShaclRunner.JSON_KEY_ENTRIES)).size();
+		int expectedCount = ((JSONArray)Utility.getResourceAsJson(this, "DeliveryBasketExample-shacl-results.json").get(ShaclExecutor.JSON_KEY_ENTRIES)).size();
 		assertEquals(res.getNumRows(), expectedCount);
 	}	
 	
@@ -114,9 +114,9 @@ public class ShaclRunnerTest_IT {
 	@Test
 	public void testLoadDataFromTTL() throws Exception {
 		File shaclFile = Utility.getResourceAsTempFile(this, "musicTestDataset-shacl.ttl");
-		ShaclRunner runner = new ShaclRunner(new FileInputStream(shaclFile), new FileInputStream(new File("src/test/resources/musicTestDataset_2017.q2.ttl")));
-		JSONObject resultsJson = runner.getResults();
-		assertEquals(((JSONArray)resultsJson.get(ShaclRunner.JSON_KEY_ENTRIES)).size(), 3);
+		ShaclExecutor executor = new ShaclExecutor(new FileInputStream(shaclFile), new FileInputStream(new File("src/test/resources/musicTestDataset_2017.q2.ttl")));
+		JSONObject resultsJson = executor.getResults();
+		assertEquals(((JSONArray)resultsJson.get(ShaclExecutor.JSON_KEY_ENTRIES)).size(), 3);
 		assertTrue(resultsJson.toJSONString().contains("Expect a int less than 300 (got 318)"));
 		assertTrue(resultsJson.toJSONString().contains("Expect a int less than 300 (got 323)"));
 		assertTrue(resultsJson.toJSONString().contains("Expect a int less than 300 (got 334)"));
@@ -124,20 +124,20 @@ public class ShaclRunnerTest_IT {
 	
 	@Test
 	public void testCompareSeverity() throws Exception {
-		assertEquals(ShaclRunner.compare(Severity.Violation, Severity.Info), 1);
-		assertEquals(ShaclRunner.compare(Severity.Warning, Severity.Info), 1);
-		assertEquals(ShaclRunner.compare(Severity.Violation, Severity.Warning), 1);
-		assertEquals(ShaclRunner.compare(Severity.Violation, Severity.Violation), 0);
-		assertEquals(ShaclRunner.compare(Severity.Warning, Severity.Warning), 0);
-		assertEquals(ShaclRunner.compare(Severity.Info, Severity.Info), 0);
-		assertEquals(ShaclRunner.compare(Severity.Info, Severity.Violation), -1);
-		assertEquals(ShaclRunner.compare(Severity.Warning, Severity.Violation), -1);
-		assertEquals(ShaclRunner.compare(Severity.Info, Severity.Warning), -1);
+		assertEquals(ShaclExecutor.compare(Severity.Violation, Severity.Info), 1);
+		assertEquals(ShaclExecutor.compare(Severity.Warning, Severity.Info), 1);
+		assertEquals(ShaclExecutor.compare(Severity.Violation, Severity.Warning), 1);
+		assertEquals(ShaclExecutor.compare(Severity.Violation, Severity.Violation), 0);
+		assertEquals(ShaclExecutor.compare(Severity.Warning, Severity.Warning), 0);
+		assertEquals(ShaclExecutor.compare(Severity.Info, Severity.Info), 0);
+		assertEquals(ShaclExecutor.compare(Severity.Info, Severity.Violation), -1);
+		assertEquals(ShaclExecutor.compare(Severity.Warning, Severity.Violation), -1);
+		assertEquals(ShaclExecutor.compare(Severity.Info, Severity.Warning), -1);
 	}
 	
 	
 	// helper function for test setup
-	private ShaclRunner getShaclRunnerForDeliveryBasketExample() throws Exception {
+	private ShaclExecutor getShaclExecutorForDeliveryBasketExample() throws Exception {
 
 		// create a SPARQL connection, populate it
 		TestGraph.clearGraph();
@@ -146,7 +146,7 @@ public class ShaclRunnerTest_IT {
 
 		// perform SHACL validation
 		File shaclFile = Utility.getResourceAsTempFile(this, "DeliveryBasketExample-shacl.ttl");
-		return new ShaclRunner(new FileInputStream(shaclFile), sparqlConn);
+		return new ShaclExecutor(new FileInputStream(shaclFile), sparqlConn);
 	}
 	
 	// helper function to filter expected results to a given severity level
@@ -156,20 +156,20 @@ public class ShaclRunnerTest_IT {
 		JSONArray entriesToKeep = new JSONArray();
 		
 		// iterate through entries, keeping the ones at the appropriate level
-		JSONArray entries = (JSONArray) resultsJson.get(ShaclRunner.JSON_KEY_ENTRIES);
+		JSONArray entries = (JSONArray) resultsJson.get(ShaclExecutor.JSON_KEY_ENTRIES);
 		for(int i = 0; i < entries.size(); i++) {
 			JSONObject entry = (JSONObject) entries.get(i);
-			String severityStr = (String) entry.get(ShaclRunner.JSON_KEY_SEVERITY);
+			String severityStr = (String) entry.get(ShaclExecutor.JSON_KEY_SEVERITY);
 			if(severityStr.equals("Violation")) {
 				entriesToKeep.add(entry);
-			}else if(severityStr.equals("Warning") && ShaclRunner.compare(Severity.Warning, severityLevel) >= 0) {
+			}else if(severityStr.equals("Warning") && ShaclExecutor.compare(Severity.Warning, severityLevel) >= 0) {
 				entriesToKeep.add(entry);
-			}else if(severityStr.equals("Info") && ShaclRunner.compare(Severity.Info, severityLevel) >= 0) {
+			}else if(severityStr.equals("Info") && ShaclExecutor.compare(Severity.Info, severityLevel) >= 0) {
 				entriesToKeep.add(entry);
 			}
 		}
 
-		resultsJson.put(ShaclRunner.JSON_KEY_ENTRIES, entriesToKeep);
+		resultsJson.put(ShaclExecutor.JSON_KEY_ENTRIES, entriesToKeep);
 		return resultsJson;
 	}
 

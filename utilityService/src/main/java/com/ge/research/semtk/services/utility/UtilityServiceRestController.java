@@ -76,7 +76,7 @@ import com.ge.research.semtk.springutillib.properties.QueryServiceProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Logger;
 import com.ge.research.semtk.utility.Utility;
-import com.ge.research.semtk.validate.ShaclRunner;
+import com.ge.research.semtk.validate.ShaclExecutor;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -480,7 +480,6 @@ public class UtilityServiceRestController {
 			String jobId = JobTracker.generateJobId();
 			JobTracker tracker = new JobTracker(servicesgraph_prop.buildSei());
 			ResultsClient rclient = results_prop.getClient();
-			
 			tracker.createJob(jobId);
 			tracker.setJobPercentComplete(jobId, 1);
 			
@@ -495,9 +494,9 @@ public class UtilityServiceRestController {
 				try {
 					HeadersManager.setHeaders(headers);
 					System.out.println("SHACL file name (in thread): " + shaclTtlFile.getName());  // TODO remove
-					ShaclRunner shaclRunner = new ShaclRunner(shaclTtlFile.getInputStream(), new SparqlConnection(connJsonStr), tracker, jobId, 20, 80);
+					ShaclExecutor shaclExecutor = new ShaclExecutor(shaclTtlFile.getInputStream(), new SparqlConnection(connJsonStr), tracker, jobId, 20, 80);
 					if(tracker != null) { tracker.setJobPercentComplete(jobId, 85, "Gathering SHACL results"); }
-					JSONObject resultsJson = shaclRunner.getResults(severity);
+					JSONObject resultsJson = shaclExecutor.getResults(severity);
 					rclient.execStoreBlobResults(jobId, resultsJson);
 					tracker.setJobSuccess(jobId);
 				} catch (Exception e) {

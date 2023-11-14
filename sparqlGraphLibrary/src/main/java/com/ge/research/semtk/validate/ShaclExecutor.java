@@ -46,7 +46,7 @@ import com.ge.research.semtk.utility.Utility;
 /**
  * Validate RDF data using SHACL
  */
-public class ShaclRunner {
+public class ShaclExecutor {
 	
 	private Graph dataGraph;
 	private Shapes shapes;
@@ -77,7 +77,7 @@ public class ShaclRunner {
 	 * @param shaclTtlInputStream SHACL shapes in a TTL input stream
 	 * @param conn connection containing model/data
 	 */
-	public ShaclRunner(InputStream shaclTtlInputStream, SparqlConnection conn) throws Exception{
+	public ShaclExecutor(InputStream shaclTtlInputStream, SparqlConnection conn) throws Exception{
 		this(shaclTtlInputStream, conn, null, null, 0, 100);
 	}
 	
@@ -90,7 +90,7 @@ public class ShaclRunner {
 	 * @param percentStart the start percent for setting job status
 	 * @param percentEnd the end percent for setting job status
 	 */
-	public ShaclRunner(InputStream shaclTtlInputStream, SparqlConnection conn, JobTracker tracker, String jobId, int percentStart, int percentEnd) throws Exception{
+	public ShaclExecutor(InputStream shaclTtlInputStream, SparqlConnection conn, JobTracker tracker, String jobId, int percentStart, int percentEnd) throws Exception{
 		
 		this.tracker = tracker;
 		this.jobId = jobId;
@@ -102,7 +102,7 @@ public class ShaclRunner {
 		if(this.tracker != null) { this.tracker.setJobPercentComplete(this.jobId, (int)(startPercent + (endPercent - startPercent)*0.3), "Creating Jena graph"); }
 		dataGraph = conn.getJenaGraph();
 		if(this.tracker != null) { this.tracker.setJobPercentComplete(this.jobId, (int)(startPercent + (endPercent - startPercent)*0.6), "Running SHACL"); }
-		run();
+		executeShacl();
 		if(this.tracker != null) { this.tracker.setJobPercentComplete(this.jobId, endPercent); }
 	}
 	
@@ -111,14 +111,14 @@ public class ShaclRunner {
 	 * @param shaclTtlInputStream SHACL shapes in a TTL input stream
 	 * @param dataTtlInputStream data/model in a TTL input stream
 	 */
-	public ShaclRunner(InputStream shaclTtlInputStream, InputStream dataTtlInputStream) throws Exception{
+	public ShaclExecutor(InputStream shaclTtlInputStream, InputStream dataTtlInputStream) throws Exception{
 		shapes = parseShapes(shaclTtlInputStream);
 		dataGraph = Utility.getJenaGraphFromTurtle(dataTtlInputStream);
-		run();
+		executeShacl();
 	}
 	
 	// run SHACL shapes on a Jena Graph object, get report object and raw ttl
-	private void run() throws Exception {
+	private void executeShacl() throws Exception {
 		
 		try {
 			report = ShaclValidator.get().validate(shapes, dataGraph);
