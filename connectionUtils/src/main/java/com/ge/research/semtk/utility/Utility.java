@@ -1212,9 +1212,25 @@ public abstract class Utility {
 
 	/**
 	 * Create a Jena Graph from Turtle data
+	 * @param ttlStr Turtle data in a string
+	 * @return the Jena graph
+	 */
+	public static Graph getJenaGraphFromTurtle(String ttlStr) throws Exception {
+		InputStream inputStream = null;
+		Graph g;
+		try {
+			inputStream = new ByteArrayInputStream(ttlStr.getBytes());
+			g = getJenaGraphFromTurtle(inputStream);
+		}finally {
+			if(inputStream != null) { inputStream.close(); }
+		}
+		return g;
+	}
+	
+	/**
+	 * Create a Jena Graph from Turtle data
 	 * @param ttlInputStream Turtle data in an input stream
 	 * @return the Jena graph
-	 * @throws Exception
 	 */
 	public static Graph getJenaGraphFromTurtle(InputStream ttlInputStream) throws Exception {
 		try {

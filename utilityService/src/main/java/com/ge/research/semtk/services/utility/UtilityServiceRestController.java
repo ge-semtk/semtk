@@ -19,7 +19,6 @@ package com.ge.research.semtk.services.utility;
 
 import java.io.File;
 import java.io.PrintWriter;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -61,7 +60,6 @@ import com.ge.research.semtk.resultSet.SimpleResultSet;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.resultSet.TableResultSet;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
-import com.ge.research.semtk.sparqlX.SparqlResultTypes;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryAuthClientConfig;
 import com.ge.research.semtk.sparqlX.client.SparqlQueryClient;
 import com.ge.research.semtk.springutillib.headers.HeadersManager;
@@ -483,18 +481,11 @@ public class UtilityServiceRestController {
 			tracker.createJob(jobId);
 			tracker.setJobPercentComplete(jobId, 1);
 			
-			// TODO remove
-			System.out.println("SHACL file name: " + shaclTtlFile.getName());
-			InputStream is = shaclTtlFile.getInputStream();
-			System.out.println("SHACL file bytes available: " + is.available());
-			is.close();
-			
 			// spin up an async thread
 			new Thread(() -> {
 				try {
 					HeadersManager.setHeaders(headers);
-					System.out.println("SHACL file name (in thread): " + shaclTtlFile.getName());  // TODO remove
-					ShaclExecutor shaclExecutor = new ShaclExecutor(shaclTtlFile.getInputStream(), new SparqlConnection(connJsonStr), tracker, jobId, 20, 80);
+					ShaclExecutor shaclExecutor = new ShaclExecutor(new String(shaclTtlFile.getBytes()), new SparqlConnection(connJsonStr), tracker, jobId, 20, 80);
 					if(tracker != null) { tracker.setJobPercentComplete(jobId, 85, "Gathering SHACL results"); }
 					JSONObject resultsJson = shaclExecutor.getResults(severity);
 					rclient.execStoreBlobResults(jobId, resultsJson);

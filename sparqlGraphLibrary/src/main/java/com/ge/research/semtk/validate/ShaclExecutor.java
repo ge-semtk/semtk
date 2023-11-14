@@ -74,23 +74,23 @@ public class ShaclExecutor {
 
 	/**
 	 * Constructor
-	 * @param shaclTtlInputStream SHACL shapes in a TTL input stream
+	 * @param shaclTtl SHACL shapes string
 	 * @param conn connection containing model/data
 	 */
-	public ShaclExecutor(InputStream shaclTtlInputStream, SparqlConnection conn) throws Exception{
-		this(shaclTtlInputStream, conn, null, null, 0, 100);
+	public ShaclExecutor(String shaclTtl, SparqlConnection conn) throws Exception{
+		this(shaclTtl, conn, null, null, 0, 100);
 	}
 	
 	/**
 	 * Constructor
-	 * @param shaclTtlInputStream SHACL shapes in a TTL input stream
+	 * @param shaclTtl SHACL shapes string
 	 * @param conn connection containing model/data
 	 * @param tracker the job tracker
 	 * @param jobId the job id for setting job status
 	 * @param percentStart the start percent for setting job status
 	 * @param percentEnd the end percent for setting job status
 	 */
-	public ShaclExecutor(InputStream shaclTtlInputStream, SparqlConnection conn, JobTracker tracker, String jobId, int percentStart, int percentEnd) throws Exception{
+	public ShaclExecutor(String shaclTtl, SparqlConnection conn, JobTracker tracker, String jobId, int percentStart, int percentEnd) throws Exception{
 		
 		this.tracker = tracker;
 		this.jobId = jobId;
@@ -98,7 +98,7 @@ public class ShaclExecutor {
 		endPercent = percentEnd;
 
 		if(this.tracker != null) { this.tracker.setJobPercentComplete(this.jobId, startPercent, "Parsing SHACL shapes"); }
-		shapes = parseShapes(shaclTtlInputStream);
+		shapes = parseShapes(shaclTtl);
 		if(this.tracker != null) { this.tracker.setJobPercentComplete(this.jobId, (int)(startPercent + (endPercent - startPercent)*0.3), "Creating Jena graph"); }
 		dataGraph = conn.getJenaGraph();
 		if(this.tracker != null) { this.tracker.setJobPercentComplete(this.jobId, (int)(startPercent + (endPercent - startPercent)*0.6), "Running SHACL"); }
@@ -108,11 +108,11 @@ public class ShaclExecutor {
 	
 	/**
 	 * Constructor
-	 * @param shaclTtlInputStream SHACL shapes in a TTL input stream
+	 * @param shaclTtl SHACL shapes string
 	 * @param dataTtlInputStream data/model in a TTL input stream
 	 */
-	public ShaclExecutor(InputStream shaclTtlInputStream, InputStream dataTtlInputStream) throws Exception{
-		shapes = parseShapes(shaclTtlInputStream);
+	public ShaclExecutor(String shaclTtl, InputStream dataTtlInputStream) throws Exception{
+		shapes = parseShapes(shaclTtl);
 		dataGraph = Utility.getJenaGraphFromTurtle(dataTtlInputStream);
 		executeShacl();
 	}
@@ -239,9 +239,9 @@ public class ShaclExecutor {
 	}
 	
 	// parse shapes
-	private Shapes parseShapes(InputStream shaclTtlInputStream) throws Exception {
+	private Shapes parseShapes(String shaclTtl) throws Exception {
 		try {
-			return Shapes.parse(Utility.getJenaGraphFromTurtle(shaclTtlInputStream));
+			return Shapes.parse(Utility.getJenaGraphFromTurtle(shaclTtl));
 		}catch(Exception e) {
 			throw new Exception("Error parsing SHACL shapes: " + e.getMessage(), e);
 		}

@@ -23,6 +23,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.jena.shacl.validation.Severity;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -114,7 +115,7 @@ public class ShaclExecutorTest_IT {
 	@Test
 	public void testLoadDataFromTTL() throws Exception {
 		File shaclFile = Utility.getResourceAsTempFile(this, "musicTestDataset-shacl.ttl");
-		ShaclExecutor executor = new ShaclExecutor(new FileInputStream(shaclFile), new FileInputStream(new File("src/test/resources/musicTestDataset_2017.q2.ttl")));
+		ShaclExecutor executor = new ShaclExecutor(FileUtils.readFileToString(shaclFile, "UTF-8"), new FileInputStream(new File("src/test/resources/musicTestDataset_2017.q2.ttl")));
 		JSONObject resultsJson = executor.getResults();
 		assertEquals(((JSONArray)resultsJson.get(ShaclExecutor.JSON_KEY_ENTRIES)).size(), 3);
 		assertTrue(resultsJson.toJSONString().contains("Expect a int less than 300 (got 318)"));
@@ -146,7 +147,7 @@ public class ShaclExecutorTest_IT {
 
 		// perform SHACL validation
 		File shaclFile = Utility.getResourceAsTempFile(this, "DeliveryBasketExample-shacl.ttl");
-		return new ShaclExecutor(new FileInputStream(shaclFile), sparqlConn);
+		return new ShaclExecutor(FileUtils.readFileToString(shaclFile, "UTF-8"), sparqlConn);
 	}
 	
 	// helper function to filter expected results to a given severity level

@@ -285,6 +285,11 @@ public class UtilityTest {
 		Graph g = Utility.getJenaGraphFromTurtle(new FileInputStream(file));
 		assertEquals(g.size(), 215);
 		
+		// get Jena graph from TTL file
+		String fileStr = new String(FileUtils.readFileToString(file, "UTF-8"));
+		g = Utility.getJenaGraphFromTurtle(fileStr);
+		assertEquals(g.size(), 215);
+		
 		// get TTL file from Jena graph
 		String ttl = Utility.getTurtleFromJenaGraph(g);
 		assertTrue(ttl.contains("ns1:Kansas  rdf:type  ns2:Band;"));
