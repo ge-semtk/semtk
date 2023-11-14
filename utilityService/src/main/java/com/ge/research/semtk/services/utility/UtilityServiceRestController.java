@@ -479,13 +479,14 @@ public class UtilityServiceRestController {
 			JobTracker tracker = new JobTracker(servicesgraph_prop.buildSei());
 			ResultsClient rclient = results_prop.getClient();
 			tracker.createJob(jobId);
-			tracker.setJobPercentComplete(jobId, 1);
+			tracker.setJobPercentComplete(jobId, 1);			
+			String shaclTtl = new String(shaclTtlFile.getBytes()); // read file before launching new thread
 			
 			// spin up an async thread
 			new Thread(() -> {
 				try {
 					HeadersManager.setHeaders(headers);
-					ShaclExecutor shaclExecutor = new ShaclExecutor(new String(shaclTtlFile.getBytes()), new SparqlConnection(connJsonStr), tracker, jobId, 20, 80);
+					ShaclExecutor shaclExecutor = new ShaclExecutor(shaclTtl, new SparqlConnection(connJsonStr), tracker, jobId, 20, 80);
 					if(tracker != null) { tracker.setJobPercentComplete(jobId, 85, "Gathering SHACL results"); }
 					JSONObject resultsJson = shaclExecutor.getResults(severity);
 					rclient.execStoreBlobResults(jobId, resultsJson);
