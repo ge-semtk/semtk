@@ -1,0 +1,8 @@
+uri "http://semtk.ge.com/cardinality2" alias c2.
+
+Item is a class,
+	described by owner with at most 1 value of type Item. 
+	
+Item2 is a class,
+	described by owner2 with values of type Item2.
+owner2 of Item2 has at most 1 value. 

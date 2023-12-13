@@ -568,4 +568,31 @@ public class OntologyInfoTests_IT {
 		assertEquals(oInfo.findLowestCommonSuperclass(tiger, cat), cat);
 		assertEquals(oInfo.findLowestCommonSuperclass(dog, cat), animal);
 	}
+	
+	/**
+	 * Test that cardinality statements don't confuse OInfo domain and range queries
+	 * CardinalityTwo.sadl has examples of failures in the past
+	 * @throws Exception
+	 */
+	@Test
+	public void testCardinalityDomainRange() throws Exception {
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlContents(Utility.getResourceAsString(QueryGenTest_IT.class, 
+				"CardinalityTwo.owl"));
+		OntologyInfo oInfo = new OntologyInfo();
+		oInfo.load(TestGraph.getSei(), false);
+		
+		String item =  "http://semtk.ge.com/cardinality2#Item";
+		String owner = "http://semtk.ge.com/cardinality2#owner";
+		
+		OntologyProperty oProp = oInfo.getProperty(owner);
+		OntologyClass oClass = oInfo.getClass(item);
+		OntologyRange oRange = oProp.getRange(oClass, oInfo);
+		
+		// This fails due to a bug in SADL.
+		// Different SADL syntax must be used for now.
+		// See CardinalityTwo.sadl
+		// Splitting the cardinality into a separate phrase results in the correct owl.
+		//assertFalse("Range of property 'owner' is incorrectly complex.", oRange.isComplex());
+	}
 }
