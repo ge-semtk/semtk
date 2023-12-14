@@ -104,11 +104,13 @@
 		</dependency>
 
 
+
+		
 		<!-- License: Apache 2.0 -->
 		<dependency>
 			<groupId>org.apache.jena</groupId>
 			<artifactId>jena-arq</artifactId>
-			<version>4.9.0</version>
+			<version>4.10.0</version>
 		</dependency>
 		
 		<!-- License: Apache 2.0 -->

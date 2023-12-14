@@ -162,7 +162,7 @@ public class UtilityClientTest_IT {
 		TestGraph.uploadOwlResource(this, "DeliveryBasketExample.owl");
 		File ttlFile = Utility.getResourceAsTempFile(this, "DeliveryBasketExample-GarbageCollection-shacl.ttl");
 		String jobId = client.execPerformShaclBasedGarbageCollection(ttlFile, TestGraph.getSparqlConn());
-		IntegrationTestUtility.getStatusClient(jobId).waitForCompletion(jobId);
+		IntegrationTestUtility.getStatusClient(jobId).waitForCompletionSuccess();
 		CSVDataset deletedUrisDataset = IntegrationTestUtility.getResultsClient().getTableResultsCSV(jobId, 99999);
 		assertEquals(deletedUrisDataset.getColumnIndex(ShaclBasedGarbageCollector.HEADER_DELETED_INSTANCES), 0);
 		assertEquals(deletedUrisDataset.getNumRows(), 10);  // 10 URIs garbage collected
