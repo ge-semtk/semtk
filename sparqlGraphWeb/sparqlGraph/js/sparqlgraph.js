@@ -48,6 +48,9 @@
 
     var gQueryTypeIndex = 0;   // sel index of QueryType
     var gQuerySource = "SERVICES";
+    
+    var gConstructLabelProperty = "";
+    var CONSTRUCT_LABEL_COOKIE = "construct_label_prop";
 
     var RESULTS_MAX_ROWS = 5000; // 5000 sample rows
     var ALLOW_CIRCULAR_NODEGROUPS = true;
@@ -78,7 +81,8 @@
 
                   // shim
                   'sparqlgraph/js/belmont',
-
+				  'sparqlgraph/js/cookiemanager',
+                  
 	              'local/sparqlgraphlocal'
                 ],
                 function (ExploreTab, MappingTab, ModalIidx, ModalLoadDialog, ModalStoreDialog, MsiClientNodeGroupService, MsiClientNodeGroupStore, NodegroupRenderer, ReportTab, UndoManager, UploadTab) {
@@ -166,6 +170,10 @@
 					console.log(e.stack);
 				}
 			}
+			
+			var cookieManager = new CookieManager(document);
+			var p = cookieManager.getCookie(CONSTRUCT_LABEL_COOKIE);
+			gConstructLabelProperty = p ? p : "";
 			
 			var nodegroupId = getUrlParameter("nodegroupId");
 			var reportId = getUrlParameter("reportId");
@@ -1726,6 +1734,36 @@
         }
         guiUpdateGraphRunButton();
     };
+    
+    // set gConstructLabelProperty :  the property used to label CONSTRUCT query result nodes (default is the class)
+    var doConstructLabelProperty = function() {
+		if (! gOInfo) {
+			logAndAlert("To perform this operation, first load a connection. ");
+			return;
+		}
+		require(['sparqlgraph/js/modaliidx',
+		          //shim
+		         'sparqlgraph/js/cookiemanager' ],
+             function (ModalIidx) {
+				// set value and cookie
+				var setGlobal = function(propertyList) { 
+					if (propertyList.length) {
+						gConstructLabelProperty = propertyList[0];
+					} else {
+						gConstructLabelProperty = "";
+					}
+					var cookieManager = new CookieManager(document);
+					cookieManager.setCookie(CONSTRUCT_LABEL_COOKIE, gConstructLabelProperty);
+				};
+				
+				// get list of string properties plus blank
+				var propList = gOInfo.getStringValuePropNames();
+				propList.unshift("");
+			
+				ModalIidx.multiListDialog("Choose property to label nodes in Construct query results", "OK", propList, [gConstructLabelProperty], setGlobal, false);
+		});
+		
+	};
 
     // ======= drag-and-drop version of query-loading =======
 
@@ -2331,8 +2369,8 @@
             }.bind(this, network));
 
             // button callbacks
-            network.on('doubleClick', VisJsHelper.expandSelectedNodes.bind(this, canvasDiv, network));
-            expandButton.onclick = VisJsHelper.expandSelectedNodes.bind(this, canvasDiv, network);
+            network.on('doubleClick', VisJsHelper.expandSelectedNodes.bind(this, canvasDiv, network, gConstructLabelProperty));
+            expandButton.onclick = VisJsHelper.expandSelectedNodes.bind(this, canvasDiv, network, gConstructLabelProperty);
             buildButton.onclick = this.constructBuildNodegroupCallback.bind(this, network);
             removeButton.onclick = this.constructRemoveCallback.bind(this, network);
 
@@ -2422,7 +2460,7 @@
 			
 			setStatusProgressBar("Rendering results graph", 100 * thisStart/triples.length);
 			for (var i=thisStart; i < nextStart; i++) {
-				VisJsHelper.addTriple(triples[i], nodeDict, edgeList, false, true);
+				VisJsHelper.addTripleToDicts(network, triples[i], nodeDict, edgeList, false, true, gConstructLabelProperty);
 			}
 			
 			network.body.data.nodes.update(Object.values(nodeDict));

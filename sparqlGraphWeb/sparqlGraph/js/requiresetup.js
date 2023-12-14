@@ -107,6 +107,10 @@ var requireConfigSparqlgraph = function(pathRelativeToBase, config) {
 			deps : [ 'sparqlgraph/js/cookiemanager'
 			       ]
 		};
+	config.shim['sparqlgraph/js/sparqlgraph'] = {
+			deps : [ 'sparqlgraph/js/cookiemanager'
+			       ]
+		};
 
 	config.waitSeconds = 45;
 

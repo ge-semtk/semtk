@@ -245,6 +245,7 @@ OntologyClass.prototype = {
 		return null;
 	},
 
+	
     addParentName : function(name) {
         this.parentNames.push(new OntologyName(name));
     },
@@ -686,6 +687,27 @@ OntologyInfo.prototype = {
 		return Object.keys(this.propertyHash);
 	},
 
+	getStringValuePropNames : function() {
+		var ret = [];
+		for (var k of Object.keys(this.propertyHash)) {
+			var prop = this.propertyHash[k];
+	        var rangeUris = prop.getAllRangeUris();
+           	for (var uri of rangeUris) {
+				if (uri.endsWith("#string")) {
+					ret.push(prop.getNameStr());
+					break;
+				}
+			}
+        }
+        ret.sort( function(a,b) {
+                                    var aa = a.split(/(#|\/)/).slice(-1);
+                                    var bb = b.split(/(#|\/)/).slice(-1);
+                                    if (aa < bb)  return -1;
+                                    else if (aa > bb)  return 1;
+                                    else return 0;
+                                } );
+        return ret;
+	},
     getEnumNames : function() {
         // returns an array of all known enumeration values
 

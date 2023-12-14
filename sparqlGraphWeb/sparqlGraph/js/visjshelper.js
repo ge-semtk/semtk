@@ -282,14 +282,14 @@ define([	// properly require.config'ed
 	 * canvasDiv - the canvas div containing the network
 	 * network - the network
 	 */
-    VisJsHelper.expandSelectedNodes = function(canvasDiv, network) {
+    VisJsHelper.expandSelectedNodes = function(canvasDiv, network, optNodeLabelProp) {
         require(['sparqlgraph/js/modaliidx', 'sparqlgraph/js/msiclientnodegroupexec'
 			    ], function(ModalIidx, MsiClientNodeGroupExec) {
 
             VisJsHelper.networkBusy(canvasDiv, true);
             var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.longTimeoutMsec);
             var resultsCallback = MsiClientNodeGroupExec.buildJsonLdOrTriplesCallback(
-                VisJsHelper.addTriples.bind(this, canvasDiv, network), // add triples to graph
+                VisJsHelper.addTriples.bind(this, canvasDiv, network, optNodeLabelProp?optNodeLabelProp:""), // add triples to graph
                 networkFailureCallback.bind(this, canvasDiv),
                 function() {}, // no status updates
                 function() {}, // no check for cancel
@@ -309,11 +309,13 @@ define([	// properly require.config'ed
 					ModalIidx.alert("Blank node error", "Can not expand a blank node returned from a previous query.")
 				} else if (classUri == VisJsHelper.DATA_NODE) {
                     var instanceUri = id;
-                    client.execAsyncConstructConnectedData(instanceUri, null, SemanticNodeGroup.RT_NTRIPLES, ADD_TRIPLES_MAX, gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
+                    client.execAsyncConstructConnectedData(instanceUri, null, null, SemanticNodeGroup.RT_NTRIPLES, ADD_TRIPLES_MAX, gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
                 } else {
                     // get classname and instance name with ':' prefix expanded out to full '#' uri
                     var instanceUri = id;
-                    client.execAsyncConstructConnectedData(instanceUri, "node_uri", SemanticNodeGroup.RT_NTRIPLES, ADD_TRIPLES_MAX, gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
+                    client.execAsyncConstructConnectedData(instanceUri, "node_uri", 
+                    	optNodeLabelProp?[optNodeLabelProp]:[],
+                    	SemanticNodeGroup.RT_NTRIPLES, ADD_TRIPLES_MAX, gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
                 }
             }
         });
@@ -327,7 +329,7 @@ define([	// properly require.config'ed
 	 * network - the network
 	 * triplesRes - a results object containing n-triples
 	 */
-	VisJsHelper.addTriples = function(canvasDiv, network, triplesRes) {
+	VisJsHelper.addTriples = function(canvasDiv, network, nodeLabelProperty, triplesRes) {
 	
 		var nodeDict = {};   // dictionary of nodes with @id as the key
 		var edgeList = [];
@@ -335,9 +337,9 @@ define([	// properly require.config'ed
 		if (triplesRes.isNtriplesResults()) {
 
 			// Load function for after we've tested size and chopped it down if needed
-			loadTriples = function(nodeDict, edgeList, canvasDiv, network, triples) {
+			var loadTriples = function(nodeDict, edgeList, canvasDiv, network, triples) {
 				for (var i = 0; i < triples.length; i++) {
-					VisJsHelper.addTriple(triples[i], nodeDict, edgeList, false, true);
+					VisJsHelper.addTripleToDicts(network, triples[i], nodeDict, edgeList, false, true, nodeLabelProperty);
 				}
 				network.body.data.nodes.update(Object.values(nodeDict));
 				network.body.data.edges.update(edgeList);
@@ -431,12 +433,80 @@ define([	// properly require.config'ed
 		network.body.data.edges.update(edgeList);
 		VisJsHelper.networkBusy(canvasDiv, false);
     };
-
-    
-    // optLabelIdFlag - instead of "normal formatting", Label nodes with the id (URI)
+	
+		
+    // optLabelIdFlag - True: put URI instead of Type on node label
     // optSkipSAClassFlag - skip triples like "Dog #type owl#class" on main SPARQLgraph display
     //                      these triples can slip in when expanding a node.
-    VisJsHelper.addTriple = function(triple, nodeDict, edgeList, optLabelIdFlag, optSkipSAClassFlag) {
+    VisJsHelper.addTripleToDicts = function(network, triple, nodeDict, edgeList, optLabelIdFlag, optSkipSAClassFlag, optNodeLabelProp) {
+		
+		var propIsId = function(p) {
+			return optNodeLabelProp && p == optNodeLabelProp;
+		}
+		
+		// add a key value pair to the title
+		// lines separated by "<br>"
+		// values separated by ","
+		// lines are sorted
+		var addKeyVal = function(oldStr, newKey, newVal) {
+			var lines;
+			if (! oldStr) {
+				// create from empty oldTitle
+				lines = [newKey + ": " + newVal];
+				
+			} else if (oldStr.match("(^"+newKey+"|br>"+newKey+")")) {
+				// add comma-separated newVal to existing line
+				lines = oldStr.split("<br>")
+				for (var i in lines) {
+					if (lines[i].startsWith(newKey + ":")) {
+						lines[i] += ", " + newVal;
+						
+						// split and re-sort the comma-separated values
+						keyi = lines[i].split(": ")[0];
+						valListi = lines[i].split(": ").slice(1).join(": ").split(', ');
+						valListi = [...new Set(valListi)]
+						lines[i]=keyi + ": " + valListi.sort().join(", ")
+					}
+				}
+				
+			} else {
+				// add a new line for this newKey
+				lines = oldStr.split("<br>")
+				lines.push(newKey + ": " + newVal);
+			}
+			
+			return lines.sort().join("<br>");
+		}
+		
+		var getVal = function(theStr, key) {
+			
+			for (var line of theStr.split("<br>")) {
+				if (line.startsWith(key + ":")) {
+					return line.split(": ").slice(1).join(": ");
+				}
+			}
+			return ""
+		}
+		
+		// if node is not in nodeDict then pull it from network into nodeDict
+		var ensureNodeInDict = function(id) {
+			if (nodeDict[id] === undefined) {
+				if (id in network.body.nodes) {
+					// pull the nodeDict entry out of the network if possible
+					var n = network.body.nodes[id].options;
+					nodeDict[id] = { id: n.id };
+					nodeDict[id].group = n.group;
+					nodeDict[id][MOUSEOVER] = n[MOUSEOVER];
+					nodeDict[id][LABEL] = n[LABEL];
+				} else {
+					// create a blank-ish node if there's nothing in the network either
+					nodeDict[id] = { id: id , group: UNTYPED };
+					nodeDict[id][MOUSEOVER] = addKeyVal("", URI, formatUri(id));
+					nodeDict[id][LABEL] = optLabelIdFlag ? formatUri(id) : "";
+				}
+			}
+		}
+		
 		var s = triple[0];
 		var p = triple[1];
 		var o = triple[2];
@@ -445,6 +515,10 @@ define([	// properly require.config'ed
 		// shorten uri for viewers if optLabelIdFlag
 		var formatUri = function(uri) {
 			return (optLabelIdFlag ? uri.split("/").slice(-1)[0] : uri);
+		}
+		
+		var formatProp = function(p) {
+			return p.split(/\/|#/).slice(-1)[0]
 		}
 		
 		// clean up triples removing <> and quotes, etc.
@@ -485,16 +559,13 @@ define([	// properly require.config'ed
 			oType = VisJsHelper.BLANK_NODE;
 		}
 		
-		// based on optLabelIdFlag:  figure out where type and uri go
-		var type_field = optLabelIdFlag ? "title" : "label";
-		var uri_field = optLabelIdFlag ? "label" : "title";
 		var UNTYPED = "untyped";
+		var MOUSEOVER = "title";
+		var LABEL = "label";
+		var URI = "Uri";
+		var TYPE = "Type";
 		
-		// make sure subject exists
-		if (nodeDict[s] === undefined) {
-			nodeDict[s] = { id: s , group: UNTYPED }
-			nodeDict[s][uri_field] = formatUri(s);
-		}
+		ensureNodeInDict(s);
 			
 		if (this.isTypePredicate(p)) {
 			
@@ -502,22 +573,19 @@ define([	// properly require.config'ed
 			longType = o;
 			shortType = o.indexOf("#")>-1 ? o.split("#").slice(-1,)[0] : o;
 			
-			if (nodeDict[s][type_field] === undefined) {
-				nodeDict[s][type_field] = shortType;
-			} else {
-				// split, sort, uniquify types
-				var types = nodeDict[s][type_field].split(",");
-				types.push(shortType);
-				types = [...new Set(types)]
-				types.sort()
-				nodeDict[s][type_field] = types.join(",");
+			nodeDict[s][MOUSEOVER] = addKeyVal(nodeDict[s][MOUSEOVER], TYPE, shortType);
+			nodeDict[s][MOUSEOVER] = addKeyVal(nodeDict[s][MOUSEOVER], URI,  formatUri(s));
+			
+			if (! nodeDict[s][LABEL]) {
+				// fill in LABEL if it is not already overridden by a property
+				nodeDict[s][LABEL] = getVal(nodeDict[s][MOUSEOVER], optLabelIdFlag?URI:TYPE);
 			}
-        	nodeDict[s][uri_field] = formatUri(s);
         	
         	if (nodeDict[s]["group"] === undefined || nodeDict[s]["group"] === VisJsHelper.BLANK_NODE || nodeDict[s]["group"] === UNTYPED ) {
+				// group was empty
         		nodeDict[s]["group"] = longType;
         	} else {
-				// split, sort, uniqifty types
+				// split, sort, uniqifty long types
 				types = nodeDict[s]["group"].split(",");
 				types.push(longType);
 				types = [...new Set(types)]
@@ -531,12 +599,7 @@ define([	// properly require.config'ed
 			if (oType == "uri") {
 				// edge to uri
 				
-				// make sure object exists
-				if (nodeDict[o] === undefined) {
-					// populate the object uri into id, and either label or title
-					nodeDict[o] = { id: o }
-					nodeDict[o][uri_field] = formatUri(o);		
-				}
+				ensureNodeInDict(o);
 				
 				edgeList.push({
                             id: s + "-" + predName  +"-" + o,  // prevent duplicate edges
@@ -547,22 +610,16 @@ define([	// properly require.config'ed
                             color: {inherit: false},
                             //group: key      // removed this not sure what it is supposed to be for edges
                         });
+                        
+			} else if (propIsId(p)) {
+				// already made sure subject node exists
+				
+				// add prop to MOUSEOVER
+				nodeDict[s][MOUSEOVER] = addKeyVal(nodeDict[s][MOUSEOVER], formatProp(p), o);
+				nodeDict[s][LABEL] = getVal(nodeDict[s][MOUSEOVER], formatProp(p));
+				
 			} else {
                 // edge to a data data or blank
-
-                // get value and type:
-                // sometimes { @value: 35, @type: integer } and sometimes just "35" or 35
-				var obj_uri;
-				
-				// If we're not in special lablIdFlag mode AND blank node has slipped in as an object
-				// stop exploration here
-				// (blank nodes are not consistent across queries)
-				if (oType == VisJsHelper.BLANK_NODE) {
-					obj_uri = "_:blank";
-
-				} else {
-					obj_lab = o;
-				}
 				
                 var g = (oType == VisJsHelper.BLANK_NODE) ? VisJsHelper.BLANK_NODE : VisJsHelper.DATA_NODE;
                 // allow typing blank nodes if optLabelIdFlag

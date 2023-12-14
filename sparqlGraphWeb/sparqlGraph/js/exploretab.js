@@ -599,7 +599,7 @@ define([	// properly require.config'ed
 
 				var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.longTimeoutMsec);
 				var resultsCallback = MsiClientNodeGroupExec.buildJsonLdOrTriplesCallback(
-					VisJsHelper.addTriples.bind(this, canvasDiv, network),  // add triples to graph
+					VisJsHelper.addTriples.bind(this, canvasDiv, network, ""),  // add triples to graph
 					networkFailureCallback.bind(this, canvasDiv),
 					function() { }, // no status updates
 					function() { }, // no check for cancel
@@ -634,7 +634,7 @@ define([	// properly require.config'ed
 
 				var client = new MsiClientNodeGroupExec(g.service.nodeGroupExec.url, g.longTimeoutMsec);
 				var resultsCallback = MsiClientNodeGroupExec.buildJsonLdOrTriplesCallback(
-					VisJsHelper.addTriples.bind(this, canvasDiv, network),  // add triples to graph
+					VisJsHelper.addTriples.bind(this, canvasDiv, network, ""),  // add triples to graph
 					networkFailureCallback.bind(this, canvasDiv),
 					function() { }, // no status updates
 					function() { }, // no check for cancel
@@ -645,7 +645,7 @@ define([	// properly require.config'ed
 				// construct all connected data
 				const nodeTitle = node.data.title;  	// this could be an instance URI or a literal
 				// TODO line below uses instance type "node_uri" even though the nodeTitle may be a literal.  Currently works for literal strings (e.g. "id0") but need to revisit.
-				client.execAsyncConstructConnectedData(nodeTitle, "node_uri", SemanticNodeGroup.RT_NTRIPLES, VisJsHelper.ADD_TRIPLES_MAX, gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
+				client.execAsyncConstructConnectedData(nodeTitle, "node_uri", null, SemanticNodeGroup.RT_NTRIPLES, VisJsHelper.ADD_TRIPLES_MAX, gConn, resultsCallback, networkFailureCallback.bind(this, canvasDiv));
 			},
 
 
@@ -1033,7 +1033,7 @@ define([	// properly require.config'ed
 	            if (res.isNtriplesResults()) {
 					triples = res.getNtriplesArray();
 					for (var i=0; i < triples.length; i++) {
-	                	VisJsHelper.addTriple(triples[i], nodeDict, edgeList, true, false);
+	                	VisJsHelper.addTripleToDicts(network, triples[i], nodeDict, edgeList, true, false);
 	            		if (i % 20 == 0) {
 		                    network.body.data.nodes.update(Object.values(nodeDict));
 		                    network.body.data.edges.update(edgeList);
