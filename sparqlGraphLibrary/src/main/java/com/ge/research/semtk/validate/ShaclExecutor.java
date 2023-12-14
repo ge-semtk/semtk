@@ -46,7 +46,7 @@ import com.ge.research.semtk.utility.Utility;
 /**
  * Validate RDF data using SHACL
  */
-public class ShaclRunner {
+public class ShaclExecutor {
 	
 	private Graph dataGraph;
 	private Shapes shapes;
@@ -67,30 +67,30 @@ public class ShaclRunner {
 	private static final String JSON_KEY_PATH = "path";						// the relevant path (e.g. <http://DeliveryBasketExample#holds>, ^<http://DeliveryBasketExample#holds>, <http://DeliveryBasketExample#holds>/<http://DeliveryBasketExample#identifier>, more)
 	private static final String JSON_KEY_CONSTRAINT = "constraint"; 		// the constraint (e.g. maxCount[3])
 	public static final String JSON_KEY_SEVERITY = "severity";				// Violation, Info, or Warning (e.g. from http://www.w3.org/ns/shacl#Violation)
-	private static final String JSON_KEY_FOCUSNODE = "focusNode";			// the offending item, could be URI or literal (e.g. http://DeliveryBasketExample#basket100)
+	public static final String JSON_KEY_FOCUSNODE = "focusNode";			// the offending item, could be URI or literal (e.g. http://DeliveryBasketExample#basket100)
 	private static final String JSON_KEY_VALUE = "value";					// sometimes populated (e.g. for failed DataType constraint)
 	private static final String JSON_KEY_MESSAGE = "message"; 				// a message (auto-generated unless defined in SHACL shape) e.g. "maxCount[1]: Invalid cardinality: expected max 1: Got count = 2".  No other way to get actual, so best practice is to let it auto-generate 
 	private static final String JSON_KEY_MESSAGETRANSFORMED = "messageTransformed"; 	// a message transformed to be more readable than the original 
 
 	/**
 	 * Constructor
-	 * @param shaclTtlInputStream SHACL shapes in a TTL input stream
+	 * @param shaclTtl SHACL shapes string
 	 * @param conn connection containing model/data
 	 */
-	public ShaclRunner(InputStream shaclTtlInputStream, SparqlConnection conn) throws Exception{
-		this(shaclTtlInputStream, conn, null, null, 0, 100);
+	public ShaclExecutor(String shaclTtl, SparqlConnection conn) throws Exception{
+		this(shaclTtl, conn, null, null, 0, 100);
 	}
 	
 	/**
 	 * Constructor
-	 * @param shaclTtlInputStream SHACL shapes in a TTL input stream
+	 * @param shaclTtl SHACL shapes string
 	 * @param conn connection containing model/data
 	 * @param tracker the job tracker
 	 * @param jobId the job id for setting job status
 	 * @param percentStart the start percent for setting job status
 	 * @param percentEnd the end percent for setting job status
 	 */
-	public ShaclRunner(InputStream shaclTtlInputStream, SparqlConnection conn, JobTracker tracker, String jobId, int percentStart, int percentEnd) throws Exception{
+	public ShaclExecutor(String shaclTtl, SparqlConnection conn, JobTracker tracker, String jobId, int percentStart, int percentEnd) throws Exception{
 		
 		this.tracker = tracker;
 		this.jobId = jobId;
@@ -98,27 +98,27 @@ public class ShaclRunner {
 		endPercent = percentEnd;
 
 		if(this.tracker != null) { this.tracker.setJobPercentComplete(this.jobId, startPercent, "Parsing SHACL shapes"); }
-		shapes = parseShapes(shaclTtlInputStream);
+		shapes = parseShapes(shaclTtl);
 		if(this.tracker != null) { this.tracker.setJobPercentComplete(this.jobId, (int)(startPercent + (endPercent - startPercent)*0.3), "Creating Jena graph"); }
 		dataGraph = conn.getJenaGraph();
 		if(this.tracker != null) { this.tracker.setJobPercentComplete(this.jobId, (int)(startPercent + (endPercent - startPercent)*0.6), "Running SHACL"); }
-		run();
+		executeShacl();
 		if(this.tracker != null) { this.tracker.setJobPercentComplete(this.jobId, endPercent); }
 	}
 	
 	/**
 	 * Constructor
-	 * @param shaclTtlInputStream SHACL shapes in a TTL input stream
+	 * @param shaclTtl SHACL shapes string
 	 * @param dataTtlInputStream data/model in a TTL input stream
 	 */
-	public ShaclRunner(InputStream shaclTtlInputStream, InputStream dataTtlInputStream) throws Exception{
-		shapes = parseShapes(shaclTtlInputStream);
+	public ShaclExecutor(String shaclTtl, InputStream dataTtlInputStream) throws Exception{
+		shapes = parseShapes(shaclTtl);
 		dataGraph = Utility.getJenaGraphFromTurtle(dataTtlInputStream);
-		run();
+		executeShacl();
 	}
 	
 	// run SHACL shapes on a Jena Graph object, get report object and raw ttl
-	private void run() throws Exception {
+	private void executeShacl() throws Exception {
 		
 		try {
 			report = ShaclValidator.get().validate(shapes, dataGraph);
@@ -239,9 +239,9 @@ public class ShaclRunner {
 	}
 	
 	// parse shapes
-	private Shapes parseShapes(InputStream shaclTtlInputStream) throws Exception {
+	private Shapes parseShapes(String shaclTtl) throws Exception {
 		try {
-			return Shapes.parse(Utility.getJenaGraphFromTurtle(shaclTtlInputStream));
+			return Shapes.parse(Utility.getJenaGraphFromTurtle(shaclTtl));
 		}catch(Exception e) {
 			throw new Exception("Error parsing SHACL shapes: " + e.getMessage(), e);
 		}
@@ -484,7 +484,7 @@ public class ShaclRunner {
 			LocalLogger.printStackTrace(e);
 		}
 		
-		LocalLogger.logToStdOut("No SHACL message transform applies: " + message);
+		//LocalLogger.logToStdOut("No SHACL message transform applies: " + message);
 		return "";
 	}
 	

@@ -26,18 +26,19 @@ import org.apache.jena.shacl.validation.Severity;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.ge.research.semtk.load.config.test.ManifestConfigTest_IT;
+import com.ge.research.semtk.load.dataset.CSVDataset;
 import com.ge.research.semtk.services.client.RestClientConfig;
 import com.ge.research.semtk.services.client.UtilityClient;
 import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
 import com.ge.research.semtk.test.IntegrationTestUtility;
 import com.ge.research.semtk.test.TestGraph;
 import com.ge.research.semtk.utility.Utility;
-import com.ge.research.semtk.validate.ShaclRunner;
-import com.ge.research.semtk.validate.test.ShaclRunnerTest_IT;
+import com.ge.research.semtk.validate.ShaclExecutor;
+import com.ge.research.semtk.validate.ShaclBasedGarbageCollector;
+import com.ge.research.semtk.validate.test.ShaclExecutorTest_IT;
 
 public class UtilityClientTest_IT {
 
@@ -122,7 +123,6 @@ public class UtilityClientTest_IT {
 	}
 
 	@Test
-	@Ignore  // TODO temporarily ignoring due to frequent intermittent failure ("Received empty response") in Jenkins build
 	public void testGetShaclResults() throws Exception {
 		TestGraph.clearGraph();
 		TestGraph.uploadOwlResource(this, "DeliveryBasketExample.owl");
@@ -136,15 +136,15 @@ public class UtilityClientTest_IT {
 		jobId = client.execGetShaclResults(ttlFile, TestGraph.getSparqlConn(), Severity.Info);
 		IntegrationTestUtility.getStatusClient(jobId).waitForCompletion(jobId);
 		resultsJson = IntegrationTestUtility.getResultsClient().execGetBlobResult(jobId);
-		assertEquals(((JSONArray)resultsJson.get(ShaclRunner.JSON_KEY_ENTRIES)).size(), ((JSONArray)expectedJson.get(ShaclRunner.JSON_KEY_ENTRIES)).size());
+		assertEquals(((JSONArray)resultsJson.get(ShaclExecutor.JSON_KEY_ENTRIES)).size(), ((JSONArray)expectedJson.get(ShaclExecutor.JSON_KEY_ENTRIES)).size());
 		Utility.equals(resultsJson, expectedJson);	
 		
 		// violation level
 		jobId = client.execGetShaclResults(ttlFile, TestGraph.getSparqlConn(), Severity.Violation);
 		IntegrationTestUtility.getStatusClient(jobId).waitForCompletion(jobId);
 		resultsJson = IntegrationTestUtility.getResultsClient().execGetBlobResult(jobId);
-		expectedJson = ShaclRunnerTest_IT.removeEntriesBelowSeverityLevel(expectedJson, Severity.Violation);
-		assertEquals(((JSONArray)resultsJson.get(ShaclRunner.JSON_KEY_ENTRIES)).size(), ((JSONArray)expectedJson.get(ShaclRunner.JSON_KEY_ENTRIES)).size());
+		expectedJson = ShaclExecutorTest_IT.removeEntriesBelowSeverityLevel(expectedJson, Severity.Violation);
+		assertEquals(((JSONArray)resultsJson.get(ShaclExecutor.JSON_KEY_ENTRIES)).size(), ((JSONArray)expectedJson.get(ShaclExecutor.JSON_KEY_ENTRIES)).size());
 		Utility.equals(resultsJson, expectedJson);	
 		
 		try {
@@ -154,6 +154,18 @@ public class UtilityClientTest_IT {
 			assert(e.getMessage().contains("File does not exist"));
 		}
 		TestGraph.clearGraph();
+	}
+
+	@Test
+	public void testShaclBasedGarbageCollection() throws Exception {
+		TestGraph.clearGraph();
+		TestGraph.uploadOwlResource(this, "DeliveryBasketExample.owl");
+		File ttlFile = Utility.getResourceAsTempFile(this, "DeliveryBasketExample-GarbageCollection-shacl.ttl");
+		String jobId = client.execPerformShaclBasedGarbageCollection(ttlFile, TestGraph.getSparqlConn());
+		IntegrationTestUtility.getStatusClient(jobId).waitForCompletion(jobId);
+		CSVDataset deletedUrisDataset = IntegrationTestUtility.getResultsClient().getTableResultsCSV(jobId, 99999);
+		assertEquals(deletedUrisDataset.getColumnIndex(ShaclBasedGarbageCollector.HEADER_DELETED_INSTANCES), 0);
+		assertEquals(deletedUrisDataset.getNumRows(), 10);  // 10 URIs garbage collected
 	}
 	
 	// clear graphs and nodegroup store

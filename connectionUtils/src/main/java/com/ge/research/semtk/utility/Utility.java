@@ -83,11 +83,13 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.text.StrSubstitutor;
 import org.apache.jena.graph.Graph;
+import org.apache.jena.graph.Triple;
 import org.apache.jena.rdf.model.Model;
 import org.apache.jena.rdf.model.ModelFactory;
 import org.apache.jena.riot.Lang;
 import org.apache.jena.riot.RDFDataMgr;
 import org.apache.jena.riot.RDFParser;
+import org.apache.jena.util.iterator.ExtendedIterator;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -1210,9 +1212,25 @@ public abstract class Utility {
 
 	/**
 	 * Create a Jena Graph from Turtle data
+	 * @param ttlStr Turtle data in a string
+	 * @return the Jena graph
+	 */
+	public static Graph getJenaGraphFromTurtle(String ttlStr) throws Exception {
+		InputStream inputStream = null;
+		Graph g;
+		try {
+			inputStream = new ByteArrayInputStream(ttlStr.getBytes());
+			g = getJenaGraphFromTurtle(inputStream);
+		}finally {
+			if(inputStream != null) { inputStream.close(); }
+		}
+		return g;
+	}
+	
+	/**
+	 * Create a Jena Graph from Turtle data
 	 * @param ttlInputStream Turtle data in an input stream
 	 * @return the Jena graph
-	 * @throws Exception
 	 */
 	public static Graph getJenaGraphFromTurtle(InputStream ttlInputStream) throws Exception {
 		try {
@@ -1237,6 +1255,20 @@ public abstract class Utility {
 			outputStream.close();
 		}
 		return outputStream.toString();
+	}
+	
+	/**
+	 * Get triples from a Jena graph
+	 * @param graph the graph
+	 * @return the triples
+	 */
+	public static ArrayList<Triple> getTriplesFromJenaGraph(Graph graph) throws IOException {
+		ArrayList<Triple> triplesList = new ArrayList<Triple>();
+		ExtendedIterator<Triple> triplesIter = graph.find();
+		while(triplesIter.hasNext()) {
+			triplesList.add(triplesIter.next());
+		}
+		return triplesList;
 	}
 
 }

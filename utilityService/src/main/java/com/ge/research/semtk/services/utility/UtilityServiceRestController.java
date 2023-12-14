@@ -75,7 +75,8 @@ import com.ge.research.semtk.springutillib.properties.QueryServiceProperties;
 import com.ge.research.semtk.utility.LocalLogger;
 import com.ge.research.semtk.utility.Logger;
 import com.ge.research.semtk.utility.Utility;
-import com.ge.research.semtk.validate.ShaclRunner;
+import com.ge.research.semtk.validate.ShaclExecutor;
+import com.ge.research.semtk.validate.ShaclBasedGarbageCollector;
 
 import io.swagger.v3.oas.annotations.Operation;
 
@@ -479,17 +480,17 @@ public class UtilityServiceRestController {
 			String jobId = JobTracker.generateJobId();
 			JobTracker tracker = new JobTracker(servicesgraph_prop.buildSei());
 			ResultsClient rclient = results_prop.getClient();
-			
 			tracker.createJob(jobId);
-			tracker.setJobPercentComplete(jobId, 1);
+			tracker.setJobPercentComplete(jobId, 1);			
+			String shaclTtl = new String(shaclTtlFile.getBytes()); // read file before launching new thread
 			
 			// spin up an async thread
 			new Thread(() -> {
 				try {
 					HeadersManager.setHeaders(headers);
-					ShaclRunner shaclRunner = new ShaclRunner(shaclTtlFile.getInputStream(), new SparqlConnection(connJsonStr), tracker, jobId, 20, 80);
+					ShaclExecutor shaclExecutor = new ShaclExecutor(shaclTtl, new SparqlConnection(connJsonStr), tracker, jobId, 20, 80);
 					if(tracker != null) { tracker.setJobPercentComplete(jobId, 85, "Gathering SHACL results"); }
-					JSONObject resultsJson = shaclRunner.getResults(severity);
+					JSONObject resultsJson = shaclExecutor.getResults(severity);
 					rclient.execStoreBlobResults(jobId, resultsJson);
 					tracker.setJobSuccess(jobId);
 				} catch (Exception e) {
@@ -511,6 +512,55 @@ public class UtilityServiceRestController {
 			LocalLogger.printStackTrace(e);
 		}
 		return retval.toJson();		
+	}	
+	
+	
+	@Operation(
+			summary="Perform SHACL-based garbage collection",
+			description="Async.  Returns a jobID."
+			)
+	@CrossOrigin
+	@RequestMapping(value="/performShaclBasedGarbageCollection", method=RequestMethod.POST, consumes=MediaType.MULTIPART_FORM_DATA_VALUE)
+	public JSONObject performShaclBasedGarbageCollection(@RequestParam("shaclTtlFile") MultipartFile shaclTtlFile,
+														 @RequestParam("conn") String connJsonStr,
+														 @RequestHeader HttpHeaders headers){
+		HeadersManager.setHeaders(headers);
+		final String ENDPOINT_NAME = "performShaclBasedGarbageCollection";
+		SimpleResultSet retval = new SimpleResultSet(false);
+
+		try {		
+			String jobId = JobTracker.generateJobId();
+			JobTracker tracker = new JobTracker(servicesgraph_prop.buildSei());
+			tracker.createJob(jobId);
+			ResultsClient rclient = results_prop.getClient();
+			String shaclTtl = new String(shaclTtlFile.getBytes()); // read file before launching new thread
+			
+			// spin up an async thread
+			new Thread(() -> {	
+				try {
+					HeadersManager.setHeaders(headers);
+					Table deletesTable = (new ShaclBasedGarbageCollector()).run(shaclTtl, new SparqlConnection(connJsonStr));
+					rclient.execStoreTableResults(jobId, deletesTable);  // table of deleted URIs
+					tracker.setJobSuccess(jobId);
+				} catch (Exception e) {
+					try {
+						LocalLogger.printStackTrace(e);
+						tracker.setJobFailure(jobId, e.getMessage());
+					} catch (Exception ee) {
+						LocalLogger.logToStdErr(ENDPOINT_NAME + " error accessing job tracker");
+						LocalLogger.printStackTrace(ee);
+					}
+				}
+			}).start();			
+			retval.addJobId(jobId);
+			retval.addResultType(SparqlResultTypes.TABLE);
+			retval.setSuccess(true);
+		} catch (Exception e) {
+			retval.addRationaleMessage(SERVICE_NAME, ENDPOINT_NAME, e);
+			retval.setSuccess(false);
+			LocalLogger.printStackTrace(e);
+		}
+		return retval.toJson();
 	}	
 	
 	/**
