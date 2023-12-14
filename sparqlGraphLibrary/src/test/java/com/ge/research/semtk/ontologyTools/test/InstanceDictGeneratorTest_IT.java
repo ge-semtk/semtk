@@ -19,26 +19,17 @@ package com.ge.research.semtk.ontologyTools.test;
 
 import static org.junit.Assert.*;
 
-import java.util.ArrayList;
 
-import org.junit.AfterClass;
-import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.ge.research.semtk.belmont.Node;
-import com.ge.research.semtk.belmont.NodeGroup;
-import com.ge.research.semtk.ontologyTools.ClassInstance;
+
 import com.ge.research.semtk.ontologyTools.InstanceDictGenerator;
-import com.ge.research.semtk.ontologyTools.NodeGroupCache;
 import com.ge.research.semtk.ontologyTools.OntologyInfo;
-import com.ge.research.semtk.ontologyTools.PathExplorer;
-import com.ge.research.semtk.ontologyTools.PathItemRequest;
-import com.ge.research.semtk.ontologyTools.ReturnRequest;
+
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
-import com.ge.research.semtk.sparqlX.SparqlEndpointInterface;
-import com.ge.research.semtk.test.IntegrationTestUtility;
+
 import com.ge.research.semtk.test.TestGraph;
 
 public class InstanceDictGeneratorTest_IT {
@@ -69,17 +60,14 @@ public class InstanceDictGeneratorTest_IT {
 		
 		InstanceDictGenerator generator = new InstanceDictGenerator(conn, oInfo, 2, 2);
 		Table tab = generator.generate();
-		// almost a no-op test : make sure nothing crashes
 		assertEquals("Wrong number of rows", 11, tab.getNumRows());
 		
 		generator = new InstanceDictGenerator(conn, oInfo, 3, 2);
 		tab = generator.generate();
-		// almost a no-op test : make sure nothing crashes
 		assertEquals("Wrong number of rows after allowing three words", 13, tab.getNumRows());
 		
 		generator = new InstanceDictGenerator(conn, oInfo, 2, 1);
 		tab = generator.generate();
-		// almost a no-op test : make sure nothing crashes
 		assertEquals("Wrong number of rows with specificity set to 1", 9, tab.getNumRows());
 	}
 	

@@ -8,6 +8,7 @@ import java.util.Set;
 import com.ge.research.semtk.resultSet.Table;
 import com.ge.research.semtk.sparqlToXLib.SparqlToXLibUtil;
 import com.ge.research.semtk.sparqlX.SparqlConnection;
+import com.ge.research.semtk.utility.LocalLogger;
 
 /**
  * A utility class to generate data dictionaries from an ontology.
@@ -48,7 +49,7 @@ public class InstanceDictGenerator {
 	 * @param oInfo the ontology info object
 	 * @param stripNamespace true to remove namespaces from classes and properties
 	 */
-	public Table generate() throws Exception{
+	public Table generateOLD() throws Exception{
 		
 		Table table = null;
 		
@@ -102,5 +103,72 @@ public class InstanceDictGenerator {
 		}
 		return table;
 	}
+	// @TODO Different in that it will discount a string if it names members of different classes
+	// @TODO Above queries by subjects of each (super)class
+	public Table generate() throws Exception{
+
+		Table table = null;
+		HashSet<String> stringSet = new HashSet<String>();
+				
+		// get all strings (objects of a string predicate)
+		ArrayList<String> propNames = this.oInfo.getPropertyNames();
+		for (String propUri : propNames) {
+			OntologyProperty oProp = oInfo.getProperty(propUri);
+			Set<String> domains = oProp.getRangeDomains();
+			for (String domainUri : domains) {
+				OntologyRange oRange = oProp.getExactRange(domainUri); 
+				if (oRange.containsUri("http://www.w3.org/2001/XMLSchema#string")) {
+					String query = String.format(
+							"select distinct ?str \n"
+									+ "		%s \n "
+									+ " where {\n"
+									+ "	\n"
+									+ "	?u <%s> ?str.\n"
+									+ " filter ( ! regex (?str, \"%s\")) .\n"
+									+ "} \n"
+									, 
+									SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", conn, this.oInfo), 
+									propUri, 
+									// domainUri, 
+									this.wordRegex);
+					LocalLogger.logToStdOut("query " + propUri + " domain: " + domainUri);
+					Table tab = conn.getDefaultQueryInterface().executeToTable(query);
+					LocalLogger.logToStdOut(tab.toCSVString());
+					for (String s : tab.getColumn(0)) {
+						stringSet.add(s);
+					}
+				}
+			}
+		}
+		
+		
+		Table ret = new Table(new String[] {"instance_uri", "class_uris", "label", "label_specificity", "property"});
+		
+		for (String s : stringSet) {
+
+			String query = String.format(
+					  "select distinct ?sub (GROUP_CONCAT(DISTINCT ?t) as ?class_uris) ?label ?prop \n"
+					+ "		%s \n "
+					+ " where {\n"
+					+ " BIND (\"%s\" as ?label) . \n"
+					+ "	?sub ?prop ?label.\n"
+					+ " ?sub a ?t .\n"
+					+ "} \n"
+					+ "GROUP BY ?sub ?label ?prop \n"
+					+ "LIMIT %d", 
+					SparqlToXLibUtil.generateSparqlFromOrUsing("", "FROM", conn, this.oInfo), 
+					s,
+					this.specificityLimit + 1);
+			//LocalLogger.logToStdOut("query label: " + s + " " + String.valueOf(++i) + "/" + String.valueOf(numStrings));
+			Table tab = conn.getDefaultQueryInterface().executeToTable(query);
+			//LocalLogger.logToStdOut(tab.toCSVString());
+			if (tab.getNumRows() <= this.specificityLimit) {
+				for (int r=0; r < tab.getNumRows(); r++) {
+					ret.addRow(new String[] {tab.getCell(r, 0), tab.getCell(r,1), s, String.valueOf(tab.getNumRows()), tab.getCell(r,3)});
+				}
+			}
+		}
 	
+		return ret;
+	}
 }
