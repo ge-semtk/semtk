@@ -2445,6 +2445,7 @@ public class NodeGroup {
 		int myDone = doneNodes.size() - 1;
 				
 		// delete where
+		// TODO: this mixes the delete with the first half of the type clause, resulting in a very inefficient query
 		if (clauseType == ClauseTypes.DELETE_WHERE && snode.getDeletionMode() != NodeDeletionTypes.NO_DELETE){
 			sparql.append(this.generateNodeDeletionSparql(snode, true));
 		}
