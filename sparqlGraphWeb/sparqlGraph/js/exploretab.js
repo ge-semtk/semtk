@@ -138,8 +138,8 @@ define([	// properly require.config'ed
                 }
                 
                 // in some modes, enable double-click to expand node
-            	this.networkHash[ExploreTab.MODE_RESTRICTIONS].on('doubleClick', VisJsHelper.expandSelectedNodes.bind(this, this.canvasDivHash[ExploreTab.MODE_RESTRICTIONS], this.networkHash[ExploreTab.MODE_RESTRICTIONS]));
-            	this.networkHash[ExploreTab.MODE_SHACL].on('doubleClick', VisJsHelper.expandSelectedNodes.bind(this, this.canvasDivHash[ExploreTab.MODE_SHACL], this.networkHash[ExploreTab.MODE_SHACL]));
+            	this.networkHash[ExploreTab.MODE_RESTRICTIONS].on('doubleClick', VisJsHelper.expandSelectedNodes.bind(this, this.canvasDivHash[ExploreTab.MODE_RESTRICTIONS], this.networkHash[ExploreTab.MODE_RESTRICTIONS], ""));
+            	this.networkHash[ExploreTab.MODE_SHACL].on('doubleClick', VisJsHelper.expandSelectedNodes.bind(this, this.canvasDivHash[ExploreTab.MODE_SHACL], this.networkHash[ExploreTab.MODE_SHACL], ""));
                 
                 return this.networkHash;
             },
