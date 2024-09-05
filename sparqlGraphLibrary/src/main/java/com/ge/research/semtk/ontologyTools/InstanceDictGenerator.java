@@ -94,7 +94,7 @@ public class InstanceDictGenerator {
 					if (table == null)
 						table = tab;
 					else
-						table.append(tab);
+						table.append(tab);	
 										
 				}
 				
@@ -106,19 +106,24 @@ public class InstanceDictGenerator {
 	// @TODO Different in that it will discount a string if it names members of different classes
 	// @TODO Above queries by subjects of each (super)class
 	public Table generate() throws Exception{
-
+		
 		Table table = null;
 		HashSet<String> stringSet = new HashSet<String>();
 				
 		// get all strings (objects of a string predicate)
 		ArrayList<String> propNames = this.oInfo.getPropertyNames();
 		for (String propUri : propNames) {
-			OntologyProperty oProp = oInfo.getProperty(propUri);
+			if(propUri.equals("http://sadl.org/sadlimplicitmodel#script")) {
+				// one-off predicate to skip.  It has objects that we want to ignore that slip through the regex filter, e.g. "-- unique(...): uri(""com.ge.research.sadl.jena.reasoner.builtin#unique"")"
+				// TODO a more generic solution would be better
+				continue;
+			}
+			OntologyProperty oProp = oInfo.getProperty(propUri);		
 			Set<String> domains = oProp.getRangeDomains();
 			for (String domainUri : domains) {
 				OntologyRange oRange = oProp.getExactRange(domainUri); 
 				if (oRange.containsUri("http://www.w3.org/2001/XMLSchema#string")) {
-					String query = String.format(
+					String query = String.format(									
 							"select distinct ?str \n"
 									+ "		%s \n "
 									+ " where {\n"
