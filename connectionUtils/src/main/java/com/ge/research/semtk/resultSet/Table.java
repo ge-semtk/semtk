@@ -755,7 +755,7 @@ public class Table {
 		XSDSupportedType t;
 		
 		try {
-			t = XSDSupportedType.getMatchingValue(this.columnTypes[row]);
+			t = XSDSupportedType.getMatchingValue(this.columnTypes[col]);
 		} catch (Exception e) {
 			return getCellAsString(row, col);
 		}

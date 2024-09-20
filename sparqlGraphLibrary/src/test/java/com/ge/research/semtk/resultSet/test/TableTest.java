@@ -59,6 +59,25 @@ public class TableTest {
 	}
 	
 	@Test
+	public void testTableToDataArray() throws Exception {
+		String[] cols = {"colA","colB","colC"};
+		String[] colTypes = {"Integer","String","Integer"};
+		ArrayList<ArrayList<String>> rows = new ArrayList<ArrayList<String>>();
+		ArrayList<String> row = new ArrayList<String>();
+		row.add("6");
+		row.add("five");
+		row.add("5");
+		rows.add(row);
+		Table table = new Table(cols, colTypes, rows);
+		assertEquals(table.getNumRows(),1);
+		Object[][] objectArray = table.getDataArray();
+		assertEquals(objectArray.length,1);
+		assertEquals(objectArray[0][0], 6);
+		assertEquals(objectArray[0][1], "five");
+		assertEquals(objectArray[0][2], 5);
+	}
+	
+	@Test
 	public void testSortStr() throws Exception {
 		
 		String[] cols = {"colA","colB","colC"};
