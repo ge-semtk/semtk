@@ -135,6 +135,7 @@ public class PathExplorer {
 			if (p != null) {
 				Triple t = p.getTriple(0);
 				if (this.predStats.getExact(t.getSubject(), t.getPredicate(), t.getObject()) == 0) {
+					LocalLogger.logToStdErr("Cannot build nodegroup: no predicate stats entry for s=" + t.getSubject() + ", p=" + t.getPredicate() + ", o=" + t.getObject());
 					return null;
 				}
 			}
