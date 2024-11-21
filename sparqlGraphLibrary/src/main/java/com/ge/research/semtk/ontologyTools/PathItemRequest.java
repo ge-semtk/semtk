@@ -4,18 +4,17 @@ import java.util.ArrayList;
 import java.util.HashSet;
 
 public class PathItemRequest {
-	// things that hlep define the classUri
-	private String instanceUri = null;      // the uri of the instance
-	
-	// constraint
-	private String labelStr = null;         // a label that uniquely defines the instance
-	private String labelPropUri = null;      // property used with the label to uniquely define the instance
-	
-	private String incomingClassUri = null;  // The instance must be connected to this class
-	private String incomingPropUri = null;   // The instance must be connected using this prop
-	
+
 	// node that must be added to path
-	private String classUri = null;        // 	class of this instance
+	private String classUri = null;         // class of this instance
+	// things that help define the classUri:
+	private String instanceUri = null;      // the uri of the instance
+	private String labelStr = null;         // a label that uniquely defines the instance	(e.g. a serial number string)
+	private String labelPropUri = null;     // property used with the label to uniquely define the instance (e.g. property #serialnumber)
+	
+	// incoming class/property
+	private String incomingClassUri = null; // the instance must be connected to this class
+	private String incomingPropUri = null;  // the instance must be connected using this prop
 	
 	// parallel arrays
 	private ArrayList<String> propUriList = null;

@@ -15,7 +15,6 @@
  ** limitations under the License.
  */
 
-
 package com.ge.research.semtk.ontologyTools;
 
 import java.util.ArrayList;
@@ -40,11 +39,9 @@ import com.ge.research.semtk.utility.Utility;
 /**
  * Path and nodegroup builder that checks instance data for path validity
  * @author 200001934
- *
- *
- *
  */
 public class PathExplorer {
+
 	// A NodeGroupCache for each unique cacheSei in memory 
 	private static HashMap<String, NodeGroupCache> cache = new HashMap<String, NodeGroupCache>();
 	private static String NO_CACHE = "No cache";
@@ -54,29 +51,27 @@ public class PathExplorer {
 	private String cacheKey;
 	private PredicateStats predStats;  
 	
+	/**
+	 * Constructor
+	 */
 	public PathExplorer(SparqlConnection conn, NodeGroupExecutionClient ngeClient, SparqlEndpointInterface cacheSei) throws Exception {
 		this(new OntologyInfo(conn), conn, ngeClient, cacheSei);
 	}
 	
 	/**
-	 * 
-	 * @param oInfo
-	 * @param conn - graphs being explored
-	 * @param ngeClient
-	 * @param cacheSei - location of ng cache, or null     WRONG: this is the Cache key.  The sei being explored.
-	 * @throws Exception
+	 * Constructor
 	 */
 	public PathExplorer(OntologyInfo oInfo, SparqlConnection conn, NodeGroupExecutionClient ngeClient, SparqlEndpointInterface cacheSei) throws Exception {
 		this(oInfo, conn, ngeClient, cacheSei, null);
 	}
 	
 	/**
-	 * 
-	 * @param oInfo
-	 * @param conn
-	 * @param ngeClient
-	 * @param cacheSei
-	 * @param predStats - if null path-finding uses this.pathHasInstance(), if non-null search each hop in PredicateStats
+	 * Constructor
+	 * @param oInfo ontology info object
+	 * @param conn the graphs being explored
+	 * @param ngeClient nodegroup execution client
+	 * @param cacheSei location of ng cache, or null
+	 * @param predStats predicate stats object
 	 * @throws Exception
 	 */
 	public PathExplorer(OntologyInfo oInfo, SparqlConnection conn, NodeGroupExecutionClient ngeClient, SparqlEndpointInterface cacheSei, PredicateStats predStats) throws Exception {
@@ -104,8 +99,7 @@ public class PathExplorer {
 	 *    check for missing,
 	 *    return first success
 	 * 
-	 * @param classInstanceList  - class/instance uri pairs that need to be in ng.  (instances may be null)
-	 * @param returns  - data property or enum classes that need to be returned  (Data property domain must be in classInstanceList) 
+	 * @param requestList a list of PathItemRequests to include in the nodegroup 
 	 * @return NodeGroup or null
 	 * @throws Exception
 	 */
@@ -114,22 +108,23 @@ public class PathExplorer {
 		// try pulling from cache
 		NodeGroup cached = this.getFromCache(requestList);
 		if (cached != null) {
-			LocalLogger.logToStdOut("Retrieved nodegroup from cache");
+			LocalLogger.logToStdOut("PathExplorer retrieved nodegroup from cache");
 			return cached;
-		}
+		}		
+		LocalLogger.logToStdOut("PathExplorer will build new nodegroup (vs retrieving from cache)");
 		
-		LocalLogger.logToStdOut("Building new nodegroup");
-		
+		// throw exception if any request items specify instance URIs that don't exist
 		this.checkInstances(requestList);
 		
-		// handle special simple  case: just one class
+		// handle special simple case: just one class
 		if (requestList.size() == 1) {
 			return this.buildSingleNodeNg(requestList);
 		} 
 		
+		// confirm predicate stats are available
 		if (this.predStats == null) throw new Exception("Internal error: no predicate stats are set");
 		
-		// check incomingPaths against predicate stats
+		// confirm that predicate stats has at least 1 entry for each incomingPath
 		for (PathItemRequest r : requestList) {
 			OntologyPath p = r.getIncomingPath();
 			if (p != null) {
@@ -146,36 +141,39 @@ public class PathExplorer {
 		// Process the requestList in every possible order
 		PermutationGenerator permGen = new PermutationGenerator(requestList.size());
 		for (int i=0; i < permGen.numPermutations(); i++) {
+
 			boolean success = true;
 			ArrayList<Integer> perm = permGen.getPermutation(i);
+			NodeGroup ng = new NodeGroup();	
 			
-			// build nodegroup with anchor node: requestList[0]
-			NodeGroup ng = new NodeGroup();		
+			// designate one request item (permutation index 0) as an anchor node
 			PathItemRequest anchorRequest = requestList.get(perm.get(0));
 			Node anchorNode = ng.addNode(anchorRequest.getClassUri(), this.oInfo);
 			
+			// add constraints to the anchor node
 			this.constrainNode(ng, anchorNode, anchorRequest);
 			
-			// add incoming path, if any
+			// add incoming path (if any) to anchor node
 			OntologyPath anchorPath = anchorRequest.getIncomingPath();
 			if (anchorPath != null) {
 				Triple t = anchorPath.getTriple(0);
 				ng.addNode(t.getSubject(), anchorNode, t.getPredicate(), null);
 			}
 			
-			// add request list items 1..n
+			// add the remaining request items (permutation index 1->n)
 			for (int j=1; j < perm.size(); j++) {
+
 				PathItemRequest newRequest = requestList.get(j);
 				OntologyPath incomingPath = newRequest.getIncomingPath();
+				
+				// addFirstUri is the incoming class uri (if request item has an incoming path), else the class uri of the request item itself
 				String addFirstUri = (incomingPath != null) ? incomingPath.getTriple(0).getSubject() : newRequest.getClassUri();
 				
-				// find the request uri or incoming path uri
+				// find the addFirstUri in the nodegroup (if not found, add it)
 				ArrayList<Node> existsList = ng.getNodesBySuperclassURI(addFirstUri, this.oInfo);
 				Node n = existsList.size() > 0 ? existsList.get(0) : null;
-				
-				// if not found, add the request uri or incoming path uri
 				if (n == null) {
-					n = ng.addClassFirstPath(addFirstUri, this.oInfo, false, this.predStats);
+					n = ng.addClassFirstPath(addFirstUri, this.oInfo, false, this.predStats);  // pathfinding
 					if (n == null) {
 						// could not add class
 						success = false;
@@ -183,19 +181,18 @@ public class PathExplorer {
 					}
 				}
 				
-				// if incoming path, addFirst was the incoming.  Now add the request's classUri
+				// if incoming path, addFirstUri was the incoming class uri.  Now add the request's classUri
 				if (incomingPath != null) {
 					Triple t = incomingPath.getTriple(0);
 					n = ng.addNode(newRequest.getClassUri(), n, null, t.getPredicate());
 				}
 				
-				// constrain the node with instance URI if any
+				// add constraints to the node
 				this.constrainNode(ng, n, newRequest);
 			}	
 			
 			// save if it looks best so far
-			// NOTE: In all current test cases, we could break on the first found
-			//       This the (ng.getNodeCount() < reNg.getNodeCount()) is never true
+			// NOTE: In all current test cases, we could break on the first found. That is: ng.getNodeCount() < reNg.getNodeCount() is never true
 			if (success && 
 					(retNg == null || ng.getNodeCount() < retNg.getNodeCount())  ) {
 				retNg = NodeGroup.deepCopy(ng);
@@ -203,9 +200,9 @@ public class PathExplorer {
 		}
 		
 		if (retNg != null) {
-			this.putToCache(NodeGroup.deepCopy(retNg), requestList);
+			this.putToCache(NodeGroup.deepCopy(retNg), requestList); // store in cache for next time
 			this.addNodegroupReturns(retNg, requestList);
-			LocalLogger.logToStdOut("...succeeded");
+			LocalLogger.logToStdOut("PathExplorer built nodegroup with " + retNg.getNodeCount() + " nodes and select SPARQL:\n" + retNg.generateSparqlSelect());
 		}
 		
 		return retNg;
@@ -213,15 +210,10 @@ public class PathExplorer {
 	
 	/**
 	 * Constrain a node by label and property if they exist, or instanceUri if it exists, or no-op
-	 * @param ng
-	 * @param node
-	 * @param request
-	 * @throws Exception
 	 */
 	private void constrainNode(NodeGroup ng, Node node, PathItemRequest request) throws Exception {
 		if (request.getLabelStr() != null) {
 			// constrain by the label and property if they exist
-			XSDSupportedType str = XSDSupportedType.STRING;
 			node.addValueConstraint(node.getBindingOrSparqlID() + " <" + request.getLabelPropUri() + "> " + XSDSupportedType.STRING.buildRDF11ValueString(request.getLabelStr()));
 		} else {
 			// constrain by the instanceUri if there is one
@@ -230,9 +222,7 @@ public class PathExplorer {
 	}
 
 	/**
-	 * Throw exception if any instances don't exist
-	 * @param requestList
-	 * @throws Exception
+	 * Throw exception if any request items specify instance URIs that don't exist
 	 */
 	private void checkInstances(ArrayList<PathItemRequest> requestList) throws Exception {
 		for (PathItemRequest req : requestList) {
@@ -257,7 +247,7 @@ public class PathExplorer {
 		this.constrainNode(ng, n,  requestList.get(0));
 		this.addNodegroupReturns(ng, requestList);
 		
-		LocalLogger.logToStdOut("...succeeded");
+		LocalLogger.logToStdOut("PathExplorer built a single-node nodegroup with " + ng.getNodeCount() + " nodes and select SPARQL:\n" + ng.generateSparqlSelect());
 		return ng;
 	}
 	
@@ -649,6 +639,7 @@ public class PathExplorer {
 		
 		return null;
 	}
+
 	@Deprecated
 	/**
 	 * Return any triples that don't appear in the path
@@ -715,6 +706,7 @@ public class PathExplorer {
 		}
 		return ret;
 	}
+	
 	@Deprecated
 	/**
 	 * Return copy of classList with classes from the path removed
@@ -738,10 +730,7 @@ public class PathExplorer {
 			}
 		}
 		return ret;
-	}
-	
-	
-	
+	}	
 	
 	@Deprecated
 	public Node addClassFirstPath(NodeGroup ng, String classUri) throws Exception {
