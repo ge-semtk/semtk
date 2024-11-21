@@ -108,7 +108,7 @@ public class PathExplorer {
 		// try pulling from cache
 		NodeGroup cached = this.getFromCache(requestList);
 		if (cached != null) {
-			LocalLogger.logToStdOut("PathExplorer retrieved nodegroup from cache");
+			LocalLogger.logToStdOut("PathExplorer retrieved from cache a nodegroup with " + cached.getNodeCount() + " nodes");  // wanted to print SELECT sparql but errors sometimes
 			return cached;
 		}		
 		LocalLogger.logToStdOut("PathExplorer will build new nodegroup (vs retrieving from cache)");
@@ -202,7 +202,7 @@ public class PathExplorer {
 		if (retNg != null) {
 			this.putToCache(NodeGroup.deepCopy(retNg), requestList); // store in cache for next time
 			this.addNodegroupReturns(retNg, requestList);
-			LocalLogger.logToStdOut("PathExplorer built nodegroup with " + retNg.getNodeCount() + " nodes and select SPARQL:\n" + retNg.generateSparqlSelect());
+			LocalLogger.logToStdOut("PathExplorer built nodegroup with " + retNg.getNodeCount() + " nodes");  // wanted to print SELECT sparql but errors sometimes
 		}
 		
 		return retNg;
@@ -247,7 +247,7 @@ public class PathExplorer {
 		this.constrainNode(ng, n,  requestList.get(0));
 		this.addNodegroupReturns(ng, requestList);
 		
-		LocalLogger.logToStdOut("PathExplorer built a single-node nodegroup with " + ng.getNodeCount() + " nodes and select SPARQL:\n" + ng.generateSparqlSelect());
+		LocalLogger.logToStdOut("PathExplorer built a single-node nodegroup with " + ng.getNodeCount() + " nodes");  // wanted to print SELECT sparql but errors sometimes
 		return ng;
 	}
 	
