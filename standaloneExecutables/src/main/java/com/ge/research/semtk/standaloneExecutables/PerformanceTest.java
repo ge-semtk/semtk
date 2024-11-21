@@ -356,16 +356,16 @@ public class PerformanceTest {
 			importAndCheck(dl0, NO_PRECHECK);
 			
 			endTask();
-
-			// get new total triples twice
-			long triples = sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
-			startTask(MessageFormat.format(
-				"{0} count, {1,number,#}", taskName, triples
-			));
-			sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
-			endTask();
 		});
 
+		// get new total triples twice
+		long triples = sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
+		startTask(MessageFormat.format(
+			"{0} count, {1,number,#}", taskName, triples
+		));
+		sei.executeQueryToTable(SparqlToXUtils.generateCountTriplesSparql(sei)).getCellAsLong(0, 0);
+		endTask();
+		
 	}
 
 	/**
