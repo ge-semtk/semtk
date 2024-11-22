@@ -163,7 +163,7 @@ public class PathExplorer {
 			// add the remaining request items (permutation index 1->n)
 			for (int j=1; j < perm.size(); j++) {
 
-				PathItemRequest newRequest = requestList.get(j);
+				PathItemRequest newRequest = requestList.get(perm.get(j));
 				OntologyPath incomingPath = newRequest.getIncomingPath();
 				
 				// addFirstUri is the incoming class uri (if request item has an incoming path), else the class uri of the request item itself
@@ -173,7 +173,7 @@ public class PathExplorer {
 				ArrayList<Node> existsList = ng.getNodesBySuperclassURI(addFirstUri, this.oInfo);
 				Node n = existsList.size() > 0 ? existsList.get(0) : null;
 				if (n == null) {
-					n = ng.addClassFirstPath(addFirstUri, this.oInfo, false, this.predStats);  // pathfinding
+					n = ng.addClassFirstPath(addFirstUri, this.oInfo, false, this.predStats);  // pathfinding from nodegroup-in-progress to the new request item
 					if (n == null) {
 						// could not add class
 						success = false;

@@ -2,37 +2,64 @@ package com.ge.research.semtk.ontologyTools;
 
 import java.util.ArrayList;
 
-import org.apache.commons.math3.util.CombinatoricsUtils;
-
 /**
  * Get every permutation of a list of integers 0 to <size>
  * Intended to help explore every permutation of an arbitrary list
- * (i.e. this class generates every permutation of the indices)
- * @author 200001934
- *
  */
 public class PermutationGenerator {
-	private ArrayList<Integer> list;
+
+	private ArrayList<ArrayList<Integer>> permutations;
 	
-	public PermutationGenerator(int size) {
-		
-		this.list = new ArrayList<Integer>();
-		for (int i=0; i < size; i++) {
-			this.list.add(i);
+	/** 
+	 * Constructor
+	 * @param size number of indices to permute
+	 */
+	public PermutationGenerator(int size) {	
+		ArrayList<Integer> numbers = new ArrayList<>();
+		for(int n = 0; n < size; n++) {
+			numbers.add(n);
 		}
-	}
-	
+		permutations = permute(numbers);
+	}	
+
+	/**
+	 * Get the number of permutations that exist
+	 */
 	public int numPermutations() {
-		return (this.list.size()==0) ? 0 : (int) CombinatoricsUtils.factorial(this.list.size());
+		return permutations.size();
+	}	
+	
+	/**
+	 * Get a given permutation
+	 * @param index the permutation index
+	 */
+	public ArrayList<Integer> getPermutation(int index) {
+		return permutations.get(index);
 	}
 	
-	public ArrayList<Integer> getPermutation(int index) {
-		ArrayList<Integer> ret = new ArrayList<Integer>();
-		ArrayList<Integer> clone = (ArrayList<Integer>) list.clone();
-		for (int i=0; i < list.size(); i++) {
-			int m = i % clone.size();
-			ret.add(clone.remove(m));
-		}
-		return ret;
-	}
+	/**
+	 * Perform the permutation
+	 */
+	private static ArrayList<ArrayList<Integer>> permute(ArrayList<Integer> nums) {
+    	ArrayList<ArrayList<Integer>> result = new ArrayList<>();
+        backtrack(result, new ArrayList<>(), nums);
+        return result;
+    }
+
+	/**
+	 * Recursive method to help perform the permutation
+	 */
+    private static void backtrack(ArrayList<ArrayList<Integer>> result, ArrayList<Integer> tempList, ArrayList<Integer> nums) {
+        if (tempList.size() == nums.size()) {
+            result.add(new ArrayList<>(tempList));
+        } else {
+            for (int i = 0; i < nums.size(); i++) {
+                if (tempList.contains(nums.get(i))) continue; // element already exists, skip
+                tempList.add(nums.get(i));
+                backtrack(result, tempList, nums);
+                tempList.remove(tempList.size() - 1);
+            }
+        }
+    }	
+
 }
