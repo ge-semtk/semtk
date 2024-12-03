@@ -230,7 +230,6 @@ public class OntologyPath {
 	
 	/**
 	 * Get ordered list of classes in the path
-	 * @return
 	 */
 	public ArrayList<String> getClassList() {
 		ArrayList<String> ret = new ArrayList<String>();
@@ -239,8 +238,8 @@ public class OntologyPath {
 		
 		for (Triple t : this.tripleList) {
 			if (t.getSubject().equals(lastUri)) {
-				ret.add(t.getPredicate());
-				lastUri = t.getPredicate();
+				ret.add(t.getObject());
+				lastUri = t.getObject();
 			} else {
 				ret.add(t.getSubject());
 				lastUri = t.getSubject();
@@ -248,7 +247,6 @@ public class OntologyPath {
 		}
 		
 		return ret;
-		
 	}
 	
 	
