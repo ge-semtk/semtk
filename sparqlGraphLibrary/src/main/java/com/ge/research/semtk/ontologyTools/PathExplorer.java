@@ -100,10 +100,14 @@ public class PathExplorer {
 	 *    return first success
 	 * 
 	 * @param requestList a list of PathItemRequests to include in the nodegroup 
+	 * @param useSuperclassURIs this should be usually be true.  Adding a false option for unusual situations.
 	 * @return NodeGroup or null
 	 * @throws Exception
 	 */
 	public NodeGroup buildNgWithPredStats(ArrayList<PathItemRequest> requestList) throws Exception {
+		return buildNgWithPredStats(requestList, true);
+	}
+	public NodeGroup buildNgWithPredStats(ArrayList<PathItemRequest> requestList, boolean useSuperclassURIs) throws Exception {
 		
 		// try pulling from cache
 		NodeGroup cached = this.getFromCache(requestList);
@@ -170,7 +174,7 @@ public class PathExplorer {
 				String addFirstUri = (incomingPath != null) ? incomingPath.getTriple(0).getSubject() : newRequest.getClassUri();
 				
 				// find the addFirstUri in the nodegroup (if not found, add it)
-				ArrayList<Node> existsList = ng.getNodesBySuperclassURI(addFirstUri, this.oInfo);
+				ArrayList<Node> existsList = useSuperclassURIs ? ng.getNodesBySuperclassURI(addFirstUri, this.oInfo) : ng.getNodesByURI(addFirstUri);
 				Node n = existsList.size() > 0 ? existsList.get(0) : null;
 				if (n == null) {
 					n = ng.addClassFirstPath(addFirstUri, this.oInfo, false, this.predStats);  // pathfinding from nodegroup-in-progress to the new request item
