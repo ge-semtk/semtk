@@ -73,8 +73,9 @@ public class PlotSpecTest {
 	
 	
 	@Test
-	public void testApplyTable() throws Exception {
-
+	public void testApplyTableCol() throws Exception {
+		// this tests SEMTK_TABLE.col[]
+		
 		// the plot spec
 		JSONObject plotSpecJson = Utility.getResourceAsJson(this, "plotly.json");
 	
@@ -112,6 +113,26 @@ public class PlotSpecTest {
 		assertTrue(resultJson.toJSONString().contains("\"y\":[22.2]"));
 		assertTrue(resultJson.toJSONString().contains("\"name\":\"two\""));
 		assertTrue(resultJson.toJSONString().contains("\"y\":[22.5]"));
+	}
+	
+	@Test
+	public void testApplyTableRow() throws Exception {
+		// this tests SEMTK_TABLE.row[] and SEMTK_TABLE.headers
+
+		// the plot spec
+		JSONObject plotSpecJson = Utility.getResourceAsJson(this, "plotly2.json");
+	
+		// a table
+		Table table = Table.fromJson((JSONObject) new JSONParser().parse(tableJsonStr));
+		
+		PlotlyPlotSpec spec = new PlotlyPlotSpec(plotSpecJson);
+		spec.applyTable(table);
+		
+		JSONObject resultJson = spec.toJson();
+		System.out.println(resultJson.toJSONString());
+		assertFalse(resultJson.toJSONString().contains("SEMTK_TABLE"));
+		assertTrue(resultJson.toJSONString().contains("\"labels\":[\"colA\",\"colB\",\"colC\"]"));
+		assertTrue(resultJson.toJSONString().contains("\"values\":[\"2020-01-24T00:00:00\",22.2,33.3]"));
 	}
 	
 	@Test

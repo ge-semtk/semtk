@@ -1,5 +1,5 @@
 /**
- ** Copyright 2021 General Electric Company
+ ** Copyright 2025 General Electric Company
  **
  **
  ** Licensed under the Apache License, Version 2.0 (the "License");
@@ -16,12 +16,9 @@
  */
 package com.ge.research.semtk.plotting;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.stream.Collectors;
 
-import org.apache.commons.lang.math.NumberUtils;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -54,7 +51,9 @@ public class PlotlyPlotSpec extends PlotSpec {
 	private static final String SEMTK_TRACE = "SEMTK_TRACE_";     
 
 	private static final String SEMTK_TABLE = "SEMTK_TABLE";     // x: "SEMTK_TABLE.col[col_name]"
-	private static final String CMD_COL = "col";
+	private static final String CMD_COL = "col";				 // x: "SEMTK_TABLE.col[col_name]"
+	private static final String CMD_ROW = "row";				 // x: "SEMTK_TABLE.row[row_index]"
+	private static final String CMD_HEADERS = "headers";		 // x: "SEMTK_TABLE.headers"
 	private static final String CMD_UNIQUE = "unique";
 			
 
@@ -224,6 +223,7 @@ public class PlotlyPlotSpec extends PlotSpec {
 			
 			JSONArray jArr = new JSONArray();
 			
+			// for each row, get the value from the target column
 			if (table.getColumnXSDType(colName).isInt()) {
 				for (int r=0; r < table.getNumRows(); r++) {
 					jArr.add(table.getCellAsInt(r, colIndex));
@@ -238,6 +238,47 @@ public class PlotlyPlotSpec extends PlotSpec {
 				}
 			}
 			
+			jObj.put(key, jArr);
+			return true;
+		
+		
+		} else if (sSplit[0].equals(SEMTK_TABLE) && sSplit[1].equals(CMD_ROW)){	// e.g. split SEMTK_TABLE.row[0] into ["SEMTK_TABLE", "row", "0"]
+				int rowIndex;
+				try {
+					rowIndex = Integer.valueOf(sSplit[2].trim());
+				}catch(Exception e) {
+					throw new Exception("Plot spec cannot parse an integer row index from: " + s);
+				}
+				if (rowIndex < 0 || rowIndex >= table.getNumRows()) {
+					throw new Exception("Plot spec specifies row index " + rowIndex +" which does not exist in table: " + s);
+				}
+				
+				JSONArray jArr = new JSONArray();
+				
+				// for each column, get the value from the target row
+				for(int c = 0; c < table.getNumColumns(); c++) {
+					String colName = table.getColumnNames()[c];
+					if (table.getColumnXSDType(colName).isInt()) {
+						jArr.add(table.getCellAsInt(rowIndex, c));
+					} else if (table.getColumnXSDType(colName).isFloat()) {
+						jArr.add(table.getCellAsFloat(rowIndex, c));
+					} else  {
+						jArr.add(table.getCellAsString(rowIndex, c));
+					}
+				}
+
+				jObj.put(key, jArr);
+				return true;
+				
+		} else if (sSplit[0].equals(SEMTK_TABLE) && sSplit[1].equals(CMD_HEADERS)){	// e.g. split SEMTK_TABLE.headers[] into ["SEMTK_TABLE", "headers"]
+			
+			JSONArray jArr = new JSONArray();
+			
+			// add each column name
+			for(String name : table.getColumnNames()) {
+				jArr.add(name);
+			}
+
 			jObj.put(key, jArr);
 			return true;
 			

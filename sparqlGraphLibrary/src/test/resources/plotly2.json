@@ -1,0 +1,17 @@
+{
+	"type": "plotly",
+	"name": "Plotly Chart 2",
+	"spec": 	{  
+	    "data": [
+	        {
+	            "labels": "SEMTK_TABLE.headers",
+	            "values": "SEMTK_TABLE.row[0]",
+	            "type": "pie"
+	        }
+	    ],
+		"layout": { 
+			"title": "simple example"
+		},
+		"config": { "editable": true }
+	}
+}
